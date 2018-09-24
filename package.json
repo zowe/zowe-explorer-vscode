@@ -1,0 +1,452 @@
+{
+  "name": "vscode-extension-for-zowe",
+  "displayName": "Zowe",
+  "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets",
+  "version": "0.6.1",
+  "publisher": "Zowe",
+  "icon": "resources/zowe_logo.png",
+  "keywords": [
+    "mainframe",
+    "zos",
+    "dataset",
+    "zowe"
+  ],
+  "engines": {
+    "vscode": "^1.26.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "files": [
+    "out",
+    "README.md",
+    "resources"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/src/extension",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "zowe.explorer",
+          "name": "Data Sets"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "zowe.addFavorite",
+        "title": "Add Favorite"
+      },
+      {
+        "command": "zowe.addSession",
+        "title": "Zowe: Add Profile",
+        "icon": {
+          "light": "./resources/light/plus.svg",
+          "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.createDataset",
+        "title": "Create New Data Set",
+        "icon": {
+          "light": "./resources/light/newfile.svg",
+          "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
+        "command": "zowe.createMember",
+        "title": "Create New Member"
+      },
+      {
+        "command": "zowe.deleteDataset",
+        "title": "Delete Data Set"
+      },
+      {
+        "command": "zowe.deleteMember",
+        "title": "Delete Member"
+      },
+      {
+        "command": "zowe.deletePDS",
+        "title": "Delete PDS"
+      },
+      {
+        "command": "zowe.pattern",
+        "title": "Search Data Sets by Entering Patterns",
+        "icon": {
+          "light": "./resources/light/pattern.svg",
+          "dark": "./resources/dark/pattern.svg"
+        }
+      },
+      {
+        "command": "zowe.refreshAll",
+        "title": "Zowe: Refresh All",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.refreshNode",
+        "title": "Pull from Mainframe",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
+        "command": "zowe.removeFavorite",
+        "title": "Remove Favorite"
+      },
+      {
+        "command": "zowe.removeSavedSearch",
+        "title": "Remove Search"
+      },
+      {
+        "command": "zowe.removeSession",
+        "title": "Remove Profile"
+      },
+      {
+        "command": "zowe.safeSave",
+        "title": "Safe Save - Merge if Necessary",
+        "icon": {
+          "light": "./resources/light/upload.svg",
+          "dark": "./resources/dark/upload.svg"
+        }
+      },
+      {
+        "command": "zowe.saveSearch",
+        "title": "Save Search"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "when": "view == zowe.explorer",
+          "command": "zowe.refreshAll",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.explorer",
+          "command": "zowe.addSession",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "when": "viewItem == member",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.deleteMember"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.deleteMember"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.deleteDataset"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.deleteDataset"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.removeFavorite"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.deletePDS"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.deletePDS"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.removeFavorite"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.pattern",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.createDataset",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.removeSession"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.saveSearch"
+        },
+        {
+          "when": "viewItem == sessionf",
+          "command": "zowe.removeSavedSearch"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "zowe.pattern",
+          "when": "never"
+        },
+        {
+          "command": "zowe.refreshNode",
+          "when": "never"
+        },
+        {
+          "command": "zowe.createDataset",
+          "when": "never"
+        },
+        {
+          "command": "zowe.createMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deleteDataset",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deletePDS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deleteMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.removeSession",
+          "when": "never"
+        },
+        {
+          "command": "zowe.safeSave",
+          "when": "never"
+        },
+        {
+          "command": "zowe.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.removeSavedSearch",
+          "when": "never"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Zowe Configuration",
+      "properties": {
+        "Zowe-Default-Datasets-Binary": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 10,
+            "dirblk": 25,
+            "recfm": "U",
+            "blksize": 27998,
+            "lrecl": 27998
+          },
+          "description": "Default values of Binary data set creation",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-C": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 25,
+            "recfm": "VB",
+            "blksize": 32760,
+            "lrecl": 260
+          },
+          "description": "Default values of C data set creation",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-Classic": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "Default values of Classic data set creation",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-PDS": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 5,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "Default values of Partitioned data set creation",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-PS": {
+          "default": {
+            "dsorg": "PS",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "Default values of Sequential data set creation",
+          "scope": "window"
+        },
+        "Zowe-Persistent-Favorites": {
+          "default": {
+            "persistence": true,
+            "favorites": []
+          },
+          "description": "Toggle if favorite files persist locally",
+          "scope": "window"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "npm run license && tsc --pretty",
+    "watch": "tsc -watch --pretty",
+    "rebuild": "electron-rebuild -f -w vscode-Zowe-extension --version 2.0.5",
+    "postinstall": "node ./node_modules/vscode/bin/install && npm run rebuild",
+    "test:unit": "jest --coverage",
+    "test": "jest --coverage",
+    "package": "vsce package",
+    "license": "node ./scripts/license.js"
+  },
+  "devDependencies": {
+    "@types/expect": "^1.20.3",
+    "@types/jest": "^23.1.0",
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^7.0.66",
+    "@types/yargs": "^11.0.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chalk": "^2.4.1",
+    "electron-rebuild": "^1.7.3",
+    "expect": "^23.4.0",
+    "glob": "^7.1.2",
+    "jest": "^22.4.4",
+    "jest-html-reporter": "^2.4.0",
+    "sinon": "^6.1.0",
+    "ts-jest": "^22.4.6",
+    "typescript": "^2.9.2",
+    "vsce": "^1.46.0"
+  },
+  "dependencies": {
+    "@brightside/core": "^1.1.0-next.201808072010",
+    "@brightside/imperative": "^1.1.0-next.201808211738",
+    "@types/chai": "^4.1.4",
+    "@types/chai-as-promised": "^7.1.0",
+    "jsdoc": "^3.5.5",
+    "vscode": "^1.1.6"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "**/__tests__/*test.+(ts|tsx)"
+    ],
+    "modulePathIgnorePatterns": [
+      "__tests__/integrationTests/"
+    ],
+    "reporters": [
+      "default",
+      "./node_modules/jest-html-reporter"
+    ],
+    "coverageDirectory": "<rootDir>/results/coverage"
+  },
+  "jest-html-reporter": {
+    "pageTitle": "Zowe Extension Tests",
+    "outputPath": "results/results.html"
+  }
+}
