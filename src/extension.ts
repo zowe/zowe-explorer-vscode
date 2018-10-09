@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
     let datasetProvider: DatasetTree;
     try {
         // Initialize the secure credential manager
-        await CredentialManagerFactory.initialize(DefaultCredentialManager, "@brightside/core");
+        // await CredentialManagerFactory.initialize(DefaultCredentialManager, "@brightside/core");
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();

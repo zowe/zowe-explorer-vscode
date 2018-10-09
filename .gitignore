@@ -6,4 +6,4 @@ resources/testProfileData.ts
 results
 debug.log
 package-lock.json
-vscode-extension-for-zowe-0.6.1.vsix
+vscode-extension-for-zowe*.vsix
