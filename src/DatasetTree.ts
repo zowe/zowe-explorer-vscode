@@ -91,7 +91,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
             type: "zosmf"
         }).load(sessionName ? {name: sessionName} : {loadDefault: true});
 
