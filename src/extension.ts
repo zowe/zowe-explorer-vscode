@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, CredentialManagerFactory, DefaultCredentialManager, Session } from "@brightside/imperative";
+import { CliProfileManager } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 
 // Globals
@@ -33,9 +33,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let datasetProvider: DatasetTree;
     try {
-        // Initialize the secure credential manager
-        // await CredentialManagerFactory.initialize(DefaultCredentialManager, "@brightside/core");
-
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
         await datasetProvider.addSession();
