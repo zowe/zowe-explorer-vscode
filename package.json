@@ -406,7 +406,7 @@
     "glob": "^7.1.2",
     "jest": "^22.4.4",
     "jest-html-reporter": "^2.4.0",
-    "jsdom": "^11.11.0",
+    "jsdom": "11.11.0",
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
