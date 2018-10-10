@@ -111,7 +111,7 @@ describe("Extension Integration Tests", () => {
             stub.returns(profileNamesList[0]);
 
             await extension.addSession(testTree);
-            expect(testTree.mSessionNodes.slice(-1)[0].mLabel).to.equal(profileNamesList[0]);
+            expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].mLabel).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });
 

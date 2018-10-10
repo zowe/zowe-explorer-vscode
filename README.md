@@ -1,25 +1,8 @@
 # Visual Studio Code Extension for Zowe
 
-The Visual Studio Code (VSC) Extension for Zowe lets you interact with data sets that are stored on IBM z/OS mainframes. You can explore data sets, view their contents, make changes, and upload those changes to the mainframe. Interacting with data sets from VSC can be more convenient than using command-line interfaces or 3270 emulators. 
+The Visual Studio Code (VSC) Extension for Zowe lets you interact with data sets that are stored on IBM z/OS mainframes. You can explore data sets, view their contents, make changes, and upload those changes to the mainframe. Interacting with data sets from VSC can be more convenient than using command-line interfaces or 3270 emulators.
 
 The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
-
-**Important Note**: This extension is a work in progress and contains native code to retrieve securely stored credentials from Zowe CLI. The version published to the marketplace is built for Visual Studio Code for Windows x64. 
-
-If your architecture differs, you might receive the following error:
-
-`could not retrieve secure field 'user' ...` 
-
-You can attempt to rebuild it for your platform by navigating to the following directory within your home directory (C:\Users\youruserID on Windows, ~ on Mac/ Linux):
- `<yourhomedirectory>/.vscode/extension/zowe.vscode-extension-for-zowe-x.x.x/` where `x.x.x` is the version number of the extension. After navigating to that directory you should be able to issue the command `npm install` to rebuild the extension for your platform. 
-
-If `npm install` does not resolve the error, you can rebuild Keytar manually:
-
-1. In Visual Studio Code, navigate to `Help` -> `About`
-2. Note your `Architecture` (most likely ia32)
-3. Navigate to the Keytar directory `<yourhomedirectory>/.vscode/extension/zowe.vscode-extension-for-zowe-x.x.x/node_modules/keytar`
-4. Open the `package.json` and locate the npm prebuild script for your VSCode architecture (e.g. `prebuild-electron-ia32`)
-5. Execute `npm run <the script you chose from (4)>` (e.g. `npm run prebuild-electron-ia32`)
 
 ## Table of Contents
 * [Prerequisites](#prerequisites)
@@ -179,7 +162,7 @@ export const profile: IProfile = {
     user: "",
     pass: "",
     rejectUnauthorized: false,
-    name: ""
+    name: "" // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
 
 export const normalPattern = "";
@@ -205,3 +188,8 @@ To test the extension, the mainframe data sets under `normalPattern` must match 
 There is no required structure for the mainframe data sets under `orPattern`.
 
 To run the tests, open your copy of the repository in VSC,  [build the extension](#build-the-extension), and open the *Debug* panel on the left. Select `Integration Tests Mocha)` from the drop down next to the green play button and press the play button. The tests will then run and the output will go to your VSC debug console. 
+
+### Profile Notes
+
+- As mentioned in the example test properties file, there must be at least one valid zosmf profile corresponding to the name in your properties file.
+- The tests need at least 2 profiles to work properly. The second profile doesn't have to have valid credentials, it must just exist on disk.
