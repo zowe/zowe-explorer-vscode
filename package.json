@@ -398,6 +398,8 @@
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
     "@types/yargs": "^11.0.0",
+    "@types/chai": "^4.1.4",
+    "@types/chai-as-promised": "^7.1.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
@@ -412,10 +414,8 @@
     "vsce": "^1.46.0"
   },
   "dependencies": {
-    "@brightside/core": "next",
-    "@brightside/imperative": "next",
-    "@types/chai": "^4.1.4",
-    "@types/chai-as-promised": "^7.1.0",
+    "@brightside/core": "2.0.0-next.201810091514",
+    "@brightside/imperative": "2.0.0-next.201810081506",
     "jsdoc": "^3.5.5",
     "vscode": "^1.1.6"
   },
