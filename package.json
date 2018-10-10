@@ -122,6 +122,10 @@
       {
         "command": "zowe.saveSearch",
         "title": "Save Search"
+      },
+      {
+        "command": "zowe.submitJcl",
+        "title": "Submit JCL"
       }
     ],
     "menus": {

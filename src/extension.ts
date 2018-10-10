@@ -75,6 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
     vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
+    vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
             const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
@@ -84,6 +85,38 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
     });
+}
+
+/**
+ * Submit the contents of the editor as JCL. 
+ * 
+ * @export
+ * @param {DatasetTree} datasetProvider - our DatasetTree object
+ */
+export async function submitJcl(datasetProvider: DatasetTree) {
+    let doc = vscode.window.activeTextEditor.document;
+    // get session name
+    let sesName = doc.fileName.substring(doc.fileName.indexOf("[") + 1, doc.fileName.lastIndexOf("]"));
+    if (sesName.includes("[")) {
+        // if saving from favorites, sesName might be the favorite node, so extract further
+        sesName = sesName.substring(sesName.indexOf("[") + 1, sesName.indexOf("]"));
+    }
+
+    // get session from session name
+    let documentSession;
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.mLabel === sesName);
+    if (sesNode) {
+        documentSession = sesNode.getSession();
+    } else {
+        // if saving from favorites, a session might not exist for this node
+        const zosmfProfile = await new CliProfileManager({
+            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            type: "zosmf"
+        }).load({name: sesName});
+        documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+    }
+    let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
+    vscode.window.showInformationMessage("Job submitted " + job.jobid);
 }
 
 /**
