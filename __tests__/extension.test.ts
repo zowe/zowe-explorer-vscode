@@ -41,7 +41,6 @@ describe("Extension Unit Tests", async () => {
     sessNode.pattern = "test hlq";
 
     const mkdirSync = jest.fn();
-    const initialize = jest.fn();
     const getAllProfileNames = jest.fn();
     const createTreeView = jest.fn();
     const Uri = jest.fn();
@@ -113,7 +112,6 @@ describe("Extension Unit Tests", async () => {
     testTree.mSessionNodes.push(sessNode);
 
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
-    Object.defineProperty(brtimperative.CredentialManagerFactory, "initialize", {value: initialize});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode, "Uri", {value: Uri});
@@ -204,9 +202,6 @@ describe("Extension Unit Tests", async () => {
         };
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
         expect(mkdirSync.mock.calls.length).toBe(1);
-        expect(initialize.mock.calls.length).toBe(1);
-        expect(initialize.mock.calls[0][0]).toBe(brtimperative.DefaultCredentialManager);
-        expect(initialize.mock.calls[0][1]).toBe("@brightside/core");
         expect(createTreeView.mock.calls.length).toBe(1);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[0][1]).toEqual({
@@ -270,7 +265,6 @@ describe("Extension Unit Tests", async () => {
         rmdirSync.mockImplementationOnce(() => {
             return;
         });
-        initialize.mockRejectedValueOnce(Error("test error"));
         showErrorMessage.mockReset();
         readFileSync.mockReturnValue("");
         getConfiguration.mockReturnValueOnce({
@@ -284,8 +278,6 @@ describe("Extension Unit Tests", async () => {
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(readdirSync.mock.calls.length).toBe(0);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("test error");
 
         existsSync.mockReset();
         readdirSync.mockReset();
@@ -306,7 +298,6 @@ describe("Extension Unit Tests", async () => {
         unlinkSync.mockImplementationOnce(() => {
             throw (Error("testError"));
         });
-        initialize.mockRejectedValueOnce(Error("test error"));
 
         await extension.activate(mock);
     });
@@ -893,7 +884,7 @@ describe("Extension Unit Tests", async () => {
         await extension.safeSave(child);
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         openTextDocument.mockResolvedValueOnce("test");
         openTextDocument.mockResolvedValueOnce("test");

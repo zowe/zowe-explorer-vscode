@@ -22,7 +22,7 @@ export async function createSystemTestEnvironment() {
 
   await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.SAMPLE.PDS`);
 
-  await createDataset(CreateDataSetTypeEnum.DATA_SET_BINARY, `${normalPattern}.PUBLIC.BIN`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.BIN`);
 
   await createDataset(CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.PUBLIC.TCLASSIC`);
   await createMember(`${normalPattern}.PUBLIC.TCLASSIC(NEW)`);
