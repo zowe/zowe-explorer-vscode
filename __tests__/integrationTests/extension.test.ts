@@ -96,7 +96,7 @@ describe("Extension Integration Tests", () => {
         it("should add a session", async () => {
             // Grab profiles
             const profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf"
             });
             const profileNamesList = profileManager.getAllProfileNames().filter((profileName) =>

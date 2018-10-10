@@ -89,7 +89,7 @@ export async function addSession(datasetProvider: DatasetTree) {
     let profileManager;
     try {
         profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
             type: "zosmf"
         });
     } catch (err) {
@@ -406,7 +406,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
         if (favoriteDataSetPattern.test(line)) {
             const sesName = line.substring(1, line.lastIndexOf("]"));
             const zosmfProfile = await new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf"
             }).load({name: sesName});
 
@@ -603,7 +603,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
             type: "zosmf"
         }).load({name: sesName});
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
