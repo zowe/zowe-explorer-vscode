@@ -569,7 +569,7 @@ export async function safeSave(node: ZoweNode) {
         if (err.message.includes("not found")) {
             vscode.window.showInformationMessage(`Unable to find file: ${label} was probably deleted.`);
         } else {
-            vscode.window.showErrorMessage(err);
+            vscode.window.showErrorMessage(err.message);
         }
     }
 }
@@ -583,7 +583,7 @@ export async function safeSave(node: ZoweNode) {
  */
 export async function saveFile(doc: vscode.TextDocument, datasetProvider: DatasetTree) {
     // Check if file is a data set, instead of some other file
-    const docPath = path.normalize(doc.fileName.substring(0, doc.fileName.lastIndexOf("\\") + 1));
+    const docPath = path.join(doc.fileName, "..");
     if (path.relative(docPath, BRIGHTTEMPFOLDER)) {
         return;
     }
@@ -623,7 +623,12 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         }
     }
     try {
-        const response = await zowe.Upload.pathToDataSet(documentSession, doc.fileName, label);
+        const response = await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Saving data set..."
+        }, () => {
+            return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label);
+        });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);
         } else {
