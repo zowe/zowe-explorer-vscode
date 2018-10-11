@@ -15,8 +15,9 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager } from "@brightside/imperative";
+import { CliProfileManager, Logger } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
+import * as log4js from "log4js";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -33,6 +34,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let datasetProvider: DatasetTree;
     try {
+        // Initialize Imperative Logger
+        const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
+        loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
+        loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
+        loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
+        Logger.initLogger(loggerConfig);
+    
+
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
         await datasetProvider.addSession();
