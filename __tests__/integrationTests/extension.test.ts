@@ -363,23 +363,24 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
 
         it("should work when provided a valid Favorites list", async () => {
-            const favorites = ["[zm13]: " + pattern + ".EXT.PDS{pds}",
-                "[zm13]: " + pattern + ".EXT.PS{ds}",
-                "[zm13]: " + pattern + ".EXT.SAMPLE.PDS{pds}",
-                "[zm13]: " + pattern + ".EXT{session}"];
+            const profileName = testConst.profile.name;
+            const favorites = [`[${profileName}]: ${pattern}.EXT.PDS{pds}`,
+                               `[${profileName}]: ${pattern}.EXT.PS{ds}`,
+                               `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
+                               `[${profileName}]: ${pattern}.EXT{session}`];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             await extension.initializeFavorites(testTree);
-            const favoritesArray = ["[zm13]: " + pattern + ".EXT.PDS",
-                "[zm13]: " + pattern + ".EXT.PS",
-                "[zm13]: " + pattern + ".EXT.SAMPLE.PDS",
-                "[zm13]: " + pattern + ".EXT"];
+            const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
+                                    `[${profileName}]: ${pattern}.EXT.PS`,
+                                    `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
+                                    `[${profileName}]: ${pattern}.EXT`];
             expect(testTree.mFavorites.map((node) => node.mLabel)).to.deep.equal(favoritesArray);
         }).timeout(TIMEOUT);
 
         it("should show an error message when provided an invalid Favorites list", async () => {
-            const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[zm13]{ds}";
-            const favorites = [pattern + ".EXT.PDS[zm13]{pds}", corruptedFavorite];
+            const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
+            const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
 
