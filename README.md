@@ -7,9 +7,9 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 ## Contents
 
 * [Prerequisites](#prerequisites)
+* [Install Visual Studio Code Extension for Zowe from Source](#install-to-vsc-from-source)
 * [Configuration and Usage Tips](#configuration-and-usage-tips)
 * [Sample use cases](#use-cases)
-* [Install Visual Studio Code Extension for Zowe from Source](#install-to-vsc-from-source)
 * [Run System Tests](#run-system-tests)
 
 ## Prerequisites
@@ -18,14 +18,38 @@ Before you install the Zowe extension, meet the following prerequisites:
 
 * [Install Zowe CLI](https://zowe.github.io/docs-site/user-guide/cli-installcli.html) on your PC.
   
-    ***Important!*** To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
+    **Important!** To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
 * [Create at least one Zowe CLI 'zosmf' profile](https://zowe.github.io/docs-site/user-guide/cli-installcli.html#creating-a-zowe-cli-profile).
 
-## Configuration and Usage Tips
+## Install to VSC from Source
+
+You can build the extension (VSIX file) from this source repository and install it to VSC.  
+
+**Note:** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
+
+### Build the Extension
+
+From your local copy of this repository, issue the following commands to create the VSIX package file from source:
+
+1. `npm install`
+2. `npm run package`
+   This creates a `.vsix` file in your local copy of the project.
+
+### Install the Extension to VSC
+
+After you create a VSIX file, install the extension to VSC:
+
+1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left. 
+2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command. 
+3. Restart Visual Studio Code.
+
+The extension is installed.
+
+## Configuration and usage tips
 
 You can alter the behavior of the extension in the following ways:
 
-* **Safe Save:** The Visual Studio Code *Save* functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension *Safe Save* functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
+* **Safe Save:** The Visual Studio Code **Save** functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension **Safe Save** functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
 * **Data set creation settings:** You can change the default creation settings for various data set types. Navigate to the Settings for this extension for more info. 
 * **Data set persistence settings:** You can toggle the persistence of any data sets that are present under your **Favorites** tab.
   
@@ -64,7 +88,7 @@ Review the following use cases to understand how to use this extension.
 3. Open a profile.  
 4. Click the PDS member (or PS) that you want to download.
 
-    **Note:** To view the members of a PDS, click on the PDS to expand the tree.
+    **Note:** To view the members of a PDS, click the PDS to expand the tree.
     
     The PDS member displays in the text editor window of VSC. 
 6. Edit the document.
@@ -137,30 +161,6 @@ Your PDS member (or PS) is uploaded.
 3. Click the **Edit** button to the left of the Data Set settings that you want to edit.
 4. Select **Copy to Settings**.
 5. Edit the settings as needed.
-
-## Install to VSC from Source
-
-You can build the extension (VSIX file) from this source repository and install it to VSC.  
-
-**Note:** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
-
-### Build the Extension
-
-From your local copy of this repository, issue the following commands to create the VSIX package file from source:
-
-1. `npm install`
-2. `npm run package`
-   This creates a `.vsix` file in your local copy of the project.
-
-### Install the Extension to VSC
-
-After you create a VSIX file, install the extension to VSC:
-
-1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left. 
-2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command. 
-3. Restart Visual Studio Code.
-
-The extension is installed.
 
 ## Run System Tests
 
