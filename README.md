@@ -46,7 +46,7 @@ Review the following use cases to understand how to use this extension.
 ### Refresh the list of data sets
 
 1. Navigate to your explorer tree.
-2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar as illustrated by the following screen.
+2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar as illustrated by the following screen:
 
 ![Refresh All](https://github.com/mheuzey/temp/blob/master/resources/gifs/refreshAll.gif?raw=true "Refresh All")
 <br /><br />
@@ -119,7 +119,7 @@ Your PDS member (or PS) is uploaded.
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
 2. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
-3. Select the profile that you want to add to the view.
+3. Select the profile that you want to add to the view as illustrated by the following screen.
 
 ![Add Profile](https://github.com/mheuzey/temp/blob/master/resources/gifs/addProfile.gif?raw=true "Add Profile")
 <br /><br />
