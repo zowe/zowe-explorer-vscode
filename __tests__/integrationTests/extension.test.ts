@@ -184,7 +184,7 @@ describe("Extension Integration Tests", () => {
 
     describe("Tests for Deleting Data Sets", () => {
         it("should delete a data set when zowe.deleteDataset is invoked", async () => {
-            const dataSetName = pattern + ".EXT.PUBLIC.DELETE.DATASET.TEST";
+            const dataSetName = pattern + ".EXT.DELETE.DATASET.TEST";
             await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
             const testNode = new ZoweNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
 
