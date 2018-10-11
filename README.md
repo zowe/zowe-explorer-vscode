@@ -2,9 +2,10 @@
 
 The Visual Studio Code (VSC) Extension for Zowe lets you interact with data sets that are stored on IBM z/OS mainframes. You can explore data sets, view their contents, make changes, and upload the changes to the mainframe. Interacting with data sets from VSC can be more convenient than using command-line interfaces or 3270 emulators.
 
+ **Important!** To use the VSC Extension for Zowe, you must install Zowe CLI version **`2.0.0`** or later.
+
 The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
- **Important!** To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
 
 ## Contents
 * [Configuration and usage tips](#configuration-and-usage-tips)
