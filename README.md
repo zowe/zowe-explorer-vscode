@@ -5,14 +5,15 @@ The Visual Studio Code (VSC) Extension for Zowe lets you interact with data sets
 The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
 ## Table of Contents
+
 * [Prerequisites](#prerequisites)
 * [Tips](#configuration-and-usage-tips)
 * [Sample use cases](#use-cases)
 * [Install Visual Studio Code Extension for Zowe from Source](#install-to-vsc-from-source)
 * [Run System Tests](#run-system-tests)
 
-
 ## Prerequisites
+
 Before you install the Zowe extension, meet the following prerequisites:
 
 * [Install Zowe CLI](https://zowe.github.io/docs-site/user-guide/cli-installcli.html) on your PC.
@@ -29,9 +30,11 @@ You can alter the behavior of the extension in the following ways:
 **Tip:** Visual Studio Code does not highlight data set syntax by default. To enhance the experience of using this extension, download an extension that highlights syntax, such as COBOL.
 
 ## Use Cases
+
 Review the following use cases to understand how to use this extension.
 
 ### View data sets and use multiple filters
+
 1. Navigate to your explorer tree.
 2. Open the 'DATA SETS' bar.
 3. Select a profile that you are interested in filtering.
@@ -62,6 +65,7 @@ Review the following use cases to understand how to use this extension.
 5. The PDS member displays in the text editor window of VSC. 
 6. Edit the document.
 7. Navigate back to the PDS member (or PS) in the explorer tree, and click the 'Safe Save' button.
+
 Your PDS member (or PS) was uploaded.  
 
 **Note:** If someone else has made changes to this PDS member (or PS) while you were editing it, then you will be able to merge your conflicts before uploading to the mainframe.  
@@ -72,7 +76,7 @@ Your PDS member (or PS) was uploaded.
 ### Use 'Safe Save' to prevent merge conflicts
 
 1. Navigate to your explorer tree.
-3. Open the 'DATA SETS' bar.
+2. Open the 'DATA SETS' bar.
 3. Open a profile.
 4. Download and edit a data set.
 5. Click the 'Safe Save' button for the data set that you opened in the explorer tree.
@@ -129,26 +133,34 @@ Your PDS member (or PS) was uploaded.
 5. Edit the settings as needed.
 
 ## Install to VSC from Source
+
 You can build the extension (VSIX file) from this source repository and install it to VSC.  
 
 **Note:** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
 
 ### Build the Extension
+
 From your local copy of this repository, issue the following commands to create the VSIX package file from source:
 
 1. `npm install`
 2. `npm run package`
    This creates a `.vsix` file in your local copy of the project.
 
-### Install the Extension to VSC 
+### Install the Extension to VSC
+
 After you create a VSIX file, install the extension to VSC:
 
 1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left. 
 2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command. 
 3. Restart Visual Studio Code.
-The extension is installed. 
+
+The extension is installed.
 
 ## Run System Tests
+
+This section covers how to run the system tests for the Visual Studio Code extension.
+
+### Test Profile Data
 
 In your copy of this repository, create a `testProfileData.ts` file in the `resources` directory. In this file, include the following text with your credentials:
 
@@ -171,6 +183,8 @@ export const orPattern = "";
 
 The above example content can also be copied from ./resources/testProfileData.example.ts
 
+#### Normal Pattern
+
 To test the extension, the mainframe data sets under `normalPattern` must match the following structures:
 
 * `normalPattern` + ".EXT.PDS"
@@ -185,11 +199,30 @@ To test the extension, the mainframe data sets under `normalPattern` must match 
   * "TCHILD2"
 * `normalPattern` + ".PUBLIC.TPS"
 
+To help with the setup of this file structure, two scripts have been created under the `./scripts` folder. Both scripts can be executed if you have the package `ts-node` installed globally.
+
+1. [create-env](./scripts/create-env.ts) - Creates the proper datasets on the mainframe.
+2. [clean-env](./scripts/clean-env.ts) - Cleans up the datasets created on the mainframe.
+
+Both scripts will use the profile you specified in `testProfileData`
+
+##### Executing the Setup Scripts
+
+1. Install `ts-node` globally.
+    1. `npm install -g ts-node`
+2. Execute script as if it were a node script.
+    1. `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
+
+#### Or Pattern
+
 There is no required structure for the mainframe data sets under `orPattern`.
+
+### Executing from VSC
 
 To run the tests, open your copy of the repository in VSC,  [build the extension](#build-the-extension), and open the *Debug* panel on the left. Select `Integration Tests Mocha)` from the drop down next to the green play button and press the play button. The tests will then run and the output will go to your VSC debug console. 
 
 ### Profile Notes
 
-- As mentioned in the example test properties file, there must be at least one valid zosmf profile corresponding to the name in your properties file.
-- The tests need at least 2 profiles to work properly. The second profile doesn't have to have valid credentials, it must just exist on disk.
+* As mentioned in the example test properties file, there must be at least one valid zosmf profile corresponding to the name in your properties file.
+  * For Example: If your test properties defines a profile called `test-vscode-extension` there should be a corresponding profile in the `.zowe` profiles directory of your `zowe-cli`. These two profile definitions **MUST** be identical for proper test execution.
+* The tests need at least 2 profiles to work properly. The second profile doesn't have to have valid credentials, it must just exist on disk.
