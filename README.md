@@ -7,10 +7,10 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 ## Contents
 
 * [Prerequisites](#prerequisites)
-* [Install Visual Studio Code Extension for Zowe from Source](#install-to-vsc-from-source)
-* [Configuration and Usage Tips](#configuration-and-usage-tips)
-* [Sample use cases](#use-cases)
-* [Run System Tests](#run-system-tests)
+* [Install Visual Studio Code Extension for Zowe from source](#install-to-vsc-from-source)
+* [Configuration and usage tips](#configuration-and-usage-tips)
+* [Sample use cases](#sample-use-cases)
+* [Run system tests](#run-system-tests)
 
 ## Prerequisites
 
@@ -21,13 +21,13 @@ Before you install the Zowe extension, meet the following prerequisites:
     **Important!** To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
 * [Create at least one Zowe CLI 'zosmf' profile](https://zowe.github.io/docs-site/user-guide/cli-installcli.html#creating-a-zowe-cli-profile).
 
-## Install to VSC from Source
+## Install to VSC from source
 
 You can build the extension (VSIX file) from this source repository and install it to VSC.  
 
 **Note:** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
 
-### Build the Extension
+### Build the extension
 
 From your local copy of this repository, issue the following commands to create the VSIX package file from source:
 
@@ -35,7 +35,7 @@ From your local copy of this repository, issue the following commands to create 
 2. `npm run package`
    This creates a `.vsix` file in your local copy of the project.
 
-### Install the Extension to VSC
+### Install the extension to VSC
 
 After you create a VSIX file, install the extension to VSC:
 
@@ -55,7 +55,7 @@ You can alter the behavior of the extension in the following ways:
   
 **Tip:** By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as COBOL.
 
-## Use Cases
+## Sample use cases
 
 Review the following use cases to understand how to use this extension.
 
@@ -139,7 +139,7 @@ Your PDS member (or PS) is uploaded.
     **Note:** Alternatively, you can select 'No' to cancel the deletion.
 6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
     
-    **Note:** You can delete PDSs without deleting its members first.
+    **Note:** You can delete a PDS before you you delete its members.
 
 ![Delete](https://github.com/mheuzey/temp/blob/master/resources/gifs/delete_pds_delete_member.gif?raw=true "Delete")
 <br /><br />
@@ -154,7 +154,7 @@ Your PDS member (or PS) is uploaded.
 ![Add Profile](https://github.com/mheuzey/temp/blob/master/resources/gifs/addProfile.gif?raw=true "Add Profile")
 <br /><br />
 
-### Add and edit information that pertains to how data sets are created
+### Add and edit information that defines how to create data sets
 
 1. Navigate to to File, Preferences, Settings.
 2. In the section **Default User Settings**, scroll to **Zowe Configuration** and expand the options.
@@ -164,7 +164,7 @@ Your PDS member (or PS) is uploaded.
 
 ## Run System Tests
 
-This section covers how to run the system tests for the Visual Studio Code extension.
+The following topics describe how to run system tests on the Visual Studio Code extension.
 
 ### Test Profile Data
 
@@ -187,9 +187,9 @@ export const normalPattern = "";
 export const orPattern = "";
 ```
 
-The above example content can also be copied from ./resources/testProfileData.example.ts
+**Note:** You can copy the above example content from `./resources/testProfileData.example.ts`.
 
-#### Normal Pattern
+#### Normal pattern
 
 To test the extension, the mainframe data sets under `normalPattern` must match the following structures:
 
@@ -205,31 +205,38 @@ To test the extension, the mainframe data sets under `normalPattern` must match 
   * "TCHILD2"
 * `normalPattern` + ".PUBLIC.TPS"
 
-To help with the setup of this file structure, two scripts have been created under the `./scripts` folder. Both scripts can be executed if you have the package `ts-node` installed globally.
+The `./scripts` folder contains the following scripts to help you set up the required file structure. You can execute the scripts when the `ts-node` package is installed globally.    
 
-1. [create-env](./scripts/create-env.ts) - Creates the proper datasets on the mainframe.
-2. [clean-env](./scripts/clean-env.ts) - Cleans up the datasets created on the mainframe.
+- [create-env](./scripts/create-env.ts): Creates the proper data sets on the mainframe.
+- [clean-env](./scripts/clean-env.ts): Cleans up the data sets created on the mainframe.
 
-Both scripts will use the profile you specified in `testProfileData`
+**Note:** The scripts use the profile that you specified in `testProfileData`.
 
-##### Executing the Setup Scripts
+##### Execute the setup scripts
 
-1. Install `ts-node` globally.
-    1. `npm install -g ts-node`
-2. Execute script as if it were a node script.
-    1. `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
+1. Issue the following command to install `ts-node` globally:
 
-#### Or Pattern
+    `npm install -g ts-node`
+
+2. Issue the following command to execute script as if it were a node script.
+    
+    `ts-node ./scripts/clean-env.ts` or `ts-node ./scripts/create-env.ts`
+
+#### Or pattern
 
 There is no required structure for the mainframe data sets under `orPattern`.
 
 ### Executing from VSC
 
-To run the tests, open your copy of the repository in VSC,  [build the extension](#build-the-extension), and open the *Debug* panel on the left. Select `Integration Tests Mocha)` from the drop down next to the green play button and press the play button. The tests will then run and the output will go to your VSC debug console. 
+1. To run the tests, open your copy of the repository in VSC, [build the extension](#build-the-extension), and open the **Debug** panel on the left.
 
-### Profile Notes
+2. From the drop-down next to the green play button, click **Integration Tests Mocha** and click the **Play** button.
+
+  The tests run and the output goes to your VSC debug console. 
+
+### Profile notes
 
 * As mentioned in the example test properties file, there must be at least one valid zosmf profile corresponding to the name in your properties file.
 
-  For Example: If your test properties defines a profile called `test-vscode-extension` there should be a corresponding profile in the `.zowe` profiles directory of your `zowe-cli`. These two profile definitions **must** be identical for proper test execution.
+  **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 * The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
