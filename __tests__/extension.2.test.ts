@@ -1,6 +1,8 @@
 describe("tests moved over", () => {
-  it("Testing that activate correctly executes", () => {
-    pending("Ly");
+  fdescribe("activate should", () => {
+    it("should execute correctly", async () => {
+      console.log("start testing");
+    });
   });
 
   it("Testing that saveFile is executed successfully", () => {

@@ -17,7 +17,6 @@ import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { CliProfileManager, Logger } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
-import * as log4js from "log4js";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
