@@ -46,15 +46,15 @@ describe("tests moved over", () => {
     };
 
     const testTree = new DatasetTree();
-    const testTree2 = new DatasetTree();
+    // const testTree2 = new DatasetTree();
 
-    console.log(testTree.getTreeItem(null));
-    expect(testTree.getTreeItem).toHaveBeenCalledTimes(4);
+    // console.log(testTree.getTreeItem(null));
+    // expect(testTree.getTreeItem).toHaveBeenCalledTimes(4);
 
 
-    expect(DatasetTree).toHaveBeenCalledTimes(1);
+    // expect(DatasetTree).toHaveBeenCalledTimes(1);
 
-    console.log(testTree);
+    // console.log(testTree);
 
   });
 });
