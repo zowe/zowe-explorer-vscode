@@ -37,7 +37,8 @@ describe("Extension Integration Tests", () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessionNode.contextValue = "session";
-    sessionNode.pattern = testConst.normalPattern;
+    const pattern = testConst.normalPattern.toUpperCase();
+    sessionNode.pattern = pattern;
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(sessionNode);
 
@@ -51,14 +52,14 @@ describe("Extension Integration Tests", () => {
 
     afterEach(async function() {
         this.timeout(TIMEOUT);
-        const createTestFileName = testConst.normalPattern + ".EXT.CREATE.DATASET.TEST";
+        const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
         try {
             await zowe.Delete.dataSet(session, createTestFileName);
         } catch (err) {
             // Do nothing
         }
 
-        const deleteTestFileName = testConst.normalPattern + ".EXT.DELETE.DATASET.TEST";
+        const deleteTestFileName = pattern + ".EXT.DELETE.DATASET.TEST";
         try {
             await zowe.Delete.dataSet(session, deleteTestFileName);
         } catch (err) {
@@ -101,9 +102,9 @@ describe("Extension Integration Tests", () => {
             });
             const profileNamesList = profileManager.getAllProfileNames().filter((profileName) =>
                 // Find all cases where a profile is not already displayed
-                !testTree.mSessionNodes.filter((node) =>
-                    node.mLabel === profileName
-                ).length
+                !testTree.mSessionNodes.find((node) =>
+                    node.mLabel.toUpperCase() === profileName.toUpperCase()
+                )
             );
 
             // Mock user selecting first profile from list
@@ -118,7 +119,7 @@ describe("Extension Integration Tests", () => {
     describe("Creating Data Sets and Members", () => {
         it("should create a data set when zowe.createFile is invoked", async () => {
             // Mock user selecting first option from list
-            const testFileName = testConst.normalPattern + ".EXT.CREATE.DATASET.TEST";
+            const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
 
@@ -137,7 +138,7 @@ describe("Extension Integration Tests", () => {
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
 
-            const testFileName = testConst.normalPattern + ".EXT.CREATE.DATASET.TEST";
+            const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
 
@@ -154,7 +155,7 @@ describe("Extension Integration Tests", () => {
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
 
-            const testParentName = testConst.normalPattern + ".EXT.SAMPLE.PDS";
+            const testParentName = pattern + ".EXT.SAMPLE.PDS";
             const testParentNode = new ZoweNode(testParentName, vscode.TreeItemCollapsibleState.Collapsed, sessionNode, session);
             await extension.createMember(testParentNode, testTree);
 
@@ -183,7 +184,7 @@ describe("Extension Integration Tests", () => {
 
     describe("Tests for Deleting Data Sets", () => {
         it("should delete a data set when zowe.deleteDataset is invoked", async () => {
-            const dataSetName = testConst.normalPattern + ".EXT.PUBLIC.DELETE.DATASET.TEST";
+            const dataSetName = pattern + ".EXT.PUBLIC.DELETE.DATASET.TEST";
             await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
             const testNode = new ZoweNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
 
@@ -201,12 +202,12 @@ describe("Extension Integration Tests", () => {
     describe("Enter Pattern", () => {
         it("should output data sets that match the user-provided pattern", async () => {
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
-            inputBoxStub.returns(testConst.normalPattern);
+            inputBoxStub.returns(pattern);
 
             await extension.enterPattern(sessionNode, testTree);
 
-            expect(testTree.mSessionNodes[1].pattern).to.equal(testConst.normalPattern);
-            expect(testTree.mSessionNodes[1].tooltip).to.equal(testConst.normalPattern.toUpperCase());
+            expect(testTree.mSessionNodes[1].pattern).to.equal(pattern);
+            expect(testTree.mSessionNodes[1].tooltip).to.equal(pattern);
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
             const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
@@ -227,7 +228,7 @@ describe("Extension Integration Tests", () => {
 
             await extension.enterPattern(sessionNode, testTree);
 
-            expect(testTree.mSessionNodes[1].pattern).to.equal(search);
+            expect(testTree.mSessionNodes[1].pattern).to.equal(search.toUpperCase());
             expect(testTree.mSessionNodes[1].tooltip).to.equal(search.toUpperCase());
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
@@ -253,7 +254,7 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
 
         it("should work when called from a saved search", async () => {
-            const searchPattern = testConst.normalPattern + ".search";
+            const searchPattern = pattern + ".search";
             const favoriteSearch = new ZoweNode("[" + testConst.profile.name + "]: " + searchPattern,
                 vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
             favoriteSearch.contextValue = "sessionf";
@@ -270,22 +271,22 @@ describe("Extension Integration Tests", () => {
 
             // reset tree
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
-            inputBoxStub.returns(testConst.normalPattern);
+            inputBoxStub.returns(pattern);
             await extension.enterPattern(sessionNode, testTree);
         }).timeout(TIMEOUT);
     });
 
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
-            const node = new ZoweNode(testConst.normalPattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
+            const node = new ZoweNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
             await extension.openPS(node);
             expect(path.relative(vscode.window.activeTextEditor.document.fileName,
-                extension.getDocumentFilePath(testConst.normalPattern + ".EXT.PS", node))).to.equal("");
-            expect(fs.existsSync(extension.getDocumentFilePath(testConst.normalPattern + ".EXT.PS", node))).to.equal(true);
+                extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal("");
+            expect(fs.existsSync(extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
         }).timeout(TIMEOUT);
 
         it("should display an error message when openPS is passed an invalid node", async () => {
-            const node = new ZoweNode(testConst.normalPattern + ".GARBAGE", vscode.TreeItemCollapsibleState.None, sessionNode, null);
+            const node = new ZoweNode(pattern + ".GARBAGE", vscode.TreeItemCollapsibleState.None, sessionNode, null);
             const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
             await expect(extension.openPS(node)).to.eventually.be.rejectedWith(Error);
 
@@ -362,23 +363,23 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
 
         it("should work when provided a valid Favorites list", async () => {
-            const favorites = ["[zm13]: " + testConst.normalPattern + ".EXT.PDS{pds}",
-                "[zm13]: " + testConst.normalPattern + ".EXT.PS{ds}",
-                "[zm13]: " + testConst.normalPattern + ".EXT.SAMPLE.PDS{pds}",
-                "[zm13]: " + testConst.normalPattern + ".EXT{session}"];
+            const favorites = ["[zm13]: " + pattern + ".EXT.PDS{pds}",
+                "[zm13]: " + pattern + ".EXT.PS{ds}",
+                "[zm13]: " + pattern + ".EXT.SAMPLE.PDS{pds}",
+                "[zm13]: " + pattern + ".EXT{session}"];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             await extension.initializeFavorites(testTree);
-            const favoritesArray = ["[zm13]: " + testConst.normalPattern + ".EXT.PDS",
-                "[zm13]: " + testConst.normalPattern + ".EXT.PS",
-                "[zm13]: " + testConst.normalPattern + ".EXT.SAMPLE.PDS",
-                "[zm13]: " + testConst.normalPattern + ".EXT"];
+            const favoritesArray = ["[zm13]: " + pattern + ".EXT.PDS",
+                "[zm13]: " + pattern + ".EXT.PS",
+                "[zm13]: " + pattern + ".EXT.SAMPLE.PDS",
+                "[zm13]: " + pattern + ".EXT"];
             expect(testTree.mFavorites.map((node) => node.mLabel)).to.deep.equal(favoritesArray);
         }).timeout(TIMEOUT);
 
         it("should show an error message when provided an invalid Favorites list", async () => {
-            const corruptedFavorite = testConst.normalPattern + ".EXT.ABCDEFGHI.PS[zm13]{ds}";
-            const favorites = [testConst.normalPattern + ".EXT.PDS[zm13]{pds}", corruptedFavorite];
+            const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[zm13]{ds}";
+            const favorites = [pattern + ".EXT.PDS[zm13]{pds}", corruptedFavorite];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
 

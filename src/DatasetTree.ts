@@ -97,7 +97,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         }).load(sessionName ? {name: sessionName} : {loadDefault: true});
 
         // If session is already added, do nothing
-        if (this.mSessionNodes.filter((tempNode) => tempNode.mLabel === zosmfProfile.profile.name).length) {
+        if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.profile.name)) {
             return;
         }
 
@@ -154,9 +154,9 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             }
         }
 
-        if (this.mFavorites.filter((tempNode) =>
+        if (!this.mFavorites.find((tempNode) =>
             (tempNode.mLabel === temp.mLabel) && (tempNode.contextValue === temp.contextValue)
-        ).length === 0) {
+        )) {
             this.mFavorites.push(temp);
             this.refresh();
             await this.updateFavorites();

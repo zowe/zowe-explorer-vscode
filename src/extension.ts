@@ -101,9 +101,9 @@ export async function addSession(datasetProvider: DatasetTree) {
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
-            !datasetProvider.mSessionNodes.filter((sessionNode) =>
+            !datasetProvider.mSessionNodes.find((sessionNode) =>
                 sessionNode.mLabel === profileName
-            ).length
+            )
         );
     } else {
         vscode.window.showInformationMessage("No profiles detected");
@@ -347,7 +347,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);
         const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
         await datasetProvider.addSession(session);
-        node = datasetProvider.mSessionNodes.filter((tempNode) => tempNode.mLabel === session)[0];
+        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);
     }
 
     // update the treeview with the new pattern
