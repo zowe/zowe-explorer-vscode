@@ -7,7 +7,7 @@ export const profile: IProfile = {
     user: "",
     pass: "",
     rejectUnauthorized: false,
-    name: ""
+    name: "" // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
 
 export const normalPattern = "";

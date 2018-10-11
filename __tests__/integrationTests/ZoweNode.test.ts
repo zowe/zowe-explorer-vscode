@@ -27,21 +27,22 @@ describe("ZoweNode Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
-    sessNode.pattern = testConst.normalPattern + ".PUBLIC";
+    const pattern = testConst.normalPattern.toUpperCase();
+    sessNode.pattern = pattern + ".PUBLIC";
 
     /*************************************************************************************************************
      * Creates an ZoweNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweNode is defined", async () => {
         // Tests empty PO node
-        const emptyPONode = new ZoweNode(testConst.normalPattern + ".TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const emptyPONode = new ZoweNode(pattern + ".TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
         expect(emptyPONode.mParent).toBeDefined();
 
         // Tests PS node
-        const PSNode = new ZoweNode(testConst.normalPattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
@@ -74,10 +75,10 @@ describe("ZoweNode Integration Tests", async () => {
 
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweNode[] = [
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null)
+            new ZoweNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null)
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -121,7 +122,7 @@ describe("ZoweNode Integration Tests", async () => {
     *************************************************************************************************************/
     it("Testing that getChildren works as expected on a PS node", async () => {
         // The method should return an empty array.
-        const PSNode = new ZoweNode(testConst.normalPattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
         let PSNodeChildren;
         try {
             PSNodeChildren = await PSNode.getChildren();
@@ -138,9 +139,9 @@ describe("ZoweNode Integration Tests", async () => {
      * Checks that getSession() returns the expected value
      *************************************************************************************************************/
     it("Testing that getSession() works as expected", async () => {
-        const PDSNode = new ZoweNode(testConst.normalPattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const PSNode = new ZoweNode(testConst.normalPattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const MemNode = new ZoweNode(testConst.normalPattern + ".TPDS(TCHILD1)", vscode.TreeItemCollapsibleState.None, PDSNode, null);
+        const PDSNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const MemNode = new ZoweNode(pattern + ".TPDS(TCHILD1)", vscode.TreeItemCollapsibleState.None, PDSNode, null);
 
         expect(sessNode.getSession()).toEqual(session);
         expect(PDSNode.getSession()).toEqual(session);

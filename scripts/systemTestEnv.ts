@@ -5,60 +5,61 @@ import { Session, Logger } from "@brightside/imperative";
 const session: Session = new Session({
   hostname: profile.host,
   user: profile.user,
-  password: profile.password,
+  password: profile.pass,
   port: profile.port,
-  rejectUnauthorized: profile.rejectUnauthorized
+  rejectUnauthorized: profile.rejectUnauthorized,
+  type: "basic"
 });
 
 /**
  * Creates the system test environment
  */
-export function createSystemTestEnvironment() {
-  createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.PDS`);
-  createMember(`${normalPattern}.EXT.PDS(MEMBER)`);
+export async function createSystemTestEnvironment() {
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.PDS`);
+  await createMember(`${normalPattern}.EXT.PDS(MEMBER)`);
 
-  createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.EXT.PS`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.EXT.PS`);
 
-  createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.SAMPLE.PDS`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.SAMPLE.PDS`);
 
-  createDataset(CreateDataSetTypeEnum.DATA_SET_BINARY, `${normalPattern}.PUBLIC.BIN`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.BIN`);
 
-  createDataset(CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.PUBLIC.TCLASSIC`);
-  createMember(`${normalPattern}.PUBLIC.TCLASSIC(NEW)`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.PUBLIC.TCLASSIC`);
+  await createMember(`${normalPattern}.PUBLIC.TCLASSIC(NEW)`);
 
-  createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.PUBLIC.TPDS`);
-  createMember(`${normalPattern}.PUBLIC.TPDS(TCHILD1)`);
-  createMember(`${normalPattern}.PUBLIC.TPDS(TCHILD2)`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.PUBLIC.TPDS`);
+  await createMember(`${normalPattern}.PUBLIC.TPDS(TCHILD1)`);
+  await createMember(`${normalPattern}.PUBLIC.TPDS(TCHILD2)`);
 
-  createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.TPS`);
+  await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.TPS`);
 }
 
 /**
  * Clean's up the system test environment
  */
-export function cleanupSystemTestEnvironment() {
-  deleteDataset(`${normalPattern}.EXT.PDS`);
-  deleteDataset(`${normalPattern}.EXT.PS`);
-  deleteDataset(`${normalPattern}.EXT.SAMPLE.PDS`);
-  deleteDataset(`${normalPattern}.PUBLIC.BIN`);
-  deleteDataset(`${normalPattern}.PUBLIC.TCLASSIC`);
-  deleteDataset(`${normalPattern}.PUBLIC.TPDS`);
-  deleteDataset(`${normalPattern}.PUBLIC.TPS`);
+export async function cleanupSystemTestEnvironment() {
+  await deleteDataset(`${normalPattern}.EXT.PDS`);
+  await deleteDataset(`${normalPattern}.EXT.PS`);
+  await deleteDataset(`${normalPattern}.EXT.SAMPLE.PDS`);
+  await deleteDataset(`${normalPattern}.PUBLIC.BIN`);
+  await deleteDataset(`${normalPattern}.PUBLIC.TCLASSIC`);
+  await deleteDataset(`${normalPattern}.PUBLIC.TPDS`);
+  await deleteDataset(`${normalPattern}.PUBLIC.TPS`);
 }
 
 
 function createDataset(type: CreateDataSetTypeEnum, name: string) {
   Logger.getConsoleLogger().info(`Creating Dataset: ${name}`);
-  Create.dataSet(session, type, name);
+  return Create.dataSet(session, type, name);
 }
 
 function createMember(name: string) {
   Logger.getConsoleLogger().info(`Creating DS member: ${name}`);
-  Upload.bufferToDataSet(session, Buffer.from(""), name);
+  return Upload.bufferToDataSet(session, Buffer.from(""), name);
 }
 
 function deleteDataset(name: string) {
   Logger.getConsoleLogger().info(`Deleting Dataset: ${name}`);
-  Delete.dataSet(session, name);
+  return Delete.dataSet(session, name);
 }
 
