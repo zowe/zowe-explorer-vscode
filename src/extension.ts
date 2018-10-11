@@ -619,7 +619,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     }
 
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf("\\") + 1, doc.fileName.indexOf("["));
+    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.indexOf("["));
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
