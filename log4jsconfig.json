@@ -1,0 +1,44 @@
+{
+	"log4jsConfig": {
+		"appenders": {
+			"default": {
+				"filename": "C:\\Users\\lyzla01/.zowe/imperative/logs/imperative.log",
+				"type": "fileSync",
+				"layout": {
+					"type": "pattern",
+					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+				}
+			},
+			"imperative": {
+				"filename": "C:\\Users\\lyzla01/.zowe/imperative/logs/imperative.log",
+				"type": "fileSync",
+				"layout": {
+					"type": "pattern",
+					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+				}
+			},
+			"app": {
+				"filename": "C:\\Users\\lyzla01/.zowe/zowe/logs/zowe.log",
+				"type": "fileSync",
+				"layout": {
+					"type": "pattern",
+					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+				}
+			}
+		},
+		"categories": {
+			"default": {
+				"appenders": ["default"],
+				"level": "DEBUG"
+			},
+			"imperative": {
+				"appenders": ["imperative"],
+				"level": "DEBUG"
+			},
+			"app": {
+				"appenders": ["app"],
+				"level": "DEBUG"
+			}
+		}
+	}
+}
