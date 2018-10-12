@@ -6,14 +6,12 @@ The Visual Studio Code (VSC) Extension for Zowe lets you interact with data sets
 
 The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
-
 ## Contents
 * [Configuration and usage tips](#configuration-and-usage-tips)
 * [Sample use cases](#sample-use-cases)
 * [Prerequisites](#prerequisites)
 * [Install Visual Studio Code Extension for Zowe from source](#install-to-vsc-from-source)
 * [Run system tests](#run-system-tests)
-
 
 ## Configuration and usage tips
 
