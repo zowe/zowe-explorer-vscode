@@ -28,6 +28,9 @@ export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "t
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
+    // Call deactivate before continuing
+    // this is to handle if the application crashed on a previous execution and
+    // VSC didn't get a chance to call our deactivate to cleanup.
     await deactivate();
     fs.mkdirSync(BRIGHTTEMPFOLDER);
 
