@@ -76,8 +76,8 @@ To test the extension, the mainframe data sets under `normalPattern` must match 
 
 The `./scripts` folder contains the following scripts to help you set up the required file structure. You can execute the scripts when the `ts-node` package is installed globally.
 
-- [create-env](./scripts/create-env.ts): Creates the proper data sets on the mainframe.
-- [clean-env](./scripts/clean-env.ts): Cleans up the data sets created on the mainframe.
+- [create-env](/scripts/create-env.ts): Creates the proper data sets on the mainframe.
+- [clean-env](/scripts/clean-env.ts): Cleans up the data sets created on the mainframe.
 
 **Note:** The scripts use the profile that you specified in `testProfileData`.
 
