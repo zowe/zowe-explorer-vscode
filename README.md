@@ -12,7 +12,7 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 * [Configuration and usage tips](#configuration-and-usage-tips)
 * [Sample use cases](#sample-use-cases)
 
-**Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [DEVELOPER_README](/docs/DEVELOPER_README.md) file that is located in the docs folder of this repository.
+**Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](./docs/README.md) file that is located in the docs folder of this repository.
 
 ## Prerequisites
 
