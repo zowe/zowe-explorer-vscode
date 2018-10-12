@@ -8,6 +8,7 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 
 
 ## Contents
+
 * [Configuration and usage tips](#configuration-and-usage-tips)
 * [Sample use cases](#sample-use-cases)
 * [Prerequisites](#prerequisites)
@@ -38,7 +39,7 @@ Review the following use cases to understand how to use this extension.
 5. From the drop-down, enter the patterns that you want to filter.  
   The data sets that match your pattern(s) display in the explorer tree.
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can prepend or append any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern. 
+**Tip:** To provide multiple filters, separate entries with a comma. You can prepend or append any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
 ![Enter Pattern](https://github.com/mheuzey/temp/blob/master/resources/gifs/patterns.gif?raw=true "Enter Pattern")
 <br /><br />
