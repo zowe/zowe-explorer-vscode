@@ -11,7 +11,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 You can build the extension (VSIX file) from this source repository and install it to VSC.  
 
-**Note:** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
+**Important!** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
 
 ### Build the extension
 
