@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -388,14 +388,15 @@
     "vscode:prepublish": "npm run build",
     "build": "npm run license && tsc --pretty",
     "watch": "tsc -watch --pretty",
-    "rebuild": "electron-rebuild -f -w vscode-Zowe-extension --version 2.0.5",
-    "postinstall": "node ./node_modules/vscode/bin/install && npm run rebuild",
+    "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
     "test": "jest --coverage",
     "package": "vsce package",
     "license": "node ./scripts/license.js"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
@@ -404,21 +405,19 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
-    "electron-rebuild": "^1.7.3",
     "expect": "^23.4.0",
     "glob": "^7.1.2",
     "jest": "^22.4.4",
     "jest-html-reporter": "^2.4.0",
+    "jsdom": "11.11.0",
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
     "vsce": "^1.46.0"
   },
   "dependencies": {
-    "@brightside/core": "^1.1.0-next.201808072010",
-    "@brightside/imperative": "^1.1.0-next.201808211738",
-    "@types/chai": "^4.1.4",
-    "@types/chai-as-promised": "^7.1.0",
+    "@brightside/core": "2.0.0-next.201810091514",
+    "@brightside/imperative": "2.0.0-next.201810081506",
     "jsdoc": "^3.5.5",
     "vscode": "^1.1.6"
   },

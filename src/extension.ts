@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, CredentialManagerFactory, DefaultCredentialManager, Session } from "@brightside/imperative";
+import { CliProfileManager, Logger } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 
 // Globals
@@ -28,13 +28,20 @@ export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "t
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
+    // Call deactivate before continuing
+    // this is to handle if the application crashed on a previous execution and
+    // VSC didn't get a chance to call our deactivate to cleanup.
     await deactivate();
     fs.mkdirSync(BRIGHTTEMPFOLDER);
 
     let datasetProvider: DatasetTree;
     try {
-        // Initialize the secure credential manager
-        await CredentialManagerFactory.initialize(DefaultCredentialManager, "@brightside/core");
+        // Initialize Imperative Logger
+        const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
+        loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
+        loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
+        loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
+        Logger.initLogger(loggerConfig);
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
@@ -92,7 +99,7 @@ export async function addSession(datasetProvider: DatasetTree) {
     let profileManager;
     try {
         profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
             type: "zosmf"
         });
     } catch (err) {
@@ -104,9 +111,9 @@ export async function addSession(datasetProvider: DatasetTree) {
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
-            !datasetProvider.mSessionNodes.filter((sessionNode) =>
+            !datasetProvider.mSessionNodes.find((sessionNode) =>
                 sessionNode.mLabel === profileName
-            ).length
+            )
         );
     } else {
         vscode.window.showInformationMessage("No profiles detected");
@@ -350,7 +357,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);
         const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
         await datasetProvider.addSession(session);
-        node = datasetProvider.mSessionNodes.filter((tempNode) => tempNode.mLabel === session)[0];
+        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);
     }
 
     // update the treeview with the new pattern
@@ -409,7 +416,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
         if (favoriteDataSetPattern.test(line)) {
             const sesName = line.substring(1, line.lastIndexOf("]"));
             const zosmfProfile = await new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf"
             }).load({name: sesName});
 
@@ -606,14 +613,14 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
             type: "zosmf"
         }).load({name: sesName});
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
 
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf("\\") + 1, doc.fileName.indexOf("["));
+    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.indexOf("["));
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server

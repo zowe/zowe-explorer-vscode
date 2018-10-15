@@ -16,11 +16,9 @@ import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
-import * as extension from "../../src/extension";
 import * as testConst from "../../resources/testProfileData";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import * as fs from "fs";
 
 declare var it: any;
 
@@ -32,7 +30,8 @@ describe("DatasetTree Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
-    sessNode.pattern = testConst.normalPattern + ".PUBLIC";
+    const pattern = testConst.normalPattern.toUpperCase();
+    sessNode.pattern = pattern + ".PUBLIC";
     const testTree = new DatasetTree();
     testTree.mSessionNodes.splice(-1, 0, sessNode);
     const oldSettings = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites");
@@ -68,10 +67,10 @@ describe("DatasetTree Integration Tests", async () => {
         const PDSChildren = await testTree.getChildren(sessChildren[2]);
 
         const sampleRChildren: ZoweNode[] = [
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(testConst.normalPattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
         ];
 
         sampleRChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]]};
@@ -131,7 +130,7 @@ describe("DatasetTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests that getParent returns the correct ZoweNode when called on a non-rootNode ZoweNode", async () => {
         // Creating structure of files and folders under BRTVS99 profile
-        const sampleChild1: ZoweNode = new ZoweNode(testConst.normalPattern + ".TPDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const sampleChild1: ZoweNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         const parent1 = testTree.getParent(sampleChild1);
 
@@ -139,7 +138,7 @@ describe("DatasetTree Integration Tests", async () => {
         // of the rootNode, it should return null
         expect(parent1).toBe(sessNode);
 
-        const sampleChild2: ZoweNode = new ZoweNode(testConst.normalPattern + ".TPDS(TCHILD1)",
+        const sampleChild2: ZoweNode = new ZoweNode(pattern + ".TPDS(TCHILD1)",
             vscode.TreeItemCollapsibleState.None, sampleChild1, null);
         const parent2 = testTree.getParent(sampleChild2);
 
@@ -169,7 +168,7 @@ describe("DatasetTree Integration Tests", async () => {
 
     describe("addFavorite()", () => {
         it("should add the selected data set to the treeView", async () => {
-            const favoriteNode = new ZoweNode(testConst.normalPattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+            const favoriteNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
             const len = testTree.mFavorites.length;
             await testTree.addFavorite(favoriteNode);
             const filtered = testTree.mFavorites.filter((temp) => temp.mLabel ===
@@ -196,7 +195,7 @@ describe("DatasetTree Integration Tests", async () => {
 
     describe("removeFavorite()", () => {
         it("should remove the selected favorite data set from the treeView", () => {
-            const favoriteNode = new ZoweNode(testConst.normalPattern + ".TPDS",
+            const favoriteNode = new ZoweNode(pattern + ".TPDS",
                 vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
             testTree.addFavorite(favoriteNode);
             const len = testTree.mFavorites.length;
