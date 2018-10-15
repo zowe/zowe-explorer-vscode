@@ -42,7 +42,6 @@ export async function activate(context: vscode.ExtensionContext) {
         loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
         loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
         Logger.initLogger(loggerConfig);
-    
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
