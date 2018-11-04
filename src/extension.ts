@@ -76,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
-    vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
             const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
@@ -116,11 +116,15 @@ export async function submitJcl(datasetProvider: DatasetTree) {
         }).load({name: sesName});
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
-    let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
-    vscode.window.showInformationMessage("Job submitted " + job.jobid);
+    try {
+        let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
+        vscode.window.showInformationMessage("Job submitted " + job.jobid);
+    } catch (error) {
+        vscode.window.showErrorMessage("Job submission failed\n" + error.message);
+    }
 }
 
-export async function submitMember(node: ZoweNode, datasetProvider: DatasetTree) {
+export async function submitMember(node: ZoweNode) {
     let label;
     switch (node.mParent.contextValue) {
         case ("favorite"):
@@ -136,8 +140,8 @@ export async function submitMember(node: ZoweNode, datasetProvider: DatasetTree)
             label = node.mParent.mLabel + "(" + node.mLabel + ")";
             break;
         default:
-            vscode.window.showErrorMessage("safeSave() called from invalid node.");
-            throw Error("safeSave() called from invalid node.");
+            vscode.window.showErrorMessage("submitMember() called from invalid node.");
+            throw Error("submitMember() called from invalid node.");
     }
     try {
         let job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
