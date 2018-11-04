@@ -126,6 +126,10 @@
       {
         "command": "zowe.submitJcl",
         "title": "Submit JCL"
+      },
+      {
+        "command": "zowe.submitMember",
+        "title": "Submit Job"
       }
     ],
     "menus": {
@@ -159,6 +163,10 @@
         {
           "when": "viewItem == member",
           "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.submitMember"
         },
         {
           "when": "viewItem == memberf",
