@@ -97,10 +97,11 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function submitJcl(datasetProvider: DatasetTree) {
     let doc = vscode.window.activeTextEditor.document;
     // get session name
-    let sesName = doc.fileName.substring(doc.fileName.indexOf("[") + 1, doc.fileName.lastIndexOf("]"));
+    const sessionregex = /\[(.*)(\])(?!.*\])/g
+    let sesName = sessionregex.exec(doc.fileName)[1];
     if (sesName.includes("[")) {
-        // if saving from favorites, sesName might be the favorite node, so extract further
-        sesName = sesName.substring(sesName.indexOf("[") + 1, sesName.indexOf("]"));
+        // if submitting from favorites, sesName might be the favorite node, so extract further
+        sesName = sessionregex.exec(sesName)[1];
     }
 
     // get session from session name
@@ -109,7 +110,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     if (sesNode) {
         documentSession = sesNode.getSession();
     } else {
-        // if saving from favorites, a session might not exist for this node
+        // if submitting from favorites, a session might not exist for this node
         const zosmfProfile = await new CliProfileManager({
             profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
             type: "zosmf"
@@ -124,14 +125,21 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     }
 }
 
+/**
+ * Submit the selected dataset member as a Job.
+ * 
+ * @export
+ * @param node The dataset member
+ */
 export async function submitMember(node: ZoweNode) {
+    const labelregex = /\: (.+)/g;
     let label;
     switch (node.mParent.contextValue) {
         case ("favorite"):
-            label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+            label = labelregex.exec(node.mLabel)[1];
             break;
         case ("pdsf"):
-            label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+            label = labelregex.exec(node.mParent.mLabel)[1]+"("+node.mLabel+")";
             break;
         case ("session"):
             label = node.mLabel;

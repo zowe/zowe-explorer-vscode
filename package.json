@@ -125,7 +125,7 @@
       },
       {
         "command": "zowe.submitJcl",
-        "title": "Submit JCL"
+        "title": "Zowe: Submit JCL"
       },
       {
         "command": "zowe.submitMember",
