@@ -75,6 +75,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
     vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
+    vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
+    vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
             const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
@@ -84,6 +86,77 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
     });
+}
+
+/**
+ * Submit the contents of the editor as JCL. 
+ * 
+ * @export
+ * @param {DatasetTree} datasetProvider - our DatasetTree object
+ */
+export async function submitJcl(datasetProvider: DatasetTree) {
+    let doc = vscode.window.activeTextEditor.document;
+    // get session name
+    const sessionregex = /\[(.*)(\])(?!.*\])/g
+    let sesName = sessionregex.exec(doc.fileName)[1];
+    if (sesName.includes("[")) {
+        // if submitting from favorites, sesName might be the favorite node, so extract further
+        sesName = sessionregex.exec(sesName)[1];
+    }
+
+    // get session from session name
+    let documentSession;
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.mLabel === sesName);
+    if (sesNode) {
+        documentSession = sesNode.getSession();
+    } else {
+        // if submitting from favorites, a session might not exist for this node
+        const zosmfProfile = await new CliProfileManager({
+            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            type: "zosmf"
+        }).load({name: sesName});
+        documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+    }
+    try {
+        let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
+        vscode.window.showInformationMessage("Job submitted " + job.jobid);
+    } catch (error) {
+        vscode.window.showErrorMessage("Job submission failed\n" + error.message);
+    }
+}
+
+/**
+ * Submit the selected dataset member as a Job.
+ * 
+ * @export
+ * @param node The dataset member
+ */
+export async function submitMember(node: ZoweNode) {
+    const labelregex = /\: (.+)/g;
+    let label;
+    switch (node.mParent.contextValue) {
+        case ("favorite"):
+            label = labelregex.exec(node.mLabel)[1];
+            break;
+        case ("pdsf"):
+            label = labelregex.exec(node.mParent.mLabel)[1]+"("+node.mLabel+")";
+            break;
+        case ("session"):
+            label = node.mLabel;
+            break;
+        case ("pds"):
+            label = node.mParent.mLabel + "(" + node.mLabel + ")";
+            break;
+        default:
+            vscode.window.showErrorMessage("submitMember() called from invalid node.");
+            throw Error("submitMember() called from invalid node.");
+    }
+    try {
+        let job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
+        vscode.window.showInformationMessage("Job submitted " + job.jobid);
+    } catch (error) {
+        vscode.window.showErrorMessage("Job submission failed\n" + error.message);
+    }
 }
 
 /**
