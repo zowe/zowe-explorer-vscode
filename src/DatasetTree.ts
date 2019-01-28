@@ -97,7 +97,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         }).load(sessionName ? {name: sessionName} : {loadDefault: true});
 
         // If session is already added, do nothing
-        if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.profile.name)) {
+        if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
             return;
         }
 
@@ -105,7 +105,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
 
         // Creates ZoweNode to track new session and pushes it to mSessionNodes
-        const node = new ZoweNode(zosmfProfile.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
         node.contextValue = "session";
         this.mSessionNodes.push(node);
         this.refresh();

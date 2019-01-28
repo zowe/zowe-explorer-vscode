@@ -3,8 +3,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## 0.8.1
-- Fixed for compatibility with the current version of the Zowe CLI. IF you are having issues retrieving user name or password using this extension,
+## 0.8.3
+ - Fixed an issue where labels did not correctly display the name of the Zowe CLI profile
+## 0.8.2
+- Fixed for compatibility with the current version of the Zowe CLI. If you are having issues retrieving user name or password using this extension,
 please update your zowe CLI to the latest available version, recreate your profiles, and update this extension. That should solve any issues you are having.
 
 ## 0.8.0
