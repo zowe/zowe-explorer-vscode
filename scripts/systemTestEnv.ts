@@ -5,7 +5,7 @@ import { Session, Logger } from "@brightside/imperative";
 const session: Session = new Session({
   hostname: profile.host,
   user: profile.user,
-  password: profile.pass,
+  password: profile.password,
   port: profile.port,
   rejectUnauthorized: profile.rejectUnauthorized,
   type: "basic"
