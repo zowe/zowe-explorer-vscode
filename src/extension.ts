@@ -15,11 +15,14 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, Logger, Imperative } from "@brightside/imperative";
+import { CliProfileManager, Logger, AbstractSession } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
+import { ZosJobsProvider, Job } from "./zosjobs";
+import { ZosSpoolProvider } from "./zosspool";
+import { IJobFile } from "@brightside/core";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -56,12 +59,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log = Logger.getAppLogger();
         log.debug("Initialized logger from VSCode extension");
-
-        // imperative uses the process.mainmodule to find out where we're calling from and resolve command definition
-        // glob paths. So we need to mock it here as the index file of brightside core
-        (process.mainModule as any) = {filename: require.resolve("@brightside/core")};
-        await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
@@ -128,6 +125,50 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
+    
+    let jobsProvider: ZosJobsProvider;
+    try {
+        // Initialize dataset provider with the created session and the selected pattern
+        jobsProvider = new ZosJobsProvider();
+        await jobsProvider.addSession();
+    } catch (err) {
+        vscode.window.showErrorMessage(err.message);
+    }
+
+    let spoolProvider: ZosSpoolProvider = new ZosSpoolProvider();
+
+    context.subscriptions.push(vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider }));
+    context.subscriptions.push(vscode.window.createTreeView("zowe.spool", { treeDataProvider: spoolProvider }));
+    vscode.commands.registerCommand("zowe.zosJobsSelectjob", (job) => {
+        spoolProvider.setJob(job);
+    });
+    vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
+        getSpoolContent(session, spool);
+    });
+    vscode.commands.registerCommand("zowe.deleteJob", (job) => {
+        deleteJob(job);
+    });
+    vscode.commands.registerCommand("zowe.runModifyCommand", (job) => {
+        modifyCommand(job);
+    });
+    vscode.commands.registerCommand("zowe.runStopCommand", (job) => {
+        stopCommand(job);
+    });
+    vscode.commands.registerCommand("zowe.refreshServer", (node) => {
+        node.dirty = true;
+        jobsProvider.refresh();
+    });
+    vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
+        jobsProvider.mSessionNodes.forEach((node) => node.dirty = true);
+        jobsProvider.refresh();
+    });
+    vscode.commands.registerCommand("zowe.addJobsSession", () => addJobsSession(jobsProvider));
+    vscode.commands.registerCommand("zowe.setOwner", (node) => {
+        setOwner(node, jobsProvider);
+    });
+    vscode.commands.registerCommand("zowe.setPrefix", (node) => {
+        setPrefix(node, jobsProvider);
+    });
 }
 
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
@@ -1030,5 +1071,96 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         log.error("Error encountered when opening USS file: " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
         throw (err);
+    }
+}
+
+export async function modifyCommand(job: Job) {
+    try {
+        let command = await vscode.window.showInputBox({ prompt: "Modify Command" });
+        if (command !== undefined) {
+            let response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
+            vscode.window.showInformationMessage(`Command response: ${response.commandResponse}`);
+        }
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
+    }
+}
+
+export async function stopCommand(job: Job) {
+    try {
+        let response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
+        vscode.window.showInformationMessage(`Command response: ${response.commandResponse}`);
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
+    }
+}
+
+export async function deleteJob(job: Job) {
+    try {
+        await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
+        vscode.window.showInformationMessage(`Job ${job.job.jobname}(${job.job.jobid} deleted)`);
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
+    }
+}
+
+export async function getSpoolContent(session: AbstractSession, spool: IJobFile) {
+    try {
+        let spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
+        const document = await vscode.workspace.openTextDocument({ content: spoolContent });
+        await vscode.window.showTextDocument(document);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export async function setOwner(job: Job, datasetProvider: ZosJobsProvider) {
+    let newOwner = await vscode.window.showInputBox({ prompt: "Owner" });
+    job.owner = newOwner;
+    job.dirty = true;
+    datasetProvider.refresh();
+}
+
+export async function setPrefix(job: Job, datasetProvider: ZosJobsProvider) {
+    let newPrefix = await vscode.window.showInputBox({ prompt: "Prefix" });
+    job.prefix = newPrefix;
+    job.dirty = true;
+    datasetProvider.refresh();
+}
+
+export async function addJobsSession(datasetProvider: ZosJobsProvider) {
+    let profileManager;
+    try {
+        profileManager = await new CliProfileManager({
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+            type: "zosmf"
+        });
+    } catch (err) {
+        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);
+        throw (err);
+    }
+
+    let profileNamesList = profileManager.getAllProfileNames();
+    if (profileNamesList) {
+        profileNamesList = profileNamesList.filter((profileName) =>
+            // Find all cases where a profile is not already displayed
+            !datasetProvider.mSessionNodes.find((sessionNode) =>
+                sessionNode.mLabel === profileName
+            )
+        );
+    } else {
+        vscode.window.showInformationMessage("No profiles detected");
+        return;
+    }
+    if (profileNamesList.length) {
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: "Select a Profile to Add to the Data Set Explorer",
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
+        await datasetProvider.addSession(chosenProfile);
+    } else {
+        vscode.window.showInformationMessage("No more profiles to add");
     }
 }

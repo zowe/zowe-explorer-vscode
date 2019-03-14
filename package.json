@@ -30,6 +30,15 @@
   ],
   "main": "./out/src/extension",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "zoweZosJobs",
+          "title": "z/OS Jobs",
+          "icon": "resources/zowe.svg"
+        }
+      ]
+    },
     "views": {
       "explorer": [
         {
@@ -39,6 +48,16 @@
         {
           "id": "zowe.uss.explorer",
           "name": "Unix System Services (USS)"
+        }
+      ],
+      "zoweZosJobs": [
+        {
+          "id": "zowe.jobs",
+          "name": "Jobs"
+        },
+        {
+          "id": "zowe.spool",
+          "name": "Spool Files"
         }
       ]
     },
@@ -198,6 +217,54 @@
       {
         "command": "zowe.uss.text",
         "title": "Toggle Text"
+      },
+      {
+        "command": "zowe.deleteJob",
+        "title": "Delete Job",
+        "icon": {
+          "dark": "media/trash-dark.svg",
+          "light": "media/trash-light.svg"
+        }
+      },
+      {
+        "command": "zowe.runModifyCommand",
+        "title": "Issue Modify command"
+      },
+      {
+        "command": "zowe.runStopCommand",
+        "title": "Issue Stop command"
+      },
+      {
+        "command": "zowe.setOwner",
+        "title": "Set Owner"
+      },
+      {
+        "command": "zowe.setPrefix",
+        "title": "Set Job Prefix"
+      },
+      {
+        "command": "zowe.refreshJobsServer",
+        "title": "Refresh",
+        "icon": {
+          "dark": "media/refresh-dark.svg",
+          "light": "media/refresh-light.svg"
+        }
+      },
+      {
+        "command": "zowe.refreshAllJobs",
+        "title": "Refresh",
+        "icon": {
+          "dark": "media/refresh-dark.svg",
+          "light": "media/refresh-light.svg"
+        }
+      },
+      {
+        "command": "zowe.addJobsSession",
+        "title": "Add Profile",
+        "icon": {
+          "light": "media/plus-light.svg",
+          "dark": "media/plus-dark.svg"
+        }
       }
     ],
     "menus": {
@@ -219,7 +286,16 @@
         },
         {
           "when": "view == zowe.uss.explorer",
-          "command": "zowe.uss.addSession",
+          "command": "zowe.uss.addSession"
+        },
+        {
+          "when": "view == zowe.jobs",
+          "command": "refresh-all",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.jobs",
+          "command": "add-session",
           "group": "navigation"
         }
       ],
@@ -375,6 +451,32 @@
         {
           "when": "viewItem == uss_session",
           "command": "zowe.uss.removeSession"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.refreshJobsServer",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.setOwner"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.setPrefix"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.deleteJob",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.runModifyCommand"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.runStopCommand"
         }
       ],
       "commandPalette": [
@@ -568,7 +670,8 @@
     },
     "globals": {
       "ts-jest": {
-        "tsConfigFile": "tsconfig.json"
+        "tsConfigFile": "tsconfig.json",
+        "diagnostics": false
       }
     },
     "testMatch": [
