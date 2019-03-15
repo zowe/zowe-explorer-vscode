@@ -112,7 +112,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     } else {
         // if submitting from favorites, a session might not exist for this node
         const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".brightside", "profiles"),
+            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
             type: "zosmf"
         }).load({name: sesName});
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
