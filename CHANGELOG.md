@@ -3,6 +3,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.8.4
+ - Fixed an issue where the submit JCL function was looking for user profiles in the wrong directory
 ## 0.8.3
  - Fixed an issue where labels did not correctly display the name of the Zowe CLI profile
 ## 0.8.2
