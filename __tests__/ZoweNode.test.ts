@@ -131,9 +131,10 @@ describe("Unit Tests (Jest)", async () => {
     it("Checks that passing a session node that is not dirty the getChildren() method is exited early", async () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        const infoChild = new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null, true);
         rootNode.contextValue = "session";
         rootNode.dirty = false;
-        await expect(await rootNode.getChildren()).toEqual([]);
+        await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
     /*************************************************************************************************************
@@ -142,8 +143,9 @@ describe("Unit Tests (Jest)", async () => {
     it("Checks that passing a session node with no hlq the getChildren() method is exited early", async () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        const infoChild = new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null, true);
         rootNode.contextValue = "session";
-        await expect(await rootNode.getChildren()).toEqual([]);
+        await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
     /*************************************************************************************************************
