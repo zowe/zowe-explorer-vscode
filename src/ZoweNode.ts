@@ -35,9 +35,11 @@ export class ZoweNode extends vscode.TreeItem {
      * @param {Session} session
      */
     constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweNode, private session: Session) {
+                public mParent: ZoweNode, private session: Session, information: boolean = false) {
         super(mLabel, mCollapsibleState);
-        if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
+        if (information) {
+            this.contextValue = "information";
+        } else if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "pds";
         } else if (mParent && mParent.mParent !== null) {
             this.contextValue = "member";
@@ -52,9 +54,14 @@ export class ZoweNode extends vscode.TreeItem {
      * @returns {Promise<ZoweNode[]>}
      */
     public async getChildren(): Promise<ZoweNode[]> {
-        if ((!this.pattern && this.contextValue === "session") || this.contextValue === "ds" || this.contextValue === "member") {
+        if ((!this.pattern && this.contextValue === "session")){ 
+            return [new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, this, null, true)];
+        }
+
+        if (this.contextValue === "ds" || this.contextValue === "member" || this.contextValue === "information") {
             return [];
         }
+
         if (!this.dirty || this.mLabel === "Favorites") {
             return this.children;
         }
@@ -118,7 +125,11 @@ export class ZoweNode extends vscode.TreeItem {
         if (this.contextValue === "session") {
             this.dirty = false;
         }
-        return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
+        if(Object.keys(elementChildren).length === 0) {
+            return this.children = [new ZoweNode("No datasets found", vscode.TreeItemCollapsibleState.None, this, null, true)];
+        } else {
+            return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
+        }
     }
 
     /**
