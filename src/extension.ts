@@ -35,6 +35,11 @@ export async function activate(context: vscode.ExtensionContext) {
     fs.mkdirSync(BRIGHTTEMPFOLDER);
 
     let datasetProvider: DatasetTree;
+
+    // Initialize dataset provider with the created session and the selected pattern
+    datasetProvider = new DatasetTree();
+    await datasetProvider.addSession();
+
     try {
         // Initialize Imperative Logger
         const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
@@ -42,10 +47,6 @@ export async function activate(context: vscode.ExtensionContext) {
         loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
         loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
         Logger.initLogger(loggerConfig);
-
-        // Initialize dataset provider with the created session and the selected pattern
-        datasetProvider = new DatasetTree();
-        await datasetProvider.addSession();
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
     }

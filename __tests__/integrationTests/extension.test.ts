@@ -267,7 +267,7 @@ describe("Extension Integration Tests", () => {
             const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const childrenFromTree = await sessionNode.getChildren();
-            expect(childrenFromTree).to.deep.equal([]);
+            expect(childrenFromTree[0].children).to.deep.equal([]);
 
             // reset tree
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
