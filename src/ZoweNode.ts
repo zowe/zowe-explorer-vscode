@@ -11,7 +11,7 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session, AbstractSession } from "@brightside/imperative";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -84,7 +84,7 @@ export class ZoweNode extends vscode.TreeItem {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
+                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true})); 
                 }
             } else {
                 responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));

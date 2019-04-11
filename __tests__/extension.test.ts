@@ -15,9 +15,11 @@ jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 jest.mock("../src/DatasetTree");
+jest.mock("../src/USSTree");
 import * as vscode from "vscode";
 import * as treeMock from "../src/DatasetTree";
-// TODO shouldn't ZoweNode be mocked?
+import * as treeUSSMock from "../src/USSTree";
+import { ZoweUSSNode } from "../src/ZoweUSSNode";
 import { ZoweNode } from "../src/ZoweNode";
 import * as brtimperative from "@brightside/imperative";
 import * as extension from "../src/extension";
@@ -39,6 +41,11 @@ describe("Extension Unit Tests", async () => {
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
     sessNode.pattern = "test hlq";
+
+    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    ussNode.contextValue = "uss_session";
+    ussNode.fullPath = "/u/myuser";
+
 
     const mkdirSync = jest.fn();
     const getAllProfileNames = jest.fn();
@@ -67,15 +74,21 @@ describe("Extension Unit Tests", async () => {
     const dataSetCreate = jest.fn();
     const Download = jest.fn();
     const dataSet = jest.fn();
+    const ussFile = jest.fn();
     const List = jest.fn();
+    const fileToUSSFile = jest.fn();
     const dataSetList = jest.fn();
+    const fileList = jest.fn();
     const openTextDocument = jest.fn();
     const showTextDocument = jest.fn();
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const mockAddSession = jest.fn();
+    const mockAddUSSSession = jest.fn();
     const mockRefresh = jest.fn();
+    const mockUSSRefresh = jest.fn();
     const mockGetChildren = jest.fn();
+    const mockGetUSSChildren = jest.fn();
     const mockRemoveFavorite = jest.fn();
     const getConfiguration = jest.fn();
     const onDidChangeConfiguration = jest.fn();
@@ -83,12 +96,17 @@ describe("Extension Unit Tests", async () => {
     const activeTextEditor = jest.fn();
     const document = jest.fn();
     const save = jest.fn();
+    const isFile = jest.fn();
     const load = jest.fn();
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
     const CliProfileManager = jest.fn().mockImplementation(() => {
         return {getAllProfileNames, load};
     });
     const DatasetTree = jest.fn().mockImplementation(() => {
-        // tslint:disable-next-line:max-line-length
         return {
             mSessionNodes: [],
             mFavorites: [],
@@ -98,7 +116,26 @@ describe("Extension Unit Tests", async () => {
             removeFavorite: mockRemoveFavorite
         };
     });
-
+    const USSTree = jest.fn().mockImplementation(() => {
+        return {
+            mSessionNodes: [],
+            addSession: mockAddUSSSession,
+            refresh: mockUSSRefresh,
+            getChildren: mockGetUSSChildren,
+        };
+    });
+    const lstatSync = jest.fn().mockImplementation(() => {
+        return { lstat };
+    });
+    const lstat = jest.fn().mockImplementation(() => {
+        return { isFile };
+    });
+    let withProgress = jest.fn().mockImplementation(() => {
+        return { 
+            location: 15,
+            title: "Saving file..."
+          };
+    });
     enum CreateDataSetTypeEnum {
         DATA_SET_BINARY = 0,
         DATA_SET_C = 1,
@@ -111,10 +148,15 @@ describe("Extension Unit Tests", async () => {
     testTree.mSessionNodes = [];
     testTree.mSessionNodes.push(sessNode);
 
+    const testUSSTree = USSTree();
+    testUSSTree.mSessionNodes = [];
+    testUSSTree.mSessionNodes.push(ussNode);
+
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode, "Uri", {value: Uri});
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     // Object.defineProperty(Uri, "parse", { value: parse });
     // Object.defineProperty(parse, "path", { value: pathMock });
     Object.defineProperty(vscode.commands, "registerCommand", {value: registerCommand});
@@ -138,27 +180,40 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(brightside, "Upload", {value: Upload});
     Object.defineProperty(Upload, "bufferToDataSet", {value: bufferToDataSet});
     Object.defineProperty(Upload, "pathToDataSet", {value: pathToDataSet});
+    Object.defineProperty(Upload, "fileToUSSFile", { value: fileToUSSFile });
     Object.defineProperty(brightside, "Create", {value: Create});
     Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
     Object.defineProperty(brightside, "List", {value: List});
     Object.defineProperty(List, "dataSet", {value: dataSetList});
+    Object.defineProperty(List, "fileList", {value: fileList});
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(brightside, "Download", {value: Download});
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
+    Object.defineProperty(treeUSSMock, "USSTree", {value: USSTree});
     Object.defineProperty(brightside, "Delete", {value: Delete});
     Object.defineProperty(Delete, "dataSet", {value: delDataset});
     Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
-
+    Object.defineProperty(fs, "lstatSync", { value: lstatSync });
+    Object.defineProperty(Download, "ussFile", { value: ussFile });
 
     it("Testing that activate correctly executes", async () => {
-        createTreeView.mockReturnValueOnce("testDisposable");
+        createTreeView.mockReturnValue("testDisposable");
+
         existsSync.mockReturnValueOnce(true);
+        //existsSync.mockReturnValueOnce(true);
+        //existsSync.mockReturnValueOnce(false);
         readdirSync.mockReturnValueOnce(["firstFile", "secondFile"]);
+        isFile.mockReturnValueOnce(true);
+        readdirSync.mockReturnValueOnce(["thirdFile"]);
+        readdirSync.mockReturnValue([]);
+        lstatSync.mockReturnValue(lstat);
+        isFile.mockReturnValueOnce(false);
         rmdirSync.mockImplementationOnce(() => {
             throw Error;
         });
@@ -203,11 +258,11 @@ describe("Extension Unit Tests", async () => {
         };
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
         expect(mkdirSync.mock.calls.length).toBe(1);
-        expect(createTreeView.mock.calls.length).toBe(1);
+        expect(createTreeView.mock.calls.length).toBe(2);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
+        expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         expect(createTreeView.mock.calls[0][1]).toEqual({
             treeDataProvider:
-            // tslint:disable-next-line:max-line-length
                 {
                     addSession: mockAddSession,
                     mSessionNodes: [],
@@ -217,7 +272,16 @@ describe("Extension Unit Tests", async () => {
                     removeFavorite: mockRemoveFavorite
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(18);
+        expect(createTreeView.mock.calls[1][1]).toEqual({
+            treeDataProvider:
+                {
+                    mSessionNodes: [],
+                    addSession: mockAddUSSSession,
+                    refresh: mockUSSRefresh,
+                    getChildren: mockGetUSSChildren,
+                }
+        });
+        expect(registerCommand.mock.calls.length).toBe(24);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");
@@ -250,21 +314,36 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[14][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[15][0]).toBe("zowe.removeSavedSearch");
         expect(registerCommand.mock.calls[15][1]).toBeInstanceOf(Function);
-        expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls.length).toBe(1);
+        expect(registerCommand.mock.calls[16][0]).toBe("zowe.submitJcl");
+        expect(registerCommand.mock.calls[16][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[17][0]).toBe("zowe.submitMember");
+        expect(registerCommand.mock.calls[17][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[18][0]).toBe("zowe.uss.addSession");
+        expect(registerCommand.mock.calls[18][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[19][0]).toBe("zowe.uss.refreshAll");
+        expect(registerCommand.mock.calls[19][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[20][0]).toBe("zowe.uss.refreshUSS");
+        expect(registerCommand.mock.calls[20][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[21][0]).toBe("zowe.uss.fullPath");
+        expect(registerCommand.mock.calls[21][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[22][0]).toBe("zowe.uss.ZoweUSSNode.open");
+        expect(registerCommand.mock.calls[22][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.removeSession");
+        expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);               
+        expect(onDidSaveTextDocument.mock.calls.length).toBe(2);
+        expect(existsSync.mock.calls.length).toBe(2);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(readdirSync.mock.calls.length).toBe(1);
-        expect(readdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(unlinkSync.mock.calls.length).toBe(2);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/firstFile"));
-        expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile"));
-        expect(rmdirSync.mock.calls.length).toBe(2);
-        expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        // expect(readdirSync.mock.calls.length).toBe(1);
+        // expect(readdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        // expect(unlinkSync.mock.calls.length).toBe(2);
+        // expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/firstFile"));
+        // expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile"));
+        // expect(rmdirSync.mock.calls.length).toBe(2);
+        // expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         // expect(parse.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(2); // TODO should be 1
         expect(showErrorMessage.mock.calls[0][0]).toBe("Cannot read property 'initLogger' of undefined"); // TODO
         expect(showErrorMessage.mock.calls[1][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
-
 
         existsSync.mockReset();
         readdirSync.mockReset();
@@ -673,13 +752,13 @@ describe("Extension Unit Tests", async () => {
 
         testResponse.apiResponse.items = ["Item1"];
         dataSetList.mockReset();
-//        pathToDataSet.mockReset();
+        pathToDataSet.mockReset();
         showErrorMessage.mockReset();
 
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = true;
-//        pathToDataSet.mockResolvedValueOnce(testResponse);
+        pathToDataSet.mockResolvedValueOnce(testResponse);
 
         await extension.saveFile(testDoc, testTree);
 
@@ -687,13 +766,13 @@ describe("Extension Unit Tests", async () => {
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = false;
         testResponse.commandResponse = "Save failed";
-//        pathToDataSet.mockResolvedValueOnce(testResponse);
+        pathToDataSet.mockResolvedValueOnce(testResponse);
 
         await extension.saveFile(testDoc, testTree);
 
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
-//        pathToDataSet.mockRejectedValueOnce(Error("Test Error"));
+        pathToDataSet.mockRejectedValueOnce(Error("Test Error"));
 
         await extension.saveFile(testDoc, testTree);
 
@@ -901,5 +980,366 @@ describe("Extension Unit Tests", async () => {
 
         node.contextValue = "pdsf";
         await extension.safeSave(child);
+    });
+
+    it("Testing that refreshUSS correctly executes with and without error", async () => {
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, null);
+
+        showErrorMessage.mockReset();
+        openTextDocument.mockReset();
+        openTextDocument.mockResolvedValueOnce({ isDirty: true });
+        ussFile.mockReset();
+        showTextDocument.mockReset();
+        executeCommand.mockReset();
+
+        await extension.refreshUSS(node);
+
+        expect(ussFile.mock.calls.length).toBe(1);
+        expect(ussFile.mock.calls[0][0]).toBe(node.getSession());
+        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        expect(ussFile.mock.calls[0][2]).toEqual({
+            file: extension.getUSSDocumentFilePath(node)
+        });
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.getUSSDocumentFilePath(node)));
+        expect(showTextDocument.mock.calls.length).toBe(2);
+        expect(executeCommand.mock.calls.length).toBe(1);
+
+
+        showInformationMessage.mockReset();
+        openTextDocument.mockResolvedValueOnce({ isDirty: false });
+        executeCommand.mockReset();
+
+        await extension.refreshUSS(node);
+
+        expect(executeCommand.mock.calls.length).toBe(0);
+
+        ussFile.mockRejectedValueOnce(Error("not found"));
+        showInformationMessage.mockReset();
+
+        await extension.refreshUSS(node);
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.mLabel + " was probably deleted.");
+
+        showErrorMessage.mockReset();
+        ussFile.mockReset();
+        ussFile.mockRejectedValueOnce(Error(""));
+
+        await extension.refreshUSS(child);
+
+        expect(ussFile.mock.calls[0][1]).toBe(child.fullPath);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+
+        showErrorMessage.mockReset();
+        openTextDocument.mockReset();
+        openTextDocument.mockResolvedValueOnce({ isDirty: true });
+        openTextDocument.mockResolvedValueOnce({ isDirty: true });
+        ussFile.mockReset();
+        showTextDocument.mockReset();
+
+        node.contextValue = "file";
+        await extension.refreshUSS(node);
+
+        node.contextValue = "directory";
+        await extension.refreshUSS(child);
+
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        existsSync.mockReset();
+        showErrorMessage.mockReset();
+
+        const badparent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
+        badparent.contextValue = "turnip";
+        const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
+        try {
+            await extension.refreshUSS(brat);
+        } catch (err) {
+        }
+        expect(ussFile.mock.calls.length).toBe(0);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("refreshUSS() called from invalid node.");
+    });
+
+    it("Testing that addSession is executed correctly for a USS explorer", async () => {
+        showQuickPick.mockReset();
+        getAllProfileNames.mockReset();
+
+        getAllProfileNames.mockReturnValueOnce(["firstName", "secondName"]);
+
+        await extension.addUSSSession(testTree);
+
+        expect(getAllProfileNames.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select a Profile to Add to the Data Set Explorer"
+        });
+
+        showInformationMessage.mockReset();
+        getAllProfileNames.mockReset();
+        getAllProfileNames.mockReturnValueOnce(undefined);
+
+        await extension.addSession(testTree);
+
+        expect(getAllProfileNames.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
+
+        showInformationMessage.mockReset();
+        getAllProfileNames.mockReset();
+        getAllProfileNames.mockReturnValueOnce(["sestest"]);
+
+        await extension.addSession(testTree);
+
+        expect(getAllProfileNames.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+
+        showErrorMessage.mockReset();
+        CliProfileManager.mockImplementationOnce(() => {
+            throw (Error("testError"));
+        });
+
+        try {
+            await extension.addSession(testTree);
+            // tslint:disable-next-line:no-empty
+        } catch (err) {
+        }
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load profile manager: testError");
+
+    });
+
+    it("Testing that enterPattern is executed successfully", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
+        node.fullPath = "/u/test";
+        node.contextValue = "uss_session";
+
+        showInputBox.mockReturnValueOnce("/u/test");
+        await extension.enterUSSPattern(node, testTree);
+
+        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls[0][0]).toEqual({
+            prompt: "Search Unix System Services (USS) by entering a path name starting with a /",
+            value: node.fullPath
+        });
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+
+        showInputBox.mockReturnValueOnce("");
+        showInputBox.mockReset();
+        showInformationMessage.mockReset();
+        await extension.enterUSSPattern(node, testTree);
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
+    });
+
+    it("Testing that refreshAllUSS is executed successfully", async () => {
+        const spy = jest.fn(testTree.refresh);
+        extension.refreshAllUSS(testTree);
+        expect(testTree.refresh).toHaveBeenCalled();
+    });
+
+    it("Testing that open is executed successfully", async () => {
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        showErrorMessage.mockReset();
+        existsSync.mockReset();
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
+
+        existsSync.mockReturnValue(null);
+        openTextDocument.mockResolvedValueOnce("test.doc");
+
+        await extension.openUSS(node);
+
+        expect(existsSync.mock.calls.length).toBe(1);
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, "/" + node.getSessionNode().mLabel + "/", node.fullPath + "[usstest]"));
+        expect(ussFile.mock.calls.length).toBe(1);
+        expect(ussFile.mock.calls[0][0]).toBe(session);
+        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        expect(ussFile.mock.calls[0][2]).toEqual({ file: extension.getUSSDocumentFilePath(node) });
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
+        expect(showTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls[0][0]).toBe("test.doc");
+
+        openTextDocument.mockResolvedValueOnce("test.doc");
+        const node2 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
+
+        await extension.openUSS(node2);
+
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        existsSync.mockReset();
+
+        existsSync.mockReturnValue("exists");
+        showTextDocument.mockRejectedValueOnce(Error("testError"));
+
+        try {
+            await extension.openUSS(child);
+        } catch (err) {
+            // do nothing
+        }
+
+        expect(ussFile.mock.calls.length).toBe(0);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(child));
+        expect(showTextDocument.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("testError");
+
+        const child2 = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, node2, null, null);
+        try {
+            await extension.openUSS(child2);
+        } catch (err) {
+            // do nothing
+        }
+
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        existsSync.mockReset();
+        showErrorMessage.mockReset();
+
+        const badparent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
+        badparent.contextValue = "turnip";
+        const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
+        try {
+            await extension.openUSS(brat);
+        } catch (err) {
+        }
+        expect(ussFile.mock.calls.length).toBe(0);
+        expect(showErrorMessage.mock.calls.length).toBe(2);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
+        expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node.");
+    });
+
+    it("Testing that saveUSSFile is executed successfully", async () => {
+        const testDoc: vscode.TextDocument = {
+            fileName: path.join(extension.BRIGHTTEMPFOLDER, "testFile[sestest]"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
+
+        const testResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: []
+            }
+        };
+        testUSSTree.getChildren.mockReturnValueOnce([new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
+
+        testResponse.apiResponse.items = ["Item1"];
+        fileToUSSFile.mockReset();
+        showErrorMessage.mockReset();
+
+        testResponse.success = true;
+        fileToUSSFile.mockResolvedValueOnce(testResponse);
+        withProgress.mockReturnValueOnce(testResponse);
+
+        await extension.saveUSSFile(testDoc, testUSSTree);
+
+        testResponse.success = false;
+        testResponse.commandResponse = "Save failed";
+        fileToUSSFile.mockResolvedValueOnce(testResponse);
+        withProgress.mockReturnValueOnce(testResponse);
+        
+        await extension.saveUSSFile(testDoc, testUSSTree);
+
+        fileToUSSFile.mockRejectedValueOnce(Error("Test Error"));
+        showErrorMessage.mockReset();
+        withProgress.mockRejectedValueOnce(Error("Test Error"));
+  
+        await extension.saveUSSFile(testDoc, testUSSTree);
+        // expect(fileToUSSFile.mock.calls.length).toBe(3);   // TODO
+        // expect(fileToUSSFile.mock.calls[0][0]).toEqual(session);
+        // expect(fileToUSSFile.mock.calls[0][1]).toBe(testDoc.fileName);
+        // expect(fileToUSSFile.mock.calls[0][2]).toBe("testFile");
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
+
+        const testDoc2: vscode.TextDocument = {
+            fileName: path.normalize("testFile[sestest]"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
+
+        testUSSTree.getChildren.mockReturnValueOnce([sessNode]);
+
+        await extension.saveUSSFile(testDoc2, testUSSTree);
+
+        const testDoc3: vscode.TextDocument = {
+            fileName: path.join(extension.BRIGHTTEMPFOLDER, "testFile(mem)[sestest]"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
+
+        fileToUSSFile.mockReset();
+        showErrorMessage.mockReset();
+
+        testUSSTree.getChildren.mockReturnValueOnce([sessNode]);
+        testResponse.success = true;
+        fileToUSSFile.mockResolvedValueOnce(testResponse);
+
+        await extension.saveUSSFile(testDoc3, testUSSTree);
     });
 });

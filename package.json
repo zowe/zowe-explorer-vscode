@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -35,6 +35,10 @@
         {
           "id": "zowe.explorer",
           "name": "Data Sets"
+        },
+        {
+          "id": "zowe.uss.explorer",
+          "name": "Unix System Services (USS)"
         }
       ]
     },
@@ -130,6 +134,50 @@
       {
         "command": "zowe.submitMember",
         "title": "Submit Job"
+      },
+      {
+        "command": "zowe.uss.addSession",
+        "title": "Zowe: Add Profile",
+        "icon": {
+          "light": "./resources/light/plus.svg",
+          "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.createDirectory",
+        "title": "Create New Directory",
+        "icon": {
+          "light": "./resources/light/newfile.svg",
+          "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.fullPath",
+        "title": "Search Unix System Services (USS) by Entering a Path",
+        "icon": {
+          "light": "./resources/light/pattern.svg",
+          "dark": "./resources/dark/pattern.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.refreshAll",
+        "title": "Zowe: Refresh All",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.refreshUSS",
+        "title": "Pull from Mainframe",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.removeSession",
+        "title": "Remove Profile"
       }
     ],
     "menus": {
@@ -142,6 +190,16 @@
         {
           "when": "view == zowe.explorer",
           "command": "zowe.addSession",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.refreshAll",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.addSession",
           "group": "navigation"
         }
       ],
@@ -263,6 +321,15 @@
         {
           "when": "viewItem == sessionf",
           "command": "zowe.removeSavedSearch"
+        },
+        {
+          "when": "viewItem == uss_session",
+          "command": "zowe.uss.fullPath",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == uss_session",
+          "command": "zowe.uss.removeSession"
         }
       ],
       "commandPalette": [
@@ -308,6 +375,18 @@
         },
         {
           "command": "zowe.removeSavedSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.fullPath",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.refreshUSS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.removeSession",
           "when": "never"
         }
       ]
@@ -425,13 +504,13 @@
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
-    "vsce": "^1.46.0"
+    "vsce": "^1.58.0",
+    "vscode": "^1.1.30"
   },
   "dependencies": {
-    "@brightside/core": "2.0.0-next.201901181325",
-    "@brightside/imperative": "2.0.0-next.201901162101",
-    "jsdoc": "^3.5.5",
-    "vscode": "^1.1.6"
+    "@brightside/core": "^2.15.0",
+    "@brightside/imperative": "^2.3.0",
+    "jsdoc": "^3.5.5"
   },
   "jest": {
     "moduleFileExtensions": [
