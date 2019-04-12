@@ -67,7 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable2);
 
     vscode.commands.registerCommand("zowe.addSession", async () => addSession(datasetProvider));
-    vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
+    vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node)); // here we are
     vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
     vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
@@ -97,6 +97,8 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    vscode.commands.registerCommand("zowe.uss.createNode", async (node) => createUSSNode(node, ussFileProvider)); // new menu
+    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => deleteUSSNode(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
@@ -107,6 +109,55 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
         await saveUSSFile(savedFile, ussFileProvider);
     });
+}
+
+/**
+ * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
+ *
+ * @param {ZoweUSSNode} node - The session node
+ * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
+ * @returns {Promise<void>}
+ */
+export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    let remotepath: string;
+    // manually entering a search
+    const options: vscode.InputBoxOptions = {
+        prompt: "Enter file or folder name",
+        value: node.fullPath
+    };
+    // get user input
+    remotepath = await vscode.window.showInputBox(options);
+    if (!remotepath) {
+        vscode.window.showInformationMessage("You must enter a path.");
+        return;
+    }
+    node.label = node.label + " ";
+    node.label.trim();
+    node.tooltip = node.fullPath = remotepath;
+    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    node.dirty = true;
+    ussFileProvider.refresh();
+}
+
+export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    let remotepath: string;
+    // manually entering a search
+    const options: vscode.InputBoxOptions = {
+        prompt: "Enter file or folder name",
+        value: node.fullPath
+    };
+    // get user input
+    remotepath = await vscode.window.showInputBox(options);
+    if (!remotepath) {
+        vscode.window.showInformationMessage("You must enter a path.");
+        return;
+    }
+    node.label = node.label + " ";
+    node.label.trim();
+    node.tooltip = node.fullPath = remotepath;
+    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    node.dirty = true;
+    ussFileProvider.refresh();
 }
 
 /**

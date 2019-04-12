@@ -87,7 +87,7 @@ export class ZoweNode extends vscode.TreeItem {
                     responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true})); 
                 }
             } else {
-                responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
+                responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true})); // api here?
             }
         } catch (err) {
             vscode.window.showErrorMessage(`Retrieving response from zowe.List\n${err}\n`);
