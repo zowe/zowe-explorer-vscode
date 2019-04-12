@@ -44,6 +44,14 @@
     },
     "commands": [
       {
+        "command": "zowe.uss.createNode",
+        "title": "Create"
+      },
+      {
+        "command": "zowe.uss.deleteNode",
+        "title": "Delete"
+      },
+      {
         "command": "zowe.addFavorite",
         "title": "Add Favorite"
       },
@@ -204,6 +212,16 @@
         }
       ],
       "view/item/context": [
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.createNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
         {
           "when": "viewItem == member",
           "command": "zowe.refreshNode",
