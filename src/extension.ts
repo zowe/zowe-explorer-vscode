@@ -22,6 +22,8 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
+export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "/_U_");
+export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "/_D_");
 
 /**
  * The function that runs when the extension is loaded
@@ -36,6 +38,8 @@ export async function activate(context: vscode.ExtensionContext) {
     await deactivate();
     
     fs.mkdirSync(BRIGHTTEMPFOLDER);
+    fs.mkdirSync(USS_DIR);
+    fs.mkdirSync(DS_DIR);
 
     let datasetProvider: DatasetTree;
     let ussFileProvider: USSTree;
@@ -55,7 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ussFileProvider = new USSTree();
         await ussFileProvider.addSession();
     } catch (err) {
-//        vscode.window.showErrorMessage(err.message); // MISSED
+        vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
     }
 
     await initializeFavorites(datasetProvider);
@@ -73,7 +77,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
-        // await saveFile(savedFile, datasetProvider); // MISSED
+        if (savedFile.fileName.indexOf(DS_DIR)>=0) {
+            await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
+        } else {
+            await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+        }
     });
     vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
     vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
@@ -88,13 +96,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
     vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-//        if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
-//            const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
- //           if (!setting.persistence) {
- //               setting.favorites = [];
-//                await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", setting, vscode.ConfigurationTarget.Global); // MISSED
-//            }
-//        }
+       if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
+           const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
+           if (!setting.persistence) {
+               setting.favorites = [];
+               await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", setting, vscode.ConfigurationTarget.Global); // MISSED
+           }
+       }
     });
 
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
@@ -103,10 +111,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
-
-    vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
-        await saveUSSFile(savedFile, ussFileProvider);  // MISSED
-    });
 }
 
 /**
@@ -138,7 +142,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         }).load({name: sesName});
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
-    try { // MISSED
+    try { 
         let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
         vscode.window.showInformationMessage("Job submitted " + job.jobid);
     } catch (error) {
@@ -585,7 +589,7 @@ export function getUSSProfile(node: ZoweUSSNode) {
  * @param {ZoweNode} node
  */
 export function getDocumentFilePath(label: string, node: ZoweNode) {
-    return path.join(BRIGHTTEMPFOLDER, label + "[" + getProfile(node) + "]");
+    return path.join(DS_DIR, label + "[" + getProfile(node) + "]");
 }
 
 /**
@@ -595,7 +599,8 @@ export function getDocumentFilePath(label: string, node: ZoweNode) {
  * @param {ZoweUSSNode} node
  */
 export function getUSSDocumentFilePath(node: ZoweUSSNode) {
-    return path.join(BRIGHTTEMPFOLDER, "/" + getUSSProfile(node) + "/", node.fullPath + "[" + node.getSessionNode().label.trim() + "]");
+    // return path.join(USS_DIR, "/" + getUSSProfile(node) + "/", node.fullPath + "[" + node.getSessionNode().label.trim() + "]");
+    return path.join(USS_DIR, "/" + getUSSProfile(node) + "/", node.fullPath);
 }
 
 /**
@@ -658,10 +663,10 @@ export async function openPS(node: ZoweNode) {
         let label: string;
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();  // TODO MISSED TESTING
+                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();  
                 break; 
             case ("pdsf"):
-                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")"; // TODO MISSED TESTING
+                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
                 break; 
             case ("session"):
                 label = node.mLabel;
@@ -840,7 +845,7 @@ export async function safeSave(node: ZoweNode) {
 export async function saveFile(doc: vscode.TextDocument, datasetProvider: DatasetTree) {
     // Check if file is a data set, instead of some other file
     const docPath = path.join(doc.fileName, "..");
-    if (path.relative(docPath, BRIGHTTEMPFOLDER)) {
+    if (path.relative(docPath, DS_DIR)) {
         return;
     }
 
@@ -853,7 +858,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
 
     // get session from session name
     let documentSession;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.mLabel === sesName);
+    const sesNode = (await datasetProvider.getChildren()).find( (child) => 
+    child.mLabel === sesName );
     if (sesNode) {
         documentSession = sesNode.getSession();
     } else {
@@ -903,14 +909,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USSTree) {
-    // get session name
-    let sesName = doc.fileName.substring(doc.fileName.indexOf("[") + 1, doc.fileName.lastIndexOf("]"));
-    if (sesName.includes("[")) {  // TODO MISSED TESTING
-        // if saving from favorites, sesName might be the favorite node, so extract further
-        sesName = sesName.substring(sesName.indexOf("[") + 1, sesName.indexOf("]"));
-    }
-    let relative = path.relative(BRIGHTTEMPFOLDER + "/" + sesName, doc.fileName);
-    relative = "/" + relative.substring(0, relative.indexOf("["));
+    const start = path.join(USS_DIR + "/").length;
+    const ending = doc.fileName.substring(start);
+    let sesName = ending.substring(0, ending.indexOf("/"));
+    let remote = ending.substring(sesName.length);
 
     // get session from session name
     let documentSession;
@@ -924,7 +926,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             location: vscode.ProgressLocation.Notification,
             title: "Saving file..."
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, relative);  // TODO MISSED TESTING
+            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote);  // TODO MISSED TESTING
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);
