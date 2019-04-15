@@ -16,6 +16,9 @@ export interface ICliOptions {
     profileRootDirectory: string;
     type: string;
 }
+export interface IConfigLogging {
+    "log4jsConfig"?: any;
+}
 
 export interface ILoadOptions {
     name?: string;
@@ -67,4 +70,11 @@ export class CredentialManagerFactory {
 // tslint:disable-next-line:max-classes-per-file
 export class DefaultCredentialManager {
      public test: "test";
+}
+
+
+// tslint:disable-next-line:max-classes-per-file
+export class Logger {
+    static initLogger(loggingConfig: IConfigLogging): any {
+    }
 }

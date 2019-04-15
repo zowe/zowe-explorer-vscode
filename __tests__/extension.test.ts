@@ -14,8 +14,10 @@ jest.mock("vscode");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
+jest.mock("fs");
 jest.mock("../src/DatasetTree");
 jest.mock("../src/USSTree");
+
 import * as vscode from "vscode";
 import * as treeMock from "../src/DatasetTree";
 import * as treeUSSMock from "../src/USSTree";
@@ -26,8 +28,6 @@ import * as extension from "../src/extension";
 import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
-
-jest.mock("fs");
 
 describe("Extension Unit Tests", async () => {
     // Globals
@@ -61,6 +61,8 @@ describe("Extension Unit Tests", async () => {
     const unlinkSync = jest.fn();
     const rmdirSync = jest.fn();
     const readFileSync = jest.fn();
+    // const lstatSync = jest.fn();
+    // const lstat = jest.fn();
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const ZosmfSession = jest.fn();
@@ -124,12 +126,14 @@ describe("Extension Unit Tests", async () => {
             getChildren: mockGetUSSChildren,
         };
     });
-    const lstatSync = jest.fn().mockImplementation(() => {
-        return { lstat };
-    });
-    const lstat = jest.fn().mockImplementation(() => {
-        return { isFile };
-    });
+    // const lstatSync = jest.fn().mockImplementation(() => {
+    //     return { lstat };
+    // });
+    // const lstat = jest.fn().mockImplementation(() => {
+    //     return { 
+    //         isFile(): true;
+    //      };
+    // });
     let withProgress = jest.fn().mockImplementation(() => {
         return { 
             location: 15,
@@ -199,24 +203,25 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(brightside, "Delete", {value: Delete});
     Object.defineProperty(Delete, "dataSet", {value: delDataset});
     Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
-    Object.defineProperty(fs, "lstatSync", { value: lstatSync });
+    // Object.defineProperty(fs, "lstatSync", { value: lstatSync });
+    // Object.defineProperty(fs, "lstat", { value: lstat });
     Object.defineProperty(Download, "ussFile", { value: ussFile });
 
     it("Testing that activate correctly executes", async () => {
         createTreeView.mockReturnValue("testDisposable");
 
         existsSync.mockReturnValueOnce(true);
-        //existsSync.mockReturnValueOnce(true);
-        //existsSync.mockReturnValueOnce(false);
-        readdirSync.mockReturnValueOnce(["firstFile", "secondFile"]);
+        existsSync.mockReturnValueOnce(true);
+        existsSync.mockReturnValueOnce(false);
+        readdirSync.mockReturnValueOnce(["firstFile.txt", "secondFile.txt", "firstDir"]);
         isFile.mockReturnValueOnce(true);
-        readdirSync.mockReturnValueOnce(["thirdFile"]);
+        readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
         readdirSync.mockReturnValue([]);
-        lstatSync.mockReturnValue(lstat);
+        //lstatSync.mockReturnValue(lstat);
         isFile.mockReturnValueOnce(false);
-        rmdirSync.mockImplementationOnce(() => {
-            throw Error;
-        });
+        // rmdirSync.mockImplementationOnce(() => {
+        //     throw Error;
+        // });
         // parse.mockReturnValue({path: "lame"});
         load.mockImplementation(() => {
             return {
@@ -331,25 +336,22 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.removeSession");
         expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);               
         expect(onDidSaveTextDocument.mock.calls.length).toBe(2);
-        expect(existsSync.mock.calls.length).toBe(2);
+        expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        // expect(readdirSync.mock.calls.length).toBe(1);
-        // expect(readdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        // expect(unlinkSync.mock.calls.length).toBe(2);
-        // expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/firstFile"));
-        // expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile"));
-        // expect(rmdirSync.mock.calls.length).toBe(2);
-        // expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        // expect(parse.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls.length).toBe(2); // TODO should be 1
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Cannot read property 'initLogger' of undefined"); // TODO
-        expect(showErrorMessage.mock.calls[1][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
+        expect(readdirSync.mock.calls.length).toBe(1);
+        expect(readdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(unlinkSync.mock.calls.length).toBe(2);
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/firstFile.txt"));
+        expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile.txt"));
+        expect(rmdirSync.mock.calls.length).toBe(1);
+        expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(showErrorMessage.mock.calls.length).toBe(1); 
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
 
         existsSync.mockReset();
         readdirSync.mockReset();
         existsSync.mockReturnValueOnce(false);
         rmdirSync.mockImplementationOnce(() => {
-            return;
         });
         showErrorMessage.mockReset();
         readFileSync.mockReturnValue("");
@@ -488,9 +490,35 @@ describe("Extension Unit Tests", async () => {
 
         node.contextValue = "dsf";
         await extension.refreshPS(node);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(dataSet.mock.calls.length).toBe(1);
 
-        node.contextValue = "pdsf";
+        dataSet.mockReset();
+        openTextDocument.mockReset();
+        
+        parent.contextValue = "pdsf";
         await extension.refreshPS(child);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(dataSet.mock.calls.length).toBe(1);
+
+        dataSet.mockReset();
+        openTextDocument.mockReset();
+
+        parent.contextValue = "favorite";
+        await extension.refreshPS(child);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(dataSet.mock.calls.length).toBe(1);
+
+        showErrorMessage.mockReset();
+        dataSet.mockReset();
+        openTextDocument.mockReset();
+        parent.contextValue = "turnip";
+        await extension.safeSave(child);
+        expect(openTextDocument.mock.calls.length).toBe(0);
+        expect(dataSet.mock.calls.length).toBe(0);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("safeSave() called from invalid node.");
+
     });
 
     it("Testing that addSession is executed successfully", async () => {
@@ -975,11 +1003,36 @@ describe("Extension Unit Tests", async () => {
         openTextDocument.mockResolvedValueOnce("test");
         openTextDocument.mockResolvedValueOnce("test");
 
+        dataSet.mockReset();
+        openTextDocument.mockReset();
         node.contextValue = "dsf";
         await extension.safeSave(node);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(dataSet.mock.calls.length).toBe(1);
 
-        node.contextValue = "pdsf";
+        dataSet.mockReset();
+        openTextDocument.mockReset();
+        parent.contextValue = "pdsf";
         await extension.safeSave(child);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(dataSet.mock.calls.length).toBe(1);
+
+        dataSet.mockReset();
+        openTextDocument.mockReset();
+        parent.contextValue = "favorite";
+        await extension.safeSave(child);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(dataSet.mock.calls.length).toBe(1);
+
+        showErrorMessage.mockReset();
+        dataSet.mockReset();
+        openTextDocument.mockReset();
+        parent.contextValue = "turnip";
+        await extension.safeSave(child);
+        expect(openTextDocument.mock.calls.length).toBe(0);
+        expect(dataSet.mock.calls.length).toBe(0);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("safeSave() called from invalid node.");
     });
 
     it("Testing that refreshUSS correctly executes with and without error", async () => {
@@ -1282,7 +1335,7 @@ describe("Extension Unit Tests", async () => {
         withProgress.mockRejectedValueOnce(Error("Test Error"));
   
         await extension.saveUSSFile(testDoc, testUSSTree);
-        // expect(fileToUSSFile.mock.calls.length).toBe(3);   // TODO
+        // expect(fileToUSSFile.mock.calls.length).toBe(3);  
         // expect(fileToUSSFile.mock.calls[0][0]).toEqual(session);
         // expect(fileToUSSFile.mock.calls[0][1]).toBe(testDoc.fileName);
         // expect(fileToUSSFile.mock.calls[0][2]).toBe("testFile");

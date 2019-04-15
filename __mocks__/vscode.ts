@@ -69,6 +69,12 @@ interface Thenable<T> {
 	 */
 export type Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) => Disposable;
 
+
+export interface CancellationToken {
+    isCancellationRequested: boolean;
+    onCancellationRequested: Event<any>;
+}
+
 export namespace window {
 
     /**
@@ -86,7 +92,6 @@ export namespace window {
     export function showErrorMessage(message: string, ...items: string[]): undefined {
         return undefined;
     }
-
 
     /**
      * Options to configure the behavior of the message.
@@ -149,22 +154,6 @@ export class Disposable {
 
     }
 
-
-}
-/**
- * An extension context is a collection of utilities private to an
- * extension.
- *
- * An instance of an `ExtensionContext` is provided as the first
- * parameter to the `activate`-call of an extension.
- */
-export interface ExtensionContext {
-
-    /**
-		 * An array to which  can be added. When this
-		 * extension is deactivated the  will be disposed.
-		 */
-    subscriptions: Array<{ dispose(): any }>;
 
 }
 
@@ -398,3 +387,4 @@ export interface InputBoxOptions {
 export interface TextDocument {
     fileName?: string;
 }
+

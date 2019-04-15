@@ -11,9 +11,16 @@
 
 interface Stats {
     isDirectory(path: string): boolean;
+    isFile(path: string): boolean;
 }
 
 export class FakeStats implements Stats {
+    isFile(path: string): boolean {
+        if (this.path.endsWith(".txt")) {
+            return true;
+        }
+        return false;
+    }
     public path: string;
     isDirectory(): boolean {
         if (this.path.endsWith(".txt")) {
@@ -37,6 +44,7 @@ export function readdirSync(path: string): string[] {
     ];
     return value;
 }
+export function rmdirSync(path: string): void {}
 
 export function unlinkSync(path: string): void {}
 
