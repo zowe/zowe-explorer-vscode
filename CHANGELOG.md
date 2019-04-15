@@ -3,6 +3,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.9.1
+ - Fix documentation links in Readme. Thanks Brandon Jenkins
 ## 0.9.0
  - Display an informational message when no data set patterns are found. Thanks @crshnburn
 ## 0.8.4
