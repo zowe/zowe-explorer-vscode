@@ -109,7 +109,8 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    vscode.commands.registerCommand("zowe.uss.createNode", async (node) => createUSSNode(node, ussFileProvider)); // new menu
+    vscode.commands.registerCommand("zowe.uss.createFile", async (node) => createUSSNode(node, ussFileProvider, "file"));
+    vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => createUSSNode(node, ussFileProvider, "directory"));
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => deleteUSSNode(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshAllUSS(ussFileProvider));
@@ -126,12 +127,12 @@ export async function activate(context: vscode.ExtensionContext) {
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
-export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree) {
+export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string) {
     const name = await vscode.window.showInputBox({placeHolder: "Name of Member"});
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await zowe.Create.uss(node.getSession(), filePath, "file");
+            await zowe.Create.uss(node.getSession(), filePath, nodeType);
             ussFileProvider.refresh();
         } catch (err) {
             vscode.window.showErrorMessage(`Unable to create node: ${err.message}`);
@@ -144,7 +145,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree)
     let remotepath: string;
     // manually entering a search
     const options: vscode.InputBoxOptions = {
-        prompt: "Enter file or folder name",
+        prompt: "Enter file or directory name",
         value: node.fullPath
     };
     // get user input
