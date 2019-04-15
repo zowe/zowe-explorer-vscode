@@ -262,7 +262,7 @@ describe("Extension Unit Tests", async () => {
             light: path.join(__dirname, "..", "..", "resources", "light", "pattern.svg")
         };
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
-        expect(mkdirSync.mock.calls.length).toBe(1);
+        expect(mkdirSync.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls.length).toBe(2);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
@@ -335,7 +335,7 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[22][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.removeSession");
         expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);               
-        expect(onDidSaveTextDocument.mock.calls.length).toBe(2);
+        expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(readdirSync.mock.calls.length).toBe(1);
@@ -445,11 +445,11 @@ describe("Extension Unit Tests", async () => {
         expect(dataSet.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({
-            file: path.join(extension.BRIGHTTEMPFOLDER, node.mLabel +
+            file: path.join(extension.DS_DIR, node.mLabel +
                 "[" + node.getSessionNode().mLabel + "]")
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, node.mLabel +
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.mLabel +
             "[" + node.getSessionNode().mLabel + "]"));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
@@ -495,7 +495,7 @@ describe("Extension Unit Tests", async () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        
+
         parent.contextValue = "pdsf";
         await extension.refreshPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
@@ -662,10 +662,10 @@ describe("Extension Unit Tests", async () => {
         expect(delDataset.mock.calls[0][0]).toBe(session);
         expect(delDataset.mock.calls[0][1]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, node.label +
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.label +
             "[" + node.getSessionNode().mLabel + "]"));
         expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, node.label +
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.label +
             "[" + node.getSessionNode().mLabel + "]"));
 
         unlinkSync.mockReset();
@@ -738,7 +738,7 @@ describe("Extension Unit Tests", async () => {
 
     it("Testing that saveFile is executed successfully", async () => {
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.BRIGHTTEMPFOLDER, "testFile[sestest]"),
+            fileName: path.join(extension.DS_DIR, "/testFile[sestest]"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -843,7 +843,7 @@ describe("Extension Unit Tests", async () => {
         expect(dataSetList.mock.calls.length).toBe(0);
 
         const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.BRIGHTTEMPFOLDER, "testFile(mem)[sestest]"),
+            fileName: path.join(extension.DS_DIR, "/testFile(mem)[sestest]"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -913,7 +913,7 @@ describe("Extension Unit Tests", async () => {
         await extension.openPS(node);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, node.mLabel +
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.mLabel +
             "[" + node.getSessionNode().mLabel + "]"));
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(session);
@@ -956,6 +956,23 @@ describe("Extension Unit Tests", async () => {
         } catch (err) {
             // do nothing
         }
+
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        parent.contextValue = "pdsf";
+        await extension.openPS(child);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+
+        parent.contextValue = "favorite";
+        await extension.openPS(child);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+
+        showErrorMessage.mockReset();
     });
 
     it("Testing that safeSave is executed successfully", async () => {
@@ -977,7 +994,7 @@ describe("Extension Unit Tests", async () => {
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.mLabel, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, node.mLabel +
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.mLabel +
             "[" + node.getSessionNode().mLabel + "]"));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test");
@@ -1221,7 +1238,7 @@ describe("Extension Unit Tests", async () => {
         await extension.openUSS(node);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER, "/" + node.getSessionNode().mLabel + "/", node.fullPath + "[usstest]"));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mLabel + "/", node.fullPath));
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(session);
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
@@ -1285,7 +1302,7 @@ describe("Extension Unit Tests", async () => {
 
     it("Testing that saveUSSFile is executed successfully", async () => {
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.BRIGHTTEMPFOLDER, "testFile[sestest]"),
+            fileName: path.join(extension.USS_DIR, "testFile"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1367,7 +1384,7 @@ describe("Extension Unit Tests", async () => {
         await extension.saveUSSFile(testDoc2, testUSSTree);
 
         const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.BRIGHTTEMPFOLDER, "testFile(mem)[sestest]"),
+            fileName: path.join(extension.DS_DIR, "/testFile(mem)[sestest]"),
             uri: null,
             isUntitled: null,
             languageId: null,

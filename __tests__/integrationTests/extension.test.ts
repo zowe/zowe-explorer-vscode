@@ -31,8 +31,8 @@ declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
 describe("Extension Integration Tests", () => {
-    const folder = extension.BRIGHTTEMPFOLDER;
-
+    const ds_folder = extension.DS_DIR;
+    const brightside_folder = extension.BRIGHTTEMPFOLDER;
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -170,17 +170,18 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(folder);
+                fs.mkdirSync(brightside_folder);
+                fs.mkdirSync(ds_folder);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(folder);
+                fs.mkdirSync(ds_folder);
             }
-            fs.closeSync(fs.openSync(path.join(folder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(folder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(ds_folder, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(ds_folder, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(folder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(folder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(ds_folder, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(ds_folder, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -410,7 +411,8 @@ async function getAllNodes(nodes: ZoweNode[]) {
 }
 
 describe("Extension Integration Tests - USS", () => {
-    const folder = extension.BRIGHTTEMPFOLDER;
+    const brightside_folder = extension.BRIGHTTEMPFOLDER;
+    const uss_folder = extension.USS_DIR;
 
     const expect = chai.expect;
     chai.use(chaiAsPromised);
@@ -481,17 +483,18 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(folder);
+                fs.mkdirSync(brightside_folder);
+                fs.mkdirSync(uss_folder);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(folder);
+                fs.mkdirSync(uss_folder);
             }
-            fs.closeSync(fs.openSync(path.join(folder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(folder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(uss_folder, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(uss_folder, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(folder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(folder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(uss_folder, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(uss_folder, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -539,8 +542,8 @@ describe("Extension Integration Tests - USS", () => {
             const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
             sessChildren2[2].dirty = true;
             const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
-            const localPath = path.join(extension.BRIGHTTEMPFOLDER, "/",  testConst.profile.name,
-            dirChildren[0].fullPath + "[" + testConst.profile.name + "]");
+            const localPath = path.join(extension.USS_DIR, "/",  testConst.profile.name,
+            dirChildren[0].fullPath);
 
             await extension.openUSS(dirChildren[0]);
             let doc = await vscode.workspace.openTextDocument(localPath);
