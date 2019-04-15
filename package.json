@@ -44,8 +44,12 @@
     },
     "commands": [
       {
-        "command": "zowe.uss.createNode",
-        "title": "Create"
+        "command": "zowe.uss.createFile",
+        "title": "Create file"
+      },
+      {
+        "command": "zowe.uss.createFolder",
+        "title": "Create directory"
       },
       {
         "command": "zowe.uss.deleteNode",
@@ -214,7 +218,12 @@
       "view/item/context": [
         {
           "when": "view == zowe.uss.explorer",
-          "command": "zowe.uss.createNode",
+          "command": "zowe.uss.createFile",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.createFolder",
           "group": "navigation"
         },
         {
