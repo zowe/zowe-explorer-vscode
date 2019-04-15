@@ -109,15 +109,15 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    vscode.commands.registerCommand("zowe.uss.createFile", async (node) => createUSSNode(node, ussFileProvider, "file"));
-    vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => createUSSNode(node, ussFileProvider, "directory"));
-    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => deleteUSSNode(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
+    vscode.commands.registerCommand("zowe.uss.createFile", async (node) => createUSSNode(node, ussFileProvider, "file"));
+    vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => createUSSNode(node, ussFileProvider, "directory"));
+    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => deleteUSSNode(node, ussFileProvider));
 }
 
 /**
