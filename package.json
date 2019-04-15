@@ -217,12 +217,12 @@
       ],
       "view/item/context": [
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.createFile",
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.createFolder",
           "group": "navigation"
         },

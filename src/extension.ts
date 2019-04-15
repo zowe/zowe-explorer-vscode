@@ -138,24 +138,15 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree) {
-    let remotepath: string;
-    // manually entering a search
-    const options: vscode.InputBoxOptions = {
-        prompt: "Enter file or directory name",
-        value: node.fullPath
-    };
-    // get user input
-    remotepath = await vscode.window.showInputBox(options);
-    if (!remotepath) {
-        vscode.window.showInformationMessage("You must enter a path.");
-        return;
+    const nodePath = node.fullPath;
+    try {
+        const isRecursive = node.contextValue === "directory" ? true : false;
+        await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
+        ussFileProvider.refresh();
+    } catch (err) {
+        vscode.window.showErrorMessage(`Unable to delete node: ${err.message}`);
+        throw (err);
     }
-    node.label = node.label + " ";
-    node.label.trim();
-    node.tooltip = node.fullPath = remotepath;
-    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-    node.dirty = true;
-    ussFileProvider.refresh();
 }
 
 /**
