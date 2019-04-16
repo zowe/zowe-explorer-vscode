@@ -19,6 +19,7 @@ import { CliProfileManager, Logger } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
+import * as ussActions from "./uss/ussNodeActions";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -111,9 +112,9 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
-    vscode.commands.registerCommand("zowe.uss.createFile", async (node) => createUSSNode(node, ussFileProvider, "file"));
-    vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => createUSSNode(node, ussFileProvider, "directory"));
-    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => deleteUSSNode(node, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
+    vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
+    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider));
 }
 
 /**
@@ -970,39 +971,6 @@ export async function openUSS(node: ZoweUSSNode) {
         await vscode.window.showTextDocument(document);
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
-        throw (err);
-    }
-}
-
-/**
- * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
- *
- * @param {ZoweUSSNode} node - The session node
- * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
- * @returns {Promise<void>}
- */
-export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string) {
-    const name = await vscode.window.showInputBox({placeHolder: "Name of Member"});
-    if (name) {
-        try {
-            const filePath = `${node.fullPath}/${name}`;
-            await zowe.Create.uss(node.getSession(), filePath, nodeType);
-            ussFileProvider.refresh();
-        } catch (err) {
-            vscode.window.showErrorMessage(`Unable to create node: ${err.message}`);
-            throw (err);
-        }
-    }
-}
-
-export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree) {
-    const nodePath = node.fullPath;
-    try {
-        const isRecursive = node.contextValue === "directory" ? true : false;
-        await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
-        ussFileProvider.refresh();
-    } catch (err) {
-        vscode.window.showErrorMessage(`Unable to delete node: ${err.message}`);
         throw (err);
     }
 }
