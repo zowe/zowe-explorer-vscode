@@ -75,7 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable2);
 
     vscode.commands.registerCommand("zowe.addSession", async () => addSession(datasetProvider));
-    vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node)); // here we are
+    vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
     vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
