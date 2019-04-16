@@ -79,7 +79,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
         if (savedFile.fileName.indexOf(DS_DIR)>=0) {
             await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
-        } else {
+        } else if (savedFile.fileName.indexOf(USS_DIR)>=0){
             await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
         }
     });
