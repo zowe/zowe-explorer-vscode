@@ -5,6 +5,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 0.9.1
  - Fix documentation links in Readme. Thanks Brandon Jenkins
+ - VSCode-USS-extension-for-zowe merged in. Thanks Colin Stone
 ## 0.9.0
  - Display an informational message when no data set patterns are found. Thanks @crshnburn
 ## 0.8.4
