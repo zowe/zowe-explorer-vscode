@@ -74,6 +74,7 @@ describe("Extension Unit Tests", async () => {
     const delDataset = jest.fn();
     const Create = jest.fn();
     const dataSetCreate = jest.fn();
+    const ussCreate = jest.fn();
     const Download = jest.fn();
     const dataSet = jest.fn();
     const ussFile = jest.fn();
@@ -187,6 +188,7 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(Upload, "fileToUSSFile", { value: fileToUSSFile });
     Object.defineProperty(brightside, "Create", {value: Create});
     Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
+    Object.defineProperty(Create, "uss", {value: ussCreate});
     Object.defineProperty(brightside, "List", {value: List});
     Object.defineProperty(List, "dataSet", {value: dataSetList});
     Object.defineProperty(List, "fileList", {value: fileList});
@@ -1411,5 +1413,15 @@ describe("Extension Unit Tests", async () => {
         fileToUSSFile.mockResolvedValueOnce(testResponse);
 
         await extension.saveUSSFile(testDoc3, testUSSTree);
+    });
+
+
+    it("Testing that createUSSNode is executed successfully", async () => {
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("USSFolder");
+        try {
+            await extension.createUSSNode(ussNode, testUSSTree, "file");
+        } catch (err) {}
+        expect(testUSSTree.refresh).toHaveBeenCalled();
     });
 });
