@@ -23,14 +23,16 @@ import * as vscode from "vscode";
 import { CliProfileManager } from "@brightside/imperative";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
+import { USSTree } from "../../src/USSTree";
+import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
 describe("Extension Integration Tests", () => {
-    const folder = extension.BRIGHTTEMPFOLDER;
-
+    const ds_folder = extension.DS_DIR;
+    const brightside_folder = extension.BRIGHTTEMPFOLDER;
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -168,17 +170,18 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(folder);
+                fs.mkdirSync(brightside_folder);
+                fs.mkdirSync(ds_folder);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(folder);
+                fs.mkdirSync(ds_folder);
             }
-            fs.closeSync(fs.openSync(path.join(folder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(folder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(ds_folder, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(ds_folder, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(folder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(folder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(ds_folder, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(ds_folder, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -215,10 +218,10 @@ describe("Extension Integration Tests", () => {
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            for (const child of childrenFromTree) {
-                await testTreeView.reveal(child);
-                expect(child).to.deep.equal(testTreeView.selection[0]);
-            }
+//            for (const child of childrenFromTree) {
+                await testTreeView.reveal(childrenFromTree[0]);
+                expect(childrenFromTree[0]).to.deep.equal(testTreeView.selection[0]);
+//            }
         }).timeout(TIMEOUT);
 
         it("should match data sets for multiple patterns", async () => {
@@ -267,7 +270,7 @@ describe("Extension Integration Tests", () => {
             const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const childrenFromTree = await sessionNode.getChildren();
-            expect(childrenFromTree).to.deep.equal([]);
+            expect(childrenFromTree[0].children).to.deep.equal([]);
 
             // reset tree
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
@@ -401,6 +404,177 @@ async function getAllNodes(nodes: ZoweNode[]) {
 
     for (const node of nodes) {
         allNodes = allNodes.concat(await getAllNodes(await node.getChildren()));
+        allNodes.push(node);
+    }
+
+    return allNodes;
+}
+
+describe("Extension Integration Tests - USS", () => {
+    const brightside_folder = extension.BRIGHTTEMPFOLDER;
+    const uss_folder = extension.USS_DIR;
+
+    const expect = chai.expect;
+    chai.use(chaiAsPromised);
+
+    const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+    const ussSessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    ussSessionNode.contextValue = "uss_session";
+    const fullUSSPath = testConst.ussPattern;
+    ussSessionNode.fullPath = fullUSSPath;
+    const ussTestTree = new USSTree();
+    ussTestTree.mSessionNodes.splice(-1, 0, ussSessionNode);
+
+    let sandbox;
+
+    beforeEach(async function() {
+        this.timeout(TIMEOUT);
+        sandbox = sinon.createSandbox();
+        await extension.deactivate();
+    });
+
+    afterEach(async function() {
+        this.timeout(TIMEOUT);
+        sandbox.restore();
+    });
+
+    describe("TreeView", () => {
+        it("should create the USS TreeView", async () => {
+            // Initialize uss file provider
+            const ussFileProvider = new USSTree();
+
+            // Create the TreeView using ussFileProvider to create tree structure
+            const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
+
+            const allNodes = await getAllUSSNodes(ussFileProvider.mSessionNodes);
+            for (const node of allNodes) {
+                // For each node, select that node in TreeView by calling reveal()
+                await ussTestTreeView.reveal(node);
+                // Test that the node is successfully selected
+                expect(node).to.deep.equal(ussTestTreeView.selection[0]);
+            }
+            ussTestTreeView.dispose();
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Creating a Session -USS", () => {
+        it("should add a session", async () => {
+            // Grab profiles
+            const profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+                type: "zosmf"
+            });
+            const profileNamesList = profileManager.getAllProfileNames().filter((profileName) =>
+                // Find all cases where a profile is not already displayed
+                !ussTestTree.mSessionNodes.find((node) =>
+                    node.mLabel.toUpperCase() === profileName.toUpperCase()
+                )
+            );
+
+            // Mock user selecting first profile from list
+            const stub = sandbox.stub(vscode.window, "showQuickPick");
+            stub.returns(profileNamesList[0]);
+
+            await extension.addUSSSession(ussTestTree);
+            expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].mLabel).to.equal(profileNamesList[0]);
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Deactivate", () => {
+        it("should clean up the local files when deactivate is invoked", async () => {
+            try {
+                fs.mkdirSync(brightside_folder);
+                fs.mkdirSync(uss_folder);
+            } catch (err) {
+                // if operation failed, wait a second and try again
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                fs.mkdirSync(uss_folder);
+            }
+            fs.closeSync(fs.openSync(path.join(uss_folder, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(uss_folder, "file2"), "w"));
+            await extension.deactivate();
+            expect(fs.existsSync(path.join(uss_folder, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(uss_folder, "file2"))).to.equal(false);
+        }).timeout(TIMEOUT);
+    });
+
+    describe("Enter USS Pattern", () => {
+        it("should output path that match the user-provided path", async () => {
+            const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+            inputBoxStub.returns(fullUSSPath);
+
+            await extension.enterUSSPattern(ussSessionNode, ussTestTree);
+
+            expect(ussTestTree.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
+            expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
+            expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
+
+            // const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
+
+            // const childrenFromTree = await ussSessionNode.getChildren();
+            // childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
+
+            // for (const child of childrenFromTree) {
+            //     await ussTestTreeView.reveal(child);
+            //     expect(child).to.deep.equal(ussTestTreeView.selection[0]);
+            // }
+        }).timeout(TIMEOUT);
+
+        it("should pop up a message if the user doesn't enter a USS path", async () => {
+            const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+            inputBoxStub.returns("");
+
+            const showInfoStub = sandbox.spy(vscode.window, "showInformationMessage");
+            await extension.enterUSSPattern(ussSessionNode, ussTestTree);
+            const gotCalled = showInfoStub.calledWith("You must enter a path.");
+            expect(gotCalled).to.equal(true);
+        }).timeout(TIMEOUT);
+    });
+    describe("Saving a USS File", () => {
+
+        it("should download, change, and re-upload a file", async () => {
+            const changedData = "File Upload Test "+ Math.random().toString(36).slice(2);
+
+            const rootChildren = await ussTestTree.getChildren();
+            rootChildren[0].dirty = true;
+            const sessChildren1 = await ussTestTree.getChildren(rootChildren[0]);
+            sessChildren1[3].dirty = true;
+            const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
+            sessChildren2[2].dirty = true;
+            const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
+            const localPath = path.join(extension.USS_DIR, "/",  testConst.profile.name,
+            dirChildren[0].fullPath);
+
+            await extension.openUSS(dirChildren[0]);
+            let doc = await vscode.workspace.openTextDocument(localPath);
+
+            const originalData = doc.getText().trim();
+
+            // write new data
+            fs.writeFileSync(localPath, changedData);
+    
+            // Upload file
+            await extension.saveUSSFile(doc, ussTestTree);
+            await fs.unlinkSync(localPath);
+            
+            // Download file
+            await extension.openUSS(dirChildren[0]);
+   
+            // Change contents back
+            fs.writeFileSync(localPath, originalData);
+            await extension.saveUSSFile(doc, ussTestTree);
+        }).timeout(TIMEOUT);
+    });
+});
+
+/*************************************************************************************************************
+ * Returns array of all subnodes of given node
+ *************************************************************************************************************/
+async function getAllUSSNodes(nodes: ZoweUSSNode[]) {
+    let allNodes = new Array<ZoweUSSNode>();
+
+    for (const node of nodes) {
+        allNodes = allNodes.concat(await getAllUSSNodes(await node.getChildren()));
         allNodes.push(node);
     }
 

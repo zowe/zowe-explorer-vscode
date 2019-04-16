@@ -12,3 +12,4 @@ export const profile: IProfile = {
 
 export const normalPattern = "";
 export const orPattern = "";
+export const ussPattern = "/u/stonecc/temp1";  // @NOTE: This directory will be created and deleted

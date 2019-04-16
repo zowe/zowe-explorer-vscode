@@ -77,6 +77,31 @@ export namespace List {
         constructor(public dsname: string, public dsorg: string, public member: string) {
         }
     }
+
+    export function fileList(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
+        if(hlq.toUpperCase() === "THROW ERROR") {
+            throw Error("Throwing an error to check error handling for unit tests!");
+        }
+
+        return new Promise((resolve) => {
+            const response = {
+                success: true,
+                apiResponse: {
+                    items: [
+                        {
+                            name: "aDir", mode: "drw-r--r--", size: 20, uid: 0, user: "WSADMIN", gid: 1,
+                            group: "OMVSGRP", mtime: "2015-11-24T02:12:04"
+                        },                        
+                        {
+                            name: "myFile.txt", mode: "-rw-r--r--", size: 20, uid: 0, user: "WSADMIN", gid: 1,
+                            group: "OMVSGRP", mtime: "2015-11-24T02:12:04"
+                        }
+                ],  returnedRows: 2, totalRows: 2, JSONversion: 1
+                }
+            };
+            resolve(response);
+        });
+    }
 }
 
 // tslint:disable-next-line:max-classes-per-file
