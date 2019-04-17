@@ -650,7 +650,7 @@ export function getDocumentFilePath(label: string, node: ZoweNode) {
  * @param {ZoweUSSNode} node
  */
 export function getUSSDocumentFilePath(node: ZoweUSSNode) {
-    return path.join(USS_DIR, path.sep + getUSSProfile(node) + path.sep, node.fullPath);
+    return path.join(USS_DIR, "/" + getUSSProfile(node) + "/", node.fullPath);
 }
 
 /**

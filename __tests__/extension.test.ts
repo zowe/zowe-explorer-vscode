@@ -1228,8 +1228,8 @@ describe("Extension Unit Tests", async () => {
         showErrorMessage.mockReset();
         existsSync.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, path.sep);
-        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, path.sep);
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
         existsSync.mockReturnValue(null);
@@ -1238,7 +1238,7 @@ describe("Extension Unit Tests", async () => {
         await extension.openUSS(node);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, path.sep + node.getSessionNode().mLabel + path.sep, node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mLabel + "/", node.fullPath));
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(session);
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
@@ -1328,7 +1328,7 @@ describe("Extension Unit Tests", async () => {
                 items: []
             }
         };
-        testUSSTree.getChildren.mockReturnValueOnce([new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, path.sep), sessNode]);
+        testUSSTree.getChildren.mockReturnValueOnce([new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
 
         testResponse.apiResponse.items = ["Item1"];
         fileToUSSFile.mockReset();
