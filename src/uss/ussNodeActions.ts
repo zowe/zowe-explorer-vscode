@@ -13,6 +13,7 @@ import { USSTree } from "../USSTree";
 import { ZoweUSSNode } from "../ZoweUSSNode";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
+import * as fs from "fs";
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -35,7 +36,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
 }
 
-export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree) {
+export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
     const nodePath = node.fullPath;
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: `Are you sure you want to delete ${node.label}`,
@@ -49,6 +50,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree)
         const isRecursive = node.contextValue === "directory" ? true : false;
         await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
         ussFileProvider.refresh();
+        deleteFromDisk(node, filePath);
     } catch (err) {
         vscode.window.showErrorMessage(`Unable to delete node: ${err.message}`);
         throw (err);
@@ -60,4 +62,18 @@ export function parseUSSPath(path: string) {
         return `/${path}`;
     }
     return path;
+}
+
+/**
+ * Marks file as deleted from disk
+ *
+ * @param {ZoweUSSNode} node
+ */
+export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        catch (err) {}
 }
