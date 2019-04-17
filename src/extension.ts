@@ -542,6 +542,7 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
     };
     // get user input
     remotepath = await vscode.window.showInputBox(options);
+    remotepath = ussActions.parseUSSPath(remotepath);
     if (!remotepath) {
         vscode.window.showInformationMessage("You must enter a path.");
         return;
