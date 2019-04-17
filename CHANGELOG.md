@@ -3,6 +3,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+
+## 0.10.3
+ - Use path.sep rather than "/".
 ## 0.10.2
  - VSCode-USS-extension-for-zowe fixed general USS file name error. Thanks Colin Stone
 ## 0.10.1

@@ -22,8 +22,8 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
-export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "/_U_");
-export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "/_D_");
+export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
+export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
 
 /**
  * The function that runs when the extension is loaded
@@ -599,8 +599,7 @@ export function getDocumentFilePath(label: string, node: ZoweNode) {
  * @param {ZoweUSSNode} node
  */
 export function getUSSDocumentFilePath(node: ZoweUSSNode) {
-    // return path.join(USS_DIR, "/" + getUSSProfile(node) + "/", node.fullPath + "[" + node.getSessionNode().label.trim() + "]");
-    return path.join(USS_DIR, "/" + getUSSProfile(node) + "/", node.fullPath);
+    return path.join(USS_DIR, path.sep + getUSSProfile(node) + path.sep, node.fullPath);
 }
 
 /**
@@ -909,10 +908,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USSTree) {
-    const start = path.join(USS_DIR + "/").length;
+    const start = path.join(USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
-    let sesName = ending.substring(0, ending.indexOf("/"));
-    let remote = ending.substring(sesName.length);
+    let sesName = ending.substring(0, ending.indexOf(path.sep));
+    let remote = ending.substring(sesName.length).replace(/\\/g, '/');
 
     // get session from session name
     let documentSession;
