@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
-import { createUSSNode, deleteUSSNode } from "../../src/uss/ussNodeActions";
+import { createUSSNode, deleteUSSNode, parseUSSPath } from "../../src/uss/ussNodeActions";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -100,6 +100,22 @@ describe("ussNodeActions", async () => {
             showQuickPick.mockResolvedValueOnce("No");
             await deleteUSSNode(ussNode, testUSSTree);
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
+        });
+    });
+    describe("parseUSSPath", () => {
+        it("should append slash", () => {
+            expect(parseUSSPath("/u/user")).toEqual("//u/user");
+            expect(parseUSSPath("/test")).toEqual("//test");
+            expect(parseUSSPath("/u/kri/dir/dir2")).toEqual("//u/kri/dir/dir2");
+        });
+        it("should not append slash", () => {
+            expect(parseUSSPath("//u/user")).toEqual("//u/user");
+            expect(parseUSSPath("//")).toEqual("//");
+            expect(parseUSSPath("///")).toEqual("///");
+            expect(parseUSSPath("/")).toEqual("/");
+            expect(parseUSSPath("")).toEqual("");
+            expect(parseUSSPath(undefined)).toEqual(undefined);
+            expect(parseUSSPath("//u/kri/dir/dir2")).toEqual("//u/kri/dir/dir2");
         });
     });
 });

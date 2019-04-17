@@ -54,3 +54,10 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree)
         throw (err);
     }
 }
+
+export function parseUSSPath(path: string) {
+    if (path && path.match('^\/[^\/]')) {
+        return `/${path}`;
+    }
+    return path;
+}
