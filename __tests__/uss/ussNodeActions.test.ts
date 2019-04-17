@@ -93,12 +93,12 @@ describe("ussNodeActions", async () => {
     describe("deleteUSSNode", () => {
         it("deleteUSSNode is executed successfully", async () => {
             showQuickPick.mockResolvedValueOnce("Yes");
-            await deleteUSSNode(ussNode, testUSSTree);
+            await deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).toHaveBeenCalled();
         });
         it("should not delete node if user did not verify", async () => {
             showQuickPick.mockResolvedValueOnce("No");
-            await deleteUSSNode(ussNode, testUSSTree);
+            await deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
