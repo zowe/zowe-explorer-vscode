@@ -1193,7 +1193,7 @@ describe("Extension Unit Tests", async () => {
         showInputBox.mockReset();
 
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        node.fullPath = "/u/test";
+        node.fullPath = "//u/test";
         node.contextValue = "uss_session";
 
         showInputBox.mockReturnValueOnce("/u/test");
