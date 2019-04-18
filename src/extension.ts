@@ -829,6 +829,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
  */
 export async function safeSave(node: ZoweNode) {
 
+    log.debug("safe save requested for node: " + node.mLabel);
     let label;
     try {
         switch (node.mParent.contextValue) {
@@ -871,8 +872,11 @@ export async function safeSave(node: ZoweNode) {
  */
 export async function saveFile(doc: vscode.TextDocument, datasetProvider: DatasetTree) {
     // Check if file is a data set, instead of some other file
+    log.debug("requested to save data set: " + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     if (path.relative(docPath, DS_DIR)) {
+        log.debug("path.relative returned a non-blank directory."+
+         "Assuming we are not in the DS_DIR directory: " + path.relative(docPath, DS_DIR));
         return;
     }
 
@@ -942,6 +946,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USSTree) {
+    log.debug("save requested for USS file " + doc.fileName);
     const start = path.join(USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     let sesName = ending.substring(0, ending.indexOf(path.sep));
@@ -978,6 +983,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  * @param {ZoweUSSNode} node
  */
 export async function openUSS(node: ZoweUSSNode) {
+ 
     try {
         let label: string;
         switch (node.mParent.contextValue) {
@@ -991,6 +997,7 @@ export async function openUSS(node: ZoweUSSNode) {
                 vscode.window.showErrorMessage("open() called from invalid node.");
                 throw Error("open() called from invalid node.");
         }
+        log.debug("requesting to open a uss file " + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (!fs.existsSync(getUSSDocumentFilePath(node))) {
             await zowe.Download.ussFile(node.getSession(), node.fullPath, {
