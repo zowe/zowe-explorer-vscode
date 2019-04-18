@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
+## 0.10.4
+ - Add additional log messages
 ## 0.10.3
  - Use path.sep rather than "/".
 ## 0.10.2
