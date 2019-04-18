@@ -5,7 +5,7 @@ export const profile: IProfile = {
     host: "",
     port: 0,
     user: "",
-    pass: "",
+    password: "",
     rejectUnauthorized: false,
     name: "" // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
