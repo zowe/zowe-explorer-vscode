@@ -37,7 +37,8 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    const nodePath = node.fullPath;
+    // handle zosmf api issue with file paths
+    const nodePath = node.fullPath.startsWith("/") ?  node.fullPath.substring(1) :  node.fullPath;
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: `Are you sure you want to delete ${node.label}`,
         ignoreFocusOut: true,
@@ -55,13 +56,6 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         vscode.window.showErrorMessage(`Unable to delete node: ${err.message}`);
         throw (err);
     }
-}
-
-export function parseUSSPath(path: string) {
-    if (path && path.match('^\/[^\/]')) {
-        return `/${path}`;
-    }
-    return path;
 }
 
 /**

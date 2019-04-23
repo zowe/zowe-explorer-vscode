@@ -499,12 +499,14 @@ describe("Extension Integration Tests - USS", () => {
     });
 
     describe("Enter USS Pattern", () => {
-        it("should output path that match the user-provided and starts with 2 double slashes", async () => {
+        it("should output path that match the user-provided path", async () => {
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(fullUSSPath);
+
             await extension.enterUSSPattern(ussSessionNode, ussTestTree);
-            expect(ussTestTree.mSessionNodes[0].fullPath).to.equal(`/${fullUSSPath}`);
-            expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(`/${fullUSSPath}`);
+
+            expect(ussTestTree.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
+            expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
             expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
             // const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
