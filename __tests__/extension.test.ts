@@ -1352,10 +1352,6 @@ describe("Extension Unit Tests", async () => {
         withProgress.mockRejectedValueOnce(Error("Test Error"));
   
         await extension.saveUSSFile(testDoc, testUSSTree);
-        // expect(fileToUSSFile.mock.calls.length).toBe(3);  
-        // expect(fileToUSSFile.mock.calls[0][0]).toEqual(session);
-        // expect(fileToUSSFile.mock.calls[0][1]).toBe(testDoc.fileName);
-        // expect(fileToUSSFile.mock.calls[0][2]).toBe("testFile");
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
 
