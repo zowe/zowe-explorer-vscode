@@ -973,7 +973,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
         }
     } catch (err) {
         log.error("Error encountered when saving USS file: " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message + "\n" + err.stack);
+        vscode.window.showErrorMessage(err.message);
     }
 }
 
