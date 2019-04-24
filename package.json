@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets",
-  "version": "0.10.4",
+  "version": "0.11.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -43,6 +43,18 @@
       ]
     },
     "commands": [
+      {
+        "command": "zowe.uss.createFile",
+        "title": "Create file"
+      },
+      {
+        "command": "zowe.uss.createFolder",
+        "title": "Create directory"
+      },
+      {
+        "command": "zowe.uss.deleteNode",
+        "title": "Delete"
+      },
       {
         "command": "zowe.addFavorite",
         "title": "Add Favorite"
@@ -204,6 +216,21 @@
         }
       ],
       "view/item/context": [
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.createFile",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.createFolder",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
         {
           "when": "viewItem == member",
           "command": "zowe.refreshNode",
@@ -527,7 +554,8 @@
       }
     },
     "testMatch": [
-      "**/__tests__/*test.+(ts|tsx)"
+      "**/__tests__/*test.+(ts|tsx)",
+      "**/__tests__/*/*test.+(ts|tsx)"
     ],
     "modulePathIgnorePatterns": [
       "__tests__/integrationTests/"
