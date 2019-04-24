@@ -263,7 +263,7 @@ describe("Extension Unit Tests", async () => {
         };
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
         expect(mkdirSync.mock.calls.length).toBe(3);
-        expect(createTreeView.mock.calls.length).toBe(2);
+        expect(createTreeView.mock.calls.length).toBe(4);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         expect(createTreeView.mock.calls[0][1]).toEqual({
@@ -286,7 +286,7 @@ describe("Extension Unit Tests", async () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(29);
+        expect(registerCommand.mock.calls.length).toBe(39);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");
@@ -345,7 +345,7 @@ describe("Extension Unit Tests", async () => {
         expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
         expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(showErrorMessage.mock.calls.length).toBe(1); 
+        expect(showErrorMessage.mock.calls.length).toBe(2); 
         expect(showErrorMessage.mock.calls[0][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
 
         existsSync.mockReset();
