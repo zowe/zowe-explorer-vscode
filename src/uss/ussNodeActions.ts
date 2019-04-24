@@ -23,7 +23,7 @@ import * as fs from "fs";
  * @returns {Promise<void>}
  */
 export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string) {
-    const name = await vscode.window.showInputBox({placeHolder: "Name of Member"});
+    const name = await vscode.window.showInputBox({placeHolder: "Name of file or directory"});
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
