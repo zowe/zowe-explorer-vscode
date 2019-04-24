@@ -3,7 +3,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-
+## 0.11.0
+ - Create and delete functionality for USS Files and directories added as menu items.
 ## 0.10.4
  - Add additional log messages
 ## 0.10.3
