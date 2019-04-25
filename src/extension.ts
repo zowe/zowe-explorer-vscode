@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, Logger } from "@brightside/imperative";
+import { CliProfileManager, Logger, Imperative } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -56,6 +56,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log = Logger.getAppLogger();
         log.debug("Initialized logger from VSCode extension");
+
+        // imperative uses the process.mainmodule to find out where we're calling from and resolve command definition
+        // glob paths. So we need to mock it here as the index file of brightside core
+        (process.mainModule as any) = {filename: require.resolve("@brightside/core")};
+        await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+
+
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
         await datasetProvider.addSession();
