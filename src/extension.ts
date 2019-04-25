@@ -126,8 +126,14 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
-    vscode.commands.registerCommand("zowe.uss.binary", async (node) => {node.setBinary(true); ussFileProvider.refresh();});
-    vscode.commands.registerCommand("zowe.uss.text", async (node) => {node.setBinary(false); ussFileProvider.refresh()});
+    vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
+}
+
+export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
+    node.setBinary(binary);
+    await openUSS(node, true);
+    ussFileProvider.refresh();
 }
 
 /**
@@ -995,7 +1001,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  *
  * @param {ZoweUSSNode} node
  */
-export async function openUSS(node: ZoweUSSNode) {
+export async function openUSS(node: ZoweUSSNode, download = false) {
  
     try {
         let label: string;
@@ -1012,7 +1018,7 @@ export async function openUSS(node: ZoweUSSNode) {
         }
         log.debug("requesting to open a uss file " + label);
         // if local copy exists, open that instead of pulling from mainframe
-        if (!fs.existsSync(getUSSDocumentFilePath(node))) {
+        if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
             await zowe.Download.ussFile(node.getSession(), node.fullPath, {
                 file: getUSSDocumentFilePath(node),
                 binary: node.binary
