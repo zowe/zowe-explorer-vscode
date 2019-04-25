@@ -99,7 +99,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
-                        if(this.binaryFiles.hasOwnProperty(item.name)) {
+                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + '/' + item.name)) {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true);
                         } else {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
@@ -139,10 +139,10 @@ export class ZoweUSSNode extends vscode.TreeItem {
         this.binary = binary;
         if(this.binary){
             this.contextValue = "binaryFile";
-            this.mParent.binaryFiles[this.mLabel] = true;
+            this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
             this.contextValue = "textFile";
-            delete this.mParent.binaryFiles[this.mLabel];
+            delete this.getSessionNode().binaryFiles[this.fullPath];
         }
         this.dirty = true;
     }
