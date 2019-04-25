@@ -24,6 +24,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
     public command: vscode.Command;
     public fullPath = "";
     public dirty = true;
+    public binary = false;
     public children: ZoweUSSNode[] = [];
 
     /**
@@ -41,7 +42,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "directory";
         } else {
-            this.contextValue = "file";
+            this.contextValue = "textFile";
         }
         if (parentPath)
             this.fullPath = this.tooltip = parentPath+'/'+mLabel;
@@ -124,5 +125,15 @@ export class ZoweUSSNode extends vscode.TreeItem {
      */
     public getSessionNode(): ZoweUSSNode {
         return this.session ? this : this.mParent.getSessionNode();
+    }
+
+    public setBinary(binary: boolean) {
+        this.binary = binary;
+        if(this.binary){
+            this.contextValue = "binaryFile";
+        } else {
+            this.contextValue = "textFile";
+        }
+        this.dirty = true;
     }
 }

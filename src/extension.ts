@@ -119,6 +119,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
+    vscode.commands.registerCommand("zowe.uss.binary", async (node) => {node.setBinary(true); ussFileProvider.refresh();});
+    vscode.commands.registerCommand("zowe.uss.text", async (node) => {node.setBinary(false); ussFileProvider.refresh()});
 }
 
 /**
@@ -968,7 +970,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             location: vscode.ProgressLocation.Notification,
             title: "Saving file..."
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote);  // TODO MISSED TESTING
+            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, sesNode.binary);  // TODO MISSED TESTING
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);
@@ -1005,7 +1007,8 @@ export async function openUSS(node: ZoweUSSNode) {
         // if local copy exists, open that instead of pulling from mainframe
         if (!fs.existsSync(getUSSDocumentFilePath(node))) {
             await zowe.Download.ussFile(node.getSession(), node.fullPath, {
-                file: getUSSDocumentFilePath(node)
+                file: getUSSDocumentFilePath(node),
+                binary: node.binary
             });
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
