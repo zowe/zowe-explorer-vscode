@@ -3,6 +3,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.12.0
+ - Added GIFs to README for USS use cases. Thanks Colin Stone
+ - Added the ability to toggle binary mode or text mode on USS files. Thanks @crshnburn 
 ## 0.11.0
  - Create and delete functionality for USS Files and directories added as menu items.
 ## 0.10.4
