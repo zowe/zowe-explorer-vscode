@@ -27,7 +27,7 @@ After you install the Zowe extension, meet the following prerequisites:
 
 You can alter the behavior of the extension in the following ways:
 
-* **Safe Save:** The Visual Studio Code **Save** functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension **Safe Save** functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
+* **Data set Safe Save:** The Visual Studio Code **Save** functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension **Safe Save** functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
 * **Data set creation settings:** You can change the default creation settings for various data set types. Navigate to the Settings for this extension for more info. 
 * **Data set persistence settings:** You can toggle the persistence of any data sets that are present under your **Favorites** tab.
   
@@ -140,3 +140,91 @@ Your PDS member (or PS) is uploaded.
 4. Select **Copy to Settings**.
 5. Edit the settings as needed.
 
+
+### View Unix System Services (USS) files
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Unix System Services (USS) by Entering a Path** magnifying glass.
+5. From the drop-down, enter the path that you want as the root of your displayed tree.  
+  All child files and directories of that root file are displayed in the explorer tree.
+
+  **Note:** You will not be able to expand directories or files that you are not authorised for.
+
+  ![Enter Path](./docs/images/path.gif?raw=true "Enter Path")
+<br /><br />
+
+### Refresh the list of files
+
+1. Navigate to your explorer tree.
+2. Click **Refresh All** button on the right of the **Unix System Services (USS)** explorer bar as illustrated by the following screen:
+
+![Refresh All](./docs/images/refreshUSS.gif?raw=true "Refresh All")
+<br /><br />
+
+### Download, edit, and upload an existing file
+
+1. Click the file that you want to download.
+
+    **Note:** To view the files within a directory, click the directory to expand the tree.
+    
+    The file displays in the text editor window of VSC. 
+
+    **Note:** If you have defined file associations with syntax coloring the suffix of your file will be marked up.
+
+2. Edit the document.
+3. Type Ctrl-s or Command-s (OSx) to save the file
+
+Your file is uploaded.  
+
+![Edit](./docs/images/editUSS.gif?raw=true "Edit")
+<br /><br />
+
+
+### Creating and deleting files and directories
+
+#### Create a directory
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory that you want to add the new directory to.
+4. Select the **Create directory** button and specify the directory name.
+   The directory is created. 
+
+#### Create a file
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory that you want to add the new file to.
+4. Select the **Create file** button and specify the file name.
+   The file is created. 
+
+#### Delete a file
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a file you want to remove.
+4. Select the **Delete** button and press yes in the confirmation dropdown.
+   The file is deleted. 
+   
+#### Delete a directory
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory you want to remove.
+4. Select the **Delete** button and press yes in the confirmation dropdown.
+   The directory and all child files and directories are deleted. 
+
+![Create and Delete](./docs/images/CreateDelete.gif?raw=true "Create and Delete")
+<br /><br />
+
+### View and access multiple profiles simultaneously 
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+2. Click the **Add Profile** button on the right of the **Unix System Services (USS)** explorer bar.
+3. Select the profile that you want to add to the view as illustrated by the following screen.
+
+![Add Profile](./docs/images/profile2.gif?raw=true "Add Profile")
+<br /><br />
