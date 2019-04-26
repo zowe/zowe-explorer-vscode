@@ -190,6 +190,14 @@
       {
         "command": "zowe.uss.removeSession",
         "title": "Remove Profile"
+      },
+      {
+        "command": "zowe.uss.binary",
+        "title": "Toggle Binary"
+      },
+      {
+        "command": "zowe.uss.text",
+        "title": "Toggle Text"
       }
     ],
     "menus": {
@@ -229,6 +237,16 @@
         {
           "when": "view == zowe.uss.explorer",
           "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFile",
+          "command": "zowe.uss.binary",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+          "command": "zowe.uss.text",
           "group": "navigation"
         },
         {

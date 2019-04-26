@@ -25,6 +25,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
     public fullPath = "";
     public dirty = true;
     public children: ZoweUSSNode[] = [];
+    public binaryFiles = {};
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -36,12 +37,14 @@ export class ZoweUSSNode extends vscode.TreeItem {
      * @param {String} parentPath - The file path of the parent on the server
      */
     constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweUSSNode, private session: Session, private parentPath: string) {
+                public mParent: ZoweUSSNode, private session: Session, private parentPath: string, public binary = false) {
         super(mLabel, mCollapsibleState);
         if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "directory";
+        } else if (binary) {
+            this.contextValue = "binaryFile";
         } else {
-            this.contextValue = "file";
+            this.contextValue = "textFile";
         }
         if (parentPath)
             this.fullPath = this.tooltip = parentPath+'/'+mLabel;
@@ -53,7 +56,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
      * @returns {Promise<ZoweUSSNode[]>}
      */
     public async getChildren(): Promise<ZoweUSSNode[]> {
-        if ((!this.fullPath && this.contextValue === "uss_session") || this.contextValue === "file") {
+        if ((!this.fullPath && this.contextValue === "uss_session") || 
+                (this.contextValue === "textFile" || this.contextValue === "binaryFile")) {
             return [];
         }
 
@@ -94,7 +98,12 @@ export class ZoweUSSNode extends vscode.TreeItem {
                         elementChildren[temp.label] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
-                        const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
+                        let temp;
+                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + '/' + item.name)) {
+                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true);
+                        } else {
+                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
+                        }
                         temp.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp]};
                         elementChildren[temp.label] = temp;
                     }
@@ -124,5 +133,17 @@ export class ZoweUSSNode extends vscode.TreeItem {
      */
     public getSessionNode(): ZoweUSSNode {
         return this.session ? this : this.mParent.getSessionNode();
+    }
+
+    public setBinary(binary: boolean) {
+        this.binary = binary;
+        if(this.binary){
+            this.contextValue = "binaryFile";
+            this.getSessionNode().binaryFiles[this.fullPath] = true;
+        } else {
+            this.contextValue = "textFile";
+            delete this.getSessionNode().binaryFiles[this.fullPath];
+        }
+        this.dirty = true;
     }
 }
