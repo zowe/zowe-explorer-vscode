@@ -290,12 +290,12 @@
         },
         {
           "when": "view == zowe.jobs",
-          "command": "refresh-all",
+          "command": "zowe.refreshAllJobs",
           "group": "navigation"
         },
         {
           "when": "view == zowe.jobs",
-          "command": "add-session",
+          "command": "zowe.addJobsSession",
           "group": "navigation"
         }
       ],
