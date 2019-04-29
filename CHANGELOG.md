@@ -3,6 +3,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.13.0
+ - Added the ability to list and view spool of z/OS Jobs. Thanks @crshnburn 
 ## 0.12.0
  - Added GIFs to README for USS use cases. Thanks Colin Stone
  - Added the ability to toggle binary mode or text mode on USS files. Thanks @crshnburn 
