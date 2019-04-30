@@ -1153,7 +1153,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: "Select a Profile to Add to the Data Set Explorer",
+            placeHolder: "Select a Profile to Add to the Jobs Explorer",
             ignoreFocusOut: true,
             canPickMany: false
         };
