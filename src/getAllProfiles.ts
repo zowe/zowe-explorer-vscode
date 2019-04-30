@@ -13,10 +13,16 @@ import { Imperative, CliProfileManager } from "@brightside/imperative";
 import * as path from "path";
 const os = require("os");
 
+/**
+ * Load all profiles of type zosmf and write it out to stdout
+ * We will then parse the output from the extension to load the profiles
+ */
 (async () => {
     const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
+    // we have to mock a few things to get the Imperative.init to work properly
     (process.mainModule as any).filename = require.resolve("@brightside/core");
     ((process.mainModule as any).paths as any).unshift(mainZoweDir);
+    // we need to call Imperative.init so that any installed credential manager plugins are loaded
     await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
     const zosmfProfiles = await new CliProfileManager({
         profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),

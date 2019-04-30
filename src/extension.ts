@@ -15,11 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-<<<<<<< HEAD
-import { CliProfileManager, Logger, AbstractSession } from "@brightside/imperative";
-=======
 import { CliProfileManager, Logger, AbstractSession, Imperative, IProfileLoaded, ILoadProfile } from "@brightside/imperative";
->>>>>>> add functions to load profiles even with credential managers
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -34,7 +30,6 @@ export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "t
 export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
 export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
 
-let ALL_PROFILES: IProfileLoaded[];
 let log: Logger;
 /**
  * The function that runs when the extension is loaded
@@ -66,18 +61,6 @@ export async function activate(context: vscode.ExtensionContext) {
         log = Logger.getAppLogger();
         log.debug("Initialized logger from VSCode extension");
 
-<<<<<<< HEAD
-=======
-        // imperative uses the process.mainmodule to find out where we're calling from and resolve command definition
-        // glob paths. So we need to mock it here as the index file of brightside core
-        // const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
-
-        // (process.mainModule as any).filename = require.resolve("@brightside/core");
-        // ((process.mainModule as any).paths as any).unshift(mainZoweDir);
-        // await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-
-        ALL_PROFILES = loadAllProfiles();
->>>>>>> add functions to load profiles even with credential managers
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
         await datasetProvider.addSession();
@@ -718,7 +701,6 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
             const sesName = line.substring(1, line.lastIndexOf("]"));
             const zosmfProfile = loadNamedProfile(sesName);
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            console.log("Session: " + JSON.stringify(session.ISession, null, 2));
             let node: ZoweNode;
             if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
                 node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
@@ -971,7 +953,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         const zosmfProfile = loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
-    console.log("Document session: " + JSON.stringify(documentSession, null, 2));
     if (documentSession == null) {
         log.error("Couldn't locate session when saving data set!");
     }
