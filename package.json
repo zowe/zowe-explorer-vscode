@@ -220,8 +220,8 @@
         "command": "zowe.deleteJob",
         "title": "Delete Job",
         "icon": {
-          "dark": "media/trash-dark.svg",
-          "light": "media/trash-light.svg"
+          "dark": "./resources/dark/trash.svg",
+          "light": "./resources/light/trash.svg"
         }
       },
       {
@@ -244,24 +244,24 @@
         "command": "zowe.refreshJobsServer",
         "title": "Refresh",
         "icon": {
-          "dark": "media/refresh-dark.svg",
-          "light": "media/refresh-light.svg"
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
         }
       },
       {
         "command": "zowe.refreshAllJobs",
         "title": "Refresh",
         "icon": {
-          "dark": "media/refresh-dark.svg",
-          "light": "media/refresh-light.svg"
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
         }
       },
       {
         "command": "zowe.addJobsSession",
         "title": "Add Profile",
         "icon": {
-          "light": "media/plus-light.svg",
-          "dark": "media/plus-dark.svg"
+          "light": "./resources/light/plus.svg",
+          "dark": "./resources/dark/plus.svg"
         }
       }
     ],
