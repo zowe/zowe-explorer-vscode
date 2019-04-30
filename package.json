@@ -284,7 +284,8 @@
         },
         {
           "when": "view == zowe.uss.explorer",
-          "command": "zowe.uss.addSession"
+          "command": "zowe.uss.addSession",
+          "group": "navigation"
         },
         {
           "when": "view == zowe.jobs",
