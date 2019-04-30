@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, Logger, AbstractSession, Imperative, IProfileLoaded, ILoadProfile } from "@brightside/imperative";
+import { CliProfileManager, Logger, AbstractSession } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -23,7 +23,7 @@ import * as ussActions from "./uss/ussNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
-import { loadAllProfiles, loadNamedProfile } from "./ProfileLoader";
+import { loadNamedProfile } from "./ProfileLoader";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");

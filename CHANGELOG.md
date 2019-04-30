@@ -3,6 +3,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.15.0
+ - The extension is now compatible with installations which use a secure credential management plugin
+   for profiles in Zowe CLI
 ## 0.14.0
  - All zowe views now part of single Zowe view container. Thanks Colin Stone
 ## 0.13.0
