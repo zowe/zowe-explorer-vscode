@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -33,14 +33,14 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "zoweZosJobs",
-          "title": "z/OS Jobs",
+          "id": "zowe",
+          "title": "Zowe",
           "icon": "resources/zowe.svg"
         }
       ]
     },
     "views": {
-      "explorer": [
+      "zowe": [
         {
           "id": "zowe.explorer",
           "name": "Data Sets"
@@ -48,9 +48,7 @@
         {
           "id": "zowe.uss.explorer",
           "name": "Unix System Services (USS)"
-        }
-      ],
-      "zoweZosJobs": [
+        },
         {
           "id": "zowe.jobs",
           "name": "Jobs"
