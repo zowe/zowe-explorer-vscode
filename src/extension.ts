@@ -15,7 +15,11 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
+<<<<<<< HEAD
 import { CliProfileManager, Logger, AbstractSession } from "@brightside/imperative";
+=======
+import { CliProfileManager, Logger, AbstractSession, Imperative, IProfileLoaded, ILoadProfile } from "@brightside/imperative";
+>>>>>>> add functions to load profiles even with credential managers
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -23,12 +27,14 @@ import * as ussActions from "./uss/ussNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
+import { loadAllProfiles, loadNamedProfile } from "./ProfileLoader";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
 export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
 export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
 
+let ALL_PROFILES: IProfileLoaded[];
 let log: Logger;
 /**
  * The function that runs when the extension is loaded
@@ -60,6 +66,18 @@ export async function activate(context: vscode.ExtensionContext) {
         log = Logger.getAppLogger();
         log.debug("Initialized logger from VSCode extension");
 
+<<<<<<< HEAD
+=======
+        // imperative uses the process.mainmodule to find out where we're calling from and resolve command definition
+        // glob paths. So we need to mock it here as the index file of brightside core
+        // const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
+
+        // (process.mainModule as any).filename = require.resolve("@brightside/core");
+        // ((process.mainModule as any).paths as any).unshift(mainZoweDir);
+        // await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+
+        ALL_PROFILES = loadAllProfiles();
+>>>>>>> add functions to load profiles even with credential managers
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
         await datasetProvider.addSession();
@@ -125,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
-    
+
     let jobsProvider: ZosJobsProvider;
     try {
         // Initialize dataset provider with the created session and the selected pattern
@@ -202,10 +220,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         documentSession = sesNode.getSession();
     } else {
         // if submitting from favorites, a session might not exist for this node
-        const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load({ name: sesName });
+        const zosmfProfile = loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
     if (documentSession == null) {
@@ -701,13 +716,9 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
         if (favoriteDataSetPattern.test(line)) {
             const sesName = line.substring(1, line.lastIndexOf("]"));
-            const zosmfProfile = await new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-                type: "zosmf"
-            }).load({ name: sesName });
-
+            const zosmfProfile = loadNamedProfile(sesName);
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
+            console.log("Session: " + JSON.stringify(session.ISession, null, 2));
             let node: ZoweNode;
             if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
                 node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
@@ -935,8 +946,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     log.debug("requested to save data set: " + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     if (path.relative(docPath, DS_DIR)) {
-        log.debug("path.relative returned a non-blank directory."+
-         "Assuming we are not in the DS_DIR directory: " + path.relative(docPath, DS_DIR));
+        log.debug("path.relative returned a non-blank directory." +
+            "Assuming we are not in the DS_DIR directory: " + path.relative(docPath, DS_DIR));
         return;
     }
 
@@ -957,13 +968,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         log.debug("couldn't find session node, loading profile with CLI profile manager");
-        const zosmfProfile = await new CliProfileManager({  // TODO MISSED TESTING
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load({ name: sesName });
+        const zosmfProfile = loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
-
+    console.log("Document session: " + JSON.stringify(documentSession, null, 2));
     if (documentSession == null) {
         log.error("Couldn't locate session when saving data set!");
     }
@@ -1043,7 +1051,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  * @param {ZoweUSSNode} node
  */
 export async function openUSS(node: ZoweUSSNode, download = false) {
- 
+
     try {
         let label: string;
         switch (node.mParent.contextValue) {
