@@ -650,7 +650,7 @@
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
-    "vsce": "^1.58.0",
+    "vsce": "^1.60.0",
     "vscode": "^1.1.30"
   },
   "dependencies": {
