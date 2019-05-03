@@ -11,7 +11,6 @@
 
 import { Imperative, CliProfileManager, ImperativeConfig } from "@brightside/imperative";
 import * as path from "path";
-const os = require("os");
 
 /**
  * Load the default profile of type zosmf and write it out to stdout
