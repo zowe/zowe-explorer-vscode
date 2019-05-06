@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, Logger, AbstractSession } from "@brightside/imperative";
+import {Logger, AbstractSession } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -23,7 +23,7 @@ import * as ussActions from "./uss/ussNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
-import { loadNamedProfile } from "./ProfileLoader";
+import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -261,19 +261,18 @@ export async function submitMember(node: ZoweNode) {
  * @param {DatasetTree} datasetProvider - our datasetTree object
  */
 export async function addSession(datasetProvider: DatasetTree) {
-    let profileManager;
+    let allProfiles;
     try {
-        profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        });
+        allProfiles = loadAllProfiles();
     } catch (err) {
         log.error("Error encountered when adding session! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);
+        vscode.window.showErrorMessage(`Unable to load all profiles: ${err.message}`);
         throw (err);
     }
 
-    let profileNamesList = profileManager.getAllProfileNames();
+    let profileNamesList = allProfiles.map((profile)=>{
+        return profile.name;
+    });
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
@@ -308,19 +307,18 @@ export async function addSession(datasetProvider: DatasetTree) {
  * @param {USSTree} ussFileProvider - our ussTree object
  */
 export async function addUSSSession(ussFileProvider: USSTree) {
-    let profileManager;
+    let allProfiles;
     try {
-        profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        });
+        allProfiles = loadAllProfiles();
     } catch (err) {
         log.error("Error encountered when adding USS session: " + JSON.stringify(err));
-        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(`Unable to load all profiles: ${err.message}`);  // TODO MISSED TESTING
         throw (err);
     }
 
-    let profileNamesList = profileManager.getAllProfileNames();
+    let profileNamesList = allProfiles.map((profile)=>{
+        return profile.name;
+    });
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
@@ -1117,18 +1115,17 @@ export async function setPrefix(job: Job, datasetProvider: ZosJobsProvider) {
 }
 
 export async function addJobsSession(datasetProvider: ZosJobsProvider) {
-    let profileManager;
+    let allProfiles;
     try {
-        profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        });
+        allProfiles = loadAllProfiles();
     } catch (err) {
-        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);
+        vscode.window.showErrorMessage(`Unable to load all profiles: ${err.message}`);
         throw (err);
     }
 
-    let profileNamesList = profileManager.getAllProfileNames();
+    let profileNamesList = allProfiles.map((profile)=>{
+        return profile.name;
+    });
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
