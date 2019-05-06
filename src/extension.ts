@@ -270,10 +270,13 @@ export async function addSession(datasetProvider: DatasetTree) {
         throw (err);
     }
 
+    if (allProfiles == null){
+        throw new Error("hi fernando");
+    }
     let profileNamesList = allProfiles.map((profile)=>{
         return profile.name;
     });
-    if (profileNamesList) {
+    if (profileNamesList.length >0 ) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !datasetProvider.mSessionNodes.find((sessionNode) =>
@@ -284,7 +287,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         vscode.window.showInformationMessage("No profiles detected");
         return;
     }
-    if (profileNamesList.length) {
+    if (profileNamesList.length >0 ) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: "Select a Profile to Add to the Data Set Explorer",
             ignoreFocusOut: true,
