@@ -41,7 +41,7 @@ export function loadAllProfiles(): IProfileLoaded[] {
 export function loadNamedProfile(name: string): IProfileLoaded {
     const allProfiles = loadAllProfiles();
     for (const profile of allProfiles) {
-        if (profile.name === name) {
+        if (profile.name === name && profile.type === "zosmf") {
             return profile;
         }
     }
