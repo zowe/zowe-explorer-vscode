@@ -31,12 +31,7 @@ export function loadAllProfiles(): IProfileLoaded[] {
             "before attempting to use this extension.");
     }
 
-    let allProfiles = JSON.parse(getProfileProcess.stdout.toString());
-    allProfiles = allProfiles.filter((profile) => {
-        // only return zosmf profiles 
-        return profile.type === "zosmf";
-    });
-    return allProfiles;
+    return JSON.parse(getProfileProcess.stdout.toString());
 }
 
 /**
