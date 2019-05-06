@@ -10,13 +10,11 @@
 */
 
 import * as zowe from "@brightside/core";
-import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, IProfileLoaded } from "@brightside/imperative";
-import {loadAllProfiles, loadNamedProfile, loadDefaultProfile} from "./ProfileLoader";
+import {IProfileLoaded } from "@brightside/imperative";
+import { loadNamedProfile, loadDefaultProfile} from "./ProfileLoader";
 
 /**
  * A tree that contains nodes of sessions and data sets
