@@ -1032,7 +1032,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  * @param {ZoweUSSNode} node
  */
 export async function openUSS(node: ZoweUSSNode, download = false) {
-
     try {
         let label: string;
         switch (node.mParent.contextValue) {
