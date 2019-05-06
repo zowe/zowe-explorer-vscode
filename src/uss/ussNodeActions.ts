@@ -58,6 +58,17 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
 }
 
+export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
+    const newName = await vscode.window.showInputBox({placeHolder: "New name for file or directory"});
+    try {
+        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, node.mParent.fullPath + "/" +  newName);
+        ussFileProvider.refresh();
+    } catch (err) {
+        vscode.window.showErrorMessage(`Unable to rename node: ${err.message}`);
+        throw (err);
+    }
+}
+
 /**
  * Marks file as deleted from disk
  *
