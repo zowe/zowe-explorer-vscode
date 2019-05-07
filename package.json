@@ -314,7 +314,7 @@
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem != uss_session",
           "command": "zowe.uss.deleteNode",
           "group": "navigation"
         },
