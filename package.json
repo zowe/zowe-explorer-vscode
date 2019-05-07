@@ -263,6 +263,10 @@
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
         }
+      },
+      {
+        "command": "zowe.removeJobsSession",
+        "title": "Remove Profile"
       }
     ],
     "menus": {
@@ -463,6 +467,10 @@
         {
           "when": "viewItem == server",
           "command": "zowe.setPrefix"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.removeJobsSession"
         },
         {
           "when": "viewItem == job",

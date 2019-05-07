@@ -168,6 +168,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.setPrefix", (node) => {
         setPrefix(node, jobsProvider);
     });
+    vscode.commands.registerCommand("zowe.removeJobsSession", (node) => jobsProvider.deleteSession(node));
 }
 
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
