@@ -58,11 +58,31 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
 }
 
+/**
+ * Refreshes treeView MOVE FUNCTION FROM EXTENSION!
+ *
+ * @param {USSTree} ussFileProvider
+ */
+export async function refreshAllUSS(ussFileProvider: USSTree) {
+    ussFileProvider.mSessionNodes.forEach((node) => {
+        node.dirty = true;
+    });
+    ussFileProvider.refresh();
+}
+
 export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    const newName = await vscode.window.showInputBox({placeHolder: "New name for file or directory"});
+    const newName = await vscode.window.showInputBox({value: node.label});
+    if (!newName) {
+        return;
+    }
     try {
-        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, node.mParent.fullPath + "/" +  newName);
-        ussFileProvider.refresh();
+        const newNamePath = node.mParent.fullPath + "/" +  newName;
+        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
+        if (node.contextValue === "directory") {
+            refreshAllUSS(ussFileProvider);
+        } else {
+            ussFileProvider.refresh();
+        }
     } catch (err) {
         vscode.window.showErrorMessage(`Unable to rename node: ${err.message}`);
         throw (err);
