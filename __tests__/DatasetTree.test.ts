@@ -14,10 +14,13 @@ jest.mock("fs");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
+jest.mock("../src/ProfileLoader");
 import * as vscode from "vscode";
 import { DatasetTree } from "../src/DatasetTree";
 import { ZoweNode } from "../src/ZoweNode";
 import { Session } from "@brightside/imperative";
+
+import * as profileLoader from "../src/ProfileLoader";
 
 describe("DatasetTree Unit Tests", async () => {
     // Globals
@@ -29,6 +32,11 @@ describe("DatasetTree Unit Tests", async () => {
         protocol: "https",
         type: "basic",
     });
+
+    Object.defineProperty(profileLoader,"loadNamedProfile", {value: jest.fn()});
+    Object.defineProperty(profileLoader,"loadAllProfiles", {value: jest.fn()});
+    Object.defineProperty(profileLoader,"loadDefaultProfile", {value: jest.fn()});
+
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
     testTree.mSessionNodes[1].contextValue = "session";
@@ -184,21 +192,21 @@ describe("DatasetTree Unit Tests", async () => {
     it("Testing that addFavorite works properly", async () => {
         testTree.mFavorites = [];
         const parent = new ZoweNode("Parent", vscode.TreeItemCollapsibleState.Collapsed,
-        testTree.mSessionNodes[2], null);
+        testTree.mSessionNodes[1], null);
         const member = new ZoweNode("Child", vscode.TreeItemCollapsibleState.None,
             parent, null);
 
-        testTree.addFavorite(member);
+        await testTree.addFavorite(member);
 
         // Check adding duplicates
         const pds = new ZoweNode("Parent", vscode.TreeItemCollapsibleState.Collapsed,
-        testTree.mSessionNodes[2], null);
+        testTree.mSessionNodes[1], null);
 
-        testTree.addFavorite(pds);
+        await testTree.addFavorite(pds);
 
         // Check adding ps
         const ps = new ZoweNode("Dataset", vscode.TreeItemCollapsibleState.None,
-        testTree.mSessionNodes[2], null);
+        testTree.mSessionNodes[1], null);
 
         testTree.addFavorite(ps);
 
@@ -209,7 +217,7 @@ describe("DatasetTree Unit Tests", async () => {
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[2]);
+        testTree.deleteSession(testTree.mSessionNodes[1]);
     });
 
     /*************************************************************************************************************

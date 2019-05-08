@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager, Logger, AbstractSession } from "@brightside/imperative";
+import {Logger, AbstractSession } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -23,6 +23,7 @@ import * as ussActions from "./uss/ussNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
+import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -59,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log = Logger.getAppLogger();
         log.debug("Initialized logger from VSCode extension");
+
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
         await datasetProvider.addSession();
@@ -124,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
-    
+
     let jobsProvider: ZosJobsProvider;
     try {
         // Initialize dataset provider with the created session and the selected pattern
@@ -201,10 +203,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         documentSession = sesNode.getSession();
     } else {
         // if submitting from favorites, a session might not exist for this node
-        const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load({ name: sesName });
+        const zosmfProfile = loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
     if (documentSession == null) {
@@ -262,20 +261,22 @@ export async function submitMember(node: ZoweNode) {
  * @param {DatasetTree} datasetProvider - our datasetTree object
  */
 export async function addSession(datasetProvider: DatasetTree) {
-    let profileManager;
+    let allProfiles;
     try {
-        profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        });
+        allProfiles = loadAllProfiles();
     } catch (err) {
         log.error("Error encountered when adding session! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);
+        vscode.window.showErrorMessage(`Unable to load all profiles: ${err.message}`);
         throw (err);
     }
 
-    let profileNamesList = profileManager.getAllProfileNames();
-    if (profileNamesList) {
+    if (allProfiles == null){
+        throw new Error("hi fernando");
+    }
+    let profileNamesList = allProfiles.map((profile)=>{
+        return profile.name;
+    });
+    if (profileNamesList.length >0 ) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !datasetProvider.mSessionNodes.find((sessionNode) =>
@@ -286,7 +287,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         vscode.window.showInformationMessage("No profiles detected");
         return;
     }
-    if (profileNamesList.length) {
+    if (profileNamesList.length >0 ) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: "Select a Profile to Add to the Data Set Explorer",
             ignoreFocusOut: true,
@@ -309,19 +310,18 @@ export async function addSession(datasetProvider: DatasetTree) {
  * @param {USSTree} ussFileProvider - our ussTree object
  */
 export async function addUSSSession(ussFileProvider: USSTree) {
-    let profileManager;
+    let allProfiles;
     try {
-        profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        });
+        allProfiles = loadAllProfiles();
     } catch (err) {
         log.error("Error encountered when adding USS session: " + JSON.stringify(err));
-        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(`Unable to load all profiles: ${err.message}`);  // TODO MISSED TESTING
         throw (err);
     }
 
-    let profileNamesList = profileManager.getAllProfileNames();
+    let profileNamesList = allProfiles.map((profile)=>{
+        return profile.name;
+    });
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
@@ -700,13 +700,8 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
         if (favoriteDataSetPattern.test(line)) {
             const sesName = line.substring(1, line.lastIndexOf("]"));
-            const zosmfProfile = await new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-                type: "zosmf"
-            }).load({ name: sesName });
-
+            const zosmfProfile = loadNamedProfile(sesName);
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
             let node: ZoweNode;
             if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
                 node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
@@ -934,8 +929,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     log.debug("requested to save data set: " + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     if (path.relative(docPath, DS_DIR)) {
-        log.debug("path.relative returned a non-blank directory."+
-         "Assuming we are not in the DS_DIR directory: " + path.relative(docPath, DS_DIR));
+        log.debug("path.relative returned a non-blank directory." +
+            "Assuming we are not in the DS_DIR directory: " + path.relative(docPath, DS_DIR));
         return;
     }
 
@@ -956,13 +951,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         log.debug("couldn't find session node, loading profile with CLI profile manager");
-        const zosmfProfile = await new CliProfileManager({  // TODO MISSED TESTING
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load({ name: sesName });
+        const zosmfProfile = loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
-
     if (documentSession == null) {
         log.error("Couldn't locate session when saving data set!");
     }
@@ -1042,7 +1033,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  * @param {ZoweUSSNode} node
  */
 export async function openUSS(node: ZoweUSSNode, download = false) {
- 
     try {
         let label: string;
         switch (node.mParent.contextValue) {
@@ -1128,18 +1118,17 @@ export async function setPrefix(job: Job, datasetProvider: ZosJobsProvider) {
 }
 
 export async function addJobsSession(datasetProvider: ZosJobsProvider) {
-    let profileManager;
+    let allProfiles;
     try {
-        profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        });
+        allProfiles = loadAllProfiles();
     } catch (err) {
-        vscode.window.showErrorMessage(`Unable to load profile manager: ${err.message}`);
+        vscode.window.showErrorMessage(`Unable to load all profiles: ${err.message}`);
         throw (err);
     }
 
-    let profileNamesList = profileManager.getAllProfileNames();
+    let profileNamesList = allProfiles.map((profile)=>{
+        return profile.name;
+    });
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed

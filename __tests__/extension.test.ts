@@ -17,6 +17,7 @@ jest.mock("@brightside/imperative");
 jest.mock("fs");
 jest.mock("../src/DatasetTree");
 jest.mock("../src/USSTree");
+jest.mock("../src/ProfileLoader");
 
 import * as vscode from "vscode";
 import * as treeMock from "../src/DatasetTree";
@@ -28,6 +29,7 @@ import * as extension from "../src/extension";
 import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
+import * as profileLoader from "../src/ProfileLoader";
 
 describe("Extension Unit Tests", async () => {
     // Globals
@@ -135,11 +137,12 @@ describe("Extension Unit Tests", async () => {
     //      };
     // });
     let withProgress = jest.fn().mockImplementation(() => {
-        return { 
+        return {
             location: 15,
             title: "Saving file..."
-          };
+        };
     });
+
     enum CreateDataSetTypeEnum {
         DATA_SET_BINARY = 0,
         DATA_SET_C = 1,
@@ -155,6 +158,14 @@ describe("Extension Unit Tests", async () => {
     const testUSSTree = USSTree();
     testUSSTree.mSessionNodes = [];
     testUSSTree.mSessionNodes.push(ussNode);
+
+    Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
+    Object.defineProperty(profileLoader, "loadAllProfiles", {
+        value: jest.fn(() => {
+            return [{name: "firstName"}, {name: "secondName"}];
+        })
+    });
+    Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});
 
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
@@ -184,7 +195,7 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(brightside, "Upload", {value: Upload});
     Object.defineProperty(Upload, "bufferToDataSet", {value: bufferToDataSet});
     Object.defineProperty(Upload, "pathToDataSet", {value: pathToDataSet});
-    Object.defineProperty(Upload, "fileToUSSFile", { value: fileToUSSFile });
+    Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
     Object.defineProperty(brightside, "Create", {value: Create});
     Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
     Object.defineProperty(brightside, "List", {value: List});
@@ -205,7 +216,7 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
     // Object.defineProperty(fs, "lstatSync", { value: lstatSync });
     // Object.defineProperty(fs, "lstat", { value: lstat });
-    Object.defineProperty(Download, "ussFile", { value: ussFile });
+    Object.defineProperty(Download, "ussFile", {value: ussFile});
 
     it("Testing that activate correctly executes", async () => {
         createTreeView.mockReturnValue("testDisposable");
@@ -223,7 +234,12 @@ describe("Extension Unit Tests", async () => {
         //     throw Error;
         // });
         // parse.mockReturnValue({path: "lame"});
-        load.mockImplementation(() => {
+        (profileLoader.loadNamedProfile as any).mockImplementation(() => {
+            return {
+                profile: "SampleProfile"
+            };
+        });
+        (profileLoader.loadDefaultProfile as any).mockImplementation(() => {
             return {
                 profile: "SampleProfile"
             };
@@ -334,7 +350,7 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[22][0]).toBe("zowe.uss.ZoweUSSNode.open");
         expect(registerCommand.mock.calls[22][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.removeSession");
-        expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);               
+        expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
@@ -345,7 +361,7 @@ describe("Extension Unit Tests", async () => {
         expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
         expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(showErrorMessage.mock.calls.length).toBe(2); 
+        expect(showErrorMessage.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
 
         existsSync.mockReset();
@@ -523,14 +539,12 @@ describe("Extension Unit Tests", async () => {
 
     it("Testing that addSession is executed successfully", async () => {
         showQuickPick.mockReset();
-        getAllProfileNames.mockReset();
 
-        getAllProfileNames.mockReturnValueOnce(["firstName", "secondName"]);
-
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
         await extension.addSession(testTree);
 
-        expect(getAllProfileNames.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls.length).toBe(1);
+        //expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -540,27 +554,24 @@ describe("Extension Unit Tests", async () => {
         });
 
         showInformationMessage.mockReset();
-        getAllProfileNames.mockReset();
-        getAllProfileNames.mockReturnValueOnce(undefined);
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
 
         await extension.addSession(testTree);
 
-        expect(getAllProfileNames.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
 
         showInformationMessage.mockReset();
-        getAllProfileNames.mockReset();
-        getAllProfileNames.mockReturnValueOnce(["sestest"]);
-
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
         await extension.addSession(testTree);
 
-        expect(getAllProfileNames.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
 
         showErrorMessage.mockReset();
-        CliProfileManager.mockImplementationOnce(() => {
+        (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
             throw (Error("testError"));
         });
 
@@ -571,7 +582,7 @@ describe("Extension Unit Tests", async () => {
         }
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load profile manager: testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
 
     });
 
@@ -1059,7 +1070,7 @@ describe("Extension Unit Tests", async () => {
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
-        openTextDocument.mockResolvedValueOnce({ isDirty: true });
+        openTextDocument.mockResolvedValueOnce({isDirty: true});
         ussFile.mockReset();
         showTextDocument.mockReset();
         executeCommand.mockReset();
@@ -1079,7 +1090,7 @@ describe("Extension Unit Tests", async () => {
 
 
         showInformationMessage.mockReset();
-        openTextDocument.mockResolvedValueOnce({ isDirty: false });
+        openTextDocument.mockResolvedValueOnce({isDirty: false});
         executeCommand.mockReset();
 
         await extension.refreshUSS(node);
@@ -1106,8 +1117,8 @@ describe("Extension Unit Tests", async () => {
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
-        openTextDocument.mockResolvedValueOnce({ isDirty: true });
-        openTextDocument.mockResolvedValueOnce({ isDirty: true });
+        openTextDocument.mockResolvedValueOnce({isDirty: true});
+        openTextDocument.mockResolvedValueOnce({isDirty: true});
         ussFile.mockReset();
         showTextDocument.mockReset();
 
@@ -1137,15 +1148,15 @@ describe("Extension Unit Tests", async () => {
 
     it("Testing that addSession is executed correctly for a USS explorer", async () => {
         showQuickPick.mockReset();
-        getAllProfileNames.mockReset();
+        (profileLoader.loadAllProfiles as any).mockReset();
 
-        getAllProfileNames.mockReturnValueOnce(["firstName", "secondName"]);
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
 
         await extension.addUSSSession(testTree);
 
-        expect(getAllProfileNames.mock.calls.length).toBe(1);
+        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName","secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
@@ -1153,27 +1164,27 @@ describe("Extension Unit Tests", async () => {
         });
 
         showInformationMessage.mockReset();
-        getAllProfileNames.mockReset();
-        getAllProfileNames.mockReturnValueOnce(undefined);
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
 
         await extension.addSession(testTree);
 
-        expect(getAllProfileNames.mock.calls.length).toBe(1);
+        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
 
         showInformationMessage.mockReset();
-        getAllProfileNames.mockReset();
-        getAllProfileNames.mockReturnValueOnce(["sestest"]);
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "sestest"}]);
 
         await extension.addSession(testTree);
 
-        expect(getAllProfileNames.mock.calls.length).toBe(1);
+        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
 
         showErrorMessage.mockReset();
-        CliProfileManager.mockImplementationOnce(() => {
+        (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
             throw (Error("testError"));
         });
 
@@ -1184,7 +1195,7 @@ describe("Extension Unit Tests", async () => {
         }
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load profile manager: testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
 
     });
 
@@ -1242,7 +1253,7 @@ describe("Extension Unit Tests", async () => {
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(session);
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        expect(ussFile.mock.calls[0][2]).toEqual({ file: extension.getUSSDocumentFilePath(node), binary: node.binary });
+        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: node.binary});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1344,13 +1355,13 @@ describe("Extension Unit Tests", async () => {
         testResponse.commandResponse = "Save failed";
         fileToUSSFile.mockResolvedValueOnce(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
-        
+
         await extension.saveUSSFile(testDoc, testUSSTree);
 
         fileToUSSFile.mockRejectedValueOnce(Error("Test Error"));
         showErrorMessage.mockReset();
         withProgress.mockRejectedValueOnce(Error("Test Error"));
-  
+
         await extension.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
