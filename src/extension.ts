@@ -15,7 +15,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import {Logger, AbstractSession } from "@brightside/imperative";
+import { Logger, AbstractSession, TextUtils } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -95,6 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
     vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
@@ -271,13 +272,13 @@ export async function addSession(datasetProvider: DatasetTree) {
         throw (err);
     }
 
-    if (allProfiles == null){
+    if (allProfiles == null) {
         throw new Error("hi fernando");
     }
-    let profileNamesList = allProfiles.map((profile)=>{
+    let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
-    if (profileNamesList.length >0 ) {
+    if (profileNamesList.length > 0) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !datasetProvider.mSessionNodes.find((sessionNode) =>
@@ -288,7 +289,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         vscode.window.showInformationMessage("No profiles detected");
         return;
     }
-    if (profileNamesList.length >0 ) {
+    if (profileNamesList.length > 0) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: "Select a Profile to Add to the Data Set Explorer",
             ignoreFocusOut: true,
@@ -320,7 +321,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         throw (err);
     }
 
-    let profileNamesList = allProfiles.map((profile)=>{
+    let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
     if (profileNamesList) {
@@ -444,6 +445,49 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null));
     }
 }
+
+
+/**
+ * Shows data set attributes in a new text editor
+ * 
+ * @export
+ * @param {ZoweNode} parent - The parent Node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
+
+    let label = parent.mLabel;
+    if (parent.contextValue === "pdsf") {
+        label = parent.mLabel.substring(parent.mLabel.indexOf(":") + 2); // TODO MISSED TESTING
+    }
+
+    log.debug("showing attributes of data set " + label);
+    let attributes: any;
+    try {
+        attributes = await zowe.List.dataSet(parent.getSession(), label, { attributes: true });
+        attributes = attributes.apiResponse.items;
+        attributes = attributes.filter((dataSet) => {
+            console.log(JSON.stringify(dataSet));
+            return dataSet.dsname.toUpperCase() === label.toUpperCase();
+        });
+        if (attributes.length === 0) {
+            throw new Error("No matching data set names found for query: " + label);
+        }
+    } catch (err) {
+        log.error("Error encountered when listing attributes! " + JSON.stringify(err));
+        vscode.window.showErrorMessage(`Unable to list attributes: ${err.message}`);
+        throw (err);
+    }
+
+    // shouldn't be possible for there to be two cataloged data sets with the same name, 
+    // but just in case we'll display all of the results 
+    // if there's only one result (which there should be), we will just pass in attributes[0]
+    // so that prettyJson doesn't display the attributes as an array with a hyphen character
+    const document = await vscode.workspace.openTextDocument(
+        { content: TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false) });
+    await vscode.window.showTextDocument(document);
+}
+
 
 function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
@@ -1127,7 +1171,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
         throw (err);
     }
 
-    let profileNamesList = allProfiles.map((profile)=>{
+    let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
     if (profileNamesList) {

@@ -97,6 +97,10 @@
         "title": "Create New Member"
       },
       {
+        "command": "zowe.showDSAttributes",
+        "title": "Show Data Set Attributes"
+      },
+      {
         "command": "zowe.deleteDataset",
         "title": "Delete Data Set"
       },
@@ -406,6 +410,10 @@
         },
         {
           "when": "viewItem == pds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == pds",
           "command": "zowe.deletePDS"
         },
         {
@@ -415,6 +423,10 @@
         {
           "when": "viewItem == pdsf",
           "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.showDSAttributes"
         },
         {
           "when": "viewItem == pdsf",
