@@ -336,7 +336,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: "Select a Profile to Add to the Data Set Explorer",
+            placeHolder: "Select a Profile to Add to the USS Explorer",
             ignoreFocusOut: true,
             canPickMany: false
         };

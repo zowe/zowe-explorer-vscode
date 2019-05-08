@@ -1160,7 +1160,7 @@ describe("Extension Unit Tests", async () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the Data Set Explorer"
+            placeHolder: "Select a Profile to Add to the USS Explorer"
         });
 
         showInformationMessage.mockReset();
