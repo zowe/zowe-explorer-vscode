@@ -62,6 +62,12 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         this.refresh();
     }
 
+    public deleteSession(node: Job) {
+        // Removes deleted session from mSessionNodes
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
+        this.refresh();
+    }
+
     /**
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *

@@ -302,7 +302,7 @@ describe("Extension Unit Tests", async () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(39);
+        expect(registerCommand.mock.calls.length).toBe(40);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");
@@ -1160,7 +1160,7 @@ describe("Extension Unit Tests", async () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the Data Set Explorer"
+            placeHolder: "Select a Profile to Add to the USS Explorer"
         });
 
         showInformationMessage.mockReset();

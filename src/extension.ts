@@ -170,6 +170,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.setPrefix", (node) => {
         setPrefix(node, jobsProvider);
     });
+    vscode.commands.registerCommand("zowe.removeJobsSession", (node) => jobsProvider.deleteSession(node));
 }
 
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
@@ -335,7 +336,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: "Select a Profile to Add to the Data Set Explorer",
+            placeHolder: "Select a Profile to Add to the USS Explorer",
             ignoreFocusOut: true,
             canPickMany: false
         };

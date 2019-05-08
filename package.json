@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -263,6 +263,10 @@
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
         }
+      },
+      {
+        "command": "zowe.removeJobsSession",
+        "title": "Remove Profile"
       }
     ],
     "menus": {
@@ -310,7 +314,7 @@
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem != uss_session",
           "command": "zowe.uss.deleteNode",
           "group": "navigation"
         },
@@ -463,6 +467,10 @@
         {
           "when": "viewItem == server",
           "command": "zowe.setPrefix"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.removeJobsSession"
         },
         {
           "when": "viewItem == job",
