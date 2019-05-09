@@ -267,6 +267,14 @@
       {
         "command": "zowe.removeJobsSession",
         "title": "Remove Profile"
+      },
+      {
+        "command": "zowe.downloadSpool",
+        "title": "Download Spool",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
       }
     ],
     "menus": {
@@ -484,6 +492,11 @@
         {
           "when": "viewItem == job",
           "command": "zowe.runStopCommand"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.downloadSpool",
+          "group": "inline"
         }
       ],
       "commandPalette": [
