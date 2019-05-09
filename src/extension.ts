@@ -457,7 +457,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
 export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
 
     let label = parent.mLabel;
-    if (parent.contextValue === "pdsf") {
+    if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
         label = parent.mLabel.substring(parent.mLabel.indexOf(":") + 2); // TODO MISSED TESTING
     }
 
@@ -467,7 +467,6 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         attributes = await zowe.List.dataSet(parent.getSession(), label, { attributes: true });
         attributes = attributes.apiResponse.items;
         attributes = attributes.filter((dataSet) => {
-            console.log(JSON.stringify(dataSet));
             return dataSet.dsname.toUpperCase() === label.toUpperCase();
         });
         if (attributes.length === 0) {

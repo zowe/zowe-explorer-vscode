@@ -387,6 +387,10 @@
           "command": "zowe.addFavorite"
         },
         {
+          "when": "viewItem == ds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
           "when": "viewItem == dsf",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -395,6 +399,10 @@
           "when": "viewItem == dsf",
           "command": "zowe.safeSave",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.showDSAttributes"
         },
         {
           "when": "viewItem == dsf",
