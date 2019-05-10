@@ -486,10 +486,35 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     // if there's only one result (which there should be), we will just pass in attributes[0]
     // so that prettyJson doesn't display the attributes as an array with a hyphen character
     const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
-    const attributesFilePath = path.join(BRIGHTTEMPFOLDER, label + ".yaml");
-    fs.writeFileSync(attributesFilePath, attributesText);
-    const document = await vscode.workspace.openTextDocument(attributesFilePath);
-    await vscode.window.showTextDocument(document);
+    // const attributesFilePath = path.join(BRIGHTTEMPFOLDER, label + ".yaml");
+    // fs.writeFileSync(attributesFilePath, attributesText);
+    // const document = await vscode.workspace.openTextDocument(attributesFilePath);
+    // await vscode.window.showTextDocument(document);
+    const webviewHTML = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>${label} Attributes</title>
+    </head>
+    <body>
+    <font size="+1">
+     ${attributesText.replace(/\n/g, "</br>")}
+     </font>
+    </body>
+    </html>`;
+    const column = vscode.window.activeTextEditor
+			? vscode.window.activeTextEditor.viewColumn
+			: undefined;
+    const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
+			"zowe",
+			label + ' Attributes',
+			column || vscode.ViewColumn.One,
+			{
+				
+			}
+        );;
+        panel.webview.html = webviewHTML;
+
 }
 
 
