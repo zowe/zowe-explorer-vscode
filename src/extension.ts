@@ -87,15 +87,20 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
+        log.debug("File was saved -- determining whether the file is a USS file or Data set.\n Comparing %s against directory %s and %s",
+            savedFile.fileName, DS_DIR, USS_DIR);
         if (savedFile.fileName.indexOf(DS_DIR) >= 0) {
+            log.debug("File is a data set-- saving ");
             await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
         } else if (savedFile.fileName.indexOf(USS_DIR) >= 0) {
+            log.debug("File is a USS file -- saving");
             await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+        } else{ 
+            log.debug("File %s is not a data set or USS file ", savedFile.fileName);
         }
     });
     vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
     vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
@@ -127,6 +132,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
+    vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
 
     let jobsProvider: ZosJobsProvider;
     try {
@@ -272,9 +278,6 @@ export async function addSession(datasetProvider: DatasetTree) {
         throw (err);
     }
 
-    if (allProfiles == null) {
-        throw new Error("hi fernando");
-    }
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });

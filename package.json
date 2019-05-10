@@ -706,7 +706,8 @@
       "**/__tests__/*/*test.+(ts|tsx)"
     ],
     "modulePathIgnorePatterns": [
-      "__tests__/integrationTests/"
+      "__tests__/integrationTests/",
+      "out/"
     ],
     "reporters": [
       "default",
