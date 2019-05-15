@@ -5,6 +5,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 0.16.0
  - Add the ability to display data set attributes by right clicking on a data set
+ - Add the ability to save all spool content by clicking a download icon next to the job. Thanks @crshnburn
 ## 0.15.1
  - Add a delete session menu item for sessions in the jobs view. Thanks @crshnburn
  - Prevent the delete menu item for USS files and directories appearing on the context menu for sessions. Thanks @crshnburn

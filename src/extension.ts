@@ -178,8 +178,42 @@ export async function activate(context: vscode.ExtensionContext) {
         setPrefix(node, jobsProvider);
     });
     vscode.commands.registerCommand("zowe.removeJobsSession", (node) => jobsProvider.deleteSession(node));
+    vscode.commands.registerCommand("zowe.downloadSpool", (job) => downloadSpool(job));
 }
 
+/**
+ * Download all the spool content for the specified job.
+ * 
+ * @param job The job to download the spool content from
+ */
+export async function downloadSpool(job: Job){
+    try {
+        let dirUri = await vscode.window.showOpenDialog({
+            openLabel: "Select",
+            canSelectFolders:true,
+            canSelectFiles: false,
+            canSelectMany: false
+        });
+        if (dirUri !== undefined) {
+            zowe.DownloadJobs.downloadAllSpoolContentCommon(job.session, {
+                jobid: job.job.jobid,
+                jobname: job.job.jobname,
+                outDir: dirUri[0].fsPath
+            });
+        }
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
+    }
+
+}
+
+/**
+ * Switch the download type and redownload the file.
+ * 
+ * @param node The file that is going to be downloaded
+ * @param binary Whether the file should be downloaded as binary or not
+ * @param ussFileProvider Our USSTree object
+ */
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
     node.setBinary(binary);
     await openUSS(node, true);
@@ -1173,7 +1207,7 @@ export async function getSpoolContent(session: AbstractSession, spool: IJobFile)
         const document = await vscode.workspace.openTextDocument({ content: spoolContent });
         await vscode.window.showTextDocument(document);
     } catch (error) {
-        console.log(error);
+        vscode.window.showErrorMessage(error.message);
     }
 }
 
