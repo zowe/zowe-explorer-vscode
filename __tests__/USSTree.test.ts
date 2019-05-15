@@ -14,10 +14,13 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
+jest.mock("../src/ProfileLoader");
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree } from "../src/USSTree";
 import { ZoweUSSNode } from "../src/ZoweUSSNode";
+
+import * as profileLoader from "../src/ProfileLoader";
 
 describe("Unit Tests (Jest)", async () => {
     // Globals
@@ -28,6 +31,23 @@ describe("Unit Tests (Jest)", async () => {
         protocol: "https",
         type: "basic",
     });
+
+    Object.defineProperty(profileLoader, "loadNamedProfile", {
+        value: jest.fn((name: string) => {
+            return { name };
+        })
+    });
+    Object.defineProperty(profileLoader, "loadAllProfiles", {
+        value: jest.fn(() => {
+            return [{ name: "profile1" }, { name: "profile2" }]
+        })
+    });
+    Object.defineProperty(profileLoader, "loadDefaultProfile", {
+        value: jest.fn(() => {
+            return { name: "defaultprofile" };
+        })
+    });
+
     const testTree = new USSTree();
     testTree.mSessionNodes.push(new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
     testTree.mSessionNodes[0].contextValue = "uss_session";
@@ -36,7 +56,7 @@ describe("Unit Tests (Jest)", async () => {
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
-        const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session,null);
+        const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session, null);
         testNode.contextValue = "uss_session";
 
         expect(testNode.label).toBeDefined();
