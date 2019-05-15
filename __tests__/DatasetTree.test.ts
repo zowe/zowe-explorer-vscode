@@ -33,10 +33,33 @@ describe("DatasetTree Unit Tests", async () => {
         type: "basic",
     });
 
-    Object.defineProperty(profileLoader,"loadNamedProfile", {value: jest.fn()});
-    Object.defineProperty(profileLoader,"loadAllProfiles", {value: jest.fn()});
-    Object.defineProperty(profileLoader,"loadDefaultProfile", {value: jest.fn()});
+    Object.defineProperty(profileLoader, "loadNamedProfile", {
+        value: jest.fn((name: string) => {
+            return { name };
+        })
+    });
+    Object.defineProperty(profileLoader, "loadAllProfiles", {
+        value: jest.fn(() => {
+            return [{ name: "profile1" }, { name: "profile2" }]
+        })
+    });
+    Object.defineProperty(profileLoader, "loadDefaultProfile", {
+        value: jest.fn(() => {
+            return { name: "defaultprofile" };
+        })
+    });
 
+
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value:
+            jest.fn(()=>{
+                return {
+                    get: jest.fn(()=>{
+                        return {};
+                    })
+                };
+            })
+    });
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
     testTree.mSessionNodes[1].contextValue = "session";
@@ -192,7 +215,7 @@ describe("DatasetTree Unit Tests", async () => {
     it("Testing that addFavorite works properly", async () => {
         testTree.mFavorites = [];
         const parent = new ZoweNode("Parent", vscode.TreeItemCollapsibleState.Collapsed,
-        testTree.mSessionNodes[1], null);
+            testTree.mSessionNodes[1], null);
         const member = new ZoweNode("Child", vscode.TreeItemCollapsibleState.None,
             parent, null);
 
@@ -200,13 +223,13 @@ describe("DatasetTree Unit Tests", async () => {
 
         // Check adding duplicates
         const pds = new ZoweNode("Parent", vscode.TreeItemCollapsibleState.Collapsed,
-        testTree.mSessionNodes[1], null);
+            testTree.mSessionNodes[1], null);
 
         await testTree.addFavorite(pds);
 
         // Check adding ps
         const ps = new ZoweNode("Dataset", vscode.TreeItemCollapsibleState.None,
-        testTree.mSessionNodes[1], null);
+            testTree.mSessionNodes[1], null);
 
         testTree.addFavorite(ps);
 

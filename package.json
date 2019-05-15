@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -95,6 +95,10 @@
       {
         "command": "zowe.createMember",
         "title": "Create New Member"
+      },
+      {
+        "command": "zowe.showDSAttributes",
+        "title": "Show Data Set Attributes"
       },
       {
         "command": "zowe.deleteDataset",
@@ -391,6 +395,10 @@
           "command": "zowe.addFavorite"
         },
         {
+          "when": "viewItem == ds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
           "when": "viewItem == dsf",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -399,6 +407,10 @@
           "when": "viewItem == dsf",
           "command": "zowe.safeSave",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.showDSAttributes"
         },
         {
           "when": "viewItem == dsf",
@@ -414,6 +426,10 @@
         },
         {
           "when": "viewItem == pds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == pds",
           "command": "zowe.deletePDS"
         },
         {
@@ -423,6 +439,10 @@
         {
           "when": "viewItem == pdsf",
           "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.showDSAttributes"
         },
         {
           "when": "viewItem == pdsf",
@@ -699,7 +719,8 @@
       "**/__tests__/*/*test.+(ts|tsx)"
     ],
     "modulePathIgnorePatterns": [
-      "__tests__/integrationTests/"
+      "__tests__/integrationTests/",
+      "out/"
     ],
     "reporters": [
       "default",
