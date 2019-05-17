@@ -1016,8 +1016,8 @@ export async function safeSave(node: ZoweNode) {
             file: getDocumentFilePath(label, node)
         });
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-        vscode.window.showTextDocument(document);
-        vscode.window.activeTextEditor.document.save();
+        await vscode.window.showTextDocument(document);
+        await vscode.window.activeTextEditor.document.save();
     } catch (err) {
         if (err.message.includes("not found")) {
             vscode.window.showInformationMessage(`Unable to find file: ${label} was probably deleted.`);
