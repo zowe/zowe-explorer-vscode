@@ -3,6 +3,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.16.1
+ - Attempt to fix an issue where saving data sets ceases to work without any error message
 ## 0.16.0
  - Add the ability to display data set attributes by right clicking on a data set
  - Add the ability to save all spool content by clicking a download icon next to the job. Thanks @crshnburn
