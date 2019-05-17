@@ -87,12 +87,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
-        log.debug("File was saved -- determining whether the file is a USS file or Data set.\n Comparing %s against directory %s and %s",
+        log.debug("File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "+
+        "%s against directory %s and %s",
             savedFile.fileName, DS_DIR, USS_DIR);
-        if (savedFile.fileName.indexOf(DS_DIR) >= 0) {
+        if (savedFile.fileName.toUpperCase().indexOf(DS_DIR.toUpperCase()) >= 0) {
             log.debug("File is a data set-- saving ");
             await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
-        } else if (savedFile.fileName.indexOf(USS_DIR) >= 0) {
+        } else if (savedFile.fileName.toUpperCase().indexOf(USS_DIR.toUpperCase()) >= 0) {
             log.debug("File is a USS file -- saving");
             await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
         } else {
