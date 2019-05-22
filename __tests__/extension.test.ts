@@ -1586,8 +1586,7 @@ describe("Extension Unit Tests", async () => {
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls[0][0]).toEqual({
-            prompt: "Prefix",
-            value: node.prefix
+            prompt: "Prefix"
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
 
@@ -1605,7 +1604,6 @@ describe("Extension Unit Tests", async () => {
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls[0][0]).toEqual({
             prompt: "Owner",
-            value: node.owner
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
     })
