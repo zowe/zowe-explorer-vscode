@@ -291,6 +291,10 @@
       {
         "command": "zowe.getJobJcl",
         "title": "Get JCL"
+      },
+      {
+        "command": "zowe.setJobSpool",
+        "title": "Set Spool"
       }
     ],
     "menus": {
