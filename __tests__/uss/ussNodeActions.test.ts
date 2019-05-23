@@ -14,6 +14,8 @@ import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
 import { createUSSNode, deleteUSSNode } from "../../src/uss/ussNodeActions";
+import * as ussNodeActions from "../../src/uss/ussNodeActions";
+import * as utils from "../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -25,6 +27,7 @@ const mockGetUSSChildren = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
 const showQuickPick = jest.fn();
+const getConfiguration = jest.fn();
 
 function getUSSNode() {
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -38,6 +41,7 @@ function getUSSTree() {
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
+            mFavorites: [],
             addSession: mockAddUSSSession,
             refresh: mockUSSRefresh,
             getChildren: mockGetUSSChildren,
@@ -60,13 +64,15 @@ const session = new brtimperative.Session({
 const ussNode = getUSSNode();
 const testUSSTree = getUSSTree();
 
-Object.defineProperty(brightside, "Create", {value: Create});
-Object.defineProperty(brightside, "Delete", {value: Delete});
+Object.defineProperty(brightside, "Create", { value: Create });
+Object.defineProperty(brightside, "Delete", { value: Delete });
 Object.defineProperty(Create, "uss", { value: uss });
 Object.defineProperty(Delete, "ussFile", { value: ussFile });
-Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
-Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+
 
 describe("ussNodeActions", async () => {
     beforeEach(() => {
@@ -101,5 +107,32 @@ describe("ussNodeActions", async () => {
             await deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
+    });
+    describe("initializingUSSFavorites", () => {
+        it("initializeUSSFavorites is executed successfully", async () => {
+            getConfiguration.mockReturnValueOnce({
+                get: (setting: string) => [
+                    "[test]: /u/aDir{directory}",
+                    "[test]: /u/myFile.txt{textFile}",
+                ]
+            });
+
+            spyOn(utils, "getSession").and.returnValue(null);
+            await ussNodeActions.initializeUSSFavorites(testUSSTree);
+            expect(testUSSTree.mFavorites.length).toEqual(2);
+
+            const expectedUSSFavorites: ZoweUSSNode[] = [
+                new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, null, "", false, "test"),
+                new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, null, "", false, "test"),
+            ];
+
+            expectedUSSFavorites.map(node => node.contextValue += "f");
+            expectedUSSFavorites.forEach(node => {
+                if (node.contextValue != "directoryf") {
+                    node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
+                }
+            })
+            expect(testUSSTree.mFavorites).toEqual(expectedUSSFavorites);
+        })
     });
 });

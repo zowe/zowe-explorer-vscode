@@ -62,11 +62,11 @@
     "commands": [
       {
         "command": "zowe.uss.createFile",
-        "title": "Create file"
+        "title": "Create File"
       },
       {
         "command": "zowe.uss.createFolder",
-        "title": "Create directory"
+        "title": "Create Directory"
       },
       {
         "command": "zowe.uss.deleteNode",
@@ -74,6 +74,10 @@
       },
       {
         "command": "zowe.addFavorite",
+        "title": "Add Favorite"
+      },
+      {
+        "command": "zowe.uss.addFavorite",
         "title": "Add Favorite"
       },
       {
@@ -138,6 +142,10 @@
       },
       {
         "command": "zowe.removeFavorite",
+        "title": "Remove Favorite"
+      },
+      {
+        "command": "zowe.uss.removeFavorite",
         "title": "Remove Favorite"
       },
       {
@@ -326,7 +334,27 @@
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != uss_session",
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.addFavorite",
+         "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.createFile",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.createFolder",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
           "group": "navigation"
         },
@@ -336,8 +364,38 @@
           "group": "navigation"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem == textFile",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "command": "zowe.uss.binary",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem == binaryFile",
           "command": "zowe.uss.text",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+          "command": "zowe.uss.text",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+          "command": "zowe.uss.removeFavorite",
           "group": "navigation"
         },
         {
@@ -657,6 +715,14 @@
             "favorites": []
           },
           "description": "Toggle if favorite files persist locally",
+          "scope": "window"
+        },
+        "Zowe-USS-Persistent-Favorites": {
+          "default": {
+            "persistence": true,
+            "favorites": []
+          },
+          "description": "Toggle is favorite files exist locally",
           "scope": "window"
         }
       }

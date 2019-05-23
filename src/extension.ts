@@ -49,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let datasetProvider: DatasetTree;
     let ussFileProvider: USSTree;
+    let jobsProvider: ZosJobsProvider;
 
     try {
         // Initialize Imperative Logger
@@ -73,6 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     await initializeFavorites(datasetProvider);
+    await ussActions.initializeUSSFavorites(ussFileProvider);
 
     // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
     const disposable1 = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
@@ -112,6 +114,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
     vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
+    vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
             const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
@@ -122,6 +125,8 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    vscode.commands.registerCommand("zowe.uss.addFavorite", async (node) => ussFileProvider.addUSSFavorite(node));
+    vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node) => ussFileProvider.removeUSSFavorite(node));
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
@@ -133,9 +138,17 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
-    vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        if (e.affectsConfiguration("Zowe-USS-Persistent-Favorites")) {
+            const ussSetting: any = { ...vscode.workspace.getConfiguration().get("Zowe-USS-Persistent-Favorites") };
+            if (!ussSetting.persistence) {
+                ussSetting.favorites = [];
+                await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", ussSetting, vscode.ConfigurationTarget.Global);
+            }
+        }
+    });
 
-    let jobsProvider: ZosJobsProvider;
+    // JES
     try {
         // Initialize dataset provider with the created session and the selected pattern
         jobsProvider = new ZosJobsProvider();
@@ -738,7 +751,8 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
     // change label so the treeview updates
     node.label = node.label + " ";
     node.label.trim();
-    node.tooltip = node.fullPath = remotepath;
+    // Sanitization: Replace multiple preceding forward slashes with just one forward slash
+    node.tooltip = node.fullPath = remotepath.replace(/\/\/+/, "/");
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
     ussFileProvider.refresh();
@@ -1145,7 +1159,12 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
+            case ("favorite"):
+                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                break;
+            // Handle file path for files in directories and favorited directories
             case ("directory"):
+            case ("directoryf"):
                 label = node.fullPath;
                 break;
             case ("uss_session"):

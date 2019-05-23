@@ -26,6 +26,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
     public dirty = true;
     public children: ZoweUSSNode[] = [];
     public binaryFiles = {};
+    public profileName = "";
+    public shortLabel = "";
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -35,9 +37,15 @@ export class ZoweUSSNode extends vscode.TreeItem {
      * @param {ZoweUSSNode} mParent - The parent node
      * @param {Session} session
      * @param {String} parentPath - The file path of the parent on the server
+     * @param {String} mProfileName - Profile to which the node belongs to
      */
-    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweUSSNode, private session: Session, private parentPath: string, public binary = false) {
+    constructor(public mLabel: string,
+                public mCollapsibleState: vscode.TreeItemCollapsibleState,
+                public mParent: ZoweUSSNode,
+                private session: Session,
+                private parentPath: string,
+                public binary = false,
+                private mProfileName?: string) {
         super(mLabel, mCollapsibleState);
         if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "directory";
@@ -46,8 +54,22 @@ export class ZoweUSSNode extends vscode.TreeItem {
         } else {
             this.contextValue = "textFile";
         }
-        if (parentPath)
-            this.fullPath = this.tooltip = parentPath+'/'+mLabel;
+        if (parentPath) {
+            this.fullPath = this.tooltip = parentPath + "/" + mLabel;
+            if (parentPath === "/") {
+                // Keep fullPath of root level nodes preceded by a single slash
+                this.fullPath = this.tooltip = "/" + mLabel;
+            }
+        }
+        if (this.mParent && this.mParent.contextValue === 'favorite') {
+            this.profileName = "[" + mProfileName + "]: ";
+            this.fullPath = mLabel.trim();
+            // File or directory name only (no parent path)
+            this.shortLabel = this.fullPath.split('/', this.fullPath.length).pop(); 
+            // Display name for favorited file or directory in tree view
+            this.label = this.profileName + this.shortLabel; 
+            this.tooltip = this.profileName + this.fullPath;
+        }
     }
 
     /**
@@ -143,6 +165,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         } else {
             this.contextValue = "textFile";
             delete this.getSessionNode().binaryFiles[this.fullPath];
+        }
+        if (this.mParent && this.mParent.contextValue === 'favorite') {
+            this.binary ? this.contextValue = "binaryFilef" : this.contextValue = "textFilef";
         }
         this.dirty = true;
     }
