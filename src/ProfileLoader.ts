@@ -20,7 +20,7 @@ import { IProfileLoaded } from "@brightside/imperative";
  */
 export function loadAllProfiles(): IProfileLoaded[] {
     const getProfileProcess = spawnSync("node", [path.join(__dirname, "getAllProfiles.js")]);
-
+ 
     if (getProfileProcess.status !== 0) {
         throw new Error("Failed to spawn process to retrieve profile contents!\n" +
             getProfileProcess.stderr.toString());
