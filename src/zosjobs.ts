@@ -48,7 +48,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
 
         // If session is already added, do nothing
-        if (this.mSessionNodes.filter((tempNode) => tempNode.mLabel === zosmfProfile.profile.name).length) {
+        if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
             return;
         }
 
@@ -136,6 +136,10 @@ export class Job extends vscode.TreeItem {
         }
     }
 
+    get owner() {
+        return this._owner;
+    }
+
     set prefix(newPrefix: string) {
         if(newPrefix !== undefined) {
             if(newPrefix.length === 0){
@@ -144,5 +148,9 @@ export class Job extends vscode.TreeItem {
                 this._prefix = newPrefix;
             }
         }
+    }
+
+    get prefix() {
+        return this._prefix;
     }
 }

@@ -31,6 +31,7 @@ import * as brightside from "@brightside/core";
 import * as fs from "fs";
 import * as profileLoader from "../src/ProfileLoader";
 import * as ussNodeActions from "../src/uss/ussNodeActions"
+import { Job } from "../src/zosjobs";
 
 describe("Extension Unit Tests", async () => {
     // Globals
@@ -41,6 +42,50 @@ describe("Extension Unit Tests", async () => {
         protocol: "https",
         type: "basic",
     });
+
+    const iJob: brightside.IJob = {
+        jobid: "JOB1234",
+        jobname: "TESTJOB",
+        "files-url": "fake/files",
+        "job-correlator": "correlator",
+        "phase-name": "PHASE",
+        "reason-not-running": "",
+        "step-data": [{
+            "proc-step-name": "",
+            "program-name": "",
+            "step-name": "",
+            "step-number": 1,
+            active: "",
+            smfid: ""
+            
+        }],
+        class: "A",
+        owner: "USER",
+        phase: 0,
+        retcode: "",
+        status: "ACTIVE",
+        subsystem: "SYS",
+        type: "JOB",
+        url: "fake/url"
+    }
+
+    const iJobFile: brightside.IJobFile = {
+        "byte-count": 128,
+        "job-correlator": "",
+        "record-count": 1,
+        "records-url": "fake/records",
+        class: "A",
+        ddname: "STDOUT",
+        id: 100,
+        jobid: "100",
+        jobname: "TESTJOB",
+        lrecl: 80,
+        procstep: "",
+        recfm: "FB",
+        stepname: "",
+        subsystem: ""
+    }
+
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
     sessNode.pattern = "test hlq";
@@ -49,6 +94,7 @@ describe("Extension Unit Tests", async () => {
     ussNode.contextValue = "uss_session";
     ussNode.fullPath = "/u/myuser";
 
+    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, session, iJob);
 
     const mkdirSync = jest.fn();
     const getAllProfileNames = jest.fn();
@@ -103,6 +149,12 @@ describe("Extension Unit Tests", async () => {
     const save = jest.fn();
     const isFile = jest.fn();
     const load = jest.fn();
+    const DeleteJobs = jest.fn();
+    const deleteJob = jest.fn();
+    const GetJobs = jest.fn();
+    const getSpoolContentById = jest.fn();
+    const IssueCommand = jest.fn();
+    const issueSimple = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -128,6 +180,14 @@ describe("Extension Unit Tests", async () => {
             refresh: mockUSSRefresh,
             getChildren: mockGetUSSChildren,
         };
+    });
+    const JobsTree = jest.fn().mockImplementation(() => {
+        return {
+            mSessionNodes: [],
+            getChildren: jest.fn(),
+            addSession: jest.fn(),
+            refresh: jest.fn(),
+        }
     });
     // const lstatSync = jest.fn().mockImplementation(() => {
     //     return { lstat };
@@ -159,6 +219,10 @@ describe("Extension Unit Tests", async () => {
     const testUSSTree = USSTree();
     testUSSTree.mSessionNodes = [];
     testUSSTree.mSessionNodes.push(ussNode);
+
+    const testJobsTree = JobsTree();
+    testJobsTree.mSessionNodes = [];
+    testJobsTree.mSessionNodes.push(jobNode);
 
     Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
     Object.defineProperty(profileLoader, "loadAllProfiles", {
@@ -218,6 +282,12 @@ describe("Extension Unit Tests", async () => {
     // Object.defineProperty(fs, "lstatSync", { value: lstatSync });
     // Object.defineProperty(fs, "lstat", { value: lstat });
     Object.defineProperty(Download, "ussFile", {value: ussFile});
+    Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
+    Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
+    Object.defineProperty(brightside, "GetJobs", {value: GetJobs});
+    Object.defineProperty(GetJobs, "getSpoolContentById", {value: getSpoolContentById});
+    Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
+    Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
 
     it("Testing that activate correctly executes", async () => {
         createTreeView.mockReturnValue("testDisposable");
@@ -359,6 +429,40 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[25][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[26][0]).toBe("zowe.uss.removeSession");
         expect(registerCommand.mock.calls[26][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[27][0]).toBe("zowe.uss.createFile");
+        expect(registerCommand.mock.calls[27][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[28][0]).toBe("zowe.uss.createFolder");
+        expect(registerCommand.mock.calls[28][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[29][0]).toBe("zowe.uss.deleteNode");
+        expect(registerCommand.mock.calls[29][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[30][0]).toBe("zowe.uss.binary");
+        expect(registerCommand.mock.calls[30][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[31][0]).toBe("zowe.uss.text");
+        expect(registerCommand.mock.calls[31][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[32][0]).toBe("zowe.zosJobsSelectjob");
+        expect(registerCommand.mock.calls[32][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[33][0]).toBe("zowe.zosJobsOpenspool");
+        expect(registerCommand.mock.calls[33][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[34][0]).toBe("zowe.deleteJob");
+        expect(registerCommand.mock.calls[34][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[35][0]).toBe("zowe.runModifyCommand");
+        expect(registerCommand.mock.calls[35][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[36][0]).toBe("zowe.runStopCommand");
+        expect(registerCommand.mock.calls[36][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[37][0]).toBe("zowe.refreshServer");
+        expect(registerCommand.mock.calls[37][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[38][0]).toBe("zowe.refreshAllJobs");
+        expect(registerCommand.mock.calls[38][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[39][0]).toBe("zowe.addJobsSession");
+        expect(registerCommand.mock.calls[39][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[40][0]).toBe("zowe.setOwner");
+        expect(registerCommand.mock.calls[40][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[41][0]).toBe("zowe.setPrefix");
+        expect(registerCommand.mock.calls[41][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[42][0]).toBe("zowe.removeJobsSession");
+        expect(registerCommand.mock.calls[42][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[43][0]).toBe("zowe.downloadSpool");
+        expect(registerCommand.mock.calls[43][1]).toBeInstanceOf(Function);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
@@ -594,6 +698,55 @@ describe("Extension Unit Tests", async () => {
 
     });
 
+    it("Testing that addJobsSession is executed successfully", async () => {
+        showQuickPick.mockReset();
+
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
+        await extension.addJobsSession(testJobsTree);
+
+        //expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        // tslint:disable-next-line
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select a Profile to Add to the Jobs Explorer"
+        });
+
+        showInformationMessage.mockReset();
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
+
+        await extension.addJobsSession(testJobsTree);
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+
+        showInformationMessage.mockReset();
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
+        await extension.addJobsSession(testJobsTree);
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+
+        showErrorMessage.mockReset();
+        (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
+            throw (Error("testError"));
+        });
+
+        try {
+            await extension.addJobsSession(testJobsTree);
+            // tslint:disable-next-line:no-empty
+        } catch (err) {
+        }
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
+
+    });
+
     it("Testing that createFile is executed successfully", async () => {
         showQuickPick.mockReset();
         getConfiguration.mockReset();
@@ -655,7 +808,7 @@ describe("Extension Unit Tests", async () => {
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
 
-        showQuickPick.mockReturnValueOnce("Data Set Fake");
+        showQuickPick.mockReturnValueOnce(undefined);
         try {
             await extension.createFile(sessNode, testTree);
             // tslint:disable-next-line:no-empty
@@ -663,19 +816,20 @@ describe("Extension Unit Tests", async () => {
         }
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Invalid data set type.");
+        expect(showErrorMessage.mock.calls.length).toBe(0);
     });
 
     it("Testing that deleteDataset is executed successfully", async () => {
         existsSync.mockReset();
         unlinkSync.mockReset();
+        showQuickPick.mockReset();
 
         let node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         let child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValueOnce(true);
+        showQuickPick.mockResolvedValueOnce("Yes");
         await extension.deleteDataset(node, testTree);
         expect(delDataset.mock.calls.length).toBe(1);
         expect(delDataset.mock.calls[0][0]).toBe(session);
@@ -690,6 +844,7 @@ describe("Extension Unit Tests", async () => {
         unlinkSync.mockReset();
         delDataset.mockReset();
         existsSync.mockReturnValueOnce(false);
+        showQuickPick.mockResolvedValueOnce("Yes");
         await extension.deleteDataset(child, testTree);
 
         expect(unlinkSync.mock.calls.length).toBe(0);
@@ -697,6 +852,7 @@ describe("Extension Unit Tests", async () => {
 
         delDataset.mockReset();
         delDataset.mockRejectedValueOnce(Error("not found"));
+        showQuickPick.mockResolvedValueOnce("Yes");
 
         await extension.deleteDataset(node, testTree);
 
@@ -706,13 +862,13 @@ describe("Extension Unit Tests", async () => {
         delDataset.mockReset();
         showErrorMessage.mockReset();
         delDataset.mockRejectedValueOnce(Error(""));
+        showQuickPick.mockResolvedValueOnce("Yes");
 
         await extension.deleteDataset(child, testTree);
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
 
-        showQuickPick.mockReset();
         showQuickPick.mockResolvedValueOnce("No");
 
         await extension.deleteDataset(child, testTree);
@@ -1457,4 +1613,74 @@ describe("Extension Unit Tests", async () => {
 
         await extension.saveUSSFile(testDoc3, testUSSTree);
     });
+
+    it("tests that the prefix is set correctly on the job", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, session, iJob);
+
+        showInputBox.mockReturnValueOnce("*");
+        await extension.setPrefix(node, testJobsTree);
+
+        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls[0][0]).toEqual({
+            prompt: "Prefix"
+        });
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+
+    });
+
+    it("tests that the owner is set correctly on the job", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, session, iJob);
+
+        showInputBox.mockReturnValueOnce("OWNER");
+        await extension.setOwner(node, testJobsTree);
+
+        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls[0][0]).toEqual({
+            prompt: "Owner",
+        });
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+    })
+
+    it("tests that the user is informed when a job is deleted", async () => {
+        showInformationMessage.mockReset();
+        await extension.deleteJob(jobNode);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted` 
+        )
+    })
+
+    it("tests that the spool content is opened in a new document", async () => {
+        showTextDocument.mockReset();
+        await extension.getSpoolContent(session, iJobFile);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("tests that a stop command is issued", async () => {
+        showInformationMessage.mockReset();
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"})
+        await extension.stopCommand(jobNode);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Command response: fake response"
+        );
+    });
+
+    it("tests that a modify command is issued", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValue("modify");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await extension.modifyCommand(jobNode);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Command response: fake response"
+        );
+    })
 });

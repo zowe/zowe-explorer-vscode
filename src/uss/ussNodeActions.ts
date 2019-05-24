@@ -44,7 +44,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         ignoreFocusOut: true,
         canPickMany: false
     };
-    if (await vscode.window.showQuickPick(["Yes", "No"], quickPickOptions) === "No") {
+    if (await vscode.window.showQuickPick(["Yes", "No"], quickPickOptions) !== "Yes") {
         return;
     }
     try {
