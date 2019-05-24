@@ -13,3 +13,4 @@ src/**
 tsconfig.json
 tslint.json
 *.vsix
+logs/**

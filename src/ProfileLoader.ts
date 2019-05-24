@@ -20,7 +20,7 @@ import { IProfileLoaded } from "@brightside/imperative";
  */
 export function loadAllProfiles(): IProfileLoaded[] {
     const getProfileProcess = spawnSync("node", [path.join(__dirname, "getAllProfiles.js")]);
-
+ 
     if (getProfileProcess.status !== 0) {
         throw new Error("Failed to spawn process to retrieve profile contents!\n" +
             getProfileProcess.stderr.toString());
@@ -28,7 +28,7 @@ export function loadAllProfiles(): IProfileLoaded[] {
     if (getProfileProcess.stdout.toString().length === 0) {
         throw new Error("Error attempting to load all zosmf profiles. Please " +
             "ensure that you have created at least one profile with Zowe CLI " +
-            "before attempting to use this extension.");
+            "before attempting to use this extension. Error text:" + getProfileProcess.stderr.toString());
     }
 
     return JSON.parse(getProfileProcess.stdout.toString());
@@ -62,7 +62,7 @@ export function loadDefaultProfile(): IProfileLoaded {
     if (getProfileProcess.stdout.toString().length === 0) {
         throw new Error("Error attempting to load the default zosmf profile for Zowe CLI. Please " +
             "ensure that you have created at least one profile with Zowe CLI " +
-            "before attempting to use this extension.");
+            "before attempting to use this extension. Error text:" + getProfileProcess.stderr.toString());
     }
     return JSON.parse(getProfileProcess.stdout.toString());
 }
