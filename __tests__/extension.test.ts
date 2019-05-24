@@ -802,7 +802,7 @@ describe("Extension Unit Tests", async () => {
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
 
-        showQuickPick.mockReturnValueOnce("Data Set Fake");
+        showQuickPick.mockReturnValueOnce(undefined);
         try {
             await extension.createFile(sessNode, testTree);
             // tslint:disable-next-line:no-empty
@@ -810,19 +810,20 @@ describe("Extension Unit Tests", async () => {
         }
 
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Invalid data set type.");
+        expect(showErrorMessage.mock.calls.length).toBe(0);
     });
 
     it("Testing that deleteDataset is executed successfully", async () => {
         existsSync.mockReset();
         unlinkSync.mockReset();
+        showQuickPick.mockReset();
 
         let node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         let child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValueOnce(true);
+        showQuickPick.mockResolvedValueOnce("Yes");
         await extension.deleteDataset(node, testTree);
         expect(delDataset.mock.calls.length).toBe(1);
         expect(delDataset.mock.calls[0][0]).toBe(session);
@@ -837,6 +838,7 @@ describe("Extension Unit Tests", async () => {
         unlinkSync.mockReset();
         delDataset.mockReset();
         existsSync.mockReturnValueOnce(false);
+        showQuickPick.mockResolvedValueOnce("Yes");
         await extension.deleteDataset(child, testTree);
 
         expect(unlinkSync.mock.calls.length).toBe(0);
@@ -844,6 +846,7 @@ describe("Extension Unit Tests", async () => {
 
         delDataset.mockReset();
         delDataset.mockRejectedValueOnce(Error("not found"));
+        showQuickPick.mockResolvedValueOnce("Yes");
 
         await extension.deleteDataset(node, testTree);
 
@@ -853,13 +856,13 @@ describe("Extension Unit Tests", async () => {
         delDataset.mockReset();
         showErrorMessage.mockReset();
         delDataset.mockRejectedValueOnce(Error(""));
+        showQuickPick.mockResolvedValueOnce("Yes");
 
         await extension.deleteDataset(child, testTree);
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
 
-        showQuickPick.mockReset();
         showQuickPick.mockResolvedValueOnce("No");
 
         await extension.deleteDataset(child, testTree);

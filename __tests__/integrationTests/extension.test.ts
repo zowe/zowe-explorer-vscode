@@ -186,8 +186,18 @@ describe("Extension Integration Tests", () => {
     });
 
     describe("Tests for Deleting Data Sets", () => {
-        it("should delete a data set when zowe.deleteDataset is invoked", async () => {
-            const dataSetName = pattern + ".EXT.DELETE.DATASET.TEST";
+        const dataSetName = pattern + ".EXT.DELETE.DATASET.TEST";
+        beforeEach(async () => {
+            try {
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
+            } catch { }
+        });
+        afterEach(async () => {
+            try {
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
+            } catch { }
+        });
+        it("should delete a data set if user verified", async () => {
             await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
             const testNode = new ZoweNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
 
@@ -199,6 +209,38 @@ describe("Extension Integration Tests", () => {
             const response = await zowe.List.dataSet(session, dataSetName);
 
             expect(response.apiResponse.items).to.deep.equal([]);
+        }).timeout(TIMEOUT);
+        it("should not delete a data set if user did not verify", async () => {
+            await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
+            const testNode = new ZoweNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+
+            // Mock user selecting second option from list
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            quickPickStub.returns("No");
+            await extension.deleteDataset(testNode, testTree);
+
+            const response = await zowe.List.dataSet(session, dataSetName);
+
+            // Check that dataset was not deleted
+            expect(response.apiResponse.items.filter((entry) => {
+                return (entry.dsname === dataSetName.toUpperCase());
+            }).length).to.greaterThan(0);
+        }).timeout(TIMEOUT);
+        it("should delete a data set if user cancelled", async () => {
+            await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
+            const testNode = new ZoweNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+
+            // Mock user not selecting any option from list
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            quickPickStub.returns(undefined);
+            await extension.deleteDataset(testNode, testTree);
+
+            const response = await zowe.List.dataSet(session, dataSetName);
+
+            // Check that dataset was not deleted
+            expect(response.apiResponse.items.filter((entry) => {
+                return (entry.dsname === dataSetName.toUpperCase());
+            }).length).to.greaterThan(0);
         }).timeout(TIMEOUT);
     });
 

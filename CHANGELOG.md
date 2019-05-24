@@ -3,6 +3,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.16.3
+ - Fix behavior when the user cancels "quick pick" dialogs, including selecting profiles and deleting data sets.
 ## 0.16.2
  - Add the stderr of the getDefaultProfile or getAllProfiles process to display in the error message to the user
 ## 0.16.1
