@@ -1207,7 +1207,7 @@ export async function stopCommand(job: Job) {
 export async function deleteJob(job: Job) {
     try {
         await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
-        vscode.window.showInformationMessage(`Job ${job.job.jobname}(${job.job.jobid} deleted)`);
+        vscode.window.showInformationMessage(`Job ${job.job.jobname}(${job.job.jobid}) deleted`);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }

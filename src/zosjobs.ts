@@ -136,6 +136,10 @@ export class Job extends vscode.TreeItem {
         }
     }
 
+    get owner() {
+        return this._owner;
+    }
+
     set prefix(newPrefix: string) {
         if(newPrefix !== undefined) {
             if(newPrefix.length === 0){
@@ -144,5 +148,9 @@ export class Job extends vscode.TreeItem {
                 this._prefix = newPrefix;
             }
         }
+    }
+
+    get prefix() {
+        return this._prefix;
     }
 }
