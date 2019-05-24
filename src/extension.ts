@@ -334,7 +334,12 @@ export async function addSession(datasetProvider: DatasetTree) {
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
-        await datasetProvider.addSession(chosenProfile);
+        if (chosenProfile) {
+            log.debug("User selected profile '%s'", chosenProfile);
+            await datasetProvider.addSession(chosenProfile);
+        } else {
+            log.debug("User cancelled profile selection");
+        }
     } else {
         vscode.window.showInformationMessage("No more profiles to add");
     }
@@ -380,7 +385,12 @@ export async function addUSSSession(ussFileProvider: USSTree) {
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
-        await ussFileProvider.addSession(chosenProfile);
+        if (chosenProfile) {
+            log.debug("User selected profile '%s'", chosenProfile);
+            await ussFileProvider.addSession(chosenProfile);
+        } else {
+            log.debug("User cancelled profile selection");
+        }
     } else {
         vscode.window.showInformationMessage("No more profiles to add");  // TODO MISSED TESTING
     }
@@ -408,12 +418,13 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         "Data Set Partitioned",
         "Data Set Sequential"
     ];
-    log.debug("Creating new data set");
     // get data set type
     const type = await vscode.window.showQuickPick(types, quickPickOptions);
-    if (types.indexOf(type) < 0) {
-        vscode.window.showErrorMessage("Invalid data set type.");
+    if (type == null) {
+        log.debug("No valid data type selected");
         return;
+    } else {
+        log.debug("Creating new data set");
     }
 
     let typeEnum;
@@ -601,7 +612,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         canPickMany: false
     };
     // confirm that the user really wants to delete
-    if (await vscode.window.showQuickPick(["Yes", "No"], quickPickOptions) === "No") {
+    if (await vscode.window.showQuickPick(["Yes", "No"], quickPickOptions) !== "Yes") {
         log.debug("User picked no. Cancelling delete of data set");
         return;
     }
@@ -1256,7 +1267,12 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
-        await datasetProvider.addSession(chosenProfile);
+        if (chosenProfile) {
+            log.debug("User selected profile '%s'", chosenProfile);
+            await datasetProvider.addSession(chosenProfile);
+        } else {
+            log.debug("User cancelled profile selection");
+        }
     } else {
         vscode.window.showInformationMessage("No more profiles to add");
     }
