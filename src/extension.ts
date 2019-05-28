@@ -110,6 +110,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
+    vscode.commands.registerCommand("zowe.uploadDialog", async (node) => uploadDialog(datasetProvider));
     vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
@@ -1114,6 +1115,41 @@ export async function safeSave(node: ZoweNode) {
         }
     }
 }
+
+export function uploadDialog(datasetProvider: DatasetTree) {
+    let inputOptions = {
+        prompt: "Which dataset would you like to upload to?",
+        placeHolder: "Destination Dataset:"
+    }
+
+    let fileOpenOptions = {
+       canSelectFiles: true,
+       openLabel: 'Upload File'
+    }
+
+    vscode.window.showOpenDialog(fileOpenOptions).then(async value => {
+        const mvsDestination: string = await vscode.window.showInputBox(inputOptions).then(value => {
+            if (!value) return;
+            return value
+        });
+
+        if (!value || !mvsDestination) return;
+        
+        // log.debug(`MVS Destination: ${mvsDestination}`);
+
+        await Promise.all(
+            value.map(async item => {
+                // Convert to vscode.TextDocument
+                const doc = await vscode.workspace.openTextDocument(item)
+
+                // Run save on each file path in array
+                // `doc` needs to be edited so label in next function points to destination
+                // Currently destination label is derived from "fileName" in doc
+                await saveFile(doc, datasetProvider);
+            })
+        )
+    })
+};
 
 /**
  * Uploads the file to the mainframe

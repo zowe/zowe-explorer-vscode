@@ -295,6 +295,10 @@
       {
         "command": "zowe.setJobSpool",
         "title": "Set Spool"
+      },
+      {
+        "command": "zowe.uploadDialog",
+        "title": "Upload Dialog"
       }
     ],
     "menus": {
@@ -344,7 +348,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.addFavorite",
-         "group": "navigation"
+          "group": "navigation"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == directoryf",
