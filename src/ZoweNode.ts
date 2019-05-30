@@ -142,7 +142,7 @@ export class ZoweNode extends vscode.TreeItem {
     }
 
     /**
-     * Returs the session node for this node
+     * Returns the session node for this node
      *
      * @returns {ZoweNode}
      */

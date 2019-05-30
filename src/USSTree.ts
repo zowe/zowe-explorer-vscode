@@ -10,11 +10,12 @@
 */
 
 import * as zowe from "@brightside/core";
-import { CliProfileManager } from "@brightside/imperative";
+import { CliProfileManager, IProfileLoaded } from "@brightside/imperative";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
+import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 
 /**
  * A tree that contains nodes of sessions and USS Files
@@ -25,6 +26,8 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
  */
 export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public mSessionNodes: ZoweUSSNode[];
+    public mFavoriteSession: ZoweUSSNode;
+    public mFavorites: ZoweUSSNode[] = [];
 
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
@@ -32,6 +35,9 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
 
     constructor() {
         this.mSessionNodes = [];
+        this.mFavoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        this.mFavoriteSession.contextValue = "favorite";
+        this.mSessionNodes = [this.mFavoriteSession];
     }
 
     /**
@@ -52,6 +58,9 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public getChildren(element?: ZoweUSSNode): ZoweUSSNode[] | Promise<ZoweUSSNode[]> {
         if (element) {
+            if (element.contextValue === "favorite") {
+                return this.mFavorites;
+            }
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -82,11 +91,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile = await new CliProfileManager({
-
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load(sessionName ? {name: sessionName} : {loadDefault: true});
+        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
 
         // If session is already added, do nothing
         if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
@@ -112,5 +117,50 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         // Removes deleted session from mSessionNodes
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
         this.refresh();
+    }
+
+    /**
+     * Adds a node to the USS favorites list
+     *
+     * @param {ZoweUSSNode} node
+     */
+    public async addUSSFavorite(node: ZoweUSSNode) {
+        let temp: ZoweUSSNode;
+        temp = new ZoweUSSNode(node.fullPath,
+            node.collapsibleState,
+            this.mFavoriteSession,
+            node.getSession(),
+            node.mParent.fullPath,
+            false,
+            node.getSessionNode().mLabel);
+        temp.contextValue += "f";
+        if (temp.contextValue === "textFilef" || temp.contextValue === "binaryFilef") {
+            temp.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp]};
+        }
+        if (!this.mFavorites.find((tempNode) => tempNode.mLabel === temp.mLabel)) {
+            this.mFavorites.push(temp); // testing
+            this.refresh();
+            await this.updateFavorites();
+        }
+    }
+
+     /**
+     * Removes a node from the favorites list
+     *
+     * @param {ZoweUSSNode} node
+     */
+    public async removeUSSFavorite(node: ZoweUSSNode) {
+        this.mFavorites = this.mFavorites.filter((temp) =>
+            !((temp.mLabel === node.mLabel) && (temp.contextValue.startsWith(node.contextValue))));
+        this.refresh();
+        await this.updateFavorites();
+    }
+
+    public async updateFavorites() {
+        const settings: any = { ...vscode.workspace.getConfiguration().get("Zowe-USS-Persistent-Favorites")};
+        if (settings.persistence) {
+            settings.favorites = this.mFavorites.map((fav) => fav.profileName + fav.fullPath + "{" + fav.contextValue.slice(0, -1) + "}");
+            await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", settings, vscode.ConfigurationTarget.Global);
+        }
     }
 }

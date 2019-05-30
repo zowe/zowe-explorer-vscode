@@ -10,12 +10,11 @@
 */
 
 import * as zowe from "@brightside/core";
-import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { CliProfileManager } from "@brightside/imperative";
+import {IProfileLoaded } from "@brightside/imperative";
+import { loadNamedProfile, loadDefaultProfile} from "./ProfileLoader";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -90,12 +89,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile = await new CliProfileManager({
-
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load(sessionName ? {name: sessionName} : {loadDefault: true});
-
+        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
         // If session is already added, do nothing
         if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
             return;
