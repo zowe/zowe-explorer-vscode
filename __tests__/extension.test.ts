@@ -99,7 +99,7 @@ describe("Extension Unit Tests", async () => {
     const mkdirSync = jest.fn();
     const getAllProfileNames = jest.fn();
     const createTreeView = jest.fn();
-    const Uri = jest.fn();
+    // const Uri = jest.fn();
     // const parse = jest.fn();
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
@@ -114,6 +114,7 @@ describe("Extension Unit Tests", async () => {
     // const lstat = jest.fn();
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
+    const showOpenDialog = jest.fn();
     const ZosmfSession = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const Upload = jest.fn();
@@ -146,6 +147,7 @@ describe("Extension Unit Tests", async () => {
     const executeCommand = jest.fn();
     const activeTextEditor = jest.fn();
     const document = jest.fn();
+    const getText = jest.fn();
     const save = jest.fn();
     const isFile = jest.fn();
     const load = jest.fn();
@@ -153,6 +155,11 @@ describe("Extension Unit Tests", async () => {
     const deleteJob = jest.fn();
     const GetJobs = jest.fn();
     const getSpoolContentById = jest.fn();
+    const getJclForJob = jest.fn();
+    const DownloadJobs = jest.fn();
+    const downloadAllSpoolContentCommon = jest.fn();
+    const SubmitJobs = jest.fn();
+    const submitJcl = jest.fn();
     const IssueCommand = jest.fn();
     const issueSimple = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
@@ -235,7 +242,7 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-    Object.defineProperty(vscode, "Uri", {value: Uri});
+    // Object.defineProperty(vscode, "Uri", {value: Uri});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     // Object.defineProperty(Uri, "parse", { value: parse });
     // Object.defineProperty(parse, "path", { value: pathMock });
@@ -254,6 +261,7 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(vscode.window, "activeTextEditor", {value: activeTextEditor});
     Object.defineProperty(activeTextEditor, "document", {value: document});
     Object.defineProperty(document, "save", {value: save});
+    Object.defineProperty(document, "getText", {value: getText});
     Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
     Object.defineProperty(brightside, "ZosmfSession", {value: ZosmfSession});
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
@@ -270,6 +278,7 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+    Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(brightside, "Download", {value: Download});
@@ -286,6 +295,11 @@ describe("Extension Unit Tests", async () => {
     Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
     Object.defineProperty(brightside, "GetJobs", {value: GetJobs});
     Object.defineProperty(GetJobs, "getSpoolContentById", {value: getSpoolContentById});
+    Object.defineProperty(GetJobs, "getJclForJob", {value: getJclForJob});
+    Object.defineProperty(brightside, "DownloadJobs", {value: DownloadJobs});
+    Object.defineProperty(DownloadJobs, "downloadAllSpoolContentCommon", {value: downloadAllSpoolContentCommon});
+    Object.defineProperty(brightside, "SubmitJobs", {value: SubmitJobs});
+    Object.defineProperty(SubmitJobs, "submitJcl", {value: submitJcl});
     Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
 
@@ -445,7 +459,7 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[33][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[34][0]).toBe("zowe.deleteJob");
         expect(registerCommand.mock.calls[34][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[35][0]).toBe("zowe.runModifyCommand");
+        expect(registerCommand.mock.calls[35][0]).toBe("zowe.refreshJobsServer");
         expect(registerCommand.mock.calls[35][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[36][0]).toBe("zowe.runStopCommand");
         expect(registerCommand.mock.calls[36][1]).toBeInstanceOf(Function);
@@ -459,9 +473,9 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[40][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[41][0]).toBe("zowe.setPrefix");
         expect(registerCommand.mock.calls[41][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[42][0]).toBe("zowe.removeJobsSession");
+        expect(registerCommand.mock.calls[42][0]).toBe("zowe.getJobJcl");
         expect(registerCommand.mock.calls[42][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[43][0]).toBe("zowe.downloadSpool");
+        expect(registerCommand.mock.calls[43][0]).toBe("zowe.setJobSpool");
         expect(registerCommand.mock.calls[43][1]).toBeInstanceOf(Function);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
@@ -1682,5 +1696,41 @@ describe("Extension Unit Tests", async () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
             "Command response: fake response"
         );
+    });
+
+    it("tests that the spool is downloaded", async () => {
+        let fileUri = {fsPath: "/tmp/foo"};
+        showOpenDialog.mockReturnValue([fileUri]);
+        await extension.downloadSpool(jobNode);
+        expect(showOpenDialog).toBeCalled();
+        expect(downloadAllSpoolContentCommon).toBeCalled();
+        expect(downloadAllSpoolContentCommon.mock.calls[0][0]).toEqual(jobNode.session);
+        expect(downloadAllSpoolContentCommon.mock.calls[0][1]).toEqual(
+            {
+                jobid: jobNode.job.jobid,
+                jobname: jobNode.job.jobname,
+                outDir: fileUri.fsPath
+            }
+        )
+    });
+
+    it("tests that the jcl is downloaded", async () => {
+        getJclForJob.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        await extension.downloadJcl(jobNode);
+        expect(getJclForJob).toBeCalled();
+        expect(openTextDocument).toBeCalled();
+        expect(showTextDocument).toBeCalled();
     })
+
+    it("tests that the jcl is submitted", async () => {
+        (profileLoader.loadAllProfiles as any).mockReset();
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
+        createBasicZosmfSession.mockReturnValue(session);
+        submitJcl.mockReturnValue(iJob);
+        await extension.submitJcl(testTree);
+        expect(submitJcl).toBeCalled();
+        expect(showInformationMessage).toBeCalled();
+    });
 });
