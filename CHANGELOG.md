@@ -3,6 +3,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+
+## 0.17.0
+ - Add Favorites to USS explorer. Thanks to Rodney-Wilson and Lauren-Li
+ - Add ability to obtain the raw JCL from a job on spool and resubmit. Thanks @crshnburn
 ## 0.16.3
  - Fix behavior when the user cancels "quick pick" dialogs, including selecting profiles and deleting data sets.
 ## 0.16.2
