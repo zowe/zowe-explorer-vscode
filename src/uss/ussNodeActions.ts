@@ -78,7 +78,7 @@ export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     try {
         const newNamePath = node.mParent.fullPath + "/" +  newName;
         await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
-        if (node.contextValue === "directory") {
+        if (node.contextValue === "directory" || node.mParent.contextValue === "uss_session") {
             refreshAllUSS(ussFileProvider);
         } else {
             ussFileProvider.refresh();
