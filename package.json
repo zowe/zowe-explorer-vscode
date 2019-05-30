@@ -287,6 +287,14 @@
           "light": "./resources/light/download.svg",
           "dark": "./resources/dark/download.svg"
         }
+      },
+      {
+        "command": "zowe.getJobJcl",
+        "title": "Get JCL"
+      },
+      {
+        "command": "zowe.setJobSpool",
+        "title": "Set Spool"
       }
     ],
     "menus": {
@@ -575,6 +583,10 @@
           "when": "viewItem == job",
           "command": "zowe.downloadSpool",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.getJobJcl"
         }
       ],
       "commandPalette": [
