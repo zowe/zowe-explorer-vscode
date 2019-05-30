@@ -48,10 +48,21 @@ describe("Unit Tests (Jest)", async () => {
         })
     });
 
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value:
+            jest.fn(()=>{
+                return {
+                    get: jest.fn(()=>{
+                        return {};
+                    })
+                };
+            })
+    });
+
     const testTree = new USSTree();
     testTree.mSessionNodes.push(new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
-    testTree.mSessionNodes[0].contextValue = "uss_session";
-    testTree.mSessionNodes[0].fullPath = "test";
+    testTree.mSessionNodes[1].contextValue = "uss_session";
+    testTree.mSessionNodes[1].fullPath = "test";
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -90,10 +101,12 @@ describe("Unit Tests (Jest)", async () => {
         const rootChildren = await testTree.getChildren();
         // Creating a rootNode
         const sessNode = [
+            new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null),
             new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null),
         ];
-        sessNode[0].contextValue = "uss_session";
-        sessNode[0].fullPath = "test";
+        sessNode[0].contextValue = "favorite";
+        sessNode[1].contextValue = "uss_session";
+        sessNode[1].fullPath = "test";
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
@@ -140,38 +153,38 @@ describe("Unit Tests (Jest)", async () => {
     it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<session>", async () => {
 
         // Waiting until we populate rootChildren with what getChildren return
-        const sessChildren = await testTree.getChildren(testTree.mSessionNodes[0]);
+        const sessChildren = await testTree.getChildren(testTree.mSessionNodes[1]);
         // Creating fake datasets and uss members to test
         const sampleChildren: ZoweUSSNode[] = [
-            new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], null, null),
+            new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, null),
         ];
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessChildren[0].mLabel).toEqual(sampleChildren[0].mLabel);
     });
 
-    // /*************************************************************************************************************
-    //  * Tests that getChildren() method returns an array of all child nodes of passed ZoweUSSNode
-    //  *************************************************************************************************************/
-    // it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<favorite>", async () => {
+    /*************************************************************************************************************
+     * Tests that getChildren() method returns an array of all child nodes of passed ZoweUSSNode
+     *************************************************************************************************************/
+    it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<favorite>", async () => {
 
-    //     // Waiting until we populate rootChildren with what getChildren return
-    //     testTree.mFavorites.push(new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[0], null, null));
-    //     const favChildren = await testTree.getChildren(testTree.mSessionNodes[0]);
-    //     // Creating fake datasets and uss members to test
-    //     const sampleChildren: ZoweUSSNode[] = [
-    //         new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[0], null, null)
-    //     ];
+        // Waiting until we populate rootChildren with what getChildren return
+        testTree.mFavorites.push(new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[0], null, null));
+        const favChildren = await testTree.getChildren(testTree.mSessionNodes[0]);
+        // Creating fake datasets and uss members to test
+        const sampleChildren: ZoweUSSNode[] = [
+            new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[0], null, null)
+        ];
 
-    //     // Checking that the rootChildren are what they are expected to be
-    //     expect(favChildren).toEqual(sampleChildren);
-    // });
+        // Checking that the rootChildren are what they are expected to be
+        expect(favChildren).toEqual(sampleChildren);
+    });
 
     /*************************************************************************************************************
      * Tests that getChildren() method returns an array of all child nodes of passed ZoweUSSNode
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<directory>", async () => {
-        const directory = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], null, null);
+        const directory = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, null);
 
         // Waiting until we populate rootChildren with what getChildren return
         const dirChildren = await testTree.getChildren(directory);
@@ -202,10 +215,40 @@ describe("Unit Tests (Jest)", async () => {
         testTree.addSession("fake");
     });
 
+    /*************************************************************************************************************
+     * Testing that addUSSFavorite works properly
+     *************************************************************************************************************/
+    it("Testing that addUSSFavorite works properly", async () => {
+        testTree.mFavorites = [];
+        const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null, "/");
+        const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.Collapsed,
+            parentDir, null, "/parent");
+        
+        // Check adding directory
+        await testTree.addUSSFavorite(parentDir);
+        // Check adding duplicates
+        await testTree.addUSSFavorite(parentDir);
+        // Check adding file
+        await testTree.addUSSFavorite(childFile);
 
-    it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[0]);
+        expect(testTree.mFavorites.length).toEqual(2);
     });
 
+    /*************************************************************************************************************
+     * Testing that deleteSession works properly
+     *************************************************************************************************************/
+    it("Testing that deleteSession works properly", async () => {
+        testTree.deleteSession(testTree.mSessionNodes[1]);
+    });
 
+    /*************************************************************************************************************
+     * Testing that removeFavorite works properly
+     *************************************************************************************************************/
+    it("Testing that removeFavorite works properly", async () => {
+        testTree.removeUSSFavorite(testTree.mFavorites[0]);
+        testTree.removeUSSFavorite(testTree.mFavorites[0]);
+
+        expect(testTree.mFavorites).toEqual([]);
+    });
 });

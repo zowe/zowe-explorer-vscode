@@ -488,7 +488,8 @@ describe("Extension Integration Tests - USS", () => {
             // Create the TreeView using ussFileProvider to create tree structure
             const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
 
-            const allNodes = await getAllUSSNodes(ussFileProvider.mSessionNodes);
+            const nonFavorites = ussFileProvider.mSessionNodes.filter((node) => node.contextValue !== "favorite" );
+            const allNodes = await getAllUSSNodes(nonFavorites);
             for (const node of allNodes) {
                 // For each node, select that node in TreeView by calling reveal()
                 await ussTestTreeView.reveal(node);

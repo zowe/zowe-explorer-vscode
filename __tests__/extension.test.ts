@@ -30,6 +30,7 @@ import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
 import * as profileLoader from "../src/ProfileLoader";
+import * as ussNodeActions from "../src/uss/ussNodeActions"
 import { Job } from "../src/zosjobs";
 
 describe("Extension Unit Tests", async () => {
@@ -322,6 +323,7 @@ describe("Extension Unit Tests", async () => {
                 "[test]: brtvs99.test.search{session}",
             ]
         });
+        spyOn(ussNodeActions, "initializeUSSFavorites").and.returnValue(undefined);
         const extensionMock = jest.fn(() => (<vscode.ExtensionContext>{
             subscriptions: [],
             extensionPath: path.join(__dirname, "..")
@@ -372,7 +374,7 @@ describe("Extension Unit Tests", async () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(42);
+        expect(registerCommand.mock.calls.length).toBe(44);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");
@@ -409,54 +411,58 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[16][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[17][0]).toBe("zowe.submitMember");
         expect(registerCommand.mock.calls[17][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[18][0]).toBe("zowe.uss.addSession");
+        expect(registerCommand.mock.calls[18][0]).toBe("zowe.showDSAttributes");
         expect(registerCommand.mock.calls[18][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[19][0]).toBe("zowe.uss.refreshAll");
+        expect(registerCommand.mock.calls[19][0]).toBe("zowe.uss.addFavorite");
         expect(registerCommand.mock.calls[19][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[20][0]).toBe("zowe.uss.refreshUSS");
+        expect(registerCommand.mock.calls[20][0]).toBe("zowe.uss.removeFavorite");
         expect(registerCommand.mock.calls[20][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[21][0]).toBe("zowe.uss.fullPath");
+        expect(registerCommand.mock.calls[21][0]).toBe("zowe.uss.addSession");
         expect(registerCommand.mock.calls[21][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[22][0]).toBe("zowe.uss.ZoweUSSNode.open");
+        expect(registerCommand.mock.calls[22][0]).toBe("zowe.uss.refreshAll");
         expect(registerCommand.mock.calls[22][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.removeSession");
+        expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.refreshUSS");
         expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[24][0]).toBe("zowe.uss.createFile");
+        expect(registerCommand.mock.calls[24][0]).toBe("zowe.uss.fullPath");
         expect(registerCommand.mock.calls[24][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[25][0]).toBe("zowe.uss.createFolder");
+        expect(registerCommand.mock.calls[25][0]).toBe("zowe.uss.ZoweUSSNode.open");
         expect(registerCommand.mock.calls[25][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[26][0]).toBe("zowe.uss.deleteNode");
+        expect(registerCommand.mock.calls[26][0]).toBe("zowe.uss.removeSession");
         expect(registerCommand.mock.calls[26][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[27][0]).toBe("zowe.uss.binary");
+        expect(registerCommand.mock.calls[27][0]).toBe("zowe.uss.createFile");
         expect(registerCommand.mock.calls[27][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[28][0]).toBe("zowe.uss.text");
+        expect(registerCommand.mock.calls[28][0]).toBe("zowe.uss.createFolder");
         expect(registerCommand.mock.calls[28][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[29][0]).toBe("zowe.showDSAttributes");
+        expect(registerCommand.mock.calls[29][0]).toBe("zowe.uss.deleteNode");
         expect(registerCommand.mock.calls[29][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[30][0]).toBe("zowe.zosJobsSelectjob");
+        expect(registerCommand.mock.calls[30][0]).toBe("zowe.uss.binary");
         expect(registerCommand.mock.calls[30][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[31][0]).toBe("zowe.zosJobsOpenspool");
+        expect(registerCommand.mock.calls[31][0]).toBe("zowe.uss.text");
         expect(registerCommand.mock.calls[31][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[32][0]).toBe("zowe.deleteJob");
+        expect(registerCommand.mock.calls[32][0]).toBe("zowe.zosJobsSelectjob");
         expect(registerCommand.mock.calls[32][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[33][0]).toBe("zowe.runModifyCommand");
+        expect(registerCommand.mock.calls[33][0]).toBe("zowe.zosJobsOpenspool");
         expect(registerCommand.mock.calls[33][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[34][0]).toBe("zowe.runStopCommand");
+        expect(registerCommand.mock.calls[34][0]).toBe("zowe.deleteJob");
         expect(registerCommand.mock.calls[34][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[35][0]).toBe("zowe.refreshServer");
+        expect(registerCommand.mock.calls[35][0]).toBe("zowe.runModifyCommand");
         expect(registerCommand.mock.calls[35][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[36][0]).toBe("zowe.refreshAllJobs");
+        expect(registerCommand.mock.calls[36][0]).toBe("zowe.runStopCommand");
         expect(registerCommand.mock.calls[36][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[37][0]).toBe("zowe.addJobsSession");
+        expect(registerCommand.mock.calls[37][0]).toBe("zowe.refreshServer");
         expect(registerCommand.mock.calls[37][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[38][0]).toBe("zowe.setOwner");
+        expect(registerCommand.mock.calls[38][0]).toBe("zowe.refreshAllJobs");
         expect(registerCommand.mock.calls[38][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[39][0]).toBe("zowe.setPrefix");
+        expect(registerCommand.mock.calls[39][0]).toBe("zowe.addJobsSession");
         expect(registerCommand.mock.calls[39][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[40][0]).toBe("zowe.removeJobsSession");
+        expect(registerCommand.mock.calls[40][0]).toBe("zowe.setOwner");
         expect(registerCommand.mock.calls[40][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[41][0]).toBe("zowe.downloadSpool");
+        expect(registerCommand.mock.calls[41][0]).toBe("zowe.setPrefix");
         expect(registerCommand.mock.calls[41][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[42][0]).toBe("zowe.removeJobsSession");
+        expect(registerCommand.mock.calls[42][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[43][0]).toBe("zowe.downloadSpool");
+        expect(registerCommand.mock.calls[43][1]).toBeInstanceOf(Function);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
@@ -1467,6 +1473,36 @@ describe("Extension Unit Tests", async () => {
         expect(showErrorMessage.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
         expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node.");
+    });
+
+    it("Tests that openUSS executes successfully with favorited files", async () => {
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+
+        openTextDocument.mockResolvedValueOnce("test.doc");
+
+        // Set up mock favorite session
+        const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        favoriteSession.contextValue = "favorite";
+
+        // Set up favorited nodes (directly under Favorites)
+        const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, null, "/");
+        favoriteFile.contextValue = "textfilef";
+        const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/");
+        favoriteParent.contextValue = "directoryf";
+        // Set up child of favoriteDir - make sure we can open the child of a favorited directory
+        const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir");
+        child.contextValue = "textfile";
+
+        // For each node, make sure that code below the log.debug statement is execute
+        await extension.openUSS(favoriteFile);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+        showTextDocument.mockReset();
+
+        await extension.openUSS(child);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+        showTextDocument.mockReset();
     });
 
     it("Testing that saveUSSFile is executed successfully", async () => {
