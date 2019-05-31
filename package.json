@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -458,6 +458,10 @@
         },
         {
           "when": "viewItem == ds",
+          "command": "zowe.submitMember"
+        },
+        {
+          "when": "viewItem == ds",
           "command": "zowe.addFavorite"
         },
         {
@@ -477,6 +481,10 @@
         {
           "when": "viewItem == dsf",
           "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.submitMember"
         },
         {
           "when": "viewItem == dsf",
