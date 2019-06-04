@@ -1,8 +1,8 @@
 {
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
-  "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets",
-  "version": "0.14.0",
+  "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
+  "version": "0.17.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -62,11 +62,11 @@
     "commands": [
       {
         "command": "zowe.uss.createFile",
-        "title": "Create file"
+        "title": "Create File"
       },
       {
         "command": "zowe.uss.createFolder",
-        "title": "Create directory"
+        "title": "Create Directory"
       },
       {
         "command": "zowe.uss.deleteNode",
@@ -78,6 +78,10 @@
       },
       {
         "command": "zowe.addFavorite",
+        "title": "Add Favorite"
+      },
+      {
+        "command": "zowe.uss.addFavorite",
         "title": "Add Favorite"
       },
       {
@@ -99,6 +103,10 @@
       {
         "command": "zowe.createMember",
         "title": "Create New Member"
+      },
+      {
+        "command": "zowe.showDSAttributes",
+        "title": "Show Data Set Attributes"
       },
       {
         "command": "zowe.deleteDataset",
@@ -138,6 +146,10 @@
       },
       {
         "command": "zowe.removeFavorite",
+        "title": "Remove Favorite"
+      },
+      {
+        "command": "zowe.uss.removeFavorite",
         "title": "Remove Favorite"
       },
       {
@@ -267,6 +279,26 @@
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
         }
+      },
+      {
+        "command": "zowe.removeJobsSession",
+        "title": "Remove Profile"
+      },
+      {
+        "command": "zowe.downloadSpool",
+        "title": "Download Spool",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
+        "command": "zowe.getJobJcl",
+        "title": "Get JCL"
+      },
+      {
+        "command": "zowe.setJobSpool",
+        "title": "Set Spool"
       }
     ],
     "menus": {
@@ -314,7 +346,27 @@
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.addFavorite",
+         "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.createFile",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.createFolder",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
           "group": "navigation"
         },
@@ -329,8 +381,38 @@
           "group": "navigation"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem == textFile",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "command": "zowe.uss.binary",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem == binaryFile",
           "command": "zowe.uss.text",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+          "command": "zowe.uss.text",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+          "command": "zowe.uss.removeFavorite",
           "group": "navigation"
         },
         {
@@ -388,6 +470,10 @@
           "command": "zowe.addFavorite"
         },
         {
+          "when": "viewItem == ds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
           "when": "viewItem == dsf",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -396,6 +482,10 @@
           "when": "viewItem == dsf",
           "command": "zowe.safeSave",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.showDSAttributes"
         },
         {
           "when": "viewItem == dsf",
@@ -411,6 +501,10 @@
         },
         {
           "when": "viewItem == pds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == pds",
           "command": "zowe.deletePDS"
         },
         {
@@ -420,6 +514,10 @@
         {
           "when": "viewItem == pdsf",
           "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.showDSAttributes"
         },
         {
           "when": "viewItem == pdsf",
@@ -474,6 +572,10 @@
           "command": "zowe.setPrefix"
         },
         {
+          "when": "viewItem == server",
+          "command": "zowe.removeJobsSession"
+        },
+        {
           "when": "viewItem == job",
           "command": "zowe.deleteJob",
           "group": "inline"
@@ -485,6 +587,15 @@
         {
           "when": "viewItem == job",
           "command": "zowe.runStopCommand"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.downloadSpool",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.getJobJcl"
         }
       ],
       "commandPalette": [
@@ -626,6 +737,14 @@
           },
           "description": "Toggle if favorite files persist locally",
           "scope": "window"
+        },
+        "Zowe-USS-Persistent-Favorites": {
+          "default": {
+            "persistence": true,
+            "favorites": []
+          },
+          "description": "Toggle is favorite files exist locally",
+          "scope": "window"
         }
       }
     }
@@ -659,7 +778,7 @@
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
-    "vsce": "^1.58.0",
+    "vsce": "^1.60.0",
     "vscode": "^1.1.30"
   },
   "dependencies": {
@@ -687,7 +806,8 @@
       "**/__tests__/*/*test.+(ts|tsx)"
     ],
     "modulePathIgnorePatterns": [
-      "__tests__/integrationTests/"
+      "__tests__/integrationTests/",
+      "out/"
     ],
     "reporters": [
       "default",

@@ -13,8 +13,9 @@ import * as vscode from 'vscode';
 import * as zowe from '@brightside/core';
 import * as path from 'path';
 import * as os from 'os';
-import { CliProfileManager, Session } from '@brightside/imperative';
+import { CliProfileManager, Session, IProfileLoaded } from '@brightside/imperative';
 import { IJob } from '@brightside/core';
+import { loadNamedProfile, loadDefaultProfile } from './ProfileLoader';
 
 export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public mSessionNodes: Job[] = [];
@@ -44,13 +45,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      */
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-            type: "zosmf"
-        }).load(sessionName ? {name: sessionName} : {loadDefault: true});
+        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
 
         // If session is already added, do nothing
-        if (this.mSessionNodes.filter((tempNode) => tempNode.mLabel === zosmfProfile.profile.name).length) {
+        if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
             return;
         }
 
@@ -61,6 +59,12 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, session, null);
         node.contextValue = "server";
         this.mSessionNodes.push(node);
+        this.refresh();
+    }
+
+    public deleteSession(node: Job) {
+        // Removes deleted session from mSessionNodes
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
         this.refresh();
     }
 
@@ -132,6 +136,10 @@ export class Job extends vscode.TreeItem {
         }
     }
 
+    get owner() {
+        return this._owner;
+    }
+
     set prefix(newPrefix: string) {
         if(newPrefix !== undefined) {
             if(newPrefix.length === 0){
@@ -140,5 +148,9 @@ export class Job extends vscode.TreeItem {
                 this._prefix = newPrefix;
             }
         }
+    }
+
+    get prefix() {
+        return this._prefix;
     }
 }
