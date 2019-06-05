@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.19.0
+
+- Added the rename USS files. Thanks Kristina Mayo
+
 ## 0.18.0
 
 - Added the ability to submit JCL from physical sequential data sets

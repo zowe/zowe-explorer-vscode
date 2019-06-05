@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -71,6 +71,10 @@
       {
         "command": "zowe.uss.deleteNode",
         "title": "Delete"
+      },
+      {
+        "command": "zowe.uss.renameNode",
+        "title": "Rename"
       },
       {
         "command": "zowe.addFavorite",
@@ -364,6 +368,11 @@
         {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.renameNode",
           "group": "navigation"
         },
         {
@@ -783,8 +792,8 @@
     "vscode": "^1.1.30"
   },
   "dependencies": {
-    "@brightside/core": "^2.15.0",
-    "@brightside/imperative": "^2.3.0",
+    "@brightside/core": "2.28.1",
+    "@brightside/imperative": "2.4.2",
     "jsdoc": "^3.5.5"
   },
   "jest": {

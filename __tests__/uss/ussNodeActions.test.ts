@@ -13,14 +13,16 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
-import { createUSSNode, deleteUSSNode } from "../../src/uss/ussNodeActions";
+import { createUSSNode, deleteUSSNode, renameUSSNode } from "../../src/uss/ussNodeActions";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import * as utils from "../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
+const Utilities = jest.fn();
 const uss = jest.fn();
 const ussFile = jest.fn();
+const renameUSSFile = jest.fn();
 const mockAddUSSSession = jest.fn();
 const mockUSSRefresh = jest.fn();
 const mockGetUSSChildren = jest.fn();
@@ -31,8 +33,10 @@ const getConfiguration = jest.fn();
 
 function getUSSNode() {
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
     ussNode.contextValue = "uss_session";
     ussNode.fullPath = "/u/myuser";
+    ussNode.mParent = mParent;
     return ussNode;
 }
 
@@ -66,8 +70,10 @@ const testUSSTree = getUSSTree();
 
 Object.defineProperty(brightside, "Create", { value: Create });
 Object.defineProperty(brightside, "Delete", { value: Delete });
+Object.defineProperty(brightside, "Utilities", { value: Utilities });
 Object.defineProperty(Create, "uss", { value: uss });
 Object.defineProperty(Delete, "ussFile", { value: ussFile });
+Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
 Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
 Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
 Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
@@ -79,17 +85,16 @@ describe("ussNodeActions", async () => {
         showErrorMessage.mockReset();
         testUSSTree.refresh.mockReset();
         showQuickPick.mockReset();
+        showInputBox.mockReset();
     });
     describe("createUSSNode", () => {
         it("createUSSNode is executed successfully", async () => {
-            showInputBox.mockReset();
             showInputBox.mockReturnValueOnce("USSFolder");
             await createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
         });
         it("createUSSNode does not execute if node name was not entered", async () => {
-            showInputBox.mockReset();
             showInputBox.mockReturnValueOnce("");
             await createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
@@ -139,5 +144,20 @@ describe("ussNodeActions", async () => {
             })
             expect(testUSSTree.mFavorites).toEqual(expectedUSSFavorites);
         })
+    });
+    describe("renameUSSNode", () => {
+        it('should exit if blank input is provided', () => {
+            showInputBox.mockReturnValueOnce("");
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(0);
+        });
+        it("should execute rename USS file and and refresh the tree", async () => {
+            showInputBox.mockReturnValueOnce("new name");
+            await renameUSSNode(ussNode, testUSSTree, "file");
+            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+        });
     });
 });
