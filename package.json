@@ -121,6 +121,10 @@
         "title": "Delete PDS"
       },
       {
+        "command": "zowe.uploadDialog",
+        "title": "Upload"
+      },
+      {
         "command": "zowe.pattern",
         "title": "Search Data Sets by Entering Patterns",
         "icon": {
@@ -299,10 +303,6 @@
       {
         "command": "zowe.setJobSpool",
         "title": "Set Spool"
-      },
-      {
-        "command": "zowe.uploadDialog",
-        "title": "Upload Dialog"
       }
     ],
     "menus": {
@@ -534,6 +534,10 @@
         {
           "when": "viewItem == pdsf",
           "command": "zowe.deletePDS"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.uploadDialog"
         },
         {
           "when": "viewItem == pdsf",

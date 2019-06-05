@@ -106,11 +106,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.uploadDialog", (node) => uploadDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
-    vscode.commands.registerCommand("zowe.uploadDialog", async (node) => uploadDialog(datasetProvider));
     vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
@@ -1118,11 +1118,8 @@ export async function safeSave(node: ZoweNode) {
     }
 }
 
-export function uploadDialog(datasetProvider: DatasetTree) {
-    let inputOptions = {
-        prompt: "Which dataset would you like to upload to?",
-        placeHolder: "Destination Dataset:"
-    }
+export function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
+    log.debug('Here is node ', node);
 
     let fileOpenOptions = {
        canSelectFiles: true,
@@ -1130,14 +1127,6 @@ export function uploadDialog(datasetProvider: DatasetTree) {
     }
 
     vscode.window.showOpenDialog(fileOpenOptions).then(async value => {
-        const mvsDestination: string = await vscode.window.showInputBox(inputOptions).then(value => {
-            if (!value) return;
-            return value
-        });
-
-        if (!value || !mvsDestination) return;
-        
-        // log.debug(`MVS Destination: ${mvsDestination}`);
 
         await Promise.all(
             value.map(async item => {
@@ -1147,11 +1136,19 @@ export function uploadDialog(datasetProvider: DatasetTree) {
                 // Run save on each file path in array
                 // `doc` needs to be edited so label in next function points to destination
                 // Currently destination label is derived from "fileName" in doc
-                await saveFile(doc, datasetProvider);
+                await uploadFile(node, doc);
             })
         )
     })
 };
+
+export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
+    try {
+        return zowe.Upload.fileToDataset(node.getSession(), doc.fileName, node.label);
+    } catch (e) {
+        vscode.window.showInformationMessage(e);
+    }
+}
 
 /**
  * Uploads the file to the mainframe
@@ -1198,7 +1195,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
-            const response = await zowe.List.dataSet(documentSession, label);
+            const response = await zowe.List.dataSet(documentSession, label); // here
             if (!response.apiResponse.items.length) {
                 return vscode.window.showErrorMessage("Data set failed to save. Data set may have been deleted on mainframe.");
             }
@@ -1212,6 +1209,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             title: "Saving data set..."
         }, () => {
             return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label);  // TODO MISSED TESTING
+            // needs to use fileToDataset
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);  // TODO MISSED TESTING
