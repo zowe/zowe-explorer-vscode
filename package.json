@@ -344,7 +344,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.addFavorite",
-         "group": "navigation"
+          "group": "navigation"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == directoryf",
@@ -749,14 +749,15 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "npm run build && npm run markdown",
     "build": "npm run license && tsc --pretty",
     "watch": "tsc -watch --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
     "test": "jest --coverage",
     "package": "vsce package",
-    "license": "node ./scripts/license.js"
+    "license": "node ./scripts/license.js",
+    "markdown": "markdownlint CHANGELOG.md README.md"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -774,6 +775,7 @@
     "jest": "^22.4.4",
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
+    "markdownlint-cli": "^0.16.0",
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
