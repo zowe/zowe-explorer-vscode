@@ -348,7 +348,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.addFavorite",
-         "group": "navigation"
+          "group": "navigation"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == directoryf",
@@ -782,8 +782,8 @@
     "vscode": "^1.1.30"
   },
   "dependencies": {
-    "@brightside/core": "^2.28.0",
-    "@brightside/imperative": "^2.3.0",
+    "@brightside/core": "2.28.1",
+    "@brightside/imperative": "2.4.2",
     "jsdoc": "^3.5.5"
   },
   "jest": {
