@@ -59,6 +59,37 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
 }
 
 /**
+ * Refreshes treeView MOVE FUNCTION FROM EXTENSION!
+ *
+ * @param {USSTree} ussFileProvider
+ */
+export async function refreshAllUSS(ussFileProvider: USSTree) {
+    ussFileProvider.mSessionNodes.forEach((node) => {
+        node.dirty = true;
+    });
+    ussFileProvider.refresh();
+}
+
+export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
+    const newName = await vscode.window.showInputBox({value: node.label});
+    if (!newName) {
+        return;
+    }
+    try {
+        const newNamePath = node.mParent.fullPath + "/" +  newName;
+        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
+        if (node.contextValue === "directory" || node.mParent.contextValue === "uss_session") {
+            refreshAllUSS(ussFileProvider);
+        } else {
+            ussFileProvider.refresh();
+        }
+    } catch (err) {
+        vscode.window.showErrorMessage(`Unable to rename node: ${err.message}`);
+        throw (err);
+    }
+}
+
+/**
  * Marks file as deleted from disk
  *
  * @param {ZoweUSSNode} node
