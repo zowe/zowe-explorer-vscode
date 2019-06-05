@@ -24,6 +24,7 @@ import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
+import { isNullOrUndefined } from "util";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -998,7 +999,7 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
  *
  * @param {ZoweNode} node - The node which represents the dataset
  */
-export async function refreshPS(node: ZoweNode) {
+export async function refreshPS(node: ZoweNode) { // should use this to refresh?
     let label;
     try {
         switch (node.mParent.contextValue) {
@@ -1118,35 +1119,29 @@ export async function safeSave(node: ZoweNode) {
     }
 }
 
-export function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
-    log.debug('Here is node ', node);
-
+export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     let fileOpenOptions = {
        canSelectFiles: true,
        openLabel: 'Upload File'
     }
 
-    vscode.window.showOpenDialog(fileOpenOptions).then(async value => {
+    const value = await vscode.window.showOpenDialog(fileOpenOptions);
 
-        await Promise.all(
-            value.map(async item => {
-                // Convert to vscode.TextDocument
-                const doc = await vscode.workspace.openTextDocument(item)
-
-                // Run save on each file path in array
-                // `doc` needs to be edited so label in next function points to destination
-                // Currently destination label is derived from "fileName" in doc
-                await uploadFile(node, doc);
-            })
-        )
-    })
+    await Promise.all(
+        value.map(async item => {
+            // Convert to vscode.TextDocument
+            const doc = await vscode.workspace.openTextDocument(item)
+            await uploadFile(node, doc);
+        }
+    ));
+    datasetProvider.refresh();
 };
 
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
-        return zowe.Upload.fileToDataset(node.getSession(), doc.fileName, node.label);
+        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, node.label);
     } catch (e) {
-        vscode.window.showInformationMessage(e);
+        vscode.window.showErrorMessage(e.message);
     }
 }
 
