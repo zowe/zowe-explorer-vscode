@@ -73,6 +73,10 @@
         "title": "Delete"
       },
       {
+        "command": "zowe.uss.renameNode",
+        "title": "Rename"
+      },
+      {
         "command": "zowe.addFavorite",
         "title": "Add Favorite"
       },
@@ -364,6 +368,11 @@
         {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.renameNode",
           "group": "navigation"
         },
         {
@@ -781,7 +790,7 @@
     "vscode": "^1.1.30"
   },
   "dependencies": {
-    "@brightside/core": "^2.15.0",
+    "@brightside/core": "^2.28.0",
     "@brightside/imperative": "^2.3.0",
     "jsdoc": "^3.5.5"
   },
