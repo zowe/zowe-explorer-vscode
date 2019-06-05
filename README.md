@@ -28,7 +28,7 @@ After you install the Zowe extension, meet the following prerequisites:
 You can alter the behavior of the extension in the following ways:
 
 * **Data set Safe Save:** The Visual Studio Code **Save** functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension **Safe Save** functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
-* **Data set creation settings:** You can change the default creation settings for various data set types. Navigate to the Settings for this extension for more info. 
+* **Data set creation settings:** You can change the default creation settings for various data set types. Navigate to the Settings for this extension for more info.
 * **Data set persistence settings:** You can toggle the persistence of any data sets that are present under your **Favorites** tab.
   
 **Tip:** By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as COBOL.
@@ -67,10 +67,10 @@ Review the following use cases to understand how to use this extension.
 4. Click the PDS member (or PS) that you want to download.
 
     **Note:** To view the members of a PDS, click the PDS to expand the tree.
-    
-    The PDS member displays in the text editor window of VSC. 
-6. Edit the document.
-7. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Safe Save** button.
+
+    The PDS member displays in the text editor window of VSC.
+5. Edit the document.
+6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Safe Save** button.
 
 Your PDS member (or PS) is uploaded.  
 
@@ -101,7 +101,7 @@ Your PDS member (or PS) is uploaded.
    The PDS is created.
 6. To create a member, right-click the PDS and select **Create New Member**.
 7. Enter a name for the member.
-   The member is created. 
+   The member is created.
 
 ![Create](https://github.com/mheuzey/temp/blob/master/resources/gifs/new_pds_new_member.gif?raw=true "Create")
 <br /><br />
@@ -113,21 +113,21 @@ Your PDS member (or PS) is uploaded.
 3. Open the profile and PDS containing the member.
 4. Right-click on the PDS member that you want to delete and select **Delete Member**.
 5. Confirm the deletion by clicking **Yes** on the drop-down menu.
-    
+
     **Note:** Alternatively, you can select 'No' to cancel the deletion.
 6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
-    
+
     **Note:** You can delete a PDS before you you delete its members.
 
 ![Delete](https://github.com/mheuzey/temp/blob/master/resources/gifs/delete_pds_delete_member.gif?raw=true "Delete")
 <br /><br />
 
-### View and access multiple profiles simultaneously 
+### View and access multiple profiles simultaneously
 
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
-2. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
-3. Select the profile that you want to add to the view as illustrated by the following screen.
+3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
+4. Select the profile that you want to add to the view as illustrated by the following screen.
 
 ![Add Profile](https://github.com/mheuzey/temp/blob/master/resources/gifs/addProfile.gif?raw=true "Add Profile")
 <br /><br />
@@ -139,7 +139,6 @@ Your PDS member (or PS) is uploaded.
 3. Click the **Edit** button to the left of the Data Set settings that you want to edit.
 4. Select **Copy to Settings**.
 5. Edit the settings as needed.
-
 
 ### View Unix System Services (USS) files
 
@@ -168,8 +167,8 @@ Your PDS member (or PS) is uploaded.
 1. Click the file that you want to download.
 
     **Note:** To view the files within a directory, click the directory to expand the tree.
-    
-    The file displays in the text editor window of VSC. 
+
+    The file displays in the text editor window of VSC.
 
     **Note:** If you have defined file associations with syntax coloring the suffix of your file will be marked up.
 
@@ -181,7 +180,6 @@ Your file is uploaded.
 ![Edit](./docs/images/editUSS.gif?raw=true "Edit")
 <br /><br />
 
-
 ### Creating and deleting files and directories
 
 #### Create a directory
@@ -190,7 +188,7 @@ Your file is uploaded.
 2. Open the **Unix System Services (USS)** bar.
 3. Select a directory that you want to add the new directory to.
 4. Select the **Create directory** button and specify the directory name.
-   The directory is created. 
+   The directory is created.
 
 #### Create a file
 
@@ -198,7 +196,7 @@ Your file is uploaded.
 2. Open the **Unix System Services (USS)** bar.
 3. Select a directory that you want to add the new file to.
 4. Select the **Create file** button and specify the file name.
-   The file is created. 
+   The file is created.
 
 #### Delete a file
 
@@ -206,25 +204,24 @@ Your file is uploaded.
 2. Open the **Unix System Services (USS)** bar.
 3. Select a file you want to remove.
 4. Select the **Delete** button and press yes in the confirmation dropdown.
-   The file is deleted. 
-   
+   The file is deleted.
+
 #### Delete a directory
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
 3. Select a directory you want to remove.
 4. Select the **Delete** button and press yes in the confirmation dropdown.
-   The directory and all child files and directories are deleted. 
+   The directory and all child files and directories are deleted.
 
 ![Create and Delete](./docs/images/CreateDelete.gif?raw=true "Create and Delete")
 <br /><br />
 
-### View and access multiple profiles simultaneously 
+### View and access multiple USS profiles simultaneously
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
-2. Click the **Add Profile** button on the right of the **Unix System Services (USS)** explorer bar.
-3. Select the profile that you want to add to the view as illustrated by the following screen.
+3. Click the **Add Profile** button on the right of the **Unix System Services (USS)** explorer bar.
+4. Select the profile that you want to add to the view as illustrated by the following screen.
 
 ![Add Profile](./docs/images/profile2.gif?raw=true "Add Profile")
-<br /><br />

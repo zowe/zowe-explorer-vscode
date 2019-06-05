@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.16.3",
+  "version": "0.19.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -71,6 +71,10 @@
       {
         "command": "zowe.uss.deleteNode",
         "title": "Delete"
+      },
+      {
+        "command": "zowe.uss.renameNode",
+        "title": "Rename"
       },
       {
         "command": "zowe.addFavorite",
@@ -287,6 +291,14 @@
           "light": "./resources/light/download.svg",
           "dark": "./resources/dark/download.svg"
         }
+      },
+      {
+        "command": "zowe.getJobJcl",
+        "title": "Get JCL"
+      },
+      {
+        "command": "zowe.setJobSpool",
+        "title": "Set Spool"
       }
     ],
     "menus": {
@@ -336,7 +348,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.addFavorite",
-         "group": "navigation"
+          "group": "navigation"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == directoryf",
@@ -356,6 +368,11 @@
         {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.renameNode",
           "group": "navigation"
         },
         {
@@ -450,6 +467,10 @@
         },
         {
           "when": "viewItem == ds",
+          "command": "zowe.submitMember"
+        },
+        {
+          "when": "viewItem == ds",
           "command": "zowe.addFavorite"
         },
         {
@@ -469,6 +490,10 @@
         {
           "when": "viewItem == dsf",
           "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.submitMember"
         },
         {
           "when": "viewItem == dsf",
@@ -575,6 +600,10 @@
           "when": "viewItem == job",
           "command": "zowe.downloadSpool",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.getJobJcl"
         }
       ],
       "commandPalette": [
@@ -729,14 +758,15 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "npm run build && npm run markdown",
     "build": "npm run license && tsc --pretty",
     "watch": "tsc -watch --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
     "test": "jest --coverage",
     "package": "vsce package",
-    "license": "node ./scripts/license.js"
+    "license": "node ./scripts/license.js",
+    "markdown": "markdownlint CHANGELOG.md README.md"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -754,6 +784,7 @@
     "jest": "^22.4.4",
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
+    "markdownlint-cli": "^0.16.0",
     "sinon": "^6.1.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
@@ -761,8 +792,8 @@
     "vscode": "^1.1.30"
   },
   "dependencies": {
-    "@brightside/core": "^2.15.0",
-    "@brightside/imperative": "^2.3.0",
+    "@brightside/core": "2.28.1",
+    "@brightside/imperative": "2.4.2",
     "jsdoc": "^3.5.5"
   },
   "jest": {
