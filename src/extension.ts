@@ -1122,7 +1122,8 @@ export async function safeSave(node: ZoweNode) {
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     let fileOpenOptions = {
        canSelectFiles: true,
-       openLabel: 'Upload File'
+       openLabel: 'Upload File',
+       canSelectMany: true
     }
 
     const value = await vscode.window.showOpenDialog(fileOpenOptions);
