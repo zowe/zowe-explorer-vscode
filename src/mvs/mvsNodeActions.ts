@@ -19,7 +19,7 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
        canSelectFiles: true,
        openLabel: "Upload File",
        canSelectMany: true
-    }
+    };
 
     const value = await vscode.window.showOpenDialog(fileOpenOptions);
 
@@ -31,7 +31,7 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
         }
     ));
     datasetProvider.refresh();
-};
+}
 
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
