@@ -11,7 +11,6 @@
 
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
@@ -20,11 +19,11 @@ import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
+import * as mvsActions from "./mvs/mvsNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
-import { isNullOrUndefined } from "util";
 
 // Globals
 export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
@@ -107,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.uploadDialog", (node) => uploadDialog(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.uploadDialog", (node) => mvsActions.uploadDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
