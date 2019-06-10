@@ -38,7 +38,9 @@ def PIPELINE_CONTROL = [
   ci_skip: false
 ]
 
-
+/**
+ * Options for the pipeline
+ */
 def opts = []
 opts.push(buildDiscarder(logRotator(numToKeepStr: '10')))
 if (BRANCH_NAME == MASTER_BRANCH) opts.push(disableConcurrentBuilds())
@@ -51,7 +53,6 @@ opts.push( parameters([
   string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to receive build results (Override)')
 ]) )
 properties(opts)
-parameters([booleanParam(defaultValue: false, description: '', name: 'TEST001')])])
 
 pipeline {
   agent { label 'ca-jenkins-agent' }
