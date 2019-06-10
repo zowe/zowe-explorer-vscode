@@ -9,12 +9,15 @@
 *
 */
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-
 /**
  * List of people who will get all emails for master builds
  */
 def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
+
+/**
+ * Name of the master branch
+ */
+def MASTER_BRANCH = "master"
 
 /**
  * Name of the VSCE publisher
@@ -31,107 +34,148 @@ def PUBLISH_TOKEN = "vsce-publish-key"
  */
 def PUBLISH_VERSION = "0.0.0"
 
-/**
- * Control constants
- */
-def _skipAll = false
-def _CI_SKIP = "[ci skip]"
+def PIPELINE_CONTROL = [
+  ci_skip: false
+]
 
-node('ca-jenkins-agent') {
-  try {
-    checkout scm
-    stage("Check CI Skip") {
-      def result = steps.sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-      if (result == 0) {
-          steps.echo "\"${_CI_SKIP}\" spotted in the git commit. Aborting."
-          _skipAll = true
+pipeline {
+  agent { label 'ca-jenkins-agent' }
+  stages {
+    stage('Check for CI Skip') { steps {
+      timeout(time: 2, unit: 'MINUTES') { script {
+        def result = sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+        if (result == 0) {
+          echo '"ci skip" spotted in the git commit. Aborting.'
+          PIPELINE_CONTROL.ci_skip = true
+        } }
+      }
+    } }
+    stage('Install dependencies') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm install"
+        } }
       }
     }
-    stage("Install dependencies") {
-      if(_skipAll) echo "skipped"//Utils.markStageSkippedForConditional(STAGE_NAME)
-      else sh "npm istall"
+    stage('Build') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm run build"
+        } }
+      }
     }
-    stage("Build") {
-      if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
-      sh "npm run build"
+    stage('Test') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm run test"
+        } }
+      }
     }
-    stage("Test") {
-      if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
-      sh "npm run test"
-    }
-    stage("Audit") {
-      if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
-      sh "npm audit"
+    stage('Audit') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm audit"
+        } }
+      }
     }
     stage("Versioning & Changelog") {
-      if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
-      if (BRANCH_NAME != "master") Utils.markStageSkippedForConditional(STAGE_NAME)
-      def versionInput = input message: "Version information:", submitterParameter: "VERSION", parameters: [
-        choice(name: "VERSION", description: "What level should be increased?", choices: ["major", "minor", "patch"])
-      ]
-      
-      echo "User selected: ${versionInput.VERSION}"
-      
-      def prDescription = sh returnStdout: true, script: "git log --format=%B -n 1"
-      echo "${prDescription}"
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          def versionInput = input message: "Version information:", submitterParameter: "VERSION", parameters: [
+            choice(name: "VERSION", description: "What level should be increased?", choices: ["major", "minor", "patch"])
+          ]
+          
+          echo "User selected: ${versionInput.VERSION}"
+          
+          def prDescription = sh returnStdout: true, script: "git log --format=%B -n 1"
+          echo "${prDescription}"
 
-      sh "npm version ${versionInput.VERSION}"
-      sh "git commit --amend --signoff -m \"Bump version to %s ${_CI_SKIP}\""
+          sh "npm version ${versionInput.VERSION}"
+          sh "git commit --amend --signoff -m \"Bump version to %s [ci skip]\""
 
-      def packageJSON = readJSON file: "package.json"
-      PUBLISH_VERSION = packageJSON.version
-      
-      sh "git reset HEAD --hard"
-      
-      def changelogFile = "CHANGELOG.md"
+          def packageJSON = readJSON file: "package.json"
+          PUBLISH_VERSION = packageJSON.version
+          
+          sh "git reset HEAD --hard"
+          
+          def changelogFile = "CHANGELOG.md"
 
-      def changelogInput = input message: "Changelog description:", submitterParameter: "TEXT", parameters: [
-        text(name: "TEXT", description: "What goes on the changelog?", defaultvalue: '''$prDescription''')
-      ]
+          def changelogInput = input message: "Changelog description:", submitterParameter: "TEXT", parameters: [
+            text(name: "TEXT", description: "What goes on the changelog?", defaultvalue: '''$prDescription''')
+          ]
 
-      def changelogOutput = sh returnStdout: true, script: "sed -n 'H;\${x;s/^\n//;s/## .*\$/## ${PUBLISH_VERSION}\n\n${changelogInput.TEXT}\n\n&/;p;}' ${changelogFile} > ${changelogFile}.temp"
-      sh "mv ${changelogFile}.temp ${changelogFile}"
+          def changelogOutput = sh returnStdout: true, script: "sed -n 'H;\${x;s/^\n//;s/## .*\$/## ${PUBLISH_VERSION}\n\n${changelogInput.TEXT}\n\n&/;p;}' ${changelogFile} > ${changelogFile}.temp"
+          sh "mv ${changelogFile}.temp ${changelogFile}"
 
-      sh "cat ${changelogFile}"
+          sh "cat ${changelogFile}"
 
-      sh "git add ${changelogFile}"
-      sh "git commit --signoff -m \"Update Changelog for version: ${PUBLISH_VERSION} ${_CI_SKIP}\""
+          sh "git add ${changelogFile}"
+          sh "git commit --signoff -m \"Update Changelog for version: ${PUBLISH_VERSION} [ci skip]\""
 
-      sh "git push --dry-run"
+          sh "git push --dry-run"
+        } }
+      }
     }
-
-    stage("Publish") {
-      if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
-      if (BRANCH_NAME != "master") Utils.markStageSkippedForConditional(STAGE_NAME)
-      sh "npx vsce login ${PUBLISHER_NAME}"
-      // withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-      //   sh "npx vsce publish ${PUBLISH_VERSION} -p $TOKEN"
-      // }
+    stage("Versioning & Changelog") {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npx vsce login ${PUBLISHER_NAME}"
+          // withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
+          //   sh "npx vsce publish ${PUBLISH_VERSION} -p $TOKEN"
+          // }
+        } }
+      }
     }
-  } catch (e) {
-    currentBuild.result = "FAILURE"
-    error "${e.getMessage()}"
-  } finally {
+  }
+  post { always { script {
     def buildStatus = currentBuild.currentResult
     def recipients = "${MASTER_RECIPIENTS_LIST}"
     def subjectTitle = "VSCode Extension Deployment"
     def details = "${subjectTitle}"
-    try {
-      if (_skipAll) {
-        currentBuild.result = "SUCCESS"
-      } else {
-        if (buildStatus.equals("SUCCESS")) {
-          details = "${details} succeded."
+    if (!PIPELINE_CONTROL.ci_skip) {
+      try {
+        // get the logs
+        try {
+          sh("cp -rf /home/jenkins/.npm/_logs deploy-log")
+        } catch(e) {}
+        archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy-log/*.log'
+
+        if (PIPELINE_CONTROL.ci_skip) {
+          currentBuild.result = "SUCCESS"
         } else {
-          details = "${details} failed.\n\nPlease investigate build ${currentBuild.number}"
+          if (buildStatus.equals("SUCCESS")) {
+            details = "${details} succeded."
+          } else {
+            details = "${details} failed.\n\nPlease investigate build ${currentBuild.number}"
+          }
+          details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
+          emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
         }
-        details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
-        emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
+      } catch (e) {
+        echo "Experienced an error sending an email for a ${buildStatus} build"
+        currentBuild.result = buildStatus
+        echo "${details}"
       }
-    } catch (e) {
-      echo "Experienced an error sending an email for a ${buildStatus} build"
-      currentBuild.result = buildStatus
-      echo "${details}"
     }
-  }
+  } } }
 }
