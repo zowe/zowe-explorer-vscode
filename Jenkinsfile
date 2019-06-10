@@ -87,6 +87,8 @@ pipeline {
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
+          // copy test properties file
+          sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
           sh "npm run build"
         } }
       }
