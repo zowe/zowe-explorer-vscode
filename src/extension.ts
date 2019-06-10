@@ -998,7 +998,7 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
  *
  * @param {ZoweNode} node - The node which represents the dataset
  */
-export async function refreshPS(node: ZoweNode) { // should use this to refresh?
+export async function refreshPS(node: ZoweNode) {
     let label;
     try {
         switch (node.mParent.contextValue) {
@@ -1118,33 +1118,6 @@ export async function safeSave(node: ZoweNode) {
     }
 }
 
-export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
-    let fileOpenOptions = {
-       canSelectFiles: true,
-       openLabel: 'Upload File',
-       canSelectMany: true
-    }
-
-    const value = await vscode.window.showOpenDialog(fileOpenOptions);
-
-    await Promise.all(
-        value.map(async item => {
-            // Convert to vscode.TextDocument
-            const doc = await vscode.workspace.openTextDocument(item)
-            await uploadFile(node, doc);
-        }
-    ));
-    datasetProvider.refresh();
-};
-
-export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
-    try {
-        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, node.label);
-    } catch (e) {
-        vscode.window.showErrorMessage(e.message);
-    }
-}
-
 /**
  * Uploads the file to the mainframe
  *
@@ -1190,7 +1163,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
-            const response = await zowe.List.dataSet(documentSession, label); // here
+            const response = await zowe.List.dataSet(documentSession, label);
             if (!response.apiResponse.items.length) {
                 return vscode.window.showErrorMessage("Data set failed to save. Data set may have been deleted on mainframe.");
             }
@@ -1204,7 +1177,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             title: "Saving data set..."
         }, () => {
             return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label);  // TODO MISSED TESTING
-            // needs to use fileToDataset
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);  // TODO MISSED TESTING

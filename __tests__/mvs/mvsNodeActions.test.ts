@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
-// import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-// import * as brtimperative from "@brightside/imperative";
 import * as mvsNodeActions from "../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../src/ZoweNode";
-// jest.mock("../src/DatasetTree");
 
 const mockRefresh = jest.fn();
+const showOpenDialog = jest.fn();
+const openTextDocument = jest.fn();
+
+Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
+Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
 const DatasetTree = jest.fn().mockImplementation(() => {
     return {
         mSessionNodes: [],
@@ -15,16 +17,17 @@ const DatasetTree = jest.fn().mockImplementation(() => {
 });
 
 const testTree = DatasetTree();
-// testTree.mSessionNodes = [];
-// testTree.mSessionNodes.push(sessNode);
 
 describe("mvsNodeActions", async () => {
     it("should call upload dialog and upload file", async () => {
         const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-        spyOn(vscode.window, "showOpenDialog").and.returnValue(Promise.resolve());
-        spyOn(testTree, "refresh");
-        mvsNodeActions.uploadDialog(node, testTree);
-        expect(testTree.refresh).toHaveBeenCalled();
+        const fileUri = {fsPath: "/tmp/foo"};
+        showOpenDialog.mockReturnValue([fileUri]);
+        openTextDocument.mockReturnValue({});
+        await mvsNodeActions.uploadDialog(node, testTree);
+        expect(showOpenDialog).toBeCalled();
+        expect(openTextDocument).toBeCalled();
+        expect(testTree.refresh).toBeCalled();
     });
 });
 
