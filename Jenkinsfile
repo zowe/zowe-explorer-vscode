@@ -38,10 +38,28 @@ def PIPELINE_CONTROL = [
   ci_skip: false
 ]
 
+
+def opts = []
+opts.push(buildDiscarder(logRotator(numToKeepStr: '10')))
+if (BRANCH_NAME == MASTER_BRANCH) opts.push(disableConcurrentBuilds())
+opts.push( parameters([
+  booleanParam(name: 'SKIP_CI_SKIP', defaultValue: false, description: 'Skip: CI SKIP'),
+  booleanParam(name: 'SKIP_TEST', defaultValue: false, description: 'Skip: TEST'),
+  booleanParam(name: 'SKIP_AUDIT', defaultValue: false, description: 'Skip: AUDIT'),
+  booleanParam(name: 'SKIP_VERSIONING', defaultValue: false, description: 'Skip: VERSIONING'),
+  booleanParam(name: 'SKIP_PUBLISH', defaultValue: false, description: 'Skip: PUBLISH'),
+  string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to receive build results (Override)')
+]) )
+properties(opts)
+parameters([booleanParam(defaultValue: false, description: '', name: 'TEST001')])])
+
 pipeline {
   agent { label 'ca-jenkins-agent' }
   stages {
     stage('Check for CI Skip') { steps {
+      when { allOf {
+        expression { return !params.SKIP_CI_SKIP }
+      } }
       timeout(time: 2, unit: 'MINUTES') { script {
         def result = sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
         if (result == 0) {
@@ -73,6 +91,7 @@ pipeline {
     stage('Test') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
@@ -83,6 +102,7 @@ pipeline {
     stage('Audit') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_AUDIT }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
@@ -94,6 +114,7 @@ pipeline {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
         expression { return BRANCH_NAME == MASTER_BRANCH }
+        expression { return !params.SKIP_VERSIONING }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
@@ -136,6 +157,7 @@ pipeline {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
         expression { return BRANCH_NAME == MASTER_BRANCH }
+        expression { return !params.SKIP_PUBLISH }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
@@ -149,12 +171,11 @@ pipeline {
   }
   post { always { script {
     def buildStatus = currentBuild.currentResult
-    def recipients = "${MASTER_RECIPIENTS_LIST}"
+    def recipients = params.RECIPIENTS_LIST != '' ? params.RECIPIENTS_LIST : "${MASTER_RECIPIENTS_LIST}"
     def subjectTitle = "VSCode Extension Deployment"
     def details = "${subjectTitle}"
     if (!PIPELINE_CONTROL.ci_skip) {
       try {
-        // get the logs
         try {
           sh("cp -rf /home/jenkins/.npm/_logs deploy-log")
         } catch(e) {}
