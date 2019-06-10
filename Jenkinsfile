@@ -117,13 +117,17 @@ node('ca-jenkins-agent') {
     def subjectTitle = "VSCode Extension Deployment"
     def details = "${subjectTitle}"
     try {
-      if (buildStatus.equals("SUCCESS")) {
-        details = "${details} succeded."
+      if (_skipAll) {
+        currentBuild.result = "SUCCESS"
       } else {
-        details = "${details} failed.\n\nPlease investigate build ${currentBuild.number}"
+        if (buildStatus.equals("SUCCESS")) {
+          details = "${details} succeded."
+        } else {
+          details = "${details} failed.\n\nPlease investigate build ${currentBuild.number}"
+        }
+        details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
+        emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
       }
-      details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
-      emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
     } catch (e) {
       echo "Experienced an error sending an email for a ${buildStatus} build"
       currentBuild.result = buildStatus
