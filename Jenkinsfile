@@ -75,7 +75,8 @@ node('ca-jenkins-agent') {
       def prDescription = sh returnStdout: true, script: "git log --format=%B -n 1"
       echo "${prDescription}"
 
-      sh "npm version ${versionInput.VERSION} -m \"Bump version to %s ${_CI_SKIP}\""
+      sh "npm version ${versionInput.VERSION}"
+      sh "git commit --amend --signoff -m \"Bump version to %s ${_CI_SKIP}\""
 
       def packageJSON = readJSON file: "package.json"
       PUBLISH_VERSION = packageJSON.version
@@ -94,7 +95,7 @@ node('ca-jenkins-agent') {
       sh "cat ${changelogFile}"
 
       sh "git add ${changelogFile}"
-      sh "git commit -m \"Update Changelog for version: ${PUBLISH_VERSION} ${_CI_SKIP}\""
+      sh "git commit --signoff -m \"Update Changelog for version: ${PUBLISH_VERSION} ${_CI_SKIP}\""
 
       sh "git push --dry-run"
     }
