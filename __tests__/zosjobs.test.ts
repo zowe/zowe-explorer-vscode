@@ -21,7 +21,7 @@ import { Session } from "@brightside/imperative"
 import * as profileLoader from "../src/ProfileLoader";
 import { Job, ZosJobsProvider } from "../src/zosjobs";
 
-describe("ZosJobsProvider Unit Tets", async () => {
+describe("ZosJobsProvider Unit Tets", () => {
     const ZosmfSession = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const GetJobs = jest.fn();

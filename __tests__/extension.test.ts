@@ -33,7 +33,7 @@ import * as profileLoader from "../src/ProfileLoader";
 import * as ussNodeActions from "../src/uss/ussNodeActions"
 import { Job } from "../src/zosjobs";
 
-describe("Extension Unit Tests", async () => {
+describe("Extension Unit Tests", () => {
     // Globals
     const session = new brtimperative.Session({
         user: "fake",
