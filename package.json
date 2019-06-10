@@ -785,6 +785,7 @@
     "jest": "^24.8.0",
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
+    "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
@@ -794,7 +795,7 @@
   },
   "dependencies": {
     "@brightside/core": "2.28.1",
-    "@brightside/imperative": "2.4.2",
+    "@brightside/imperative": "2.4.6",
     "jsdoc": "^3.5.5"
   },
   "jest": {
