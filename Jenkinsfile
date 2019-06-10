@@ -132,7 +132,7 @@ pipeline {
         } }
       }
     }
-    stage("Versioning & Changelog") {
+    stage("Publish") {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
         expression { return BRANCH_NAME == MASTER_BRANCH }
