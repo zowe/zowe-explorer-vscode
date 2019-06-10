@@ -57,18 +57,20 @@ properties(opts)
 pipeline {
   agent { label 'ca-jenkins-agent' }
   stages {
-    stage('Check for CI Skip') { steps {
+    stage('Check for CI Skip') {
       when { allOf {
         expression { return !params.SKIP_CI_SKIP }
       } }
-      timeout(time: 2, unit: 'MINUTES') { script {
-        def result = sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
-        if (result == 0) {
-          echo '"ci skip" spotted in the git commit. Aborting.'
-          PIPELINE_CONTROL.ci_skip = true
+      steps {
+        timeout(time: 2, unit: 'MINUTES') { script {
+          def result = sh returnStatus: true, script: 'git log -1 | grep \'.*\\[ci skip\\].*\''
+          if (result == 0) {
+            echo '"ci skip" spotted in the git commit. Aborting.'
+            PIPELINE_CONTROL.ci_skip = true
+          }
         } }
       }
-    } }
+    }
     stage('Install dependencies') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
