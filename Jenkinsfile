@@ -48,8 +48,8 @@ node('ca-jenkins-agent') {
       }
     }
     stage("Install dependencies") {
-      if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
-      sh "npm istall"
+      if(_skipAll) echo "skipped"//Utils.markStageSkippedForConditional(STAGE_NAME)
+      else sh "npm istall"
     }
     stage("Build") {
       if(_skipAll) Utils.markStageSkippedForConditional(STAGE_NAME)
