@@ -90,7 +90,7 @@ node('ca-jenkins-agent') {
       ]
 
       def changelogOutput = sh returnStdout: true, script: "sed -n 'H;\${x;s/^\n//;s/## .*\$/## ${PUBLISH_VERSION}\n\n${changelogInput.TEXT}\n\n&/;p;}' ${changelogFile} > ${changelogFile}.temp"
-      sh "mv $${changelogFile}.temp ${changelogFile}"
+      sh "mv ${changelogFile}.temp ${changelogFile}"
 
       sh "cat ${changelogFile}"
 
