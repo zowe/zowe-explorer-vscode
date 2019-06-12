@@ -19,7 +19,7 @@ import { ZosSpoolProvider } from "../src/zosspool"
 import { Session } from "@brightside/imperative"
 import { Job } from "../src/zosjobs";
 
-describe("ZosSpoolProvider Unit Tets", async () => {
+describe("ZosSpoolProvider Unit Tets", () => {
     const GetJobs = jest.fn();
     const getSpoolFiles = jest.fn();
 

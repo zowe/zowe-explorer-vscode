@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.19.1
+
+- Fix error when files exist in the profiles folder (such as `.DS_Store` which is automatically generated on macOS)
+
 ## 0.19.0
 
 - Added the rename USS files. Thanks Kristina Mayo
