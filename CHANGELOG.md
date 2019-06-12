@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.20.0
+
+- Combined Spool files with Jobs in Jobs view. Thanks Colin Stone
+
 ## 0.19.0
 
 - Added the rename USS files. Thanks Kristina Mayo

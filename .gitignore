@@ -9,3 +9,4 @@ debug.log
 package-lock.json
 vscode-extension-for-zowe*.vsix
 .vscode/settings.json
+.history
