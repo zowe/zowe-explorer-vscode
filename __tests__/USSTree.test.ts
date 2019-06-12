@@ -22,7 +22,7 @@ import { ZoweUSSNode } from "../src/ZoweUSSNode";
 
 import * as profileLoader from "../src/ProfileLoader";
 
-describe("Unit Tests (Jest)", async () => {
+describe("Unit Tests (Jest)", () => {
     // Globals
     const session = new Session({
         user: "fake",
