@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -782,25 +782,27 @@
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
+    "@types/vscode": "^1.35.0",
     "@types/yargs": "^11.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
-    "expect": "^23.4.0",
+    "expect": "^24.8.0",
     "glob": "^7.1.2",
-    "jest": "^22.4.4",
+    "jest": "^24.8.0",
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
+    "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
     "sinon": "^6.1.0",
-    "ts-jest": "^22.4.6",
+    "ts-jest": "^24.0.2",
     "typescript": "^2.9.2",
     "vsce": "^1.60.0",
     "vscode": "^1.1.30"
   },
   "dependencies": {
-    "@brightside/core": "2.28.1",
-    "@brightside/imperative": "2.4.2",
+    "@brightside/core": "2.28.2",
+    "@brightside/imperative": "2.4.6",
     "jsdoc": "^3.5.5"
   },
   "jest": {
