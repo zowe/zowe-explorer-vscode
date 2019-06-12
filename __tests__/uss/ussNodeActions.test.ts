@@ -80,7 +80,7 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 
 
-describe("ussNodeActions", async () => {
+describe("ussNodeActions", () => {
     beforeEach(() => {
         showErrorMessage.mockReset();
         testUSSTree.refresh.mockReset();

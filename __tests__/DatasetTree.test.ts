@@ -22,7 +22,7 @@ import { Session } from "@brightside/imperative";
 
 import * as profileLoader from "../src/ProfileLoader";
 
-describe("DatasetTree Unit Tests", async () => {
+describe("DatasetTree Unit Tests", () => {
     // Globals
     const session = new Session({
         user: "fake",
