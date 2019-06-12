@@ -122,7 +122,7 @@
       },
       {
         "command": "zowe.uploadDialog",
-        "title": "Upload"
+        "title": "Upload member.."
       },
       {
         "command": "zowe.pattern",

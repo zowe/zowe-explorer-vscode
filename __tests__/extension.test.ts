@@ -413,6 +413,8 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[10][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[11][0]).toBe("zowe.deleteMember");
         expect(registerCommand.mock.calls[11][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[12][0]).toBe("zowe.removeSession");
+        expect(registerCommand.mock.calls[12][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[13][0]).toBe("zowe.removeFavorite");
         expect(registerCommand.mock.calls[13][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[14][0]).toBe("zowe.safeSave");
