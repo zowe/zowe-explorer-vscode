@@ -746,6 +746,13 @@
           "description": "Toggle if favorite files persist locally",
           "scope": "window"
         },
+        "Zowe-Temp-Folder-Location": {
+          "default": {
+            "folderPath": ""
+          },
+          "description": "Path to temporary folder location",
+          "scope": "window"
+        },
         "Zowe-USS-Persistent-Favorites": {
           "default": {
             "persistence": true,

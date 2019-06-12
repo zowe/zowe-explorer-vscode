@@ -26,9 +26,19 @@ import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 
 // Globals
-export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
-export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
-export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+
+// Get temp folder location from settings
+let settingTempPath: string = 
+    vscode.workspace.getConfiguration()
+    .get("Zowe-Temp-Folder-Location")['folderPath']
+
+export let BRIGHTTEMPFOLDER;
+settingTempPath === '' ? 
+    BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp") : 
+    BRIGHTTEMPFOLDER = path.join(settingTempPath, "temp");
+
+export let USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
+export let DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
 
 let log: Logger;
 /**
@@ -122,6 +132,28 @@ export async function activate(context: vscode.ExtensionContext) {
                 setting.favorites = [];
                 await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", setting, vscode.ConfigurationTarget.Global); // MISSED
             }
+        }
+    });
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
+            // This will only get the first instance, not the new ones
+            const newBrightSideTempLocation: any = vscode.workspace.getConfiguration().get("Zowe-Temp-Folder-Location")['folderPath'];
+
+            // Remove all the old temp files
+            deactivate();
+        
+            // Redefine constants
+            BRIGHTTEMPFOLDER = path.join(newBrightSideTempLocation, "temp");
+            USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
+            DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+
+            // Setup Paths again
+            fs.mkdirSync(BRIGHTTEMPFOLDER);
+            fs.mkdirSync(USS_DIR);
+            fs.mkdirSync(DS_DIR);
+
+            // update last setting temp
+            settingTempPath = newBrightSideTempLocation
         }
     });
 
@@ -664,8 +696,8 @@ function cleanDir(directory) {
  * @export
  */
 export async function deactivate() {
-    // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(BRIGHTTEMPFOLDER)) {
+    // logger hasn't necessarily been initialized yet, don't use the `log` in this function    
+    if (!fs.existsSync(BRIGHTTEMPFOLDER)) {        
         return;
     }
     try {
