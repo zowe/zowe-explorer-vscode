@@ -20,7 +20,6 @@ import { Session } from "@brightside/imperative";
 import * as profileLoader from "../src/ProfileLoader";
 import { Job, ZosJobsProvider } from "../src/zosjobs";
 
-
 describe("Zos Jobs Unit Tests", async () => {
 
     const GetJobs = jest.fn();
