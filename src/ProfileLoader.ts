@@ -12,7 +12,8 @@
 import { spawnSync } from "child_process";
 import * as path from "path";
 import { IProfileLoaded } from "@brightside/imperative";
-
+import * as nls from 'vscode-nls';
+const localize = nls.loadMessageBundle();
 /**
  * Load all profiles by spawning a script that uses the users' globally installed 
  * 'node' command. This should work regardless of what credential manager plugins 
@@ -22,13 +23,15 @@ export function loadAllProfiles(): IProfileLoaded[] {
     const getProfileProcess = spawnSync("node", [path.join(__dirname, "getAllProfiles.js")]);
  
     if (getProfileProcess.status !== 0) {
-        throw new Error("Failed to spawn process to retrieve profile contents!\n" +
+        throw new Error(localize("ProfileLoader.loadAllProfiles.error.spawnProcess.text", "Failed to spawn process to retrieve profile contents!\n") +
             getProfileProcess.stderr.toString());
     }
     if (getProfileProcess.stdout.toString().length === 0) {
-        throw new Error("Error attempting to load all zosmf profiles. Please " +
-            "ensure that you have created at least one profile with Zowe CLI " +
-            "before attempting to use this extension. Error text:" + getProfileProcess.stderr.toString());
+        throw new Error(localize("ProfileLoader.loadAllProfiles.error.loadAll.text1", 
+        "Error attempting to load all zosmf profiles.") +
+        localize("ProfileLoader.loadAllProfiles.error.loadAll.text2",
+        "Please ensure that you have created at least one profile with Zowe CLI before attempting to use this extension. Error text:")
+        + getProfileProcess.stderr.toString());
     }
 
     return JSON.parse(getProfileProcess.stdout.toString());
@@ -46,7 +49,7 @@ export function loadNamedProfile(name: string): IProfileLoaded {
             return profile;
         }
     }
-    throw new Error("Couldn't find profile named: " + name);
+    throw new Error(localize("ProfileLoader.loadNamedProfile.error.profileName.text", "Couldn't find profile named: ") + name);
 }
 
 /**
@@ -56,13 +59,17 @@ export function loadDefaultProfile(): IProfileLoaded {
     const getProfileProcess = spawnSync("node", [path.join(__dirname, "getDefaultProfile.js")]);
 
     if (getProfileProcess.status !== 0) {
-        throw new Error("Failed to spawn process to retrieve default profile contents!\n" +
+        throw new Error(
+            localize("ProfileLoader.loadDefaultProfile.error.spawnProcess.text", "Failed to spawn process to retrieve default profile contents!\n") +
             getProfileProcess.stderr.toString());
     }
     if (getProfileProcess.stdout.toString().length === 0) {
-        throw new Error("Error attempting to load the default zosmf profile for Zowe CLI. Please " +
-            "ensure that you have created at least one profile with Zowe CLI " +
-            "before attempting to use this extension. Error text:" + getProfileProcess.stderr.toString());
+        throw new Error(
+            localize("ProfileLoader.loadDefaultProfile.error.profile.text1", "Error attempting to load the default zosmf profile for Zowe CLI. ") +
+            localize("ProfileLoader.loadDefaultProfile.error.profile.text2",
+                     "Please ensure that you have created at least one profile with Zowe CLI ") +
+            localize("ProfileLoader.loadDefaultProfile.error.profile.text3","before attempting to use this extension. Error text:")
+             + getProfileProcess.stderr.toString());
     }
     return JSON.parse(getProfileProcess.stdout.toString());
 }

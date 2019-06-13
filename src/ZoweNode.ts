@@ -12,6 +12,9 @@
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
 import { Session, AbstractSession } from "@brightside/imperative";
+import * as nls from 'vscode-nls';
+const localize = nls.loadMessageBundle();
+
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -55,7 +58,8 @@ export class ZoweNode extends vscode.TreeItem {
      */
     public async getChildren(): Promise<ZoweNode[]> {
         if ((!this.pattern && this.contextValue === "session")){ 
-            return [new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, this, null, true)];
+            return [new ZoweNode(localize("ZoweNode.ZoweNode.getChildren.search.text", "Use the search button to display datasets"),
+                                 vscode.TreeItemCollapsibleState.None, this, null, true)];
         }
 
         if (this.contextValue === "ds" || this.contextValue === "member" || this.contextValue === "information") {
@@ -67,8 +71,8 @@ export class ZoweNode extends vscode.TreeItem {
         }
 
         if (!this.mLabel) {
-            vscode.window.showErrorMessage("Invalid node");
-            throw Error("Invalid node");
+            vscode.window.showErrorMessage(localize("ZoweNode.ZoweNode.getChildren.error.message.invalidNode.text", "Invalid node"));
+            throw Error(localize("ZoweNode.ZoweNode.getChildren.error.invalidNode.text", "Invalid node"));
         }
 
         // Check if node is a favorite
@@ -90,8 +94,9 @@ export class ZoweNode extends vscode.TreeItem {
                 responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
             }
         } catch (err) {
-            vscode.window.showErrorMessage(`Retrieving response from zowe.List\n${err}\n`);
-            throw Error(`Retrieving response from zowe.List\n${err}\n`);
+            vscode.window.showErrorMessage(localize("ZoweNode.ZoweNode.getChildren.error.message.response.text", "Retrieving response from zowe.List")
+                                                     + `\n${err}\n`);
+            throw Error(localize("ZoweNode.ZoweNode.getChildren.error.response.text", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
 
         // push nodes to an object with property names to avoid duplicates
@@ -99,7 +104,7 @@ export class ZoweNode extends vscode.TreeItem {
         responses.forEach((response) => {
             // Throws reject if the brightside command does not throw an error but does not succeed
             if (!response.success) {
-                throw Error("The response from Zowe CLI was not successful");
+                throw Error(localize("ZoweNode.ZoweNode.getChildren.responses.error.text", "The response from Zowe CLI was not successful"));
             }
 
             // Loops through all the returned dataset members and creates nodes for them
@@ -126,7 +131,7 @@ export class ZoweNode extends vscode.TreeItem {
             this.dirty = false;
         }
         if(Object.keys(elementChildren).length === 0) {
-            return this.children = [new ZoweNode("No datasets found", vscode.TreeItemCollapsibleState.None, this, null, true)];
+            return this.children = [new ZoweNode(localize("ZoweNode.ZoweNode.getChildren.noDataset.text", "No datasets found"), vscode.TreeItemCollapsibleState.None, this, null, true)];
         } else {
             return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
         }

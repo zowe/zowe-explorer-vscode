@@ -12,6 +12,8 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
+import * as nls from 'vscode-nls';
+const localize = nls.loadMessageBundle();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -88,7 +90,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
 
         if (!this.mLabel) {
-            vscode.window.showErrorMessage("Invalid node");
+            vscode.window.showErrorMessage(localize("ZoweUSSNode.ZoweUSSNode.getChildre.error.message.invalidNode.text", "Invalid node"));
             throw Error("Invalid node");
         }
 
@@ -98,8 +100,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         try {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
-            vscode.window.showErrorMessage(`Retrieving response from zowe.List\n${err}\n`);
-            throw Error(`Retrieving response from zowe.List\n${err}\n`);
+            vscode.window.showErrorMessage(localize("ZoweUSSNode.ZoweUSSNode.getChildren.error.message.response.text", "Retrieving response from ")
+                                                    + `zowe.List\n${err}\n`);
+            throw Error(localize("ZoweUSSNode.ZoweUSSNode.getChildren.error.response.text", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
 
         // push nodes to an object with property names to avoid duplicates
@@ -108,7 +111,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
         responses.forEach((response) => {
             // Throws reject if the brightside command does not throw an error but does not succeed
             if (!response.success) {
-                throw Error("The response from Zowe CLI was not successful");
+                throw Error(
+                    localize("ZoweUSSNode.ZoweUSSNode.getChildren.responses.error.response.text", "The response from Zowe CLI was not successful"));
             }
 
             // Loops through all the returned file references members and creates nodes for them
@@ -126,7 +130,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
                         } else {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
                         }
-                        temp.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp]};
+                        temp.command = {command: "zowe.uss.ZoweUSSNode.open",
+                                        title: localize("ZoweUSSNode.ZoweUSSNode.getChildren.responses.open.text", "Open"), arguments: [temp]};
                         elementChildren[temp.label] = temp;
                     }
                 }

@@ -1,7 +1,7 @@
 import { IProfile } from "@brightside/imperative";
 
 export const profile: IProfile = {
-    type : "zosmf",
+    type : "",
     host: "",
     port: 0,
     user: "",
