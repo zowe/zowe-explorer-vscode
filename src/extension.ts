@@ -158,7 +158,8 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(err.message);
     }
 
-    context.subscriptions.push(vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider }));
+    const jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
+    context.subscriptions.push(jobView);
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
     });
@@ -191,6 +192,19 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.getJobJcl",  (job) => {
         downloadJcl(job);
     });
+
+    vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
+        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
+            return jobNode.mLabel === session;
+        });
+        sessionNode.dirty = true;
+        jobsProvider.refresh();
+        const jobs = await sessionNode.getChildren();
+        const job = jobs.find((jobNode) => {
+            return jobNode.job.jobid === jobid;
+        });
+        jobsProvider.setJob(jobView, job);
+    })
 }
 
 /**

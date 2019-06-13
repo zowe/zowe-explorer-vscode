@@ -32,8 +32,8 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public getTreeItem(element: Job): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
     }
-    public getParent?(element: Job): vscode.ProviderResult<Job> {
-        return element;
+    public getParent?(element: Job): Job {
+        return element.mParent;
     }
 
     /**
@@ -54,7 +54,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
 
         // Creates ZoweNode to track new session and pushes it to mSessionNodes
-        const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, session, null);
+        const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
         node.contextValue = "server";
         this.mSessionNodes.push(node);
         this.refresh();
@@ -65,6 +65,14 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
         this.refresh();
     }
+    /**
+     * Selects a specific job in the Jobs view
+     *
+     * @param {Job}
+     */
+    public setJob(treeView: vscode.TreeView<Job>, job: Job) {
+        treeView.reveal(job, {select: true, focus: true});
+     }
 
     /**
      * Called whenever the tree needs to be refreshed, and fires the data change event
@@ -84,7 +92,8 @@ export class Job extends vscode.TreeItem {
 // tslint:disable-next-line: variable-name
     private _prefix: string;
 
-    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public session: Session, public job: IJob) {
+    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
+                public mParent: Job, public session: Session, public job: IJob) {
         super(mLabel, mCollapsibleState);
         this._owner = session.ISession.user;
         this._prefix = "*";
@@ -97,7 +106,7 @@ export class Job extends vscode.TreeItem {
                 const spools: zowe.IJobFile[] = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
                     const spoolNode = new Spool(`${spool.ddname}(${spool.id})`,
-                            vscode.TreeItemCollapsibleState.None, this.session, spool, this.job);
+                            vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                     spoolNode.command = {command: "zowe.zosJobsOpenspool", title: "", arguments: [this.session, spool]};
                     this.children.push(spoolNode);
                 });
@@ -106,11 +115,11 @@ export class Job extends vscode.TreeItem {
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
-                        nodeTitle = `${job.jobname}(${job.retcode})`;
+                        nodeTitle = `${job.jobname}(${job.jobid}) - ${job.retcode}`;
                     } else {
-                        nodeTitle = `${job.jobname}(${job.status})`;
+                        nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
                     }
-                    const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this.session, job);
+                    const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
                     jobNode.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode]};
                     jobNode.contextValue = "job";
                     this.children.push(jobNode);
@@ -167,8 +176,8 @@ export class Job extends vscode.TreeItem {
 }
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
-    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public session: Session, public spool: IJobFile, public parent: IJob) {
-        super(mLabel, mCollapsibleState, session, parent);
+    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
+                public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
+        super(mLabel, mCollapsibleState, mParent, session, job);
     }
 }

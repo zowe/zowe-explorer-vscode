@@ -221,7 +221,7 @@ describe("Zos Jobs Unit Tests", async () => {
             "subsystem": ""
         };
 
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, session, iJob);
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
         jobNode.contextValue = "job";
 
         it("Tests the children are the spool files", async () => {
