@@ -399,6 +399,25 @@ describe("Extension Integration Tests", () => {
         // TODO add tests for saving data set from favorites
     });
 
+    describe("Updating Temp folder Preference", () => {
+        it("should assign default if preference empty", async () => {
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: "" }, vscode.ConfigurationTarget.Global);
+            expect(extension.BRIGHTTEMPFOLDER).to.deep.equal("");
+        }).timeout(TIMEOUT);
+
+        it("should assign the temp folder to the preference", async () => {
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: extension.BRIGHTTEMPFOLDER }, vscode.ConfigurationTarget.Global);
+
+        }).timeout(TIMEOUT);
+
+        it("on change of preference, temp folder should update", () => {
+            vscode.workspace.onDidChangeConfiguration(async (e) => {
+            });
+        }).timeout(TIMEOUT);
+    })
+
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",

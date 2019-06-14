@@ -11,6 +11,7 @@
 
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
+import { moveSync } from "fs-extra";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -26,19 +27,17 @@ import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 
 // Globals
+export let BRIGHTTEMPFOLDER;
+export let USS_DIR;
+export let DS_DIR;
 
 // Get temp folder location from settings
-let settingTempPath: string = 
+let preferencesTempPath: string = 
     vscode.workspace.getConfiguration()
     .get("Zowe-Temp-Folder-Location")['folderPath']
 
-export let BRIGHTTEMPFOLDER;
-settingTempPath === '' ? 
-    BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp") : 
-    BRIGHTTEMPFOLDER = path.join(settingTempPath, "temp");
-
-export let USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
-export let DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+// Define globals based on temp path
+defineGlobals(preferencesTempPath);
 
 let log: Logger;
 /**
@@ -136,24 +135,26 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
-            // This will only get the first instance, not the new ones
-            const newBrightSideTempLocation: any = vscode.workspace.getConfiguration().get("Zowe-Temp-Folder-Location")['folderPath'];
-
-            // Remove all the old temp files
-            deactivate();
+            // define updated temp path
+            const updatedPreferencesTempPath: string = 
+                vscode.workspace.getConfiguration()
+                .get("Zowe-Temp-Folder-Location")['folderPath'];
         
-            // Redefine constants
-            BRIGHTTEMPFOLDER = path.join(newBrightSideTempLocation, "temp");
-            USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
-            DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+            // Re-define globals with updated path 
+            defineGlobals(updatedPreferencesTempPath);
 
-            // Setup Paths again
             fs.mkdirSync(BRIGHTTEMPFOLDER);
             fs.mkdirSync(USS_DIR);
             fs.mkdirSync(DS_DIR);
 
-            // update last setting temp
-            settingTempPath = newBrightSideTempLocation
+            try {
+                moveSync(`${preferencesTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true })
+            } catch (err) {
+                vscode.window.showErrorMessage(err.message);
+            }
+
+            // update current preference temp path
+            preferencesTempPath = updatedPreferencesTempPath
         }
     });
 
@@ -688,6 +689,19 @@ function cleanDir(directory) {
         }
     });
     fs.rmdirSync(directory);
+}
+
+/**
+ * Defines all global variables
+ * @param tempPath File path for temporary folder defined in preferences
+ */
+function defineGlobals(tempPath: string) {
+    tempPath === '' || undefined ? 
+        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp") : 
+        BRIGHTTEMPFOLDER = path.join(tempPath, "temp");
+
+    USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
+    DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
 }
 
 /**
