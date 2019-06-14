@@ -52,10 +52,6 @@
         {
           "id": "zowe.jobs",
           "name": "Jobs"
-        },
-        {
-          "id": "zowe.spool",
-          "name": "Spool Files"
         }
       ]
     },

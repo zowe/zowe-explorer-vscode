@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.20.0
+
+- Combined Spool files with Jobs in Jobs view. Colin Stone
+
 ## 0.19.1
 
 - Fix error when files exist in the profiles folder (such as `.DS_Store` which is automatically generated on macOS)
