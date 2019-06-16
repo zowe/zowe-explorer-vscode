@@ -21,7 +21,6 @@ import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
-import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 
@@ -159,13 +158,8 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(err.message);
     }
 
-    let spoolProvider: ZosSpoolProvider = new ZosSpoolProvider();
-
-    context.subscriptions.push(vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider }));
-    context.subscriptions.push(vscode.window.createTreeView("zowe.spool", { treeDataProvider: spoolProvider }));
-    vscode.commands.registerCommand("zowe.zosJobsSelectjob", (job) => {
-        spoolProvider.setJob(job);
-    });
+    const jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
+    context.subscriptions.push(jobView);
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
     });
@@ -198,17 +192,18 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.getJobJcl",  (job) => {
         downloadJcl(job);
     });
+
     vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
-        let sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
+        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
             return jobNode.mLabel === session;
         });
         sessionNode.dirty = true;
         jobsProvider.refresh();
-        let jobs = await sessionNode.getChildren();
-        let job = jobs.find((jobNode) => {
+        const jobs = await sessionNode.getChildren();
+        const job = jobs.find((jobNode) => {
             return jobNode.job.jobid === jobid;
         });
-        spoolProvider.setJob(job);
+        jobsProvider.setJob(jobView, job);
     })
 }
 
