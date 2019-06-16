@@ -45,7 +45,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 private session: Session,
                 private parentPath: string,
                 public binary = false,
-                private mProfileName?: string) {
+                public mProfileName?: string) {
         super(mLabel, mCollapsibleState);
         if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "directory";
@@ -116,15 +116,15 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 if (item.name !== '.' && item.name !== '..') {
                     // Creates a ZoweUSSNode for a directory
                     if (item.mode.startsWith('d')) {
-                        const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.Collapsed, this, null, this.fullPath);
+                        const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.Collapsed, this, null, this.fullPath, false, item.mProfileName);
                         elementChildren[temp.label] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
                         if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + '/' + item.name)) {
-                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true);
+                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true, item.mProfileName);
                         } else {
-                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
+                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, false, item.mProfileName);
                         }
                         temp.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp]};
                         elementChildren[temp.label] = temp;
