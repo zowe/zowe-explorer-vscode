@@ -367,7 +367,7 @@
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
           "command": "zowe.uss.renameNode",
           "group": "navigation"
         },
