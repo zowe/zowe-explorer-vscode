@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
-import { createUSSNode, deleteUSSNode, renameUSSNode } from "../../src/uss/ussNodeActions";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import * as utils from "../../src/utils";
 
@@ -90,31 +89,47 @@ describe("ussNodeActions", () => {
     describe("createUSSNode", () => {
         it("createUSSNode is executed successfully", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
-            await createUSSNode(ussNode, testUSSTree, "file");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
         });
         it("createUSSNode does not execute if node name was not entered", async () => {
             showInputBox.mockReturnValueOnce("");
-            await createUSSNode(ussNode, testUSSTree, "file");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
         });
-    })
+        it("should refresh the whole tree if created at top level", async () => {
+            showInputBox.mockReturnValueOnce("USSFolder");
+            const isTopLevel = true;
+            spyOn(ussNodeActions, "refreshAllUSS");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "folder", isTopLevel);
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+            expect(ussNodeActions.refreshAllUSS).toHaveBeenCalled();
+        });
+        it("should refresh only the child folder", async () => {
+            showInputBox.mockReturnValueOnce("USSFolder");
+            const isTopLevel = false;
+            spyOn(ussNodeActions, "refreshAllUSS");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "folder", isTopLevel);
+            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
+        });
+    });
     describe("deleteUSSNode", () => {
         it("should delete node if user verified", async () => {
             showQuickPick.mockResolvedValueOnce("Yes");
-            await deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).toHaveBeenCalled();
         });
         it("should not delete node if user did not verify", async () => {
             showQuickPick.mockResolvedValueOnce("No");
-            await deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
         it("should not delete node if user cancelled", async () => {
             showQuickPick.mockResolvedValueOnce(undefined);
-            await deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
@@ -141,12 +156,12 @@ describe("ussNodeActions", () => {
                 if (node.contextValue != "directoryf") {
                     node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
                 }
-            })
+            });
             expect(testUSSTree.mFavorites).toEqual(expectedUSSFavorites);
-        })
+        });
     });
     describe("renameUSSNode", () => {
-        it('should exit if blank input is provided', () => {
+        it("should exit if blank input is provided", () => {
             showInputBox.mockReturnValueOnce("");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
@@ -154,7 +169,7 @@ describe("ussNodeActions", () => {
         });
         it("should execute rename USS file and and refresh the tree", async () => {
             showInputBox.mockReturnValueOnce("new name");
-            await renameUSSNode(ussNode, testUSSTree, "file");
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
