@@ -20,7 +20,7 @@ import { Session } from "@brightside/imperative";
 import * as profileLoader from "../src/ProfileLoader";
 import { Job, ZosJobsProvider } from "../src/zosjobs";
 
-describe("Zos Jobs Unit Tests", async () => {
+describe("Zos Jobs Unit Tests", () => {
 
     const GetJobs = jest.fn();
 
@@ -28,7 +28,7 @@ describe("Zos Jobs Unit Tests", async () => {
         Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
     });
 
-    describe("ZosJobsProvider Unit Test", async () => {
+    describe("ZosJobsProvider Unit Test", () => {
         const ZosmfSession = jest.fn();
         const createBasicZosmfSession = jest.fn();
 
@@ -163,7 +163,7 @@ describe("Zos Jobs Unit Tests", async () => {
     });
 
 
-    describe("JobSpool Unit Test", async () => {
+    describe("JobSpool Unit Test", () => {
         const getSpoolFiles = jest.fn();
 
         Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
