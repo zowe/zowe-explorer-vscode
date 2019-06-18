@@ -193,6 +193,14 @@
         }
       },
       {
+        "command": "zowe.uss.createNode",
+        "title": "Create new file or directory",
+        "icon": {
+          "light": "./resources/light/newfile.svg",
+          "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
         "command": "zowe.uss.fullPath",
         "title": "Search Unix System Services (USS) by Entering a Path",
         "icon": {
@@ -556,6 +564,11 @@
         {
           "when": "viewItem == uss_session",
           "command": "zowe.uss.fullPath",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == uss_session",
+          "command": "zowe.uss.createNode",
           "group": "inline"
         },
         {

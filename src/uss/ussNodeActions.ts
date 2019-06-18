@@ -36,6 +36,16 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
 }
 
+export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    const quickPickOptions: vscode.QuickPickOptions = {
+        placeHolder: `What would you like to create at ${node.label}?`,
+        ignoreFocusOut: true,
+        canPickMany: false
+    };
+    const type = await vscode.window.showQuickPick(["Directory", "File"], quickPickOptions);
+    createUSSNode(node, ussFileProvider, type);
+}
+
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
     // handle zosmf api issue with file paths
     const nodePath = node.fullPath.startsWith("/") ?  node.fullPath.substring(1) :  node.fullPath;
