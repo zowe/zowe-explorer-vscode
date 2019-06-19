@@ -762,7 +762,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run markdown",
+    "vscode:prepublish": "npm run build && npm run lint",
     "build": "npm run license && tsc --pretty",
     "watch": "tsc -watch --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
@@ -770,7 +770,10 @@
     "test": "jest --coverage",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "markdown": "markdownlint CHANGELOG.md README.md"
+    "markdown": "markdownlint CHANGELOG.md README.md",
+    "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
+    "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\""
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
