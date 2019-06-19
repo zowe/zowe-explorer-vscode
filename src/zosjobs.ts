@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import { Session, IProfileLoaded } from "@brightside/imperative";
+// tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 

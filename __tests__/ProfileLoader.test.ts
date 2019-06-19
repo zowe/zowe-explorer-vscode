@@ -22,11 +22,11 @@ describe("ProfileLoader", ()=>{
 
     (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any)=>{
 
-        const createFakeChildProcess =(status: number, stdout:string, stderr: string) =>{
+        const createFakeChildProcess =(status: number, stdout: string, stderr: string) =>{
             return {
                 status,
                 stdout: {
-                    toString : jest.fn(()=>{ 
+                    toString : jest.fn(()=> {
                         return stdout;
                     })
                 },

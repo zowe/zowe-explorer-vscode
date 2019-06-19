@@ -144,7 +144,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         }
     }
 
-     /**
+    /**
      * Removes a node from the favorites list
      *
      * @param {ZoweUSSNode} node

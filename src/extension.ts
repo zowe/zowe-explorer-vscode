@@ -21,6 +21,7 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
+// tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 
@@ -135,9 +136,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
+// tslint:disable-next-line: max-line-length
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
+// tslint:disable-next-line: max-line-length
     vscode.commands.registerCommand("zowe.uss.renameNode", async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -205,17 +208,17 @@ export async function activate(context: vscode.ExtensionContext) {
             return jobNode.job.jobid === jobid;
         });
         jobsProvider.setJob(jobView, job);
-    })
+    });
 }
 
 /**
  * Download all the spool content for the specified job.
- * 
+ *
  * @param job The job to download the spool content from
  */
 export async function downloadSpool(job: Job){
     try {
-        let dirUri = await vscode.window.showOpenDialog({
+        const dirUri = await vscode.window.showOpenDialog({
             openLabel: "Select",
             canSelectFolders:true,
             canSelectFiles: false,
@@ -236,7 +239,7 @@ export async function downloadSpool(job: Job){
 
 export async function downloadJcl(job: Job) {
     try {
-        let jobJcl = await zowe.GetJobs.getJclForJob(job.session, job.job);
+        const jobJcl = await zowe.GetJobs.getJclForJob(job.session, job.job);
         const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
@@ -246,7 +249,7 @@ export async function downloadJcl(job: Job) {
 
 /**
  * Switch the download type and redownload the file.
- * 
+ *
  * @param node The file that is going to be downloaded
  * @param binary Whether the file should be downloaded as binary or not
  * @param ussFileProvider Our USSTree object
@@ -258,17 +261,17 @@ export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFile
 }
 
 /**
- * Submit the contents of the editor as JCL. 
- * 
+ * Submit the contents of the editor as JCL.
+ *
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
 export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED TESTING
-    let doc = vscode.window.activeTextEditor.document;
+    const doc = vscode.window.activeTextEditor.document;
     log.debug("Submitting JCL in document " + doc.fileName);
     // get session name
-    const sessionregex = /\[(.*)(\])(?!.*\])/g
-    let regExp = sessionregex.exec(doc.fileName);
+    const sessionregex = /\[(.*)(\])(?!.*\])/g;
+    const regExp = sessionregex.exec(doc.fileName);
     let sesName;
     if(regExp === null){
         let allProfiles: IProfileLoaded[];
@@ -279,7 +282,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
             throw (err);
         }
 
-        let profileNamesList = allProfiles.map((profile) => {
+        const profileNamesList = allProfiles.map((profile) => {
             return profile.name;
         });
         if (profileNamesList.length) {
@@ -314,9 +317,9 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         log.error("Session for submitting JCL was null or undefined!");
     }
     try {
-        let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
-        let args = [sesName, job.jobid];
-        let setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+        const job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
+        const args = [sesName, job.jobid];
+        const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(`Job submitted [${job.jobid}](${setJobCmd})`);
     } catch (error) {
         vscode.window.showErrorMessage("Job submission failed\n" + error.message);
@@ -325,7 +328,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
 
 /**
  * Submit the selected dataset member as a Job.
- * 
+ *
  * @export
  * @param node The dataset member
  */
@@ -335,13 +338,13 @@ export async function submitMember(node: ZoweNode) {
     let sesName;
     switch (node.mParent.contextValue) {
         case ("favorite"): {
-            let regex = labelregex.exec(node.mLabel);
+            const regex = labelregex.exec(node.mLabel);
             sesName = regex[1];
             label = regex[2];
             break;
         }
         case ("pdsf"): {
-            let regex = labelregex.exec(node.mParent.mLabel);
+            const regex = labelregex.exec(node.mParent.mLabel);
             sesName = regex[1];
             label = regex[2] + "(" + node.mLabel + ")";
             break;
@@ -359,9 +362,9 @@ export async function submitMember(node: ZoweNode) {
             throw Error("submitMember() called from invalid node.");
     }
     try {
-        let job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
-        let args = [sesName, job.jobid];
-        let setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+        const job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
+        const args = [sesName, job.jobid];
+        const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(`Job submitted [${job.jobid}](${setJobCmd})`);
     } catch (error) {
         vscode.window.showErrorMessage("Job submission failed\n" + error.message);
@@ -572,7 +575,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
 
 /**
  * Shows data set attributes in a new text editor
- * 
+ *
  * @export
  * @param {ZoweNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
@@ -601,8 +604,8 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         throw (err);
     }
 
-    // shouldn't be possible for there to be two cataloged data sets with the same name, 
-    // but just in case we'll display all of the results 
+    // shouldn't be possible for there to be two cataloged data sets with the same name,
+    // but just in case we'll display all of the results
     // if there's only one result (which there should be), we will just pass in attributes[0]
     // so that prettyJson doesn't display the attributes as an array with a hyphen character
     const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
@@ -623,17 +626,17 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     </body>
     </html>`;
     const column = vscode.window.activeTextEditor
-			? vscode.window.activeTextEditor.viewColumn
-			: undefined;
+            ? vscode.window.activeTextEditor.viewColumn
+            : undefined;
     const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
-			"zowe",
-			label + ' Attributes',
-			column || vscode.ViewColumn.One,
-			{
-				
-			}
-        );;
-        panel.webview.html = webviewHTML;
+            "zowe",
+            label + " Attributes",
+            column || vscode.ViewColumn.One,
+            {
+
+            }
+        );
+    panel.webview.html = webviewHTML;
 
 }
 
@@ -643,7 +646,7 @@ function cleanDir(directory) {
         return;
     }
     fs.readdirSync(directory).forEach((file) => {
-        const fullpath = path.join(directory, file)
+        const fullpath = path.join(directory, file);
         const lstat = fs.lstatSync(fullpath);
         if (lstat.isFile()) {
             fs.unlinkSync(fullpath);
@@ -665,7 +668,7 @@ export async function deactivate() {
         return;
     }
     try {
-        cleanDir(BRIGHTTEMPFOLDER)
+        cleanDir(BRIGHTTEMPFOLDER);
     } catch (err) {
         vscode.window.showErrorMessage("Unable to delete temporary folder. " + err);  // TODO MISSED TESTING
     }
@@ -852,7 +855,7 @@ export function getProfile(node: ZoweNode) {
  * @param {ZoweUSSNode} node
  */
 export function getUSSProfile(node: ZoweUSSNode) {
-    let profile = node.getSessionNode().mLabel;
+    const profile = node.getSessionNode().mLabel;
     return profile;
 }
 
@@ -1194,8 +1197,8 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     log.debug("save requested for USS file " + doc.fileName);
     const start = path.join(USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
-    let sesName = ending.substring(0, ending.indexOf(path.sep));
-    let remote = ending.substring(sesName.length).replace(/\\/g, '/');
+    const sesName = ending.substring(0, ending.indexOf(path.sep));
+    const remote = ending.substring(sesName.length).replace(/\\/g, "/");
 
     // get session from session name
     let documentSession;
@@ -1265,9 +1268,9 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
 
 export async function modifyCommand(job: Job) {
     try {
-        let command = await vscode.window.showInputBox({ prompt: "Modify Command" });
+        const command = await vscode.window.showInputBox({ prompt: "Modify Command" });
         if (command !== undefined) {
-            let response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
+            const response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
             vscode.window.showInformationMessage(`Command response: ${response.commandResponse}`);
         }
     } catch (error) {
@@ -1277,7 +1280,7 @@ export async function modifyCommand(job: Job) {
 
 export async function stopCommand(job: Job) {
     try {
-        let response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
+        const response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
         vscode.window.showInformationMessage(`Command response: ${response.commandResponse}`);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
@@ -1295,7 +1298,7 @@ export async function deleteJob(job: Job) {
 
 export async function getSpoolContent(session: AbstractSession, spool: IJobFile) {
     try {
-        let spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
+        const spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
         const document = await vscode.workspace.openTextDocument({ content: spoolContent });
         await vscode.window.showTextDocument(document);
     } catch (error) {
@@ -1304,14 +1307,14 @@ export async function getSpoolContent(session: AbstractSession, spool: IJobFile)
 }
 
 export async function setOwner(job: Job, datasetProvider: ZosJobsProvider) {
-    let newOwner = await vscode.window.showInputBox({ prompt: "Owner" });
+    const newOwner = await vscode.window.showInputBox({ prompt: "Owner" });
     job.owner = newOwner;
     job.dirty = true;
     datasetProvider.refresh();
 }
 
 export async function setPrefix(job: Job, datasetProvider: ZosJobsProvider) {
-    let newPrefix = await vscode.window.showInputBox({ prompt: "Prefix" });
+    const newPrefix = await vscode.window.showInputBox({ prompt: "Prefix" });
     job.prefix = newPrefix;
     job.dirty = true;
     datasetProvider.refresh();

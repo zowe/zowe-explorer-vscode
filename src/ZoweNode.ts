@@ -54,7 +54,7 @@ export class ZoweNode extends vscode.TreeItem {
      * @returns {Promise<ZoweNode[]>}
      */
     public async getChildren(): Promise<ZoweNode[]> {
-        if ((!this.pattern && this.contextValue === "session")){ 
+        if ((!this.pattern && this.contextValue === "session")){
             return [new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, this, null, true)];
         }
 
@@ -84,7 +84,7 @@ export class ZoweNode extends vscode.TreeItem {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true})); 
+                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
                 }
             } else {
                 responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));

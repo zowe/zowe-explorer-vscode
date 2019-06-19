@@ -61,13 +61,13 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 this.fullPath = this.tooltip = "/" + mLabel;
             }
         }
-        if (this.mParent && this.mParent.contextValue === 'favorite') {
+        if (this.mParent && this.mParent.contextValue === "favorite") {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = mLabel.trim();
             // File or directory name only (no parent path)
-            this.shortLabel = this.fullPath.split('/', this.fullPath.length).pop(); 
+            this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
-            this.label = this.profileName + this.shortLabel; 
+            this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
     }
@@ -78,7 +78,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
      * @returns {Promise<ZoweUSSNode[]>}
      */
     public async getChildren(): Promise<ZoweUSSNode[]> {
-        if ((!this.fullPath && this.contextValue === "uss_session") || 
+        if ((!this.fullPath && this.contextValue === "uss_session") ||
                 (this.contextValue === "textFile" || this.contextValue === "binaryFile")) {
             return [];
         }
@@ -94,7 +94,6 @@ export class ZoweUSSNode extends vscode.TreeItem {
 
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
-        let response: any;
         try {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
@@ -104,7 +103,6 @@ export class ZoweUSSNode extends vscode.TreeItem {
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
-        let fullPath;
         responses.forEach((response) => {
             // Throws reject if the brightside command does not throw an error but does not succeed
             if (!response.success) {
@@ -113,15 +111,15 @@ export class ZoweUSSNode extends vscode.TreeItem {
 
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                if (item.name !== '.' && item.name !== '..') {
+                if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
-                    if (item.mode.startsWith('d')) {
+                    if (item.mode.startsWith("d")) {
                         const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.Collapsed, this, null, this.fullPath);
                         elementChildren[temp.label] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
-                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + '/' + item.name)) {
+                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true);
                         } else {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
@@ -166,7 +164,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
             this.contextValue = "textFile";
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.mParent && this.mParent.contextValue === 'favorite') {
+        if (this.mParent && this.mParent.contextValue === "favorite") {
             this.binary ? this.contextValue = "binaryFilef" : this.contextValue = "textFilef";
         }
         this.dirty = true;
