@@ -762,8 +762,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run lint",
-    "build": "npm run license && tsc --pretty",
+    "build": "npm run lint && npm run license && tsc --pretty",
     "watch": "tsc -watch --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
