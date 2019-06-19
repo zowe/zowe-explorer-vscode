@@ -802,7 +802,8 @@
   "dependencies": {
     "@brightside/core": "2.28.2",
     "@brightside/imperative": "2.4.6",
-    "jsdoc": "^3.5.5"
+    "jsdoc": "^3.5.5",
+    "tslint": "^5.17.0"
   },
   "jest": {
     "moduleFileExtensions": [
