@@ -46,7 +46,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
-        //expect(PSNode.getParent()).toBeDefined();
+        // expect(PSNode.getParent()).toBeDefined();
     });
 
     /*************************************************************************************************************
@@ -58,7 +58,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
         expect(edgeNode.label).toBeDefined();
         expect(edgeNode.collapsibleState).toBeDefined();
-        //expect(edgeNode.mParent).toBeDefined();
+        // expect(edgeNode.mParent).toBeDefined();
     });
 
     /*************************************************************************************************************
@@ -86,6 +86,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
         sampleChildren[1].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[1]] };
 
         // Checking that the rootChildren are what they are expected to be
+// tslint:disable-next-line: no-magic-numbers
         expect(sessChildren.length).toBe(4);
         expect(sessChildren[0].label).toBe("aDir3");
         expect(sessChildren[1].label).toBe("aDir4");

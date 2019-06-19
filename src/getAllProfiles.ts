@@ -27,9 +27,9 @@ import * as path from "path";
         profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
         type: "zosmf"
     }).loadAll()).filter((profile) => {
-        // only return zosmf profiles 
+        // only return zosmf profiles
         return profile.type === "zosmf";
-    });;
+    });
 
     process.stdout.write(JSON.stringify(zosmfProfiles, null, 2));
 })();

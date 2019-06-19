@@ -14,6 +14,7 @@ import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
 import { createUSSNode, deleteUSSNode, renameUSSNode } from "../../src/uss/ussNodeActions";
+// tslint:disable-next-line: no-duplicate-imports
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import * as utils from "../../src/utils";
 
@@ -32,16 +33,16 @@ const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
 
 function getUSSNode() {
-    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    ussNode.contextValue = "uss_session";
-    ussNode.fullPath = "/u/myuser";
-    ussNode.mParent = mParent;
-    return ussNode;
+    ussNode1.contextValue = "uss_session";
+    ussNode1.fullPath = "/u/myuser";
+    ussNode1.mParent = mParent;
+    return ussNode1;
 }
 
 function getUSSTree() {
-    const ussNode = getUSSNode();
+    const ussNode1= getUSSNode();
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
@@ -51,10 +52,10 @@ function getUSSTree() {
             getChildren: mockGetUSSChildren,
         };
     });
-    const testUSSTree = USSTree();
-    testUSSTree.mSessionNodes = [];
-    testUSSTree.mSessionNodes.push(ussNode);
-    return testUSSTree;
+    const testUSSTree1 = USSTree();
+    testUSSTree1.mSessionNodes = [];
+    testUSSTree1.mSessionNodes.push(ussNode1);
+    return testUSSTree1;
 }
 
 const session = new brtimperative.Session({
@@ -100,7 +101,7 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
         });
-    })
+    });
     describe("deleteUSSNode", () => {
         it("should delete node if user verified", async () => {
             showQuickPick.mockResolvedValueOnce("Yes");
@@ -136,17 +137,17 @@ describe("ussNodeActions", () => {
                 new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, null, "", false, "test"),
             ];
 
-            expectedUSSFavorites.map(node => node.contextValue += "f");
-            expectedUSSFavorites.forEach(node => {
-                if (node.contextValue != "directoryf") {
+            expectedUSSFavorites.map((node) => node.contextValue += "f");
+            expectedUSSFavorites.forEach((node) => {
+                if (node.contextValue !== "directoryf") {
                     node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
                 }
-            })
+            });
             expect(testUSSTree.mFavorites).toEqual(expectedUSSFavorites);
-        })
+        });
     });
     describe("renameUSSNode", () => {
-        it('should exit if blank input is provided', () => {
+        it("should exit if blank input is provided", () => {
             showInputBox.mockReturnValueOnce("");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);

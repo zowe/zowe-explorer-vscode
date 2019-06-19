@@ -71,7 +71,7 @@ describe("Unit Tests (Jest)", () => {
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null),
         ];
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        
+
         // Checking that the rootChildren are what they are expected to be
         expect(rootChildren).toEqual(sampleChildren);
 

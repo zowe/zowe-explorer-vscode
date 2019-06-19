@@ -40,7 +40,7 @@ describe("DatasetTree Unit Tests", () => {
     });
     Object.defineProperty(profileLoader, "loadAllProfiles", {
         value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }]
+            return [{ name: "profile1" }, { name: "profile2" }];
         })
     });
     Object.defineProperty(profileLoader, "loadDefaultProfile", {
