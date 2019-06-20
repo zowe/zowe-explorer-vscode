@@ -1436,7 +1436,7 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(node);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mLabel + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(session);
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);

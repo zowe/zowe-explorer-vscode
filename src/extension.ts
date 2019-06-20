@@ -855,7 +855,7 @@ export function getProfile(node: ZoweNode) {
  * @param {ZoweUSSNode} node
  */
 export function getUSSProfile(node: ZoweUSSNode) {
-    const profile = node.getSessionNode().mLabel;
+    const profile = node.getSessionNode().mProfileName;
     return profile;
 }
 
