@@ -167,6 +167,6 @@ describe("USSTree Integration Tests", async () => {
         testTree.deleteSession(testTree.mSessionNodes[len]);
         await testTree.addSession(testConst.profile.name);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
-    });
+    }).timeout(TIMEOUT);
 });
 
