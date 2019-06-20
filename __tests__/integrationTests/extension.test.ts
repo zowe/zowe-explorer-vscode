@@ -31,7 +31,9 @@ declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
 describe("Extension Integration Tests", () => {
+// tslint:disable-next-line: variable-name
     const ds_folder = extension.DS_DIR;
+// tslint:disable-next-line: variable-name
     const brightside_folder = extension.BRIGHTTEMPFOLDER;
     const expect = chai.expect;
     chai.use(chaiAsPromised);
@@ -190,11 +192,13 @@ describe("Extension Integration Tests", () => {
         beforeEach(async () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
+// tslint:disable-next-line: no-empty
             } catch { }
         });
         afterEach(async () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
+// tslint:disable-next-line: no-empty
             } catch { }
         });
         it("should delete a data set if user verified", async () => {
@@ -260,10 +264,9 @@ describe("Extension Integration Tests", () => {
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-//            for (const child of childrenFromTree) {
-                await testTreeView.reveal(childrenFromTree[0]);
-                expect(childrenFromTree[0]).to.deep.equal(testTreeView.selection[0]);
-//            }
+            await testTreeView.reveal(childrenFromTree[0]);
+            expect(childrenFromTree[0]).to.deep.equal(testTreeView.selection[0]);
+
         }).timeout(TIMEOUT);
 
         it("should match data sets for multiple patterns", async () => {
@@ -453,14 +456,21 @@ async function getAllNodes(nodes: ZoweNode[]) {
 }
 
 describe("Extension Integration Tests - USS", () => {
-    const brightside_folder = extension.BRIGHTTEMPFOLDER;
-    const uss_folder = extension.USS_DIR;
+    const brightsidefolder = extension.BRIGHTTEMPFOLDER;
+    const ussFolder = extension.USS_DIR;
 
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const ussSessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussSessionNode = new ZoweUSSNode(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        null,
+        false,
+        testConst.profile.name);
     ussSessionNode.contextValue = "uss_session";
     const fullUSSPath = testConst.ussPattern;
     ussSessionNode.fullPath = fullUSSPath;
@@ -526,18 +536,18 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(brightside_folder);
-                fs.mkdirSync(uss_folder);
+                fs.mkdirSync(brightsidefolder);
+                fs.mkdirSync(ussFolder);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(uss_folder);
+                fs.mkdirSync(ussFolder);
             }
-            fs.closeSync(fs.openSync(path.join(uss_folder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(uss_folder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(ussFolder, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(ussFolder, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(uss_folder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(uss_folder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(ussFolder, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(ussFolder, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -589,20 +599,20 @@ describe("Extension Integration Tests - USS", () => {
             dirChildren[0].fullPath);
 
             await extension.openUSS(dirChildren[0]);
-            let doc = await vscode.workspace.openTextDocument(localPath);
+            const doc = await vscode.workspace.openTextDocument(localPath);
 
             const originalData = doc.getText().trim();
 
             // write new data
             fs.writeFileSync(localPath, changedData);
-    
+
             // Upload file
             await extension.saveUSSFile(doc, ussTestTree);
             await fs.unlinkSync(localPath);
-            
+
             // Download file
             await extension.openUSS(dirChildren[0]);
-   
+
             // Change contents back
             fs.writeFileSync(localPath, originalData);
             await extension.saveUSSFile(doc, ussTestTree);

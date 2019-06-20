@@ -30,7 +30,7 @@ import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
 import * as profileLoader from "../src/ProfileLoader";
-import * as ussNodeActions from "../src/uss/ussNodeActions"
+import * as ussNodeActions from "../src/uss/ussNodeActions";
 import { Job } from "../src/zosjobs";
 
 describe("Extension Unit Tests", () => {
@@ -44,8 +44,8 @@ describe("Extension Unit Tests", () => {
     });
 
     const iJob: brightside.IJob = {
-        jobid: "JOB1234",
-        jobname: "TESTJOB",
+        "jobid": "JOB1234",
+        "jobname": "TESTJOB",
         "files-url": "fake/files",
         "job-correlator": "correlator",
         "phase-name": "PHASE",
@@ -55,36 +55,36 @@ describe("Extension Unit Tests", () => {
             "program-name": "",
             "step-name": "",
             "step-number": 1,
-            active: "",
-            smfid: ""
-            
+            "active": "",
+            "smfid": ""
+
         }],
-        class: "A",
-        owner: "USER",
-        phase: 0,
-        retcode: "",
-        status: "ACTIVE",
-        subsystem: "SYS",
-        type: "JOB",
-        url: "fake/url"
-    }
+        "class": "A",
+        "owner": "USER",
+        "phase": 0,
+        "retcode": "",
+        "status": "ACTIVE",
+        "subsystem": "SYS",
+        "type": "JOB",
+        "url": "fake/url"
+    };
 
     const iJobFile: brightside.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
         "records-url": "fake/records",
-        class: "A",
-        ddname: "STDOUT",
-        id: 100,
-        jobid: "100",
-        jobname: "TESTJOB",
-        lrecl: 80,
-        procstep: "",
-        recfm: "FB",
-        stepname: "",
-        subsystem: ""
-    }
+        "class": "A",
+        "ddname": "STDOUT",
+        "id": 100,
+        "jobid": "100",
+        "jobname": "TESTJOB",
+        "lrecl": 80,
+        "procstep": "",
+        "recfm": "FB",
+        "stepname": "",
+        "subsystem": ""
+    };
 
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
@@ -194,17 +194,17 @@ describe("Extension Unit Tests", () => {
             getChildren: jest.fn(),
             addSession: jest.fn(),
             refresh: jest.fn(),
-        }
+        };
     });
     // const lstatSync = jest.fn().mockImplementation(() => {
     //     return { lstat };
     // });
     // const lstat = jest.fn().mockImplementation(() => {
-    //     return { 
+    //     return {
     //         isFile(): true;
     //      };
     // });
-    let withProgress = jest.fn().mockImplementation(() => {
+    const withProgress = jest.fn().mockImplementation(() => {
         return {
             location: 15,
             title: "Saving file..."
@@ -313,7 +313,7 @@ describe("Extension Unit Tests", () => {
         isFile.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
         readdirSync.mockReturnValue([]);
-        //lstatSync.mockReturnValue(lstat);
+        // lstatSync.mockReturnValue(lstat);
         isFile.mockReturnValueOnce(false);
         // rmdirSync.mockImplementationOnce(() => {
         //     throw Error;
@@ -338,10 +338,11 @@ describe("Extension Unit Tests", () => {
             ]
         });
         spyOn(ussNodeActions, "initializeUSSFavorites").and.returnValue(undefined);
-        const extensionMock = jest.fn(() => (<vscode.ExtensionContext>{
+// tslint:disable-next-line: no-object-literal-type-assertion
+        const extensionMock = jest.fn(() => ({
             subscriptions: [],
             extensionPath: path.join(__dirname, "..")
-        }));
+        } as vscode.ExtensionContext));
         const mock = new extensionMock();
         await extension.activate(mock);
 
@@ -499,6 +500,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         readdirSync.mockReset();
         existsSync.mockReturnValueOnce(false);
+// tslint:disable-next-line: no-empty
         rmdirSync.mockImplementationOnce(() => {
         });
         showErrorMessage.mockReset();
@@ -676,7 +678,7 @@ describe("Extension Unit Tests", () => {
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
         await extension.addSession(testTree);
 
-        //expect(showQuickPick.mock.calls.length).toBe(1);
+        // expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -725,7 +727,7 @@ describe("Extension Unit Tests", () => {
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
         await extension.addJobsSession(testJobsTree);
 
-        //expect(showQuickPick.mock.calls.length).toBe(1);
+        // expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -1323,6 +1325,7 @@ describe("Extension Unit Tests", () => {
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
             await extension.refreshUSS(brat);
+// tslint:disable-next-line: no-empty
         } catch (err) {
         }
         expect(ussFile.mock.calls.length).toBe(0);
@@ -1487,8 +1490,9 @@ describe("Extension Unit Tests", () => {
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
             await extension.openUSS(brat);
+// tslint:disable-next-line: no-empty
         } catch (err) {
-        };
+        }
         expect(ussFile.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
@@ -1672,7 +1676,7 @@ describe("Extension Unit Tests", () => {
         await extension.deleteJob(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted` 
+            `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted`
         );
     });
 
@@ -1684,7 +1688,7 @@ describe("Extension Unit Tests", () => {
 
     it("tests that a stop command is issued", async () => {
         showInformationMessage.mockReset();
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"})
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
         await extension.stopCommand(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
@@ -1705,7 +1709,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the spool is downloaded", async () => {
-        let fileUri = {fsPath: "/tmp/foo"};
+        const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
         await extension.downloadSpool(jobNode);
         expect(showOpenDialog).toBeCalled();
