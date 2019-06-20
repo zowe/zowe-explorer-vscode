@@ -86,6 +86,8 @@ describe("Extension Unit Tests", () => {
         subsystem: ""
     }
 
+    
+
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
     sessNode.pattern = "test hlq";
@@ -304,6 +306,9 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
 
     it("Testing that activate correctly executes", async () => {
+        // getConfiguration.mockReturnValue("testDisposable");
+
+        
         createTreeView.mockReturnValue("testDisposable");
 
         existsSync.mockReturnValueOnce(true);
@@ -509,6 +514,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValueOnce(true);
 
         await extension.activate(mock);
+        
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(readdirSync.mock.calls.length).toBe(0);

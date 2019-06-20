@@ -26,7 +26,7 @@ import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 
-const TIMEOUT = 45000;
+const TIMEOUT = 4500000;
 declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
@@ -49,7 +49,7 @@ describe("Extension Integration Tests", () => {
     beforeEach(async function() {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
-        await extension.deactivate();
+        await extension.cleanTempDir();
     });
 
     afterEach(async function() {
@@ -399,22 +399,53 @@ describe("Extension Integration Tests", () => {
         // TODO add tests for saving data set from favorites
     });
 
-    describe("Updating Temp folder Preference", () => {
-        it("should assign default if preference empty", async () => {
+    describe("Updating Temp Folder", () => {
+        // define paths
+        const testingPath = path.join(__dirname, "..", "..", "..", "test");
+        const providedPathOne = path.join(__dirname, "..", "..", "..", "test-folder-one");
+        const providedPathTwo = path.join(__dirname, "..", "..", "..", "test-folder-two");
+
+        // remove directories in case of previously failed tests
+        extension.cleanDir(testingPath);
+        extension.cleanDir(providedPathOne);
+        extension.cleanDir(providedPathTwo);
+
+        it("should assign the temp folder based on preference", async () => {
+            // create target folder
+            fs.mkdirSync(testingPath);
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
+
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+
+            // Remove directory for subsequent tests
+            extension.cleanDir(testingPath);
+        }).timeout(TIMEOUT);
+
+        it("should update temp folder on preference change", async () => {
+            fs.mkdirSync(providedPathOne);
+            fs.mkdirSync(providedPathTwo);
+
+            // set first preference
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: `${providedPathOne}` }, vscode.ConfigurationTarget.Global);
+
+            // change preference and test for update
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+            { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
+
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+
+            // Remove directory for subsequent tests
+            extension.cleanDir(providedPathOne);
+            extension.cleanDir(providedPathTwo);
+        }).timeout(TIMEOUT);
+
+        it("should assign default temp folder, if preference is empty", async () => {
+            const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: "" }, vscode.ConfigurationTarget.Global);
-            expect(extension.BRIGHTTEMPFOLDER).to.deep.equal("");
-        }).timeout(TIMEOUT);
-
-        it("should assign the temp folder to the preference", async () => {
-            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
-                { folderPath: extension.BRIGHTTEMPFOLDER }, vscode.ConfigurationTarget.Global);
-
-        }).timeout(TIMEOUT);
-
-        it("on change of preference, temp folder should update", () => {
-            vscode.workspace.onDidChangeConfiguration(async (e) => {
-            });
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
     })
 

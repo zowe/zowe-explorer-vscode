@@ -30,14 +30,6 @@ export let BRIGHTTEMPFOLDER;
 export let USS_DIR;
 export let DS_DIR;
 
-// Get temp folder location from settings
-let preferencesTempPath: string = 
-    vscode.workspace.getConfiguration()
-    .get("Zowe-Temp-Folder-Location")['folderPath']
-
-// Define globals based on temp path
-defineGlobals(preferencesTempPath);
-
 let log: Logger;
 /**
  * The function that runs when the extension is loaded
@@ -46,14 +38,26 @@ let log: Logger;
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
+    // Get temp folder location from settings
+    // Has undefined for the actual "get" in tests
+    let preferencesTempPath: string = 
+        vscode.workspace.getConfiguration()
+        .get("Zowe-Temp-Folder-Location")['folderPath']
+
+    defineGlobals(preferencesTempPath);
+
     // Call deactivate before continuing
     // this is to handle if the application crashed on a previous execution and
     // VSC didn't get a chance to call our deactivate to cleanup.
-    await deactivate();
+    await cleanTempDir();
 
-    fs.mkdirSync(BRIGHTTEMPFOLDER);
-    fs.mkdirSync(USS_DIR);
-    fs.mkdirSync(DS_DIR);
+    try {
+        fs.mkdirSync(BRIGHTTEMPFOLDER);
+        fs.mkdirSync(USS_DIR);
+        fs.mkdirSync(DS_DIR);
+    } catch (err) {
+        vscode.window.showErrorMessage(err.message); 
+    }
 
     let datasetProvider: DatasetTree;
     let ussFileProvider: USSTree;
@@ -132,9 +136,9 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         }
     });
+
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
-            // define updated temp path
             const updatedPreferencesTempPath: string = 
                 vscode.workspace.getConfiguration()
                 .get("Zowe-Temp-Folder-Location")['folderPath'];
@@ -142,17 +146,30 @@ export async function activate(context: vscode.ExtensionContext) {
             // Re-define globals with updated path 
             defineGlobals(updatedPreferencesTempPath);
 
-            fs.mkdirSync(BRIGHTTEMPFOLDER);
-            fs.mkdirSync(USS_DIR);
-            fs.mkdirSync(DS_DIR);
+            // Set past preference to default path if empty
+            if (preferencesTempPath === "") {
+                preferencesTempPath = path.join(__dirname, "..", "..", "resources");
+            }
+
+            // Make certain that "temp" folder is cleared
+            cleanTempDir();            
+
+            try {
+                fs.mkdirSync(BRIGHTTEMPFOLDER);
+                fs.mkdirSync(USS_DIR);
+                fs.mkdirSync(DS_DIR);
+            } catch (err) {
+                log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
+                vscode.window.showErrorMessage(err.message); 
+            }
 
             try {
                 moveSync(`${preferencesTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true })
             } catch (err) {
+                log.error("Error moving temporary folder! " + JSON.stringify(err));
                 vscode.window.showErrorMessage(err.message);
             }
 
-            // update current preference temp path
             preferencesTempPath = updatedPreferencesTempPath
         }
     });
@@ -238,6 +255,19 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         jobsProvider.setJob(jobView, job);
     })
+}
+
+/**
+ * Defines all global variables
+ * @param tempPath File path for temporary folder defined in preferences
+ */
+export function defineGlobals(tempPath: any) {
+    tempPath === "" ? 
+        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp") : 
+        BRIGHTTEMPFOLDER = path.join(tempPath, "temp");
+    
+    USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
+    DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
 }
 
 /**
@@ -669,8 +699,12 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
 
 }
 
-
-function cleanDir(directory) {
+/**
+ * Recursively deletes directory
+ * 
+ * @param directory path to directory to be deleted
+ */
+export function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
         return;
     }
@@ -687,26 +721,13 @@ function cleanDir(directory) {
 }
 
 /**
- * Defines all global variables
- * @param tempPath File path for temporary folder defined in preferences
- */
-function defineGlobals(tempPath: string) {
-    tempPath === '' || undefined ? 
-        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp") : 
-        BRIGHTTEMPFOLDER = path.join(tempPath, "temp");
-
-    USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
-    DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
-}
-
-/**
- * Cleans up the default local storage directory
+ * Cleans up local temp directory
  *
  * @export
  */
-export async function deactivate() {
-    // logger hasn't necessarily been initialized yet, don't use the `log` in this function    
-    if (!fs.existsSync(BRIGHTTEMPFOLDER)) {        
+export async function cleanTempDir() {
+    // logger hasn't necessarily been initialized yet, don't use the `log` in this function
+    if (!fs.existsSync(BRIGHTTEMPFOLDER)) {
         return;
     }
     try {
@@ -715,6 +736,16 @@ export async function deactivate() {
         vscode.window.showErrorMessage("Unable to delete temporary folder. " + err);  // TODO MISSED TESTING
     }
 }
+
+/**
+ * Called by VSCode on shutdown
+ *
+ * @export
+ */
+export async function deactivate() {
+    await cleanTempDir();
+}
+
 
 /**
  * Deletes a dataset
