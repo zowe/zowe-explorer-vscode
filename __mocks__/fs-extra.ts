@@ -9,4 +9,4 @@
 *                                                                                 *
 */
 
-// export function moveSync(srcPath: string, destPath: string): void {}
+export function moveSync(srcPath: string, destPath: string): void {}

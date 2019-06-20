@@ -773,7 +773,7 @@
     "watch": "tsc -watch --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
-    "test": "jest -o --watch --coverage",
+    "test": "jest --coverage",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
     "markdown": "markdownlint CHANGELOG.md README.md",

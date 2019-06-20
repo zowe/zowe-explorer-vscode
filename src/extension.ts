@@ -41,11 +41,10 @@ let log: Logger;
  */
 export async function activate(context: vscode.ExtensionContext) {
     // Get temp folder location from settings
-    // Has undefined for the actual "get" in tests
     let preferencesTempPath: string = 
         vscode.workspace.getConfiguration()
-        .get("Zowe-Temp-Folder-Location")['folderPath']
-
+        .get("Zowe-Temp-Folder-Location")['folderPath'];
+    
     defineGlobals(preferencesTempPath);
 
     // Call deactivate before continuing
@@ -149,13 +148,12 @@ export async function activate(context: vscode.ExtensionContext) {
             // Re-define globals with updated path 
             defineGlobals(updatedPreferencesTempPath);
 
-            // Set past preference to default path if empty
             if (preferencesTempPath === "") {
                 preferencesTempPath = path.join(__dirname, "..", "..", "resources");
             }
 
             // Make certain that "temp" folder is cleared
-            cleanTempDir();            
+            cleanTempDir();
 
             try {
                 fs.mkdirSync(BRIGHTTEMPFOLDER);
@@ -167,13 +165,17 @@ export async function activate(context: vscode.ExtensionContext) {
             }
 
             try {
+                // If source and destination path are same, exit
+                if(`${preferencesTempPath}/temp` === BRIGHTTEMPFOLDER) {
+                    return;
+                }
                 moveSync(`${preferencesTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true })
             } catch (err) {
                 log.error("Error moving temporary folder! " + JSON.stringify(err));
                 vscode.window.showErrorMessage(err.message);
             }
 
-            preferencesTempPath = updatedPreferencesTempPath
+            preferencesTempPath = updatedPreferencesTempPath;
         }
     });
 
@@ -266,10 +268,10 @@ export async function activate(context: vscode.ExtensionContext) {
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
  */
-export function defineGlobals(tempPath: any) {
-    tempPath === "" ? 
-        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp") : 
-        BRIGHTTEMPFOLDER = path.join(tempPath, "temp");
+export function defineGlobals(tempPath: string | undefined) {
+    tempPath !== "" && tempPath !== undefined ? 
+        BRIGHTTEMPFOLDER = path.join(tempPath, "temp") :
+        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
     
     USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
     DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
