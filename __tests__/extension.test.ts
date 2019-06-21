@@ -353,7 +353,7 @@ describe("Extension Unit Tests", () => {
             extensionPath: path.join(__dirname, "..")
         } as vscode.ExtensionContext));
         const mock = new extensionMock();
-        
+
         await extension.activate(mock);
 
         const sampleFavorites = [
@@ -528,7 +528,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.test.search{session}",
             ]
         });
-        
+
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => [
                 "",
@@ -1780,7 +1780,7 @@ describe("Extension Unit Tests", () => {
 
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(moveSync.mock.calls.length).toBe(1);        
+        expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(defaultPreference);
         expect(moveSync.mock.calls[0][1]).toBe("/testing/temp");
     });

@@ -450,7 +450,7 @@ describe("Extension Integration Tests", () => {
                 { folderPath: "" }, vscode.ConfigurationTarget.Global);
             expect(extension.BRIGHTTEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
-    })
+    });
 
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
