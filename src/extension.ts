@@ -47,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext) {
     
     defineGlobals(preferencesTempPath);
 
-    // Call deactivate before continuing
+    // Call cleanTempDir before continuing
     // this is to handle if the application crashed on a previous execution and
     // VSC didn't get a chance to call our deactivate to cleanup.
     await cleanTempDir();
@@ -139,42 +139,15 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
+    vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
             const updatedPreferencesTempPath: string = 
                 vscode.workspace.getConfiguration()
                 .get("Zowe-Temp-Folder-Location")['folderPath'];
         
-            // Re-define globals with updated path 
-            defineGlobals(updatedPreferencesTempPath);
+            moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
 
-            if (preferencesTempPath === "") {
-                preferencesTempPath = path.join(__dirname, "..", "..", "resources");
-            }
-
-            // Make certain that "temp" folder is cleared
-            cleanTempDir();
-
-            try {
-                fs.mkdirSync(BRIGHTTEMPFOLDER);
-                fs.mkdirSync(USS_DIR);
-                fs.mkdirSync(DS_DIR);
-            } catch (err) {
-                log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
-                vscode.window.showErrorMessage(err.message); 
-            }
-
-            try {
-                // If source and destination path are same, exit
-                if(`${preferencesTempPath}/temp` === BRIGHTTEMPFOLDER) {
-                    return;
-                }
-                moveSync(`${preferencesTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true })
-            } catch (err) {
-                log.error("Error moving temporary folder! " + JSON.stringify(err));
-                vscode.window.showErrorMessage(err.message);
-            }
-
+            // Update current temp folder preference
             preferencesTempPath = updatedPreferencesTempPath;
         }
     });
@@ -275,6 +248,43 @@ export function defineGlobals(tempPath: string | undefined) {
     
     USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
     DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+}
+
+/**
+ * Moves temp folder to user defined location in preferences
+ * @param previousTempPath temp path settings value before updated by user
+ * @param currentTempPath temp path settings value after updated by user
+ */
+export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
+    // Re-define globals with updated path 
+    defineGlobals(currentTempPath);
+
+    if (previousTempPath === "") {
+        previousTempPath = path.join(__dirname, "..", "..", "resources");
+    }
+    
+    // Make certain that "temp" folder is cleared
+    cleanTempDir();
+    
+    try {
+        fs.mkdirSync(BRIGHTTEMPFOLDER);
+        fs.mkdirSync(USS_DIR);
+        fs.mkdirSync(DS_DIR);
+    } catch (err) {
+        log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
+        vscode.window.showErrorMessage(err.message); 
+    }
+    
+    try {
+        // If source and destination path are same, exit
+        if(`${previousTempPath}/temp` === BRIGHTTEMPFOLDER) {
+            return;
+        }
+        moveSync(`${previousTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true })
+    } catch (err) {
+        log.error("Error moving temporary folder! " + JSON.stringify(err));
+        vscode.window.showErrorMessage(err.message);
+    }
 }
 
 /**
