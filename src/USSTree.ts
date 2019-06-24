@@ -151,7 +151,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public async removeUSSFavorite(node: ZoweUSSNode) {
         this.mFavorites = this.mFavorites.filter((temp) =>
-            !((temp.mLabel === node.mLabel) && (temp.contextValue.startsWith(node.contextValue))));
+            !((temp.fullPath === node.fullPath) && (temp.contextValue.startsWith(node.contextValue))));
         this.refresh();
         await this.updateFavorites();
     }
