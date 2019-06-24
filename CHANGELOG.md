@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.21.0
+
+- Added the Upload member to datasets. Thanks Kristina Mayo
+- Addressed same file issue with Favorites in USS explorer. Thanks to Rodney-Wilson and Lauren-Li
+- USS Favorites. Ensure file deletion synchronisation. Thanks to Rodney-Wilson and Lauren-Li
+
 ## 0.20.0
 
 - Combined Spool files with Jobs in Jobs view. Colin Stone
