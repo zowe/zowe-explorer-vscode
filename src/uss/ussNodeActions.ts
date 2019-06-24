@@ -56,10 +56,14 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         vscode.window.showErrorMessage(`Unable to delete node: ${err.message}`);
         throw (err);
     }
+
+    // Remove node from the USS Favorites tree
+    ussFileProvider.removeUSSFavorite(node);
+    ussFileProvider.refresh();
 }
 
 /**
- * Refreshes treeView MOVE FUNCTION FROM EXTENSION!
+ * Refreshes treeView
  *
  * @param {USSTree} ussFileProvider
  */

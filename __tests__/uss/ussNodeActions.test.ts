@@ -27,6 +27,7 @@ const renameUSSFile = jest.fn();
 const mockAddUSSSession = jest.fn();
 const mockUSSRefresh = jest.fn();
 const mockGetUSSChildren = jest.fn();
+const mockRemoveUSSFavorite = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
 const showQuickPick = jest.fn();
@@ -50,6 +51,7 @@ function getUSSTree() {
             addSession: mockAddUSSSession,
             refresh: mockUSSRefresh,
             getChildren: mockGetUSSChildren,
+            removeUSSFavorite: mockRemoveUSSFavorite
         };
     });
     const testUSSTree1 = USSTree();
