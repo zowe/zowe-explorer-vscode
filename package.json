@@ -118,7 +118,7 @@
       },
       {
         "command": "zowe.uploadDialog",
-        "title": "Upload member.."
+        "title": "Upload Member..."
       },
       {
         "command": "zowe.pattern",
@@ -427,6 +427,16 @@
         },
         {
           "when": "viewItem == member",
+          "command": "zowe.refreshNode",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.safeSave",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "viewItem == member",
           "command": "zowe.deleteMember",
           "group": "5_modification@3"
         },
@@ -452,6 +462,16 @@
         },
         {
           "when": "viewItem == memberf",
+          "command": "zowe.refreshNode",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.safeSave",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "viewItem == memberf",
           "command": "zowe.deleteMember",
           "group": "5_modification@3"
         },
@@ -464,6 +484,16 @@
           "when": "viewItem == ds",
           "command": "zowe.safeSave",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.refreshNode",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.safeSave",
+          "group": "0_mainframeInteraction"
         },
         {
           "when": "viewItem == ds",
@@ -494,6 +524,16 @@
           "when": "viewItem == dsf",
           "command": "zowe.safeSave",
           "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.refreshNode",
+          "group": "0_mainframeInteraction"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.safeSave",
+          "group": "0_mainframeInteraction"
         },
         {
           "when": "viewItem == dsf",
