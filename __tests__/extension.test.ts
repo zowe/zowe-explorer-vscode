@@ -15,6 +15,7 @@ jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 jest.mock("fs");
+jest.mock("fs-extra");
 jest.mock("../src/DatasetTree");
 jest.mock("../src/USSTree");
 jest.mock("../src/ProfileLoader");
@@ -29,6 +30,7 @@ import * as extension from "../src/extension";
 import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
+import * as fsextra from "fs-extra";
 import * as profileLoader from "../src/ProfileLoader";
 import * as ussNodeActions from "../src/uss/ussNodeActions";
 import { Job } from "../src/zosjobs";
@@ -97,6 +99,7 @@ describe("Extension Unit Tests", () => {
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
 
     const mkdirSync = jest.fn();
+    const moveSync = jest.fn();
     const getAllProfileNames = jest.fn();
     const createTreeView = jest.fn();
     // const Uri = jest.fn();
@@ -256,6 +259,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(fs, "unlinkSync", {value: unlinkSync});
     Object.defineProperty(fs, "rmdirSync", {value: rmdirSync});
     Object.defineProperty(fs, "readFileSync", {value: readFileSync});
+    Object.defineProperty(fsextra, "moveSync", {value: moveSync});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(vscode.window, "activeTextEditor", {value: activeTextEditor});
@@ -329,6 +333,11 @@ describe("Extension Unit Tests", () => {
                 profile: "SampleProfile"
             };
         });
+
+        getConfiguration.mockReturnValueOnce({
+            get: () => ""
+        });
+
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
@@ -344,6 +353,7 @@ describe("Extension Unit Tests", () => {
             extensionPath: path.join(__dirname, "..")
         } as vscode.ExtensionContext));
         const mock = new extensionMock();
+
         await extension.activate(mock);
 
         const sampleFavorites = [
@@ -505,6 +515,20 @@ describe("Extension Unit Tests", () => {
         });
         showErrorMessage.mockReset();
         readFileSync.mockReturnValue("");
+
+        getConfiguration.mockReturnValueOnce({
+            get: () => ""
+        });
+
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => [
+                "[test]: brtvs99.public.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+            ]
+        });
+
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => [
                 "",
@@ -1742,5 +1766,52 @@ describe("Extension Unit Tests", () => {
         await extension.submitJcl(testTree);
         expect(submitJcl).toBeCalled();
         expect(showInformationMessage).toBeCalled();
+    });
+
+    it("Tests that temp folder handles default preference", () => {
+        mkdirSync.mockReset();
+        moveSync.mockReset();
+
+        const originalPreferencePath = "";
+        const updatedPreferencePath = "/testing";
+        const defaultPreference = extension.BRIGHTTEMPFOLDER;
+
+        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+
+        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(moveSync.mock.calls.length).toBe(1);
+        expect(moveSync.mock.calls[0][0]).toBe(defaultPreference);
+        expect(moveSync.mock.calls[0][1]).toBe("/testing/temp");
+    });
+
+    it("Tests that temp folder is moved successfully", () => {
+        mkdirSync.mockReset();
+        moveSync.mockReset();
+
+        const originalPreferencePath = "/test/path";
+        const updatedPreferencePath = "/new/test/path";
+
+        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+
+        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(moveSync.mock.calls.length).toBe(1);
+        expect(moveSync.mock.calls[0][0]).toBe("/test/path/temp");
+        expect(moveSync.mock.calls[0][1]).toBe("/new/test/path/temp");
+    });
+
+    it("Tests that temp folder does not update on duplicate preference", () => {
+        mkdirSync.mockReset();
+        moveSync.mockReset();
+
+        const originalPreferencePath = "/test/path";
+        const updatedPreferencePath = "/test/path";
+
+        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+
+        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(moveSync.mock.calls.length).toBe(0);
     });
 });

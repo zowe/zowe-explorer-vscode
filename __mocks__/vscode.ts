@@ -377,7 +377,7 @@ export namespace workspace {
 		 */
         readonly index: number;
     }
-
+    
 }
 
 export interface InputBoxOptions {
