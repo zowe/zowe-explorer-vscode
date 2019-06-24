@@ -134,6 +134,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
+    vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
 // tslint:disable-next-line: max-line-length
@@ -1097,6 +1098,8 @@ export async function safeSave(node: ZoweNode) {
             case ("pds"):
                 label = node.mParent.mLabel + "(" + node.mLabel + ")";
                 break;
+            case ("directory"):
+                break;
             default:
                 throw Error("safeSave() called from invalid node.");
         }
@@ -1105,6 +1108,40 @@ export async function safeSave(node: ZoweNode) {
             file: getDocumentFilePath(label, node)
         });
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
+        await vscode.window.showTextDocument(document);
+        await vscode.window.activeTextEditor.document.save();
+    } catch (err) {
+        if (err.message.includes("not found")) {
+            vscode.window.showInformationMessage(`Unable to find file: ${label} was probably deleted.`);
+        } else {
+            vscode.window.showErrorMessage(err.message);
+        }
+    }
+}
+
+/**
+ * Checks if there are changes on the mainframe before pushing changes
+ *
+ * @export
+ * @param {ZoweUSSNode} node
+ */
+export async function safeSaveUSS(node: ZoweUSSNode) {
+
+    log.debug("safe save requested for node: " + node.mLabel);
+    let label;
+    try {
+        switch (node.mParent.contextValue) {
+            case ("directory"):
+                label = node.fullPath;
+                break;
+            default:
+                throw Error("safeSaveUSS() called from invalid node.");
+        }
+        log.debug("Invoking safesave for USS file " + label);
+        await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            file: getUSSDocumentFilePath(node)
+        });
+        const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
         await vscode.window.showTextDocument(document);
         await vscode.window.activeTextEditor.document.save();
     } catch (err) {
