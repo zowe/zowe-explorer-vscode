@@ -21,6 +21,7 @@ After you install the Zowe extension, meet the following prerequisites:
 * [Install Zowe CLI](https://zowe.github.io/docs-site/latest/user-guide/cli-installcli.html#methods-to-install-zowe-cli) on your PC.
   
 > **Important!**: To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
+
 * [Create at least one Zowe CLI 'zosmf' profile](https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).
 
 ## Configuration and usage tips
@@ -33,12 +34,13 @@ You can alter the behavior of the extension in the following ways:
 **Tip:** By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as COBOL.
 
 ### Advanced Configuration
-> **WARNING**: Specifying these preferences incorrectly, may cause the extension to fail. 
+
+> **WARNING**: Specifying these preferences incorrectly, may cause the extension to fail.
 
 Extension preferences can also be modified in the `Settings` for this extension. They can be customized in the following ways:
 
 * **Data set creation settings:** You can change the default creation settings for various data set types.
-* **Temp Folder Location:** You can change the default folder location for where temporary files are stored. 
+* **Temp Folder Location:** You can change the default folder location for where temporary files are stored.
 
 ## Sample use cases
 
