@@ -12,7 +12,7 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
-import * as nls from 'vscode-nls';
+import * as nls from "vscode-nls";
 const localize = nls.loadMessageBundle();
 
 /**
@@ -63,11 +63,11 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 this.fullPath = this.tooltip = "/" + mLabel;
             }
         }
-        if (this.mParent && this.mParent.contextValue === 'favorite') {
+        if (this.mParent && this.mParent.contextValue === "favorite") {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = mLabel.trim();
             // File or directory name only (no parent path)
-            this.shortLabel = this.fullPath.split('/', this.fullPath.length).pop(); 
+            this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop(); 
             // Display name for favorited file or directory in tree view
             this.label = this.profileName + this.shortLabel; 
             this.tooltip = this.profileName + this.fullPath;
@@ -90,7 +90,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
 
         if (!this.mLabel) {
-            vscode.window.showErrorMessage(localize("ZoweUSSNode.ZoweUSSNode.getChildre.error.message.invalidNode.text", "Invalid node"));
+            vscode.window.showErrorMessage(localize("getChildren.error.message.invalidNode", "Invalid node"));
             throw Error("Invalid node");
         }
 
@@ -100,9 +100,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         try {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
-            vscode.window.showErrorMessage(localize("ZoweUSSNode.ZoweUSSNode.getChildren.error.message.response.text", "Retrieving response from ")
+            vscode.window.showErrorMessage(localize("getChildren.error.message.response", "Retrieving response from ")
                                                     + `zowe.List\n${err}\n`);
-            throw Error(localize("ZoweUSSNode.ZoweUSSNode.getChildren.error.response.text", "Retrieving response from ") + `zowe.List\n${err}\n`);
+            throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
 
         // push nodes to an object with property names to avoid duplicates
@@ -112,26 +112,26 @@ export class ZoweUSSNode extends vscode.TreeItem {
             // Throws reject if the brightside command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(
-                    localize("ZoweUSSNode.ZoweUSSNode.getChildren.responses.error.response.text", "The response from Zowe CLI was not successful"));
+                    localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
             }
 
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                if (item.name !== '.' && item.name !== '..') {
+                if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
-                    if (item.mode.startsWith('d')) {
+                    if (item.mode.startsWith("d")) {
                         const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.Collapsed, this, null, this.fullPath);
                         elementChildren[temp.label] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
-                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + '/' + item.name)) {
+                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true);
                         } else {
                             temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
                         }
                         temp.command = {command: "zowe.uss.ZoweUSSNode.open",
-                                        title: localize("ZoweUSSNode.ZoweUSSNode.getChildren.responses.open.text", "Open"), arguments: [temp]};
+                                        title: localize("getChildren.responses.open", "Open"), arguments: [temp]};
                         elementChildren[temp.label] = temp;
                     }
                 }
@@ -171,7 +171,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
             this.contextValue = "textFile";
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.mParent && this.mParent.contextValue === 'favorite') {
+        if (this.mParent && this.mParent.contextValue === "favorite") {
             this.binary ? this.contextValue = "binaryFilef" : this.contextValue = "textFilef";
         }
         this.dirty = true;
