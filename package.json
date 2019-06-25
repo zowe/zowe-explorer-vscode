@@ -1,8 +1,8 @@
 {
     "name": "vscode-extension-for-zowe",
-    "displayName": "%package.displayName%",
-    "description": "%package.description%",
-    "version": "0.18.0",
+    "displayName": "%displayName%",
+    "description": "%description%",
+    "version": "0.20.0",
     "publisher": "Zowe",
     "repository": {
         "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -34,7 +34,7 @@
             "activitybar": [
                 {
                     "id": "zowe",
-                    "title": "%package.contributes.viewsContainer.activitybar.title%",
+                    "title": "%contributes.viewsContainer.activitybar.title%",
                     "icon": "resources/zowe.svg"
                 }
             ]
@@ -43,50 +43,50 @@
             "zowe": [
                 {
                     "id": "zowe.explorer",
-                    "name": "%package.contributes.views.zowe.zowe.explorer%"
+                    "name": "%contributes.views.zowe.zowe.explorer%"
                 },
                 {
                     "id": "zowe.uss.explorer",
-                    "name": "%package.contributes.views.zowe.zowe.uss.explorer%"
+                    "name": "%contributes.views.zowe.zowe.uss.explorer%"
                 },
                 {
                     "id": "zowe.jobs",
-                    "name": "%package.contributes.views.zowe.zowe.jobs%"
+                    "name": "%contributes.views.zowe.zowe.jobs%"
                 },
                 {
                     "id": "zowe.spool",
-                    "name": "%package.contributes.views.zowe.zowe.spool%"
+                    "name": "%contributes.views.zowe.zowe.spool%"
                 }
             ]
         },
         "commands": [
             {
                 "command": "zowe.uss.createFile",
-                "title": "%package.contributes.commands.zowe.uss.createFile%"
+                "title": "%contributes.commands.zowe.uss.createFile%"
             },
             {
                 "command": "zowe.uss.createFolder",
-                "title": "%package.contributes.commands.zowe.uss.createFolder%"
+                "title": "%contributes.commands.zowe.uss.createFolder%"
             },
             {
                 "command": "zowe.uss.deleteNode",
-                "title": "%package.contributes.commands.zowe.uss.deleteNode%"
+                "title": "%contributes.commands.zowe.uss.deleteNode%"
             },
             {
                 "command": "zowe.uss.renameNode",
-                "title": "%package.contributes.commands.zowe.uss.renameNode%"
+                "title": "%contributes.commands.zowe.uss.renameNode%"
             },
             {
                 "command": "zowe.addFavorite",
-                "title": "%package.contributes.commands.zowe.addFavorite%"
+                "title": "%contributes.commands.zowe.addFavorite%"
             },
             {
                 "command": "zowe.uss.addFavorite",
-                "title": "%package.contributes.commands.zowe.uss.addFavorite%"
+                "title": "%contributes.commands.zowe.uss.addFavorite%"
             },
             {
                 "command": "zowe.addSession",
-                "title": "%package.contributes.commands.zowe.addSession%",
+                "title": "%contributes.commands.zowe.addSession%",
                 "icon": {
                     "light": "./resources/light/plus.svg",
                     "dark": "./resources/dark/plus.svg"
@@ -94,7 +94,7 @@
             },
             {
                 "command": "zowe.createDataset",
-                "title": "%package.contributes.commands.zowe.createDataset%",
+                "title": "%contributes.commands.zowe.createDataset%",
                 "icon": {
                     "light": "./resources/light/newfile.svg",
                     "dark": "./resources/dark/newfile.svg"
@@ -102,27 +102,27 @@
             },
             {
                 "command": "zowe.createMember",
-                "title": "%package.contributes.commands.zowe.createMember%"
+                "title": "%contributes.commands.zowe.createMember%"
             },
             {
                 "command": "zowe.showDSAttributes",
-                "title": "%package.contributes.commands.zowe.showDSAttributes%"
+                "title": "%contributes.commands.zowe.showDSAttributes%"
             },
             {
                 "command": "zowe.deleteDataset",
-                "title": "%package.contributes.commands.zowe.deleteDataset%"
+                "title": "%contributes.commands.zowe.deleteDataset%"
             },
             {
                 "command": "zowe.deleteMember",
-                "title": "%package.contributes.commands.zowe.deleteMember%"
+                "title": "%contributes.commands.zowe.deleteMember%"
             },
             {
                 "command": "zowe.deletePDS",
-                "title": "%package.contributes.commands.zowe.deletePDS%"
+                "title": "%contributes.commands.zowe.deletePDS%"
             },
             {
                 "command": "zowe.pattern",
-                "title": "%package.contributes.commands.zowe.pattern%",
+                "title": "%contributes.commands.zowe.pattern%",
                 "icon": {
                     "light": "./resources/light/pattern.svg",
                     "dark": "./resources/dark/pattern.svg"
@@ -130,7 +130,7 @@
             },
             {
                 "command": "zowe.refreshAll",
-                "title": "%package.contributes.commands.zowe.refreshAll%",
+                "title": "%contributes.commands.zowe.refreshAll%",
                 "icon": {
                     "light": "./resources/light/refresh.svg",
                     "dark": "./resources/dark/refresh.svg"
@@ -138,7 +138,7 @@
             },
             {
                 "command": "zowe.refreshNode",
-                "title": "%package.contributes.commands.zowe.refreshNode%",
+                "title": "%contributes.commands.zowe.refreshNode%",
                 "icon": {
                     "light": "./resources/light/download.svg",
                     "dark": "./resources/dark/download.svg"
@@ -146,23 +146,23 @@
             },
             {
                 "command": "zowe.removeFavorite",
-                "title": "%package.contributes.commands.zowe.removeFavorite%"
+                "title": "%contributes.commands.zowe.removeFavorite%"
             },
             {
                 "command": "zowe.uss.removeFavorite",
-                "title": "%package.contributes.commands.zowe.uss.removeFavorite%"
+                "title": "%contributes.commands.zowe.uss.removeFavorite%"
             },
             {
                 "command": "zowe.removeSavedSearch",
-                "title": "%package.contributes.commands.zowe.removeSavedSearch%"
+                "title": "%contributes.commands.zowe.removeSavedSearch%"
             },
             {
                 "command": "zowe.removeSession",
-                "title": "%package.contributes.commands.zowe.removeSession%"
+                "title": "%contributes.commands.zowe.removeSession%"
             },
             {
                 "command": "zowe.safeSave",
-                "title": "%package.contributes.commands.zowe.safeSave%",
+                "title": "%contributes.commands.zowe.safeSave%",
                 "icon": {
                     "light": "./resources/light/upload.svg",
                     "dark": "./resources/dark/upload.svg"
@@ -170,19 +170,19 @@
             },
             {
                 "command": "zowe.saveSearch",
-                "title": "%package.contributes.commands.zowe.saveSearch%"
+                "title": "%contributes.commands.zowe.saveSearch%"
             },
             {
                 "command": "zowe.submitJcl",
-                "title": "%package.contributes.commands.zowe.submitJcl%"
+                "title": "%contributes.commands.zowe.submitJcl%"
             },
             {
                 "command": "zowe.submitMember",
-                "title": "%package.contributes.commands.zowe.submitMember%"
+                "title": "%contributes.commands.zowe.submitMember%"
             },
             {
                 "command": "zowe.uss.addSession",
-                "title": "%package.contributes.commands.zowe.uss.addSession%",
+                "title": "%contributes.commands.zowe.uss.addSession%",
                 "icon": {
                     "light": "./resources/light/plus.svg",
                     "dark": "./resources/dark/plus.svg"
@@ -190,7 +190,7 @@
             },
             {
                 "command": "zowe.uss.createDirectory",
-                "title": "%package.contributes.commands.zowe.uss.createDirectory%",
+                "title": "%contributes.commands.zowe.uss.createDirectory%",
                 "icon": {
                     "light": "./resources/light/newfile.svg",
                     "dark": "./resources/dark/newfile.svg"
@@ -198,7 +198,7 @@
             },
             {
                 "command": "zowe.uss.fullPath",
-                "title": "%package.contributes.commands.zowe.uss.fullPath%",
+                "title": "%contributes.commands.zowe.uss.fullPath%",
                 "icon": {
                     "light": "./resources/light/pattern.svg",
                     "dark": "./resources/dark/pattern.svg"
@@ -206,7 +206,7 @@
             },
             {
                 "command": "zowe.uss.refreshAll",
-                "title": "%package.contributes.commands.zowe.uss.refreshAll%",
+                "title": "%contributes.commands.zowe.uss.refreshAll%",
                 "icon": {
                     "light": "./resources/light/refresh.svg",
                     "dark": "./resources/dark/refresh.svg"
@@ -214,7 +214,7 @@
             },
             {
                 "command": "zowe.uss.refreshUSS",
-                "title": "%package.contributes.commands.zowe.uss.refreshUSS%",
+                "title": "%contributes.commands.zowe.uss.refreshUSS%",
                 "icon": {
                     "light": "./resources/light/download.svg",
                     "dark": "./resources/dark/download.svg"
@@ -222,19 +222,19 @@
             },
             {
                 "command": "zowe.uss.removeSession",
-                "title": "%package.contributes.commands.zowe.uss.removeSession%"
+                "title": "%contributes.commands.zowe.uss.removeSession%"
             },
             {
                 "command": "zowe.uss.binary",
-                "title": "%package.contributes.commands.zowe.uss.binary%"
+                "title": "%contributes.commands.zowe.uss.binary%"
             },
             {
                 "command": "zowe.uss.text",
-                "title": "%package.contributes.commands.zowe.uss.text%"
+                "title": "%contributes.commands.zowe.uss.text%"
             },
             {
                 "command": "zowe.deleteJob",
-                "title": "%package.contributes.commands.zowe.deleteJob%",
+                "title": "%contributes.commands.zowe.deleteJob%",
                 "icon": {
                     "dark": "./resources/dark/trash.svg",
                     "light": "./resources/light/trash.svg"
@@ -242,23 +242,23 @@
             },
             {
                 "command": "zowe.runModifyCommand",
-                "title": "%package.contributes.commands.zowe.runModifyCommand%"
+                "title": "%contributes.commands.zowe.runModifyCommand%"
             },
             {
                 "command": "zowe.runStopCommand",
-                "title": "%package.contributes.commands.zowe.runStopCommand%"
+                "title": "%contributes.commands.zowe.runStopCommand%"
             },
             {
                 "command": "zowe.setOwner",
-                "title": "%package.contributes.commands.zowe.setOwner%"
+                "title": "%contributes.commands.zowe.setOwner%"
             },
             {
                 "command": "zowe.setPrefix",
-                "title": "%package.contributes.commands.zowe.setPrefix%"
+                "title": "%contributes.commands.zowe.setPrefix%"
             },
             {
                 "command": "zowe.refreshJobsServer",
-                "title": "%package.contributes.commands.zowe.refreshJobsServer%",
+                "title": "%contributes.commands.zowe.refreshJobsServer%",
                 "icon": {
                     "light": "./resources/light/refresh.svg",
                     "dark": "./resources/dark/refresh.svg"
@@ -266,7 +266,7 @@
             },
             {
                 "command": "zowe.refreshAllJobs",
-                "title": "%package.contributes.commands.zowe.refreshAllJobs%",
+                "title": "%contributes.commands.zowe.refreshAllJobs%",
                 "icon": {
                     "light": "./resources/light/refresh.svg",
                     "dark": "./resources/dark/refresh.svg"
@@ -274,7 +274,7 @@
             },
             {
                 "command": "zowe.addJobsSession",
-                "title": "%package.contributes.commands.zowe.addJobsSession%",
+                "title": "%contributes.commands.zowe.addJobsSession%",
                 "icon": {
                     "light": "./resources/light/plus.svg",
                     "dark": "./resources/dark/plus.svg"
@@ -282,11 +282,11 @@
             },
             {
                 "command": "zowe.removeJobsSession",
-                "title": "%package.contributes.commands.zowe.removeJobsSession%"
+                "title": "%contributes.commands.zowe.removeJobsSession%"
             },
             {
                 "command": "zowe.downloadSpool",
-                "title": "%package.contributes.commands.zowe.downloadSpool%",
+                "title": "%contributes.commands.zowe.downloadSpool%",
                 "icon": {
                     "light": "./resources/light/download.svg",
                     "dark": "./resources/dark/download.svg"
@@ -294,11 +294,11 @@
             },
             {
                 "command": "zowe.getJobJcl",
-                "title": "%package.contributes.commands.zowe.getJobJcl%"
+                "title": "%contributes.commands.zowe.getJobJcl%"
             },
             {
                 "command": "zowe.setJobSpool",
-                "title": "%package.contributes.commands.zowe.setJobSpool%"
+                "title": "%contributes.commands.zowe.setJobSpool%"
             }
         ],
         "menus": {
@@ -667,7 +667,7 @@
         },
         "configuration": {
             "type": "object",
-            "title": "%package.configuration.title%",
+            "title": "%configuration.title%",
             "properties": {
                 "Zowe-Default-Datasets-Binary": {
                     "default": {
@@ -680,7 +680,7 @@
                         "blksize": 27998,
                         "lrecl": 27998
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-Binary.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-Binary.description%",
                     "scope": "window"
                 },
                 "Zowe-Default-Datasets-C": {
@@ -694,7 +694,7 @@
                         "blksize": 32760,
                         "lrecl": 260
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-C.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-C.description%",
                     "scope": "window"
                 },
                 "Zowe-Default-Datasets-Classic": {
@@ -708,7 +708,7 @@
                         "blksize": 6160,
                         "lrecl": 80
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-Classic.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-Classic.description%",
                     "scope": "window"
                 },
                 "Zowe-Default-Datasets-PDS": {
@@ -722,7 +722,7 @@
                         "blksize": 6160,
                         "lrecl": 80
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-PDS.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-PDS.description%",
                     "scope": "window"
                 },
                 "Zowe-Default-Datasets-PS": {
@@ -735,7 +735,7 @@
                         "blksize": 6160,
                         "lrecl": 80
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-PS.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-PS.description%",
                     "scope": "window"
                 },
                 "Zowe-Persistent-Favorites": {
@@ -743,7 +743,7 @@
                         "persistence": true,
                         "favorites": []
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-Favorites.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-Favorites.description%",
                     "scope": "window"
                 },
                 "Zowe-USS-Persistent-Favorites": {
@@ -751,22 +751,23 @@
                         "persistence": true,
                         "favorites": []
                     },
-                    "description": "%package.configuration.properties.Zowe-Default-Datasets-Persistent-Favorites.description%",
+                    "description": "%configuration.properties.Zowe-Default-Datasets-Persistent-Favorites.description%",
                     "scope": "window"
                 }
             }
         }
     },
-
     "scripts": {
         "vscode:prepublish": "npm run build",
-        "build": "npm run license && tsc --pretty",
-        "watch": "tsc -watch --pretty",
+        "build": "npm run license && tsc --build --pretty",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test:unit": "jest --coverage",
         "test": "jest --coverage",
         "package": "vsce package",
-        "license": "node ./scripts/license.js"
+        "license": "node ./scripts/license.js",
+        "watch": "tsc -b --watch --pretty",
+        "compile": "tsc -b",
+        "clean": "gulp clean"
     },
     "devDependencies": {
         "@types/chai": "^4.1.4",
@@ -786,14 +787,31 @@
         "jsdom": "11.11.0",
         "sinon": "^6.1.0",
         "ts-jest": "^22.4.6",
-        "typescript": "^2.9.2",
-        "vsce": "^1.60.0",
-        "vscode": "^1.1.30"
+        "vsce": "^1.61.0",
+        "vscode": "^1.1.30",
+        "@types/vscode": "^1.34.0",
+        "del": "^4.1.1",
+        "event-stream": "^4.0.1",
+        "gulp": "^4.0.2",
+        "gulp-filter": "^5.1.0",
+        "gulp-sourcemaps": "^2.6.5",
+        "gulp-typescript": "^5.0.1",
+        "run-sequence": "^2.2.1",
+        "tslint": "^5.16.0",
+        "typescript": "^3.5.1",
+        "vscode-nls-dev": "^3.2.6"
     },
     "dependencies": {
         "@brightside/core": "^2.28.0",
         "@brightside/imperative": "^2.3.0",
-        "jsdoc": "^3.5.5"
+        "jsdoc": "^3.5.5",
+        "ftp": "^0.3.10",
+        "gulp": "^4.0.2",
+        "gulp-cli": "^2.2.0",
+        "jsonc-parser": "^0.4.2",
+        "mkdirp": "^0.5.1",
+        "rimraf": "^2.6.2",
+        "vscode-nls": "^4.1.1"
     },
     "jest": {
         "moduleFileExtensions": [

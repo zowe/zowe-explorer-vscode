@@ -16,6 +16,8 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * A tree that contains nodes of sessions and USS Files
@@ -35,7 +37,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
 
     constructor() {
         this.mSessionNodes = [];
-        this.mFavoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        this.mFavoriteSession = new ZoweUSSNode(localize("USSTree.Favorites", "Favorites"), 
+        vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
         this.mFavoriteSession.contextValue = "favorite";
         this.mSessionNodes = [this.mFavoriteSession];
     }
