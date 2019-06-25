@@ -159,6 +159,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
+    vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
@@ -1135,6 +1136,9 @@ export async function refreshPS(node: ZoweNode) {
 export async function refreshUSS(node: ZoweUSSNode) {
     let label;
     switch (node.mParent.contextValue) {
+        case ("directoryf"):
+            label = node.fullPath;
+            break;
         case ("directory"):
             label = node.fullPath;
             break;
@@ -1169,7 +1173,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
  * Checks if there are changes on the mainframe before pushing changes
  *
  * @export
- * @param {ZoweNode} node
+ * @param {ZoweNode} node The node which represents the dataset
  */
 export async function safeSave(node: ZoweNode) {
 
@@ -1202,6 +1206,33 @@ export async function safeSave(node: ZoweNode) {
     } catch (err) {
         if (err.message.includes("not found")) {
             vscode.window.showInformationMessage(`Unable to find file: ${label} was probably deleted.`);
+        } else {
+            vscode.window.showErrorMessage(err.message);
+        }
+    }
+}
+
+/**
+ * Checks if there are changes on the mainframe before pushing changes
+ *
+ * @export
+ * @param {ZoweUSSNode} node The node which represents the file
+ */
+export async function safeSaveUSS(node: ZoweUSSNode) {
+
+    log.debug("safe save requested for node: " + node.mLabel);
+    try {
+        // Switch case from `safeSave` not needed, as we will only ever receive a file
+        log.debug("Invoking safesave for USS file " + node.fullPath);
+        await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            file: getUSSDocumentFilePath(node)
+        });
+        const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
+        await vscode.window.showTextDocument(document);
+        await vscode.window.activeTextEditor.document.save();
+    } catch (err) {
+        if (err.message.includes("not found")) {
+            vscode.window.showInformationMessage(`Unable to find file: ${node.fullPath} was probably deleted.`);
         } else {
             vscode.window.showErrorMessage(err.message);
         }
