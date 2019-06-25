@@ -24,7 +24,7 @@ import { ZosJobsProvider, Job } from "./zosjobs";
 import { ZosSpoolProvider } from "./zosspool";
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
-import * as nls from 'vscode-nls';
+import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 
@@ -63,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext) {
         Logger.initLogger(loggerConfig);
 
         log = Logger.getAppLogger();
-        log.debug(localize("extension.log.debug.text", "Initialized logger from VSCode extension"));
+        log.debug(localize("log.debug", "Initialized logger from VSCode extension"));
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
@@ -72,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ussFileProvider = new USSTree();
         await ussFileProvider.addSession();
     } catch (err) {
-        log.error(localize("extension.log.error.text", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
+        log.error(localize("log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
     }
 
@@ -92,16 +92,20 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
-        log.debug(localize("extension.onDidSaveTextDocument.text1", "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ") +
-        savedFile.fileName + localize("extension.onDidSaveTextDocument.text2", " against directory ") + DS_DIR + localize("extension.onDidSaveTextDocument.text3", "and") + USS_DIR);
+        log.debug(localize("onDidSaveTextDocument1",
+            "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ") +
+            savedFile.fileName +
+            localize("onDidSaveTextDocument2", " against directory ") +
+            DS_DIR + localize("onDidSaveTextDocument3", "and") + USS_DIR);
         if (savedFile.fileName.toUpperCase().indexOf(DS_DIR.toUpperCase()) >= 0) {
-            log.debug("File is a data set-- saving ");
+            log.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
             await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
         } else if (savedFile.fileName.toUpperCase().indexOf(USS_DIR.toUpperCase()) >= 0) {
-            log.debug("File is a USS file -- saving");
+            log.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
             await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
         } else {
-            log.debug("File %s is not a data set or USS file ", savedFile.fileName);
+            log.debug(localize("activate.didSaveText.file", "File ") + savedFile.fileName +
+            localize("activate.didSaveText.notDataSet", " is not a data set or USS file "));
         }
     });
     vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
@@ -139,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
-    vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss", async (node) => changeFileType(node, false, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.renameNode", async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -222,7 +226,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function downloadSpool(job: Job){
     try {
         let dirUri = await vscode.window.showOpenDialog({
-            openLabel: localize("extension.downloadSpool.select.text", "Select"),
+            openLabel: localize("downloadSpool.select", "Select"),
             canSelectFolders:true,
             canSelectFiles: false,
             canSelectMany: false
@@ -271,7 +275,7 @@ export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFile
  */
 export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED TESTING
     let doc = vscode.window.activeTextEditor.document;
-    log.debug(localize("extension.submitJcl.log.debug.text", "Submitting JCL in document ") + doc.fileName);
+    log.debug(localize("submitJcl.log.debug", "Submitting JCL in document ") + doc.fileName);
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g
     let regExp = sessionregex.exec(doc.fileName);
@@ -281,7 +285,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         try {
             allProfiles = loadAllProfiles();
         } catch (err) {
-            vscode.window.showErrorMessage(localize("extension.submitJcl.error.message.text", "Unable to load all profiles: ") + err.message);
+            vscode.window.showErrorMessage(localize("submitJcl.error.message", "Unable to load all profiles: ") + err.message);
             throw (err);
         }
 
@@ -290,13 +294,13 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         });
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("extension.submitJcl.quickPickOption.placeHolder.text", "Select the Profile to use to submit the job"),
+                placeHolder: localize("submitJcl.quickPickOption.placeHolder", "Select the Profile to use to submit the job"),
                 ignoreFocusOut: true,
                 canPickMany: false
             };
             sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         } else {
-            vscode.window.showInformationMessage(localize("extension.submitJcl.message.noProfile.text", "No profiles available"));
+            vscode.window.showInformationMessage(localize("submitJcl.message.noProfile", "No profiles available"));
         }
     } else {
         sesName = regExp[1];
@@ -317,15 +321,15 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
     if (documentSession == null) {
-        log.error(localize("extension.submitJcl.log.error.nullSession.text", "Session for submitting JCL was null or undefined!"));
+        log.error(localize("submitJcl.log.error.nullSession", "Session for submitting JCL was null or undefined!"));
     }
     try {
         let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
         let args = [sesName, job.jobid];
         let setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-        vscode.window.showInformationMessage(localize("extension.submitJcl.message.jobSubmitted.text" ,"Job submitted ") + job.jobid + setJobCmd);
+        vscode.window.showInformationMessage(localize("submitJcl.message.jobSubmitted" ,"Job submitted ") + job.jobid + setJobCmd);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("extension.submitJcl.message.jobSubmissionFailed.text", "Job submission failed\n") + error.message);
+        vscode.window.showErrorMessage(localize("submitJcl.message.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -361,16 +365,16 @@ export async function submitMember(node: ZoweNode) {
             label = node.mParent.mLabel + "(" + node.mLabel + ")";
             break;
         default:
-            vscode.window.showErrorMessage(localize("extension.submitMember.message.invalidNode.text", "submitMember() called from invalid node."));
-            throw Error(localize("extension.submitMember.error.invalidNode.text", "submitMember() called from invalid node."));
+            vscode.window.showErrorMessage(localize("submitMember.message.invalidNode", "submitMember() called from invalid node."));
+            throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
     }
     try {
         let job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
         let args = [sesName, job.jobid];
         let setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-        vscode.window.showInformationMessage(localize("extension.submitMember.message.jobSubmitted.text" ,"Job submitted ") + job.jobid + setJobCmd);
+        vscode.window.showInformationMessage(localize("submitMember.message.jobSubmitted" ,"Job submitted ") + job.jobid + setJobCmd);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("extension.submitMember.message.jobSubmissionFailed.text", "Job submission failed\n") + error.message);
+        vscode.window.showErrorMessage(localize("submitMember.message.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -388,8 +392,8 @@ export async function addSession(datasetProvider: DatasetTree) {
     try {
         allProfiles = loadAllProfiles();
     } catch (err) {
-        log.error(localize("extension.addSession.log.error.addingSession.text", "Error encountered when adding session! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("extension.addSession.message.error.loadProfiles.text", "Unable to load all profiles: ") + err.message);
+        log.error(localize("addSession.log.error.addingSession", "Error encountered when adding session! ") + JSON.stringify(err));
+        vscode.window.showErrorMessage(localize("addSession.message.error.loadProfiles", "Unable to load all profiles: ") + err.message);
         throw (err);
     }
 
@@ -404,24 +408,24 @@ export async function addSession(datasetProvider: DatasetTree) {
             )
         );
     } else {
-        vscode.window.showInformationMessage(localize("extension.addSession.message.noProfile.text", "No profiles detected"));
+        vscode.window.showInformationMessage(localize("addSession.message.noProfile", "No profiles detected"));
         return;
     }
     if (profileNamesList.length > 0) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("extension.addSession.quickPickOption.placeHolder.text", "Select a Profile to Add to the Data Set Explorer"),
+            placeHolder: localize("addSession.quickPickOption.placeHolder", "Select a Profile to Add to the Data Set Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
-            log.debug(localize("extension.addSession.log.debug.selectedProfile.text", "User selected profile ") + chosenProfile);
+            log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
             await datasetProvider.addSession(chosenProfile);
         } else {
-            log.debug(localize("extension.addSession.log.debug.cancelledSelection.text", "User cancelled profile selection"));
+            log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     } else {
-        vscode.window.showInformationMessage(localize("extension.addSession.message.noProfilesAdd.text", "No more profiles to add"));
+        vscode.window.showInformationMessage(localize("addSession.message.noProfilesAdd", "No more profiles to add"));
     }
 }
 
@@ -439,8 +443,9 @@ export async function addUSSSession(ussFileProvider: USSTree) {
     try {
         allProfiles = loadAllProfiles();
     } catch (err) {
-        log.error(localize("extension.addUSSSession.log.error.text", "Error encountered when adding USS session: ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("extension.addUSSSession.message.error.loadProfile.text", "Unable to load all profiles: ") + err.message);  // TODO MISSED TESTING
+        log.error(localize("addUSSSession.log.error", "Error encountered when adding USS session: ") + JSON.stringify(err));
+        vscode.window.showErrorMessage(localize("addUSSSession.message.error.loadProfile", "Unable to load all profiles: ") + err.message);  
+        // TODO MISSED TESTING
         throw (err);
     }
 
@@ -455,24 +460,25 @@ export async function addUSSSession(ussFileProvider: USSTree) {
             )
         );
     } else {
-        vscode.window.showInformationMessage(localize("extension.addUSSSession.message.noProfile.text", "No profiles detected"));  // TODO MISSED TESTING
+        vscode.window.showInformationMessage(localize("addUSSSession.message.noProfile", "No profiles detected"));  // TODO MISSED TESTING
         return;
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("extension.addUSSSession.quickPickOption.placeHolder.text", "Select a Profile to Add to the USS Explorer"),
+            placeHolder: localize("addUSSSession.quickPickOption.placeHolder", "Select a Profile to Add to the USS Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
-            log.debug(localize("extension.addUSSSession.log.debug.selectProfile.text", "User selected profile ") + chosenProfile);
+            log.debug(localize("addUSSSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
             await ussFileProvider.addSession(chosenProfile);
         } else {
-            log.debug(localize("extension.addUSSSession.log.debug.cancelledSelection.text", "User cancelled profile selection"));
+            log.debug(localize("addUSSSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     } else {
-        vscode.window.showInformationMessage(localize("extension.addUSSSession.message.noProfileAdd.text", "No more profiles to add"));  // TODO MISSED TESTING
+        vscode.window.showInformationMessage(
+            localize("addUSSSession.message.noProfileAdd", "No more profiles to add"));  // TODO MISSED TESTING
     }
 }
 
@@ -487,60 +493,60 @@ export async function addUSSSession(ussFileProvider: USSTree) {
  */
 export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("extension.createFile.quickPickOption.placeHolder.dataSetType.text", "Type of Data Set to be Created"),
+        placeHolder: localize("createFile.quickPickOption.placeHolder.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
         canPickMany: false
     };
     const types = [
-        localize("extensions.createFile.dataSetBinary.text", "Data Set Binary"),
-        localize("extensions.createFile.dataSetC.text", "Data Set C"),
-        localize("extensions.createFile.dataSetClassic.text", "Data Set Classic"),
-        localize("extensions.createFile.dataSetPartitioned.text", "Data Set Partitioned"),
-        localize("extensions.createFile.dataSetSequential.text", "Data Set Sequential")
+        localize("createFile.dataSetBinary", "Data Set Binary"),
+        localize("createFile.dataSetC", "Data Set C"),
+        localize("createFile.dataSetClassic", "Data Set Classic"),
+        localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
+        localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
     // get data set type
     const type = await vscode.window.showQuickPick(types, quickPickOptions);
     if (type == null) {
-        log.debug(localize("extension.createFile.log.debug.noValidTypeSelected.text", "No valid data type selected"));
+        log.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
         return;
     } else {
-        log.debug(localize("extension.createFile.log.debug.creatingNewDataSet.text", "Creating new data set"));
+        log.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
     }
 
     let typeEnum;
     let createOptions;
     switch (type) {
-        case localize("extensions.createFile.dataSetBinary.text", "Data Set Binary"):
+        case localize("createFile.dataSetBinary", "Data Set Binary"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
             break;
-        case localize("extensions.createFile.dataSetC.text", "Data Set C"):
+        case localize("createFile.dataSetC", "Data Set C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
             break;
-        case localize("extensions.createFile.dataSetClassic.text", "Data Set Classic"):
+        case localize("createFile.dataSetClassic", "Data Set Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
             break;
-        case localize("extensions.createFile.dataSetPartitioned.text", "Data Set Partitioned"):
+        case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
             break;
-        case localize("extensions.createFile.dataSetSequential.text", "Data Set Sequential"):
+        case localize("createFile.dataSetSequential", "Data Set Sequential"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
             createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
             break;
     }
 
     // get name of data set
-    const name = await vscode.window.showInputBox({ placeHolder: localize("extension.dataset.name.text", "Name of Data Set") });
+    const name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
 
     try {
         await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
         node.dirty = true;
         datasetProvider.refresh();
     } catch (err) {
-        log.error(localize("extension.createDataSet.error.text", "Error encountered when creating data set! ") + JSON.stringify(err));
+        log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
         throw (err);
     }
@@ -554,8 +560,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createMember(parent: ZoweNode, datasetProvider: DatasetTree) {
-    const name = await vscode.window.showInputBox({ placeHolder: localize("extension.createMember.placeHolder.text", "Name of Member") });
-    log.debug(localize("extension.createMember.log.debug.createNewDataSet.text", "creating new data set member of name ") + name);
+    const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.placeHolder", "Name of Member") });
+    log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         let label = parent.mLabel;
         if (parent.contextValue === "pdsf") {
@@ -565,8 +571,8 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         try {
             await zowe.Upload.bufferToDataSet(parent.getSession(), Buffer.from(""), label + "(" + name + ")");
         } catch (err) {
-            log.error(localize("extension.createMember.log.error.text", "Error encountered when creating member! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(localize("extension.createMember.message.error.text", "Unable to create member: ") + err.message);
+            log.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(localize("createMember.message.error", "Unable to create member: ") + err.message);
             throw (err);
         }
         parent.getSessionNode().dirty = true;
@@ -590,7 +596,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         label = parent.mLabel.substring(parent.mLabel.indexOf(":") + 2); // TODO MISSED TESTING
     }
 
-    log.debug(localize("extension.showDSAttributes.debug.text", "showing attributes of data set ") + label);
+    log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
     let attributes: any;
     try {
         attributes = await zowe.List.dataSet(parent.getSession(), label, { attributes: true });
@@ -599,11 +605,11 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
             return dataSet.dsname.toUpperCase() === label.toUpperCase();
         });
         if (attributes.length === 0) {
-            throw new Error(localize("extension.showDSAttributes.lengthError.text", "No matching data set names found for query: ") + label);
+            throw new Error(localize("showDSAttributes.lengthError", "No matching data set names found for query: ") + label);
         }
     } catch (err) {
-        log.error(localize("extension.showDSAttributes.log.error.text", "Error encountered when listing attributes! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("extension.showDSAttributes.error.message.text", "Unable to list attributes: ") + err.message);
+        log.error(localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
+        vscode.window.showErrorMessage(localize("showDSAttributes.error.message", "Unable to list attributes: ") + err.message);
         throw (err);
     }
 
@@ -616,7 +622,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     // fs.writeFileSync(attributesFilePath, attributesText);
     // const document = await vscode.workspace.openTextDocument(attributesFilePath);
     // await vscode.window.showTextDocument(document);
-    const attributesMessage = localize("extension.attributes.title","Attributes");
+    const attributesMessage = localize("attributes.title","Attributes");
     const webviewHTML = `<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -674,7 +680,7 @@ export async function deactivate() {
     try {
         cleanDir(BRIGHTTEMPFOLDER)
     } catch (err) {
-        vscode.window.showErrorMessage(localize("extension.deactivate.error.message.text", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(localize("deactivate.error.message", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
     }
 }
 
@@ -686,17 +692,18 @@ export async function deactivate() {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree) {
-    log.debug(localize("extension.deleteDataset.log.debug.text", "Deleting data set ") + node.label);
+    log.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("extension.deleteDataset.quickPickOption.placeHolder.text", "Are you sure you want to delete ") + node.label,
+        placeHolder: localize("deleteDataset.quickPickOption.placeHolder", "Are you sure you want to delete ") + node.label,
         ignoreFocusOut: true,
         canPickMany: false
     };
     // confirm that the user really wants to delete
-    if (await vscode.window.showQuickPick([localize("extension.deleteDataset.showQuickPick.yes.text", "Yes"), localize("extension.deleteDataset.showQuickPick.no.text", "No")], quickPickOptions) !== localize("extension.deleteDataset.showQuickPick.yes.text", "Yes")) {
-        log.debug(localize("extension.deleteDataset.showQuickPick.log.debug.text", "User picked no. Cancelling delete of data set"));
-        return;
-    }
+    if (await vscode.window.showQuickPick([localize("deleteDataset.showQuickPick.yes", "Yes"),
+        localize("deleteDataset.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteDataset.showQuickPick.yes", "Yes")) {
+            log.debug(localize("deleteDataset.showQuickPick.log.debug", "User picked no. Cancelling delete of data set"));
+            return;
+        }
 
     let label = "";
     let fav = false;
@@ -716,16 +723,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
             label = node.mParent.mLabel + "(" + node.mLabel + ")";
             break;
         default:
-            vscode.window.showErrorMessage(localize("extension.deleteDataSet.invalidNode.error.message", "deleteDataSet() called from invalid node."));  // TODO MISSED TESTING
-            throw Error(localize("extension.deleteDataSet.invalidNode.error.text", "deleteDataSet() called from invalid node."));
+            vscode.window.showErrorMessage(localize("deleteDataSet.invalidNode.error.message", "deleteDataSet() called from invalid node."));  
+            // TODO MISSED TESTING
+            throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
     }
 
     try {
         await zowe.Delete.dataSet(node.getSession(), label);
     } catch (err) {
-        log.error(localize("extension.deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
-        if (err.message.includes(localize("extension.deleteDataSet.error.notFound.text", "not found"))) {
-            vscode.window.showInformationMessage(localize("extension.deleteDataSet.notFound.error.message.text1", "Unable to find file:") + label + localize("extension.deleteDataSet.notFound.error.message.text2", "was probably already deleted."));
+        log.error(localize("deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
+        if (err.message.includes(localize("deleteDataSet.error.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("deleteDataSet.notFound.error.message1", "Unable to find file:") + label +
+            localize("deleteDataSet.notFound.error.message2", "was probably already deleted."));
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -768,18 +777,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
  * @returns {Promise<void>}
  */
 export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree) {
-    log.debug(localize("extension.enterPattern.log.debug.prompt.text", "Prompting the user for a data set pattern"));
+    log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
     let pattern: string;
     if (node.contextValue === "session") {
         // manually entering a search
         const options: vscode.InputBoxOptions = {
-            prompt: localize("extension.enterPatter.options.prompt", "Search data sets by entering patterns: use a comma to separate multiple patterns"),
+            prompt: localize("enterPattern.options.prompt", "Search data sets by entering patterns: use a comma to separate multiple patterns"),
             value: node.pattern
         };
         // get user input
         pattern = await vscode.window.showInputBox(options);
         if (!pattern) {
-            vscode.window.showInformationMessage(localize("extension.enterPattern.message.pattern.text", "You must enter a pattern."));
+            vscode.window.showInformationMessage(localize("enterPattern.message.pattern", "You must enter a pattern."));
             return;
         }
     } else {
@@ -810,17 +819,17 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
  * @returns {Promise<void>}
  */
 export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTree) {
-    log.debug(localize("extension.enterUSSPattern.log.debug.promptUSSPath.text", "Prompting the user for a USS path"));
+    log.debug(localize("enterUSSPattern.log.debug.promptUSSPath", "Prompting the user for a USS path"));
     let remotepath: string;
     // manually entering a search
     const options: vscode.InputBoxOptions = {
-        prompt: localize("extension.enterUSSPattern.option.prompt.search", "Search Unix System Services (USS) by entering a path name starting with a /"),
+        prompt: localize("enterUSSPattern.option.prompt.search", "Search Unix System Services (USS) by entering a path name starting with a /"),
         value: node.fullPath
     };
     // get user input
     remotepath = await vscode.window.showInputBox(options);
     if (!remotepath) {
-        vscode.window.showInformationMessage(localize("extension.enterUSSPattern.message.enterPath.text", "You must enter a path."));
+        vscode.window.showInformationMessage(localize("enterUSSPattern.message.enterPath", "You must enter a path."));
         return;
     }
 
@@ -891,7 +900,7 @@ export function getUSSDocumentFilePath(node: ZoweUSSNode) {
  * @param {DatasetTree} datasetProvider
  */
 export async function initializeFavorites(datasetProvider: DatasetTree) {
-    log.debug(localize("extension.initializeFavorites.log.debug.text", "initializing favorites"));
+    log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
     const lines: string[] = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites").get("favorites");
     for (const line of lines) {
         if (line === "") {
@@ -925,7 +934,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
             node.contextValue = "sessionf";
             datasetProvider.mFavorites.push(node);
         } else {
-            vscode.window.showErrorMessage(localize("extension.initializeFavorites.message.fileCorrupted.text", "Favorites file corrupted: ") + line);
+            vscode.window.showErrorMessage(localize("initializeFavorites.message.fileCorrupted", "Favorites file corrupted: ") + line);
         }
     }
 }
@@ -952,10 +961,10 @@ export async function openPS(node: ZoweNode) {
                 label = node.mParent.mLabel + "(" + node.mLabel + ")";
                 break;
             default:
-                vscode.window.showErrorMessage(localize("extension.openPS.message.invalidNode.text", "openPS() called from invalid node."));
-                throw Error(localize("extension.openPS.error.invalidNode.text", "openPS() called from invalid node."));
+                vscode.window.showErrorMessage(localize("openPS.message.invalidNode", "openPS() called from invalid node."));
+                throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
         }
-        log.debug(localize("extension.openPS.log.debug.openDataSet.text", "opening physical sequential data set from label ") + label);
+        log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (!fs.existsSync(getDocumentFilePath(label, node))) {
             await zowe.Download.dataSet(node.getSession(), label, {
@@ -965,7 +974,7 @@ export async function openPS(node: ZoweNode) {
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
         await vscode.window.showTextDocument(document);
     } catch (err) {
-        log.error(localize("extension.openPS.log.error.openDataSet.text", "Error encountered when opening data set! ") + JSON.stringify(err));
+        log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
         throw (err);
     }
@@ -977,7 +986,7 @@ export async function openPS(node: ZoweNode) {
  * @param {DataSetTree} datasetProvider
  */
 export async function refreshAll(datasetProvider: DatasetTree) {
-    log.debug(localize("extension.refreshAll.log.debug.refreshDataSet.text", "Refreshing data set tree view"));
+    log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
     datasetProvider.mSessionNodes.forEach((node) => {
         node.dirty = true;
     });
@@ -1017,7 +1026,7 @@ export async function refreshPS(node: ZoweNode) {
                 label = node.mParent.mLabel + "(" + node.mLabel + ")";
                 break;
             default:
-                throw Error(localize("extension.refreshPS.error.invalidNode.text", "refreshPS() called from invalid node."));
+                throw Error(localize("refreshPS.error.invalidNode", "refreshPS() called from invalid node."));
         }
         await zowe.Download.dataSet(node.getSession(), label, {
             file: getDocumentFilePath(label, node)
@@ -1030,9 +1039,10 @@ export async function refreshPS(node: ZoweNode) {
             vscode.window.showTextDocument(document);
         }
     } catch (err) {
-        log.error(localize("extension.refreshPS.log.error.refresh", "Error encountered when refreshing data set view: ") + JSON.stringify(err));
-        if (err.message.includes(localize("extension.refreshPS.err.message.notFound.text", "not found"))) {
-            vscode.window.showInformationMessage(localize("extension.refreshPS.message.file.text1", "Unable to find file: ") + label + localize("extension.refreshPS.message.file.text2", " was probably deleted."));
+        log.error(localize("refreshPS.log.error.refresh", "Error encountered when refreshing data set view: ") + JSON.stringify(err));
+        if (err.message.includes(localize("refreshPS.err.message.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("refreshPS.message.file1", "Unable to find file: ") + label +
+            localize("refreshPS.message.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -1054,8 +1064,8 @@ export async function refreshUSS(node: ZoweUSSNode) {
             label = node.mLabel;
             break;
         default:
-            vscode.window.showErrorMessage(localize("extension.refreshUSS.error.message.invalidNode.text", "refreshUSS() called from invalid node."));
-            throw Error(localize("extension.refreshUSS.error.invalidNode.text", "refreshPS() called from invalid node."));
+            vscode.window.showErrorMessage(localize("refreshUSS.error.message.invalidNode", "refreshUSS() called from invalid node."));
+            throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
     }
     try {
         await zowe.Download.ussFile(node.getSession(), node.fullPath, {
@@ -1069,8 +1079,9 @@ export async function refreshUSS(node: ZoweUSSNode) {
             vscode.window.showTextDocument(document);
         }
     } catch (err) {
-        if (err.message.includes(localize("extension.refreshUSS.err.message.notFound.text", "not found"))) {
-            vscode.window.showInformationMessage(localize("extension.refreshUSS.message.file.text1", "Unable to find file: ") + label + localize("extension.refreshUSS.message.file.text2", " was probably deleted."));
+        if (err.message.includes(localize("refreshUSS.err.message.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("refreshUSS.message.file1", "Unable to find file: ") + label + 
+            localize("refreshUSS.message.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -1085,7 +1096,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
  */
 export async function safeSave(node: ZoweNode) {
 
-    log.debug(localize("extension.safeSave.log.debug.request.text", "safe save requested for node: ") + node.mLabel);
+    log.debug(localize("safeSave.log.debug.request", "safe save requested for node: ") + node.mLabel);
     let label;
     try {
         switch (node.mParent.contextValue) {
@@ -1102,9 +1113,9 @@ export async function safeSave(node: ZoweNode) {
                 label = node.mParent.mLabel + "(" + node.mLabel + ")";
                 break;
             default:
-                throw Error(localize("extension.safeSave.error.invalidNode.text", "safeSave() called from invalid node."));
+                throw Error(localize("safeSave.error.invalidNode", "safeSave() called from invalid node."));
         }
-        log.debug(localize("extension.safeSave.log.debug.invoke.text", "Invoking safesave for data set ") + label);
+        log.debug(localize("safeSave.log.debug.invoke", "Invoking safesave for data set ") + label);
         await zowe.Download.dataSet(node.getSession(), label, {
             file: getDocumentFilePath(label, node)
         });
@@ -1112,8 +1123,9 @@ export async function safeSave(node: ZoweNode) {
         await vscode.window.showTextDocument(document);
         await vscode.window.activeTextEditor.document.save();
     } catch (err) {
-        if (err.message.includes(localize("extension.safeSave.err.message.notFound.text", "not found"))) {
-            vscode.window.showInformationMessage(localize("extension.safeSave.message.file.text1", "Unable to find file: ") + label + localize("extension.safeSave.message.file.text2", " was probably deleted."));
+        if (err.message.includes(localize("safeSave.err.message.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("safeSave.message.file1", "Unable to find file: ") + label +
+            localize("safeSave.message.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err.message);
         }
@@ -1128,11 +1140,11 @@ export async function safeSave(node: ZoweNode) {
  */
 export async function saveFile(doc: vscode.TextDocument, datasetProvider: DatasetTree) {
     // Check if file is a data set, instead of some other file
-    log.debug(localize("extension.saveFile.log.debug.request.text", "requested to save data set: ") + doc.fileName);
+    log.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     if (path.relative(docPath, DS_DIR)) {
-        log.debug(localize("extension.saveFile.log.debug.path.text", "path.relative returned a non-blank directory.") +
-            localize("extension.saveFile.log.debug.directory.text", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
+        log.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
+            localize("saveFile.log.debug.directory", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
         return;
     }
 
@@ -1148,26 +1160,27 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
         child.mLabel === sesName);
     if (sesNode) {
-        log.debug(localize("extension.saveFile.log.debug.load.text", "Loading session from session node in saveFile()"));
+        log.debug(localize("saveFile.log.debug.load", "Loading session from session node in saveFile()"));
         documentSession = sesNode.getSession();
     } else {
         // if saving from favorites, a session might not exist for this node
-        log.debug(localize("extension.saveFile.log.debug.sessionNode.text", "couldn't find session node, loading profile with CLI profile manager"));
+        log.debug(localize("saveFile.log.debug.sessionNode", "couldn't find session node, loading profile with CLI profile manager"));
         const zosmfProfile = loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
     if (documentSession == null) {
-        log.error(localize("extension.saveFile.log.error.session.text", "Couldn't locate session when saving data set!"));
+        log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
     const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.indexOf("["));
-    log.debug(localize("extension.saveFile.log.debug.saving.text", "Saving file ") + label);
+    log.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
             const response = await zowe.List.dataSet(documentSession, label);
             if (!response.apiResponse.items.length) {
-                return vscode.window.showErrorMessage(localize("extension.saveFile.error.message.saveFailed.text", "Data set failed to save. Data set may have been deleted on mainframe."));
+                return vscode.window.showErrorMessage(
+                    localize("saveFile.error.message.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe."));
             }
         } catch (err) {
             vscode.window.showErrorMessage(err.message + "\n" + err.stack);
@@ -1176,7 +1189,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     try {
         const response = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: localize("extension.saveFile.response.save.title", "Saving data set...")
+            title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
             return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label);  // TODO MISSED TESTING
         });
@@ -1198,7 +1211,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USSTree) {
-    log.debug(localize("extension.saveUSSFile.log.debug.saveRequest.text", "save requested for USS file ") + doc.fileName);
+    log.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
     const start = path.join(USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     let sesName = ending.substring(0, ending.indexOf(path.sep));
@@ -1214,7 +1227,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     try {
         const response = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: localize("extension.saveUSSFile.response.title", "Saving file...")
+            title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
             return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, sesNode.binary);  // TODO MISSED TESTING
         });
@@ -1224,7 +1237,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             vscode.window.showErrorMessage(response.commandResponse);
         }
     } catch (err) {
-        log.error(localize("extension.saveUSSFile.log.error.save.text", "Error encountered when saving USS file: ") + JSON.stringify(err));
+        log.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
     }
 }
@@ -1250,10 +1263,10 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
                 label = node.mLabel;
                 break;
             default:
-                vscode.window.showErrorMessage(localize("extension.openUSS.error.message.invalidNode.text", "open() called from invalid node."));
-                throw Error(localize("extension.openUSS.error.invalidNode.text", "open() called from invalid node."));
+                vscode.window.showErrorMessage(localize("openUSS.error.message.invalidNode", "open() called from invalid node."));
+                throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
         }
-        log.debug(localize("extension.openUSS.log.debug.request", "requesting to open a uss file ") + label);
+        log.debug(localize("openUSS.log.debug.request", "requesting to open a uss file ") + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
             await zowe.Download.ussFile(node.getSession(), node.fullPath, {
@@ -1264,7 +1277,7 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
         await vscode.window.showTextDocument(document);
     } catch (err) {
-        log.error(localize("extension.openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
+        log.error(localize("openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
         throw (err);
     }
@@ -1272,10 +1285,10 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
 
 export async function modifyCommand(job: Job) {
     try {
-        let command = await vscode.window.showInputBox({ prompt: localize("extension.modifyCommand.command.prompt", "Modify Command") });
+        let command = await vscode.window.showInputBox({ prompt: localize("modifyCommand.command.prompt", "Modify Command") });
         if (command !== undefined) {
             let response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
-            vscode.window.showInformationMessage(localize("extension.modifyCommand.message.response", "Command response: ") + response.commandResponse);
+            vscode.window.showInformationMessage(localize("modifyCommand.message.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
@@ -1285,7 +1298,7 @@ export async function modifyCommand(job: Job) {
 export async function stopCommand(job: Job) {
     try {
         let response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
-        vscode.window.showInformationMessage(localize("extension.stopCommand.message.response.text", "Command response: ") + response.commandResponse);
+        vscode.window.showInformationMessage(localize("stopCommand.message.response", "Command response: ") + response.commandResponse);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }
@@ -1294,7 +1307,8 @@ export async function stopCommand(job: Job) {
 export async function deleteJob(job: Job) {
     try {
         await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
-        vscode.window.showInformationMessage(localize("extension.deleteJob.message.job.text", "Job ") + job.job.jobname + job.job.jobid + localize("extension.deleteJob.message.delete.text", "deleted"));
+        vscode.window.showInformationMessage(localize("deleteJob.message.job", "Job ") + job.job.jobname + job.job.jobid +
+        localize("deleteJob.message.delete", "deleted"));
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }
@@ -1311,14 +1325,14 @@ export async function getSpoolContent(session: AbstractSession, spool: IJobFile)
 }
 
 export async function setOwner(job: Job, datasetProvider: ZosJobsProvider) {
-    let newOwner = await vscode.window.showInputBox({ prompt: localize("extension.setOwner.newOwner.prompt.owner.text", "Owner") });
+    let newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
     job.owner = newOwner;
     job.dirty = true;
     datasetProvider.refresh();
 }
 
 export async function setPrefix(job: Job, datasetProvider: ZosJobsProvider) {
-    let newPrefix = await vscode.window.showInputBox({ prompt: localize("extension.setOwner.newOwner.prompt.prefix.text", "Prefix") });
+    let newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
     job.prefix = newPrefix;
     job.dirty = true;
     datasetProvider.refresh();
@@ -1329,7 +1343,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
     try {
         allProfiles = loadAllProfiles();
     } catch (err) {
-        vscode.window.showErrorMessage(localize("extension.addJobsSession.error.message.load", "Unable to load all profiles: ") + err.message);
+        vscode.window.showErrorMessage(localize("addJobsSession.error.message.load", "Unable to load all profiles: ") + err.message);
         throw (err);
     }
 
@@ -1344,23 +1358,23 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
             )
         );
     } else {
-        vscode.window.showInformationMessage(localize("extension.addJobsSession.message.noProfilesDetected.text", "No profiles detected"));
+        vscode.window.showInformationMessage(localize("addJobsSession.message.noProfilesDetected", "No profiles detected"));
         return;
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("extension.addJobsSession.quickPickOptions.placeHolder.profileAdd", "Select a Profile to Add to the Jobs Explorer"),
+            placeHolder: localize("addJobsSession.quickPickOptions.placeHolder.profileAdd", "Select a Profile to Add to the Jobs Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
-            log.debug(localize("extension.addJobsSession.log.debug.selectedProfile.text", "User selected profile ") + chosenProfile);
+            log.debug(localize("addJobsSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
             await datasetProvider.addSession(chosenProfile);
         } else {
-            log.debug(localize("extension.addJobsSession.log.debug.cancelledProfile.text", "User cancelled profile selection"));
+            log.debug(localize("addJobsSession.log.debug.cancelledProfile", "User cancelled profile selection"));
         }
     } else {
-        vscode.window.showInformationMessage(localize("extension.addJobsSession.message.noProfilesAdd.text", "No more profiles to add"));
+        vscode.window.showInformationMessage(localize("addJobsSession.message.noProfilesAdd", "No more profiles to add"));
     }
 }
