@@ -13,8 +13,6 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
-import { createUSSNode, deleteUSSNode, renameUSSNode } from "../../src/uss/ussNodeActions";
-// tslint:disable-next-line: no-duplicate-imports
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import * as utils from "../../src/utils";
 
@@ -102,14 +100,6 @@ describe("ussNodeActions", () => {
             await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
-        });
-        it("should refresh the whole tree if created at top level", async () => {
-            showInputBox.mockReturnValueOnce("USSFolder");
-            const isTopLevel = true;
-            spyOn(ussNodeActions, "refreshAllUSS");
-            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "folder", isTopLevel);
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-            expect(ussNodeActions.refreshAllUSS).toHaveBeenCalled();
         });
         it("should refresh only the child folder", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
