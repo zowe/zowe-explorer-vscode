@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "Zowe",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -117,6 +117,10 @@
         "title": "Delete PDS"
       },
       {
+        "command": "zowe.uploadDialog",
+        "title": "Upload member.."
+      },
+      {
         "command": "zowe.pattern",
         "title": "Search Data Sets by Entering Patterns",
         "icon": {
@@ -227,6 +231,14 @@
       {
         "command": "zowe.uss.removeSession",
         "title": "Remove Profile"
+      },
+      {
+        "command": "zowe.uss.safeSaveUSS",
+        "title": "Safe Save - Merge if Necessary",
+        "icon": {
+          "light": "./resources/light/upload.svg",
+          "dark": "./resources/dark/upload.svg"
+        }
       },
       {
         "command": "zowe.uss.binary",
@@ -368,6 +380,16 @@
           "when": "view == zowe.uss.explorer && viewItem == directoryf",
           "command": "zowe.uss.removeFavorite",
           "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.refreshUSS",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.safeSaveUSS",
+          "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
@@ -536,6 +558,10 @@
           "command": "zowe.deletePDS"
         },
         {
+          "when": "viewItem == pds",
+          "command": "zowe.uploadDialog"
+        },
+        {
           "when": "viewItem == pdsf",
           "command": "zowe.removeFavorite"
         },
@@ -669,6 +695,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.safeSaveUSS",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.removeSession",
           "when": "never"
         }
@@ -767,15 +797,17 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run markdown",
-    "build": "npm run license && tsc --pretty",
+    "build": "npm run lint && npm run license && tsc --pretty",
     "watch": "tsc -watch --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
     "test": "jest --coverage",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "markdown": "markdownlint CHANGELOG.md README.md"
+    "markdown": "markdownlint CHANGELOG.md README.md",
+    "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
+    "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\""
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -805,7 +837,8 @@
   "dependencies": {
     "@brightside/core": "2.28.2",
     "@brightside/imperative": "2.4.6",
-    "jsdoc": "^3.5.5"
+    "jsdoc": "^3.5.5",
+    "tslint": "^5.17.0"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -39,7 +39,7 @@ describe("Unit Tests (Jest)", () => {
     });
     Object.defineProperty(profileLoader, "loadAllProfiles", {
         value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }]
+            return [{ name: "profile1" }, { name: "profile2" }];
         })
     });
     Object.defineProperty(profileLoader, "loadDefaultProfile", {
@@ -196,7 +196,7 @@ describe("Unit Tests (Jest)", () => {
 
         // Checking that the rootChildren are what they are expected to be
         expect(dirChildren[1].mLabel).toEqual(sampleChildren[0].mLabel);
-        //expect(dirChildren[1].command).toEqual("zowe.uss.ZoweUSSNode.open");
+        // expect(dirChildren[1].command).toEqual("zowe.uss.ZoweUSSNode.open");
     });
 
     /*************************************************************************************************************
@@ -224,7 +224,7 @@ describe("Unit Tests (Jest)", () => {
             testTree.mSessionNodes[1], null, "/");
         const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.Collapsed,
             parentDir, null, "/parent");
-        
+
         // Check adding directory
         await testTree.addUSSFavorite(parentDir);
         // Check adding duplicates

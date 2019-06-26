@@ -14,7 +14,7 @@ import * as path from "path";
 
 /**
  * Load the default profile of type zosmf and write it out to stdout
- * We will then parse the output from the extension to load the profile 
+ * We will then parse the output from the extension to load the profile
  */
 (async () => {
     const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
