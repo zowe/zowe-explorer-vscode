@@ -822,15 +822,15 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
         return;
     }
 
+    // Sanitization: Replace multiple preceding forward slashes with just one forward slash
+    const sanitizedPath = remotepath.replace(/\/\/+/, "/");
+    node.tooltip = node.fullPath = sanitizedPath;
+    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     // update the treeview with the new path
     // TODO figure out why a label change is needed to refresh the treeview,
     // instead of changing the collapsible state
     // change label so the treeview updates
-    node.label = node.label + " ";
-    node.label.trim();
-    // Sanitization: Replace multiple preceding forward slashes with just one forward slash
-    node.tooltip = node.fullPath = remotepath.replace(/\/\/+/, "/");
-    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    node.label = `${node.mProfileName} [${sanitizedPath}]`;
     node.dirty = true;
     ussFileProvider.refresh();
 }
