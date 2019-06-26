@@ -40,7 +40,13 @@ You can alter the behavior of the extension in the following ways:
 Extension preferences can also be modified in the `Settings` for this extension. They can be customized in the following ways:
 
 * **Data set creation settings:** You can change the default creation settings for various data set types.
-* **Temp Folder Location:** You can change the default folder location for where temporary files are stored.
+* **Temp Folder Location:** You can change the default folder location, for where temporary files are stored. In order to set in `Settings`, use the example below.
+
+```json
+"Zowe-Temp-Folder-Location": {
+    "folderPath": "/path/to/directory"
+  }
+```
 
 ## Sample use cases
 
