@@ -31,10 +31,6 @@ declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
 describe("Extension Integration Tests", () => {
-// tslint:disable-next-line: variable-name
-    const ds_folder = extension.DS_DIR;
-// tslint:disable-next-line: variable-name
-    const brightside_folder = extension.BRIGHTTEMPFOLDER;
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -172,18 +168,18 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(brightside_folder);
-                fs.mkdirSync(ds_folder);
+                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.DS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(ds_folder);
+                fs.mkdirSync(extension.DS_DIR);
             }
-            fs.closeSync(fs.openSync(path.join(ds_folder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(ds_folder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.DS_DIR, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.DS_DIR, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(ds_folder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(ds_folder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.DS_DIR, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.DS_DIR, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -506,9 +502,6 @@ async function getAllNodes(nodes: ZoweNode[]) {
 }
 
 describe("Extension Integration Tests - USS", () => {
-    const brightsidefolder = extension.BRIGHTTEMPFOLDER;
-    const ussFolder = extension.USS_DIR;
-
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -586,18 +579,18 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(brightsidefolder);
-                fs.mkdirSync(ussFolder);
+                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.USS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(ussFolder);
+                fs.mkdirSync(extension.USS_DIR);
             }
-            fs.closeSync(fs.openSync(path.join(ussFolder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(ussFolder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.USS_DIR, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.USS_DIR, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(ussFolder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(ussFolder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.USS_DIR, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.USS_DIR, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
