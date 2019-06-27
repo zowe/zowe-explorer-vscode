@@ -1283,9 +1283,10 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         log.debug("requesting to open a uss file " + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
+            const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
             await zowe.Download.ussFile(node.getSession(), node.fullPath, {
                 file: getUSSDocumentFilePath(node),
-                binary: node.binary
+                binary: chooseBinary
             });
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
