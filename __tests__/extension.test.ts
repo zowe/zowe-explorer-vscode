@@ -389,7 +389,7 @@ describe("Extension Unit Tests", () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(48);
+        expect(registerCommand.mock.calls.length).toBe(49);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");

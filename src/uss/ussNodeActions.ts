@@ -146,7 +146,7 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
 export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
     const fileOpenOptions = {
         canSelectFiles: true,
-        openLabel: "Upload File",
+        openLabel: "Upload Files",
         canSelectMany: true
      };
 
@@ -154,11 +154,11 @@ export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) 
 
     await Promise.all(
         value.map(async (item) => {
-            // Convert to vscode.TextDocument
             const doc = await vscode.workspace.openTextDocument(item);
             await uploadFile(node, doc);
         }
      ));
+    ussFileProvider.refresh();
 }
 
 export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
