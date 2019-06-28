@@ -22,18 +22,33 @@ import * as utils from "../utils";
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
-export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string) {
+export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string, isTopLevel?: boolean) {
     const name = await vscode.window.showInputBox({placeHolder: "Name of file or directory"});
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
             await zowe.Create.uss(node.getSession(), filePath, nodeType);
-            ussFileProvider.refresh();
+            if (isTopLevel) {
+                refreshAllUSS(ussFileProvider);
+            } else {
+                ussFileProvider.refresh();
+            }
         } catch (err) {
             vscode.window.showErrorMessage(`Unable to create node: ${err.message}`);
             throw (err);
         }
     }
+}
+
+export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    const quickPickOptions: vscode.QuickPickOptions = {
+        placeHolder: `What would you like to create at ${node.fullPath}?`,
+        ignoreFocusOut: true,
+        canPickMany: false
+    };
+    const type = await vscode.window.showQuickPick(["Directory", "File"], quickPickOptions);
+    const isTopLevel = true;
+    createUSSNode(node, ussFileProvider, type, isTopLevel);
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {

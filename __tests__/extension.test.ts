@@ -394,7 +394,7 @@ describe("Extension Unit Tests", () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(48);
+        expect(registerCommand.mock.calls.length).toBe(49);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");
@@ -461,36 +461,34 @@ describe("Extension Unit Tests", () => {
         expect(registerCommand.mock.calls[31][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[32][0]).toBe("zowe.uss.binary");
         expect(registerCommand.mock.calls[32][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[33][0]).toBe("zowe.uss.text");
-        expect(registerCommand.mock.calls[33][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[34][0]).toBe("zowe.uss.renameNode");
-        expect(registerCommand.mock.calls[34][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[35][0]).toBe("zowe.zosJobsOpenspool");
+        expect(registerCommand.mock.calls[35][0]).toBe("zowe.uss.createNode");
         expect(registerCommand.mock.calls[35][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[36][0]).toBe("zowe.deleteJob");
+        expect(registerCommand.mock.calls[36][0]).toBe("zowe.zosJobsOpenspool");
         expect(registerCommand.mock.calls[36][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[37][0]).toBe("zowe.runModifyCommand");
+        expect(registerCommand.mock.calls[37][0]).toBe("zowe.deleteJob");
         expect(registerCommand.mock.calls[37][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[38][0]).toBe("zowe.runStopCommand");
+        expect(registerCommand.mock.calls[38][0]).toBe("zowe.runModifyCommand");
         expect(registerCommand.mock.calls[38][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[39][0]).toBe("zowe.refreshJobsServer");
+        expect(registerCommand.mock.calls[39][0]).toBe("zowe.runStopCommand");
         expect(registerCommand.mock.calls[39][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[40][0]).toBe("zowe.refreshAllJobs");
+        expect(registerCommand.mock.calls[40][0]).toBe("zowe.refreshJobsServer");
         expect(registerCommand.mock.calls[40][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[41][0]).toBe("zowe.addJobsSession");
+        expect(registerCommand.mock.calls[41][0]).toBe("zowe.refreshAllJobs");
         expect(registerCommand.mock.calls[41][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[42][0]).toBe("zowe.setOwner");
+        expect(registerCommand.mock.calls[42][0]).toBe("zowe.addJobsSession");
         expect(registerCommand.mock.calls[42][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[43][0]).toBe("zowe.setPrefix");
+        expect(registerCommand.mock.calls[43][0]).toBe("zowe.setOwner");
         expect(registerCommand.mock.calls[43][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[44][0]).toBe("zowe.removeJobsSession");
+        expect(registerCommand.mock.calls[44][0]).toBe("zowe.setPrefix");
         expect(registerCommand.mock.calls[44][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[45][0]).toBe("zowe.downloadSpool");
+        expect(registerCommand.mock.calls[45][0]).toBe("zowe.removeJobsSession");
         expect(registerCommand.mock.calls[45][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[46][0]).toBe("zowe.getJobJcl");
+        expect(registerCommand.mock.calls[46][0]).toBe("zowe.downloadSpool");
         expect(registerCommand.mock.calls[46][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[47][0]).toBe("zowe.setJobSpool");
+        expect(registerCommand.mock.calls[47][0]).toBe("zowe.getJobJcl");
         expect(registerCommand.mock.calls[47][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[48][0]).toBe("zowe.setJobSpool");
+        expect(registerCommand.mock.calls[48][1]).toBeInstanceOf(Function);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
@@ -1465,7 +1463,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
         const spy = jest.fn(testTree.refresh);
-        extension.refreshAllUSS(testTree);
+        ussNodeActions.refreshAllUSS(testTree);
         expect(testTree.refresh).toHaveBeenCalled();
     });
 
