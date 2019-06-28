@@ -22,7 +22,7 @@ const inlineSource = false;
 const outDest = 'out';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
-const languages = [{ folderName: 'spa', id: 'es' }];
+const languages = [{ folderName: 'zho', id: 'zh-cn' },];
 
 const cleanTask = function() {
 	return del(['out/**', 'package.nls.*.json', 'vscode-extension-for-zowe*.vsix']);

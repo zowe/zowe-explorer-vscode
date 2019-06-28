@@ -70,7 +70,7 @@ export class ZoweNode extends vscode.TreeItem {
         }
 
         if (!this.mLabel) {
-            vscode.window.showErrorMessage(localize("getChildren.error.message.invalidNode", "Invalid node"));
+            vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
         }
 
@@ -93,9 +93,9 @@ export class ZoweNode extends vscode.TreeItem {
                 responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
             }
         } catch (err) {
-            vscode.window.showErrorMessage(localize("getChildren.error.message.response", "Retrieving response from zowe.List")
+            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from zowe.List")
                                                      + `\n${err}\n`);
-            throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
+            throw Error(localize("getChildren.error.response", "Retrieving response from zowe.List") + `\n${err}\n`);
         }
 
         // push nodes to an object with property names to avoid duplicates

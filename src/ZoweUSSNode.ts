@@ -13,7 +13,7 @@ import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-const localize = nls.loadMessageBundle();
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -67,9 +67,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = mLabel.trim();
             // File or directory name only (no parent path)
-            this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop(); 
+            this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
-            this.label = this.profileName + this.shortLabel; 
+            this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
     }
@@ -80,7 +80,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
      * @returns {Promise<ZoweUSSNode[]>}
      */
     public async getChildren(): Promise<ZoweUSSNode[]> {
-        if ((!this.fullPath && this.contextValue === "uss_session") || 
+        if ((!this.fullPath && this.contextValue === "uss_session") ||
                 (this.contextValue === "textFile" || this.contextValue === "binaryFile")) {
             return [];
         }
@@ -90,7 +90,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
 
         if (!this.mLabel) {
-            vscode.window.showErrorMessage(localize("getChildren.error.message.invalidNode", "Invalid node"));
+            vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error("Invalid node");
         }
 
@@ -100,7 +100,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         try {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
-            vscode.window.showErrorMessage(localize("getChildren.error.message.response", "Retrieving response from ")
+            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from ")
                                                     + `zowe.List\n${err}\n`);
             throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }

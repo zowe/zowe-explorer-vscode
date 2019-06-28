@@ -143,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
     vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
-    vscode.commands.registerCommand("zowe.uss", async (node) => changeFileType(node, false, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.renameNode", async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -294,13 +294,13 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         });
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("submitJcl.quickPickOption.placeHolder", "Select the Profile to use to submit the job"),
+                placeHolder: localize("submitJcl.quickPickOption", "Select the Profile to use to submit the job"),
                 ignoreFocusOut: true,
                 canPickMany: false
             };
             sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         } else {
-            vscode.window.showInformationMessage(localize("submitJcl.message.noProfile", "No profiles available"));
+            vscode.window.showInformationMessage(localize("submitJcl.noProfile", "No profiles available"));
         }
     } else {
         sesName = regExp[1];
@@ -327,9 +327,9 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         let job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
         let args = [sesName, job.jobid];
         let setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-        vscode.window.showInformationMessage(localize("submitJcl.message.jobSubmitted" ,"Job submitted ") + job.jobid + setJobCmd);
+        vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted" ,"Job submitted ") + job.jobid + setJobCmd);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("submitJcl.message.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        vscode.window.showErrorMessage(localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -365,16 +365,16 @@ export async function submitMember(node: ZoweNode) {
             label = node.mParent.mLabel + "(" + node.mLabel + ")";
             break;
         default:
-            vscode.window.showErrorMessage(localize("submitMember.message.invalidNode", "submitMember() called from invalid node."));
+            vscode.window.showErrorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
             throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
     }
     try {
         let job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
         let args = [sesName, job.jobid];
         let setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-        vscode.window.showInformationMessage(localize("submitMember.message.jobSubmitted" ,"Job submitted ") + job.jobid + setJobCmd);
+        vscode.window.showInformationMessage(localize("submitMember.jobSubmitted" ,"Job submitted ") + job.jobid + setJobCmd);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("submitMember.message.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        vscode.window.showErrorMessage(localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -393,7 +393,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         allProfiles = loadAllProfiles();
     } catch (err) {
         log.error(localize("addSession.log.error.addingSession", "Error encountered when adding session! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("addSession.message.error.loadProfiles", "Unable to load all profiles: ") + err.message);
+        vscode.window.showErrorMessage(localize("addSession.error.loadProfiles", "Unable to load all profiles: ") + err.message);
         throw (err);
     }
 
@@ -408,12 +408,12 @@ export async function addSession(datasetProvider: DatasetTree) {
             )
         );
     } else {
-        vscode.window.showInformationMessage(localize("addSession.message.noProfile", "No profiles detected"));
+        vscode.window.showInformationMessage(localize("addSession.noProfile", "No profiles detected"));
         return;
     }
     if (profileNamesList.length > 0) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("addSession.quickPickOption.placeHolder", "Select a Profile to Add to the Data Set Explorer"),
+            placeHolder: localize("addSession.quickPickOption", "Select a Profile to Add to the Data Set Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
@@ -425,7 +425,7 @@ export async function addSession(datasetProvider: DatasetTree) {
             log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     } else {
-        vscode.window.showInformationMessage(localize("addSession.message.noProfilesAdd", "No more profiles to add"));
+        vscode.window.showInformationMessage(localize("addSession.noProfilesAdd", "No more profiles to add"));
     }
 }
 
@@ -444,7 +444,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         allProfiles = loadAllProfiles();
     } catch (err) {
         log.error(localize("addUSSSession.log.error", "Error encountered when adding USS session: ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("addUSSSession.message.error.loadProfile", "Unable to load all profiles: ") + err.message);  
+        vscode.window.showErrorMessage(localize("addUSSSession.error.loadProfile", "Unable to load all profiles: ") + err.message);  
         // TODO MISSED TESTING
         throw (err);
     }
@@ -460,12 +460,12 @@ export async function addUSSSession(ussFileProvider: USSTree) {
             )
         );
     } else {
-        vscode.window.showInformationMessage(localize("addUSSSession.message.noProfile", "No profiles detected"));  // TODO MISSED TESTING
+        vscode.window.showInformationMessage(localize("addUSSSession.noProfile", "No profiles detected"));  // TODO MISSED TESTING
         return;
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("addUSSSession.quickPickOption.placeHolder", "Select a Profile to Add to the USS Explorer"),
+            placeHolder: localize("addUSSSession.quickPickOption", "Select a Profile to Add to the USS Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
@@ -478,7 +478,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         }
     } else {
         vscode.window.showInformationMessage(
-            localize("addUSSSession.message.noProfileAdd", "No more profiles to add"));  // TODO MISSED TESTING
+            localize("addUSSSession.noProfileAdd", "No more profiles to add"));  // TODO MISSED TESTING
     }
 }
 
@@ -493,7 +493,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
  */
 export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("createFile.quickPickOption.placeHolder.dataSetType", "Type of Data Set to be Created"),
+        placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
         canPickMany: false
     };
@@ -560,7 +560,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createMember(parent: ZoweNode, datasetProvider: DatasetTree) {
-    const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.placeHolder", "Name of Member") });
+    const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         let label = parent.mLabel;
@@ -572,7 +572,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
             await zowe.Upload.bufferToDataSet(parent.getSession(), Buffer.from(""), label + "(" + name + ")");
         } catch (err) {
             log.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(localize("createMember.message.error", "Unable to create member: ") + err.message);
+            vscode.window.showErrorMessage(localize("createMember.error", "Unable to create member: ") + err.message);
             throw (err);
         }
         parent.getSessionNode().dirty = true;
@@ -694,7 +694,7 @@ export async function deactivate() {
 export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree) {
     log.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("deleteDataset.quickPickOption.placeHolder", "Are you sure you want to delete ") + node.label,
+        placeHolder: localize("deleteDataset.quickPickOption", "Are you sure you want to delete ") + node.label,
         ignoreFocusOut: true,
         canPickMany: false
     };
@@ -788,7 +788,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         // get user input
         pattern = await vscode.window.showInputBox(options);
         if (!pattern) {
-            vscode.window.showInformationMessage(localize("enterPattern.message.pattern", "You must enter a pattern."));
+            vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
             return;
         }
     } else {
@@ -829,7 +829,7 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
     // get user input
     remotepath = await vscode.window.showInputBox(options);
     if (!remotepath) {
-        vscode.window.showInformationMessage(localize("enterUSSPattern.message.enterPath", "You must enter a path."));
+        vscode.window.showInformationMessage(localize("enterUSSPattern.enterPath", "You must enter a path."));
         return;
     }
 
@@ -934,7 +934,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
             node.contextValue = "sessionf";
             datasetProvider.mFavorites.push(node);
         } else {
-            vscode.window.showErrorMessage(localize("initializeFavorites.message.fileCorrupted", "Favorites file corrupted: ") + line);
+            vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
         }
     }
 }
@@ -961,7 +961,7 @@ export async function openPS(node: ZoweNode) {
                 label = node.mParent.mLabel + "(" + node.mLabel + ")";
                 break;
             default:
-                vscode.window.showErrorMessage(localize("openPS.message.invalidNode", "openPS() called from invalid node."));
+                vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
                 throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
         }
         log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
@@ -1040,9 +1040,9 @@ export async function refreshPS(node: ZoweNode) {
         }
     } catch (err) {
         log.error(localize("refreshPS.log.error.refresh", "Error encountered when refreshing data set view: ") + JSON.stringify(err));
-        if (err.message.includes(localize("refreshPS.err.message.notFound", "not found"))) {
-            vscode.window.showInformationMessage(localize("refreshPS.message.file1", "Unable to find file: ") + label +
-            localize("refreshPS.message.file2", " was probably deleted."));
+        if (err.message.includes(localize("refreshPS.error.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("refreshPS.file1", "Unable to find file: ") + label +
+            localize("refreshPS.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -1064,8 +1064,8 @@ export async function refreshUSS(node: ZoweUSSNode) {
             label = node.mLabel;
             break;
         default:
-            vscode.window.showErrorMessage(localize("refreshUSS.error.message.invalidNode", "refreshUSS() called from invalid node."));
-            throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
+            vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode.USS", "refreshUSS() called from invalid node."));
+            throw Error(localize("refreshUSS.error.invalidNode.PS", "refreshPS() called from invalid node."));
     }
     try {
         await zowe.Download.ussFile(node.getSession(), node.fullPath, {
@@ -1079,9 +1079,9 @@ export async function refreshUSS(node: ZoweUSSNode) {
             vscode.window.showTextDocument(document);
         }
     } catch (err) {
-        if (err.message.includes(localize("refreshUSS.err.message.notFound", "not found"))) {
-            vscode.window.showInformationMessage(localize("refreshUSS.message.file1", "Unable to find file: ") + label + 
-            localize("refreshUSS.message.file2", " was probably deleted."));
+        if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("refreshUSS.file1", "Unable to find file: ") + label + 
+            localize("refreshUSS.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -1123,9 +1123,9 @@ export async function safeSave(node: ZoweNode) {
         await vscode.window.showTextDocument(document);
         await vscode.window.activeTextEditor.document.save();
     } catch (err) {
-        if (err.message.includes(localize("safeSave.err.message.notFound", "not found"))) {
-            vscode.window.showInformationMessage(localize("safeSave.message.file1", "Unable to find file: ") + label +
-            localize("safeSave.message.file2", " was probably deleted."));
+        if (err.message.includes(localize("safeSave.error.notFound", "not found"))) {
+            vscode.window.showInformationMessage(localize("safeSave.file1", "Unable to find file: ") + label +
+            localize("safeSave.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err.message);
         }
@@ -1180,7 +1180,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             const response = await zowe.List.dataSet(documentSession, label);
             if (!response.apiResponse.items.length) {
                 return vscode.window.showErrorMessage(
-                    localize("saveFile.error.message.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe."));
+                    localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe."));
             }
         } catch (err) {
             vscode.window.showErrorMessage(err.message + "\n" + err.stack);
@@ -1263,7 +1263,7 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
                 label = node.mLabel;
                 break;
             default:
-                vscode.window.showErrorMessage(localize("openUSS.error.message.invalidNode", "open() called from invalid node."));
+                vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                 throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
         }
         log.debug(localize("openUSS.log.debug.request", "requesting to open a uss file ") + label);
@@ -1288,7 +1288,7 @@ export async function modifyCommand(job: Job) {
         let command = await vscode.window.showInputBox({ prompt: localize("modifyCommand.command.prompt", "Modify Command") });
         if (command !== undefined) {
             let response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
-            vscode.window.showInformationMessage(localize("modifyCommand.message.response", "Command response: ") + response.commandResponse);
+            vscode.window.showInformationMessage(localize("modifyCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
@@ -1298,7 +1298,7 @@ export async function modifyCommand(job: Job) {
 export async function stopCommand(job: Job) {
     try {
         let response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
-        vscode.window.showInformationMessage(localize("stopCommand.message.response", "Command response: ") + response.commandResponse);
+        vscode.window.showInformationMessage(localize("stopCommand.response", "Command response: ") + response.commandResponse);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }
@@ -1307,8 +1307,9 @@ export async function stopCommand(job: Job) {
 export async function deleteJob(job: Job) {
     try {
         await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
-        vscode.window.showInformationMessage(localize("deleteJob.message.job", "Job ") + job.job.jobname + "(" + job.job.jobid + ")" +
-        localize("deleteJob.message.delete", " deleted"));
+        vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + job.job.jobname + "(" + job.job.jobid + ")" +
+        localize("deleteJob.delete", " deleted"));
+
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }
@@ -1343,7 +1344,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
     try {
         allProfiles = loadAllProfiles();
     } catch (err) {
-        vscode.window.showErrorMessage(localize("addJobsSession.error.message.load", "Unable to load all profiles: ") + err.message);
+        vscode.window.showErrorMessage(localize("addJobsSession.error.load", "Unable to load all profiles: ") + err.message);
         throw (err);
     }
 
@@ -1358,12 +1359,12 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
             )
         );
     } else {
-        vscode.window.showInformationMessage(localize("addJobsSession.message.noProfilesDetected", "No profiles detected"));
+        vscode.window.showInformationMessage(localize("addJobsSession.noProfilesDetected", "No profiles detected"));
         return;
     }
     if (profileNamesList.length) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("addJobsSession.quickPickOptions.placeHolder.profileAdd", "Select a Profile to Add to the Jobs Explorer"),
+            placeHolder: localize("addJobsSession.quickPickOptions.profileAdd", "Select a Profile to Add to the Jobs Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
@@ -1375,6 +1376,6 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
             log.debug(localize("addJobsSession.log.debug.cancelledProfile", "User cancelled profile selection"));
         }
     } else {
-        vscode.window.showInformationMessage(localize("addJobsSession.message.noProfilesAdd", "No more profiles to add"));
+        vscode.window.showInformationMessage(localize("addJobsSession.noProfilesAdd", "No more profiles to add"));
     }
 }

@@ -1,849 +1,850 @@
 {
-    "name": "vscode-extension-for-zowe",
-    "displayName": "%displayName%",
-    "description": "%description%",
-    "version": "0.20.0",
-    "publisher": "Zowe",
-    "repository": {
-        "url": "https://github.com/zowe/vscode-extension-for-zowe"
-    },
-    "icon": "resources/zowe_logo.png",
-    "keywords": [
-        "mainframe",
-        "zos",
-        "dataset",
-        "zowe"
-    ],
-    "engines": {
-        "vscode": "^1.26.0"
-    },
-    "categories": [
-        "Other"
-    ],
-    "files": [
-        "out",
-        "README.md",
-        "resources"
-    ],
-    "activationEvents": [
-        "*"
-    ],
-    "main": "./out/src/extension",
-    "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "zowe",
-                    "title": "%contributes.viewsContainer.activitybar.title%",
-                    "icon": "resources/zowe.svg"
-                }
-            ]
-        },
-        "views": {
-            "zowe": [
-                {
-                    "id": "zowe.explorer",
-                    "name": "%contributes.views.zowe.zowe.explorer%"
-                },
-                {
-                    "id": "zowe.uss.explorer",
-                    "name": "%contributes.views.zowe.zowe.uss.explorer%"
-                },
-                {
-                    "id": "zowe.jobs",
-                    "name": "%contributes.views.zowe.zowe.jobs%"
-                },
-                {
-                    "id": "zowe.spool",
-                    "name": "%contributes.views.zowe.zowe.spool%"
-                }
-            ]
-        },
-        "commands": [
-            {
-                "command": "zowe.uss.createFile",
-                "title": "%contributes.commands.zowe.uss.createFile%"
-            },
-            {
-                "command": "zowe.uss.createFolder",
-                "title": "%contributes.commands.zowe.uss.createFolder%"
-            },
-            {
-                "command": "zowe.uss.deleteNode",
-                "title": "%contributes.commands.zowe.uss.deleteNode%"
-            },
-            {
-                "command": "zowe.uss.renameNode",
-                "title": "%contributes.commands.zowe.uss.renameNode%"
-            },
-            {
-                "command": "zowe.addFavorite",
-                "title": "%contributes.commands.zowe.addFavorite%"
-            },
-            {
-                "command": "zowe.uss.addFavorite",
-                "title": "%contributes.commands.zowe.uss.addFavorite%"
-            },
-            {
-                "command": "zowe.addSession",
-                "title": "%contributes.commands.zowe.addSession%",
-                "icon": {
-                    "light": "./resources/light/plus.svg",
-                    "dark": "./resources/dark/plus.svg"
-                }
-            },
-            {
-                "command": "zowe.createDataset",
-                "title": "%contributes.commands.zowe.createDataset%",
-                "icon": {
-                    "light": "./resources/light/newfile.svg",
-                    "dark": "./resources/dark/newfile.svg"
-                }
-            },
-            {
-                "command": "zowe.createMember",
-                "title": "%contributes.commands.zowe.createMember%"
-            },
-            {
-                "command": "zowe.showDSAttributes",
-                "title": "%contributes.commands.zowe.showDSAttributes%"
-            },
-            {
-                "command": "zowe.deleteDataset",
-                "title": "%contributes.commands.zowe.deleteDataset%"
-            },
-            {
-                "command": "zowe.deleteMember",
-                "title": "%contributes.commands.zowe.deleteMember%"
-            },
-            {
-                "command": "zowe.deletePDS",
-                "title": "%contributes.commands.zowe.deletePDS%"
-            },
-            {
-                "command": "zowe.pattern",
-                "title": "%contributes.commands.zowe.pattern%",
-                "icon": {
-                    "light": "./resources/light/pattern.svg",
-                    "dark": "./resources/dark/pattern.svg"
-                }
-            },
-            {
-                "command": "zowe.refreshAll",
-                "title": "%contributes.commands.zowe.refreshAll%",
-                "icon": {
-                    "light": "./resources/light/refresh.svg",
-                    "dark": "./resources/dark/refresh.svg"
-                }
-            },
-            {
-                "command": "zowe.refreshNode",
-                "title": "%contributes.commands.zowe.refreshNode%",
-                "icon": {
-                    "light": "./resources/light/download.svg",
-                    "dark": "./resources/dark/download.svg"
-                }
-            },
-            {
-                "command": "zowe.removeFavorite",
-                "title": "%contributes.commands.zowe.removeFavorite%"
-            },
-            {
-                "command": "zowe.uss.removeFavorite",
-                "title": "%contributes.commands.zowe.uss.removeFavorite%"
-            },
-            {
-                "command": "zowe.removeSavedSearch",
-                "title": "%contributes.commands.zowe.removeSavedSearch%"
-            },
-            {
-                "command": "zowe.removeSession",
-                "title": "%contributes.commands.zowe.removeSession%"
-            },
-            {
-                "command": "zowe.safeSave",
-                "title": "%contributes.commands.zowe.safeSave%",
-                "icon": {
-                    "light": "./resources/light/upload.svg",
-                    "dark": "./resources/dark/upload.svg"
-                }
-            },
-            {
-                "command": "zowe.saveSearch",
-                "title": "%contributes.commands.zowe.saveSearch%"
-            },
-            {
-                "command": "zowe.submitJcl",
-                "title": "%contributes.commands.zowe.submitJcl%"
-            },
-            {
-                "command": "zowe.submitMember",
-                "title": "%contributes.commands.zowe.submitMember%"
-            },
-            {
-                "command": "zowe.uss.addSession",
-                "title": "%contributes.commands.zowe.uss.addSession%",
-                "icon": {
-                    "light": "./resources/light/plus.svg",
-                    "dark": "./resources/dark/plus.svg"
-                }
-            },
-            {
-                "command": "zowe.uss.createDirectory",
-                "title": "%contributes.commands.zowe.uss.createDirectory%",
-                "icon": {
-                    "light": "./resources/light/newfile.svg",
-                    "dark": "./resources/dark/newfile.svg"
-                }
-            },
-            {
-                "command": "zowe.uss.fullPath",
-                "title": "%contributes.commands.zowe.uss.fullPath%",
-                "icon": {
-                    "light": "./resources/light/pattern.svg",
-                    "dark": "./resources/dark/pattern.svg"
-                }
-            },
-            {
-                "command": "zowe.uss.refreshAll",
-                "title": "%contributes.commands.zowe.uss.refreshAll%",
-                "icon": {
-                    "light": "./resources/light/refresh.svg",
-                    "dark": "./resources/dark/refresh.svg"
-                }
-            },
-            {
-                "command": "zowe.uss.refreshUSS",
-                "title": "%contributes.commands.zowe.uss.refreshUSS%",
-                "icon": {
-                    "light": "./resources/light/download.svg",
-                    "dark": "./resources/dark/download.svg"
-                }
-            },
-            {
-                "command": "zowe.uss.removeSession",
-                "title": "%contributes.commands.zowe.uss.removeSession%"
-            },
-            {
-                "command": "zowe.uss.binary",
-                "title": "%contributes.commands.zowe.uss.binary%"
-            },
-            {
-                "command": "zowe.uss.text",
-                "title": "%contributes.commands.zowe.uss.text%"
-            },
-            {
-                "command": "zowe.deleteJob",
-                "title": "%contributes.commands.zowe.deleteJob%",
-                "icon": {
-                    "dark": "./resources/dark/trash.svg",
-                    "light": "./resources/light/trash.svg"
-                }
-            },
-            {
-                "command": "zowe.runModifyCommand",
-                "title": "%contributes.commands.zowe.runModifyCommand%"
-            },
-            {
-                "command": "zowe.runStopCommand",
-                "title": "%contributes.commands.zowe.runStopCommand%"
-            },
-            {
-                "command": "zowe.setOwner",
-                "title": "%contributes.commands.zowe.setOwner%"
-            },
-            {
-                "command": "zowe.setPrefix",
-                "title": "%contributes.commands.zowe.setPrefix%"
-            },
-            {
-                "command": "zowe.refreshJobsServer",
-                "title": "%contributes.commands.zowe.refreshJobsServer%",
-                "icon": {
-                    "light": "./resources/light/refresh.svg",
-                    "dark": "./resources/dark/refresh.svg"
-                }
-            },
-            {
-                "command": "zowe.refreshAllJobs",
-                "title": "%contributes.commands.zowe.refreshAllJobs%",
-                "icon": {
-                    "light": "./resources/light/refresh.svg",
-                    "dark": "./resources/dark/refresh.svg"
-                }
-            },
-            {
-                "command": "zowe.addJobsSession",
-                "title": "%contributes.commands.zowe.addJobsSession%",
-                "icon": {
-                    "light": "./resources/light/plus.svg",
-                    "dark": "./resources/dark/plus.svg"
-                }
-            },
-            {
-                "command": "zowe.removeJobsSession",
-                "title": "%contributes.commands.zowe.removeJobsSession%"
-            },
-            {
-                "command": "zowe.downloadSpool",
-                "title": "%contributes.commands.zowe.downloadSpool%",
-                "icon": {
-                    "light": "./resources/light/download.svg",
-                    "dark": "./resources/dark/download.svg"
-                }
-            },
-            {
-                "command": "zowe.getJobJcl",
-                "title": "%contributes.commands.zowe.getJobJcl%"
-            },
-            {
-                "command": "zowe.setJobSpool",
-                "title": "%contributes.commands.zowe.setJobSpool%"
-            }
-        ],
-        "menus": {
-            "view/title": [
-                {
-                    "when": "view == zowe.explorer",
-                    "command": "zowe.refreshAll",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.explorer",
-                    "command": "zowe.addSession",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer",
-                    "command": "zowe.uss.refreshAll",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer",
-                    "command": "zowe.uss.addSession",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.jobs",
-                    "command": "zowe.refreshAllJobs",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.jobs",
-                    "command": "zowe.addJobsSession",
-                    "group": "navigation"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == directory",
-                    "command": "zowe.uss.createFile",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == directory",
-                    "command": "zowe.uss.createFolder",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == directory",
-                    "command": "zowe.uss.addFavorite",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == directoryf",
-                    "command": "zowe.uss.createFile",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == directoryf",
-                    "command": "zowe.uss.createFolder",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == directoryf",
-                    "command": "zowe.uss.removeFavorite",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
-                    "command": "zowe.uss.deleteNode",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer",
-                    "command": "zowe.uss.renameNode",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == textFile",
-                    "command": "zowe.uss.binary",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == textFile",
-                    "command": "zowe.uss.addFavorite",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == textFilef",
-                    "command": "zowe.uss.binary",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == textFilef",
-                    "command": "zowe.uss.removeFavorite",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == binaryFile",
-                    "command": "zowe.uss.text",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == binaryFile",
-                    "command": "zowe.uss.addFavorite",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
-                    "command": "zowe.uss.text",
-                    "group": "navigation"
-                },
-                {
-                    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
-                    "command": "zowe.uss.removeFavorite",
-                    "group": "navigation"
-                },
-                {
-                    "when": "viewItem == member",
-                    "command": "zowe.refreshNode",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == member",
-                    "command": "zowe.safeSave",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == member",
-                    "command": "zowe.deleteMember"
-                },
-                {
-                    "when": "viewItem == member",
-                    "command": "zowe.addFavorite"
-                },
-                {
-                    "when": "viewItem == member",
-                    "command": "zowe.submitMember"
-                },
-                {
-                    "when": "viewItem == memberf",
-                    "command": "zowe.refreshNode",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == memberf",
-                    "command": "zowe.safeSave",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == memberf",
-                    "command": "zowe.deleteMember"
-                },
-                {
-                    "when": "viewItem == ds",
-                    "command": "zowe.refreshNode",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == ds",
-                    "command": "zowe.safeSave",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == ds",
-                    "command": "zowe.deleteDataset"
-                },
-                {
-                    "when": "viewItem == ds",
-                    "command": "zowe.submitMember"
-                },
-                {
-                    "when": "viewItem == ds",
-                    "command": "zowe.addFavorite"
-                },
-                {
-                    "when": "viewItem == ds",
-                    "command": "zowe.showDSAttributes"
-                },
-                {
-                    "when": "viewItem == dsf",
-                    "command": "zowe.refreshNode",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == dsf",
-                    "command": "zowe.safeSave",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == dsf",
-                    "command": "zowe.showDSAttributes"
-                },
-                {
-                    "when": "viewItem == dsf",
-                    "command": "zowe.submitMember"
-                },
-                {
-                    "when": "viewItem == dsf",
-                    "command": "zowe.deleteDataset"
-                },
-                {
-                    "when": "viewItem == dsf",
-                    "command": "zowe.removeFavorite"
-                },
-                {
-                    "when": "viewItem == pds",
-                    "command": "zowe.createMember"
-                },
-                {
-                    "when": "viewItem == pds",
-                    "command": "zowe.showDSAttributes"
-                },
-                {
-                    "when": "viewItem == pds",
-                    "command": "zowe.deletePDS"
-                },
-                {
-                    "when": "viewItem == pds",
-                    "command": "zowe.addFavorite"
-                },
-                {
-                    "when": "viewItem == pdsf",
-                    "command": "zowe.createMember"
-                },
-                {
-                    "when": "viewItem == pdsf",
-                    "command": "zowe.showDSAttributes"
-                },
-                {
-                    "when": "viewItem == pdsf",
-                    "command": "zowe.deletePDS"
-                },
-                {
-                    "when": "viewItem == pdsf",
-                    "command": "zowe.removeFavorite"
-                },
-                {
-                    "when": "viewItem == session",
-                    "command": "zowe.pattern",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == session",
-                    "command": "zowe.createDataset",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == session",
-                    "command": "zowe.removeSession"
-                },
-                {
-                    "when": "viewItem == session",
-                    "command": "zowe.saveSearch"
-                },
-                {
-                    "when": "viewItem == sessionf",
-                    "command": "zowe.removeSavedSearch"
-                },
-                {
-                    "when": "viewItem == uss_session",
-                    "command": "zowe.uss.fullPath",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == uss_session",
-                    "command": "zowe.uss.removeSession"
-                },
-                {
-                    "when": "viewItem == server",
-                    "command": "zowe.refreshJobsServer",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == server",
-                    "command": "zowe.setOwner"
-                },
-                {
-                    "when": "viewItem == server",
-                    "command": "zowe.setPrefix"
-                },
-                {
-                    "when": "viewItem == server",
-                    "command": "zowe.removeJobsSession"
-                },
-                {
-                    "when": "viewItem == job",
-                    "command": "zowe.deleteJob",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == job",
-                    "command": "zowe.runModifyCommand"
-                },
-                {
-                    "when": "viewItem == job",
-                    "command": "zowe.runStopCommand"
-                },
-                {
-                    "when": "viewItem == job",
-                    "command": "zowe.downloadSpool",
-                    "group": "inline"
-                },
-                {
-                    "when": "viewItem == job",
-                    "command": "zowe.getJobJcl"
-                }
-            ],
-            "commandPalette": [
-                {
-                    "command": "zowe.pattern",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.refreshNode",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.createDataset",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.createMember",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.deleteDataset",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.deletePDS",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.deleteMember",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.removeSession",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.safeSave",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.saveSearch",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.removeSavedSearch",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.uss.fullPath",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.uss.refreshUSS",
-                    "when": "never"
-                },
-                {
-                    "command": "zowe.uss.removeSession",
-                    "when": "never"
-                }
-            ]
-        },
-        "configuration": {
-            "type": "object",
-            "title": "%configuration.title%",
-            "properties": {
-                "Zowe-Default-Datasets-Binary": {
-                    "default": {
-                        "dsorg": "PO",
-                        "alcunit": "CYL",
-                        "primary": 10,
-                        "secondary": 10,
-                        "dirblk": 25,
-                        "recfm": "U",
-                        "blksize": 27998,
-                        "lrecl": 27998
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-Binary.description%",
-                    "scope": "window"
-                },
-                "Zowe-Default-Datasets-C": {
-                    "default": {
-                        "dsorg": "PO",
-                        "alcunit": "CYL",
-                        "primary": 1,
-                        "secondary": 1,
-                        "dirblk": 25,
-                        "recfm": "VB",
-                        "blksize": 32760,
-                        "lrecl": 260
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-C.description%",
-                    "scope": "window"
-                },
-                "Zowe-Default-Datasets-Classic": {
-                    "default": {
-                        "dsorg": "PO",
-                        "alcunit": "CYL",
-                        "primary": 1,
-                        "secondary": 1,
-                        "dirblk": 25,
-                        "recfm": "FB",
-                        "blksize": 6160,
-                        "lrecl": 80
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-Classic.description%",
-                    "scope": "window"
-                },
-                "Zowe-Default-Datasets-PDS": {
-                    "default": {
-                        "dsorg": "PO",
-                        "alcunit": "CYL",
-                        "primary": 1,
-                        "secondary": 1,
-                        "dirblk": 5,
-                        "recfm": "FB",
-                        "blksize": 6160,
-                        "lrecl": 80
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-PDS.description%",
-                    "scope": "window"
-                },
-                "Zowe-Default-Datasets-PS": {
-                    "default": {
-                        "dsorg": "PS",
-                        "alcunit": "CYL",
-                        "primary": 1,
-                        "secondary": 1,
-                        "recfm": "FB",
-                        "blksize": 6160,
-                        "lrecl": 80
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-PS.description%",
-                    "scope": "window"
-                },
-                "Zowe-Persistent-Favorites": {
-                    "default": {
-                        "persistence": true,
-                        "favorites": []
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-Favorites.description%",
-                    "scope": "window"
-                },
-                "Zowe-USS-Persistent-Favorites": {
-                    "default": {
-                        "persistence": true,
-                        "favorites": []
-                    },
-                    "description": "%configuration.properties.Zowe-Default-Datasets-Persistent-Favorites.description%",
-                    "scope": "window"
-                }
-            }
+  "name": "vscode-extension-for-zowe",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.18.0",
+  "publisher": "Zowe",
+  "repository": {
+    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+  },
+  "icon": "resources/zowe_logo.png",
+  "keywords": [
+    "mainframe",
+    "zos",
+    "dataset",
+    "zowe"
+  ],
+  "engines": {
+    "vscode": "^1.26.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "files": [
+    "out",
+    "README.md",
+    "resources"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/src/extension",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "zowe",
+          "title": "%viewsContainers.activitybar%",
+          "icon": "resources/zowe.svg"
         }
+      ]
     },
-    "scripts": {
-        "vscode:prepublish": "npm run build",
-        "build": "npm run license && tsc --build --pretty",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test:unit": "jest --coverage",
-        "test": "jest --coverage",
-        "package": "vsce package",
-        "license": "node ./scripts/license.js",
-        "watch": "tsc -b --watch --pretty",
-        "compile": "tsc -b",
-        "clean": "gulp clean"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.1.4",
-        "@types/chai-as-promised": "^7.1.0",
-        "@types/expect": "^1.20.3",
-        "@types/jest": "^23.1.0",
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^7.0.66",
-        "@types/yargs": "^11.0.0",
-        "chai": "^4.1.2",
-        "chai-as-promised": "^7.1.1",
-        "chalk": "^2.4.1",
-        "expect": "^23.4.0",
-        "glob": "^7.1.2",
-        "jest": "^22.4.4",
-        "jest-html-reporter": "^2.4.0",
-        "jsdom": "11.11.0",
-        "sinon": "^6.1.0",
-        "ts-jest": "^22.4.6",
-        "vsce": "^1.61.0",
-        "vscode": "^1.1.30",
-        "@types/vscode": "^1.34.0",
-        "del": "^4.1.1",
-        "event-stream": "^4.0.1",
-        "gulp": "^4.0.2",
-        "gulp-filter": "^5.1.0",
-        "gulp-sourcemaps": "^2.6.5",
-        "gulp-typescript": "^5.0.1",
-        "run-sequence": "^2.2.1",
-        "tslint": "^5.16.0",
-        "typescript": "^3.5.1",
-        "vscode-nls-dev": "^3.2.6"
-    },
-    "dependencies": {
-        "@brightside/core": "^2.28.0",
-        "@brightside/imperative": "^2.3.0",
-        "jsdoc": "^3.5.5",
-        "ftp": "^0.3.10",
-        "gulp": "^4.0.2",
-        "gulp-cli": "^2.2.0",
-        "jsonc-parser": "^0.4.2",
-        "mkdirp": "^0.5.1",
-        "rimraf": "^2.6.2",
-        "vscode-nls": "^4.1.1"
-    },
-    "jest": {
-        "moduleFileExtensions": [
-            "ts",
-            "tsx",
-            "js"
-        ],
-        "transform": {
-            "^.+\\.(ts|tsx)$": "ts-jest"
+    "views": {
+      "zowe": [
+        {
+          "id": "zowe.explorer",
+          "name": "%zowe.explorer%"
         },
-        "globals": {
-            "ts-jest": {
-                "tsConfigFile": "tsconfig.json",
-                "diagnostics": false
-            }
+        {
+          "id": "zowe.uss.explorer",
+          "name": "%zowe.uss.explorer%"
         },
-        "testMatch": [
-            "**/__tests__/*test.+(ts|tsx)",
-            "**/__tests__/*/*test.+(ts|tsx)"
-        ],
-        "modulePathIgnorePatterns": [
-            "__tests__/integrationTests/",
-            "out/"
-        ],
-        "reporters": [
-            "default",
-            "./node_modules/jest-html-reporter"
-        ],
-        "coverageDirectory": "<rootDir>/results/coverage"
+        {
+          "id": "zowe.jobs",
+          "name": "%zowe.jobs%"
+        },
+        {
+          "id": "zowe.spool",
+          "name": "%zowe.spool%"
+        }
+      ]
     },
-    "jest-html-reporter": {
-        "pageTitle": "Zowe Extension Tests",
-        "outputPath": "results/results.html"
+    "commands": [
+      {
+        "command": "zowe.uss.createFile",
+        "title": "%uss.createFile%"
+      },
+      {
+        "command": "zowe.uss.createFolder",
+        "title": "%uss.createFolder%"
+      },
+      {
+        "command": "zowe.uss.deleteNode",
+        "title": "%uss.deleteNode%"
+      },
+      {
+        "command": "zowe.uss.renameNode",
+        "title": "%uss.renameNode%"
+      },
+      {
+        "command": "zowe.addFavorite",
+        "title": "%addFavorite%"
+      },
+      {
+        "command": "zowe.uss.addFavorite",
+        "title": "%uss.addFavorite%"
+      },
+      {
+        "command": "zowe.addSession",
+        "title": "%addSession%",
+        "icon": {
+          "light": "./resources/light/plus.svg",
+          "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.createDataset",
+        "title": "%createDataset%",
+        "icon": {
+          "light": "./resources/light/newfile.svg",
+          "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
+        "command": "zowe.createMember",
+        "title": "%createMember%"
+      },
+      {
+        "command": "zowe.showDSAttributes",
+        "title": "%showDSAttributes%"
+      },
+      {
+        "command": "zowe.deleteDataset",
+        "title": "%deleteDataset%"
+      },
+      {
+        "command": "zowe.deleteMember",
+        "title": "%deleteMember%"
+      },
+      {
+        "command": "zowe.deletePDS",
+        "title": "%deletePDS%"
+      },
+      {
+        "command": "zowe.pattern",
+        "title": "%pattern%",
+        "icon": {
+          "light": "./resources/light/pattern.svg",
+          "dark": "./resources/dark/pattern.svg"
+        }
+      },
+      {
+        "command": "zowe.refreshAll",
+        "title": "%refreshAll%",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.refreshNode",
+        "title": "%refreshNode%",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
+        "command": "zowe.removeFavorite",
+        "title": "%removeFavorite%"
+      },
+      {
+        "command": "zowe.uss.removeFavorite",
+        "title": "%uss.removeFavorite%"
+      },
+      {
+        "command": "zowe.removeSavedSearch",
+        "title": "%removeSavedSearch%"
+      },
+      {
+        "command": "zowe.removeSession",
+        "title": "%removeSession%"
+      },
+      {
+        "command": "zowe.safeSave",
+        "title": "%safeSave%",
+        "icon": {
+          "light": "./resources/light/upload.svg",
+          "dark": "./resources/dark/upload.svg"
+        }
+      },
+      {
+        "command": "zowe.saveSearch",
+        "title": "%saveSearch%"
+      },
+      {
+        "command": "zowe.submitJcl",
+        "title": "%submitJcl%"
+      },
+      {
+        "command": "zowe.submitMember",
+        "title": "%submitMember%"
+      },
+      {
+        "command": "zowe.uss.addSession",
+        "title": "%uss.addSession%",
+        "icon": {
+          "light": "./resources/light/plus.svg",
+          "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.createDirectory",
+        "title": "%uss.createDirectory%",
+        "icon": {
+          "light": "./resources/light/newfile.svg",
+          "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.fullPath",
+        "title": "%uss.fullPath%",
+        "icon": {
+          "light": "./resources/light/pattern.svg",
+          "dark": "./resources/dark/pattern.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.refreshAll",
+        "title": "%uss.refreshAll%",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.refreshUSS",
+        "title": "%uss.refreshUSS%",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.removeSession",
+        "title": "%uss.removeSession%"
+      },
+      {
+        "command": "zowe.uss.binary",
+        "title": "%uss.binary%"
+      },
+      {
+        "command": "zowe.uss.text",
+        "title": "%uss.text%"
+      },
+      {
+        "command": "zowe.deleteJob",
+        "title": "%deleteJob%",
+        "icon": {
+          "dark": "./resources/dark/trash.svg",
+          "light": "./resources/light/trash.svg"
+        }
+      },
+      {
+        "command": "zowe.runModifyCommand",
+        "title": "%runModifyCommand%"
+      },
+      {
+        "command": "zowe.runStopCommand",
+        "title": "%runStopCommand%"
+      },
+      {
+        "command": "zowe.setOwner",
+        "title": "%setOwner%"
+      },
+      {
+        "command": "zowe.setPrefix",
+        "title": "%setPrefix%"
+      },
+      {
+        "command": "zowe.refreshJobsServer",
+        "title": "%refreshJobsServer%",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.refreshAllJobs",
+        "title": "%refreshAllJobs%",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.addJobsSession",
+        "title": "%addJobsSession%",
+        "icon": {
+          "light": "./resources/light/plus.svg",
+          "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.removeJobsSession",
+        "title": "%removeJobsSession%"
+      },
+      {
+        "command": "zowe.downloadSpool",
+        "title": "%downloadSpool%",
+        "icon": {
+          "light": "./resources/light/download.svg",
+          "dark": "./resources/dark/download.svg"
+        }
+      },
+      {
+        "command": "zowe.getJobJcl",
+        "title": "%getJobJcl%"
+      },
+      {
+        "command": "zowe.setJobSpool",
+        "title": "%setJobSpool%"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "when": "view == zowe.explorer",
+          "command": "zowe.refreshAll",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.explorer",
+          "command": "zowe.addSession",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.refreshAll",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.addSession",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.jobs",
+          "command": "zowe.refreshAllJobs",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.jobs",
+          "command": "zowe.addJobsSession",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.createFile",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.createFolder",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.createFile",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.createFolder",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
+          "command": "zowe.uss.deleteNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer",
+          "command": "zowe.uss.renameNode",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFile",
+          "command": "zowe.uss.binary",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFile",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "command": "zowe.uss.binary",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+          "command": "zowe.uss.text",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+          "command": "zowe.uss.addFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+          "command": "zowe.uss.text",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+          "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.deleteMember"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == member",
+          "command": "zowe.submitMember"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == memberf",
+          "command": "zowe.deleteMember"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.deleteDataset"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.submitMember"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == ds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.safeSave",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.submitMember"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.deleteDataset"
+        },
+        {
+          "when": "viewItem == dsf",
+          "command": "zowe.removeFavorite"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.deletePDS"
+        },
+        {
+          "when": "viewItem == pds",
+          "command": "zowe.addFavorite"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.createMember"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.showDSAttributes"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.deletePDS"
+        },
+        {
+          "when": "viewItem == pdsf",
+          "command": "zowe.removeFavorite"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.pattern",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.createDataset",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.removeSession"
+        },
+        {
+          "when": "viewItem == session",
+          "command": "zowe.saveSearch"
+        },
+        {
+          "when": "viewItem == sessionf",
+          "command": "zowe.removeSavedSearch"
+        },
+        {
+          "when": "viewItem == uss_session",
+          "command": "zowe.uss.fullPath",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == uss_session",
+          "command": "zowe.uss.removeSession"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.refreshJobsServer",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.setOwner"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.setPrefix"
+        },
+        {
+          "when": "viewItem == server",
+          "command": "zowe.removeJobsSession"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.deleteJob",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.runModifyCommand"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.runStopCommand"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.downloadSpool",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == job",
+          "command": "zowe.getJobJcl"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "zowe.pattern",
+          "when": "never"
+        },
+        {
+          "command": "zowe.refreshNode",
+          "when": "never"
+        },
+        {
+          "command": "zowe.createDataset",
+          "when": "never"
+        },
+        {
+          "command": "zowe.createMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deleteDataset",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deletePDS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.deleteMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.removeSession",
+          "when": "never"
+        },
+        {
+          "command": "zowe.safeSave",
+          "when": "never"
+        },
+        {
+          "command": "zowe.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.removeSavedSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.fullPath",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.refreshUSS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.removeSession",
+          "when": "never"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "%configuration.title%",
+      "properties": {
+        "Zowe-Default-Datasets-Binary": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 10,
+            "dirblk": 25,
+            "recfm": "U",
+            "blksize": 27998,
+            "lrecl": 27998
+          },
+          "description": "%Zowe-Default-Datasets-Binary%",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-C": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 25,
+            "recfm": "VB",
+            "blksize": 32760,
+            "lrecl": 260
+          },
+          "description": "%Zowe-Default-Datasets-C%",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-Classic": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "%Zowe-Default-Datasets-Classic%",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-PDS": {
+          "default": {
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "dirblk": 5,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "%Zowe-Default-Datasets-PDS%",
+          "scope": "window"
+        },
+        "Zowe-Default-Datasets-PS": {
+          "default": {
+            "dsorg": "PS",
+            "alcunit": "CYL",
+            "primary": 1,
+            "secondary": 1,
+            "recfm": "FB",
+            "blksize": 6160,
+            "lrecl": 80
+          },
+          "description": "%Zowe-Default-Datasets-PS%",
+          "scope": "window"
+        },
+        "Zowe-Persistent-Favorites": {
+          "default": {
+            "persistence": true,
+            "favorites": []
+          },
+          "description": "%Zowe-Default-Datasets-Favorites%",
+          "scope": "window"
+        },
+        "Zowe-USS-Persistent-Favorites": {
+          "default": {
+            "persistence": true,
+            "favorites": []
+          },
+          "description": "%Zowe-Default-Datasets-Persistent-Favorites%",
+          "scope": "window"
+        }
+      }
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "npm run license && tsc --pretty",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test:unit": "jest --coverage",
+    "test": "jest --coverage",
+    "package": "gulp package",
+    "license": "node ./scripts/license.js",
+    "watch": "tsc -b --watch --pretty",
+    "compile": "tsc -b",
+    "clean": "gulp clean"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/expect": "^1.20.3",
+    "@types/jest": "^23.1.0",
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^7.0.66",
+    "@types/vscode": "^1.34.0",
+    "@types/yargs": "^11.0.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chalk": "^2.4.1",
+    "del": "^4.1.1",
+    "event-stream": "^4.0.1",
+    "expect": "^23.4.0",
+    "glob": "^7.1.2",
+    "gulp": "^4.0.2",
+    "gulp-filter": "^5.1.0",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^5.0.1",
+    "jest": "^22.4.4",
+    "jest-html-reporter": "^2.4.0",
+    "jsdom": "11.11.0",
+    "run-sequence": "^2.2.1",
+    "sinon": "^6.1.0",
+    "ts-jest": "^22.4.6",
+    "tslint": "^5.16.0",
+    "typescript": "^2.8.4",
+    "vsce": "^1.61.0",
+    "vscode": "^1.1.30",
+    "vscode-nls-dev": "^3.2.6"
+  },
+  "dependencies": {
+    "@brightside/core": "^2.28.0",
+    "@brightside/imperative": "^2.3.0",
+    "ftp": "^0.3.10",
+    "gulp": "^4.0.2",
+    "gulp-cli": "^2.2.0",
+    "jsdoc": "^3.5.5",
+    "jsonc-parser": "^0.4.2",
+    "log4js": "^4.4.0",
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.6.2",
+    "vscode-nls": "^4.1.1"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json",
+        "diagnostics": false
+      }
+    },
+    "testMatch": [
+      "**/__tests__/*test.+(ts|tsx)",
+      "**/__tests__/*/*test.+(ts|tsx)"
+    ],
+    "modulePathIgnorePatterns": [
+      "__tests__/integrationTests/",
+      "out/"
+    ],
+    "reporters": [
+      "default",
+      "./node_modules/jest-html-reporter"
+    ],
+    "coverageDirectory": "<rootDir>/results/coverage"
+  },
+  "jest-html-reporter": {
+    "pageTitle": "Zowe Extension Tests",
+    "outputPath": "results/results.html"
+  }
 }

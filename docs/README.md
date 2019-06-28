@@ -109,3 +109,33 @@ There is no required structure for the mainframe data sets under `orPattern`.
 
   **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
+
+### Editing Strings for Localization
+All localized strings must be string literals, you cannot include variables or use template literals within the argument you provide to the localize function.
+
+#### Adding Strings
+- First create a new key for your string. Existing keys follow the convention of including the functions/properties the string is nested in and a short one/two word description of the string.
+- If you want to add a new string to the package.json file, replace the string with your key wrapped around by \% __key__ \% i.e. `"This is a string" -> "%exampleProperty.exDescription%"`
+Then go to the package.nls.json file found in the root directory and include your newly created key and string inside as a json key/value pair.
+- If you want to add a new string to a typescript file, you will need to include the following library in you file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function
+```
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })(); 
+```
+Next wrap your string with the localize function in this format
+`localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
+Add the key and string as a json key/value pair to the  _filename_.i18n.json file that corresponds with the file you are adding the string to.
+
+#### Removing Strings
+- When removing strings, remove the key/value pair from its corresponding .json file (either package.nls.json or _filename_.i18n.json)
+
+#### Changing Strings
+- When changing strings, make the same change to the key/value pair from its corresponding .json file (either package.nls.json or _filename_.i18n.json)
+
+### How to Donate Translations
+1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under Sign Up heading to sign up to Zatana.
+2. Send an email to evann.wu@ibm.com with the email heading as ZATANA TRANSLATOR REQUEST and include the following information in the body of the email.
+    1. Zatana username
+    2. Language(s) you wish to translate
+    3. Affiliation with Zowe
+3. You should receive a response within 3 days and be added to the Zatana Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
+
