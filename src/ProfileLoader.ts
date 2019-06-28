@@ -13,7 +13,7 @@ import { spawnSync } from "child_process";
 import * as path from "path";
 import { IProfileLoaded } from "@brightside/imperative";
 import * as nls from "vscode-nls";
-const localize = nls.loadMessageBundle();
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 /**
  * Load all profiles by spawning a script that uses the users' globally installed 
  * 'node' command. This should work regardless of what credential manager plugins 

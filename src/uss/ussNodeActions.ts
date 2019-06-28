@@ -16,7 +16,7 @@ import * as zowe from "@brightside/core";
 import * as fs from "fs";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";
-const localize = nls.loadMessageBundle();
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -35,7 +35,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
             ussFileProvider.refresh();
         } catch (err) {
             vscode.window.showErrorMessage(
-                localize("createUSSNode.error.message.create", "Unable to create node: ") + err.message);
+                localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
     }
@@ -61,7 +61,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         ussFileProvider.refresh();
         deleteFromDisk(node, filePath);
     } catch (err) {
-        vscode.window.showErrorMessage(localize("deleteUSSNode.error.message.node", "Unable to delete node: ") + err.message);
+        vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
         throw (err);
     }
 }
@@ -92,7 +92,7 @@ export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
             ussFileProvider.refresh();
         }
     } catch (err) {
-        vscode.window.showErrorMessage(localize("renameUSSNode.error.message", "Unable to rename node: ") + err.message);
+        vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
         throw (err);
     }
 }
