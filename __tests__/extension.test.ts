@@ -125,6 +125,8 @@ describe("Extension Unit Tests", () => {
     const Create = jest.fn();
     const dataSetCreate = jest.fn();
     const Download = jest.fn();
+    const Utilities = jest.fn();
+    const isFileTagBinOrAscii = jest.fn();
     const dataSet = jest.fn();
     const ussFile = jest.fn();
     const List = jest.fn();
@@ -196,6 +198,7 @@ describe("Extension Unit Tests", () => {
             refresh: jest.fn(),
         };
     });
+
     // const lstatSync = jest.fn().mockImplementation(() => {
     //     return { lstat };
     // });
@@ -290,7 +293,9 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
     // Object.defineProperty(fs, "lstatSync", { value: lstatSync });
     // Object.defineProperty(fs, "lstat", { value: lstat });
+    Object.defineProperty(brightside, "Utilities", {value: Utilities});
     Object.defineProperty(Download, "ussFile", {value: ussFile});
+    Object.defineProperty(Utilities, "isFileTagBinOrAscii", {value: isFileTagBinOrAscii});
     Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
     Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
     Object.defineProperty(brightside, "GetJobs", {value: GetJobs});
@@ -1423,7 +1428,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
         const spy = jest.fn(testTree.refresh);
-        extension.refreshAllUSS(testTree);
+        ussNodeActions.refreshAllUSS(testTree);
         expect(testTree.refresh).toHaveBeenCalled();
     });
 
@@ -1438,6 +1443,7 @@ describe("Extension Unit Tests", () => {
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
+        isFileTagBinOrAscii.mockReturnValue(false);
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
@@ -1445,10 +1451,13 @@ describe("Extension Unit Tests", () => {
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
+        expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
+        expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
+        expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(session);
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: node.binary});
+        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: false});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1535,6 +1544,35 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(child);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
+    });
+
+    it("Testing that open is executed successfully when chtag says binary", async () => {
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        showErrorMessage.mockReset();
+        existsSync.mockReset();
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
+
+        isFileTagBinOrAscii.mockReturnValue(true);
+        existsSync.mockReturnValue(null);
+        openTextDocument.mockResolvedValueOnce("test.doc");
+
+        await extension.openUSS(node);
+
+        expect(existsSync.mock.calls.length).toBe(1);
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
+        expect(ussFile.mock.calls.length).toBe(1);
+        expect(ussFile.mock.calls[0][0]).toBe(session);
+        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: true});
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
+        expect(showTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
     it("Testing that saveUSSFile is executed successfully", async () => {
