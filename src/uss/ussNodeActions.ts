@@ -15,6 +15,7 @@ import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
 import * as utils from "../utils";
+import * as path from "path";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -155,4 +156,32 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
         node.contextValue += "f";
         ussFileProvider.mFavorites.push(node);
     });
+}
+
+export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    const fileOpenOptions = {
+        canSelectFiles: true,
+        openLabel: "Upload Files",
+        canSelectMany: true
+     };
+
+    const value = await vscode.window.showOpenDialog(fileOpenOptions);
+
+    await Promise.all(
+        value.map(async (item) => {
+            const doc = await vscode.workspace.openTextDocument(item);
+            await uploadFile(node, doc);
+        }
+     ));
+    ussFileProvider.refresh();
+}
+
+export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
+    try {
+        const localFileName = path.parse(doc.fileName).base;
+        const ussName = `${node.fullPath}/${localFileName}`;
+        await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
+    } catch (e) {
+        vscode.window.showErrorMessage(e.message);
+    }
 }

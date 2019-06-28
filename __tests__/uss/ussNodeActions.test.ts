@@ -30,6 +30,8 @@ const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
+const showOpenDialog = jest.fn();
+const openTextDocument = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -79,6 +81,8 @@ Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
 Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
 Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
+Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
 
 
 describe("ussNodeActions", () => {
@@ -167,6 +171,17 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
+        });
+    });
+    describe("uploadFile", () => {
+        it("should call upload dialog and upload file", async () => {
+            const fileUri = {fsPath: "/tmp/foo"};
+            showOpenDialog.mockReturnValue([fileUri]);
+            openTextDocument.mockReturnValue({});
+            await ussNodeActions.uploadDialog(ussNode, testUSSTree);
+            expect(showOpenDialog).toBeCalled();
+            expect(openTextDocument).toBeCalled();
+            expect(testUSSTree.refresh).toBeCalled();
         });
     });
 });

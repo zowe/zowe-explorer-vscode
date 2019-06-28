@@ -245,6 +245,10 @@
         "title": "Toggle Binary"
       },
       {
+        "command": "zowe.uss.uploadDialog",
+        "title": "Upload files..."
+      },
+      {
         "command": "zowe.uss.text",
         "title": "Toggle Text"
       },
@@ -439,6 +443,11 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
           "command": "zowe.uss.removeFavorite",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.uploadDialog",
           "group": "navigation"
         },
         {
