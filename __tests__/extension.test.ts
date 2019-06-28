@@ -394,7 +394,7 @@ describe("Extension Unit Tests", () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(49);
+        expect(registerCommand.mock.calls.length).toBe(50);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -439,6 +439,7 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.text",
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
+            "zowe.uss.createNode",
             "zowe.zosJobsOpenspool",
             "zowe.deleteJob",
             "zowe.runModifyCommand",
