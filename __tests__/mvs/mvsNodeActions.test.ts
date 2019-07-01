@@ -40,5 +40,22 @@ describe("mvsNodeActions", () => {
         expect(openTextDocument).toBeCalled();
         expect(testTree.refresh).toBeCalled();
     });
+    describe("getDatasetLabel", () => {
+        it("should return default label for dataset", () => {
+            const labelName = "dataset.test";
+            const node = new ZoweNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
+            const label = mvsNodeActions.getDatasetLabel(node);
+            expect(label).toEqual(labelName);
+        });
+        it("should return default label for dataset", () => {
+            const labelNameWithProfile = "[myProfile123]: dataset.test";
+            const labelName = "dataset.test";
+            const parentNode = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+            parentNode.contextValue = "favorite";
+            const node = new ZoweNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
+            const label = mvsNodeActions.getDatasetLabel(node);
+            expect(label).toEqual(labelName);
+        });
+    });
 });
 

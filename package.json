@@ -118,7 +118,7 @@
       },
       {
         "command": "zowe.uploadDialog",
-        "title": "Upload member.."
+        "title": "Upload Member..."
       },
       {
         "command": "zowe.pattern",
@@ -246,7 +246,7 @@
       },
       {
         "command": "zowe.uss.uploadDialog",
-        "title": "Upload files..."
+        "title": "Upload Files..."
       },
       {
         "command": "zowe.uss.text",
@@ -451,6 +451,11 @@
           "group": "navigation"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.uploadDialog",
+          "group": "navigation"
+        },
+        {
           "when": "viewItem == member",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -568,6 +573,10 @@
         },
         {
           "when": "viewItem == pds",
+          "command": "zowe.uploadDialog"
+        },
+        {
+          "when": "viewItem == pdsf",
           "command": "zowe.uploadDialog"
         },
         {
