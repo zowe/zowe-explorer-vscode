@@ -47,7 +47,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 private session: Session,
                 private parentPath: string,
                 public binary = false,
-                private mProfileName?: string) {
+                public mProfileName?: string) {
         super(mLabel, mCollapsibleState);
         if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "directory";
@@ -96,7 +96,6 @@ export class ZoweUSSNode extends vscode.TreeItem {
 
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
-        let response: any;
         try {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
@@ -107,7 +106,6 @@ export class ZoweUSSNode extends vscode.TreeItem {
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
-        let fullPath;
         responses.forEach((response) => {
             // Throws reject if the brightside command does not throw an error but does not succeed
             if (!response.success) {
@@ -120,15 +118,36 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
                     if (item.mode.startsWith("d")) {
-                        const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.Collapsed, this, null, this.fullPath);
+                        const temp = new ZoweUSSNode(
+                            item.name,
+                            vscode.TreeItemCollapsibleState.Collapsed,
+                            this,
+                            null,
+                            this.fullPath,
+                            false,
+                            item.mProfileName);
                         elementChildren[temp.label] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
                         if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
-                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, true);
+                            temp = new ZoweUSSNode(
+                                item.name,
+                                vscode.TreeItemCollapsibleState.None,
+                                this,
+                                null,
+                                this.fullPath,
+                                true,
+                                item.mProfileName);
                         } else {
-                            temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath);
+                            temp = new ZoweUSSNode(
+                                item.name,
+                                vscode.TreeItemCollapsibleState.None,
+                                this,
+                                null,
+                                this.fullPath,
+                                false,
+                                item.mProfileName);
                         }
                         temp.command = {command: "zowe.uss.ZoweUSSNode.open",
                                         title: localize("getChildren.responses.open", "Open"), arguments: [temp]};

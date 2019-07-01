@@ -30,10 +30,10 @@ import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
 import * as profileLoader from "../src/ProfileLoader";
-import * as ussNodeActions from "../src/uss/ussNodeActions"
+import * as ussNodeActions from "../src/uss/ussNodeActions";
 import { Job } from "../src/zosjobs";
 
-describe("Extension Unit Tests", async () => {
+describe("Extension Unit Tests", () => {
     // Globals
     const session = new brtimperative.Session({
         user: "fake",
@@ -44,8 +44,8 @@ describe("Extension Unit Tests", async () => {
     });
 
     const iJob: brightside.IJob = {
-        jobid: "JOB1234",
-        jobname: "TESTJOB",
+        "jobid": "JOB1234",
+        "jobname": "TESTJOB",
         "files-url": "fake/files",
         "job-correlator": "correlator",
         "phase-name": "PHASE",
@@ -55,36 +55,36 @@ describe("Extension Unit Tests", async () => {
             "program-name": "",
             "step-name": "",
             "step-number": 1,
-            active: "",
-            smfid: ""
-            
+            "active": "",
+            "smfid": ""
+
         }],
-        class: "A",
-        owner: "USER",
-        phase: 0,
-        retcode: "",
-        status: "ACTIVE",
-        subsystem: "SYS",
-        type: "JOB",
-        url: "fake/url"
-    }
+        "class": "A",
+        "owner": "USER",
+        "phase": 0,
+        "retcode": "",
+        "status": "ACTIVE",
+        "subsystem": "SYS",
+        "type": "JOB",
+        "url": "fake/url"
+    };
 
     const iJobFile: brightside.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
         "records-url": "fake/records",
-        class: "A",
-        ddname: "STDOUT",
-        id: 100,
-        jobid: "100",
-        jobname: "TESTJOB",
-        lrecl: 80,
-        procstep: "",
-        recfm: "FB",
-        stepname: "",
-        subsystem: ""
-    }
+        "class": "A",
+        "ddname": "STDOUT",
+        "id": 100,
+        "jobid": "100",
+        "jobname": "TESTJOB",
+        "lrecl": 80,
+        "procstep": "",
+        "recfm": "FB",
+        "stepname": "",
+        "subsystem": ""
+    };
 
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
@@ -94,7 +94,7 @@ describe("Extension Unit Tests", async () => {
     ussNode.contextValue = "uss_session";
     ussNode.fullPath = "/u/myuser";
 
-    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, session, iJob);
+    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
 
     const mkdirSync = jest.fn();
     const getAllProfileNames = jest.fn();
@@ -194,17 +194,17 @@ describe("Extension Unit Tests", async () => {
             getChildren: jest.fn(),
             addSession: jest.fn(),
             refresh: jest.fn(),
-        }
+        };
     });
     // const lstatSync = jest.fn().mockImplementation(() => {
     //     return { lstat };
     // });
     // const lstat = jest.fn().mockImplementation(() => {
-    //     return { 
+    //     return {
     //         isFile(): true;
     //      };
     // });
-    let withProgress = jest.fn().mockImplementation(() => {
+    const withProgress = jest.fn().mockImplementation(() => {
         return {
             location: 15,
             title: "Saving file..."
@@ -313,7 +313,7 @@ describe("Extension Unit Tests", async () => {
         isFile.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
         readdirSync.mockReturnValue([]);
-        //lstatSync.mockReturnValue(lstat);
+        // lstatSync.mockReturnValue(lstat);
         isFile.mockReturnValueOnce(false);
         // rmdirSync.mockImplementationOnce(() => {
         //     throw Error;
@@ -338,10 +338,11 @@ describe("Extension Unit Tests", async () => {
             ]
         });
         spyOn(ussNodeActions, "initializeUSSFavorites").and.returnValue(undefined);
-        const extensionMock = jest.fn(() => (<vscode.ExtensionContext>{
+// tslint:disable-next-line: no-object-literal-type-assertion
+        const extensionMock = jest.fn(() => ({
             subscriptions: [],
             extensionPath: path.join(__dirname, "..")
-        }));
+        } as vscode.ExtensionContext));
         const mock = new extensionMock();
         await extension.activate(mock);
 
@@ -365,7 +366,7 @@ describe("Extension Unit Tests", async () => {
         };
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
         expect(mkdirSync.mock.calls.length).toBe(3);
-        expect(createTreeView.mock.calls.length).toBe(4);
+        expect(createTreeView.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         expect(createTreeView.mock.calls[0][1]).toEqual({
@@ -388,7 +389,7 @@ describe("Extension Unit Tests", async () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
-        expect(registerCommand.mock.calls.length).toBe(47);
+        expect(registerCommand.mock.calls.length).toBe(48);
         expect(registerCommand.mock.calls[0][0]).toBe("zowe.addSession");
         expect(registerCommand.mock.calls[0][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[1][0]).toBe("zowe.addFavorite");
@@ -409,78 +410,82 @@ describe("Extension Unit Tests", async () => {
         expect(registerCommand.mock.calls[8][1]).toBeInstanceOf(Function);
         expect(registerCommand.mock.calls[9][0]).toBe("zowe.deletePDS");
         expect(registerCommand.mock.calls[9][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[10][0]).toBe("zowe.deleteMember");
+        expect(registerCommand.mock.calls[10][0]).toBe("zowe.uploadDialog");
         expect(registerCommand.mock.calls[10][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[11][0]).toBe("zowe.removeSession");
+        expect(registerCommand.mock.calls[11][0]).toBe("zowe.deleteMember");
         expect(registerCommand.mock.calls[11][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[12][0]).toBe("zowe.removeFavorite");
+        expect(registerCommand.mock.calls[12][0]).toBe("zowe.removeSession");
         expect(registerCommand.mock.calls[12][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[13][0]).toBe("zowe.safeSave");
+        expect(registerCommand.mock.calls[13][0]).toBe("zowe.removeFavorite");
         expect(registerCommand.mock.calls[13][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[14][0]).toBe("zowe.saveSearch");
+        expect(registerCommand.mock.calls[14][0]).toBe("zowe.safeSave");
         expect(registerCommand.mock.calls[14][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[15][0]).toBe("zowe.removeSavedSearch");
+        expect(registerCommand.mock.calls[15][0]).toBe("zowe.saveSearch");
         expect(registerCommand.mock.calls[15][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[16][0]).toBe("zowe.submitJcl");
+        expect(registerCommand.mock.calls[16][0]).toBe("zowe.removeSavedSearch");
         expect(registerCommand.mock.calls[16][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[17][0]).toBe("zowe.submitMember");
+        expect(registerCommand.mock.calls[17][0]).toBe("zowe.submitJcl");
         expect(registerCommand.mock.calls[17][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[18][0]).toBe("zowe.showDSAttributes");
+        expect(registerCommand.mock.calls[18][0]).toBe("zowe.submitMember");
         expect(registerCommand.mock.calls[18][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[19][0]).toBe("zowe.uss.addFavorite");
+        expect(registerCommand.mock.calls[19][0]).toBe("zowe.showDSAttributes");
         expect(registerCommand.mock.calls[19][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[20][0]).toBe("zowe.uss.removeFavorite");
+        expect(registerCommand.mock.calls[20][0]).toBe("zowe.uss.addFavorite");
         expect(registerCommand.mock.calls[20][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[21][0]).toBe("zowe.uss.addSession");
+        expect(registerCommand.mock.calls[21][0]).toBe("zowe.uss.removeFavorite");
         expect(registerCommand.mock.calls[21][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[22][0]).toBe("zowe.uss.refreshAll");
+        expect(registerCommand.mock.calls[22][0]).toBe("zowe.uss.addSession");
         expect(registerCommand.mock.calls[22][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.refreshUSS");
+        expect(registerCommand.mock.calls[23][0]).toBe("zowe.uss.refreshAll");
         expect(registerCommand.mock.calls[23][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[24][0]).toBe("zowe.uss.fullPath");
+        expect(registerCommand.mock.calls[24][0]).toBe("zowe.uss.refreshUSS");
         expect(registerCommand.mock.calls[24][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[25][0]).toBe("zowe.uss.ZoweUSSNode.open");
+        expect(registerCommand.mock.calls[25][0]).toBe("zowe.uss.safeSaveUSS");
         expect(registerCommand.mock.calls[25][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[26][0]).toBe("zowe.uss.removeSession");
+        expect(registerCommand.mock.calls[26][0]).toBe("zowe.uss.fullPath");
         expect(registerCommand.mock.calls[26][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[27][0]).toBe("zowe.uss.createFile");
+        expect(registerCommand.mock.calls[27][0]).toBe("zowe.uss.ZoweUSSNode.open");
         expect(registerCommand.mock.calls[27][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[28][0]).toBe("zowe.uss.createFolder");
+        expect(registerCommand.mock.calls[28][0]).toBe("zowe.uss.removeSession");
         expect(registerCommand.mock.calls[28][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[29][0]).toBe("zowe.uss.deleteNode");
+        expect(registerCommand.mock.calls[29][0]).toBe("zowe.uss.createFile");
         expect(registerCommand.mock.calls[29][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[30][0]).toBe("zowe.uss.binary");
+        expect(registerCommand.mock.calls[30][0]).toBe("zowe.uss.createFolder");
         expect(registerCommand.mock.calls[30][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[31][0]).toBe("zowe.uss.text");
+        expect(registerCommand.mock.calls[31][0]).toBe("zowe.uss.deleteNode");
         expect(registerCommand.mock.calls[31][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[32][0]).toBe("zowe.uss.renameNode");
+        expect(registerCommand.mock.calls[32][0]).toBe("zowe.uss.binary");
         expect(registerCommand.mock.calls[32][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[33][0]).toBe("zowe.zosJobsSelectjob");
+        expect(registerCommand.mock.calls[33][0]).toBe("zowe.uss.text");
         expect(registerCommand.mock.calls[33][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[35][0]).toBe("zowe.deleteJob");
+        expect(registerCommand.mock.calls[34][0]).toBe("zowe.uss.renameNode");
+        expect(registerCommand.mock.calls[34][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[35][0]).toBe("zowe.zosJobsOpenspool");
         expect(registerCommand.mock.calls[35][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[36][0]).toBe("zowe.runModifyCommand");
+        expect(registerCommand.mock.calls[36][0]).toBe("zowe.deleteJob");
         expect(registerCommand.mock.calls[36][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[37][0]).toBe("zowe.runStopCommand");
+        expect(registerCommand.mock.calls[37][0]).toBe("zowe.runModifyCommand");
         expect(registerCommand.mock.calls[37][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[38][0]).toBe("zowe.refreshJobsServer");
+        expect(registerCommand.mock.calls[38][0]).toBe("zowe.runStopCommand");
         expect(registerCommand.mock.calls[38][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[39][0]).toBe("zowe.refreshAllJobs");
+        expect(registerCommand.mock.calls[39][0]).toBe("zowe.refreshJobsServer");
         expect(registerCommand.mock.calls[39][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[40][0]).toBe("zowe.addJobsSession");
+        expect(registerCommand.mock.calls[40][0]).toBe("zowe.refreshAllJobs");
         expect(registerCommand.mock.calls[40][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[41][0]).toBe("zowe.setOwner");
+        expect(registerCommand.mock.calls[41][0]).toBe("zowe.addJobsSession");
         expect(registerCommand.mock.calls[41][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[42][0]).toBe("zowe.setPrefix");
+        expect(registerCommand.mock.calls[42][0]).toBe("zowe.setOwner");
         expect(registerCommand.mock.calls[42][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[43][0]).toBe("zowe.removeJobsSession");
+        expect(registerCommand.mock.calls[43][0]).toBe("zowe.setPrefix");
         expect(registerCommand.mock.calls[43][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[44][0]).toBe("zowe.downloadSpool");
+        expect(registerCommand.mock.calls[44][0]).toBe("zowe.removeJobsSession");
         expect(registerCommand.mock.calls[44][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[45][0]).toBe("zowe.getJobJcl");
+        expect(registerCommand.mock.calls[45][0]).toBe("zowe.downloadSpool");
         expect(registerCommand.mock.calls[45][1]).toBeInstanceOf(Function);
-        expect(registerCommand.mock.calls[46][0]).toBe("zowe.setJobSpool");
+        expect(registerCommand.mock.calls[46][0]).toBe("zowe.getJobJcl");
         expect(registerCommand.mock.calls[46][1]).toBeInstanceOf(Function);
+        expect(registerCommand.mock.calls[47][0]).toBe("zowe.setJobSpool");
+        expect(registerCommand.mock.calls[47][1]).toBeInstanceOf(Function);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
@@ -497,6 +502,7 @@ describe("Extension Unit Tests", async () => {
         existsSync.mockReset();
         readdirSync.mockReset();
         existsSync.mockReturnValueOnce(false);
+// tslint:disable-next-line: no-empty
         rmdirSync.mockImplementationOnce(() => {
         });
         showErrorMessage.mockReset();
@@ -674,7 +680,7 @@ describe("Extension Unit Tests", async () => {
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
         await extension.addSession(testTree);
 
-        //expect(showQuickPick.mock.calls.length).toBe(1);
+        // expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -723,7 +729,7 @@ describe("Extension Unit Tests", async () => {
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
         await extension.addJobsSession(testJobsTree);
 
-        //expect(showQuickPick.mock.calls.length).toBe(1);
+        // expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -1245,6 +1251,49 @@ describe("Extension Unit Tests", async () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("safeSave() called from invalid node.");
     });
 
+    it("Testing that safeSaveUSS is executed successfully", async () => {
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        showInformationMessage.mockReset();
+        save.mockReset();
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, null);
+
+        openTextDocument.mockResolvedValueOnce("test");
+
+        await extension.safeSaveUSS(node);
+
+        expect(ussFile.mock.calls.length).toBe(1);
+        expect(ussFile.mock.calls[0][0]).toBe(node.getSession());
+        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node)});
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.getUSSDocumentFilePath(node)));
+        expect(showTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls[0][0]).toBe("test");
+        expect(save.mock.calls.length).toBe(1);
+
+        ussFile.mockReset();
+        ussFile.mockRejectedValueOnce(Error("not found"));
+
+        await extension.safeSaveUSS(node);
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.fullPath + " was probably deleted.");
+
+        ussFile.mockReset();
+        showErrorMessage.mockReset();
+        ussFile.mockRejectedValueOnce(Error(""));
+
+        await extension.safeSaveUSS(child);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
+    });
+
     it("Testing that refreshUSS correctly executes with and without error", async () => {
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
@@ -1321,6 +1370,7 @@ describe("Extension Unit Tests", async () => {
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
             await extension.refreshUSS(brat);
+// tslint:disable-next-line: no-empty
         } catch (err) {
         }
         expect(ussFile.mock.calls.length).toBe(0);
@@ -1431,7 +1481,7 @@ describe("Extension Unit Tests", async () => {
         await extension.openUSS(node);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mLabel + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(session);
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
@@ -1485,6 +1535,7 @@ describe("Extension Unit Tests", async () => {
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
             await extension.openUSS(brat);
+// tslint:disable-next-line: no-empty
         } catch (err) {
         }
         expect(ussFile.mock.calls.length).toBe(0);
@@ -1551,7 +1602,8 @@ describe("Extension Unit Tests", async () => {
                 items: []
             }
         };
-        testUSSTree.getChildren.mockReturnValueOnce([new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
+        testUSSTree.getChildren.mockReturnValueOnce([
+            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
 
         testResponse.apiResponse.items = ["Item1"];
         fileToUSSFile.mockReset();
@@ -1636,7 +1688,7 @@ describe("Extension Unit Tests", async () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
 
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, session, iJob);
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, null);
 
         showInputBox.mockReturnValueOnce("*");
         await extension.setPrefix(node, testJobsTree);
@@ -1646,14 +1698,13 @@ describe("Extension Unit Tests", async () => {
             prompt: "Prefix"
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
-
     });
 
     it("tests that the owner is set correctly on the job", async () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
 
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, session, iJob);
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, iJob);
 
         showInputBox.mockReturnValueOnce("OWNER");
         await extension.setOwner(node, testJobsTree);
@@ -1663,16 +1714,16 @@ describe("Extension Unit Tests", async () => {
             prompt: "Owner",
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
-    })
+    });
 
     it("tests that the user is informed when a job is deleted", async () => {
         showInformationMessage.mockReset();
         await extension.deleteJob(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted` 
-        )
-    })
+            `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted`
+        );
+    });
 
     it("tests that the spool content is opened in a new document", async () => {
         showTextDocument.mockReset();
@@ -1682,7 +1733,7 @@ describe("Extension Unit Tests", async () => {
 
     it("tests that a stop command is issued", async () => {
         showInformationMessage.mockReset();
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"})
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
         await extension.stopCommand(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
@@ -1703,7 +1754,7 @@ describe("Extension Unit Tests", async () => {
     });
 
     it("tests that the spool is downloaded", async () => {
-        let fileUri = {fsPath: "/tmp/foo"};
+        const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
         await extension.downloadSpool(jobNode);
         expect(showOpenDialog).toBeCalled();
@@ -1715,7 +1766,7 @@ describe("Extension Unit Tests", async () => {
                 jobname: jobNode.job.jobname,
                 outDir: fileUri.fsPath
             }
-        )
+        );
     });
 
     it("tests that the jcl is downloaded", async () => {
@@ -1726,7 +1777,7 @@ describe("Extension Unit Tests", async () => {
         expect(getJclForJob).toBeCalled();
         expect(openTextDocument).toBeCalled();
         expect(showTextDocument).toBeCalled();
-    })
+    });
 
     it("tests that the jcl is submitted", async () => {
         (profileLoader.loadAllProfiles as any).mockReset();

@@ -6,6 +6,7 @@ resources/Favorites.txt
 resources/testProfileData.ts
 results
 debug.log
-package-lock.json
+npm-shrinkwrap.json
 vscode-extension-for-zowe*.vsix
 .vscode/settings.json
+.history

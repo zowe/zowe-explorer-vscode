@@ -164,7 +164,7 @@ describe("DatasetTree Integration Tests", async () => {
         testTree.deleteSession(testTree.mSessionNodes[len]);
         await testTree.addSession(testConst.profile.name);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
-    });
+    }).timeout(TIMEOUT);
 
     describe("addFavorite()", () => {
         it("should add the selected data set to the treeView", async () => {

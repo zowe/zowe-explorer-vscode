@@ -87,7 +87,7 @@ export class ZoweNode extends vscode.TreeItem {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true})); 
+                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
                 }
             } else {
                 responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));

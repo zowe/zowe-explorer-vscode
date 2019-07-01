@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.18.0",
+  "version": "0.21.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -52,10 +52,6 @@
         {
           "id": "zowe.jobs",
           "name": "%zowe.jobs%"
-        },
-        {
-          "id": "zowe.spool",
-          "name": "%zowe.spool%"
         }
       ]
     },
@@ -119,6 +115,10 @@
       {
         "command": "zowe.deletePDS",
         "title": "%deletePDS%"
+      },
+      {
+        "command": "zowe.uploadDialog",
+        "title": "Upload member.."
       },
       {
         "command": "zowe.pattern",
@@ -223,6 +223,14 @@
       {
         "command": "zowe.uss.removeSession",
         "title": "%uss.removeSession%"
+      },
+      {
+        "command": "zowe.uss.safeSaveUSS",
+        "title": "Safe Save - Merge if Necessary",
+        "icon": {
+          "light": "./resources/light/upload.svg",
+          "dark": "./resources/dark/upload.svg"
+        }
       },
       {
         "command": "zowe.uss.binary",
@@ -366,12 +374,22 @@
           "group": "navigation"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.refreshUSS",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.safeSaveUSS",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
           "command": "zowe.uss.renameNode",
           "group": "navigation"
         },
@@ -532,6 +550,10 @@
           "command": "zowe.deletePDS"
         },
         {
+          "when": "viewItem == pds",
+          "command": "zowe.uploadDialog"
+        },
+        {
           "when": "viewItem == pdsf",
           "command": "zowe.removeFavorite"
         },
@@ -660,6 +682,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.safeSaveUSS",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.removeSession",
           "when": "never"
         }
@@ -759,7 +785,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
-    "build": "npm run license && tsc --pretty",
+    "build": "npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
     "test": "jest --coverage",
@@ -767,6 +793,10 @@
     "license": "node ./scripts/license.js",
     "watch": "tsc -b --watch --pretty",
     "compile": "tsc -b",
+    "markdown": "markdownlint CHANGELOG.md README.md",
+    "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
+    "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\"",
     "clean": "gulp clean"
   },
   "devDependencies": {
@@ -776,42 +806,41 @@
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
-    "@types/vscode": "^1.34.0",
     "@types/yargs": "^11.0.0",
+    "@types/vscode": "^1.34.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
     "del": "^4.1.1",
     "event-stream": "^4.0.1",
-    "expect": "^23.4.0",
+    "expect": "^24.8.0",
     "glob": "^7.1.2",
     "gulp": "^4.0.2",
     "gulp-filter": "^5.1.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
-    "jest": "^22.4.4",
+    "jest": "^24.8.0",
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
+    "log4js": "3.0.5",
     "run-sequence": "^2.2.1",
+    "markdownlint-cli": "^0.16.0",
     "sinon": "^6.1.0",
-    "ts-jest": "^22.4.6",
-    "tslint": "^5.16.0",
-    "typescript": "^2.8.4",
-    "vsce": "^1.61.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.1",
+    "vsce": "^1.60.0",
     "vscode": "^1.1.30",
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "^2.28.0",
-    "@brightside/imperative": "^2.3.0",
-    "ftp": "^0.3.10",
+    "@brightside/core": "2.28.2",
+    "@brightside/imperative": "2.4.6",
+    "@types/fs-extra": "^7.0.0",
+    "fs-extra": "^8.0.1",
+    "jsdoc": "^3.5.5",
+    "tslint": "^5.17.0",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.2.0",
-    "jsdoc": "^3.5.5",
-    "jsonc-parser": "^0.4.2",
-    "log4js": "^4.4.0",
-    "mkdirp": "^0.5.1",
-    "rimraf": "^2.6.2",
     "vscode-nls": "^4.1.1"
   },
   "jest": {
