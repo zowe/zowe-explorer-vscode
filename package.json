@@ -246,7 +246,7 @@
       },
       {
         "command": "zowe.uss.uploadDialog",
-        "title": "Upload files..."
+        "title": "Upload Files..."
       },
       {
         "command": "zowe.uss.text",
@@ -461,6 +461,11 @@
           "group": "1_create"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.uploadDialog",
+          "group": "1_create"
+        },
+        {
           "when": "viewItem == member",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -621,6 +626,11 @@
           "group": "4_workspace"
         },
         {
+          "when": "viewItem == pds",
+          "command": "zowe.uploadDialog",
+          "group": "1_create"
+        },
+        {
           "when": "viewItem == pdsf",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -636,7 +646,7 @@
           "group": "5_modification@1"
         },
         {
-          "when": "viewItem == pds",
+          "when": "viewItem == pdsf",
           "command": "zowe.uploadDialog",
           "group": "1_create"
         },
