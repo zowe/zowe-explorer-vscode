@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -118,7 +118,7 @@
       },
       {
         "command": "zowe.uploadDialog",
-        "title": "Upload member.."
+        "title": "Upload Member..."
       },
       {
         "command": "zowe.pattern",
@@ -197,6 +197,14 @@
         }
       },
       {
+        "command": "zowe.uss.createNode",
+        "title": "Create new file or directory",
+        "icon": {
+          "light": "./resources/light/newfile.svg",
+          "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
         "command": "zowe.uss.fullPath",
         "title": "%uss.fullPath%",
         "icon": {
@@ -235,6 +243,10 @@
       {
         "command": "zowe.uss.binary",
         "title": "%uss.binary%"
+      },
+      {
+        "command": "zowe.uss.uploadDialog",
+        "title": "Upload Files..."
       },
       {
         "command": "zowe.uss.text",
@@ -434,6 +446,16 @@
           "group": "navigation"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem == directory",
+          "command": "zowe.uss.uploadDialog",
+          "group": "navigation"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == directoryf",
+          "command": "zowe.uss.uploadDialog",
+          "group": "navigation"
+        },
+        {
           "when": "viewItem == member",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -555,6 +577,10 @@
         },
         {
           "when": "viewItem == pdsf",
+          "command": "zowe.uploadDialog"
+        },
+        {
+          "when": "viewItem == pdsf",
           "command": "zowe.removeFavorite"
         },
         {
@@ -582,6 +608,11 @@
         {
           "when": "viewItem == uss_session",
           "command": "zowe.uss.fullPath",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == uss_session",
+          "command": "zowe.uss.createNode",
           "group": "inline"
         },
         {
