@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Unit Tests (Jest) Checks that the ZoweUSSNode structure matches the snapshot 1`] = `
+ZoweUSSNode {
+  "binary": false,
+  "binaryFiles": Object {},
+  "children": Array [],
+  "collapsibleState": 1,
+  "contextValue": "directory",
+  "dirty": true,
+  "fullPath": "",
+  "label": "testDir",
+  "mCollapsibleState": 1,
+  "mLabel": "testDir",
+  "mParent": ZoweUSSNode {
+    "binary": false,
+    "binaryFiles": Object {},
+    "children": Array [],
+    "collapsibleState": 1,
+    "contextValue": "uss_session",
+    "dirty": true,
+    "fullPath": "",
+    "label": "root",
+    "mCollapsibleState": 1,
+    "mLabel": "root",
+    "mParent": null,
+    "mProfileName": undefined,
+    "parentPath": null,
+    "profileName": "",
+    "session": Session {
+      "ISession": Object {
+        "hostname": "fake",
+        "password": "fake",
+        "protocol": "https",
+        "type": "basic",
+        "user": "fake",
+      },
+    },
+    "shortLabel": "",
+  },
+  "mProfileName": undefined,
+  "parentPath": null,
+  "profileName": "",
+  "session": null,
+  "shortLabel": "",
+}
+`;

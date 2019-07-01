@@ -511,6 +511,11 @@ describe("Extension Unit Tests", () => {
         await extension.activate(mock);
     });
 
+    it("should not change the existing context menus", async () => {
+        const packageJsonContent = require("../package.json");
+        expect(packageJsonContent.contributes.menus["view/item/context"]).toMatchSnapshot();
+    });
+
     it("Testing that createMember correctly executes", async () => {
         const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
 
