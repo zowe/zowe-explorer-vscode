@@ -32,13 +32,28 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         try {
             const filePath = `${node.fullPath}/${name}`;
             await zowe.Create.uss(node.getSession(), filePath, nodeType);
-            ussFileProvider.refresh();
+            if (isTopLevel) {
+                refreshAllUSS(ussFileProvider);
+            } else {
+                ussFileProvider.refresh();
+            }
         } catch (err) {
             vscode.window.showErrorMessage(
                 localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
     }
+}
+
+export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    const quickPickOptions: vscode.QuickPickOptions = {
+        placeHolder: `What would you like to create at ${node.fullPath}?`,
+        ignoreFocusOut: true,
+        canPickMany: false
+    };
+    const type = await vscode.window.showQuickPick(["Directory", "File"], quickPickOptions);
+    const isTopLevel = true;
+    createUSSNode(node, ussFileProvider, type, isTopLevel);
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
@@ -149,4 +164,32 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
         node.contextValue += "f";
         ussFileProvider.mFavorites.push(node);
     });
+}
+
+export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    const fileOpenOptions = {
+        canSelectFiles: true,
+        openLabel: "Upload Files",
+        canSelectMany: true
+     };
+
+    const value = await vscode.window.showOpenDialog(fileOpenOptions);
+
+    await Promise.all(
+        value.map(async (item) => {
+            const doc = await vscode.workspace.openTextDocument(item);
+            await uploadFile(node, doc);
+        }
+     ));
+    ussFileProvider.refresh();
+}
+
+export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
+    try {
+        const localFileName = path.parse(doc.fileName).base;
+        const ussName = `${node.fullPath}/${localFileName}`;
+        await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
+    } catch (e) {
+        vscode.window.showErrorMessage(e.message);
+    }
 }
