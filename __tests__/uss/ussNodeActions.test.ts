@@ -13,8 +13,6 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
-import { createUSSNode, deleteUSSNode, renameUSSNode } from "../../src/uss/ussNodeActions";
-// tslint:disable-next-line: no-duplicate-imports
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import * as utils from "../../src/utils";
 
@@ -32,6 +30,8 @@ const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
+const showOpenDialog = jest.fn();
+const openTextDocument = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -81,6 +81,8 @@ Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
 Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
 Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
+Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
 
 
 describe("ussNodeActions", () => {
@@ -93,31 +95,39 @@ describe("ussNodeActions", () => {
     describe("createUSSNode", () => {
         it("createUSSNode is executed successfully", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
-            await createUSSNode(ussNode, testUSSTree, "file");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
         });
         it("createUSSNode does not execute if node name was not entered", async () => {
             showInputBox.mockReturnValueOnce("");
-            await createUSSNode(ussNode, testUSSTree, "file");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
+        });
+        it("should refresh only the child folder", async () => {
+            showInputBox.mockReturnValueOnce("USSFolder");
+            const isTopLevel = false;
+            spyOn(ussNodeActions, "refreshAllUSS");
+            await ussNodeActions.createUSSNode(ussNode, testUSSTree, "folder", isTopLevel);
+            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
         });
     });
     describe("deleteUSSNode", () => {
         it("should delete node if user verified", async () => {
             showQuickPick.mockResolvedValueOnce("Yes");
-            await deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).toHaveBeenCalled();
         });
         it("should not delete node if user did not verify", async () => {
             showQuickPick.mockResolvedValueOnce("No");
-            await deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
         it("should not delete node if user cancelled", async () => {
             showQuickPick.mockResolvedValueOnce(undefined);
-            await deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
@@ -157,10 +167,21 @@ describe("ussNodeActions", () => {
         });
         it("should execute rename USS file and and refresh the tree", async () => {
             showInputBox.mockReturnValueOnce("new name");
-            await renameUSSNode(ussNode, testUSSTree, "file");
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
+        });
+    });
+    describe("uploadFile", () => {
+        it("should call upload dialog and upload file", async () => {
+            const fileUri = {fsPath: "/tmp/foo"};
+            showOpenDialog.mockReturnValue([fileUri]);
+            openTextDocument.mockReturnValue({});
+            await ussNodeActions.uploadDialog(ussNode, testUSSTree);
+            expect(showOpenDialog).toBeCalled();
+            expect(openTextDocument).toBeCalled();
+            expect(testUSSTree.refresh).toBeCalled();
         });
     });
 });
