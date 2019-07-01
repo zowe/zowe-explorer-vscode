@@ -129,7 +129,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.addFavorite", async (node) => ussFileProvider.addUSSFavorite(node));
     vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node) => ussFileProvider.removeUSSFavorite(node));
     vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
-    vscode.commands.registerCommand("zowe.uss.refreshAll", () => refreshAllUSS(ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
     vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
@@ -137,12 +137,14 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
-// tslint:disable-next-line: max-line-length
-    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
+    vscode.commands.registerCommand("zowe.uss.deleteNode",
+        async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
-// tslint:disable-next-line: max-line-length
-    vscode.commands.registerCommand("zowe.uss.renameNode", async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
+    vscode.commands.registerCommand("zowe.uss.renameNode",
+        async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
+    vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration("Zowe-USS-Persistent-Favorites")) {
@@ -821,15 +823,15 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
         return;
     }
 
+    // Sanitization: Replace multiple preceding forward slashes with just one forward slash
+    const sanitizedPath = remotepath.replace(/\/\/+/, "/");
+    node.tooltip = node.fullPath = sanitizedPath;
+    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     // update the treeview with the new path
     // TODO figure out why a label change is needed to refresh the treeview,
     // instead of changing the collapsible state
     // change label so the treeview updates
-    node.label = node.label + " ";
-    node.label.trim();
-    // Sanitization: Replace multiple preceding forward slashes with just one forward slash
-    node.tooltip = node.fullPath = remotepath.replace(/\/\/+/, "/");
-    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    node.label = `${node.mProfileName} [${sanitizedPath}]`;
     node.dirty = true;
     ussFileProvider.refresh();
 }
@@ -981,17 +983,6 @@ export async function refreshAll(datasetProvider: DatasetTree) {
     datasetProvider.refresh();
 }
 
-/**
- * Refreshes treeView
- *
- * @param {USSTree} ussFileProvider
- */
-export async function refreshAllUSS(ussFileProvider: USSTree) {
-    ussFileProvider.mSessionNodes.forEach((node) => {
-        node.dirty = true;
-    });
-    ussFileProvider.refresh();
-}
 /**
  * Refreshes the passed node with current mainframe data
  *
@@ -1283,9 +1274,10 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         log.debug("requesting to open a uss file " + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
+            const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
             await zowe.Download.ussFile(node.getSession(), node.fullPath, {
                 file: getUSSDocumentFilePath(node),
-                binary: node.binary
+                binary: chooseBinary
             });
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
