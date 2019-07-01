@@ -2,6 +2,13 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.22.0
+
+- Add ability to create directories or files on the root node. Thanks to @kristinochka
+- Add ability to upload files through regular OS browse dialog on regular nodes and favorites. Thanks to @kristinochka
+- Add USS File Refresh and USS Safe Save. Thanks to @adambattenburg
+- Honor the file tag (binary or ascii) if not specified. Thanks to @Colin-Stone
+
 ## 0.21.0
 
 - Added the Upload member to datasets. Thanks Kristina Mayo
