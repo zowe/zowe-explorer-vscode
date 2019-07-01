@@ -458,7 +458,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == directory",
           "command": "zowe.uss.uploadDialog",
-          "group": "navigation"
+          "group": "1_create"
         },
         {
           "when": "viewItem == member",
