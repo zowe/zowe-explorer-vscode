@@ -18,7 +18,7 @@ import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../src/ZoweUSSNode";
 
-describe("Unit Tests (Jest)", async () => {
+describe("Unit Tests (Jest)", () => {
     // Globals
     const session = new Session({
         user: "fake",

@@ -22,7 +22,7 @@ import { Session } from "@brightside/imperative";
 
 import * as profileLoader from "../src/ProfileLoader";
 
-describe("Unit Tests (Jest)", async () => {
+describe("Unit Tests (Jest)", () => {
     // Globals
     const session = new Session({
         user: "fake",
@@ -71,7 +71,7 @@ describe("Unit Tests (Jest)", async () => {
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null),
         ];
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        
+
         // Checking that the rootChildren are what they are expected to be
         expect(rootChildren).toEqual(sampleChildren);
 

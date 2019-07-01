@@ -105,7 +105,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
 
         // Creates ZoweUSSNode to track new session and pushes it to mSessionNodes
-        const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "");
+        const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false, zosmfProfile.name);
         node.contextValue = "uss_session";
         this.mSessionNodes.push(node);
         this.refresh();
@@ -135,7 +135,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             node.getSession(),
             node.mParent.fullPath,
             false,
-            node.getSessionNode().mLabel);
+            node.getSessionNode().mProfileName);
         temp.contextValue += "f";
         if (temp.contextValue === "textFilef" || temp.contextValue === "binaryFilef") {
             temp.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp]};
@@ -147,14 +147,14 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         }
     }
 
-     /**
+    /**
      * Removes a node from the favorites list
      *
      * @param {ZoweUSSNode} node
      */
     public async removeUSSFavorite(node: ZoweUSSNode) {
         this.mFavorites = this.mFavorites.filter((temp) =>
-            !((temp.mLabel === node.mLabel) && (temp.contextValue.startsWith(node.contextValue))));
+            !((temp.fullPath === node.fullPath) && (temp.contextValue.startsWith(node.contextValue))));
         this.refresh();
         await this.updateFavorites();
     }

@@ -51,11 +51,15 @@
         },
         {
           "id": "zowe.jobs",
+<<<<<<< HEAD
           "name": "%zowe.jobs%"
         },
         {
           "id": "zowe.spool",
           "name": "%zowe.spool%"
+=======
+          "name": "Jobs"
+>>>>>>> 4a0f4eb0d501c227b590c80fb6339bea391eb7b5
         }
       ]
     },
@@ -119,6 +123,10 @@
       {
         "command": "zowe.deletePDS",
         "title": "%deletePDS%"
+      },
+      {
+        "command": "zowe.uploadDialog",
+        "title": "Upload member.."
       },
       {
         "command": "zowe.pattern",
@@ -223,6 +231,14 @@
       {
         "command": "zowe.uss.removeSession",
         "title": "%uss.removeSession%"
+      },
+      {
+        "command": "zowe.uss.safeSaveUSS",
+        "title": "Safe Save - Merge if Necessary",
+        "icon": {
+          "light": "./resources/light/upload.svg",
+          "dark": "./resources/dark/upload.svg"
+        }
       },
       {
         "command": "zowe.uss.binary",
@@ -366,12 +382,22 @@
           "group": "navigation"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.refreshUSS",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.safeSaveUSS",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
           "group": "navigation"
         },
         {
-          "when": "view == zowe.uss.explorer",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
           "command": "zowe.uss.renameNode",
           "group": "navigation"
         },
@@ -532,6 +558,10 @@
           "command": "zowe.deletePDS"
         },
         {
+          "when": "viewItem == pds",
+          "command": "zowe.uploadDialog"
+        },
+        {
           "when": "viewItem == pdsf",
           "command": "zowe.removeFavorite"
         },
@@ -657,6 +687,10 @@
         },
         {
           "command": "zowe.uss.refreshUSS",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.safeSaveUSS",
           "when": "never"
         },
         {

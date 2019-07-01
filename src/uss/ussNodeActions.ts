@@ -64,10 +64,14 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
         throw (err);
     }
+
+    // Remove node from the USS Favorites tree
+    ussFileProvider.removeUSSFavorite(node);
+    ussFileProvider.refresh();
 }
 
 /**
- * Refreshes treeView MOVE FUNCTION FROM EXTENSION!
+ * Refreshes treeView
  *
  * @param {USSTree} ussFileProvider
  */
@@ -108,12 +112,13 @@ export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
                 fs.unlinkSync(filePath);
             }
         }
+// tslint:disable-next-line: no-empty
         catch (err) {}
 }
 
 export async function initializeUSSFavorites(ussFileProvider: USSTree) {
     const lines: string[] = vscode.workspace.getConfiguration("Zowe-USS-Persistent-Favorites").get("favorites");
-    lines.forEach(async line => {
+    lines.forEach(async (line) => {
         const profileName = line.substring(1, line.lastIndexOf("]"));
         const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
         const session = await utils.getSession(profileName);

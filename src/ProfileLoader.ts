@@ -15,13 +15,13 @@ import { IProfileLoaded } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 /**
- * Load all profiles by spawning a script that uses the users' globally installed 
- * 'node' command. This should work regardless of what credential manager plugins 
+ * Load all profiles by spawning a script that uses the users' globally installed
+ * 'node' command. This should work regardless of what credential manager plugins
  * the user has installed
  */
 export function loadAllProfiles(): IProfileLoaded[] {
     const getProfileProcess = spawnSync("node", [path.join(__dirname, "getAllProfiles.js")]);
- 
+
     if (getProfileProcess.status !== 0) {
         throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve profile contents!\n") +
             getProfileProcess.stderr.toString());
@@ -38,8 +38,8 @@ export function loadAllProfiles(): IProfileLoaded[] {
 }
 
 /**
- * Load a specific profile. Works the same way as loadAllProfiles, then 
- * finds the specific named profile 
+ * Load a specific profile. Works the same way as loadAllProfiles, then
+ * finds the specific named profile
  * @param name the name of the profile you would like to load
  */
 export function loadNamedProfile(name: string): IProfileLoaded {
