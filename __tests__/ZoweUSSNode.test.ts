@@ -29,7 +29,18 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
+     * Checks that the ZoweUSSNode structure is the same as the snapshot
+     *************************************************************************************************************/
+    it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
+        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        rootNode.contextValue = "uss_session";
+        const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
+        const testFile = new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null);
+        await expect(testDir).toMatchSnapshot();
+    });
+
+    /*************************************************************************************************************
+     * Creates a ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session,null);
