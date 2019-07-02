@@ -38,7 +38,6 @@ opts.push( parameters([
   booleanParam(name: 'SKIP_CI_SKIP', defaultValue: false, description: 'Skip: CI SKIP'),
   booleanParam(name: 'SKIP_TEST', defaultValue: false, description: 'Skip: TEST'),
   booleanParam(name: 'SKIP_AUDIT', defaultValue: false, description: 'Skip: AUDIT'),
-  booleanParam(name: 'SKIP_VERSIONING', defaultValue: false, description: 'Skip: VERSIONING'),
   booleanParam(name: 'SKIP_PUBLISH', defaultValue: false, description: 'Skip: PUBLISH'),
   string(name: 'RECIPIENTS_LIST', defaultValue: '', description: 'List of emails to receive build results (Override)')
 ]) )
