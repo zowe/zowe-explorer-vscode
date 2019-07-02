@@ -114,7 +114,7 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
           def vscodePackageJson = readJSON file: "package.json"
-          def extensionMetadata = sh(returnStdout: true, script: "npx vsce show ${vscodePackageJson.publisher}.${vscodePackageJson.name} --json").trime()
+          def extensionMetadata = sh(returnStdout: true, script: "npx vsce show ${vscodePackageJson.publisher}.${vscodePackageJson.name} --json").trim()
           def extensionInfo = readJSON text: extensionMetadata
 
           if (extensionInfo.versions[0].version == vscodePackageJson.version) {
