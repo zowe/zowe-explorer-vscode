@@ -17,7 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 /**
  * Name of the master branch
  */
-def MASTER_BRANCH = "finish-cd"
+def MASTER_BRANCH = "master"
 
 /**
  * TOKEN ID where secret is stored
@@ -117,11 +117,11 @@ pipeline {
           def extensionInfo = readJSON text: extensionMetadata
 
           if (extensionInfo.versions[0].version == vscodePackageJson.version) {
-            echo "No need to publish since there is no new version at this time"
+            echo "No new version to publish at this time (${vscodePackageJson.version})"
           } else {
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-              // sh "npx vsce publish -p $TOKEN"
+              sh "npx vsce publish -p $TOKEN"
             }
           }
         } }
