@@ -119,9 +119,9 @@ pipeline {
           if (extensionInfo.versions[0].version == vscodePackageJson.version) {
             echo "No need to publish since there is no new version at this time"
           } else {
+            echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
               // sh "npx vsce publish -p $TOKEN"
-              echo "publishing verison ${vscodePackageJson.version} since it's different than ${extensionInfo.versions[0].version}"
             }
           }
         } }
