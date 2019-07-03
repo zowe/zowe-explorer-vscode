@@ -1414,7 +1414,7 @@ export async function deleteJob(job: Job) {
 export async function getSpoolContent(session: AbstractSession, spool: IJobFile) {
     try {
         const spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
-        const document = await vscode.workspace.openTextDocument({ content: spoolContent });
+        const document = await vscode.workspace.openTextDocument({ language: "jes-jcl", content: spoolContent });
         await vscode.window.showTextDocument(document);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
