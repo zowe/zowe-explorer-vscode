@@ -31,10 +31,6 @@ declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
 
 describe("Extension Integration Tests", () => {
-// tslint:disable-next-line: variable-name
-    const ds_folder = extension.DS_DIR;
-// tslint:disable-next-line: variable-name
-    const brightside_folder = extension.BRIGHTTEMPFOLDER;
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -51,7 +47,7 @@ describe("Extension Integration Tests", () => {
     beforeEach(async function() {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
-        await extension.deactivate();
+        await extension.cleanTempDir();
     });
 
     afterEach(async function() {
@@ -172,18 +168,18 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(brightside_folder);
-                fs.mkdirSync(ds_folder);
+                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.DS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(ds_folder);
+                fs.mkdirSync(extension.DS_DIR);
             }
-            fs.closeSync(fs.openSync(path.join(ds_folder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(ds_folder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.DS_DIR, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.DS_DIR, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(ds_folder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(ds_folder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.DS_DIR, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.DS_DIR, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
@@ -402,6 +398,56 @@ describe("Extension Integration Tests", () => {
         // TODO add tests for saving data set from favorites
     });
 
+    describe("Updating Temp Folder", () => {
+        // define paths
+        const testingPath = path.join(__dirname, "..", "..", "..", "test");
+        const providedPathOne = path.join(__dirname, "..", "..", "..", "test-folder-one");
+        const providedPathTwo = path.join(__dirname, "..", "..", "..", "test-folder-two");
+
+        // remove directories in case of previously failed tests
+        extension.cleanDir(testingPath);
+        extension.cleanDir(providedPathOne);
+        extension.cleanDir(providedPathTwo);
+
+        it("should assign the temp folder based on preference", async () => {
+            // create target folder
+            fs.mkdirSync(testingPath);
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
+
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+
+            // Remove directory for subsequent tests
+            extension.cleanDir(testingPath);
+        }).timeout(TIMEOUT);
+
+        it("should update temp folder on preference change", async () => {
+            fs.mkdirSync(providedPathOne);
+            fs.mkdirSync(providedPathTwo);
+
+            // set first preference
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: `${providedPathOne}` }, vscode.ConfigurationTarget.Global);
+
+            // change preference and test for update
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+            { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
+
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+
+            // Remove directory for subsequent tests
+            extension.cleanDir(providedPathOne);
+            extension.cleanDir(providedPathTwo);
+        }).timeout(TIMEOUT);
+
+        it("should assign default temp folder, if preference is empty", async () => {
+            const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
+            await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
+                { folderPath: "" }, vscode.ConfigurationTarget.Global);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(expectedDefaultTemp);
+        }).timeout(TIMEOUT);
+    });
+
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
@@ -456,9 +502,6 @@ async function getAllNodes(nodes: ZoweNode[]) {
 }
 
 describe("Extension Integration Tests - USS", () => {
-    const brightsidefolder = extension.BRIGHTTEMPFOLDER;
-    const ussFolder = extension.USS_DIR;
-
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
@@ -536,18 +579,18 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(brightsidefolder);
-                fs.mkdirSync(ussFolder);
+                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.USS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
                 await new Promise((resolve) => setTimeout(resolve, 1000));
-                fs.mkdirSync(ussFolder);
+                fs.mkdirSync(extension.USS_DIR);
             }
-            fs.closeSync(fs.openSync(path.join(ussFolder, "file1"), "w"));
-            fs.closeSync(fs.openSync(path.join(ussFolder, "file2"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.USS_DIR, "file1"), "w"));
+            fs.closeSync(fs.openSync(path.join(extension.USS_DIR, "file2"), "w"));
             await extension.deactivate();
-            expect(fs.existsSync(path.join(ussFolder, "file1"))).to.equal(false);
-            expect(fs.existsSync(path.join(ussFolder, "file2"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.USS_DIR, "file1"))).to.equal(false);
+            expect(fs.existsSync(path.join(extension.USS_DIR, "file2"))).to.equal(false);
         }).timeout(TIMEOUT);
     });
 
