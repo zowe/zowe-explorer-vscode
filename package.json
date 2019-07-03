@@ -878,6 +878,13 @@
           "description": "Toggle if favorite files persist locally",
           "scope": "window"
         },
+        "Zowe-Temp-Folder-Location": {
+          "default": {
+            "folderPath": ""
+          },
+          "description": "Path to temporary folder location",
+          "scope": "window"
+        },
         "Zowe-USS-Persistent-Favorites": {
           "default": {
             "persistence": true,
@@ -930,6 +937,8 @@
   "dependencies": {
     "@brightside/core": "2.28.2",
     "@brightside/imperative": "2.4.6",
+    "@types/fs-extra": "^7.0.0",
+    "fs-extra": "^8.0.1",
     "jsdoc": "^3.5.5",
     "tslint": "^5.17.0"
   },
