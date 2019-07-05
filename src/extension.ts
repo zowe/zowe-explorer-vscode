@@ -954,6 +954,31 @@ export function getUSSProfile(node: ZoweUSSNode) {
     return profile;
 }
 
+function appendSuffix(label: string): string {
+    if (label.indexOf(".ASM") > -1 ) {
+        return label.concat(".asm");
+    }
+    if (label.indexOf("JCL") > -1 || label.indexOf("CNTL") > -1) {
+        return label.concat(".jcl");
+    }
+    if (label.indexOf("COBOL") > -1 || label.indexOf("CBL") > -1) {
+        return label.concat(".cbl");
+    }
+    if (label.indexOf("PLI") > -1 || label.indexOf("PL1") > -1 || label.indexOf("PLX") > -1) {
+        return label.concat(".pl1");
+    }
+    if (label.indexOf("SCRIPTS") > -1 || label.indexOf("SHELL") > -1) {
+        return label.concat(".sh");
+    }
+    if (label.indexOf("REXX") > -1 || label.indexOf("REXEC") > -1 || label.indexOf("EXEC") > -1) {
+        return label.concat(".rexx");
+    }
+    if (label.indexOf("XML") > -1) {
+        return label.concat(".xml");
+    }
+    return label;
+}
+
 /**
  * Returns the file path for the ZoweNode
  *
@@ -962,7 +987,7 @@ export function getUSSProfile(node: ZoweUSSNode) {
  * @param {ZoweNode} node
  */
 export function getDocumentFilePath(label: string, node: ZoweNode) {
-    return path.join(DS_DIR, label + "[" + getProfile(node) + "]");
+    return path.join(DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
 }
 
 /**

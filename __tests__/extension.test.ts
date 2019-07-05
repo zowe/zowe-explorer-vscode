@@ -34,6 +34,7 @@ import * as fsextra from "fs-extra";
 import * as profileLoader from "../src/ProfileLoader";
 import * as ussNodeActions from "../src/uss/ussNodeActions";
 import { Job } from "../src/zosjobs";
+import { defineGlobals } from "../src/extension";
 
 describe("Extension Unit Tests", () => {
     // Globals
@@ -595,12 +596,12 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({
-            file: path.join(extension.DS_DIR, node.mLabel +
-                "[" + node.getSessionNode().mLabel + "]")
+            file: path.join(extension.DS_DIR,
+                node.getSessionNode().mLabel, node.mLabel )
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.mLabel +
-            "[" + node.getSessionNode().mLabel + "]"));
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
 
@@ -857,11 +858,11 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][0]).toBe(session);
         expect(delDataset.mock.calls[0][1]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.label +
-            "[" + node.getSessionNode().mLabel + "]"));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.label +
-            "[" + node.getSessionNode().mLabel + "]"));
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, node.mLabel ));
 
         unlinkSync.mockReset();
         delDataset.mockReset();
@@ -1110,8 +1111,8 @@ describe("Extension Unit Tests", () => {
         await extension.openPS(node);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.mLabel +
-            "[" + node.getSessionNode().mLabel + "]"));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(session);
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
@@ -1191,8 +1192,8 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.mLabel, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR, node.mLabel +
-            "[" + node.getSessionNode().mLabel + "]"));
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test");
         expect(save.mock.calls.length).toBe(1);
@@ -1865,5 +1866,23 @@ describe("Extension Unit Tests", () => {
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(0);
+    });
+
+    it("Testing that the add Suffix for datasets works", async () => {
+        defineGlobals("/test/path/");
+        let node = new ZoweNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.JCL(member).jcl");
+        node = new ZoweNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.ASM(member).asm");
+        node = new ZoweNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.COBOL.TEST(member).cbl");
+        node = new ZoweNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLI(member).pl1");
+        node = new ZoweNode("AUSER.PROD.SCRIPTS(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.SCRIPTS(member).sh");
+        node = new ZoweNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.REXX.EXEC(member).rexx");
+        node = new ZoweNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.XML(member).xml");
     });
 });
