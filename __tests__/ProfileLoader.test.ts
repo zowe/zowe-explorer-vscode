@@ -79,7 +79,7 @@ describe("ProfileLoader", ()=>{
     it("should display an information message and log a debug message if no default profile is found", ()=> {
         showInformationMessage.mockReset();
         mockDebug.mockReset();
-
+        // Create bad profile
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any)=>{
             return {
                 status: 0,
