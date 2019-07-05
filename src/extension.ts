@@ -22,6 +22,7 @@ import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
+import * as jesActions from "./jes/jesNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
@@ -1414,7 +1415,8 @@ export async function deleteJob(job: Job) {
 export async function getSpoolContent(session: AbstractSession, spool: IJobFile) {
     try {
         const spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
-        const document = await vscode.workspace.openTextDocument({ language: "jes-jcl", content: spoolContent });
+        const language = jesActions.getSpoolLanguage(spool);
+        const document = await vscode.workspace.openTextDocument({ language, content: spoolContent });
         await vscode.window.showTextDocument(document);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
