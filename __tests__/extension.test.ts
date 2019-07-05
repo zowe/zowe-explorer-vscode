@@ -34,7 +34,6 @@ import * as fsextra from "fs-extra";
 import * as profileLoader from "../src/ProfileLoader";
 import * as ussNodeActions from "../src/uss/ussNodeActions";
 import { Job } from "../src/zosjobs";
-import { defineGlobals } from "../src/extension";
 
 describe("Extension Unit Tests", () => {
     // Globals
@@ -1869,7 +1868,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that the add Suffix for datasets works", async () => {
-        defineGlobals("/test/path/");
+        extension.defineGlobals("/test/path/");
         let node = new ZoweNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.JCL(member).jcl");
         node = new ZoweNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
