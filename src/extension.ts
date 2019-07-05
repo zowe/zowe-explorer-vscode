@@ -1319,8 +1319,8 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     let binary;
     const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mLabel === sesName.trim()));
     if (sesNode) {
-        documentSession = sesNode.getSession();  // TODO MISSED TESTING
-        binary = Object.keys(sesNode.binaryFiles).includes(remote);
+        documentSession = sesNode.getSession();
+        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
 
     try {
