@@ -19,14 +19,17 @@ import { Logger } from "@brightside/imperative";
 import { loadNamedProfile, loadAllProfiles, loadDefaultProfile } from "../src/ProfileLoader";
 
 const showInformationMessage = jest.fn();
-const debug = jest.fn();
 Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-Object.defineProperty(Logger, "debug", {value: debug});
-
 
 describe("ProfileLoader", ()=>{
+    // Mocking log.debug
     const log = new Logger(undefined);
+    Object.defineProperty(log, "debug", {
+        value: jest.fn()
+    });
+    const mockDebug = jest.spyOn(log, "debug");
 
+    // Happy path profiles
     const profileOne = {name: "profile1", profile: {}, type: "zosmf"};
     const profileTwo = {name: "profile2", profile: {}, type: "zosmf"};
 
@@ -74,6 +77,9 @@ describe("ProfileLoader", ()=>{
     });
 
     it("should display an information message and log a debug message if no default profile is found", ()=> {
+        showInformationMessage.mockReset();
+        mockDebug.mockReset();
+
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any)=>{
             return {
                 status: 0,
@@ -81,8 +87,12 @@ describe("ProfileLoader", ()=>{
                 stderr: "Error text"
             };
         });
-        loadDefaultProfile(log);
+        // Expect loadDefaultProfile to throw an error
+        expect(()=> {
+            loadDefaultProfile(log);
+        }).toThrow();
+        // Test that the information and debug messages were called
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        // expect(log.debug.mock.calls.length).toBe(1);
+        expect(mockDebug.mock.calls.length).toBe(1);
     });
 });
