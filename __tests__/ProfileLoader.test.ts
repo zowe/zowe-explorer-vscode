@@ -9,13 +9,23 @@
 *                                                                                 *
 */
 
+jest.mock("vscode");
 jest.mock("child_process");
+jest.mock("@brightside/imperative");
+import * as vscode from "vscode";
 import * as child_process from "child_process";
+import { Logger } from "@brightside/imperative";
 
 import { loadNamedProfile, loadAllProfiles, loadDefaultProfile } from "../src/ProfileLoader";
 
+const showInformationMessage = jest.fn();
+const debug = jest.fn();
+Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+Object.defineProperty(Logger, "debug", {value: debug});
+
 
 describe("ProfileLoader", ()=>{
+    const log = new Logger(undefined);
 
     const profileOne = {name: "profile1", profile: {}, type: "zosmf"};
     const profileTwo = {name: "profile2", profile: {}, type: "zosmf"};
@@ -59,7 +69,20 @@ describe("ProfileLoader", ()=>{
 
     it("should return a default profile", ()=>{
 
-        const loadedProfile = loadDefaultProfile();
+        const loadedProfile = loadDefaultProfile(log);
         expect(loadedProfile).toEqual(profileOne);
-     });
+    });
+
+    it("should display an information message and log a debug message if no default profile is found", ()=> {
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any)=>{
+            return {
+                status: 0,
+                stdout: "",
+                stderr: "Error text"
+            };
+        });
+        loadDefaultProfile(log);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        // expect(log.debug.mock.calls.length).toBe(1);
+    });
 });
