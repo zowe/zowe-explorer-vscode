@@ -78,10 +78,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
-        await datasetProvider.addSession();
+        await datasetProvider.addSession(log);
         // Initialize file provider with the created session and the selected fullPath
         ussFileProvider = new USSTree();
-        await ussFileProvider.addSession();
+        await ussFileProvider.addSession(log);
     } catch (err) {
         log.error("Error encountered while activating and initializing logger! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
@@ -188,7 +188,7 @@ export async function activate(context: vscode.ExtensionContext) {
     try {
         // Initialize dataset provider with the created session and the selected pattern
         jobsProvider = new ZosJobsProvider();
-        await jobsProvider.addSession();
+        await jobsProvider.addSession(log);
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
     }
@@ -494,7 +494,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug("User selected profile '%s'", chosenProfile);
-            await datasetProvider.addSession(chosenProfile);
+            await datasetProvider.addSession(log, chosenProfile);
         } else {
             log.debug("User cancelled profile selection");
         }
@@ -545,7 +545,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug("User selected profile '%s'", chosenProfile);
-            await ussFileProvider.addSession(chosenProfile);
+            await ussFileProvider.addSession(log, chosenProfile);
         } else {
             log.debug("User cancelled profile selection");
         }
@@ -877,7 +877,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         // executing search from saved search in favorites
         pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);  // TODO MISSED TESTING
         const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
-        await datasetProvider.addSession(session);
+        await datasetProvider.addSession(log, session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);
     }
 
@@ -1499,7 +1499,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug("User selected profile '%s'", chosenProfile);
-            await datasetProvider.addSession(chosenProfile);
+            await datasetProvider.addSession(log, chosenProfile);
         } else {
             log.debug("User cancelled profile selection");
         }
