@@ -596,11 +596,11 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({
             file: path.join(extension.DS_DIR,
-                node.getSessionNode().mLabel, node.mLabel )
+                node.getSessionNode().mLabel, node.mLabel + ".node")
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + ".node" ));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
 
@@ -858,10 +858,10 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][1]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + ".node"));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + ".node" ));
 
         unlinkSync.mockReset();
         delDataset.mockReset();
@@ -1111,7 +1111,7 @@ describe("Extension Unit Tests", () => {
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + ".node"));
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(session);
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
@@ -1192,7 +1192,7 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.mLabel, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + ".node"));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test");
         expect(save.mock.calls.length).toBe(1);

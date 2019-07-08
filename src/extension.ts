@@ -955,28 +955,33 @@ export function getUSSProfile(node: ZoweUSSNode) {
 }
 
 function appendSuffix(label: string): string {
-    if (label.indexOf(".ASM") > -1 ) {
-        return label.concat(".asm");
+    const limit= 5;
+    const bracket = label.indexOf("(");
+    const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
+    for (let i = split.length - 1 ; i > -1; i--) {
+        if (split[i].indexOf(".ASM") > -1 ) {
+            return label.concat(".asm");
+        }
+        if (split[i].indexOf("JCL") > -1 || split[i].indexOf("CNTL") > -1) {
+            return label.concat(".jcl");
+        }
+        if (split[i].indexOf("COBOL") > -1 || split[i].indexOf("CBL") > -1) {
+            return label.concat(".cbl");
+        }
+        if (split[i].indexOf("PLI") > -1 || split[i].indexOf("PL1") > -1 || split[i].indexOf("PLX") > -1) {
+            return label.concat(".pl1");
+        }
+        if (split[i].indexOf("SCRIPTS") > -1 || split[i].indexOf("SHELL") > -1) {
+            return label.concat(".sh");
+        }
+        if (split[i].indexOf("REXX") > -1 || split[i].indexOf("REXEC") > -1 || split[i].indexOf("EXEC") > -1) {
+            return label.concat(".rexx");
+        }
+        if (split[i].indexOf("XML") > -1) {
+            return label.concat(".xml");
+        }
     }
-    if (label.indexOf("JCL") > -1 || label.indexOf("CNTL") > -1) {
-        return label.concat(".jcl");
-    }
-    if (label.indexOf("COBOL") > -1 || label.indexOf("CBL") > -1) {
-        return label.concat(".cbl");
-    }
-    if (label.indexOf("PLI") > -1 || label.indexOf("PL1") > -1 || label.indexOf("PLX") > -1) {
-        return label.concat(".pl1");
-    }
-    if (label.indexOf("SCRIPTS") > -1 || label.indexOf("SHELL") > -1) {
-        return label.concat(".sh");
-    }
-    if (label.indexOf("REXX") > -1 || label.indexOf("REXEC") > -1 || label.indexOf("EXEC") > -1) {
-        return label.concat(".rexx");
-    }
-    if (label.indexOf("XML") > -1) {
-        return label.concat(".xml");
-    }
-    return label;
+    return label.concat("." + split[split.length-1].toLowerCase());
 }
 
 /**
