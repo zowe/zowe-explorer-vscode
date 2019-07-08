@@ -1317,9 +1317,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
 
     // get session from session name
     let documentSession;
+    let binary;
     const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mLabel === sesName.trim()));
     if (sesNode) {
-        documentSession = sesNode.getSession();  // TODO MISSED TESTING
+        documentSession = sesNode.getSession();
+        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
 
     try {
@@ -1327,7 +1329,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             location: vscode.ProgressLocation.Notification,
             title: "Saving file..."
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, sesNode.binary);  // TODO MISSED TESTING
+            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary);  // TODO MISSED TESTING
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);

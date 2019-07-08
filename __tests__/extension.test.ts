@@ -1607,7 +1607,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that saveUSSFile is executed successfully", async () => {
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.USS_DIR, "testFile"),
+            fileName: path.join(extension.USS_DIR, ussNode.mLabel, "testFile"),
             uri: null,
             isUntitled: null,
             languageId: null,
