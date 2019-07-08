@@ -15,7 +15,7 @@ jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
 jest.mock("../src/ProfileLoader");
-import { Session } from "@brightside/imperative";
+import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree } from "../src/USSTree";
 import { ZoweUSSNode } from "../src/ZoweUSSNode";
@@ -210,9 +210,11 @@ describe("Unit Tests (Jest)", () => {
      * Test the addSession command
      *************************************************************************************************************/
     it("Test the addSession command ", async () => {
-        testTree.addSession();
+        const log = new Logger(undefined);
 
-        testTree.addSession("fake");
+        testTree.addSession(log);
+
+        testTree.addSession(log, "fake");
     });
 
     /*************************************************************************************************************
