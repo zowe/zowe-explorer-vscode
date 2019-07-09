@@ -13,15 +13,10 @@ import * as zowe from "@brightside/core";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-<<<<<<< HEAD
 import {IProfileLoaded } from "@brightside/imperative";
 import { loadNamedProfile, loadDefaultProfile} from "./ProfileLoader";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-=======
-import { IProfileLoaded } from "@brightside/imperative";
-import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
->>>>>>> 4a0f4eb0d501c227b590c80fb6339bea391eb7b5
 
 /**
  * A tree that contains nodes of sessions and data sets

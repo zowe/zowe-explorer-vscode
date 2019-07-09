@@ -56,14 +56,9 @@ export class ZoweNode extends vscode.TreeItem {
      * @returns {Promise<ZoweNode[]>}
      */
     public async getChildren(): Promise<ZoweNode[]> {
-<<<<<<< HEAD
         if ((!this.pattern && this.contextValue === "session")){ 
             return [new ZoweNode(localize("getChildren.search", "Use the search button to display datasets"),
                                  vscode.TreeItemCollapsibleState.None, this, null, true)];
-=======
-        if ((!this.pattern && this.contextValue === "session")){
-            return [new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, this, null, true)];
->>>>>>> 4a0f4eb0d501c227b590c80fb6339bea391eb7b5
         }
 
         if (this.contextValue === "ds" || this.contextValue === "member" || this.contextValue === "information") {

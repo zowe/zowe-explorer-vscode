@@ -1,0 +1,384 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Extension Unit Tests should not change the existing context menus 1`] = `
+Array [
+  Object {
+    "command": "zowe.uss.createFile",
+    "group": "1_create",
+    "when": "view == zowe.uss.explorer && viewItem == directory",
+  },
+  Object {
+    "command": "zowe.uss.createFolder",
+    "group": "1_create",
+    "when": "view == zowe.uss.explorer && viewItem == directory",
+  },
+  Object {
+    "command": "zowe.uss.addFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == directory",
+  },
+  Object {
+    "command": "zowe.uss.createFile",
+    "group": "1_create",
+    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+  },
+  Object {
+    "command": "zowe.uss.createFolder",
+    "group": "1_create",
+    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+  },
+  Object {
+    "command": "zowe.uss.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+  },
+  Object {
+    "command": "zowe.uss.refreshUSS",
+    "group": "inline",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+  },
+  Object {
+    "command": "zowe.uss.safeSaveUSS",
+    "group": "inline",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+  },
+  Object {
+    "command": "zowe.uss.refreshUSS",
+    "group": "0_mainframeInteraction",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+  },
+  Object {
+    "command": "zowe.uss.safeSaveUSS",
+    "group": "0_mainframeInteraction",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+  },
+  Object {
+    "command": "zowe.uss.deleteNode",
+    "group": "5_modification@1",
+    "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
+  },
+  Object {
+    "command": "zowe.uss.renameNode",
+    "group": "5_modification@0",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
+  },
+  Object {
+    "command": "zowe.uss.binary",
+    "group": "3_systemSpecific",
+    "when": "view == zowe.uss.explorer && viewItem == textFile",
+  },
+  Object {
+    "command": "zowe.uss.addFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == textFile",
+  },
+  Object {
+    "command": "zowe.uss.binary",
+    "group": "3_systemSpecific",
+    "when": "view == zowe.uss.explorer && viewItem == textFilef",
+  },
+  Object {
+    "command": "zowe.uss.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == textFilef",
+  },
+  Object {
+    "command": "zowe.uss.text",
+    "group": "3_systemSpecific",
+    "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+  },
+  Object {
+    "command": "zowe.uss.addFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == binaryFile",
+  },
+  Object {
+    "command": "zowe.uss.text",
+    "group": "3_systemSpecific",
+    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+  },
+  Object {
+    "command": "zowe.uss.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+  },
+  Object {
+    "command": "zowe.uss.uploadDialog",
+    "group": "1_create",
+    "when": "view == zowe.uss.explorer && viewItem == directory",
+  },
+  Object {
+    "command": "zowe.uss.uploadDialog",
+    "group": "1_create",
+    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "inline",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "inline",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.deleteMember",
+    "group": "5_modification@1",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.addFavorite",
+    "group": "4_workspace",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.submitMember",
+    "group": "3_systemSpecific",
+    "when": "viewItem == member",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "inline",
+    "when": "viewItem == memberf",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "inline",
+    "when": "viewItem == memberf",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == memberf",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == memberf",
+  },
+  Object {
+    "command": "zowe.deleteMember",
+    "group": "5_modification@1",
+    "when": "viewItem == memberf",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "inline",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "inline",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.deleteDataset",
+    "group": "5_modification@1",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.submitMember",
+    "group": "3_systemSpecific",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.addFavorite",
+    "group": "4_workspace",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.showDSAttributes",
+    "group": "2_information",
+    "when": "viewItem == ds",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "inline",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "inline",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.refreshNode",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.safeSave",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.showDSAttributes",
+    "group": "2_information",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.submitMember",
+    "group": "3_systemSpecific",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.deleteDataset",
+    "group": "5_modification@1",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.removeFavorite",
+    "group": "4_workspace",
+    "when": "viewItem == dsf",
+  },
+  Object {
+    "command": "zowe.createMember",
+    "group": "1_create",
+    "when": "viewItem == pds",
+  },
+  Object {
+    "command": "zowe.showDSAttributes",
+    "group": "2_information",
+    "when": "viewItem == pds",
+  },
+  Object {
+    "command": "zowe.deletePDS",
+    "group": "5_modification@1",
+    "when": "viewItem == pds",
+  },
+  Object {
+    "command": "zowe.addFavorite",
+    "group": "4_workspace",
+    "when": "viewItem == pds",
+  },
+  Object {
+    "command": "zowe.uploadDialog",
+    "group": "1_create",
+    "when": "viewItem == pds",
+  },
+  Object {
+    "command": "zowe.createMember",
+    "group": "1_create",
+    "when": "viewItem == pdsf",
+  },
+  Object {
+    "command": "zowe.showDSAttributes",
+    "group": "2_information",
+    "when": "viewItem == pdsf",
+  },
+  Object {
+    "command": "zowe.deletePDS",
+    "group": "5_modification@1",
+    "when": "viewItem == pdsf",
+  },
+  Object {
+    "command": "zowe.uploadDialog",
+    "group": "1_create",
+    "when": "viewItem == pdsf",
+  },
+  Object {
+    "command": "zowe.removeFavorite",
+    "group": "4_workspace",
+    "when": "viewItem == pdsf",
+  },
+  Object {
+    "command": "zowe.pattern",
+    "group": "inline",
+    "when": "viewItem == session",
+  },
+  Object {
+    "command": "zowe.createDataset",
+    "group": "inline",
+    "when": "viewItem == session",
+  },
+  Object {
+    "command": "zowe.removeSession",
+    "when": "viewItem == session",
+  },
+  Object {
+    "command": "zowe.saveSearch",
+    "when": "viewItem == session",
+  },
+  Object {
+    "command": "zowe.removeSavedSearch",
+    "when": "viewItem == sessionf",
+  },
+  Object {
+    "command": "zowe.uss.fullPath",
+    "group": "inline",
+    "when": "viewItem == uss_session",
+  },
+  Object {
+    "command": "zowe.uss.createNode",
+    "group": "inline",
+    "when": "viewItem == uss_session",
+  },
+  Object {
+    "command": "zowe.uss.removeSession",
+    "when": "viewItem == uss_session",
+  },
+  Object {
+    "command": "zowe.refreshJobsServer",
+    "group": "inline",
+    "when": "viewItem == server",
+  },
+  Object {
+    "command": "zowe.setOwner",
+    "when": "viewItem == server",
+  },
+  Object {
+    "command": "zowe.setPrefix",
+    "when": "viewItem == server",
+  },
+  Object {
+    "command": "zowe.removeJobsSession",
+    "when": "viewItem == server",
+  },
+  Object {
+    "command": "zowe.deleteJob",
+    "group": "inline",
+    "when": "viewItem == job",
+  },
+  Object {
+    "command": "zowe.runModifyCommand",
+    "group": "3_systemSpecific",
+    "when": "viewItem == job",
+  },
+  Object {
+    "command": "zowe.runStopCommand",
+    "group": "3_systemSpecific",
+    "when": "viewItem == job",
+  },
+  Object {
+    "command": "zowe.downloadSpool",
+    "group": "inline",
+    "when": "viewItem == job",
+  },
+  Object {
+    "command": "zowe.getJobJcl",
+    "group": "0_mainframeInteraction",
+    "when": "viewItem == job",
+  },
+]
+`;
