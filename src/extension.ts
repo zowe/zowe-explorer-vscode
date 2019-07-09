@@ -11,6 +11,8 @@
 
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
+import { moveSync } from "fs-extra";
+import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
@@ -29,9 +31,9 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 
 // Globals
-export const BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
-export const USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
-export const DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+export let BRIGHTTEMPFOLDER;
+export let USS_DIR;
+export let DS_DIR;
 
 let log: Logger;
 /**
@@ -41,14 +43,26 @@ let log: Logger;
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
-    // Call deactivate before continuing
+    // Get temp folder location from settings
+    let preferencesTempPath: string =
+        vscode.workspace.getConfiguration()
+        /* tslint:disable:no-string-literal */
+        .get("Zowe-Temp-Folder-Location")["folderPath"];
+
+    defineGlobals(preferencesTempPath);
+
+    // Call cleanTempDir before continuing
     // this is to handle if the application crashed on a previous execution and
     // VSC didn't get a chance to call our deactivate to cleanup.
-    await deactivate();
+    await cleanTempDir();
 
-    fs.mkdirSync(BRIGHTTEMPFOLDER);
-    fs.mkdirSync(USS_DIR);
-    fs.mkdirSync(DS_DIR);
+    try {
+        fs.mkdirSync(BRIGHTTEMPFOLDER);
+        fs.mkdirSync(USS_DIR);
+        fs.mkdirSync(DS_DIR);
+    } catch (err) {
+        vscode.window.showErrorMessage(err.message);
+    }
 
     let datasetProvider: DatasetTree;
     let ussFileProvider: USSTree;
@@ -129,6 +143,20 @@ export async function activate(context: vscode.ExtensionContext) {
                 setting.favorites = [];
                 await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", setting, vscode.ConfigurationTarget.Global); // MISSED
             }
+        }
+    });
+
+    vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
+            const updatedPreferencesTempPath: string =
+                vscode.workspace.getConfiguration()
+                /* tslint:disable:no-string-literal */
+                .get("Zowe-Temp-Folder-Location")["folderPath"];
+
+            moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
+
+            // Update current temp folder preference
+            preferencesTempPath = updatedPreferencesTempPath;
         }
     });
 
@@ -218,6 +246,56 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         jobsProvider.setJob(jobView, job);
     });
+}
+
+/**
+ * Defines all global variables
+ * @param tempPath File path for temporary folder defined in preferences
+ */
+export function defineGlobals(tempPath: string | undefined) {
+    tempPath !== "" && tempPath !== undefined ?
+        BRIGHTTEMPFOLDER = path.join(tempPath, "temp") :
+        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
+
+    USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
+    DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+}
+
+/**
+ * Moves temp folder to user defined location in preferences
+ * @param previousTempPath temp path settings value before updated by user
+ * @param currentTempPath temp path settings value after updated by user
+ */
+export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
+    // Re-define globals with updated path
+    defineGlobals(currentTempPath);
+
+    if (previousTempPath === "") {
+        previousTempPath = path.join(__dirname, "..", "..", "resources");
+    }
+
+    // Make certain that "temp" folder is cleared
+    cleanTempDir();
+
+    try {
+        fs.mkdirSync(BRIGHTTEMPFOLDER);
+        fs.mkdirSync(USS_DIR);
+        fs.mkdirSync(DS_DIR);
+    } catch (err) {
+        log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
+        vscode.window.showErrorMessage(err.message);
+    }
+
+    try {
+        // If source and destination path are same, exit
+        if(`${previousTempPath}/temp` === BRIGHTTEMPFOLDER) {
+            return;
+        }
+        moveSync(`${previousTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true });
+    } catch (err) {
+        log.error("Error moving temporary folder! " + JSON.stringify(err));
+        vscode.window.showErrorMessage(err.message);
+    }
 }
 
 /**
@@ -652,8 +730,12 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
 
 }
 
-
-function cleanDir(directory) {
+/**
+ * Recursively deletes directory
+ *
+ * @param directory path to directory to be deleted
+ */
+export function cleanDir(directory) {
     if (!fs.existsSync(directory)) {
         return;
     }
@@ -670,11 +752,11 @@ function cleanDir(directory) {
 }
 
 /**
- * Cleans up the default local storage directory
+ * Cleans up local temp directory
  *
  * @export
  */
-export async function deactivate() {
+export async function cleanTempDir() {
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
     if (!fs.existsSync(BRIGHTTEMPFOLDER)) {
         return;
@@ -685,6 +767,16 @@ export async function deactivate() {
         vscode.window.showErrorMessage(localize("deactivate.error.message", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
     }
 }
+
+/**
+ * Called by VSCode on shutdown
+ *
+ * @export
+ */
+export async function deactivate() {
+    await cleanTempDir();
+}
+
 
 /**
  * Deletes a dataset
@@ -1307,9 +1399,9 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
 
 export async function modifyCommand(job: Job) {
     try {
-        const command = await vscode.window.showInputBox({ prompt: localize("modifyCommand.command.prompt", "Modify Command") });
+        let command = await vscode.window.showInputBox({ prompt: localize("modifyCommand.command.prompt", "Modify Command") });
         if (command !== undefined) {
-            let response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
+            const response = await zowe.IssueCommand.issueSimple(job.session, `f ${job.job.jobname},${command}`);
             vscode.window.showInformationMessage(localize("modifyCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
@@ -1329,8 +1421,9 @@ export async function stopCommand(job: Job) {
 export async function deleteJob(job: Job) {
     try {
         await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
-        vscode.window.showInformationMessage(localize("deleteJob.message.job", "Job ") + job.job.jobname + "(" + job.job.jobid + ")" +
-        localize("deleteJob.message.delete", " deleted"));
+        vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + job.job.jobname + "(" + job.job.jobid + ")" +
+        localize("deleteJob.delete", " deleted"));
+
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }
