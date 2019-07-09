@@ -11,7 +11,8 @@
 
 import { spawnSync } from "child_process";
 import * as path from "path";
-import { IProfileLoaded } from "@brightside/imperative";
+import { IProfileLoaded, Logger } from "@brightside/imperative";
+import * as vscode from "vscode";
 
 /**
  * Load all profiles by spawning a script that uses the users' globally installed
@@ -52,7 +53,7 @@ export function loadNamedProfile(name: string): IProfileLoaded {
 /**
  * Load the default zosmf profile
  */
-export function loadDefaultProfile(): IProfileLoaded {
+export function loadDefaultProfile(log: Logger): IProfileLoaded {
     const getProfileProcess = spawnSync("node", [path.join(__dirname, "getDefaultProfile.js")]);
 
     if (getProfileProcess.status !== 0) {
@@ -60,9 +61,15 @@ export function loadDefaultProfile(): IProfileLoaded {
             getProfileProcess.stderr.toString());
     }
     if (getProfileProcess.stdout.toString().length === 0) {
-        throw new Error("Error attempting to load the default zosmf profile for Zowe CLI. Please " +
-            "ensure that you have created at least one profile with Zowe CLI " +
-            "before attempting to use this extension. Error text:" + getProfileProcess.stderr.toString());
+        const defaultProfileMessage = "No default zosmf profile found for Zowe CLI. A default zosmf " +
+            "profile created with Zowe CLI is required to use the Zowe extension. Please [create at least one profile " +
+            "with Zowe CLI](https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).";
+        // Display info message to user
+        vscode.window.showInformationMessage(defaultProfileMessage);
+        // Include stack trace in debug log
+        log.debug(defaultProfileMessage + "Error text:" + getProfileProcess.stderr.toString());
+        // Keep from continuing
+        throw new Error();
     }
     return JSON.parse(getProfileProcess.stdout.toString());
 }
