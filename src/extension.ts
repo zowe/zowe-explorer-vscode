@@ -22,6 +22,7 @@ import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
+import * as jesActions from "./jes/jesNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
@@ -81,10 +82,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Initialize dataset provider with the created session and the selected pattern
         datasetProvider = new DatasetTree();
-        await datasetProvider.addSession();
+        await datasetProvider.addSession(log);
         // Initialize file provider with the created session and the selected fullPath
         ussFileProvider = new USSTree();
-        await ussFileProvider.addSession();
+        await ussFileProvider.addSession(log);
     } catch (err) {
         log.error(localize("log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
@@ -194,7 +195,7 @@ export async function activate(context: vscode.ExtensionContext) {
     try {
         // Initialize dataset provider with the created session and the selected pattern
         jobsProvider = new ZosJobsProvider();
-        await jobsProvider.addSession();
+        await jobsProvider.addSession(log);
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
     }
@@ -500,7 +501,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
-            await datasetProvider.addSession(chosenProfile);
+            await datasetProvider.addSession(log, chosenProfile);
         } else {
             log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
@@ -552,7 +553,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug(localize("addUSSSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
-            await ussFileProvider.addSession(chosenProfile);
+            await ussFileProvider.addSession(log, chosenProfile);
         } else {
             log.debug(localize("addUSSSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
@@ -889,7 +890,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         // executing search from saved search in favorites
         pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);  // TODO MISSED TESTING
         const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
-        await datasetProvider.addSession(session);
+        await datasetProvider.addSession(log, session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);
     }
 
@@ -1332,9 +1333,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
 
     // get session from session name
     let documentSession;
+    let binary;
     const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mLabel === sesName.trim()));
     if (sesNode) {
-        documentSession = sesNode.getSession();  // TODO MISSED TESTING
+        documentSession = sesNode.getSession();
+        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
 
     try {
@@ -1342,7 +1345,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, sesNode.binary);  // TODO MISSED TESTING
+            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary);  // TODO MISSED TESTING
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);
@@ -1432,7 +1435,8 @@ export async function deleteJob(job: Job) {
 export async function getSpoolContent(session: AbstractSession, spool: IJobFile) {
     try {
         const spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
-        const document = await vscode.workspace.openTextDocument({ content: spoolContent });
+        const language = jesActions.getSpoolLanguage(spool);
+        const document = await vscode.workspace.openTextDocument({ language, content: spoolContent });
         await vscode.window.showTextDocument(document);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
@@ -1485,7 +1489,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug(localize("addJobsSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
-            await datasetProvider.addSession(chosenProfile);
+            await datasetProvider.addSession(log, chosenProfile);
         } else {
             log.debug(localize("addJobsSession.log.debug.cancelledProfile", "User cancelled profile selection"));
         }

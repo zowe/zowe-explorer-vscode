@@ -13,8 +13,8 @@ import * as zowe from "@brightside/core";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import {IProfileLoaded } from "@brightside/imperative";
-import { loadNamedProfile, loadDefaultProfile} from "./ProfileLoader";
+import { IProfileLoaded, Logger } from "@brightside/imperative";
+import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -89,9 +89,9 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(sessionName?: string) {
+    public async addSession(log: Logger, sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
+        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile(log);
         // If session is already added, do nothing
         if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
             return;

@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
-import { Session, IProfileLoaded } from "@brightside/imperative";
+import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
@@ -42,9 +42,9 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(sessionName?: string) {
+    public async addSession(log: Logger, sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
+        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile(log);
 
         // If session is already added, do nothing
         if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {

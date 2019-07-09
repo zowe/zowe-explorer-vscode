@@ -18,7 +18,7 @@ jest.mock("../src/ProfileLoader");
 import * as vscode from "vscode";
 import { DatasetTree } from "../src/DatasetTree";
 import { ZoweNode } from "../src/ZoweNode";
-import { Session } from "@brightside/imperative";
+import { Session, Logger } from "@brightside/imperative";
 
 import * as profileLoader from "../src/ProfileLoader";
 
@@ -204,9 +204,11 @@ describe("DatasetTree Unit Tests", () => {
      * Test the addSession command
      *************************************************************************************************************/
     it("Test the addSession command ", async () => {
-        testTree.addSession();
+        const log = new Logger(undefined);
 
-        testTree.addSession("fake");
+        testTree.addSession(log);
+
+        testTree.addSession(log, "fake");
     });
 
     /*************************************************************************************************************
