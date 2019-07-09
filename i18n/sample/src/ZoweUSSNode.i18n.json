@@ -1,0 +1,6 @@
+{
+    "getChildren.error.invalidNode" : "Invalid node",
+    "getChildren.error.response" : "Retrieving response from ",
+    "getChildren.responses.error.response" : "The response from Zowe CLI was not successful",
+    "getChildren.responses.open" : "Open"
+}

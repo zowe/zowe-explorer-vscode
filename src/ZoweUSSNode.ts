@@ -12,6 +12,8 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -88,7 +90,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
 
         if (!this.mLabel) {
-            vscode.window.showErrorMessage("Invalid node");
+            vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error("Invalid node");
         }
 
@@ -97,8 +99,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         try {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
-            vscode.window.showErrorMessage(`Retrieving response from zowe.List\n${err}\n`);
-            throw Error(`Retrieving response from zowe.List\n${err}\n`);
+            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from ")
+                                                    + `zowe.List\n${err}\n`);
+            throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
 
         // push nodes to an object with property names to avoid duplicates
@@ -106,7 +109,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
         responses.forEach((response) => {
             // Throws reject if the brightside command does not throw an error but does not succeed
             if (!response.success) {
-                throw Error("The response from Zowe CLI was not successful");
+                throw Error(
+                    localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
             }
 
             // Loops through all the returned file references members and creates nodes for them
@@ -145,7 +149,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
                                 false,
                                 item.mProfileName);
                         }
-                        temp.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp]};
+                        temp.command = {command: "zowe.uss.ZoweUSSNode.open",
+                                        title: localize("getChildren.responses.open", "Open"), arguments: [temp]};
                         elementChildren[temp.label] = temp;
                     }
                 }
