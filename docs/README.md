@@ -133,7 +133,7 @@ Add the key and string as a json key/value pair to the  _filename_.i18n.json fil
 
 ### How to Donate Translations
 1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under Sign Up heading to sign up to Zanata.
-2. Send an email to evann.wu@ibm.com with the email heading as Zanata TRANSLATOR REQUEST and include the following information in the body of the email.
+2. Send an email to evann.wu@ibm.com with the email heading as ZANATA TRANSLATOR REQUEST and include the following information in the body of the email.
     1. Zanata username
     2. Language(s) you wish to translate
     3. Affiliation with Zowe
