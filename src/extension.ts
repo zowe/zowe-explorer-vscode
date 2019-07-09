@@ -955,34 +955,42 @@ export function getUSSProfile(node: ZoweUSSNode) {
     return profile;
 }
 
+/**
+ * Rules of mapping:
+ *  1. Dont do this for the top level HLQ
+ *  2a. If a conventional file (no members) only test the LLQ
+ *  2b. If a conventional file (no members) default is to return label
+ */
 function appendSuffix(label: string): string {
     const limit= 5;
     const bracket = label.indexOf("(");
     const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
-    for (let i = split.length - 1 ; i > -1; i--) {
-        if (split[i].indexOf(".ASM") > -1 ) {
+
+    const doUntil = 0 ; // (bracket > -1) ? 0 : split.length - 2;
+    for (let i = split.length - 1 ; i > doUntil; i--) {
+        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
             return label.concat(".asm");
         }
-        if (split[i].indexOf("JCL") > -1 || split[i].indexOf("CNTL") > -1) {
+        if (split[i] === "JCL" || split[i] === "CNTL" ) {
             return label.concat(".jcl");
         }
-        if (split[i].indexOf("COBOL") > -1 || split[i].indexOf("CBL") > -1) {
+        if (split[i] === "COBOL" || split[i] === "CBL" ) {
             return label.concat(".cbl");
         }
-        if (split[i].indexOf("PLI") > -1 || split[i].indexOf("PL1") > -1 || split[i].indexOf("PLX") > -1) {
+        if (split[i] === "PLI" || split[i] === "PL1" || split[i] === "PLX" ) {
             return label.concat(".pl1");
         }
-        if (split[i].indexOf("SCRIPTS") > -1 || split[i].indexOf("SHELL") > -1) {
+        if (split[i] === "SHELL" || split[i] === "SH" ) {
             return label.concat(".sh");
         }
-        if (split[i].indexOf("REXX") > -1 || split[i].indexOf("REXEC") > -1 || split[i].indexOf("EXEC") > -1) {
+        if (split[i] === "REXX" || split[i] === "REXEC" || split[i] === "EXEC" ) {
             return label.concat(".rexx");
         }
-        if (split[i].indexOf("XML") > -1) {
+        if (split[i] === "XML" ) {
             return label.concat(".xml");
         }
     }
-    return label.concat("." + split[split.length-1].toLowerCase());
+    return (bracket > -1) ? label.concat("." + split[split.length-1].toLowerCase()) : label;
 }
 
 /**

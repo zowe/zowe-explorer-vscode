@@ -596,11 +596,11 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({
             file: path.join(extension.DS_DIR,
-                node.getSessionNode().mLabel, node.mLabel + ".node")
+                node.getSessionNode().mLabel, node.mLabel )
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel + ".node" ));
+            node.getSessionNode().mLabel, node.mLabel  ));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
 
@@ -858,10 +858,10 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][1]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel + ".node"));
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel + ".node" ));
+            node.getSessionNode().mLabel, node.mLabel  ));
 
         unlinkSync.mockReset();
         delDataset.mockReset();
@@ -1111,7 +1111,7 @@ describe("Extension Unit Tests", () => {
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel + ".node"));
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(session);
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
@@ -1192,7 +1192,7 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.mLabel, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel + ".node"));
+            node.getSessionNode().mLabel, node.mLabel ));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test");
         expect(save.mock.calls.length).toBe(1);
@@ -1879,11 +1879,33 @@ describe("Extension Unit Tests", () => {
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLI(member).pl1");
         node = new ZoweNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLX(member).pl1");
-        node = new ZoweNode("AUSER.PROD.SCRIPTS(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.SCRIPTS(member).sh");
+        node = new ZoweNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.SH(member).sh");
         node = new ZoweNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.REXX.EXEC(member).rexx");
         node = new ZoweNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.XML(member).xml");
+
+        node = new ZoweNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.XML.xml");
+        node = new ZoweNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.TXML");
+        node = new ZoweNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.TGML.xml");
+        node = new ZoweNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.ASM.asm");
+        node = new ZoweNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER");
+
+        node = new ZoweNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.TEST(member).xml");
+        node = new ZoweNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/XML.AUSER.TEST(member).test");
+        node = new ZoweNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.TEST(member).xml");
+        node = new ZoweNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(
+            "/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm");
+
     });
 });
