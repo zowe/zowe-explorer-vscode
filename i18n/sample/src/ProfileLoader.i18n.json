@@ -1,0 +1,12 @@
+{
+    "loadAllProfiles.error.spawnProcess" : "Failed to spawn process to retrieve profile contents!\n",
+    "loadAllProfiles.error.loadAll1" : "Error attempting to load all zosmf profiles. Please ensure that you have created at least one profile with Zowe CLI before attempting to use this extension. Error text:",
+    "loadAllProfiles.error.loadAll2" : "Please ensure that you have created at least one profile with Zowe CLI before attempting to use this extension. Error text:",
+    "loadNamedProfile.error.profileName" : "Couldn't find profile named: ",
+    "loadDefaultProfile.error.spawnProcess" : "Failed to spawn process to retrieve default profile contents!\n",
+    "loadDefaultProfile.error.profile1" : "No default zosmf profile found for Zowe CLI.",
+    "loadDefaultProfile.error.profile2" : " A default zosmf profile created with Zowe CLI is required to use the Zowe extension.",
+    "loadDefaultProfile.error.profile3" : " Please [create at least one profile with Zowe CLI]",
+    "loadDefaultProfile.error.profile4" : "(https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).",
+    "loadDefaultProfile.debug.errorText" : "Error text:"
+}
