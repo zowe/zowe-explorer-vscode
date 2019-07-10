@@ -956,18 +956,18 @@ export function getUSSProfile(node: ZoweUSSNode) {
 }
 
 /**
+ * Append a suffix on a ds file so it can be interpretted with syntax highlighter
+ *
  * Rules of mapping:
- *  1. Dont do this for the top level HLQ
- *  2a. If a conventional file (no members) only test the LLQ
- *  2b. If a conventional file (no members) default is to return label
+ *  1. Start with LLQ and work backwards as it is at this end usually
+ *   the language is specified
+ *  2. Dont do this for the top level HLQ
  */
 function appendSuffix(label: string): string {
     const limit= 5;
     const bracket = label.indexOf("(");
     const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
-
-    const doUntil = 0 ; // (bracket > -1) ? 0 : split.length - 2;
-    for (let i = split.length - 1 ; i > doUntil; i--) {
+    for (let i = split.length - 1 ; i > 0; i--) {
         if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
             return label.concat(".asm");
         }
