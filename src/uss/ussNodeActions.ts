@@ -15,6 +15,9 @@ import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
 import * as utils from "../utils";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
 import * as path from "path";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -24,7 +27,8 @@ import * as path from "path";
  * @returns {Promise<void>}
  */
 export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string, isTopLevel?: boolean) {
-    const name = await vscode.window.showInputBox({placeHolder: "Name of file or directory"});
+    const name = await vscode.window.showInputBox({placeHolder:
+        localize("createUSSNode.name", "Name of file or directory")});
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
@@ -35,7 +39,8 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
                 ussFileProvider.refresh();
             }
         } catch (err) {
-            vscode.window.showErrorMessage(`Unable to create node: ${err.message}`);
+            vscode.window.showErrorMessage(
+                localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
     }
@@ -56,11 +61,14 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     // handle zosmf api issue with file paths
     const nodePath = node.fullPath.startsWith("/") ?  node.fullPath.substring(1) :  node.fullPath;
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: `Are you sure you want to delete ${node.label}`,
+        placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + node.label,
         ignoreFocusOut: true,
         canPickMany: false
     };
-    if (await vscode.window.showQuickPick(["Yes", "No"], quickPickOptions) !== "Yes") {
+    if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes","Yes"),
+                                           localize("deleteUSSNode.showQuickPick.no", "No")],
+                                           quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes","Yes"))
+    {
         return;
     }
     try {
@@ -69,7 +77,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         ussFileProvider.refresh();
         deleteFromDisk(node, filePath);
     } catch (err) {
-        vscode.window.showErrorMessage(`Unable to delete node: ${err.message}`);
+        vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
         throw (err);
     }
 
@@ -104,7 +112,7 @@ export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
             ussFileProvider.refresh();
         }
     } catch (err) {
-        vscode.window.showErrorMessage(`Unable to rename node: ${err.message}`);
+        vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
         throw (err);
     }
 }
@@ -151,7 +159,8 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
                 false,
                 profileName
             );
-            node.command = {command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node]};
+            node.command = {command: "zowe.uss.ZoweUSSNode.open",
+                            title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
         }
         node.contextValue += "f";
         ussFileProvider.mFavorites.push(node);

@@ -1,7 +1,7 @@
 {
   "name": "vscode-extension-for-zowe",
-  "displayName": "Zowe",
-  "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.22.0",
   "publisher": "Zowe",
   "repository": {
@@ -34,7 +34,7 @@
       "activitybar": [
         {
           "id": "zowe",
-          "title": "Zowe",
+          "title": "%viewsContainers.activitybar%",
           "icon": "resources/zowe.svg"
         }
       ]
@@ -43,46 +43,46 @@
       "zowe": [
         {
           "id": "zowe.explorer",
-          "name": "Data Sets"
+          "name": "%zowe.explorer%"
         },
         {
           "id": "zowe.uss.explorer",
-          "name": "Unix System Services (USS)"
+          "name": "%zowe.uss.explorer%"
         },
         {
           "id": "zowe.jobs",
-          "name": "Jobs"
+          "name": "%zowe.jobs%"
         }
       ]
     },
     "commands": [
       {
         "command": "zowe.uss.createFile",
-        "title": "Create File"
+        "title": "%uss.createFile%"
       },
       {
         "command": "zowe.uss.createFolder",
-        "title": "Create Directory"
+        "title": "%uss.createFolder%"
       },
       {
         "command": "zowe.uss.deleteNode",
-        "title": "Delete"
+        "title": "%uss.deleteNode%"
       },
       {
         "command": "zowe.uss.renameNode",
-        "title": "Rename"
+        "title": "%uss.renameNode%"
       },
       {
         "command": "zowe.addFavorite",
-        "title": "Add Favorite"
+        "title": "%addFavorite%"
       },
       {
         "command": "zowe.uss.addFavorite",
-        "title": "Add Favorite"
+        "title": "%uss.addFavorite%"
       },
       {
         "command": "zowe.addSession",
-        "title": "Zowe: Add Profile",
+        "title": "%addSession%",
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
@@ -90,7 +90,7 @@
       },
       {
         "command": "zowe.createDataset",
-        "title": "Create New Data Set",
+        "title": "%createDataset%",
         "icon": {
           "light": "./resources/light/newfile.svg",
           "dark": "./resources/dark/newfile.svg"
@@ -98,23 +98,23 @@
       },
       {
         "command": "zowe.createMember",
-        "title": "Create New Member"
+        "title": "%createMember%"
       },
       {
         "command": "zowe.showDSAttributes",
-        "title": "Show Data Set Attributes"
+        "title": "%showDSAttributes%"
       },
       {
         "command": "zowe.deleteDataset",
-        "title": "Delete Data Set"
+        "title": "%deleteDataset%"
       },
       {
         "command": "zowe.deleteMember",
-        "title": "Delete Member"
+        "title": "%deleteMember%"
       },
       {
         "command": "zowe.deletePDS",
-        "title": "Delete PDS"
+        "title": "%deletePDS%"
       },
       {
         "command": "zowe.uploadDialog",
@@ -122,7 +122,7 @@
       },
       {
         "command": "zowe.pattern",
-        "title": "Search Data Sets by Entering Patterns",
+        "title": "%pattern%",
         "icon": {
           "light": "./resources/light/pattern.svg",
           "dark": "./resources/dark/pattern.svg"
@@ -130,7 +130,7 @@
       },
       {
         "command": "zowe.refreshAll",
-        "title": "Zowe: Refresh All",
+        "title": "%refreshAll%",
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
@@ -138,7 +138,7 @@
       },
       {
         "command": "zowe.refreshNode",
-        "title": "Pull from Mainframe",
+        "title": "%refreshNode%",
         "icon": {
           "light": "./resources/light/download.svg",
           "dark": "./resources/dark/download.svg"
@@ -146,23 +146,23 @@
       },
       {
         "command": "zowe.removeFavorite",
-        "title": "Remove Favorite"
+        "title": "%removeFavorite%"
       },
       {
         "command": "zowe.uss.removeFavorite",
-        "title": "Remove Favorite"
+        "title": "%uss.removeFavorite%"
       },
       {
         "command": "zowe.removeSavedSearch",
-        "title": "Remove Search"
+        "title": "%removeSavedSearch%"
       },
       {
         "command": "zowe.removeSession",
-        "title": "Remove Profile"
+        "title": "%removeSession%"
       },
       {
         "command": "zowe.safeSave",
-        "title": "Safe Save - Merge if Necessary",
+        "title": "%safeSave%",
         "icon": {
           "light": "./resources/light/upload.svg",
           "dark": "./resources/dark/upload.svg"
@@ -170,19 +170,19 @@
       },
       {
         "command": "zowe.saveSearch",
-        "title": "Save Search"
+        "title": "%saveSearch%"
       },
       {
         "command": "zowe.submitJcl",
-        "title": "Zowe: Submit JCL"
+        "title": "%submitJcl%"
       },
       {
         "command": "zowe.submitMember",
-        "title": "Submit Job"
+        "title": "%submitMember%"
       },
       {
         "command": "zowe.uss.addSession",
-        "title": "Zowe: Add Profile",
+        "title": "%uss.addSession%",
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
@@ -190,7 +190,7 @@
       },
       {
         "command": "zowe.uss.createDirectory",
-        "title": "Create New Directory",
+        "title": "%uss.createDirectory%",
         "icon": {
           "light": "./resources/light/newfile.svg",
           "dark": "./resources/dark/newfile.svg"
@@ -206,7 +206,7 @@
       },
       {
         "command": "zowe.uss.fullPath",
-        "title": "Search Unix System Services (USS) by Entering a Path",
+        "title": "%uss.fullPath%",
         "icon": {
           "light": "./resources/light/pattern.svg",
           "dark": "./resources/dark/pattern.svg"
@@ -214,7 +214,7 @@
       },
       {
         "command": "zowe.uss.refreshAll",
-        "title": "Zowe: Refresh All",
+        "title": "%uss.refreshAll%",
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
@@ -222,7 +222,7 @@
       },
       {
         "command": "zowe.uss.refreshUSS",
-        "title": "Pull from Mainframe",
+        "title": "%uss.refreshUSS%",
         "icon": {
           "light": "./resources/light/download.svg",
           "dark": "./resources/dark/download.svg"
@@ -230,7 +230,7 @@
       },
       {
         "command": "zowe.uss.removeSession",
-        "title": "Remove Profile"
+        "title": "%uss.removeSession%"
       },
       {
         "command": "zowe.uss.safeSaveUSS",
@@ -242,7 +242,7 @@
       },
       {
         "command": "zowe.uss.binary",
-        "title": "Toggle Binary"
+        "title": "%uss.binary%"
       },
       {
         "command": "zowe.uss.uploadDialog",
@@ -250,11 +250,11 @@
       },
       {
         "command": "zowe.uss.text",
-        "title": "Toggle Text"
+        "title": "%uss.text%"
       },
       {
         "command": "zowe.deleteJob",
-        "title": "Delete Job",
+        "title": "%deleteJob%",
         "icon": {
           "dark": "./resources/dark/trash.svg",
           "light": "./resources/light/trash.svg"
@@ -262,23 +262,23 @@
       },
       {
         "command": "zowe.runModifyCommand",
-        "title": "Issue Modify command"
+        "title": "%runModifyCommand%"
       },
       {
         "command": "zowe.runStopCommand",
-        "title": "Issue Stop command"
+        "title": "%runStopCommand%"
       },
       {
         "command": "zowe.setOwner",
-        "title": "Set Owner"
+        "title": "%setOwner%"
       },
       {
         "command": "zowe.setPrefix",
-        "title": "Set Job Prefix"
+        "title": "%setPrefix%"
       },
       {
         "command": "zowe.refreshJobsServer",
-        "title": "Refresh",
+        "title": "%refreshJobsServer%",
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
@@ -286,7 +286,7 @@
       },
       {
         "command": "zowe.refreshAllJobs",
-        "title": "Refresh",
+        "title": "%refreshAllJobs%",
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
@@ -294,7 +294,7 @@
       },
       {
         "command": "zowe.addJobsSession",
-        "title": "Add Profile",
+        "title": "%addJobsSession%",
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
@@ -302,11 +302,11 @@
       },
       {
         "command": "zowe.removeJobsSession",
-        "title": "Remove Profile"
+        "title": "%removeJobsSession%"
       },
       {
         "command": "zowe.downloadSpool",
-        "title": "Download Spool",
+        "title": "%downloadSpool%",
         "icon": {
           "light": "./resources/light/download.svg",
           "dark": "./resources/dark/download.svg"
@@ -314,11 +314,11 @@
       },
       {
         "command": "zowe.getJobJcl",
-        "title": "Get JCL"
+        "title": "%getJobJcl%"
       },
       {
         "command": "zowe.setJobSpool",
-        "title": "Set Spool"
+        "title": "%setJobSpool%"
       }
     ],
     "menus": {
@@ -799,7 +799,7 @@
     },
     "configuration": {
       "type": "object",
-      "title": "Zowe Configuration",
+      "title": "%configuration.title%",
       "properties": {
         "Zowe-Default-Datasets-Binary": {
           "default": {
@@ -812,7 +812,7 @@
             "blksize": 27998,
             "lrecl": 27998
           },
-          "description": "Default values of Binary data set creation",
+          "description": "%Zowe-Default-Datasets-Binary%",
           "scope": "window"
         },
         "Zowe-Default-Datasets-C": {
@@ -826,7 +826,7 @@
             "blksize": 32760,
             "lrecl": 260
           },
-          "description": "Default values of C data set creation",
+          "description": "%Zowe-Default-Datasets-C%",
           "scope": "window"
         },
         "Zowe-Default-Datasets-Classic": {
@@ -840,7 +840,7 @@
             "blksize": 6160,
             "lrecl": 80
           },
-          "description": "Default values of Classic data set creation",
+          "description": "%Zowe-Default-Datasets-Classic%",
           "scope": "window"
         },
         "Zowe-Default-Datasets-PDS": {
@@ -854,7 +854,7 @@
             "blksize": 6160,
             "lrecl": 80
           },
-          "description": "Default values of Partitioned data set creation",
+          "description": "%Zowe-Default-Datasets-PDS%",
           "scope": "window"
         },
         "Zowe-Default-Datasets-PS": {
@@ -867,7 +867,7 @@
             "blksize": 6160,
             "lrecl": 80
           },
-          "description": "Default values of Sequential data set creation",
+          "description": "%Zowe-Default-Datasets-PS%",
           "scope": "window"
         },
         "Zowe-Persistent-Favorites": {
@@ -875,7 +875,7 @@
             "persistence": true,
             "favorites": []
           },
-          "description": "Toggle if favorite files persist locally",
+          "description": "%Zowe-Default-Datasets-Favorites%",
           "scope": "window"
         },
         "Zowe-Temp-Folder-Location": {
@@ -890,24 +890,27 @@
             "persistence": true,
             "favorites": []
           },
-          "description": "Toggle is favorite files exist locally",
+          "description": "%Zowe-Default-Datasets-Persistent-Favorites%",
           "scope": "window"
         }
       }
     }
   },
   "scripts": {
-    "build": "npm run lint && npm run license && tsc --pretty",
-    "watch": "tsc -watch --pretty",
+    "vscode:prepublish": "npm run build",
+    "build": "npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest --coverage",
     "test": "jest --coverage",
-    "package": "vsce package",
+    "package": "gulp package",
     "license": "node ./scripts/license.js",
+    "watch": "tsc -b --watch --pretty",
+    "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
     "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\""
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\"",
+    "clean": "gulp clean"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -916,23 +919,31 @@
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
-    "@types/vscode": "^1.35.0",
     "@types/yargs": "^11.0.0",
+    "@types/vscode": "^1.34.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
+    "del": "^4.1.1",
+    "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "glob": "^7.1.2",
+    "gulp": "^4.0.2",
+    "gulp-filter": "^5.1.0",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^5.0.1",
     "jest": "^24.8.0",
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
     "log4js": "3.0.5",
+    "run-sequence": "^2.2.1",
     "markdownlint-cli": "^0.16.0",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
-    "typescript": "^2.9.2",
+    "typescript": "^3.5.1",
     "vsce": "^1.60.0",
-    "vscode": "^1.1.30"
+    "vscode": "^1.1.30",
+    "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
     "@brightside/core": "2.28.2",
@@ -940,7 +951,9 @@
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "jsdoc": "^3.5.5",
-    "tslint": "^5.17.0"
+    "tslint": "^5.17.0",
+    "gulp-cli": "^2.2.0",
+    "vscode-nls": "^4.1.1"
   },
   "jest": {
     "moduleFileExtensions": [
