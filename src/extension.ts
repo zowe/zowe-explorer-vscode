@@ -968,6 +968,44 @@ export function getUSSProfile(node: ZoweUSSNode) {
 }
 
 /**
+ * Append a suffix on a ds file so it can be interpretted with syntax highlighter
+ *
+ * Rules of mapping:
+ *  1. Start with LLQ and work backwards as it is at this end usually
+ *   the language is specified
+ *  2. Dont do this for the top level HLQ
+ */
+function appendSuffix(label: string): string {
+    const limit= 5;
+    const bracket = label.indexOf("(");
+    const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
+    for (let i = split.length - 1 ; i > 0; i--) {
+        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
+            return label.concat(".asm");
+        }
+        if (split[i] === "JCL" || split[i] === "CNTL" ) {
+            return label.concat(".jcl");
+        }
+        if (split[i] === "COBOL" || split[i] === "CBL" ) {
+            return label.concat(".cbl");
+        }
+        if (split[i] === "PLI" || split[i] === "PL1" || split[i] === "PLX" ) {
+            return label.concat(".pl1");
+        }
+        if (split[i] === "SHELL" || split[i] === "SH" ) {
+            return label.concat(".sh");
+        }
+        if (split[i] === "REXX" || split[i] === "REXEC" || split[i] === "EXEC" ) {
+            return label.concat(".rexx");
+        }
+        if (split[i] === "XML" ) {
+            return label.concat(".xml");
+        }
+    }
+    return (bracket > -1) ? label.concat("." + split[split.length-1].toLowerCase()) : label;
+}
+
+/**
  * Returns the file path for the ZoweNode
  *
  * @export
@@ -975,7 +1013,7 @@ export function getUSSProfile(node: ZoweUSSNode) {
  * @param {ZoweNode} node
  */
 export function getDocumentFilePath(label: string, node: ZoweNode) {
-    return path.join(DS_DIR, label + "[" + getProfile(node) + "]");
+    return path.join(DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
 }
 
 /**
