@@ -579,7 +579,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that refreshPS correctly executes with and without error", async () => {
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node = new ZoweNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
@@ -595,12 +595,11 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSet.mock.calls[0][2]).toEqual({
-            file: path.join(extension.DS_DIR,
-                node.getSessionNode().mLabel, node.mLabel )
+            file: path.join(extension.DS_DIR, node.getSessionNode().mLabel, node.mLabel + ".afile7" )
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel  ));
+            node.getSessionNode().mLabel, node.mLabel + ".afile7" ));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
 
@@ -629,7 +628,7 @@ describe("Extension Unit Tests", () => {
 
         expect(dataSet.mock.calls[0][1]).toBe(child.mParent.mLabel + "(" + child.mLabel + ")");
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
@@ -846,7 +845,7 @@ describe("Extension Unit Tests", () => {
         unlinkSync.mockReset();
         showQuickPick.mockReset();
 
-        let node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        let node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         let child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
@@ -858,10 +857,10 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][1]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + ".node" ));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel  ));
+            node.getSessionNode().mLabel, node.mLabel + ".node" ));
 
         unlinkSync.mockReset();
         delDataset.mockReset();
@@ -896,7 +895,7 @@ describe("Extension Unit Tests", () => {
         await extension.deleteDataset(child, testTree);
 
         existsSync.mockReturnValueOnce(true);
-        node = new ZoweNode("node[sestest]", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node.contextValue = "dsf";
         await extension.deleteDataset(node, testTree);
 
@@ -935,7 +934,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that saveFile is executed successfully", async () => {
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/testFile[sestest]"),
+            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE.aFile"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -971,7 +970,7 @@ describe("Extension Unit Tests", () => {
 
         expect(dataSetList.mock.calls.length).toBe(1);
         expect(dataSetList.mock.calls[0][0]).toEqual(session);
-        expect(dataSetList.mock.calls[0][1]).toBe("testFile");
+        expect(dataSetList.mock.calls[0][1]).toBe("HLQ.TEST.AFILE");
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Data set failed to save. Data set may have been deleted on mainframe.");
 
@@ -1003,7 +1002,7 @@ describe("Extension Unit Tests", () => {
 
         expect(dataSetList.mock.calls.length).toBe(3);
         expect(dataSetList.mock.calls[0][0]).toEqual(session);
-        expect(dataSetList.mock.calls[0][1]).toBe("testFile");
+        expect(dataSetList.mock.calls[0][1]).toBe("HLQ.TEST.AFILE");
         // expect(pathToDataSet.mock.calls.length).toBe(3);
         // expect(pathToDataSet.mock.calls[0][0]).toEqual(session);
         // expect(pathToDataSet.mock.calls[0][1]).toBe(testDoc.fileName);
@@ -1013,7 +1012,7 @@ describe("Extension Unit Tests", () => {
         // expect(showErrorMessage.mock.calls[1][0]).toBe("Test Error");
 
         const testDoc2: vscode.TextDocument = {
-            fileName: path.normalize("testFile[sestest]"),
+            fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1040,7 +1039,7 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls.length).toBe(0);
 
         const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/testFile(mem)[sestest]"),
+            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1111,7 +1110,7 @@ describe("Extension Unit Tests", () => {
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + "."+ node.mLabel.toLowerCase()));
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(session);
         expect(dataSet.mock.calls[0][1]).toBe(node.mLabel);
@@ -1122,7 +1121,7 @@ describe("Extension Unit Tests", () => {
         expect(showTextDocument.mock.calls[0][0]).toBe("test doc");
 
         openTextDocument.mockResolvedValueOnce("test doc");
-        const node2 = new ZoweNode("node[sestest]", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node2 = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         await extension.openPS(node2);
 
@@ -1192,7 +1191,7 @@ describe("Extension Unit Tests", () => {
         expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.mLabel, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().mLabel, node.mLabel ));
+            node.getSessionNode().mLabel, node.mLabel + "."+ node.mLabel.toLowerCase()));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test");
         expect(save.mock.calls.length).toBe(1);
@@ -1662,7 +1661,7 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
 
         const testDoc2: vscode.TextDocument = {
-            fileName: path.normalize("testFile[sestest]"),
+            fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1686,7 +1685,7 @@ describe("Extension Unit Tests", () => {
         await extension.saveUSSFile(testDoc2, testUSSTree);
 
         const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/testFile(mem)[sestest]"),
+            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1889,13 +1888,13 @@ describe("Extension Unit Tests", () => {
         node = new ZoweNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.XML.xml");
         node = new ZoweNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.TXML");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.TXML.txml");
         node = new ZoweNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.TGML.xml");
         node = new ZoweNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.ASM.asm");
         node = new ZoweNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.auser");
 
         node = new ZoweNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.TEST(member).xml");
@@ -1906,6 +1905,9 @@ describe("Extension Unit Tests", () => {
         node = new ZoweNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(
             "/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm");
+
+        node = new ZoweNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.SPFLOG1.log");
 
     });
 });
