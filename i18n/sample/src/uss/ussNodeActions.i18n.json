@@ -1,0 +1,11 @@
+{
+    "createUSSNode.name" : "Name of file or directory",
+    "createUSSNode.error.create" : "Unable to create node: ",
+    "deleteUSSNode.quickPickOption" : "Are you sure you want to delete ",
+    "deleteUSSNode.showQuickPick.yes" : "Yes",
+    "deleteUSSNode.showQuickPick.no" : "No",
+    "deleteUSSNode.error.node" : "Unable to delete node: ",
+    "renameUSSNode.error" : "Unable to rename node: ",
+    "initializeUSSFavorites.lines.title" : "Open"
+
+}
