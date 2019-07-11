@@ -1017,8 +1017,11 @@ function appendSuffix(label: string): string {
         if (split[i] === "XML" ) {
             return label.concat(".xml");
         }
+        if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1 ) {
+            return label.concat(".log");
+        }
     }
-    return (bracket > -1) ? label.concat("." + split[split.length-1].toLowerCase()) : label;
+    return label.concat("." + split[split.length-1].toLowerCase());
 }
 
 /**
@@ -1182,7 +1185,7 @@ export async function refreshPS(node: ZoweNode) {
             vscode.window.showInformationMessage(localize("refreshPS.file1", "Unable to find file: ") + label +
             localize("refreshPS.file2", " was probably deleted."));
         } else {
-            vscode.window.showErrorMessage(err);
+            vscode.window.showErrorMessage(err.message);
         }
     }
 }
@@ -1310,18 +1313,15 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     // Check if file is a data set, instead of some other file
     log.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
-    if (path.relative(docPath, DS_DIR)) {
+    log.debug("requested to save data set: " + doc.fileName);
+    if (docPath.indexOf(DS_DIR) === -1 ) {
         log.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
             localize("saveFile.log.debug.directory", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
         return;
     }
-
-    // get session name
-    let sesName = doc.fileName.substring(doc.fileName.indexOf("[") + 1, doc.fileName.lastIndexOf("]"));
-    if (sesName.includes("[")) {
-        // if saving from favorites, sesName might be the favorite node, so extract further
-        sesName = sesName.substring(sesName.indexOf("[") + 1, sesName.indexOf("]"));  // TODO MISSED TESTING
-    }
+    const start = path.join(DS_DIR + path.sep).length;
+    const ending = doc.fileName.substring(start);
+    const sesName = ending.substring(0, ending.indexOf(path.sep));
 
     // get session from session name
     let documentSession;
@@ -1340,7 +1340,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.indexOf("["));
+    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.lastIndexOf("."));
     log.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {
