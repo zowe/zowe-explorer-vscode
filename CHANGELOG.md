@@ -2,6 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+
+## 0.23.0
+
+- Add support for localization. Thanks to @evannwu20
+- Correctly determine if file is binary for saving. Thanks @crshnburn
+- Fix Default profile error message with friendlier version. Thanks @lauren-li
+- Context menu grouping for MVS and USS. Thanks @lauren-li
+- Preference to Specify Temp Folder. Thanks to @adambattenburg
+- Store local version of dataset with a suffix if appropriate to enable syntax highlighting. Thanks to @Colin-Stone
+
 ## 0.22.0
 
 - Add ability to create directories or files on the root node. Thanks to @kristinochka
