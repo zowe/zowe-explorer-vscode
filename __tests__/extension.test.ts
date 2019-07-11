@@ -1823,6 +1823,9 @@ describe("Extension Unit Tests", () => {
     it("Tests that temp folder handles default preference", () => {
         mkdirSync.mockReset();
         moveSync.mockReset();
+        // Possibly remove `existsSync` from here and subsequent tests, when implementing "multiple occurrences"
+        existsSync.mockReset();
+        existsSync.mockReturnValue(true);
 
         const originalPreferencePath = "";
         const updatedPreferencePath = "/testing";
@@ -1840,6 +1843,8 @@ describe("Extension Unit Tests", () => {
     it("Tests that temp folder is moved successfully", () => {
         mkdirSync.mockReset();
         moveSync.mockReset();
+        existsSync.mockReset();
+        existsSync.mockReturnValue(true);
 
         const originalPreferencePath = "/test/path";
         const updatedPreferencePath = "/new/test/path";
@@ -1865,6 +1870,27 @@ describe("Extension Unit Tests", () => {
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(0);
+    });
+
+    // To Do: When supporting "multiple instances", possibly remove this test
+    it("Tests that moving temp folder does not show error, if already moved by another Instance", () => {
+        mkdirSync.mockReset();
+        moveSync.mockReset();
+
+        existsSync.mockReset();
+        // Needs to mock once for each path
+        existsSync.mockReturnValue(true);
+        existsSync.mockReturnValue(true);
+        existsSync.mockReturnValue(false);
+
+        const originalPreferencePath = "/invalid/path";
+        const updatedPreferencePath = "/test/path";
+
+        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+
+        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(moveSync.mock.calls.length).toBe(0);
+
     });
 
     it("Testing that the add Suffix for datasets works", async () => {
@@ -1906,6 +1932,5 @@ describe("Extension Unit Tests", () => {
         node = new ZoweNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(
             "/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm");
-
     });
 });

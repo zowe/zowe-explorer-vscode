@@ -299,6 +299,15 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         if(`${previousTempPath}/temp` === BRIGHTTEMPFOLDER) {
             return;
         }
+
+        // TODO: Possibly remove when supporting "Multiple Instances"
+        // If a second instance has already moved the temp folder, exit
+        // Ideally, `moveSync()` would alert user if path doesn't exist.
+        // However when supporting "Multiple Instances", might not be possible.
+        if(!fs.existsSync(`${previousTempPath}/temp`)) {
+            return;
+        }
+
         moveSync(`${previousTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true });
     } catch (err) {
         log.error("Error moving temporary folder! " + JSON.stringify(err));
