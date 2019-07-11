@@ -94,11 +94,14 @@ export async function activate(context: vscode.ExtensionContext) {
     await initializeFavorites(datasetProvider);
     await ussActions.initializeUSSFavorites(ussFileProvider);
 
-    // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
-    const disposable1 = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
-    context.subscriptions.push(disposable1);
-    const disposable2 = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: ussFileProvider });
-    context.subscriptions.push(disposable2);
+    if (datasetProvider && ussFileProvider) {
+        // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
+        const disposable1 = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
+        context.subscriptions.push(disposable1);
+
+        const disposable2 = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: ussFileProvider });
+        context.subscriptions.push(disposable2);
+    }
 
     vscode.commands.registerCommand("zowe.addSession", async () => addSession(datasetProvider));
     vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
@@ -200,8 +203,12 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(err.message);
     }
 
-    const jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
-    context.subscriptions.push(jobView);
+    let jobView;
+    if (jobsProvider) {
+        jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
+        context.subscriptions.push(jobView);
+    }
+
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
     });
