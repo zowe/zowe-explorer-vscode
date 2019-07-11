@@ -1280,11 +1280,12 @@ export async function safeSaveUSS(node: ZoweUSSNode) {
  */
 export async function saveFile(doc: vscode.TextDocument, datasetProvider: DatasetTree) {
     // Check if file is a data set, instead of some other file
+    log.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     log.debug("requested to save data set: " + doc.fileName);
     if (docPath.indexOf(DS_DIR) === -1 ) {
-        log.debug("path.relative returned a non-blank directory." +
-            "Assuming we are not in the DS_DIR directory: " + path.relative(docPath, DS_DIR));
+        log.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
+            localize("saveFile.log.debug.directory", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
         return;
     }
     const start = path.join(DS_DIR + path.sep).length;
