@@ -13,8 +13,10 @@ import * as zowe from "@brightside/core";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { IProfileLoaded } from "@brightside/imperative";
+import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -33,7 +35,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public readonly onDidChangeTreeData: vscode.Event<ZoweNode | undefined> = this.mOnDidChangeTreeData.event;
 
     constructor() {
-        this.mFavoriteSession = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        this.mFavoriteSession = new ZoweNode(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null);
         this.mFavoriteSession.contextValue = "favorite";
         this.mSessionNodes = [this.mFavoriteSession];
     }
@@ -87,9 +89,9 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(sessionName?: string) {
+    public async addSession(log: Logger, sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile();
+        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile(log);
         // If session is already added, do nothing
         if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
             return;
@@ -125,7 +127,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         let temp: ZoweNode;
         if (node.contextValue === "member") {
             if (node.mParent.contextValue === "pdsf") {
-                vscode.window.showInformationMessage("PDS already in favorites");
+                vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
             this.addFavorite(node.mParent);

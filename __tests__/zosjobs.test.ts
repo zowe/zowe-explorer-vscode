@@ -15,7 +15,7 @@ jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
-import { Session } from "@brightside/imperative";
+import { Session, Logger } from "@brightside/imperative";
 
 import * as profileLoader from "../src/ProfileLoader";
 import { Job, ZosJobsProvider } from "../src/zosjobs";
@@ -29,6 +29,7 @@ describe("Zos Jobs Unit Tests", () => {
     });
 
     describe("ZosJobsProvider Unit Test", () => {
+        const log = new Logger(undefined);
         const ZosmfSession = jest.fn();
         const createBasicZosmfSession = jest.fn();
 
@@ -118,7 +119,7 @@ describe("Zos Jobs Unit Tests", () => {
 
         it("should add the session to the tree", async () => {
             createBasicZosmfSession.mockReturnValue(session);
-            await testJobsProvider.addSession("fake");
+            await testJobsProvider.addSession(log, "fake");
             expect(testJobsProvider.mSessionNodes[0]).toBeDefined();
             expect(testJobsProvider.mSessionNodes[0].mLabel).toEqual("fake");
             expect(testJobsProvider.mSessionNodes[0].tooltip).toEqual("fake - owner: fake prefix: *");
@@ -132,7 +133,7 @@ describe("Zos Jobs Unit Tests", () => {
         it("should get the jobs of the session", async () => {
             createBasicZosmfSession.mockReturnValue(session);
             getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            await testJobsProvider.addSession("fake");
+            await testJobsProvider.addSession(log, "fake");
             const jobs = await testJobsProvider.mSessionNodes[0].getChildren();
             expect(jobs.length).toBe(2);
             expect(jobs[0].job.jobid).toEqual(iJob.jobid);
