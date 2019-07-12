@@ -370,7 +370,7 @@ export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFile
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
-export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED TESTING
+export async function submitJcl(datasetProvider: DatasetTree) {
     const doc = vscode.window.activeTextEditor.document;
     log.debug(localize("submitJcl.log.debug", "Submitting JCL in document ") + doc.fileName);
     // get session name
@@ -818,28 +818,25 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
 
     let label = "";
     let fav = false;
-    switch (node.mParent.contextValue) {
-        case ("favorite"):
-            label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();  // TODO MISSED TESTING
-            fav = true; // MISSED
-            break; // MISSED
-        case ("pdsf"):
-            label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
-            fav = true;
-            break;
-        case ("session"):
-            label = node.mLabel;
-            break;
-        case ("pds"):
-            label = node.mParent.mLabel + "(" + node.mLabel + ")";
-            break;
-        default:
-            vscode.window.showErrorMessage(localize("deleteDataSet.invalidNode.error.message", "deleteDataSet() called from invalid node."));
-            // TODO MISSED TESTING
-            throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
-    }
-
     try {
+        switch (node.mParent.contextValue) {
+            case ("favorite"):
+                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                fav = true;
+                break;
+            case ("pdsf"):
+                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+                fav = true;
+                break;
+            case ("session"):
+                label = node.mLabel;
+                break;
+            case ("pds"):
+                label = node.mParent.mLabel + "(" + node.mLabel + ")";
+                break;
+            default:
+                throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
+        }
         await zowe.Delete.dataSet(node.getSession(), label);
     } catch (err) {
         log.error(localize("deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
@@ -856,17 +853,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         datasetProvider.mSessionNodes.forEach((ses) => {
             if (node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]")) === ses.mLabel ||
                 node.mParent.mLabel.substring(node.mParent.mLabel.indexOf("["), node.mParent.mLabel.indexOf("]")) === ses.mLabel) {
-                ses.dirty = true;  // TODO MISSED TESTING
+                ses.dirty = true;
             }
         });
+        datasetProvider.removeFavorite(node);
     } else {
         node.getSessionNode().dirty = true;
+        const temp = node.mLabel;
+        node.mLabel = "[" + node.getSessionNode().mLabel + "]: " + node.mLabel;
+        datasetProvider.removeFavorite(node);
+        node.mLabel = temp;
     }
 
-    const temp = node.mLabel;
-    node.mLabel = "[" + node.getSessionNode().mLabel + "]: " + node.mLabel;
-    datasetProvider.removeFavorite(node);
-    node.mLabel = temp;
     datasetProvider.refresh();
 
     // remove local copy of file
@@ -904,7 +902,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         }
     } else {
         // executing search from saved search in favorites
-        pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);  // TODO MISSED TESTING
+        pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);
         const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
         await datasetProvider.addSession(log, session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);

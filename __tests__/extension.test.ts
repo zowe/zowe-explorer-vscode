@@ -905,6 +905,82 @@ describe("Extension Unit Tests", () => {
         await extension.deleteDataset(child, testTree);
     });
 
+    it("Testing that deleteDataset is executed successfully for favorite", async () => {
+        existsSync.mockReset();
+        unlinkSync.mockReset();
+        showQuickPick.mockReset();
+        delDataset.mockReset();
+        mockRemoveFavorite.mockReset();
+
+        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
+        node.contextValue = "favorite";
+
+        existsSync.mockReturnValueOnce(true);
+        showQuickPick.mockResolvedValueOnce("Yes");
+        await extension.deleteDataset(child, testTree);
+
+        expect(delDataset.mock.calls.length).toBe(1);
+        expect(delDataset.mock.calls[0][0]).toBe(session);
+        expect(delDataset.mock.calls[0][1]).toBe("HLQ.TEST.DELETE.NODE");
+        expect(mockRemoveFavorite.mock.calls.length).toBe(1);
+        expect(mockRemoveFavorite.mock.calls[0][0].mLabel).toBe( "[sestest]: HLQ.TEST.DELETE.NODE" );
+        expect(existsSync.mock.calls.length).toBe(1);
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, "HLQ.TEST.DELETE.NODE.node" ));
+        expect(unlinkSync.mock.calls.length).toBe(1);
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, "HLQ.TEST.DELETE.NODE.node" ));
+    });
+
+    it("Testing that deleteDataset is executed successfully for pdsf", async () => {
+        existsSync.mockReset();
+        unlinkSync.mockReset();
+        showQuickPick.mockReset();
+        delDataset.mockReset();
+        mockRemoveFavorite.mockReset();
+
+        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)", vscode.TreeItemCollapsibleState.None, node, null);
+        node.contextValue = "pdsf";
+
+        existsSync.mockReturnValueOnce(true);
+        showQuickPick.mockResolvedValueOnce("Yes");
+        await extension.deleteDataset(child, testTree);
+
+        expect(delDataset.mock.calls.length).toBe(1);
+        expect(delDataset.mock.calls[0][0]).toBe(session);
+        expect(delDataset.mock.calls[0][1]).toBe("HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))");
+        expect(mockRemoveFavorite.mock.calls.length).toBe(1);
+        expect(mockRemoveFavorite.mock.calls[0][0].mLabel).toBe( "[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)" );
+        expect(existsSync.mock.calls.length).toBe(1);
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER)).pds" ));
+        expect(unlinkSync.mock.calls.length).toBe(1);
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+            node.getSessionNode().mLabel, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER)).pds" ));
+    });
+
+    it("Testing that deleteDataset fails if junk passed", async () => {
+        existsSync.mockReset();
+        unlinkSync.mockReset();
+        showQuickPick.mockReset();
+        delDataset.mockReset();
+        mockRemoveFavorite.mockReset();
+        showErrorMessage.mockReset();
+
+        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const parent = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
+        node.contextValue = "junk";
+
+        existsSync.mockReturnValueOnce(true);
+        showQuickPick.mockResolvedValueOnce("Yes");
+        await extension.deleteDataset(child, testTree);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0].message).toEqual("deleteDataSet() called from invalid node.");
+    });
+
     it("Testing that enterPattern is executed successfully", async () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
@@ -930,6 +1006,16 @@ describe("Extension Unit Tests", () => {
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
+    });
+
+    it("Testing that enterPattern is executed successfully for search favorite", async () => {
+        mockAddSession.mockReset();
+        const favoriteSample = new ZoweNode("[sestest]: HLQ.TEST", vscode.TreeItemCollapsibleState.None, undefined, null);
+
+        await extension.enterPattern(favoriteSample, testTree);
+
+        expect(mockAddSession.mock.calls.length).toBe(1);
+        expect(mockAddSession.mock.calls[0][1]).toEqual("sestest");
     });
 
     it("Testing that saveFile is executed successfully", async () => {
