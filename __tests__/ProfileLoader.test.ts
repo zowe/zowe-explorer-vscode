@@ -19,9 +19,9 @@ import { Logger } from "@brightside/imperative";
 import { loadNamedProfile, loadAllProfiles, loadDefaultProfile } from "../src/ProfileLoader";
 
 const showInformationMessage = jest.fn();
-Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 
-describe("ProfileLoader", ()=>{
+describe("ProfileLoader", () => {
     // Mocking log.debug
     const log = new Logger(undefined);
     Object.defineProperty(log, "debug", {
@@ -30,28 +30,28 @@ describe("ProfileLoader", ()=>{
     const mockDebug = jest.spyOn(log, "debug");
 
     // Happy path profiles
-    const profileOne = {name: "profile1", profile: {}, type: "zosmf"};
-    const profileTwo = {name: "profile2", profile: {}, type: "zosmf"};
+    const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
+    const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
 
-    (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any)=>{
+    (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
 
-        const createFakeChildProcess =(status: number, stdout: string, stderr: string) =>{
+        const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
             return {
                 status,
                 stdout: {
-                    toString : jest.fn(()=> {
+                    toString: jest.fn(() => {
                         return stdout;
                     })
                 },
                 stderr: {
-                    toString : jest.fn(()=>{
+                    toString: jest.fn(() => {
                         return stderr;
                     })
                 },
             };
         };
 
-        if (args[0].indexOf("getAllProfiles") >=0){
+        if (args[0].indexOf("getAllProfiles") >= 0) {
             return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
         } else {
             // load default profile
@@ -59,38 +59,37 @@ describe("ProfileLoader", ()=>{
         }
     });
 
-    it("should return a named profile", ()=>{
+    it("should return a named profile", () => {
 
-       const loadedProfile = loadNamedProfile("profile1");
-       expect(loadedProfile).toEqual(profileOne);
+        const loadedProfile = loadNamedProfile("profile1");
+        expect(loadedProfile).toEqual(profileOne);
     });
 
-    it ("should return all profiles ", ()=>{
+    it("should return all profiles ", () => {
         const loadedProfiles = loadAllProfiles();
         expect(loadedProfiles).toEqual([profileOne, profileTwo]);
     });
 
-    it("should return a default profile", ()=>{
+    it("should return a default profile", () => {
 
         const loadedProfile = loadDefaultProfile(log);
         expect(loadedProfile).toEqual(profileOne);
     });
 
-    it("should display an information message and log a debug message if no default profile is found", ()=> {
+    it("should display an information message and log a debug message if no default profile is found", () => {
         showInformationMessage.mockReset();
         mockDebug.mockReset();
         // Create bad profile
-        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any)=>{
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             return {
                 status: 0,
                 stdout: "",
                 stderr: "Error text"
             };
         });
-        // Expect loadDefaultProfile to throw an error
-        expect(()=> {
-            loadDefaultProfile(log);
-        }).toThrow();
+        // Expect loadDefaultProfile to return undefined
+        const loadedProfile = loadDefaultProfile(log);
+        expect(loadedProfile).toBeUndefined();
         // Test that the information and debug messages were called
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(mockDebug.mock.calls.length).toBe(1);

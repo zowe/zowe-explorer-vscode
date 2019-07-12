@@ -30,10 +30,10 @@ export function loadAllProfiles(): IProfileLoaded[] {
     }
     if (getProfileProcess.stdout.toString().length === 0) {
         throw new Error(localize("loadAllProfiles.error.loadAll1",
-        "Error attempting to load all zosmf profiles.") +
-        localize("loadAllProfiles.error.loadAll2",
-        "Please ensure that you have created at least one profile with Zowe CLI before attempting to use this extension. Error text:")
-        + getProfileProcess.stderr.toString());
+            "Error attempting to load all zosmf profiles.") +
+            localize("loadAllProfiles.error.loadAll2",
+                "Please ensure that you have created at least one profile with Zowe CLI before attempting to use this extension. Error text:")
+            + getProfileProcess.stderr.toString());
     }
 
     return JSON.parse(getProfileProcess.stdout.toString());
@@ -70,13 +70,13 @@ export function loadDefaultProfile(log: Logger): IProfileLoaded {
             + localize("loadDefaultProfile.error.profile2", " A default zosmf profile created with Zowe CLI is required to use the Zowe extension.")
             + localize("loadDefaultProfile.error.profile3", " Please [create at least one profile with Zowe CLI]")
             + localize("loadDefaultProfile.error.profile4",
-                       "(https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).");
+                "(https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).");
         // Display info message to user
         vscode.window.showInformationMessage(defaultProfileMessage);
         // Include stack trace in debug log
         log.debug(defaultProfileMessage + localize("loadDefaultProfile.debug.errorText", "Error text:") + getProfileProcess.stderr.toString());
         // Keep from continuing
-        throw new Error();
+        return undefined;
     }
     return JSON.parse(getProfileProcess.stdout.toString());
 }
