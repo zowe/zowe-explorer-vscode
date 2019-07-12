@@ -370,7 +370,7 @@ export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFile
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
-export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED TESTING
+export async function submitJcl(datasetProvider: DatasetTree) {
     const doc = vscode.window.activeTextEditor.document;
     log.debug(localize("submitJcl.log.debug", "Submitting JCL in document ") + doc.fileName);
     // get session name
@@ -821,7 +821,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     try {
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();  // TODO MISSED TESTING
+                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
                 fav = true;
                 break;
             case ("pdsf"):
