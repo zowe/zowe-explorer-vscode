@@ -897,11 +897,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
-    "build": "npm run license && tsc --build --pretty",
+    "vscode:prepublish": "npm run build && npm run lint",
+    "build": "npm run clean && npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "test:unit": "jest --coverage",
-    "test": "jest --coverage",
+    "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test": "npm run test:unit",
     "package": "gulp package",
     "license": "node ./scripts/license.js",
     "watch": "tsc -b --watch --pretty",
@@ -919,11 +919,12 @@
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
-    "@types/yargs": "^11.0.0",
     "@types/vscode": "^1.34.0",
+    "@types/yargs": "^11.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
+    "cross-env": "^5.2.0",
     "del": "^4.1.1",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
@@ -936,8 +937,8 @@
     "jest-html-reporter": "^2.4.0",
     "jsdom": "11.11.0",
     "log4js": "3.0.5",
-    "run-sequence": "^2.2.1",
     "markdownlint-cli": "^0.16.0",
+    "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
     "typescript": "^3.5.1",
@@ -961,6 +962,9 @@
       "tsx",
       "js"
     ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/src/decorators"
+    ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
@@ -970,12 +974,9 @@
         "diagnostics": false
       }
     },
-    "testMatch": [
-      "**/__tests__/*test.+(ts|tsx)",
-      "**/__tests__/*/*test.+(ts|tsx)"
-    ],
+    "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
-      "__tests__/integrationTests/",
+      "__tests__/__integration__/",
       "out/"
     ],
     "reporters": [

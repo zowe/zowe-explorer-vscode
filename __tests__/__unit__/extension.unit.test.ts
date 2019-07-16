@@ -9,31 +9,30 @@
 *                                                                                 *
 */
 
-// tslint:disable:no-magic-numbers
+import * as vscode from "vscode";
+import * as treeMock from "../../src/DatasetTree";
+import * as treeUSSMock from "../../src/USSTree";
+import { ZoweUSSNode } from "../../src/ZoweUSSNode";
+import { ZoweNode } from "../../src/ZoweNode";
+import * as brtimperative from "@brightside/imperative";
+import * as extension from "../../src/extension";
+import * as path from "path";
+import * as brightside from "@brightside/core";
+import * as fs from "fs";
+import * as fsextra from "fs-extra";
+import * as profileLoader from "../../src/ProfileLoader";
+import * as ussNodeActions from "../../src/uss/ussNodeActions";
+import { Job } from "../../src/zosjobs";
+
 jest.mock("vscode");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 jest.mock("fs");
 jest.mock("fs-extra");
-jest.mock("../src/DatasetTree");
-jest.mock("../src/USSTree");
-jest.mock("../src/ProfileLoader");
-
-import * as vscode from "vscode";
-import * as treeMock from "../src/DatasetTree";
-import * as treeUSSMock from "../src/USSTree";
-import { ZoweUSSNode } from "../src/ZoweUSSNode";
-import { ZoweNode } from "../src/ZoweNode";
-import * as brtimperative from "@brightside/imperative";
-import * as extension from "../src/extension";
-import * as path from "path";
-import * as brightside from "@brightside/core";
-import * as fs from "fs";
-import * as fsextra from "fs-extra";
-import * as profileLoader from "../src/ProfileLoader";
-import * as ussNodeActions from "../src/uss/ussNodeActions";
-import { Job } from "../src/zosjobs";
+jest.mock("DatasetTree");
+jest.mock("USSTree");
+// jest.mock("ProfileLoader");
 
 describe("Extension Unit Tests", () => {
     // Globals
@@ -376,11 +375,13 @@ describe("Extension Unit Tests", () => {
         };
         sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
         sampleFavorites[2].iconPath = {
-            dark: path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg"),
-            light: path.join(__dirname, "..", "..", "resources", "light", "pattern.svg")
+            dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),
+            light: path.join(__dirname, "..", "..", "..", "resources", "light", "pattern.svg")
         };
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
+        // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
+        // tslint:disable-next-line: no-magic-numbers
         expect(createTreeView.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
@@ -404,6 +405,7 @@ describe("Extension Unit Tests", () => {
                     getChildren: mockGetUSSChildren,
                 }
         });
+        // tslint:disable-next-line: no-magic-numbers
         expect(registerCommand.mock.calls.length).toBe(50);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
@@ -466,6 +468,7 @@ describe("Extension Unit Tests", () => {
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
+        // tslint:disable-next-line: no-magic-numbers
         expect(existsSync.mock.calls.length).toBe(3);
         expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(readdirSync.mock.calls.length).toBe(1);
@@ -536,7 +539,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("should not change the existing context menus", async () => {
-        const packageJsonContent = require("../package.json");
+        const packageJsonContent = require("../../package.json");
         expect(packageJsonContent.contributes.menus["view/item/context"]).toMatchSnapshot();
     });
 
@@ -789,14 +792,20 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode, testTree);
 
+        // tslint:disable-next-line: no-magic-numbers
         expect(showQuickPick.mock.calls.length).toBe(5);
+        // tslint:disable-next-line: no-magic-numbers
         expect(getConfiguration.mock.calls.length).toBe(5);
         expect(getConfiguration.mock.calls[0][0]).toBe("Zowe-Default-Datasets-Binary");
         expect(getConfiguration.mock.calls[1][0]).toBe("Zowe-Default-Datasets-C");
         expect(getConfiguration.mock.calls[2][0]).toBe("Zowe-Default-Datasets-Classic");
+        // tslint:disable-next-line: no-magic-numbers
         expect(getConfiguration.mock.calls[3][0]).toBe("Zowe-Default-Datasets-PDS");
+        // tslint:disable-next-line: no-magic-numbers
         expect(getConfiguration.mock.calls[4][0]).toBe("Zowe-Default-Datasets-PS");
+        // tslint:disable-next-line: no-magic-numbers
         expect(showInputBox.mock.calls.length).toBe(5);
+        // tslint:disable-next-line: no-magic-numbers
         expect(dataSetCreate.mock.calls.length).toBe(5);
         expect(dataSetCreate.mock.calls[0][0]).toEqual(session);
 
@@ -1085,7 +1094,7 @@ describe("Extension Unit Tests", () => {
         pathToDataSet.mockRejectedValueOnce(Error("Test Error"));
 
         await extension.saveFile(testDoc, testTree);
-
+        // tslint:disable-next-line: no-magic-numbers
         expect(dataSetList.mock.calls.length).toBe(3);
         expect(dataSetList.mock.calls[0][0]).toEqual(session);
         expect(dataSetList.mock.calls[0][1]).toBe("HLQ.TEST.AFILE");
@@ -1917,7 +1926,7 @@ describe("Extension Unit Tests", () => {
         const defaultPreference = extension.BRIGHTTEMPFOLDER;
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
-
+        // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
@@ -1935,7 +1944,7 @@ describe("Extension Unit Tests", () => {
         const updatedPreferencePath = "/new/test/path";
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
-
+        // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
@@ -1951,7 +1960,7 @@ describe("Extension Unit Tests", () => {
         const updatedPreferencePath = "/test/path";
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
-
+        // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(0);
@@ -1972,7 +1981,7 @@ describe("Extension Unit Tests", () => {
         const updatedPreferencePath = "/test/path";
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
-
+        // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
         expect(moveSync.mock.calls.length).toBe(0);
 

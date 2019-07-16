@@ -10,11 +10,12 @@
 */
 
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
+import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as brightside from "@brightside/core";
-import * as ussNodeActions from "../../src/uss/ussNodeActions";
-import * as utils from "../../src/utils";
+import * as ussNodeActions from "../../../src/uss/ussNodeActions";
+import * as utils from "../../../src/utils";
+import * as path from "path";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -32,6 +33,10 @@ const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
 const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
+const Upload = jest.fn();
+const fileToUSSFile = jest.fn();
+const ZosmfSession = jest.fn();
+const createBasicZosmfSession = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -83,7 +88,8 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
-
+Object.defineProperty(brightside, "ZosmfSession", {value: ZosmfSession});
+Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -134,19 +140,18 @@ describe("ussNodeActions", () => {
     describe("initializingUSSFavorites", () => {
         it("initializeUSSFavorites is executed successfully", async () => {
             getConfiguration.mockReturnValueOnce({
-                get: (setting: string) => [
+                get: (favorites: string) => [
                     "[test]: /u/aDir{directory}",
                     "[test]: /u/myFile.txt{textFile}",
                 ]
             });
-
-            spyOn(utils, "getSession").and.returnValue(null);
+            createBasicZosmfSession.mockReturnValue(session);
             await ussNodeActions.initializeUSSFavorites(testUSSTree);
             expect(testUSSTree.mFavorites.length).toEqual(2);
 
             const expectedUSSFavorites: ZoweUSSNode[] = [
-                new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, null, "", false, "test"),
-                new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, null, "", false, "test"),
+                new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, session, "", false, "test"),
+                new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, session, "", false, "test"),
             ];
 
             expectedUSSFavorites.map((node) => node.contextValue += "f");
@@ -174,10 +179,34 @@ describe("ussNodeActions", () => {
         });
     });
     describe("uploadFile", () => {
+        Object.defineProperty(brightside, "Upload", {value: Upload});
+        Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
+
         it("should call upload dialog and upload file", async () => {
-            const fileUri = {fsPath: "/tmp/foo"};
+            fileToUSSFile.mockReset();
+            const testDoc2: vscode.TextDocument = {
+                fileName: path.normalize("/sestest/tmp/foo.txt"),
+                uri: null,
+                isUntitled: null,
+                languageId: null,
+                version: null,
+                isDirty: null,
+                isClosed: null,
+                save: null,
+                eol: null,
+                lineCount: null,
+                lineAt: null,
+                offsetAt: null,
+                positionAt: null,
+                getText: null,
+                getWordRangeAtPosition: null,
+                validateRange: null,
+                validatePosition: null
+            };
+
+            const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
-            openTextDocument.mockReturnValue({});
+            openTextDocument.mockResolvedValueOnce(testDoc2);
             await ussNodeActions.uploadDialog(ussNode, testUSSTree);
             expect(showOpenDialog).toBeCalled();
             expect(openTextDocument).toBeCalled();

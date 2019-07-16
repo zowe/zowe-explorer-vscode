@@ -16,7 +16,7 @@ jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions")
 jest.mock("Session");
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../src/ZoweUSSNode";
+import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -40,7 +40,7 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Creates a ZoweUSSNode and checks that its members are all initialized by the constructor
+     * Creates a ZoweUSSNode and checks that its childs are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session,null);
@@ -139,12 +139,31 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Checks that when getSession() is called on a memeber it returns the proper session
      *************************************************************************************************************/
-    it("Checks that a member can reach its session properly", async () => {
+    it("Checks that a child can reach its session properly", async () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
         rootNode.contextValue = "uss_session";
         const subNode = new ZoweUSSNode("pds", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
-        const member = new ZoweUSSNode("member", vscode.TreeItemCollapsibleState.None, subNode, null, null);
-        await expect(member.getSession()).toBeDefined();
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, subNode, null, null);
+        await expect(child.getSession()).toBeDefined();
+    });
+
+    /*************************************************************************************************************
+     * Checks that setBinary works
+     *************************************************************************************************************/
+    it("Checks that set Binary works", async () => {
+        const rootNode = new ZoweUSSNode("favorite", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        rootNode.contextValue = "favorite";
+        const subNode = new ZoweUSSNode("binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, subNode, null, null);
+
+        child.setBinary(true);
+        expect(child.contextValue).toEqual("binaryFile");
+        child.setBinary(false);
+        expect(child.contextValue).toEqual("textFile");
+        subNode.setBinary(true);
+        expect(subNode.contextValue).toEqual("binaryFilef");
+        subNode.setBinary(false);
+        expect(subNode.contextValue).toEqual("textFilef");
     });
 });
