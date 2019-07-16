@@ -140,7 +140,7 @@ describe("ussNodeActions", () => {
     describe("initializingUSSFavorites", () => {
         it("initializeUSSFavorites is executed successfully", async () => {
             getConfiguration.mockReturnValueOnce({
-                get: (favorites: string) => [
+                get: (setting: string) => [
                     "[test]: /u/aDir{directory}",
                     "[test]: /u/myFile.txt{textFile}",
                 ]
