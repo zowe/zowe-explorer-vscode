@@ -147,7 +147,7 @@ describe("ussNodeActions", () => {
             });
             createBasicZosmfSession.mockReturnValue(session);
             await ussNodeActions.initializeUSSFavorites(testUSSTree);
-            expect(testUSSTree.mFavorites.length).toEqual(2);
+            expect(testUSSTree.mFavorites.length).toBe(2);
 
             const expectedUSSFavorites: ZoweUSSNode[] = [
                 new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, session, "", false, "test"),
