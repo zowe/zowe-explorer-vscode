@@ -17,8 +17,8 @@ import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
 import { Session, Logger } from "@brightside/imperative";
 
-import * as profileLoader from "../src/ProfileLoader";
-import { Job, ZosJobsProvider } from "../src/zosjobs";
+import * as profileLoader from "../../src/ProfileLoader";
+import { Job, ZosJobsProvider } from "../../src/zosjobs";
 
 describe("Zos Jobs Unit Tests", () => {
 

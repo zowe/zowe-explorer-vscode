@@ -1,0 +1,41 @@
+{
+	"log4jsConfig": {
+		"appenders": {
+			"default": {
+				"type": "fileSync",
+				"layout": {
+					"type": "pattern",
+					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+				}
+			},
+			"imperative": {
+				"type": "fileSync",
+				"layout": {
+					"type": "pattern",
+					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+				}
+			},
+			"app": {
+				"type": "fileSync",
+				"layout": {
+					"type": "pattern",
+					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
+				}
+			}
+		},
+		"categories": {
+			"default": {
+				"appenders": ["default"],
+				"level": "DEBUG"
+			},
+			"imperative": {
+				"appenders": ["imperative"],
+				"level": "DEBUG"
+			},
+			"app": {
+				"appenders": ["app"],
+				"level": "DEBUG"
+			}
+		}
+	}
+}

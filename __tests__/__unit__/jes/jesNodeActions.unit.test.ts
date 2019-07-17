@@ -10,7 +10,7 @@
 */
 
 jest.mock("@brightside/core");
-import * as jesNodeActions from "../../src/jes/jesNodeActions";
+import * as jesNodeActions from "../../../src/jes/jesNodeActions";
 import * as brightside from "@brightside/core";
 
 describe("jesNodeActions", () => {

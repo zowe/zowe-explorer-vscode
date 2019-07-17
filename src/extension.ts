@@ -437,7 +437,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
  * @param node The dataset member
  */
 export async function submitMember(node: ZoweNode) {
-    const labelregex = /\[(.+)\]\: (.+)/g;  // TODO MISSED TESTING
+    const labelregex = /\[(.+)\]\: (.+)/g;
     let label;
     let sesName;
     switch (node.mParent.contextValue) {
@@ -714,7 +714,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     // but just in case we'll display all of the results
     // if there's only one result (which there should be), we will just pass in attributes[0]
     // so that prettyJson doesn't display the attributes as an array with a hyphen character
-    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
+    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, true);
     // const attributesFilePath = path.join(BRIGHTTEMPFOLDER, label + ".yaml");
     // fs.writeFileSync(attributesFilePath, attributesText);
     // const document = await vscode.workspace.openTextDocument(attributesFilePath);
@@ -738,7 +738,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
             "zowe",
             label + " " + localize("attributes.title","Attributes"),
-            column || vscode.ViewColumn.One,
+            column || 1,
             {
 
             }
