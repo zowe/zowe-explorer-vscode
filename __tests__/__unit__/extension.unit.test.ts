@@ -101,6 +101,7 @@ describe("Extension Unit Tests", () => {
     const moveSync = jest.fn();
     const getAllProfileNames = jest.fn();
     const createTreeView = jest.fn();
+    const createWebviewPanel = jest.fn();
     // const Uri = jest.fn();
     // const parse = jest.fn();
     const pathMock = jest.fn();
@@ -164,6 +165,7 @@ describe("Extension Unit Tests", () => {
     const downloadAllSpoolContentCommon = jest.fn();
     const SubmitJobs = jest.fn();
     const submitJcl = jest.fn();
+    const submitJob = jest.fn();
     const IssueCommand = jest.fn();
     const issueSimple = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
@@ -247,6 +249,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
+    Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
     // Object.defineProperty(vscode, "Uri", {value: Uri});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     // Object.defineProperty(Uri, "parse", { value: parse });
@@ -308,6 +311,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(DownloadJobs, "downloadAllSpoolContentCommon", {value: downloadAllSpoolContentCommon});
     Object.defineProperty(brightside, "SubmitJobs", {value: SubmitJobs});
     Object.defineProperty(SubmitJobs, "submitJcl", {value: submitJcl});
+    Object.defineProperty(SubmitJobs, "submitJob", {value: submitJob});
     Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
 
@@ -1387,9 +1391,12 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that refreshUSS correctly executes with and without error", async () => {
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
-        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, null);
+        const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, node, null, "/");
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/");
+
+        node.contextValue = "uss_session";
+        node.fullPath = "/u/myuser";
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
@@ -1445,11 +1452,20 @@ describe("Extension Unit Tests", () => {
         ussFile.mockReset();
         showTextDocument.mockReset();
 
+        ussFile.mockReset();
         node.contextValue = "file";
         await extension.refreshUSS(node);
+        expect(ussFile.mock.calls[0][1]).toEqual("/u/myuser");
 
+        ussFile.mockReset();
         node.contextValue = "directory";
         await extension.refreshUSS(child);
+        expect(ussFile.mock.calls[0][1]).toBe("/child");
+
+        ussFile.mockReset();
+        parent.contextValue = "directoryf";
+        await extension.refreshUSS(child);
+        expect(ussFile.mock.calls[0][1]).toBe("/child");
 
         ussFile.mockReset();
         openTextDocument.mockReset();
@@ -1462,8 +1478,8 @@ describe("Extension Unit Tests", () => {
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
             await extension.refreshUSS(brat);
-// tslint:disable-next-line: no-empty
         } catch (err) {
+            expect(err.message).toEqual("refreshPS() called from invalid node.");
         }
         expect(ussFile.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -1905,6 +1921,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the jcl is submitted", async () => {
+        showInformationMessage.mockReset();
         (profileLoader.loadAllProfiles as any).mockReset();
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
         createBasicZosmfSession.mockReturnValue(session);
@@ -1912,6 +1929,84 @@ describe("Extension Unit Tests", () => {
         await extension.submitJcl(testTree);
         expect(submitJcl).toBeCalled();
         expect(showInformationMessage).toBeCalled();
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5Bnull%2C%22JOB1234%22%5D)");
+    });
+
+    it("tests that a pds member is submitted", async () => {
+        showErrorMessage.mockReset();
+        const rootNode = new ZoweNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        rootNode.contextValue = "session";
+        const file = new ZoweNode("file", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        file.contextValue = "file";
+        const subNode = new ZoweNode("pds", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const member = new ZoweNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
+        const favorite = new ZoweNode("favorite", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const favoriteSubNode = new ZoweNode("memberf", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const favoritemember = new ZoweNode("pdsf", vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        const gibberish = new ZoweNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        gibberish.contextValue = "gibberish";
+        const gibberishSubNode = new ZoweNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
+        submitJob.mockReturnValue(iJob);
+
+
+        // pds member
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        await extension.submitMember(member);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("pds(member)");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+
+        // file node
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        await extension.submitMember(file);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("file");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+
+        // favorite member
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        await extension.submitMember(favoritemember);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("memberf(pdsf)");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+
+
+        // favorite
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        await extension.submitMember(favorite);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("favorite");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+
+        // gibberish
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        try {
+            await extension.submitMember(gibberishSubNode);
+        } catch (e) {
+            expect(e.message).toEqual("submitMember() called from invalid node.");
+        }
+        expect(showInformationMessage).not.toBeCalled();
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
     });
 
     it("Tests that temp folder handles default preference", () => {
@@ -2029,5 +2124,49 @@ describe("Extension Unit Tests", () => {
 
         node = new ZoweNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.SPFLOG1.log");
+    });
+
+    it("Tests the showDSAttributes function", async () => {
+        dataSetList.mockReset();
+        const node = new ZoweNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const testResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{
+                    blksz:"6160",
+                    catnm:"ICFCAT.MV3B.CATALOGA",
+                    cdate:"2019/05/08",
+                    dev:"3390",
+                    dsname:"AUSER.A1557332.A996850.TEST1",
+                    dsntp:"PDS",
+                    dsorg:"PO",
+                    edate:"***None***",
+                    extx:"1",
+                    lrecl:"80",
+                    migr:"NO",
+                    mvol:"N",
+                    ovf:"NO",
+                    rdate:"2019/07/17",
+                    recfm:"FB",
+                    sizex:"15",
+                    spacu:"CYLINDERS",
+                    used:"6",
+                    vol:"3BP001",
+                    vols:"3BP001"}]
+            }
+        };
+
+        createWebviewPanel.mockReturnValue({
+               webview: {
+                    html: ""
+                }
+        });
+        dataSetList.mockReturnValueOnce(testResponse);
+        await extension.showDSAttributes(node, testTree);
+        expect(dataSetList.mock.calls.length).toBe(1);
+        expect(dataSetList.mock.calls[0][0]).toBe(node.getSession());
+        expect(dataSetList.mock.calls[0][1]).toBe(node.mLabel);
+        expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
     });
 });

@@ -84,3 +84,30 @@ export class Logger {
         return log4js.getLogger("app");
     }
 }
+
+// tslint:disable-next-line:max-classes-per-file
+export class TextUtils {
+    public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
+        return JSON.stringify(object);
+        // return("dsname: STONECC.A1550669.A698019.TEST1" +
+        // "blksz:  6160" +
+        // "catnm:  ICFCAT.MV3B.CATALOGA" +
+        // "cdate:  2019/02/20" +
+        // "dev:    3390" +
+        // "dsntp:  PDS" +
+        // "dsorg:  PO" +
+        // "edate:  ***None***" +
+        // "extx:   1" +
+        // "lrecl:  80" +
+        // "migr:   NO" +
+        // "mvol:   N" +
+        // "ovf:    NO" +
+        // "rdate:  2019/07/17" +
+        // "recfm:  FB" +
+        // "sizex:  15" +
+        // "spacu:  CYLINDERS" +
+        // "used:   6" +
+        // "vol:    3BP002" +
+        // "vols:   3BP002");
+    }
+}

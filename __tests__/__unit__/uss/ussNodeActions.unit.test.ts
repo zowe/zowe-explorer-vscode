@@ -35,8 +35,6 @@ const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
-//const ZosmfSession = jest.fn();
-//const createBasicZosmfSession = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -88,8 +86,6 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
-//Object.defineProperty(brightside, "ZosmfSession", {value: ZosmfSession});
-//Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
