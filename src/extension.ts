@@ -366,7 +366,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
         try {
             allProfiles = loadAllProfiles();
         } catch (err) {
-            vscode.window.showErrorMessage(localize("submitJcl.error.message", "Unable to load all profiles: ") + err.message);
+            vscode.window.showErrorMessage(localize("submitJcl.error", "Unable to load all profiles: ") + err);
             throw (err);
         }
 
@@ -690,7 +690,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         }
     } catch (err) {
         log.error(localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("showDSAttributes.error.message", "Unable to list attributes: ") + err.message);
+        vscode.window.showErrorMessage(localize("showDSAttributes.error", "Unable to list attributes: ") + err.message);
         throw (err);
     }
 
@@ -765,7 +765,7 @@ export async function cleanTempDir() {
     try {
         cleanDir(BRIGHTTEMPFOLDER);
     } catch (err) {
-        vscode.window.showErrorMessage(localize("deactivate.error.message", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
     }
 }
 
@@ -818,7 +818,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
             label = node.mParent.mLabel + "(" + node.mLabel + ")";
             break;
         default:
-            vscode.window.showErrorMessage(localize("deleteDataSet.invalidNode.error.message", "deleteDataSet() called from invalid node."));
+            vscode.window.showErrorMessage(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
             // TODO MISSED TESTING
             throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
     }
@@ -828,8 +828,8 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     } catch (err) {
         log.error(localize("deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
         if (err.message.includes(localize("deleteDataSet.error.notFound", "not found"))) {
-            vscode.window.showInformationMessage(localize("deleteDataSet.notFound.error.message1", "Unable to find file: ") + label +
-            localize("deleteDataSet.notFound.error.message2", " was probably already deleted."));
+            vscode.window.showInformationMessage(localize("deleteDataSet.notFound.error1", "Unable to find file: ") + label +
+            localize("deleteDataSet.notFound.error2", " was probably already deleted."));
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -1189,8 +1189,8 @@ export async function refreshUSS(node: ZoweUSSNode) {
             label = node.mLabel;
             break;
         default:
-            vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode.USS", "refreshUSS() called from invalid node."));
-            throw Error(localize("refreshUSS.error.invalidNode.PS", "refreshPS() called from invalid node."));
+            vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
+            throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
     }
     try {
         await zowe.Download.ussFile(node.getSession(), node.fullPath, {

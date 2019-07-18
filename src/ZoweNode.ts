@@ -56,7 +56,7 @@ export class ZoweNode extends vscode.TreeItem {
      * @returns {Promise<ZoweNode[]>}
      */
     public async getChildren(): Promise<ZoweNode[]> {
-        if ((!this.pattern && this.contextValue === "session")){ 
+        if ((!this.pattern && this.contextValue === "session")){
             return [new ZoweNode(localize("getChildren.search", "Use the search button to display datasets"),
                                  vscode.TreeItemCollapsibleState.None, this, null, true)];
         }
@@ -130,7 +130,8 @@ export class ZoweNode extends vscode.TreeItem {
             this.dirty = false;
         }
         if(Object.keys(elementChildren).length === 0) {
-            return this.children = [new ZoweNode(localize("getChildren.noDataset", "No datasets found"), vscode.TreeItemCollapsibleState.None, this, null, true)];
+            return this.children = [new ZoweNode(
+                localize("getChildren.noDataset", "No datasets found"), vscode.TreeItemCollapsibleState.None, this, null, true)];
         } else {
             return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
         }

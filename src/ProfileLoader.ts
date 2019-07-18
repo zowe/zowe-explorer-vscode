@@ -69,7 +69,7 @@ export function loadDefaultProfile(log: Logger): IProfileLoaded {
         const defaultProfileMessage = localize("loadDefaultProfile.error.profile1", "No default zosmf profile found for Zowe CLI.")
             + localize("loadDefaultProfile.error.profile2", " A default zosmf profile created with Zowe CLI is required to use the Zowe extension.")
             + localize("loadDefaultProfile.error.profile3", " Please [create at least one profile with Zowe CLI]")
-            + localize("loadDefaultProfile.error.profile4", 
+            + localize("loadDefaultProfile.error.profile4",
                        "(https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).");
         // Display info message to user
         vscode.window.showInformationMessage(defaultProfileMessage);
