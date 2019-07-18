@@ -91,20 +91,22 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async addSession(log: Logger, sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName? loadNamedProfile(sessionName): loadDefaultProfile(log);
-        // If session is already added, do nothing
-        if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
-            return;
+        const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
+        if (zosmfProfile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
+                return;
+            }
+
+            // Uses loaded profile to create a zosmf session with brightside
+            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
+            node.contextValue = "session";
+            this.mSessionNodes.push(node);
+            this.refresh();
         }
-
-        // Uses loaded profile to create a zosmf session with brightside
-        const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
-        // Creates ZoweNode to track new session and pushes it to mSessionNodes
-        const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
-        node.contextValue = "session";
-        this.mSessionNodes.push(node);
-        this.refresh();
     }
 
     /**
@@ -137,16 +139,16 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 this.mFavoriteSession, node.getSession());
             temp.contextValue = "sessionf";
             // add a command to execute the search
-            temp.command = {command: "zowe.pattern", title: "", arguments: [temp]};
+            temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
             const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
             const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-            temp.iconPath = {light, dark};
+            temp.iconPath = { light, dark };
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().mLabel + "]: " + node.mLabel, node.collapsibleState,
                 this.mFavoriteSession, node.getSession());
             temp.contextValue += "f";
             if (temp.contextValue === "dsf") {
-                temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
+                temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
         }
 

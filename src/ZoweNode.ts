@@ -130,8 +130,8 @@ export class ZoweNode extends vscode.TreeItem {
             this.dirty = false;
         }
         if(Object.keys(elementChildren).length === 0) {
-            return this.children = [new ZoweNode(
-                localize("getChildren.noDataset", "No datasets found"), vscode.TreeItemCollapsibleState.None, this, null, true)];
+            return this.children = [new ZoweNode(localize("getChildren.noDataset", "No datasets found"),
+            vscode.TreeItemCollapsibleState.None, this, null, true)];
         } else {
             return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
         }
