@@ -1000,7 +1000,10 @@ function appendSuffix(label: string): string {
         if (split[i] === "JCL" || split[i] === "CNTL" ) {
             return label.concat(".jcl");
         }
-        if (split[i] === "COBOL" || split[i] === "CBL" ) {
+        if (split[i] === "COBOL" || split[i] === "CBL" || split[i] === "COB" ) {
+            return label.concat(".cbl");
+        }
+        if (["COPYBOOK", "COPY", "COBCOPY", "CPY"].includes(split[i])) {
             return label.concat(".cbl");
         }
         if (split[i] === "PLI" || split[i] === "PL1" || split[i] === "PLX" ) {
@@ -1019,7 +1022,7 @@ function appendSuffix(label: string): string {
             return label.concat(".log");
         }
     }
-    return label.concat("." + split[split.length-1].toLowerCase());
+    return label;
 }
 
 /**
@@ -1301,6 +1304,12 @@ export async function safeSaveUSS(node: ZoweUSSNode) {
     }
 }
 
+function checkForAddedSuffix(filename: string): boolean {
+    const dotPos = 4;
+    return ((filename.lastIndexOf(".") === (filename.length - dotPos)) &&
+        ((filename.substring(filename.length - dotPos) ===  filename.substring(filename.length - dotPos).toLowerCase())));
+
+}
 /**
  * Uploads the file to the mainframe
  *
@@ -1338,7 +1347,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.lastIndexOf("."));
+    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
+        checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length);
     log.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {
