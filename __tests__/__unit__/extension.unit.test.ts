@@ -2091,9 +2091,9 @@ describe("Extension Unit Tests", () => {
         node = new ZoweNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.COBOL.TEST(member).cbl");
         node = new ZoweNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLI(member).pl1");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLI(member).pli");
         node = new ZoweNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLX(member).pl1");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLX(member).pli");
         node = new ZoweNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.SH(member).sh");
         node = new ZoweNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
@@ -2121,6 +2121,12 @@ describe("Extension Unit Tests", () => {
         node = new ZoweNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(
             "/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm");
+
+        node = new ZoweNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.COPYBOOK.cpy");
+        node = new ZoweNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.PLINC.inc");
+
 
         node = new ZoweNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.SPFLOG1.log");

@@ -994,29 +994,32 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1 ; i > 0; i--) {
-        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
-            return label.concat(".asm");
-        }
-        if (split[i] === "JCL" || split[i] === "CNTL" ) {
+        if (["JCL", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
-        if (split[i] === "COBOL" || split[i] === "CBL" || split[i] === "COB" ) {
+        if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
             return label.concat(".cbl");
         }
-        if (["COPYBOOK", "COPY", "COBCOPY", "CPY"].includes(split[i])) {
-            return label.concat(".cbl");
+        if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
+            return label.concat(".cpy");
         }
-        if (split[i] === "PLI" || split[i] === "PL1" || split[i] === "PLX" ) {
-            return label.concat(".pl1");
+        if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
+            return label.concat(".inc");
         }
-        if (split[i] === "SHELL" || split[i] === "SH" ) {
+        if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
+            return label.concat(".pli");
+        }
+        if (["SH", "SHELL"].includes(split[i])) {
             return label.concat(".sh");
         }
-        if (split[i] === "REXX" || split[i] === "REXEC" || split[i] === "EXEC" ) {
+        if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
             return label.concat(".rexx");
         }
         if (split[i] === "XML" ) {
             return label.concat(".xml");
+        }
+        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
+            return label.concat(".asm");
         }
         if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1 ) {
             return label.concat(".log");
@@ -1305,8 +1308,9 @@ export async function safeSaveUSS(node: ZoweUSSNode) {
 }
 
 function checkForAddedSuffix(filename: string): boolean {
-    const dotPos = 4;
-    return ((filename.lastIndexOf(".") === (filename.length - dotPos)) &&
+    const dotPos = filename.lastIndexOf(".");
+    // tslint:disable-next-line: no-magic-numbers
+    return ((dotPos >= 2 && dotPos <= 5 ) &&
         ((filename.substring(filename.length - dotPos) ===  filename.substring(filename.length - dotPos).toLowerCase())));
 
 }
