@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.23.1
+
+- Refined dataset suffix solution by restricting to explicit names only
+
 ## 0.23.0
 
 - Add support for localization. Thanks to @evannwu20
