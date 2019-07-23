@@ -1326,7 +1326,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     log.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     log.debug("requested to save data set: " + doc.fileName);
-    if (docPath.indexOf(DS_DIR) === -1 ) {
+    if (docPath.toUpperCase().indexOf(DS_DIR) === -1 ) {
         log.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
             localize("saveFile.log.debug.directory", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
         return;
