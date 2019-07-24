@@ -9,10 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import { CliProfileManager, IProfileLoaded, Logger } from "@brightside/imperative";
-import * as os from "os";
-import * as path from "path";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";

@@ -11,11 +11,11 @@
 
 jest.mock("vscode");
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 import * as vscode from "vscode";
-import * as brightside from "@brightside/core";
-import { Session, Logger } from "@brightside/imperative";
+import * as brightside from "@zowe/cli";
+import { Session, Logger } from "@zowe/imperative";
 
 import * as profileLoader from "../../src/ProfileLoader";
 import { Job, ZosJobsProvider } from "../../src/zosjobs";

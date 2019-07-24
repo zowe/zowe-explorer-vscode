@@ -9,14 +9,13 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import { moveSync } from "fs-extra";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, AbstractSession, TextUtils, IProfileLoaded } from "@brightside/imperative";
+import { Logger, AbstractSession, TextUtils, IProfileLoaded } from "@zowe/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -25,7 +24,7 @@ import * as mvsActions from "./mvs/mvsNodeActions";
 import * as jesActions from "./jes/jesNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 // tslint:disable-next-line: no-duplicate-imports
-import { IJobFile } from "@brightside/core";
+import { IJobFile } from "@zowe/cli";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();

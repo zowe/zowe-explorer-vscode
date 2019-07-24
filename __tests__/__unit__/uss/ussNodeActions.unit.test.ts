@@ -11,8 +11,8 @@
 
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
-import * as brtimperative from "@brightside/imperative";
-import * as brightside from "@brightside/core";
+import * as brtimperative from "@zowe/imperative";
+import * as brightside from "@zowe/cli";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as utils from "../../../src/utils";
 import * as path from "path";

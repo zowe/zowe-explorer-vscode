@@ -10,7 +10,7 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -20,7 +20,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
-import { CliProfileManager } from "@brightside/imperative";
+import { CliProfileManager } from "@zowe/imperative";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";

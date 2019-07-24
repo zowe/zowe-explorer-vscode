@@ -9,11 +9,11 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();

@@ -11,14 +11,14 @@
 
 // tslint:disable:no-shadowed-variable
 jest.mock("vscode");
-jest.mock("@brightside/imperative");
-jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
+jest.mock("@zowe/imperative");
+jest.mock("@zowe/cli/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
 
 jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
-import { Session } from "@brightside/imperative";
+import { Session } from "@zowe/imperative";
 
 import * as profileLoader from "../../src/ProfileLoader";
 

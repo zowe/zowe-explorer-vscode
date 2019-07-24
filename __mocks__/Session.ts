@@ -9,8 +9,8 @@
 *                                                                                 *
 */
 
-import { AbstractSession } from "@brightside/imperative/lib/rest/src/session/AbstractSession";
-import { ISession } from "@brightside/imperative/lib/rest/src/session/doc/ISession";
+import { AbstractSession } from "@zowe/imperative/lib/rest/src/session/AbstractSession";
+import { ISession } from "@zowe/imperative/lib/rest/src/session/doc/ISession";
 
 /**
  * Non-abstract session class

@@ -12,13 +12,13 @@
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
-import { Session, Logger } from "@brightside/imperative";
+import { Session, Logger } from "@zowe/imperative";
 
 import * as profileLoader from "../../src/ProfileLoader";
 

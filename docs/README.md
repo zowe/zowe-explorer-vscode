@@ -40,7 +40,7 @@ The following topics describe how to run system tests on the Visual Studio Code 
 In your copy of this repository, create a `testProfileData.ts` file in the `resources` directory. In this file, include the following text with your credentials:
 
 ```typescript
-import { IProfile } from "@brightside/imperative";
+import { IProfile } from "@zowe/imperative";
 
 export const profile: IProfile = {
     type : "zosmf",

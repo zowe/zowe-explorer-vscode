@@ -12,7 +12,7 @@
 import { USSTree } from "../USSTree";
 import { ZoweUSSNode } from "../ZoweUSSNode";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";

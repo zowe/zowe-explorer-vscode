@@ -10,10 +10,10 @@
 */
 
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
 // tslint:disable-next-line: no-duplicate-imports
-import { IJob, IJobFile } from "@brightside/core";
+import { IJob, IJobFile } from "@zowe/cli";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 
 export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {

@@ -11,8 +11,8 @@
 
 import * as path from "path";
 import * as os from "os";
-import * as zowe from "@brightside/core";
-import { CliProfileManager } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { CliProfileManager } from "@zowe/imperative";
 
 /*
  * Created this file to be a place where commonly used functions will be defined.

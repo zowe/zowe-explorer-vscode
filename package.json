@@ -947,13 +947,14 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "2.28.2",
-    "@brightside/imperative": "2.4.6",
     "@types/fs-extra": "^7.0.0",
+    "@zowe/cli": "^5.11.0",
+    "@zowe/imperative": "^4.1.11",
     "fs-extra": "^8.0.1",
+    "gulp-cli": "^2.2.0",
+    "jest-resolve": "^24.8.0",
     "jsdoc": "^3.5.5",
     "tslint": "^5.17.0",
-    "gulp-cli": "^2.2.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

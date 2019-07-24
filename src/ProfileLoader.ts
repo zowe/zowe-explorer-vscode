@@ -11,7 +11,7 @@
 
 import { spawnSync } from "child_process";
 import * as path from "path";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();

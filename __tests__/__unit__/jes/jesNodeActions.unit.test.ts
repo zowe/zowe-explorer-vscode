@@ -9,9 +9,9 @@
 *                                                                                 *
 */
 
-jest.mock("@brightside/core");
+jest.mock("@zowe/cli");
 import * as jesNodeActions from "../../../src/jes/jesNodeActions";
-import * as brightside from "@brightside/core";
+import * as brightside from "@zowe/cli";
 
 describe("jesNodeActions", () => {
     describe("getSpoolLanguage", () => {

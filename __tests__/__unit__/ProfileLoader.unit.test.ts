@@ -11,10 +11,10 @@
 
 jest.mock("vscode");
 jest.mock("child_process");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/imperative");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger } from "@brightside/imperative";
+import { Logger } from "@zowe/imperative";
 
 import { loadNamedProfile, loadAllProfiles, loadDefaultProfile } from "../../src/ProfileLoader";
 

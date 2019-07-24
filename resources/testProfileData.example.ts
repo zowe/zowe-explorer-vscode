@@ -1,4 +1,4 @@
-import { IProfile } from "@brightside/imperative";
+import { IProfile } from "@zowe/imperative";
 
 export const profile: IProfile = {
     type : "zosmf",
