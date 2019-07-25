@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.23.1",
+  "version": "0.23.2",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -949,6 +949,7 @@
   "dependencies": {
     "@types/fs-extra": "^7.0.0",
     "@zowe/cli": "^5.11.0",
+    "@zowe/imperative": "^4.1.11",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
     "jest-resolve": "^24.8.0",
