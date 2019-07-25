@@ -87,6 +87,16 @@ describe("Extension Unit Tests", () => {
         "subsystem": ""
     };
 
+    const outputChannel: vscode.OutputChannel = {
+        append: jest.fn(),
+        name: "fakeChannel",
+        appendLine: jest.fn(),
+        clear: jest.fn(),
+        show: jest.fn(),
+        hide: jest.fn(),
+        dispose: jest.fn()
+    };
+
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
     sessNode.pattern = "test hlq";
@@ -168,6 +178,7 @@ describe("Extension Unit Tests", () => {
     const submitJob = jest.fn();
     const IssueCommand = jest.fn();
     const issueSimple = jest.fn();
+    const createOutputChannel = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -290,6 +301,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
     Object.defineProperty(brightside, "Download", {value: Download});
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
@@ -410,7 +422,7 @@ describe("Extension Unit Tests", () => {
                 }
         });
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(50);
+        expect(registerCommand.mock.calls.length).toBe(51);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -468,7 +480,8 @@ describe("Extension Unit Tests", () => {
             "zowe.removeJobsSession",
             "zowe.downloadSpool",
             "zowe.getJobJcl",
-            "zowe.setJobSpool"
+            "zowe.setJobSpool",
+            "zowe.issueTsoCmd"
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -2168,5 +2181,29 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSetList.mock.calls[0][1]).toBe(node.mLabel);
         expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
+    });
+
+    it("tests the issueTsoCommand function", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        (profileLoader.loadAllProfiles as any).mockReset();
+
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"},{name: "secondName"}]);
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
+
+        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(1);
     });
 });

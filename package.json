@@ -319,6 +319,10 @@
       {
         "command": "zowe.setJobSpool",
         "title": "%setJobSpool%"
+      },
+      {
+        "command": "zowe.issueTsoCmd",
+        "title": "%issueTsoCmd%"
       }
     ],
     "menus": {
@@ -793,6 +797,10 @@
         },
         {
           "command": "zowe.uss.removeSession",
+          "when": "never"
+        },
+        {
+          "command": "zowe.submitMember",
           "when": "never"
         }
       ]
