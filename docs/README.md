@@ -124,7 +124,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 Next wrap your string with the localize function in this format
 `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
 
-After adding/updating/removing any string, run `npm run package` then run the stringUpdateScript.js. This will update the sample directory under the i18n folder. Upload these files to Zanata or email a maintainer to do so.
+After adding/updating/removing any string, run `npm run build`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
 Maintainers: Evann Wu (evann.wu@ibm.com), Lauren Li (lauren.li@ibm.com), Kristina Mayo (ktopchi@us.ibm.com)
 
