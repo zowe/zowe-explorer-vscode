@@ -370,7 +370,7 @@ export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFile
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
-export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED TESTING
+export async function submitJcl(datasetProvider: DatasetTree) {
     const doc = vscode.window.activeTextEditor.document;
     log.debug(localize("submitJcl.log.debug", "Submitting JCL in document ") + doc.fileName);
     // get session name
@@ -437,7 +437,7 @@ export async function submitJcl(datasetProvider: DatasetTree) { // TODO MISSED T
  * @param node The dataset member
  */
 export async function submitMember(node: ZoweNode) {
-    const labelregex = /\[(.+)\]\: (.+)/g;  // TODO MISSED TESTING
+    const labelregex = /\[(.+)\]\: (.+)/g;
     let label;
     let sesName;
     switch (node.mParent.contextValue) {
@@ -714,7 +714,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     // but just in case we'll display all of the results
     // if there's only one result (which there should be), we will just pass in attributes[0]
     // so that prettyJson doesn't display the attributes as an array with a hyphen character
-    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
+    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, true);
     // const attributesFilePath = path.join(BRIGHTTEMPFOLDER, label + ".yaml");
     // fs.writeFileSync(attributesFilePath, attributesText);
     // const document = await vscode.workspace.openTextDocument(attributesFilePath);
@@ -738,7 +738,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
             "zowe",
             label + " " + localize("attributes.title","Attributes"),
-            column || vscode.ViewColumn.One,
+            column || 1,
             {
 
             }
@@ -818,28 +818,25 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
 
     let label = "";
     let fav = false;
-    switch (node.mParent.contextValue) {
-        case ("favorite"):
-            label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();  // TODO MISSED TESTING
-            fav = true; // MISSED
-            break; // MISSED
-        case ("pdsf"):
-            label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
-            fav = true;
-            break;
-        case ("session"):
-            label = node.mLabel;
-            break;
-        case ("pds"):
-            label = node.mParent.mLabel + "(" + node.mLabel + ")";
-            break;
-        default:
-            vscode.window.showErrorMessage(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
-            // TODO MISSED TESTING
-            throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
-    }
-
     try {
+        switch (node.mParent.contextValue) {
+            case ("favorite"):
+                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                fav = true;
+                break;
+            case ("pdsf"):
+                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+                fav = true;
+                break;
+            case ("session"):
+                label = node.mLabel;
+                break;
+            case ("pds"):
+                label = node.mParent.mLabel + "(" + node.mLabel + ")";
+                break;
+            default:
+                throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
+        }
         await zowe.Delete.dataSet(node.getSession(), label);
     } catch (err) {
         log.error(localize("deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
@@ -856,17 +853,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         datasetProvider.mSessionNodes.forEach((ses) => {
             if (node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]")) === ses.mLabel ||
                 node.mParent.mLabel.substring(node.mParent.mLabel.indexOf("["), node.mParent.mLabel.indexOf("]")) === ses.mLabel) {
-                ses.dirty = true;  // TODO MISSED TESTING
+                ses.dirty = true;
             }
         });
+        datasetProvider.removeFavorite(node);
     } else {
         node.getSessionNode().dirty = true;
+        const temp = node.mLabel;
+        node.mLabel = "[" + node.getSessionNode().mLabel + "]: " + node.mLabel;
+        datasetProvider.removeFavorite(node);
+        node.mLabel = temp;
     }
 
-    const temp = node.mLabel;
-    node.mLabel = "[" + node.getSessionNode().mLabel + "]: " + node.mLabel;
-    datasetProvider.removeFavorite(node);
-    node.mLabel = temp;
     datasetProvider.refresh();
 
     // remove local copy of file
@@ -904,7 +902,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         }
     } else {
         // executing search from saved search in favorites
-        pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);  // TODO MISSED TESTING
+        pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);
         const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
         await datasetProvider.addSession(log, session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);
@@ -996,32 +994,38 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1 ; i > 0; i--) {
-        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
-            return label.concat(".asm");
-        }
-        if (split[i] === "JCL" || split[i] === "CNTL" ) {
+        if (["JCL", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
-        if (split[i] === "COBOL" || split[i] === "CBL" ) {
+        if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
             return label.concat(".cbl");
         }
-        if (split[i] === "PLI" || split[i] === "PL1" || split[i] === "PLX" ) {
-            return label.concat(".pl1");
+        if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
+            return label.concat(".cpy");
         }
-        if (split[i] === "SHELL" || split[i] === "SH" ) {
+        if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
+            return label.concat(".inc");
+        }
+        if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
+            return label.concat(".pli");
+        }
+        if (["SH", "SHELL"].includes(split[i])) {
             return label.concat(".sh");
         }
-        if (split[i] === "REXX" || split[i] === "REXEC" || split[i] === "EXEC" ) {
+        if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
             return label.concat(".rexx");
         }
         if (split[i] === "XML" ) {
             return label.concat(".xml");
         }
+        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
+            return label.concat(".asm");
+        }
         if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1 ) {
             return label.concat(".log");
         }
     }
-    return label.concat("." + split[split.length-1].toLowerCase());
+    return label;
 }
 
 /**
@@ -1303,6 +1307,14 @@ export async function safeSaveUSS(node: ZoweUSSNode) {
     }
 }
 
+function checkForAddedSuffix(filename: string): boolean {
+    // identify how close to the end of the string the last . is
+    const dotPos = filename.length - ( 1 + filename.lastIndexOf(".") );
+    // tslint:disable-next-line: no-magic-numbers
+    return ((dotPos >= 2 && dotPos <= 4 ) && // if the last characters are 2 to 4 long and lower case it has been added
+        ((filename.substring(filename.length - dotPos) ===  filename.substring(filename.length - dotPos).toLowerCase())));
+
+}
 /**
  * Uploads the file to the mainframe
  *
@@ -1314,7 +1326,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     log.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     log.debug("requested to save data set: " + doc.fileName);
-    if (docPath.indexOf(DS_DIR) === -1 ) {
+    if (docPath.toUpperCase().indexOf(DS_DIR.toUpperCase()) === -1 ) {
         log.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
             localize("saveFile.log.debug.directory", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
         return;
@@ -1340,7 +1352,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.lastIndexOf("."));
+    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
+        checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length);
     log.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {

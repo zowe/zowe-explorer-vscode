@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as child_process from "child_process";
 import { Logger } from "@brightside/imperative";
 
-import { loadNamedProfile, loadAllProfiles, loadDefaultProfile } from "../src/ProfileLoader";
+import { loadNamedProfile, loadAllProfiles, loadDefaultProfile } from "../../src/ProfileLoader";
 
 const showInformationMessage = jest.fn();
 Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
