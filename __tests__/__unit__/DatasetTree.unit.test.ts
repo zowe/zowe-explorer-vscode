@@ -14,13 +14,13 @@ jest.mock("fs");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
-jest.mock("../src/ProfileLoader");
+jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
-import { DatasetTree } from "../src/DatasetTree";
-import { ZoweNode } from "../src/ZoweNode";
+import { DatasetTree } from "../../src/DatasetTree";
+import { ZoweNode } from "../../src/ZoweNode";
 import { Session, Logger } from "@brightside/imperative";
 
-import * as profileLoader from "../src/ProfileLoader";
+import * as profileLoader from "../../src/ProfileLoader";
 
 describe("DatasetTree Unit Tests", () => {
     // Globals
@@ -236,6 +236,21 @@ describe("DatasetTree Unit Tests", () => {
         testTree.addFavorite(ps);
 
         expect(testTree.mFavorites.length).toEqual(2);
+
+        // Check adding a session
+        testTree.addFavorite(testTree.mSessionNodes[1]);
+
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(3);
+
+        /*************************************************************************************************************
+        * Testing that removeFavorite works properly
+        *************************************************************************************************************/
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        expect(testTree.mFavorites).toEqual([]);
+
     });
 
     /*************************************************************************************************************
@@ -243,15 +258,5 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
         testTree.deleteSession(testTree.mSessionNodes[1]);
-    });
-
-    /*************************************************************************************************************
-     * Testing that removeFavorite works properly
-     *************************************************************************************************************/
-    it("Testing that removeFavorite works properly", async () => {
-        testTree.removeFavorite(testTree.mFavorites[0]);
-        testTree.removeFavorite(testTree.mFavorites[0]);
-
-        expect(testTree.mFavorites).toEqual([]);
     });
 });

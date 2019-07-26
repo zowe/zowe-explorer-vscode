@@ -14,13 +14,13 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-jest.mock("../src/ProfileLoader");
+jest.mock("../../src/ProfileLoader");
 import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
-import { USSTree } from "../src/USSTree";
-import { ZoweUSSNode } from "../src/ZoweUSSNode";
+import { USSTree } from "../../src/USSTree";
+import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 
-import * as profileLoader from "../src/ProfileLoader";
+import * as profileLoader from "../../src/ProfileLoader";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -47,7 +47,7 @@ describe("Unit Tests (Jest)", () => {
             return { name: "defaultprofile" };
         })
     });
-
+    const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value:
             jest.fn(()=>{
@@ -58,6 +58,7 @@ describe("Unit Tests (Jest)", () => {
                 };
             })
     });
+
 
     const testTree = new USSTree();
     testTree.mSessionNodes.push(new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));

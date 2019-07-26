@@ -15,12 +15,12 @@ jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
 
-jest.mock("../src/ProfileLoader");
+jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
-import { ZoweNode } from "../src/ZoweNode";
+import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
 
-import * as profileLoader from "../src/ProfileLoader";
+import * as profileLoader from "../../src/ProfileLoader";
 
 describe("Unit Tests (Jest)", () => {
     // Globals

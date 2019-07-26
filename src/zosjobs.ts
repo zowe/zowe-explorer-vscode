@@ -96,7 +96,7 @@ export class Job extends vscode.TreeItem {
     private _prefix: string;
 
     constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-        public mParent: Job, public session: Session, public job: IJob) {
+                public mParent: Job, public session: Session, public job: IJob) {
         super(mLabel, mCollapsibleState);
         this._owner = session.ISession.user;
         this._prefix = "*";
@@ -180,7 +180,7 @@ export class Job extends vscode.TreeItem {
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
     constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
-        public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
+                public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
         super(mLabel, mCollapsibleState, mParent, session, job);
     }
 }

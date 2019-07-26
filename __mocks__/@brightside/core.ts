@@ -15,8 +15,17 @@ import * as imperative from "../@brightside/imperative";
 
 // tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {
-    export function createBasicZosmfSession(profile: imperative.Profile){
-        return true;
+    export function createBasicZosmfSession(profile: imperative.Profile) {
+        return {
+            type: "basic",
+            user: "fake",
+            password: "fake",
+            hostname: "fake",
+            protocol: "https",
+            base64EncodedAuth: "",
+            rejectUnauthorized: false,
+            port: 2,
+        };
     }
 }
 
@@ -91,7 +100,7 @@ export namespace List {
                         {
                             name: "aDir", mode: "drw-r--r--", size: 20, uid: 0, user: "WSADMIN", gid: 1,
                             group: "OMVSGRP", mtime: "2015-11-24T02:12:04"
-                        },                        
+                        },
                         {
                             name: "myFile.txt", mode: "-rw-r--r--", size: 20, uid: 0, user: "WSADMIN", gid: 1,
                             group: "OMVSGRP", mtime: "2015-11-24T02:12:04"
