@@ -1044,32 +1044,38 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1 ; i > 0; i--) {
-        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
-            return label.concat(".asm");
-        }
-        if (split[i] === "JCL" || split[i] === "CNTL" ) {
+        if (["JCL", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
-        if (split[i] === "COBOL" || split[i] === "CBL" ) {
+        if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
             return label.concat(".cbl");
         }
-        if (split[i] === "PLI" || split[i] === "PL1" || split[i] === "PLX" ) {
-            return label.concat(".pl1");
+        if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
+            return label.concat(".cpy");
         }
-        if (split[i] === "SHELL" || split[i] === "SH" ) {
+        if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
+            return label.concat(".inc");
+        }
+        if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
+            return label.concat(".pli");
+        }
+        if (["SH", "SHELL"].includes(split[i])) {
             return label.concat(".sh");
         }
-        if (split[i] === "REXX" || split[i] === "REXEC" || split[i] === "EXEC" ) {
+        if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
             return label.concat(".rexx");
         }
         if (split[i] === "XML" ) {
             return label.concat(".xml");
         }
+        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1 ) {
+            return label.concat(".asm");
+        }
         if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1 ) {
             return label.concat(".log");
         }
     }
-    return label.concat("." + split[split.length-1].toLowerCase());
+    return label;
 }
 
 /**
@@ -1351,6 +1357,14 @@ export async function safeSaveUSS(node: ZoweUSSNode) {
     }
 }
 
+function checkForAddedSuffix(filename: string): boolean {
+    // identify how close to the end of the string the last . is
+    const dotPos = filename.length - ( 1 + filename.lastIndexOf(".") );
+    // tslint:disable-next-line: no-magic-numbers
+    return ((dotPos >= 2 && dotPos <= 4 ) && // if the last characters are 2 to 4 long and lower case it has been added
+        ((filename.substring(filename.length - dotPos) ===  filename.substring(filename.length - dotPos).toLowerCase())));
+
+}
 /**
  * Uploads the file to the mainframe
  *
@@ -1362,7 +1376,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     log.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
     log.debug("requested to save data set: " + doc.fileName);
-    if (docPath.indexOf(DS_DIR) === -1 ) {
+    if (docPath.toUpperCase().indexOf(DS_DIR.toUpperCase()) === -1 ) {
         log.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
             localize("saveFile.log.debug.directory", "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, DS_DIR));
         return;
@@ -1388,7 +1402,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.lastIndexOf("."));
+    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
+        checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length);
     log.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {
