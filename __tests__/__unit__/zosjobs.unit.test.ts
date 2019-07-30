@@ -217,7 +217,7 @@ describe("Zos Jobs Unit Tests", () => {
             "lrecl": 80,
             "procstep": "",
             "recfm": "FB",
-            "stepname": "",
+            "stepname": "STEP",
             "subsystem": ""
         };
 
@@ -228,7 +228,7 @@ describe("Zos Jobs Unit Tests", () => {
             getSpoolFiles.mockReturnValue([iJobFile]);
             const spoolFiles = await jobNode.getChildren();
             expect(spoolFiles.length).toBe(1);
-            expect(spoolFiles[0].mLabel).toEqual("STDOUT(100)");
+            expect(spoolFiles[0].mLabel).toEqual("STEP:STDOUT(100)");
             expect(spoolFiles[0].owner).toEqual("fake");
         });
     });
