@@ -22,8 +22,11 @@ const inlineSource = false;
 const outDest = 'out';
 
 // If all VS Code langaues are support you can use nls.coreLanguages
+// For new languages, add { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to array below
+// Ex. for Chinese add: { folderName: 'zho', id: 'zh-cn' }
+/* ************************* ADD NEW LANGUAGES HERE ******************************** */
 const languages = [];
-
+/* ********************************************************************************* */
 const cleanTask = function() {
 	return del(['out/**', 'package.nls.*.json', 'vscode-extension-for-zowe*.vsix']);
 }
@@ -49,7 +52,7 @@ const doCompile = function (buildNls) {
 		.pipe(sourcemaps.init())
 		.pipe(tsProject()).js
 		.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
-		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n', 'out') : es.through());
+		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n') : es.through());
 
 	if (inlineMap && inlineSource) {
 		r = r.pipe(sourcemaps.write());
