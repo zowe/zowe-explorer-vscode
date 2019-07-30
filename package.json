@@ -319,6 +319,10 @@
       {
         "command": "zowe.setJobSpool",
         "title": "%setJobSpool%"
+      },
+      {
+        "command": "zowe.issueTsoCmd",
+        "title": "%issueTsoCmd%"
       }
     ],
     "menus": {
@@ -794,6 +798,10 @@
         {
           "command": "zowe.uss.removeSession",
           "when": "never"
+        },
+        {
+          "command": "zowe.submitMember",
+          "when": "never"
         }
       ]
     },
@@ -954,7 +962,7 @@
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
     "gulp-fs": "0.0.2",
-    "jsdoc": "^3.5.5",
+    "jsdoc": "^3.6.3",
     "tslint": "^5.17.0",
     "vscode-nls": "^4.1.1"
   },
