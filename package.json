@@ -959,9 +959,9 @@
     "@brightside/imperative": "2.4.6",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
-    "jsdoc": "^3.5.5",
-    "tslint": "^5.17.0",
     "gulp-cli": "^2.2.0",
+    "jsdoc": "^3.6.3",
+    "tslint": "^5.17.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {
