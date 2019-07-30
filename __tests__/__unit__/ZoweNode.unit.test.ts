@@ -19,7 +19,7 @@ jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
-
+import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("Unit Tests (Jest)", () => {
@@ -70,10 +70,15 @@ describe("Unit Tests (Jest)", () => {
             new ZoweNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null),
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null),
         ];
+        sampleChildren[0].iconPath = utils.applyIcons("ds");
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[1].iconPath = utils.applyIcons("pds");
+        sampleChildren[2].iconPath = utils.applyIcons("pds");
 
         // Checking that the rootChildren are what they are expected to be
-        expect(rootChildren).toEqual(sampleChildren);
+        expect(rootChildren[0]).toEqual(sampleChildren[0]);
+        expect(rootChildren[1]).toEqual(sampleChildren[1]);
+        expect(rootChildren[2]).toEqual(sampleChildren[2]);
 
         // Check the dirty and children variable have been set
         rootChildren = await rootNode.getChildren();
@@ -105,8 +110,9 @@ describe("Unit Tests (Jest)", () => {
             new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, subNode, null),
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, subNode, null),
         ];
-
+        sampleChildren[0].iconPath = utils.applyIcons("ds");
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[1].iconPath = utils.applyIcons("ds");
         sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
         // Checking that the rootChildren are what they are expected to be
         expect(subChildren).toEqual(sampleChildren);

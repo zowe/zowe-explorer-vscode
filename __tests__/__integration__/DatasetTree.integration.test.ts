@@ -20,7 +20,7 @@ import { ZoweNode } from "../../src/ZoweNode";
 import * as testConst from "../../resources/testProfileData";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-
+import * as utils from "../../src/utils";
 declare var it: any;
 
 describe("DatasetTree Integration Tests", async () => {
@@ -76,6 +76,10 @@ describe("DatasetTree Integration Tests", async () => {
 
         sampleRChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]]};
         sampleRChildren[3].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]]};
+        sampleRChildren[0].iconPath = utils.applyIcons("ds");
+        sampleRChildren[1].iconPath = utils.applyIcons("pds", "closed");
+        sampleRChildren[2].iconPath = utils.applyIcons("pds", "closed");
+        sampleRChildren[3].iconPath = utils.applyIcons("ds");
 
         const samplePChildren: ZoweNode[] = [
             new ZoweNode("TCHILD1", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
@@ -84,6 +88,8 @@ describe("DatasetTree Integration Tests", async () => {
 
         samplePChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[0]]};
         samplePChildren[1].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[1]]};
+        samplePChildren[0].iconPath = utils.applyIcons("ds");
+        samplePChildren[1].iconPath = utils.applyIcons("ds", "closed");
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be

@@ -161,6 +161,34 @@ describe("Zos Jobs Unit Tests", () => {
             job.prefix = "zowe*";
             expect(job.prefix).toEqual("zowe*");
         });
+
+        it("Testing that expand tree is executed successfully", async () => {
+            const refresh = jest.fn();
+            Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
+            refresh.mockReset();
+            await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], true);
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder-open.svg");
+            await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], false);
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder.svg");
+            await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], true);
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder-open.svg");
+
+            const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
+                testJobsProvider.mSessionNodes[0].session, iJob);
+            job.contextValue = "job";
+            await testJobsProvider.flipState(job, true);
+            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
+            await testJobsProvider.flipState(job, false);
+            expect(JSON.stringify(job.iconPath)).toContain("folder.svg");
+            await testJobsProvider.flipState(job, true);
+            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
+            // tslint:disable-next-line: no-magic-numbers
+            expect(refresh.mock.calls.length).toBe(6);
+
+            job.contextValue = "jobber";
+            await testJobsProvider.flipState(job, true);
+            expect(job.iconPath).not.toBeDefined();
+        });
     });
 
 
@@ -232,6 +260,5 @@ describe("Zos Jobs Unit Tests", () => {
             expect(spoolFiles[0].owner).toEqual("fake");
         });
     });
-
 });
 

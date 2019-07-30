@@ -163,6 +163,7 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
                             title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
         }
         node.contextValue += "f";
+        node.iconPath = utils.applyIcons(node.contextValue);
         ussFileProvider.mFavorites.push(node);
     });
 }

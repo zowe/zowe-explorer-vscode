@@ -19,7 +19,7 @@ import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session, Logger } from "@brightside/imperative";
-
+import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("DatasetTree Unit Tests", () => {
@@ -48,7 +48,8 @@ describe("DatasetTree Unit Tests", () => {
             return { name: "defaultprofile" };
         })
     });
-
+    const showInformationMessage = jest.fn();
+    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
 
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value:
@@ -93,10 +94,13 @@ describe("DatasetTree Unit Tests", () => {
             new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session),
         ];
         sessNode[0].contextValue = "favorite";
-        sessNode[1].contextValue = "session";
         sessNode[1].pattern = "test";
+        sessNode[0].iconPath = utils.applyIcons("favorite");
+        sessNode[1].contextValue = "session";
 
         // Checking that the rootChildren are what they are expected to be
+        expect(sessNode[0]).toEqual(rootChildren[0]);
+        expect(sessNode[1]).toEqual(rootChildren[1]);
         expect(sessNode).toEqual(rootChildren);
     });
 
@@ -148,7 +152,9 @@ describe("DatasetTree Unit Tests", () => {
             new ZoweNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
         ];
-
+        sampleChildren[0].iconPath = utils.applyIcons("ds");
+        sampleChildren[1].iconPath = utils.applyIcons("pds");
+        sampleChildren[2].iconPath = utils.applyIcons("pds");
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         // Checking that the rootChildren are what they are expected to be
@@ -185,12 +191,14 @@ describe("DatasetTree Unit Tests", () => {
             new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, pds, null),
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, pds, null),
         ];
-
+        sampleChildren[0].iconPath = utils.applyIcons("ds");
+        sampleChildren[1].iconPath = utils.applyIcons("ds");
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
         sampleChildren[1].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
 
         // Checking that the rootChildren are what they are expected to be
-        expect(pdsChildren).toEqual(sampleChildren);
+        expect(pdsChildren[0]).toEqual(sampleChildren[0]);
+        expect(pdsChildren[1]).toEqual(sampleChildren[1]);
     });
 
     /*************************************************************************************************************
@@ -229,6 +237,20 @@ describe("DatasetTree Unit Tests", () => {
 
         await testTree.addFavorite(pds);
 
+        // Check not adding favorite
+        showInformationMessage.mockReset();
+        const pdsf = new ZoweNode("Parent", vscode.TreeItemCollapsibleState.Collapsed,
+        testTree.mSessionNodes[1], null);
+        pdsf.contextValue = "pdsf";
+        const member1 = new ZoweNode("Child", vscode.TreeItemCollapsibleState.None,
+        pdsf, null);
+
+        await testTree.addFavorite(member1);
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("PDS already in favorites");
+
+
         // Check adding ps
         const ps = new ZoweNode("Dataset", vscode.TreeItemCollapsibleState.None,
             testTree.mSessionNodes[1], null);
@@ -244,7 +266,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(testTree.mFavorites.length).toEqual(3);
 
         /*************************************************************************************************************
-        * Testing that removeFavorite works properly
+        *         * Testing that removeFavorite works properly
         *************************************************************************************************************/
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
@@ -258,5 +280,23 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
         testTree.deleteSession(testTree.mSessionNodes[1]);
+    });
+
+    /*************************************************************************************************************
+     * Testing that expand tree is executed successfully
+     *************************************************************************************************************/
+    it("Testing that expand tree is executed successfully", async () => {
+        const refresh = jest.fn();
+        Object.defineProperty(testTree, "refresh", {value: refresh});
+        refresh.mockReset();
+        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+        await testTree.flipState(pds, false);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(refresh.mock.calls.length).toBe(3);
     });
 });

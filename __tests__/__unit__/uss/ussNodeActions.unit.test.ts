@@ -156,6 +156,7 @@ describe("ussNodeActions", () => {
                 if (node.contextValue !== "directoryf") {
                     node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
                 }
+                node.iconPath = utils.applyIcons(node.contextValue);
             });
             expect(testUSSTree.mFavorites).toEqual(expectedUSSFavorites);
         });

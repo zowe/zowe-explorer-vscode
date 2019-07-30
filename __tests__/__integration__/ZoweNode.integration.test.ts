@@ -17,7 +17,7 @@ import * as expect from "expect";
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import * as testConst from "../../resources/testProfileData";
-
+import * as utils from "../../src/utils";
 declare var it: any;
 
 describe("ZoweNode Integration Tests", async () => {
@@ -82,8 +82,13 @@ describe("ZoweNode Integration Tests", async () => {
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[0].iconPath = utils.applyIcons("ds");
+        sampleChildren[1].iconPath = utils.applyIcons("pds", "closed");
+        sampleChildren[2].iconPath = utils.applyIcons("pds", "closed");
         // tslint:disable-next-line:no-magic-numbers
         sampleChildren[3].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[3]] };
+                // tslint:disable-next-line:no-magic-numbers
+        sampleChildren[3].iconPath = utils.applyIcons("ds");
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessChildren).toEqual(sampleChildren);

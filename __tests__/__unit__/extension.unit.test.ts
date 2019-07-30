@@ -22,6 +22,7 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/ProfileLoader";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
+import * as utils from "../../src/utils";
 import { Job } from "../../src/zosjobs";
 
 jest.mock("vscode");
@@ -107,6 +108,8 @@ describe("Extension Unit Tests", () => {
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
+    const onDidCollapseElement = jest.fn();
+    const onDidExpandElement = jest.fn();
     const existsSync = jest.fn();
     const createReadStream = jest.fn();
     const readdirSync = jest.fn();
@@ -229,6 +232,8 @@ describe("Extension Unit Tests", () => {
     const testTree = DatasetTree();
     testTree.mSessionNodes = [];
     testTree.mSessionNodes.push(sessNode);
+    Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
+    Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
 
     const testUSSTree = USSTree();
     testUSSTree.mSessionNodes = [];
@@ -256,6 +261,8 @@ describe("Extension Unit Tests", () => {
     // Object.defineProperty(parse, "path", { value: pathMock });
     Object.defineProperty(vscode.commands, "registerCommand", {value: registerCommand});
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {value: onDidSaveTextDocument});
+    Object.defineProperty(vscode.window, "onDidCollapseElement", {value: onDidCollapseElement});
+    Object.defineProperty(vscode.window, "onDidExpandElement", {value: onDidExpandElement});
     Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {value: onDidChangeConfiguration});
     Object.defineProperty(fs, "readdirSync", {value: readdirSync});
@@ -316,7 +323,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
 
     it("Testing that activate correctly executes", async () => {
-        createTreeView.mockReturnValue("testDisposable");
+        createTreeView.mockReturnValue(testTree);
 
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(true);
@@ -377,11 +384,11 @@ describe("Extension Unit Tests", () => {
             title: "",
             arguments: [sampleFavorites[1]]
         };
+        sampleFavorites[0].iconPath = utils.applyIcons(sampleFavorites[0].contextValue);
+        sampleFavorites[1].iconPath = utils.applyIcons(sampleFavorites[1].contextValue);
+        sampleFavorites[2].iconPath = utils.applyIcons(sampleFavorites[2].contextValue);
         sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
-        sampleFavorites[2].iconPath = {
-            dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),
-            light: path.join(__dirname, "..", "..", "..", "resources", "light", "pattern.svg")
-        };
+        // sampleFavorites[2].iconPath = utils.applyIcons(sampleFavorites[2].contextValue);
         // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
@@ -2085,51 +2092,70 @@ describe("Extension Unit Tests", () => {
     it("Testing that the add Suffix for datasets works", async () => {
         extension.defineGlobals("/test/path/");
         let node = new ZoweNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.JCL(member).jcl");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.JCL(member).jcl");
         node = new ZoweNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.ASM(member).asm");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.ASM(member).asm");
         node = new ZoweNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.COBOL.TEST(member).cbl");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.COBOL.TEST(member).cbl");
         node = new ZoweNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLI(member).pli");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.PROD.PLI(member).pli");
         node = new ZoweNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.PLX(member).pli");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.PROD.PLX(member).pli");
         node = new ZoweNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.PROD.SH(member).sh");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.PROD.SH(member).sh");
         node = new ZoweNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.REXX.EXEC(member).rexx");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.REXX.EXEC(member).rexx");
         node = new ZoweNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.XML(member).xml");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.XML(member).xml");
 
         node = new ZoweNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.XML.xml");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.XML.xml");
         node = new ZoweNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.TXML");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep
+            +"path"+path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.TXML");
         node = new ZoweNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.TGML.xml");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.XML.TGML.xml");
         node = new ZoweNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.ASM.asm");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep
+            +"path"+path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.XML.ASM.asm");
         node = new ZoweNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep
+            +"path"+path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER");
 
         node = new ZoweNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.XML.TEST(member).xml");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep
+            +"path"+path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.XML.TEST(member).xml");
         node = new ZoweNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/XML.AUSER.TEST(member)");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep
+            +"path"+path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"XML.AUSER.TEST(member)");
         node = new ZoweNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.TEST(member).xml");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep
+            +"path"+path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.COBOL.PL1.XML.TEST(member).xml");
         node = new ZoweNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(
-            "/test/path/temp/_D_/sestest/AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"+path.sep+"temp"
+            +path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm");
 
         node = new ZoweNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.COPYBOOK.cpy");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.COPYBOOK.cpy");
         node = new ZoweNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.PLINC.inc");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.PLINC.inc");
 
 
         node = new ZoweNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual("/test/path/temp/_D_/sestest/AUSER.TEST.SPFLOG1.log");
+        expect(extension.getDocumentFilePath(node.mLabel, node)).toEqual(path.sep+"test"+path.sep+"path"
+            +path.sep+"temp"+path.sep+"_D_"+path.sep+"sestest"+path.sep+"AUSER.TEST.SPFLOG1.log");
     });
 
     it("Tests the showDSAttributes function", async () => {

@@ -19,7 +19,7 @@ import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-
+import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("Unit Tests (Jest)", () => {
@@ -64,6 +64,7 @@ describe("Unit Tests (Jest)", () => {
     testTree.mSessionNodes.push(new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
     testTree.mSessionNodes[1].contextValue = "uss_session";
     testTree.mSessionNodes[1].fullPath = "test";
+    testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1].contextValue);
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -106,8 +107,10 @@ describe("Unit Tests (Jest)", () => {
             new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null),
         ];
         sessNode[0].contextValue = "favorite";
+        sessNode[0].iconPath = utils.applyIcons(sessNode[0].contextValue);
         sessNode[1].contextValue = "uss_session";
         sessNode[1].fullPath = "test";
+        sessNode[1].iconPath = utils.applyIcons(sessNode[1].contextValue);
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
@@ -253,5 +256,24 @@ describe("Unit Tests (Jest)", () => {
         testTree.removeUSSFavorite(testTree.mFavorites[0]);
 
         expect(testTree.mFavorites).toEqual([]);
+    });
+
+    /*************************************************************************************************************
+     * Testing that expand tree is executed successfully
+     *************************************************************************************************************/
+    it("Testing that expand tree is executed successfully", async () => {
+        const refresh = jest.fn();
+        Object.defineProperty(testTree, "refresh", {value: refresh});
+        refresh.mockReset();
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], session, null);
+        folder.contextValue = "directory";
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+        await testTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(refresh.mock.calls.length).toBe(3);
     });
 });
