@@ -68,6 +68,7 @@ export async function activate(context: vscode.ExtensionContext) {
     let datasetProvider: DatasetTree;
     let ussFileProvider: USSTree;
     let jobsProvider: ZosJobsProvider;
+    const outputChannel = vscode.window.createOutputChannel("Zowe TSO Command");
 
     try {
         // Initialize Imperative Logger
@@ -254,6 +255,55 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         jobsProvider.setJob(jobView, job);
     });
+
+    vscode.commands.registerCommand("zowe.issueTsoCmd", async () => issueTsoCommand(outputChannel));
+}
+
+/**
+ * Allow the user to subbmit a TSO command to the selected server. Response is written
+ * to the output channel.
+ * @param outputChannel The Output Channel to write the command and response to
+ */
+export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
+    let allProfiles: IProfileLoaded[];
+    let sesName: string;
+    let zosmfProfile: IProfileLoaded;
+    try {
+        allProfiles = loadAllProfiles();
+    } catch (err) {
+        vscode.window.showErrorMessage(localize("submitJcl.error.message", "Unable to load all profiles: ") + err.message);
+        throw (err);
+    }
+
+    const profileNamesList = allProfiles.map((profile) => {
+        return profile.name;
+    });
+    if (profileNamesList.length) {
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("issueTsoCommand.quickPickOption", "Select the Profile to use to submit the command"),
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
+        zosmfProfile = allProfiles.filter((profile) => profile.name === sesName)[0];
+    } else {
+        vscode.window.showInformationMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
+    }
+    let command = await vscode.window.showInputBox({ prompt: localize("issueTsoCommand.command", "Command") });
+    try {
+        if (command !== undefined) {
+            // If the user has started their command with a / then remove it
+            if (command.startsWith("/")) {
+                command = command.substring(1);
+            }
+            outputChannel.appendLine(`> ${command}`);
+            const response = await zowe.IssueCommand.issueSimple(zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile), command);
+            outputChannel.appendLine(response.commandResponse);
+            outputChannel.show(true);
+        }
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
+    }
 }
 
 /**
