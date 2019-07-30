@@ -110,7 +110,7 @@ There is no required structure for the mainframe data sets under `orPattern`.
   **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
 
-### Editing Strings for Localization
+## Localization
 All localized strings must be string literals, you cannot include variables or use template literals within the argument you provide to the localize function.
 
 #### Adding Strings
@@ -118,15 +118,10 @@ All localized strings must be string literals, you cannot include variables or u
 - If you want to add a new string to the package.json file, replace the string with your key wrapped around by \% __key__ \% i.e. `"This is a string" -> "%exampleProperty.exDescription%"`
 Then go to the package.nls.json file found in the root directory and include your newly created key and string inside as a json key/value pair.
 - If you want to add a new string to a typescript file, you will need to include the following library in you file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function
-```
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })(); 
-```
+`const localize = nls.config({ messageFormat: nls.MessageFormat.file })(); `
 Next wrap your string with the localize function in this format
 `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
-Add the key and string as a json key/value pair to the  _filename_.i18n.json file that corresponds with the file you are adding the string to.
-
-#### Removing Strings
-- When removing strings, remove the key/value pair from its corresponding .json file (either package.nls.json or _filename_.i18n.json)
+After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
 #### Changing Strings
 - When changing strings, make the same change to the key/value pair from its corresponding .json file (either package.nls.json or _filename_.i18n.json)
