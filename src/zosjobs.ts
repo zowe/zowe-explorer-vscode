@@ -108,7 +108,11 @@ export class Job extends vscode.TreeItem {
             if (this.contextValue === "job") {
                 const spools: zowe.IJobFile[] = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
-                    const spoolNode = new Spool(`${spool.ddname}(${spool.id})`,
+                    let prefix = spool.stepname;
+                    if (prefix === undefined) {
+                        prefix = spool.procstep;
+                    }
+                    const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                         vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                     spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.session, spool] };
                     this.children.push(spoolNode);

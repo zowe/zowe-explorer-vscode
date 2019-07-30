@@ -119,5 +119,11 @@
     "addJobsSession.quickPickOptions.profileAdd" : "Select a Profile to Add to the Jobs Explorer",
     "addJobsSession.log.debug.selectedProfile" : "User selected profile ",
     "addJobsSession.log.debug.cancelledProfile" : "User cancelled profile selection",
-    "addJobsSession.noProfilesAdd" : "No more profiles to add"
+    "addJobsSession.noProfilesAdd" : "No more profiles to add",
+    "issueTsoCommand.error.message" : "Unable to load all profiles",
+    "issueTsoCommand.quickPickOption" : "Select the Profile to use to submit the command",
+    "issueTsoCommand.noProfilesLoaded" : "No profiles available",
+    "issueTsoCommand.command" : "Command",
+    "issueTsoCommand.response" : "Command response: "
+
 }
