@@ -118,7 +118,7 @@
       },
       {
         "command": "zowe.uploadDialog",
-        "title": "Upload Member..."
+        "title": "%uploadDialog%"
       },
       {
         "command": "zowe.pattern",
@@ -198,7 +198,7 @@
       },
       {
         "command": "zowe.uss.createNode",
-        "title": "Create new file or directory",
+        "title": "%uss.createNode%",
         "icon": {
           "light": "./resources/light/newfile.svg",
           "dark": "./resources/dark/newfile.svg"
@@ -234,7 +234,7 @@
       },
       {
         "command": "zowe.uss.safeSaveUSS",
-        "title": "Safe Save - Merge if Necessary",
+        "title": "%uss.safeSaveUSS%",
         "icon": {
           "light": "./resources/light/upload.svg",
           "dark": "./resources/dark/upload.svg"
@@ -246,7 +246,7 @@
       },
       {
         "command": "zowe.uss.uploadDialog",
-        "title": "Upload Files..."
+        "title": "%uss.uploadDialog%"
       },
       {
         "command": "zowe.uss.text",
@@ -890,7 +890,7 @@
           "default": {
             "folderPath": ""
           },
-          "description": "Path to temporary folder location",
+          "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
         "Zowe-USS-Persistent-Favorites": {
@@ -905,11 +905,12 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run lint",
-    "build": "npm run clean && npm run license && tsc --build --pretty",
+    "vscode:prepublish": "npm run build && npm run lint && npm run update",
+    "build": "npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "npm run test:unit",
+    "update": "node stringUpdateScript.js",
     "package": "gulp package",
     "license": "node ./scripts/license.js",
     "watch": "tsc -b --watch --pretty",
@@ -960,6 +961,7 @@
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
+    "gulp-fs": "0.0.2",
     "jsdoc": "^3.6.3",
     "tslint": "^5.17.0",
     "vscode-nls": "^4.1.1"
