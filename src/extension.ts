@@ -764,7 +764,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     // but just in case we'll display all of the results
     // if there's only one result (which there should be), we will just pass in attributes[0]
     // so that prettyJson doesn't display the attributes as an array with a hyphen character
-    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, true);
+    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
     // const attributesFilePath = path.join(BRIGHTTEMPFOLDER, label + ".yaml");
     // fs.writeFileSync(attributesFilePath, attributesText);
     // const document = await vscode.workspace.openTextDocument(attributesFilePath);
