@@ -776,10 +776,8 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         <meta charset="UTF-8">
         <title>${label} "${attributesMessage}"</title>
     </head>
-    <body>
-    <font size="+1">
-     ${attributesText.replace(/\n/g, "</br>")}
-     </font>
+    <body>  
+     ${attributesText.replace(/\n/g, "</br>")}   
     </body>
     </html>`;
     const column = vscode.window.activeTextEditor
