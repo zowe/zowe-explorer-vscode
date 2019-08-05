@@ -194,6 +194,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
         element.iconPath = utils.applyIcons(element.contextValue, isOpen ? "open" : "closed");
-        this.refresh();
+        element.dirty = element.contextValue !== "session";
+        this.mOnDidChangeTreeData.fire(element);
     }
 }

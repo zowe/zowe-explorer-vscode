@@ -65,6 +65,7 @@ describe("Unit Tests (Jest)", () => {
     testTree.mSessionNodes[1].contextValue = "uss_session";
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1].contextValue);
+    testTree.mSessionNodes[1].dirty = true;
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -111,6 +112,7 @@ describe("Unit Tests (Jest)", () => {
         sessNode[1].contextValue = "uss_session";
         sessNode[1].fullPath = "test";
         sessNode[1].iconPath = utils.applyIcons(sessNode[1].contextValue);
+        sessNode[1].dirty = true;
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
@@ -189,7 +191,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<directory>", async () => {
         const directory = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, null);
-
+        directory.dirty = true;
         // Waiting until we populate rootChildren with what getChildren return
         const dirChildren = await testTree.getChildren(directory);
         // Creating fake directory and files to test
@@ -273,7 +275,5 @@ describe("Unit Tests (Jest)", () => {
         expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(refresh.mock.calls.length).toBe(3);
     });
 });

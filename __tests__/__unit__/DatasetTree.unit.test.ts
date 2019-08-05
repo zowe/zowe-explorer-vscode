@@ -145,6 +145,7 @@ describe("DatasetTree Unit Tests", () => {
     it("Testing that getChildren returns the correct ZoweNodes when called and passed an element of type ZoweNode<session>", async () => {
 
         // Waiting until we populate rootChildren with what getChildren return
+        testTree.mSessionNodes[1].dirty = true;
         const sessChildren = await testTree.getChildren(testTree.mSessionNodes[1]);
         // Creating fake datasets and dataset members to test
         const sampleChildren: ZoweNode[] = [
@@ -185,6 +186,7 @@ describe("DatasetTree Unit Tests", () => {
         const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
 
         // Waiting until we populate rootChildren with what getChildren return
+        pds.dirty = true;
         const pdsChildren = await testTree.getChildren(pds);
         // Creating fake datasets and dataset members to test
         const sampleChildren: ZoweNode[] = [
@@ -296,7 +298,5 @@ describe("DatasetTree Unit Tests", () => {
         expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(refresh.mock.calls.length).toBe(3);
     });
 });

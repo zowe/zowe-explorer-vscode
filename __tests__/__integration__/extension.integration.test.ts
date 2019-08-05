@@ -39,6 +39,7 @@ describe("Extension Integration Tests", () => {
     sessionNode.contextValue = "session";
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
+    sessionNode.dirty = true;
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(sessionNode);
 
@@ -48,7 +49,8 @@ describe("Extension Integration Tests", () => {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
         await extension.cleanTempDir();
-    });
+        sessionNode.dirty = true;
+     });
 
     afterEach(async function() {
         this.timeout(TIMEOUT);
@@ -256,9 +258,10 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
             const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
-
+            sessionNode.dirty = true;
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
+            testTree.refresh();
 
             await testTreeView.reveal(childrenFromTree[0]);
             expect(childrenFromTree[0]).to.deep.equal(testTreeView.selection[0]);
@@ -280,6 +283,7 @@ describe("Extension Integration Tests", () => {
 
             const sessionChildren = await sessionNode.getChildren();
             const childrenFromTree = await getAllNodes(sessionChildren);
+            testTree.refresh();
 
             for (const child of childrenFromTree) {
                 await testTreeView.reveal(child);
@@ -371,7 +375,7 @@ describe("Extension Integration Tests", () => {
             const profiles = await testTree.getChildren();
             profiles[1].dirty = true;
             const children = await profiles[1].getChildren();
-
+            children[0].dirty = true;
             // Test for member under PO
             const childrenMembers = await testTree.getChildren(children[0]);
             await extension.openPS(childrenMembers[0]);

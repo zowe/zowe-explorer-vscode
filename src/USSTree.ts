@@ -178,6 +178,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
         element.iconPath = utils.applyIcons(element.contextValue, isOpen ? "open" : "closed");
-        this.refresh();
+        element.dirty = element.contextValue === "directory";
+        this.mOnDidChangeTreeData.fire(element);
     }
 }

@@ -60,7 +60,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
         rootNode.contextValue = "directory";
-
+        rootNode.dirty = true;
         // Creating structure of files and directories
         const elementChildren = {};
         const sampleChildren: ZoweUSSNode[] = [
@@ -81,10 +81,12 @@ describe("Unit Tests (Jest)", () => {
 
         // Check that error is thrown when mLabel is blank
         const errorNode = new ZoweUSSNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        errorNode.dirty = true;
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
         // Check that label is different when mLabel contains a []
         const rootNode2 = new ZoweUSSNode("root[test]", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        rootNode2.dirty = true;
         rootChildren = await rootNode2.getChildren();
     });
 
@@ -97,6 +99,7 @@ describe("Unit Tests (Jest)", () => {
             const rootNode = new ZoweUSSNode("toot", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root");
             rootNode.contextValue = "uss_session";
             rootNode.fullPath = "Throw Error";
+            rootNode.dirty = true;
             await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
                 "Error: Throwing an error to check error handling for unit tests!\n"));
         });
@@ -111,6 +114,7 @@ describe("Unit Tests (Jest)", () => {
             rootNode.contextValue = "uss_session";
             const subNode = new ZoweUSSNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
             subNode.fullPath = "THROW ERROR";
+            subNode.dirty = true;
             await expect(subNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
                 "Error: Throwing an error to check error handling for unit tests!\n"));
         });

@@ -12,6 +12,8 @@
 import * as vscode from "vscode";
 import * as treeMock from "../../src/DatasetTree";
 import * as treeUSSMock from "../../src/USSTree";
+import * as jobMock from "../../src/ZosJobsProvider";
+import { Job } from "../../src/Job";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import { ZoweNode } from "../../src/ZoweNode";
 import * as brtimperative from "@brightside/imperative";
@@ -23,7 +25,6 @@ import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/ProfileLoader";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import * as utils from "../../src/utils";
-import { Job } from "../../src/zosjobs";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -33,6 +34,7 @@ jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
+jest.mock("ZosJobsProvider");
 // jest.mock("ProfileLoader");
 
 describe("Extension Unit Tests", () => {
@@ -155,6 +157,7 @@ describe("Extension Unit Tests", () => {
     const showQuickPick = jest.fn();
     const mockAddSession = jest.fn();
     const mockAddUSSSession = jest.fn();
+    const mockAddJobSession = jest.fn();
     const mockRefresh = jest.fn();
     const mockUSSRefresh = jest.fn();
     const mockGetChildren = jest.fn();
@@ -208,12 +211,15 @@ describe("Extension Unit Tests", () => {
             getChildren: mockGetUSSChildren,
         };
     });
-    const JobsTree = jest.fn().mockImplementation(() => {
+    const ZosJobsProvider = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
             getChildren: jest.fn(),
-            addSession: jest.fn(),
+            // getTreeItem: jest.fn(),
+            // getParent: jest.fn(),
+            addSession: mockAddJobSession,
             refresh: jest.fn(),
+            // refreshElement: jest.fn(),
         };
     });
 
@@ -250,7 +256,7 @@ describe("Extension Unit Tests", () => {
     testUSSTree.mSessionNodes = [];
     testUSSTree.mSessionNodes.push(ussNode);
 
-    const testJobsTree = JobsTree();
+    const testJobsTree = ZosJobsProvider();
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
 
@@ -313,6 +319,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
     Object.defineProperty(treeUSSMock, "USSTree", {value: USSTree});
+    Object.defineProperty(jobMock, "ZosJobsProvider", {value: ZosJobsProvider});
     Object.defineProperty(brightside, "Delete", {value: Delete});
     Object.defineProperty(Delete, "dataSet", {value: delDataset});
     Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
@@ -502,7 +509,7 @@ describe("Extension Unit Tests", () => {
         expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
         expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(showErrorMessage.mock.calls.length).toBe(2);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
 
         existsSync.mockReset();

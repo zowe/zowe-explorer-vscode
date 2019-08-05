@@ -23,7 +23,8 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import * as jesActions from "./jes/jesNodeActions";
-import { ZosJobsProvider, Job } from "./zosjobs";
+import { Job } from "./Job";
+import { ZosJobsProvider } from "./ZosJobsProvider";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
@@ -88,6 +89,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // Initialize file provider with the created session and the selected fullPath
         ussFileProvider = new USSTree();
         await ussFileProvider.addSession(log);
+        // Initialize jobs provider
+        jobsProvider = new ZosJobsProvider();
+        await jobsProvider.addSession(log);
     } catch (err) {
         log.error(localize("initialize.log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
@@ -96,7 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await initializeFavorites(datasetProvider);
     await ussActions.initializeUSSFavorites(ussFileProvider);
 
-    if (datasetProvider && ussFileProvider) {
+    if (datasetProvider) {
         // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
         const disposable1 = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
         context.subscriptions.push(disposable1);
@@ -106,7 +110,8 @@ export async function activate(context: vscode.ExtensionContext) {
         disposable1.onDidExpandElement( async (e) => {
             datasetProvider.flipState(e.element, true);
         });
-
+    }
+    if (ussFileProvider) {
         const disposable2 = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: ussFileProvider });
         context.subscriptions.push(disposable2);
         disposable2.onDidCollapseElement( async (e) => {
@@ -208,19 +213,16 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // JES
-    try {
-        // Initialize dataset provider with the created session and the selected pattern
-        jobsProvider = new ZosJobsProvider();
-        await jobsProvider.addSession(log);
-    } catch (err) {
-        vscode.window.showErrorMessage(err.message);
-    }
-
     let jobView;
     if (jobsProvider) {
         jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
         context.subscriptions.push(jobView);
+        jobView.onDidCollapseElement( async (e) => {
+            jobsProvider.flipState(e.element, false);
+        });
+        jobView.onDidExpandElement( async (e) => {
+            jobsProvider.flipState(e.element, true);
+        });
     }
 
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
@@ -236,11 +238,12 @@ export async function activate(context: vscode.ExtensionContext) {
         stopCommand(job);
     });
     vscode.commands.registerCommand("zowe.refreshJobsServer", (node) => {
-        node.dirty = true;
-        jobsProvider.refresh();
+        jobsProvider.refreshElement(node);
     });
     vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
-        jobsProvider.mSessionNodes.forEach((node) => node.dirty = true);
+        jobsProvider.mSessionNodes.forEach((node) => {
+            node.dirty = true;
+        });
         jobsProvider.refresh();
     });
     vscode.commands.registerCommand("zowe.addJobsSession", () => addJobsSession(jobsProvider));
@@ -255,19 +258,20 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.getJobJcl",  (job) => {
         downloadJcl(job);
     });
-
-    vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
-        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
-            return jobNode.mLabel === session;
+    if (jobView) {
+        vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
+            const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
+                return jobNode.mLabel === session;
+            });
+            sessionNode.dirty = true;
+            jobsProvider.refresh();
+            const jobs = await sessionNode.getChildren();
+            const job = jobs.find((jobNode) => {
+                return jobNode.job.jobid === jobid;
+            });
+            jobsProvider.setJob(jobView, job);
         });
-        sessionNode.dirty = true;
-        jobsProvider.refresh();
-        const jobs = await sessionNode.getChildren();
-        const job = jobs.find((jobNode) => {
-            return jobNode.job.jobid === jobid;
-        });
-        jobsProvider.setJob(jobView, job);
-    });
+    }
 
     vscode.commands.registerCommand("zowe.issueTsoCmd", async () => issueTsoCommand(outputChannel));
 }

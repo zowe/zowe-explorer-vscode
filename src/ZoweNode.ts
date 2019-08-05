@@ -26,7 +26,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 export class ZoweNode extends vscode.TreeItem {
     public command: vscode.Command;
     public pattern = "";
-    public dirty = true;
+    public dirty = false;
     public children: ZoweNode[] = [];
 
     /**
@@ -130,15 +130,15 @@ export class ZoweNode extends vscode.TreeItem {
             }
         });
 
-        if (this.contextValue === "session") {
-            this.dirty = false;
-        }
         if(Object.keys(elementChildren).length === 0) {
-            return this.children = [new ZoweNode(localize("getChildren.noDataset", "No datasets found"),
+            this.children = [new ZoweNode(localize("getChildren.noDataset", "No datasets found"),
             vscode.TreeItemCollapsibleState.None, this, null, true)];
         } else {
-            return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
+            this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
         }
+        this.dirty = false;
+        return this.children;
+
     }
 
     /**

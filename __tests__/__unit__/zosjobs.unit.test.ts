@@ -18,7 +18,8 @@ import * as brightside from "@brightside/core";
 import { Session, Logger } from "@brightside/imperative";
 
 import * as profileLoader from "../../src/ProfileLoader";
-import { Job, ZosJobsProvider } from "../../src/zosjobs";
+import { Job } from "../../src/Job";
+import { ZosJobsProvider } from "../../src/ZosJobsProvider";
 
 describe("Zos Jobs Unit Tests", () => {
 
@@ -182,8 +183,6 @@ describe("Zos Jobs Unit Tests", () => {
             expect(JSON.stringify(job.iconPath)).toContain("folder.svg");
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
-            // tslint:disable-next-line: no-magic-numbers
-            expect(refresh.mock.calls.length).toBe(6);
 
             job.contextValue = "jobber";
             await testJobsProvider.flipState(job, true);

@@ -26,7 +26,7 @@ import * as utils from "./utils";
 export class ZoweUSSNode extends vscode.TreeItem {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = true;
+    public dirty = false;
     public children: ZoweUSSNode[] = [];
     public binaryFiles = {};
     public profileName = "";
@@ -57,9 +57,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         } else {
             this.contextValue = "textFile";
         }
-        if (parentPath) {
-            this.fullPath = this.tooltip = parentPath + "/" + mLabel;
-            if (parentPath === "/") {
+        if (this.parentPath) {
+            this.fullPath = this.tooltip = this.parentPath + "/" + mLabel;
+            if (this.parentPath === "/") {
                 // Keep fullPath of root level nodes preceded by a single slash
                 this.fullPath = this.tooltip = "/" + mLabel;
             }
@@ -160,9 +160,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
             }
         });
 
-        if (this.contextValue === "uss_session") {
-            this.dirty = false;
-        }
+        this.dirty = false;
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
     }
 
@@ -196,6 +194,6 @@ export class ZoweUSSNode extends vscode.TreeItem {
         if (this.mParent && this.mParent.contextValue === "favorite") {
             this.binary ? this.contextValue = "binaryFilef" : this.contextValue = "textFilef";
         }
-        this.dirty = true;
+//        this.dirty = true;
     }
 }
