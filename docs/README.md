@@ -142,11 +142,11 @@ Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kr
 
 ### How to Donate Translations
 
-1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under Sign Up heading to sign up to Zanata.
+1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under the Sign Up heading to sign up to Zanata.
 
-2. Send an email to evann.wu@ibm.com with the email heading as ZANATA TRANSLATOR REQUEST and include the following information in the body of the email.
+2. Send an email to one of the maintainers with the email heading as ZANATA TRANSLATOR REQUEST and include the following information in the body of the email.
     1. Zanata username
     2. Language(s) you wish to translate
     3. Affiliation with Zowe
 
-3. You should receive a response within 3 days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
+3. You should receive a response within 3 business days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
