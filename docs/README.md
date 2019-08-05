@@ -6,6 +6,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 - [Install to VSC from source](#install-to-vsc-from-source)
 - [Run System Tests](#run-system-tests)
+- [Localization](#localization)
 
 ## Install to VSC from source
 
@@ -111,30 +112,45 @@ There is no required structure for the mainframe data sets under `orPattern`.
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
 
 ## Localization
+
 All localized strings must be string literals, you cannot include variables or use template literals within the argument you provide to the localize function.
 
-#### Adding Strings
+### Adding Strings
+
 - First create a new key for your string. Existing keys follow the convention of including the functions/properties the string is nested in and a short one/two word description of the string.
-- If you want to add a new string to the package.json file, replace the string with your key wrapped around by \% __key__ \% i.e. `"This is a string" -> "%exampleProperty.exDescription%"`
+
+- If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% __key__ \% i.e. `"This is a string" becomes "%exampleProperty.exDescription%"`
 Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
+
 - If you want to add a new string to a typescript file, you will need to include the following library in you file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function
-`const localize = nls.config({ messageFormat: nls.MessageFormat.file })(); `
-Next wrap your string with the localize function in this format
+`const localize = nls.config({ messageFormat: nls.MessageFormat.file })();`
+
+- Next wrap your string with the localize function in this format
 `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
-After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
-Maintainers: Evann Wu (evann.wu@ibm.com), Lauren Li (lauren.li@ibm.com), Kristina Mayo (ktopchi@us.ibm.com)
+- After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
-#### Adding a New Language
-Navigate to the i18n folder found in the root directory of the repository. Duplicate the sample folder and rename the new folder to the ISO-639-3 code for the language [found here](https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Languages/List_of_ISO_639-3_language_codes_(2019)). Once the language has been translated, go to the Zowe VS Code Extension project in Zanata, select the most up to date version, select the translated language, and for each file, press the arrow to the left of the filename and select download translated .json. Replace the files in the folder you created with these newly downloaded files of the same name.
-Next, open gulpfile.js found in the root directory of the repository. Add the following information: { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to the `languages` array. You can find the vscode locale id [here](https://code.visualstudio.com/docs/getstarted/locales).
-Make sure you have the vscode language pack of this new language installed and to see the localized result, first run the `npm run package` command in terminal. Then press F1, run the Configure Display Language command, and select the locale id of your translated language.np
+Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kristina Mayo (ktopchi@us.ibm.com)
+
+### Adding a New Language
+
+- Navigate to the i18n folder found in the root directory of the repository. Duplicate the sample folder and rename the new folder to the ISO-639-3 code for the language [found here](https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Languages/List_of_ISO_639-3_language_codes_(2019)).
+
+- Once the language has been translated, go to the Zowe VS Code Extension project in Zanata, select the most up to date version, select the translated language, and for each file, press the arrow to the left of the filename and select download translated .json.
+
+- Replace the files in the folder you created with these newly downloaded files of the same name.
+
+- Next, open gulpfile.js found in the root directory of the repository. Add the following information: { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to the `languages` array. You can find the vscode locale id [here](https://code.visualstudio.com/docs/getstarted/locales).
+
+- Make sure you have the vscode language pack of this new language installed and to see the localized result, first run the `npm run package` command in terminal. Then press F1, run the Configure Display Language command, and select the locale id of your translated language.np
 
 ### How to Donate Translations
+
 1. Click [here](https://translate.zanata.org/?dswid=8786) and follow instructions under Sign Up heading to sign up to Zanata.
+
 2. Send an email to evann.wu@ibm.com with the email heading as ZANATA TRANSLATOR REQUEST and include the following information in the body of the email.
     1. Zanata username
     2. Language(s) you wish to translate
     3. Affiliation with Zowe
-3. You should receive a response within 3 days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
 
+3. You should receive a response within 3 days and be added to the Zanata Zowe VS Code Extension project. Click [here](http://docs.zanata.org/en/release/user-guide/translator-guide/) for more information about how to use Zanata to translate.
