@@ -27,7 +27,7 @@ fs.writeFileSync('./i18n/sample/src/DatasetTree.i18n.json', JSON.stringify(keysP
 fs.writeFileSync('./i18n/sample/src/extension.i18n.json', JSON.stringify(keysPairsExtension, null, 4));
 fs.writeFileSync('./i18n/sample/src/ProfileLoader.i18n.json', JSON.stringify(keysPairsProfileLoader, null, 4));
 fs.writeFileSync('./i18n/sample/src/USSTree.i18n.json', JSON.stringify(keysPairsUSSTree, null, 4));
-fs.writeFileSync('./i18n/sample/src/ussNodeActions.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
+fs.writeFileSync('./i18n/sample/src/uss/ussNodeActions.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
 fs.writeFileSync('./i18n/sample/src/ZoweNode.i18n.json', JSON.stringify(keysPairsZoweNode, null, 4));
 fs.writeFileSync('./i18n/sample/src/ZoweUSSNode.i18n.json', JSON.stringify(keysPairsZoweUSSNode, null, 4));
 fs.writeFileSync('./i18n/sample/package.i18n.json', JSON.stringify(keysPairsPackage, null, 4));
