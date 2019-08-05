@@ -26,8 +26,8 @@ From your local copy of this repository, issue the following commands to create 
 
 After you create a VSIX file, install the extension to VSC:
 
-1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left. 
-2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command. 
+1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left.
+2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command.
 3. Restart Visual Studio Code.
 
 The extension is installed.
@@ -102,7 +102,7 @@ There is no required structure for the mainframe data sets under `orPattern`.
 
 2. From the drop-down next to the green play button, click **Integration Tests Mocha** and click the **Play** button.
 
-  The tests run and the output goes to your VSC debug console. 
+  The tests run and the output goes to your VSC debug console.
 
 ### Profile notes
 
