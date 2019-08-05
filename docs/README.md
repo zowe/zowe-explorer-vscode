@@ -26,8 +26,8 @@ From your local copy of this repository, issue the following commands to create 
 
 After you create a VSIX file, install the extension to VSC:
 
-1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left. 
-2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command. 
+1. Navigate to the Extensions menu in Visual Studio Code and click the **...** menu on the top-left.
+2. Select Install from VSIX and select the `.vsix` file that was created by your `npm run package` command.
 3. Restart Visual Studio Code.
 
 The extension is installed.
@@ -102,7 +102,7 @@ There is no required structure for the mainframe data sets under `orPattern`.
 
 2. From the drop-down next to the green play button, click **Integration Tests Mocha** and click the **Play** button.
 
-  The tests run and the output goes to your VSC debug console. 
+  The tests run and the output goes to your VSC debug console.
 
 ### Profile notes
 
@@ -119,10 +119,10 @@ All localized strings must be string literals, you cannot include variables or u
 
 1. Create a new key for your string. Existing keys follow the convention of including the functions/properties the string is nested in and a short one/two word description of the string.
 
-2. There are two places to localize strings. In the package.json file and in the typescript files in the src directory.
-    - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% __key__ \% i.e. `"This is a string" becomes "%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
+2. There are two places to localize strings: in the package.json file and in the typescript files in the src directory.
+    - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% __key__ \% i.e. `"This is a string"` becomes `"%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
 
-    - If you want to add a new string to a typescript file, you will need to include the following library in you file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function `const localize = nls.config({ messageFormat: nls.MessageFormat.file })();` Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
+    - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function `const localize = nls.config({ messageFormat: nls.MessageFormat.file })();` Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
 
 3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
