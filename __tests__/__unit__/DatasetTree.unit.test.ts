@@ -19,7 +19,7 @@ import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session, Logger } from "@brightside/imperative";
-
+import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("DatasetTree Unit Tests", () => {
@@ -64,7 +64,7 @@ describe("DatasetTree Unit Tests", () => {
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
     testTree.mSessionNodes[1].contextValue = "session";
     testTree.mSessionNodes[1].pattern = "test";
-
+    testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
     /*************************************************************************************************************
      * Creates a datasetTree and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -95,6 +95,8 @@ describe("DatasetTree Unit Tests", () => {
         sessNode[0].contextValue = "favorite";
         sessNode[1].contextValue = "session";
         sessNode[1].pattern = "test";
+        sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
+        sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
@@ -258,5 +260,22 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
         testTree.deleteSession(testTree.mSessionNodes[1]);
+    });
+
+
+    /*************************************************************************************************************
+     * Testing that expand tree is executed successfully
+     *************************************************************************************************************/
+    it("Testing that expand tree is executed successfully", async () => {
+        const refresh = jest.fn();
+        Object.defineProperty(testTree, "refresh", {value: refresh});
+        refresh.mockReset();
+        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        await testTree.flipState(pds, false);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
     });
 });

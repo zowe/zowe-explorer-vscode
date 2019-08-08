@@ -15,6 +15,7 @@ import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
+import * as utils from "./utils";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -37,6 +38,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     constructor() {
         this.mFavoriteSession = new ZoweNode(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null);
         this.mFavoriteSession.contextValue = "favorite";
+        this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
     }
 
@@ -104,6 +106,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
             node.contextValue = "session";
+            node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
             this.refresh();
         }
@@ -138,6 +141,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             temp = new ZoweNode("[" + node.getSessionNode().mLabel + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession());
             temp.contextValue = "sessionf";
+            temp.iconPath =  utils.applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
             const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
@@ -150,6 +154,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (temp.contextValue === "dsf") {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
+            temp.iconPath = utils.applyIcons(temp);
         }
 
         if (!this.mFavorites.find((tempNode) =>
@@ -183,5 +188,17 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             );
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", settings, vscode.ConfigurationTarget.Global);
         }
+    }
+
+    /**
+     * Change the state of an expandable node
+     * @param provider the tree view provider
+     * @param element the node being flipped
+     * @param isOpen the intended state of the the tree view provider, true or false
+     */
+    public async flipState(element: ZoweNode, isOpen: boolean = false) {
+        element.iconPath = utils.applyIcons(element, isOpen ? "closed" : "closed");
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
     }
 }

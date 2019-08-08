@@ -9,6 +9,10 @@ ZoweUSSNode {
   "contextValue": "directory",
   "dirty": true,
   "fullPath": "",
+  "iconPath": Object {
+    "dark": "/Users/stonecc/git/resources/dark/folder.svg",
+    "light": "/Users/stonecc/git/resources/light/folder.svg",
+  },
   "label": "testDir",
   "mCollapsibleState": 1,
   "mLabel": "testDir",
@@ -20,6 +24,10 @@ ZoweUSSNode {
     "contextValue": "uss_session",
     "dirty": true,
     "fullPath": "",
+    "iconPath": Object {
+      "dark": "/Users/stonecc/git/resources/dark/folder.svg",
+      "light": "/Users/stonecc/git/resources/light/folder.svg",
+    },
     "label": "root",
     "mCollapsibleState": 1,
     "mLabel": "root",

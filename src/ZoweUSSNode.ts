@@ -14,6 +14,7 @@ import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import * as utils from "./utils";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -72,6 +73,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
             this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
+        utils.applyIcons(this);
     }
 
     /**
@@ -152,9 +154,11 @@ export class ZoweUSSNode extends vscode.TreeItem {
                         temp.command = {command: "zowe.uss.ZoweUSSNode.open",
                                         title: localize("getChildren.responses.open", "Open"), arguments: [temp]};
                         elementChildren[temp.label] = temp;
+                        temp.iconPath = utils.applyIcons(temp);
                     }
                 }
             }
+            utils.applyIcons(this);
         });
 
         if (this.contextValue === "uss_session") {
