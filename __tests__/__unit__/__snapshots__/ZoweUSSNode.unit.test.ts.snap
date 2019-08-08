@@ -10,8 +10,8 @@ ZoweUSSNode {
   "dirty": true,
   "fullPath": "",
   "iconPath": Object {
-    "dark": "/Users/stonecc/git/resources/dark/folder.svg",
-    "light": "/Users/stonecc/git/resources/light/folder.svg",
+    "dark": "/home/jenkins/workspace/resources/dark/folder.svg",
+    "light": "/home/jenkins/workspace/resources/light/folder.svg",
   },
   "label": "testDir",
   "mCollapsibleState": 1,
@@ -25,8 +25,8 @@ ZoweUSSNode {
     "dirty": true,
     "fullPath": "",
     "iconPath": Object {
-      "dark": "/Users/stonecc/git/resources/dark/folder.svg",
-      "light": "/Users/stonecc/git/resources/light/folder.svg",
+      "dark": "/home/jenkins/workspace/resources/dark/folder.svg",
+      "light": "/home/jenkins/workspace/resources/light/folder.svg",
     },
     "label": "root",
     "mCollapsibleState": 1,
