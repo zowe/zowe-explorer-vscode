@@ -102,6 +102,14 @@ export class Job extends vscode.TreeItem {
         this._prefix = "*";
     }
 
+    public getSessionName(): string {
+        if(this.mParent == null) {
+            return this.mLabel;
+        } else {
+            return this.mParent.getSessionName();
+        }
+    }
+
     public async getChildren(): Promise<Job[]> {
         if (this.dirty) {
             this.children = [];
@@ -114,7 +122,7 @@ export class Job extends vscode.TreeItem {
                     }
                     const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                         vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
-                    spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.session, spool] };
+                    spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.getSessionName(), spool] };
                     this.children.push(spoolNode);
                 });
             } else {

@@ -12,22 +12,21 @@
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
 import { moveSync } from "fs-extra";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, AbstractSession, TextUtils, IProfileLoaded } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
 import { DatasetTree } from "./DatasetTree";
 import { USSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
-import * as jesActions from "./jes/jesNodeActions";
 import { ZosJobsProvider, Job } from "./zosjobs";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 import * as nls from "vscode-nls";
+import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 
@@ -209,6 +208,12 @@ export async function activate(context: vscode.ExtensionContext) {
         jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
         context.subscriptions.push(jobView);
     }
+
+    const spoolProvider = new SpoolProvider();
+    const providerRegistration = vscode.Disposable.from(
+        vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
+    );
+    context.subscriptions.push(spoolProvider, providerRegistration);
 
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
@@ -1547,11 +1552,10 @@ export async function deleteJob(job: Job) {
     }
 }
 
-export async function getSpoolContent(session: AbstractSession, spool: IJobFile) {
+export async function getSpoolContent(session: string, spool: IJobFile) {
     try {
-        const spoolContent = await zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
-        const language = jesActions.getSpoolLanguage(spool);
-        const document = await vscode.workspace.openTextDocument({ language, content: spoolContent });
+        const uri = encodeJobFile(session, spool);
+        const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
