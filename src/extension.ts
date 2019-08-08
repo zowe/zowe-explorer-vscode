@@ -12,7 +12,6 @@
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
 import { moveSync } from "fs-extra";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
