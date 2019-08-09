@@ -23,6 +23,7 @@ import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/ProfileLoader";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/zosjobs";
+import * as utils from "../../src/utils";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -117,6 +118,8 @@ describe("Extension Unit Tests", () => {
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
+    const onDidCollapseElement = jest.fn();
+    const onDidExpandElement = jest.fn();
     const existsSync = jest.fn();
     const createReadStream = jest.fn();
     const readdirSync = jest.fn();
@@ -244,6 +247,8 @@ describe("Extension Unit Tests", () => {
     const testTree = DatasetTree();
     testTree.mSessionNodes = [];
     testTree.mSessionNodes.push(sessNode);
+    Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
+    Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
 
     const testUSSTree = USSTree();
     testUSSTree.mSessionNodes = [];
@@ -271,6 +276,8 @@ describe("Extension Unit Tests", () => {
     // Object.defineProperty(parse, "path", { value: pathMock });
     Object.defineProperty(vscode.commands, "registerCommand", {value: registerCommand});
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {value: onDidSaveTextDocument});
+    Object.defineProperty(vscode.window, "onDidCollapseElement", {value: onDidCollapseElement});
+    Object.defineProperty(vscode.window, "onDidExpandElement", {value: onDidExpandElement});
     Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {value: onDidChangeConfiguration});
     Object.defineProperty(fs, "readdirSync", {value: readdirSync});
@@ -335,7 +342,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
 
     it("Testing that activate correctly executes", async () => {
-        createTreeView.mockReturnValue("testDisposable");
+        createTreeView.mockReturnValue(testTree);
 
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(true);
@@ -396,6 +403,9 @@ describe("Extension Unit Tests", () => {
             title: "",
             arguments: [sampleFavorites[1]]
         };
+        sampleFavorites[0].iconPath = utils.applyIcons(sampleFavorites[0]);
+        sampleFavorites[1].iconPath = utils.applyIcons(sampleFavorites[1]);
+        sampleFavorites[2].iconPath = utils.applyIcons(sampleFavorites[2]);
         sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
         sampleFavorites[2].iconPath = {
             dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),

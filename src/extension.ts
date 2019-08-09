@@ -26,9 +26,9 @@ import { ZosJobsProvider, Job } from "./zosjobs";
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
 import * as nls from "vscode-nls";
+import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-
 
 // Globals
 export let BRIGHTTEMPFOLDER;
@@ -94,13 +94,26 @@ export async function activate(context: vscode.ExtensionContext) {
     await initializeFavorites(datasetProvider);
     await ussActions.initializeUSSFavorites(ussFileProvider);
 
-    if (datasetProvider && ussFileProvider) {
+    if (datasetProvider) {
         // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
         const disposable1 = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
         context.subscriptions.push(disposable1);
-
+        disposable1.onDidCollapseElement( async (e) => {
+            datasetProvider.flipState(e.element, false);
+        });
+        disposable1.onDidExpandElement( async (e) => {
+            datasetProvider.flipState(e.element, true);
+        });
+    }
+    if (ussFileProvider) {
         const disposable2 = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: ussFileProvider });
         context.subscriptions.push(disposable2);
+        disposable2.onDidCollapseElement( async (e) => {
+            ussFileProvider.flipState(e.element, false);
+        });
+        disposable2.onDidExpandElement( async (e) => {
+            ussFileProvider.flipState(e.element, true);
+        });
     }
 
     vscode.commands.registerCommand("zowe.addSession", async () => addSession(datasetProvider));
@@ -207,6 +220,12 @@ export async function activate(context: vscode.ExtensionContext) {
     if (jobsProvider) {
         jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
         context.subscriptions.push(jobView);
+        jobView.onDidCollapseElement( async (e) => {
+            jobsProvider.flipState(e.element, false);
+        });
+        jobView.onDidExpandElement( async (e) => {
+            jobsProvider.flipState(e.element, true);
+        });
     }
 
     const spoolProvider = new SpoolProvider();
@@ -970,6 +989,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
+    node.iconPath = utils.applyIcons(node, "open");
     datasetProvider.refresh();
 }
 
@@ -999,6 +1019,7 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
     const sanitizedPath = remotepath.replace(/\/\/+/, "/");
     node.tooltip = node.fullPath = sanitizedPath;
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    node.iconPath = utils.applyIcons(node, "open");
     // update the treeview with the new path
     // TODO figure out why a label change is needed to refresh the treeview,
     // instead of changing the collapsible state
@@ -1132,6 +1153,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
                 node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
             }
             node.contextValue += "f";
+            node.iconPath = utils.applyIcons(node);
             datasetProvider.mFavorites.push(node);
         } else if (favoriteSearchPattern.test(line)) {
             const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
@@ -1141,6 +1163,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
             const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
             node.iconPath = { light, dark };
             node.contextValue = "sessionf";
+            node.iconPath = utils.applyIcons(node);
             datasetProvider.mFavorites.push(node);
         } else {
             vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);

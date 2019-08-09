@@ -10,9 +10,8 @@
 */
 
 import * as zowe from "@brightside/core";
-import { CliProfileManager, IProfileLoaded, Logger } from "@brightside/imperative";
-import * as os from "os";
-import * as path from "path";
+import { IProfileLoaded, Logger } from "@brightside/imperative";
+import * as utils from "./utils";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
@@ -41,6 +40,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
         this.mFavoriteSession.contextValue = "favorite";
         this.mSessionNodes = [this.mFavoriteSession];
+        this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
     }
 
     /**
@@ -107,6 +107,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             // Creates ZoweUSSNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false, zosmfProfile.name);
             node.contextValue = "uss_session";
+            node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
             this.refresh();
         }
@@ -141,6 +142,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         if (temp.contextValue === "textFilef" || temp.contextValue === "binaryFilef") {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
+        temp.iconPath = utils.applyIcons(node);
         if (!this.mFavorites.find((tempNode) => tempNode.mLabel === temp.mLabel)) {
             this.mFavorites.push(temp); // testing
             this.refresh();
@@ -166,5 +168,18 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             settings.favorites = this.mFavorites.map((fav) => fav.profileName + fav.fullPath + "{" + fav.contextValue.slice(0, -1) + "}");
             await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", settings, vscode.ConfigurationTarget.Global);
         }
+    }
+
+    /**
+     * Change the state of an expandable node
+     * @param provider the tree view provider
+     * @param element the node being flipped
+     * @param isOpen the intended state of the the tree view provider, true or false
+     */
+    public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
+        element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
+        // element.dirty = element.contextValue === "directory";
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
     }
 }

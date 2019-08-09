@@ -11,8 +11,9 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { Session, AbstractSession } from "@brightside/imperative";
+import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
+import * as utils from "./utils";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -48,6 +49,7 @@ export class ZoweNode extends vscode.TreeItem {
         } else {
             this.contextValue = "ds";
         }
+        utils.applyIcons(this);
     }
 
     /**
@@ -111,16 +113,19 @@ export class ZoweNode extends vscode.TreeItem {
                 // Creates a ZoweNode for a PDS
                 if (item.dsorg === "PO" || item.dsorg === "PO-E") {
                     const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
+                    temp.iconPath = utils.applyIcons(temp);
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === "session") {
                     // Creates a ZoweNode for a PS
                     const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
+                    temp.iconPath = utils.applyIcons(temp);
                     elementChildren[temp.label] = temp;
                 } else {
                     // Creates a ZoweNode for a PDS member
                     const temp = new ZoweNode(item.member, vscode.TreeItemCollapsibleState.None, this, null);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
+                    temp.iconPath = utils.applyIcons(temp);
                     elementChildren[temp.label] = temp;
                 }
             }

@@ -13,6 +13,7 @@ import * as path from "path";
 import * as os from "os";
 import * as zowe from "@brightside/core";
 import { CliProfileManager } from "@brightside/imperative";
+import { TreeItem } from "vscode";
 
 /*
  * Created this file to be a place where commonly used functions will be defined.
@@ -25,4 +26,45 @@ export async function getSession(profileName: string) {
         type: "zosmf"
     }).load({name: profileName});
     return zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+}
+export function applyIcons(node: TreeItem, state?: string ): any {
+    let light: string;
+    let dark: string;
+
+    if (["pds", "pdsf", "dsf", "directory", "directoryf", "job"].includes(node.contextValue)) {
+        if (state === "open") {
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder.svg");
+        } else {
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder.svg");
+        }
+    } else if (["session", "favorite", "uss_session", "server"].includes(node.contextValue)) {
+        if (state === "open") {
+            light = path.join(__dirname, "..", "..", "resources", "light", "root-folder.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder.svg");
+        } else {
+            light = path.join(__dirname, "..", "..", "resources", "light", "root-folder.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder.svg");
+        }
+    } else if (["sessionf"].includes(node.contextValue)) {
+        light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
+        dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
+    } else if (["ds", "member", "textFile", "textFilef", "spool"].includes(node.contextValue)) {
+        light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
+        dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
+    } else {
+        return undefined;
+    }
+    node.iconPath = { light, dark };
+    return { light, dark };
+}
+
+/**
+ * For no obvious reason a label change is often required to make a node repaint.
+ * This function does this by adding or removing a blank.
+ * @param {vscode.TreeItem} node - the node element
+ */
+export function labelHack( node: TreeItem ): void {
+    node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
