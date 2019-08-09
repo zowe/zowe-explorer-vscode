@@ -78,6 +78,15 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     }
 
     /**
+     * Called whenever the tree needs to be refreshed, and fires the data change event
+     *
+     */
+    public refreshElement(element: ZoweUSSNode): void {
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
+    }
+
+    /**
      * Returns the parent node or null if it has no parent
      *
      * @param {ZoweUSSNode} element
@@ -97,7 +106,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
         if (zosmfProfile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label === zosmfProfile.name)) {
                 return;
             }
 
@@ -105,11 +114,11 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
 
             // Creates ZoweUSSNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false, zosmfProfile.name);
+            const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
+                            zosmfProfile.name);
             node.contextValue = "uss_session";
             node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
-            this.refresh();
         }
     }
 
@@ -121,7 +130,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public deleteSession(node: ZoweUSSNode) {
         // Removes deleted session from mSessionNodes
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.refresh();
+        this.refreshElement(node);
     }
 
     /**
@@ -143,10 +152,10 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
         temp.iconPath = utils.applyIcons(node);
-        if (!this.mFavorites.find((tempNode) => tempNode.mLabel === temp.mLabel)) {
+        if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp); // testing
-            this.refresh();
             await this.updateFavorites();
+            this.refreshElement(this.mFavoriteSession);
         }
     }
 
@@ -158,8 +167,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public async removeUSSFavorite(node: ZoweUSSNode) {
         this.mFavorites = this.mFavorites.filter((temp) =>
             !((temp.fullPath === node.fullPath) && (temp.contextValue.startsWith(node.contextValue))));
-        this.refresh();
         await this.updateFavorites();
+        this.refreshElement(this.mFavoriteSession);
     }
 
     public async updateFavorites() {
@@ -178,7 +187,9 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
         element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
-        // element.dirty = element.contextValue === "directory";
+        if (!isOpen) {
+            element.children = [];
+        }
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }

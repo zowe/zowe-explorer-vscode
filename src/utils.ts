@@ -31,18 +31,18 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     let light: string;
     let dark: string;
 
-    if (["pds", "pdsf", "dsf", "directory", "directoryf", "job"].includes(node.contextValue)) {
+    if (["pds", "pdsf", "directory", "directoryf", "job"].includes(node.contextValue)) {
         if (state === "open") {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder.svg");
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder-open.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-open.svg");
         } else {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder.svg");
         }
     } else if (["session", "favorite", "uss_session", "server"].includes(node.contextValue)) {
         if (state === "open") {
-            light = path.join(__dirname, "..", "..", "resources", "light", "root-folder.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder.svg");
+            light = path.join(__dirname, "..", "..", "resources", "light", "root-folder-open.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder-open.svg");
         } else {
             light = path.join(__dirname, "..", "..", "resources", "light", "root-folder.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder.svg");
@@ -50,7 +50,10 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     } else if (["sessionf"].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-    } else if (["ds", "member", "textFile", "textFilef", "spool"].includes(node.contextValue)) {
+    } else if (["ds", "dsf", "member", "textFile", "textFilef", "spool"].includes(node.contextValue)) {
+        light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
+        dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
+    } else if (["binary", "binaryFilef"].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
     } else {

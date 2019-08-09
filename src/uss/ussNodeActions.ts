@@ -36,13 +36,14 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
-                ussFileProvider.refresh();
+                ussFileProvider.refreshElement(node);
             }
         } catch (err) {
             vscode.window.showErrorMessage(
                 localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
+        ussFileProvider.refresh();
     }
 }
 
@@ -74,7 +75,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     try {
         const isRecursive = node.contextValue === "directory" ? true : false;
         await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
-        ussFileProvider.refresh();
+        node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {
         vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
@@ -92,8 +93,11 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
  * @param {USSTree} ussFileProvider
  */
 export async function refreshAllUSS(ussFileProvider: USSTree) {
-    ussFileProvider.mSessionNodes.forEach((node) => {
-        node.dirty = true;
+    ussFileProvider.mSessionNodes.forEach( (sessNode) => {
+        if (sessNode.contextValue === "uss_session") {
+            utils.labelHack(sessNode);
+            sessNode.dirty = true;
+        }
     });
     ussFileProvider.refresh();
 }

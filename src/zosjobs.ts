@@ -49,7 +49,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
 
         if (zosmfProfile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
 
@@ -79,11 +79,27 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         treeView.reveal(job, { select: true, focus: true });
     }
 
+
+    /**
+     * Called whenever the tree needs to be refreshed, and fires the data change event
+     *
+     */
+    public refreshElement(element: Job): void {
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
+    }
+
     /**
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
     public refresh(): void {
+        this.mSessionNodes.forEach((jobNode) => {
+            if (jobNode.contextValue === "server") {
+                //utils.labelHack(jobNode);
+                jobNode.dirty = true;
+            }
+        });
         this.mOnDidChangeTreeData.fire();
     }
 
@@ -109,16 +125,16 @@ export class Job extends vscode.TreeItem {
     // tslint:disable-next-line: variable-name
     private _prefix: string;
 
-    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
+    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
                 public mParent: Job, public session: Session, public job: IJob) {
-        super(mLabel, mCollapsibleState);
+        super(label, mCollapsibleState);
         this._owner = session.ISession.user;
         this._prefix = "*";
         utils.applyIcons(this);
     }
 
     public async getChildren(): Promise<Job[]> {
-        if (this.dirty || this.contextValue === "job") {
+        if (this.dirty) {
             this.children = [];
             if (this.contextValue === "job") {
                 const spools: zowe.IJobFile[] = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
@@ -132,8 +148,8 @@ export class Job extends vscode.TreeItem {
                     spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.session, spool] };
                     spoolNode.iconPath = utils.applyIcons(spoolNode);
                     this.children.push(spoolNode);
-                    this.iconPath = utils.applyIcons(this, "open");
                 });
+                this.iconPath = utils.applyIcons(this, "open");
             } else {
                 const jobs: zowe.IJob[] = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
                 jobs.forEach((job) => {
@@ -158,6 +174,7 @@ export class Job extends vscode.TreeItem {
                 });
             }
         }
+        this.dirty = false;
         return this.children;
     }
 
@@ -169,7 +186,7 @@ export class Job extends vscode.TreeItem {
                 return `${this.job.jobname}(${this.job.jobid})`;
             }
         } else {
-            return `${this.mLabel} - owner: ${this._owner} prefix: ${this._prefix}`;
+            return `${this.label} - owner: ${this._owner} prefix: ${this._prefix}`;
         }
     }
 
@@ -203,9 +220,9 @@ export class Job extends vscode.TreeItem {
 }
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
-    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
+    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
                 public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
-        super(mLabel, mCollapsibleState, mParent, session, job);
+        super(label, mCollapsibleState, mParent, session, job);
         this.contextValue = "spool";
         utils.applyIcons(this);
     }

@@ -17,6 +17,7 @@ jest.mock("Session");
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
+import * as utils from "../../src/utils";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -36,7 +37,14 @@ describe("Unit Tests (Jest)", () => {
         rootNode.contextValue = "uss_session";
         const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
         const testFile = new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null);
-        await expect(testDir).toMatchSnapshot();
+        testFile.contextValue = "textFile";
+        expect(JSON.stringify(rootNode.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(testDir.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
+        rootNode.iconPath = "Ref: 'folder.svg'";
+        testDir.iconPath = "Ref: 'folder.svg'";
+        testFile.iconPath = "Ref: 'document.svg'";
+        await expect(testFile).toMatchSnapshot();
     });
 
     /*************************************************************************************************************
@@ -48,7 +56,7 @@ describe("Unit Tests (Jest)", () => {
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
-        expect(testNode.mLabel).toBeDefined();
+        expect(testNode.label).toBeDefined();
         expect(testNode.mParent).toBeDefined();
         expect(testNode.getSession()).toBeDefined();
     });
@@ -79,11 +87,11 @@ describe("Unit Tests (Jest)", () => {
         await rootChildren[0].getChildren();
         expect(rootChildren[0].children.length).toBe(0);
 
-        // Check that error is thrown when mLabel is blank
+        // Check that error is thrown when label is blank
         const errorNode = new ZoweUSSNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
-        // Check that label is different when mLabel contains a []
+        // Check that label is different when label contains a []
         const rootNode2 = new ZoweUSSNode("root[test]", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
         rootChildren = await rootNode2.getChildren();
     });
@@ -159,11 +167,24 @@ describe("Unit Tests (Jest)", () => {
 
         child.setBinary(true);
         expect(child.contextValue).toEqual("binaryFile");
+        expect(JSON.stringify(child.iconPath)).toContain("document.svg");
         child.setBinary(false);
         expect(child.contextValue).toEqual("textFile");
         subNode.setBinary(true);
         expect(subNode.contextValue).toEqual("binaryFilef");
         subNode.setBinary(false);
         expect(subNode.contextValue).toEqual("textFilef");
+    });
+
+    /*************************************************************************************************************
+     * Checks that labelHack works
+     *************************************************************************************************************/
+    it("Checks that labelHack subtley alters the label", async () => {
+        const rootNode = new ZoweUSSNode("gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        expect(rootNode.label === "gappy");
+        utils.labelHack(rootNode);
+        expect(rootNode.label === "gappy ");
+        utils.labelHack(rootNode);
+        expect(rootNode.label === "gappy");
     });
 });

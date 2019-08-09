@@ -272,10 +272,10 @@ describe("DatasetTree Unit Tests", () => {
         refresh.mockReset();
         const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
         await testTree.flipState(pds, true);
-        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(pds, false);
         expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
         await testTree.flipState(pds, true);
-        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
     });
 });

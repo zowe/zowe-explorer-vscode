@@ -121,7 +121,7 @@ describe("Zos Jobs Unit Tests", () => {
             createBasicZosmfSession.mockReturnValue(session);
             await testJobsProvider.addSession(log, "fake");
             expect(testJobsProvider.mSessionNodes[0]).toBeDefined();
-            expect(testJobsProvider.mSessionNodes[0].mLabel).toEqual("fake");
+            expect(testJobsProvider.mSessionNodes[0].label).toEqual("fake");
             expect(testJobsProvider.mSessionNodes[0].tooltip).toEqual("fake - owner: fake prefix: *");
         });
 
@@ -167,21 +167,21 @@ describe("Zos Jobs Unit Tests", () => {
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder-open.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], false);
             expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder-open.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
                 testJobsProvider.mSessionNodes[0].session, iJob);
             job.contextValue = "job";
             await testJobsProvider.flipState(job, true);
-            expect(JSON.stringify(job.iconPath)).toContain("folder.svg");
+            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
             await testJobsProvider.flipState(job, false);
             expect(JSON.stringify(job.iconPath)).toContain("folder.svg");
             await testJobsProvider.flipState(job, true);
-            expect(JSON.stringify(job.iconPath)).toContain("folder.svg");
+            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
 
             job.contextValue = "jobber";
             await testJobsProvider.flipState(job, true);
@@ -254,7 +254,7 @@ describe("Zos Jobs Unit Tests", () => {
             getSpoolFiles.mockReturnValue([iJobFile]);
             const spoolFiles = await jobNode.getChildren();
             expect(spoolFiles.length).toBe(1);
-            expect(spoolFiles[0].mLabel).toEqual("STEP:STDOUT(100)");
+            expect(spoolFiles[0].label).toEqual("STEP:STDOUT(100)");
             expect(spoolFiles[0].owner).toEqual("fake");
         });
     });
