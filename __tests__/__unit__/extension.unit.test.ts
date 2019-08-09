@@ -184,6 +184,10 @@ describe("Extension Unit Tests", () => {
     const IssueCommand = jest.fn();
     const issueSimple = jest.fn();
     const createOutputChannel = jest.fn();
+    const registerTextDocumentContentProvider = jest.fn();
+    const from = jest.fn();
+    const Uri = jest.fn();
+    const parse = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -271,7 +275,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
-    // Object.defineProperty(vscode, "Uri", {value: Uri});
+    Object.defineProperty(vscode, "Uri", {value: Uri});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     // Object.defineProperty(Uri, "parse", { value: parse });
     // Object.defineProperty(parse, "path", { value: pathMock });
@@ -338,6 +342,9 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(SubmitJobs, "submitJob", {value: submitJob});
     Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
+    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider});
+    Object.defineProperty(vscode.Disposable, "from", {value: from});
+    Object.defineProperty(vscode.Uri, "parse", {value: parse});
 
     it("Testing that activate correctly executes", async () => {
         createTreeView.mockReturnValue(testTree);
@@ -1898,7 +1905,8 @@ describe("Extension Unit Tests", () => {
 
     it("tests that the spool content is opened in a new document", async () => {
         showTextDocument.mockReset();
-        await extension.getSpoolContent(session, iJobFile);
+        openTextDocument.mockReset();
+        await extension.getSpoolContent("sessionName", iJobFile);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
 
