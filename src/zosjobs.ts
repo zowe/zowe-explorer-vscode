@@ -96,7 +96,6 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public refresh(): void {
         this.mSessionNodes.forEach((jobNode) => {
             if (jobNode.contextValue === "server") {
-                //utils.labelHack(jobNode);
                 jobNode.dirty = true;
             }
         });
@@ -135,7 +134,7 @@ export class Job extends vscode.TreeItem {
 
     public getSessionName(): string {
         if(this.mParent == null) {
-            return this.mLabel;
+            return this.label.trim();
         } else {
             return this.mParent.getSessionName();
         }
