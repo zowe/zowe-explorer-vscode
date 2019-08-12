@@ -1158,7 +1158,8 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
                 datasetProvider.mFavorites.push(node);
             } catch(e) {
                 vscode.window.showErrorMessage(e + localize("initalizeFavorites.error.profile",
-                    " Either add this profile, or check your Zowe Configuration settings and remove any saved favorites with this profile name."));
+                    " Either add this profile, or check your Zowe Configuration settings and" +
+                    " remove any saved Zowe-Persistent-Favorites with this profile name."));
                 continue;
             }
         } else if (favoriteSearchPattern.test(line)) {

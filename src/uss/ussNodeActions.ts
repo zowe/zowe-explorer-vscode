@@ -137,34 +137,42 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
     lines.forEach(async (line) => {
         const profileName = line.substring(1, line.lastIndexOf("]"));
         const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
-        const session = await utils.getSession(profileName);
-        let node: ZoweUSSNode;
-        if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "directory") {
-        node = new ZoweUSSNode(
-            nodeName,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            ussFileProvider.mFavoriteSession,
-            session,
-            "",
-            false,
-            profileName
-        );
-        } else {
-            node = new ZoweUSSNode(
-                nodeName,
-                vscode.TreeItemCollapsibleState.None,
-                ussFileProvider.mFavoriteSession,
-                session,
-                "",
-                false,
-                profileName
-            );
-            node.command = {command: "zowe.uss.ZoweUSSNode.open",
-                            title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
+        try {
+            const session = await utils.getSession(profileName);
+            let node: ZoweUSSNode;
+            if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "directory") {
+                node = new ZoweUSSNode(
+                    nodeName,
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    ussFileProvider.mFavoriteSession,
+                    session,
+                    "",
+                    false,
+                    profileName
+                );
+            } else {
+                node = new ZoweUSSNode(
+                    nodeName,
+                    vscode.TreeItemCollapsibleState.None,
+                    ussFileProvider.mFavoriteSession,
+                    session,
+                    "",
+                    false,
+                    profileName
+                );
+                node.command = {command: "zowe.uss.ZoweUSSNode.open",
+                                title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
+            }
+            node.contextValue += "f";
+            node.iconPath = utils.applyIcons(node);
+            ussFileProvider.mFavorites.push(node);
+        } catch(e) {
+            vscode.window.showErrorMessage(localize("initializeUSSFavorites.error.profile1", "Error: Could not find profile named: ") + profileName
+            + localize("intializeUSSFavorites.error.profile2",
+                ". Either add this profile, or check your Zowe Configuration settings and" +
+                " remove any saved Zowe-USS-Persistent-Favorites with this profile name."));
+            return;
         }
-        node.contextValue += "f";
-        node.iconPath = utils.applyIcons(node);
-        ussFileProvider.mFavorites.push(node);
     });
 }
 
