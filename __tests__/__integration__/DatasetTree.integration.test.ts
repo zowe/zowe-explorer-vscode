@@ -173,23 +173,23 @@ describe("DatasetTree Integration Tests", async () => {
             const favoriteNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
             const len = testTree.mFavorites.length;
             await testTree.addFavorite(favoriteNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.mLabel ===
-                `[${favoriteNode.getSessionNode().mLabel}]: ${favoriteNode.mLabel}`);
+            const filtered = testTree.mFavorites.filter((temp) => temp.label ===
+                `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
             expect(filtered.length).toEqual(len + 1);
 
             const favorites: string[] = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites").get("favorites");
-            expect(favorites.find((fav) => fav === `[${favoriteNode.getSessionNode().mLabel}]: ${favoriteNode.mLabel}{pds}`)).toBeDefined();
+            expect(favorites.find((fav) => fav === `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}{pds}`)).toBeDefined();
 
             testTree.mFavorites = [];
         });
 
         it("should add a favorite search", async () => {
             await testTree.addFavorite(sessNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.mLabel === `[${sessNode.mLabel}]: ${sessNode.pattern}`);
+            const filtered = testTree.mFavorites.filter((temp) => temp.label === `[${sessNode.label}]: ${sessNode.pattern}`);
             expect(filtered.length).toEqual(1);
 
             const favorites: string[] = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites").get("favorites");
-            expect(favorites.find((fav) => fav === `[${sessNode.mLabel}]: ${sessNode.pattern}{session}`)).toBeDefined();
+            expect(favorites.find((fav) => fav === `[${sessNode.label}]: ${sessNode.pattern}{session}`)).toBeDefined();
 
             testTree.mFavorites = [];
         });

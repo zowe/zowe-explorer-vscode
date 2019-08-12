@@ -25,6 +25,7 @@ const ussFile = jest.fn();
 const renameUSSFile = jest.fn();
 const mockAddUSSSession = jest.fn();
 const mockUSSRefresh = jest.fn();
+const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
 const mockRemoveUSSFavorite = jest.fn();
 const showInputBox = jest.fn();
@@ -53,6 +54,7 @@ function getUSSTree() {
             mFavorites: [],
             addSession: mockAddUSSSession,
             refresh: mockUSSRefresh,
+            refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             removeUSSFavorite: mockRemoveUSSFavorite
         };
@@ -98,7 +100,7 @@ describe("ussNodeActions", () => {
         it("createUSSNode is executed successfully", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
             await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(testUSSTree.refreshElement).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
         });
         it("createUSSNode does not execute if node name was not entered", async () => {
@@ -112,7 +114,7 @@ describe("ussNodeActions", () => {
             const isTopLevel = false;
             spyOn(ussNodeActions, "refreshAllUSS");
             await ussNodeActions.createUSSNode(ussNode, testUSSTree, "folder", isTopLevel);
-            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(testUSSTree.refreshElement).toHaveBeenCalled();
             expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
         });
     });
@@ -147,8 +149,10 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.mFavorites.length).toBe(2);
 
             const expectedUSSFavorites: ZoweUSSNode[] = [
-                new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, session, "", false, "test"),
-                new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, session, "", false, "test"),
+                new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, session, "",
+                    false, "test"),
+                new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, session, "",
+                    false, "test"),
             ];
 
             expectedUSSFavorites.map((node) => node.contextValue += "f");
