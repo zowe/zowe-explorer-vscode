@@ -372,10 +372,10 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
     }
-
+    const previousTemp = path.join(previousTempPath, "temp");
     try {
         // If source and destination path are same, exit
-        if(`${previousTempPath}/temp` === BRIGHTTEMPFOLDER) {
+        if(previousTemp === BRIGHTTEMPFOLDER) {
             return;
         }
 
@@ -383,11 +383,11 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         // If a second instance has already moved the temp folder, exit
         // Ideally, `moveSync()` would alert user if path doesn't exist.
         // However when supporting "Multiple Instances", might not be possible.
-        if(!fs.existsSync(`${previousTempPath}/temp`)) {
+        if(!fs.existsSync(previousTemp)) {
             return;
         }
 
-        moveSync(`${previousTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true });
+        moveSync(previousTemp, BRIGHTTEMPFOLDER, { overwrite: true });
     } catch (err) {
         log.error("Error moving temporary folder! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
