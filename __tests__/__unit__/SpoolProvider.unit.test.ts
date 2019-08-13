@@ -8,6 +8,7 @@
 * Copyright Contributors to the Zowe Project.                                     *
 *                                                                                 *
 */
+
 import * as spoolprovider from "../../src/SpoolProvider";
 import * as brightside from "@brightside/core";
 import * as vscode from "vscode";

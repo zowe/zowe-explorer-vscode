@@ -32,17 +32,17 @@ export class ZoweNode extends vscode.TreeItem {
     /**
      * Creates an instance of ZoweNode
      *
-     * @param {string} mLabel - Displayed in the [TreeView]
+     * @param {string} label - Displayed in the [TreeView]
      * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/folder
      * @param {ZoweNode} mParent
      * @param {Session} session
      */
-    constructor(public mLabel: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
+    constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState,
                 public mParent: ZoweNode, private session: Session, information: boolean = false) {
-        super(mLabel, mCollapsibleState);
+        super(label, collapsibleState);
         if (information) {
             this.contextValue = "information";
-        } else if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
+        } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "pds";
         } else if (mParent && mParent.mParent !== null) {
             this.contextValue = "member";
@@ -67,19 +67,19 @@ export class ZoweNode extends vscode.TreeItem {
             return [];
         }
 
-        if (!this.dirty || this.mLabel === "Favorites") {
+        if (!this.dirty || this.label === "Favorites") {
             return this.children;
         }
 
-        if (!this.mLabel) {
+        if (!this.label) {
             vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
         }
 
         // Check if node is a favorite
-        let label = this.mLabel.trim();
-        if (this.mLabel.startsWith("[")) {
-            label = this.mLabel.substring(this.mLabel.indexOf(":") + 1).trim();
+        let label = this.label.trim();
+        if (this.label.startsWith("[")) {
+            label = this.label.substring(this.label.indexOf(":") + 1).trim();
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors

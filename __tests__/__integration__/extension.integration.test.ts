@@ -103,7 +103,7 @@ describe("Extension Integration Tests", () => {
             const profileNamesList = profileManager.getAllProfileNames().filter((profileName) =>
                 // Find all cases where a profile is not already displayed
                 !testTree.mSessionNodes.find((node) =>
-                    node.mLabel.toUpperCase() === profileName.toUpperCase()
+                    node.label.toUpperCase() === profileName.toUpperCase()
                 )
             );
 
@@ -112,7 +112,7 @@ describe("Extension Integration Tests", () => {
             stub.returns(profileNamesList[0]);
 
             await extension.addSession(testTree);
-            expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].mLabel).to.equal(profileNamesList[0]);
+            expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });
 
@@ -349,11 +349,11 @@ describe("Extension Integration Tests", () => {
 
             const changedData = "PS Upload Test";
 
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[1].mLabel + "[" + profiles[1].mLabel + "]"), changedData);
+            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[1].label + "[" + profiles[1].label + "]"), changedData);
 
             // Upload file
             const doc = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER,
-                children[1].mLabel + "[" + profiles[1].mLabel + "]"));
+                children[1].label + "[" + profiles[1].label + "]"));
             await extension.saveFile(doc, testTree);
 
             // Download file
@@ -363,7 +363,7 @@ describe("Extension Integration Tests", () => {
 
             // Change contents back
             const originalData = "";
-            fs.writeFileSync(path.join(path.join(extension.BRIGHTTEMPFOLDER, children[1].mLabel)), originalData);
+            fs.writeFileSync(path.join(path.join(extension.BRIGHTTEMPFOLDER, children[1].label)), originalData);
         }).timeout(TIMEOUT);
 
         it("should download, change, and re-upload a PDS member", async () => {
@@ -378,11 +378,11 @@ describe("Extension Integration Tests", () => {
 
             const changedData2 = "PO Member Upload Test";
 
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].mLabel + "(" + childrenMembers[0].mLabel + ")"), changedData2);
+            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), changedData2);
 
             // Upload file
-            const doc2 = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER, children[0].mLabel +
-                "(" + childrenMembers[0].mLabel + ")"));
+            const doc2 = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER, children[0].label +
+                "(" + childrenMembers[0].label + ")"));
             extension.saveFile(doc2, testTree);
 
             // Download file
@@ -392,7 +392,7 @@ describe("Extension Integration Tests", () => {
 
             // Change contents back
             const originalData2 = "";
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].mLabel + "(" + childrenMembers[0].mLabel + ")"), originalData2);
+            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), originalData2);
         }).timeout(TIMEOUT);
 
         // TODO add tests for saving data set from favorites
@@ -469,7 +469,7 @@ describe("Extension Integration Tests", () => {
                                     `[${profileName}]: ${pattern}.EXT.PS`,
                                     `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
                                     `[${profileName}]: ${pattern}.EXT`];
-            expect(testTree.mFavorites.map((node) => node.mLabel)).to.deep.equal(favoritesArray);
+            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
         }).timeout(TIMEOUT);
 
         it("should show an error message when provided an invalid Favorites list", async () => {
@@ -563,7 +563,7 @@ describe("Extension Integration Tests - USS", () => {
             const profileNamesList = profileManager.getAllProfileNames().filter((profileName) =>
                 // Find all cases where a profile is not already displayed
                 !ussTestTree.mSessionNodes.find((node) =>
-                    node.mLabel.toUpperCase() === profileName.toUpperCase()
+                    node.label.toUpperCase() === profileName.toUpperCase()
                 )
             );
 
@@ -572,7 +572,7 @@ describe("Extension Integration Tests - USS", () => {
             stub.returns(profileNamesList[0]);
 
             await extension.addUSSSession(ussTestTree);
-            expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].mLabel).to.equal(profileNamesList[0]);
+            expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });
 

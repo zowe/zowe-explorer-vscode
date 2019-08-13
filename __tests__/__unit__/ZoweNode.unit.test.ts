@@ -49,7 +49,7 @@ describe("Unit Tests (Jest)", () => {
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
-        expect(testNode.mLabel).toBeDefined();
+        expect(testNode.label).toBeDefined();
         expect(testNode.mParent).toBeDefined();
         expect(testNode.getSession()).toBeDefined();
     });
@@ -81,11 +81,11 @@ describe("Unit Tests (Jest)", () => {
         // Checking that the rootChildren are what they are expected to be
         expect(rootChildren).toEqual(sampleChildren);
 
-        // Check that error is thrown when mLabel is blank
+        // Check that error is thrown when label is blank
         const errorNode = new ZoweNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session);
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
-        // Check that label is different when mLabel contains a []
+        // Check that label is different when label contains a []
         const rootNode2 = new ZoweNode("root[test]", vscode.TreeItemCollapsibleState.Collapsed, null, session);
         rootChildren = await rootNode2.getChildren();
     });

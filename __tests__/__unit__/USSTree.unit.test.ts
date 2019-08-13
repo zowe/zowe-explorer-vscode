@@ -75,7 +75,7 @@ describe("Unit Tests (Jest)", () => {
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
-        expect(testNode.mLabel).toBeDefined();
+        expect(testNode.label).toBeDefined();
         expect(testNode.mParent).toBeDefined();
         expect(testNode.getSession()).toBeDefined();
     });
@@ -165,7 +165,7 @@ describe("Unit Tests (Jest)", () => {
         ];
 
         // Checking that the rootChildren are what they are expected to be
-        expect(sessChildren[0].mLabel).toEqual(sampleChildren[0].mLabel);
+        expect(sessChildren[0].label).toEqual(sampleChildren[0].label);
     });
 
     /*************************************************************************************************************
@@ -200,7 +200,7 @@ describe("Unit Tests (Jest)", () => {
         sampleChildren[0].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[0]] };
 
         // Checking that the rootChildren are what they are expected to be
-        expect(dirChildren[1].mLabel).toEqual(sampleChildren[0].mLabel);
+        expect(dirChildren[1].label).toEqual(sampleChildren[0].label);
         // expect(dirChildren[1].command).toEqual("zowe.uss.ZoweUSSNode.open");
     });
 
@@ -229,8 +229,9 @@ describe("Unit Tests (Jest)", () => {
         testTree.mFavorites = [];
         const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             testTree.mSessionNodes[1], null, "/");
-        const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.Collapsed,
+        const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None,
             parentDir, null, "/parent");
+        childFile.contextValue = "textFile";
 
         // Check adding directory
         await testTree.addUSSFavorite(parentDir);
@@ -269,10 +270,10 @@ describe("Unit Tests (Jest)", () => {
         const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], session, null);
         folder.contextValue = "directory";
         await testTree.flipState(folder, true);
-        expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(folder, false);
         expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
         await testTree.flipState(folder, true);
-        expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
     });
 });

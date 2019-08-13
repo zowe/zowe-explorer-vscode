@@ -77,6 +77,15 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     }
 
     /**
+     * Called whenever the tree needs to be refreshed, and fires the data change event
+     *
+     */
+    public refreshElement(element: ZoweNode): void {
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
+    }
+
+    /**
      * Returns the parent node or null if it has no parent
      *
      * @param {ZoweNode} element
@@ -96,7 +105,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
         if (zosmfProfile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.mLabel === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label === zosmfProfile.name)) {
                 return;
             }
 
@@ -120,7 +129,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public deleteSession(node: ZoweNode) {
         // Removes deleted session from mSessionNodes
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.refresh();
+        this.refreshElement(node);
     }
 
     /**
@@ -138,7 +147,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             this.addFavorite(node.mParent);
             return;
         } else if (node.contextValue === "session") {
-            temp = new ZoweNode("[" + node.getSessionNode().mLabel + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
+            temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession());
             temp.contextValue = "sessionf";
             temp.iconPath =  utils.applyIcons(temp);
@@ -148,7 +157,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
             temp.iconPath = { light, dark };
         } else {    // pds | ds
-            temp = new ZoweNode("[" + node.getSessionNode().mLabel + "]: " + node.mLabel, node.collapsibleState,
+            temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession());
             temp.contextValue += "f";
             if (temp.contextValue === "dsf") {
@@ -158,11 +167,12 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         }
 
         if (!this.mFavorites.find((tempNode) =>
-            (tempNode.mLabel === temp.mLabel) && (tempNode.contextValue === temp.contextValue)
+            (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
             this.mFavorites.push(temp);
             this.refresh();
             await this.updateFavorites();
+            this.refreshElement(this.mFavoriteSession);
         }
     }
 
@@ -173,10 +183,11 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async removeFavorite(node: ZoweNode) {
         this.mFavorites = this.mFavorites.filter((temp) =>
-            !((temp.mLabel === node.mLabel) && (temp.contextValue.startsWith(node.contextValue)))
+            !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue)))
         );
         this.refresh();
         await this.updateFavorites();
+        this.refreshElement(this.mFavoriteSession);
     }
 
     public async updateFavorites() {
@@ -184,7 +195,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         const settings: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
         if (settings.persistence) {
             settings.favorites = this.mFavorites.map((fav) =>
-                fav.mLabel + "{" + fav.contextValue.slice(0, -1) + "}"
+                fav.label + "{" + fav.contextValue.slice(0, -1) + "}"
             );
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", settings, vscode.ConfigurationTarget.Global);
         }
@@ -197,7 +208,10 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? "closed" : "closed");
+        element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
+        if (!isOpen) {
+            element.children = [];
+        }
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }

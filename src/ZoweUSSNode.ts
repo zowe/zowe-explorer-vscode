@@ -35,38 +35,38 @@ export class ZoweUSSNode extends vscode.TreeItem {
     /**
      * Creates an instance of ZoweUSSNode
      *
-     * @param {string} mLabel - Displayed in the [TreeView]
-     * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/directory
+     * @param {string} label - Displayed in the [TreeView]
+     * @param {vscode.TreeItemCollapsibleState} collapsibleState - file/directory
      * @param {ZoweUSSNode} mParent - The parent node
      * @param {Session} session
      * @param {String} parentPath - The file path of the parent on the server
      * @param {String} mProfileName - Profile to which the node belongs to
      */
-    constructor(public mLabel: string,
-                public mCollapsibleState: vscode.TreeItemCollapsibleState,
+    constructor(label: string,
+                collapsibleState: vscode.TreeItemCollapsibleState,
                 public mParent: ZoweUSSNode,
                 private session: Session,
                 private parentPath: string,
                 public binary = false,
                 public mProfileName?: string) {
-        super(mLabel, mCollapsibleState);
-        if (mCollapsibleState !== vscode.TreeItemCollapsibleState.None) {
+        super(label, collapsibleState);
+        if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = "directory";
         } else if (binary) {
             this.contextValue = "binaryFile";
         } else {
             this.contextValue = "textFile";
         }
-        if (parentPath) {
-            this.fullPath = this.tooltip = parentPath + "/" + mLabel;
+        if (this.parentPath) {
+            this.fullPath = this.tooltip = this.parentPath + "/" + label;
             if (parentPath === "/") {
                 // Keep fullPath of root level nodes preceded by a single slash
-                this.fullPath = this.tooltip = "/" + mLabel;
+                this.fullPath = this.tooltip = "/" + label;
             }
         }
         if (this.mParent && this.mParent.contextValue === "favorite") {
             this.profileName = "[" + mProfileName + "]: ";
-            this.fullPath = mLabel.trim();
+            this.fullPath = label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
@@ -91,7 +91,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
             return this.children;
         }
 
-        if (!this.mLabel) {
+        if (!this.label) {
             vscode.window.showErrorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
             throw Error("Invalid node");
         }
@@ -105,7 +105,6 @@ export class ZoweUSSNode extends vscode.TreeItem {
                                                     + `zowe.List\n${err}\n`);
             throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
-
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
         responses.forEach((response) => {
@@ -158,9 +157,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
                     }
                 }
             }
-            utils.applyIcons(this);
         });
-
         if (this.contextValue === "uss_session") {
             this.dirty = false;
         }
@@ -197,6 +194,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
         if (this.mParent && this.mParent.contextValue === "favorite") {
             this.binary ? this.contextValue = "binaryFilef" : this.contextValue = "textFilef";
         }
+        utils.applyIcons(this);
         this.dirty = true;
     }
 }

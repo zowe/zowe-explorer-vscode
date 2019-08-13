@@ -247,11 +247,16 @@ export async function activate(context: vscode.ExtensionContext) {
         stopCommand(job);
     });
     vscode.commands.registerCommand("zowe.refreshJobsServer", (node) => {
-        node.dirty = true;
-        jobsProvider.refresh();
+        utils.labelHack(node);
+        jobsProvider.refreshElement(node);
     });
     vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
-        jobsProvider.mSessionNodes.forEach((node) => node.dirty = true);
+        jobsProvider.mSessionNodes.forEach((jobNode) => {
+            if (jobNode.contextValue === "server") {
+                utils.labelHack(jobNode);
+                jobNode.dirty = true;
+            }
+        });
         jobsProvider.refresh();
     });
     vscode.commands.registerCommand("zowe.addJobsSession", () => addJobsSession(jobsProvider));
@@ -269,7 +274,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
         const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
-            return jobNode.mLabel === session;
+            return jobNode.label.trim()=== session;
         });
         sessionNode.dirty = true;
         jobsProvider.refresh();
@@ -367,10 +372,10 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
     }
-
+    const previousTemp = path.join(previousTempPath, "temp");
     try {
         // If source and destination path are same, exit
-        if(`${previousTempPath}/temp` === BRIGHTTEMPFOLDER) {
+        if(previousTemp === BRIGHTTEMPFOLDER) {
             return;
         }
 
@@ -378,11 +383,11 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         // If a second instance has already moved the temp folder, exit
         // Ideally, `moveSync()` would alert user if path doesn't exist.
         // However when supporting "Multiple Instances", might not be possible.
-        if(!fs.existsSync(`${previousTempPath}/temp`)) {
+        if(!fs.existsSync(previousTemp)) {
             return;
         }
 
-        moveSync(`${previousTempPath}/temp`, BRIGHTTEMPFOLDER, { overwrite: true });
+        moveSync(previousTemp, BRIGHTTEMPFOLDER, { overwrite: true });
     } catch (err) {
         log.error("Error moving temporary folder! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
@@ -483,7 +488,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
 
     // get session from session name
     let documentSession;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.mLabel === sesName);
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim()=== sesName);
     if (sesNode) {
         documentSession = sesNode.getSession();
     } else {
@@ -516,24 +521,24 @@ export async function submitMember(node: ZoweNode) {
     let sesName;
     switch (node.mParent.contextValue) {
         case ("favorite"): {
-            const regex = labelregex.exec(node.mLabel);
+            const regex = labelregex.exec(node.label);
             sesName = regex[1];
             label = regex[2];
             break;
         }
         case ("pdsf"): {
-            const regex = labelregex.exec(node.mParent.mLabel);
+            const regex = labelregex.exec(node.mParent.label);
             sesName = regex[1];
-            label = regex[2] + "(" + node.mLabel + ")";
+            label = regex[2] + "(" + node.label.trim()+ ")";
             break;
         }
         case ("session"):
-            sesName = node.mParent.mLabel;
-            label = node.mLabel;
+            sesName = node.mParent.label;
+            label = node.label;
             break;
         case ("pds"):
-            sesName = node.mParent.mParent.mLabel;
-            label = node.mParent.mLabel + "(" + node.mLabel + ")";
+            sesName = node.mParent.mParent.label;
+            label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
             break;
         default:
             vscode.window.showErrorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
@@ -575,7 +580,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !datasetProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.mLabel === profileName
+                sessionNode.label.trim() === profileName
             )
         );
     } else {
@@ -627,7 +632,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !ussFileProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.mLabel === profileName
+                sessionNode.label.trim()=== profileName
             )
         );
     } else {
@@ -734,9 +739,9 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
     const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
-        let label = parent.mLabel;
+        let label = parent.label.trim();
         if (parent.contextValue === "pdsf") {
-            label = parent.mLabel.substring(parent.mLabel.indexOf(":") + 2); // TODO MISSED TESTING
+            label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
         }
 
         try {
@@ -746,9 +751,10 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
             vscode.window.showErrorMessage(localize("createMember.error", "Unable to create member: ") + err.message);
             throw (err);
         }
-        parent.getSessionNode().dirty = true;
-        datasetProvider.refresh();
+        parent.dirty = true;
+        datasetProvider.refreshElement(parent);
         openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null));
+        datasetProvider.refresh();
     }
 }
 
@@ -762,9 +768,9 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
  */
 export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
 
-    let label = parent.mLabel;
+    let label = parent.label.trim();
     if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
-        label = parent.mLabel.substring(parent.mLabel.indexOf(":") + 2); // TODO MISSED TESTING
+        label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
     }
 
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
@@ -893,18 +899,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     try {
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 fav = true;
                 break;
             case ("pdsf"):
-                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+                label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 fav = true;
                 break;
             case ("session"):
-                label = node.mLabel;
+                label = node.label.trim();
                 break;
             case ("pds"):
-                label = node.mParent.mLabel + "(" + node.mLabel + ")";
+                label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
                 break;
             default:
                 throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
@@ -923,20 +929,19 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     // remove node from tree
     if (fav) {
         datasetProvider.mSessionNodes.forEach((ses) => {
-            if (node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]")) === ses.mLabel ||
-                node.mParent.mLabel.substring(node.mParent.mLabel.indexOf("["), node.mParent.mLabel.indexOf("]")) === ses.mLabel) {
+            if (node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]")) === ses.label.trim()||
+                node.mParent.label.substring(node.mParent.label.indexOf("["), node.mParent.label.indexOf("]")) === ses.label) {
                 ses.dirty = true;
             }
         });
         datasetProvider.removeFavorite(node);
     } else {
         node.getSessionNode().dirty = true;
-        const temp = node.mLabel;
-        node.mLabel = "[" + node.getSessionNode().mLabel + "]: " + node.mLabel;
+        const temp = node.label;
+        node.label = "[" + node.getSessionNode().label.trim() + "]: " + node.label;
         datasetProvider.removeFavorite(node);
-        node.mLabel = temp;
+        node.label = temp;
     }
-
     datasetProvider.refresh();
 
     // remove local copy of file
@@ -974,17 +979,17 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         }
     } else {
         // executing search from saved search in favorites
-        pattern = node.mLabel.substring(node.mLabel.indexOf(":") + 2);
-        const session = node.mLabel.substring(node.mLabel.indexOf("[") + 1, node.mLabel.indexOf("]"));
+        pattern = node.label.substring(node.label.indexOf(":") + 2);
+        const session = node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]"));
         await datasetProvider.addSession(log, session);
-        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.mLabel === session);
+        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
     }
 
     // update the treeview with the new pattern
     // TODO figure out why a label change is needed to refresh the treeview,
     // instead of changing the collapsible state
     // change label so the treeview updates
-    node.label = node.label + " ";
+    node.label = node.label.trim()+ " ";
     node.label.trim();
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
@@ -1036,7 +1041,7 @@ export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTre
  * @param {ZoweNode} node
  */
 export function getProfile(node: ZoweNode) {
-    let profile = node.getSessionNode().mLabel;
+    let profile = node.getSessionNode().label.trim();
     // if this is a favorite node, further extraction is necessary
     if (profile.includes("[")) {
         profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));  // TODO MISSED TESTING
@@ -1140,7 +1145,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
         const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
         if (favoriteDataSetPattern.test(line)) {
-            const sesName = line.substring(1, line.lastIndexOf("]"));
+            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
                 const zosmfProfile = loadNamedProfile(sesName);
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
@@ -1188,16 +1193,16 @@ export async function openPS(node: ZoweNode) {
         let label: string;
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
             case ("pdsf"):
-                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+                label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
             case ("session"):
-                label = node.mLabel;
+                label = node.label.trim();
                 break;
             case ("pds"):
-                label = node.mParent.mLabel + "(" + node.mLabel + ")";
+                label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
                 break;
             default:
                 vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
@@ -1226,8 +1231,11 @@ export async function openPS(node: ZoweNode) {
  */
 export async function refreshAll(datasetProvider: DatasetTree) {
     log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
-    datasetProvider.mSessionNodes.forEach((node) => {
-        node.dirty = true;
+    datasetProvider.mSessionNodes.forEach((sessNode) => {
+        if (sessNode.contextValue === "session") {
+            utils.labelHack(sessNode);
+            sessNode.dirty = true;
+        }
     });
     datasetProvider.refresh();
 }
@@ -1242,16 +1250,16 @@ export async function refreshPS(node: ZoweNode) {
     try {
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
             case ("pdsf"):
-                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+                label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
             case ("session"):
-                label = node.mLabel;
+                label = node.label.trim();
                 break;
             case ("pds"):
-                label = node.mParent.mLabel + "(" + node.mLabel + ")";
+                label = node.mParent.label.trim() + "(" + node.label.trim() + ")";
                 break;
             default:
                 throw Error(localize("refreshPS.error.invalidNode", "refreshPS() called from invalid node."));
@@ -1292,7 +1300,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
             label = node.fullPath;
             break;
         case ("uss_session"):
-            label = node.mLabel;
+            label = node.label;
             break;
         default:
             vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
@@ -1327,21 +1335,21 @@ export async function refreshUSS(node: ZoweUSSNode) {
  */
 export async function safeSave(node: ZoweNode) {
 
-    log.debug(localize("safeSave.log.debug.request", "safe save requested for node: ") + node.mLabel);
+    log.debug(localize("safeSave.log.debug.request", "safe save requested for node: ") + node.label);
     let label;
     try {
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                label = node.label.trim().substring(node.label.indexOf(":") + 1).trim();
                 break;
             case ("pdsf"):
-                label = node.mParent.mLabel.substring(node.mParent.mLabel.indexOf(":") + 1).trim() + "(" + node.mLabel + ")";
+                label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
             case ("session"):
-                label = node.mLabel;
+                label = node.label.trim();
                 break;
             case ("pds"):
-                label = node.mParent.mLabel + "(" + node.mLabel + ")";
+                label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
                 break;
             default:
                 throw Error(localize("safeSave.error.invalidNode", "safeSave() called from invalid node."));
@@ -1371,7 +1379,7 @@ export async function safeSave(node: ZoweNode) {
  */
 export async function safeSaveUSS(node: ZoweUSSNode) {
 
-    log.debug("safe save requested for node: " + node.mLabel);
+    log.debug("safe save requested for node: " + node.label);
     try {
         // Switch case from `safeSave` not needed, as we will only ever receive a file
         log.debug("Invoking safesave for USS file " + node.fullPath);
@@ -1421,7 +1429,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     // get session from session name
     let documentSession;
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
-        child.mLabel === sesName);
+        child.label.trim() === sesName);
     if (sesNode) {
         log.debug(localize("saveFile.log.debug.load", "Loading session from session node in saveFile()"));
         documentSession = sesNode.getSession();
@@ -1484,7 +1492,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     // get session from session name
     let documentSession;
     let binary;
-    const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mLabel === sesName.trim()));
+    const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.label.trim()=== sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
@@ -1518,7 +1526,7 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         let label: string;
         switch (node.mParent.contextValue) {
             case ("favorite"):
-                label = node.mLabel.substring(node.mLabel.indexOf(":") + 1).trim();
+                label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
             // Handle file path for files in directories and favorited directories
             case ("directory"):
@@ -1526,7 +1534,7 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
                 label = node.fullPath;
                 break;
             case ("uss_session"):
-                label = node.mLabel;
+                label = node.label;
                 break;
             default:
                 vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
@@ -1592,18 +1600,22 @@ export async function getSpoolContent(session: string, spool: IJobFile) {
     }
 }
 
-export async function setOwner(job: Job, datasetProvider: ZosJobsProvider) {
+export async function setOwner(job: Job, jobsProvider: ZosJobsProvider) {
     const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
     job.owner = newOwner;
-    job.dirty = true;
-    datasetProvider.refresh();
+    jobsProvider.refreshElement(job);
 }
 
-export async function setPrefix(job: Job, datasetProvider: ZosJobsProvider) {
+export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
     const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
     job.prefix = newPrefix;
-    job.dirty = true;
-    datasetProvider.refresh();
+    jobsProvider.refreshElement(job);
+}
+
+export async function setId(job: Job, jobsProvider: ZosJobsProvider) {
+    const newId = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.id", "Job Id") });
+    job.id = newId;
+    jobsProvider.refreshElement(job);
 }
 
 export async function addJobsSession(datasetProvider: ZosJobsProvider) {
@@ -1622,7 +1634,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !datasetProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.mLabel === profileName
+                sessionNode.label.trim() === profileName
             )
         );
     } else {
