@@ -24,6 +24,8 @@
     ],
     "include": [
         "src",
-        "__tests__", "resources/testProfileData.example.ts"
+        "__tests__",
+        "resources/testProfileData.example.ts",
+        "resources/testProfileData.ts"
     ]
 }
