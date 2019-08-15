@@ -123,6 +123,7 @@ All localized strings must be string literals, you cannot include variables or u
     - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% __key__ \% i.e. `"This is a string"` becomes `"%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
 
     - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function `const localize = nls.config({ messageFormat: nls.MessageFormat.file })();` Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
+        - If the new string is in a newly-created typescript file, update the stringUpdateScript.js file with an entry for the new typescript file.
 
 3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
