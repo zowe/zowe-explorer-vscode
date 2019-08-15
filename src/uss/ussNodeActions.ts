@@ -171,10 +171,14 @@ export async function initializeUSSFavorites(ussFileProvider: USSTree) {
             node.iconPath = utils.applyIcons(node);
             ussFileProvider.mFavorites.push(node);
         } catch(e) {
-            vscode.window.showErrorMessage(localize("initializeUSSFavorites.error.profile1", "Error: Could not find profile named: ") + profileName
-            + localize("intializeUSSFavorites.error.profile2",
-                ". Either add this profile, or check your Zowe Configuration settings and" +
-                " remove any saved Zowe-USS-Persistent-Favorites with this profile name."));
+            vscode.window.showErrorMessage(
+                localize("initializeUSSFavorites.error.profile1",
+                "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
+                localize("intializeUSSFavorites.error.profile2",
+                ". To resolve this, you can create a profile with this name, ") +
+                localize("initializeUSSFavorites.error.profile3",
+                "or remove the favorites with this profile name from the Zowe-USS-Persistent-Favorites setting, ") +
+                localize("initializeUSSFavorites.error.profile4", "which can be found in your VS Code user settings."));
             return;
         }
     });

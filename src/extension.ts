@@ -1162,9 +1162,14 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
                 node.iconPath = utils.applyIcons(node);
                 datasetProvider.mFavorites.push(node);
             } catch(e) {
-                vscode.window.showErrorMessage(e + localize("initalizeFavorites.error.profile",
-                    " Either add this profile, or check your Zowe Configuration settings and" +
-                    " remove any saved Zowe-Persistent-Favorites with this profile name."));
+                vscode.window.showErrorMessage(
+                    localize("initializeFavorites.error.profile1",
+                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                    localize("intializeFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ") +
+                    localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
                 continue;
             }
         } else if (favoriteSearchPattern.test(line)) {
