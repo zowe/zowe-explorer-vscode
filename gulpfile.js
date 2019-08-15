@@ -21,7 +21,7 @@ const inlineMap = true;
 const inlineSource = false;
 const outDest = 'out';
 
-// If all VS Code langaues are support you can use nls.coreLanguages
+// If all VS Code languages are supported, you can use nls.coreLanguages
 // For new languages, add { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to array below
 // Ex. for Chinese add: { folderName: 'zho', id: 'zh-cn' }
 /* ************************* ADD NEW LANGUAGES HERE ******************************** */
