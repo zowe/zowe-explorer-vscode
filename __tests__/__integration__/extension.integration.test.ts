@@ -448,7 +448,7 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
     });
 
-    describe.only("Initializing Favorites", () => {
+    describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
@@ -484,7 +484,7 @@ describe("Extension Integration Tests", () => {
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
 
-        it("should show an error message when given a favorite with invalid profile name, and load other favorites with valid profiles", async () => {
+        it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
@@ -496,12 +496,15 @@ describe("Extension Integration Tests", () => {
                                `[${profileName}]: ${pattern}.EXT{session}`];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+            const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await extension.initializeFavorites(testTree);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
                                     `[${profileName}]: ${pattern}.EXT.PS`,
                                     `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
                                     `[${profileName}]: ${pattern}.EXT`];
+            const gotCalledOnce = showErrorStub.calledOnce;
             expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
+            expect(gotCalledOnce).to.equal(true);
         }).timeout(TIMEOUT);
     });
 });
