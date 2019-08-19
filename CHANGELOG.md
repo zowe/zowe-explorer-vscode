@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.24.1
+
+- Fixed issue when saving USS files
+
 ## 0.24.0
 
 - Updated Localization Documentation and Added Update Dictionary Script. Thanks to @evannwu20

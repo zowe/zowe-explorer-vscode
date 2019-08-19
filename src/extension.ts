@@ -1485,7 +1485,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     // get session from session name
     let documentSession;
     let binary;
-    const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.label.trim()=== sesName.trim()));
+    const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mProfileName && child.mProfileName.trim()=== sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
