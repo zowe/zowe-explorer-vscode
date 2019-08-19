@@ -106,7 +106,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
         if (zosmfProfile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
 
@@ -119,6 +119,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             node.contextValue = "uss_session";
             node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
+            this.refresh();
         }
     }
 
@@ -129,8 +130,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public deleteSession(node: ZoweUSSNode) {
         // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.refreshElement(node);
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        this.refresh();
     }
 
     /**
