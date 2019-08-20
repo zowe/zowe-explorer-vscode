@@ -26,7 +26,7 @@ import * as utils from "./utils";
 export class ZoweUSSNode extends vscode.TreeItem {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = true;
+    public dirty = false;
     public children: ZoweUSSNode[] = [];
     public binaryFiles = {};
     public profileName = "";
@@ -116,7 +116,10 @@ export class ZoweUSSNode extends vscode.TreeItem {
 
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                if (item.name !== "." && item.name !== "..") {
+                const existing = this.children.find((element) => element.label.trim() === item.name );
+                if (existing) {
+                    elementChildren[existing.label] = existing;
+                } else if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
                     if (item.mode.startsWith("d")) {
                         const temp = new ZoweUSSNode(
@@ -153,14 +156,11 @@ export class ZoweUSSNode extends vscode.TreeItem {
                         temp.command = {command: "zowe.uss.ZoweUSSNode.open",
                                         title: localize("getChildren.responses.open", "Open"), arguments: [temp]};
                         elementChildren[temp.label] = temp;
-                        temp.iconPath = utils.applyIcons(temp);
                     }
                 }
             }
         });
-        if (this.contextValue === "uss_session") {
-            this.dirty = false;
-        }
+        this.dirty = false;
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
     }
 

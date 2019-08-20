@@ -27,6 +27,7 @@ describe("ZoweNode Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = "session";
+    sessNode.dirty = true;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
 
@@ -99,6 +100,7 @@ describe("ZoweNode Integration Tests", async () => {
         // The method should throw an error.
         const nullNode = new ZoweNode(null, null, null, null);
         nullNode.contextValue = "pds";
+        nullNode.dirty = true;
         await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
     }).timeout(TIMEOUT);
 
@@ -112,6 +114,7 @@ describe("ZoweNode Integration Tests", async () => {
         // The method should throw an error.
         const undefinedNode = new ZoweNode(undefined, undefined, undefined, undefined);
         undefinedNode.contextValue = "pds";
+        undefinedNode.dirty = true;
         // tslint:disable-next-line:max-line-length
         await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
 

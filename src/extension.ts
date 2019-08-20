@@ -247,14 +247,12 @@ export async function activate(context: vscode.ExtensionContext) {
         stopCommand(job);
     });
     vscode.commands.registerCommand("zowe.refreshJobsServer", (node) => {
-        utils.labelHack(node);
         jobsProvider.refreshElement(node);
     });
     vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
         jobsProvider.mSessionNodes.forEach((jobNode) => {
             if (jobNode.contextValue === "server") {
-                utils.labelHack(jobNode);
-                jobNode.dirty = true;
+                jobNode.reset();
             }
         });
         jobsProvider.refresh();
@@ -274,7 +272,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
         const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
-            return jobNode.label.trim()=== session;
+            return jobNode.label.trim() === session.trim();
         });
         sessionNode.dirty = true;
         jobsProvider.refresh();
@@ -632,7 +630,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !ussFileProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.label.trim()=== profileName
+                sessionNode.mProfileName === profileName
             )
         );
     } else {
@@ -1227,6 +1225,7 @@ export async function refreshAll(datasetProvider: DatasetTree) {
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === "session") {
             utils.labelHack(sessNode);
+            sessNode.children = [];
             sessNode.dirty = true;
         }
     });

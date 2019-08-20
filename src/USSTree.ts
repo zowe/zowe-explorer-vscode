@@ -119,6 +119,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             node.contextValue = "uss_session";
             node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
+            node.dirty = true;
             this.refresh();
         }
     }
@@ -130,7 +131,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public deleteSession(node: ZoweUSSNode) {
         // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
         this.refresh();
     }
 
@@ -188,9 +189,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
         element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
-        if (!isOpen) {
-            element.children = [];
-        }
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
