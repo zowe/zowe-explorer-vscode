@@ -129,7 +129,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public deleteSession(node: ZoweNode) {
         // Removes deleted session from mSessionNodes
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.refreshElement(node);
+        this.refresh();
     }
 
     /**
@@ -209,9 +209,6 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
         element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
-        if (!isOpen) {
-            element.children = [];
-        }
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }

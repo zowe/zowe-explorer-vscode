@@ -632,7 +632,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !ussFileProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.label.trim()=== profileName
+                sessionNode.mProfileName === profileName
             )
         );
     } else {
@@ -1227,6 +1227,7 @@ export async function refreshAll(datasetProvider: DatasetTree) {
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === "session") {
             utils.labelHack(sessNode);
+            sessNode.children = [];
             sessNode.dirty = true;
         }
     });

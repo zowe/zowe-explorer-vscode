@@ -142,6 +142,7 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct ZoweNodes when called and passed an element of type ZoweNode<session>", async () => {
 
+        testTree.mSessionNodes[1].dirty = true;
         // Waiting until we populate rootChildren with what getChildren return
         const sessChildren = await testTree.getChildren(testTree.mSessionNodes[1]);
         // Creating fake datasets and dataset members to test
@@ -179,7 +180,7 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct ZoweNodes when called and passed an element of type ZoweNode<pds>", async () => {
         const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
-
+        pds.dirty = true;
         // Waiting until we populate rootChildren with what getChildren return
         const pdsChildren = await testTree.getChildren(pds);
         // Creating fake datasets and dataset members to test
