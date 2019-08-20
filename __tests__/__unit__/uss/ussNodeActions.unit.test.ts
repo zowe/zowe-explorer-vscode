@@ -54,6 +54,7 @@ function getUSSTree() {
             mFavorites: [],
             addSession: mockAddUSSSession,
             refresh: mockUSSRefresh,
+            refreshAll: mockUSSRefresh,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             removeUSSFavorite: mockRemoveUSSFavorite
@@ -93,9 +94,21 @@ describe("ussNodeActions", () => {
     beforeEach(() => {
         showErrorMessage.mockReset();
         testUSSTree.refresh.mockReset();
+        testUSSTree.refreshAll.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
     });
+    describe("createUSSNodeDialog", () => {
+        it("createUSSNode is executed successfully", async () => {
+            showQuickPick.mockResolvedValueOnce("File");
+            showInputBox.mockReturnValueOnce("USSFolder");
+            await ussNodeActions.createUSSNodeDialog(ussNode, testUSSTree);
+            expect(testUSSTree.refreshAll).toHaveBeenCalled();
+            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+        });
+    });
+
     describe("createUSSNode", () => {
         it("createUSSNode is executed successfully", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
@@ -117,6 +130,21 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refreshElement).toHaveBeenCalled();
             expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
         });
+        it("createUSSNode throws an error", async () => {
+            showInputBox.mockReturnValueOnce("USSFolder");
+            showErrorMessage.mockReset();
+            testUSSTree.refreshElement.mockReset();
+            uss.mockImplementationOnce(() => {
+                throw (Error("testError"));
+            });
+            try {
+                await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
+            // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
     });
     describe("deleteUSSNode", () => {
         it("should delete node if user verified", async () => {
@@ -132,6 +160,20 @@ describe("ussNodeActions", () => {
         it("should not delete node if user cancelled", async () => {
             showQuickPick.mockResolvedValueOnce(undefined);
             await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+        });
+        it("should not delete node if an error thrown", async () => {
+            showErrorMessage.mockReset();
+            showQuickPick.mockResolvedValueOnce("Yes");
+            ussFile.mockImplementationOnce(() => {
+                throw (Error("testError"));
+            });
+            try {
+                await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
+            // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(showErrorMessage.mock.calls.length).toBe(1);
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
@@ -178,6 +220,33 @@ describe("ussNodeActions", () => {
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
         });
+        it("should execute rename USS file and and refreshAll the tree", async () => {
+            renameUSSFile.mockReset();
+            showInputBox.mockReturnValueOnce("new name");
+            ussNode.contextValue = "directory";
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "session");
+            expect(testUSSTree.refreshAll).toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+        });
+        it("should attempt rename USS file but abort with no name", async () => {
+            showInputBox.mockReturnValueOnce(undefined);
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+        });
+        it("should attempt to rename USS file but throw an error", async () => {
+            showErrorMessage.mockReset();
+            showInputBox.mockReturnValueOnce("new name");
+            renameUSSFile.mockImplementationOnce(() => {
+                throw (Error("testError"));
+            });
+            try {
+                await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
+            // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
     });
     describe("uploadFile", () => {
         Object.defineProperty(brightside, "Upload", {value: Upload});
@@ -212,6 +281,43 @@ describe("ussNodeActions", () => {
             expect(showOpenDialog).toBeCalled();
             expect(openTextDocument).toBeCalled();
             expect(testUSSTree.refresh).toBeCalled();
+        });
+        it("should attempt to upload USS file but throw an error", async () => {
+            showInputBox.mockReturnValueOnce("new name");
+            showErrorMessage.mockReset();
+            fileToUSSFile.mockReset();
+            fileToUSSFile.mockImplementationOnce(() => {
+                throw (Error("testError"));
+            });
+            const testDoc2: vscode.TextDocument = {
+                fileName: path.normalize("/sestest/tmp/foo.txt"),
+                uri: null,
+                isUntitled: null,
+                languageId: null,
+                version: null,
+                isDirty: null,
+                isClosed: null,
+                save: null,
+                eol: null,
+                lineCount: null,
+                lineAt: null,
+                offsetAt: null,
+                positionAt: null,
+                getText: null,
+                getWordRangeAtPosition: null,
+                validateRange: null,
+                validatePosition: null
+            };
+            const fileUri = {fsPath: "/tmp/foo.txt"};
+            showOpenDialog.mockReturnValue([fileUri]);
+            openTextDocument.mockResolvedValueOnce(testDoc2);
+
+            try {
+                await ussNodeActions.uploadDialog(ussNode, testUSSTree);
+            // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(showErrorMessage.mock.calls.length).toBe(1);
         });
     });
 });
