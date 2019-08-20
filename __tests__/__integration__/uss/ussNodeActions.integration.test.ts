@@ -65,17 +65,17 @@ describe("ussNodeActions integration test", async () => {
             // Then, update
             const favorites = [`[${profileName}]: /u/tester1{directory}`,
                                `[${profileName}]: /u/tester1/testfile{textfile}`,
-                               `[badProfileName]: /u/tester1{directory}`,
+                               `['badProfileName']: /u/tester1{directory}`,
                                `[${profileName}]: /u/tester2{directory}`,
                                `[${profileName}]: /u/tester2/testfile{textfile}`];
             await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await ussNodeActions.initializeUSSFavorites(testTree);
-            const ussFavoritesArray = [`[${profileName}]: /u/tester1{directory}`,
-                                    `[${profileName}]: /u/tester1/testfile{textfile}`,
-                                    `[${profileName}]: /u/tester2{directory}`,
-                                    `[${profileName}]: /u/tester2/testfile{textfile}`];
+            const ussFavoritesArray = [`[${profileName}]: tester1`,
+                                    `[${profileName}]: testfile1`,
+                                    `[${profileName}]: tester2`,
+                                    `[${profileName}]: testfile2`];
             const gotCalledOnce = showErrorStub.calledOnce;
             expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(ussFavoritesArray);
             expect(gotCalledOnce).to.equal(true);
