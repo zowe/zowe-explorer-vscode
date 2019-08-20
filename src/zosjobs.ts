@@ -94,11 +94,6 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      *
      */
     public refresh(): void {
-        this.mSessionNodes.forEach((jobNode) => {
-            if (jobNode.contextValue === "server") {
-                jobNode.dirty = true;
-            }
-        });
         this.mOnDidChangeTreeData.fire();
     }
 
@@ -142,19 +137,24 @@ export class Job extends vscode.TreeItem {
 
     public async getChildren(): Promise<Job[]> {
         if (this.dirty) {
-            this.children = [];
+            const elementChildren = [];
             if (this.contextValue === "job") {
                 const spools: zowe.IJobFile[] = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
-                    let prefix = spool.stepname;
-                    if (prefix === undefined) {
-                        prefix = spool.procstep;
+                    const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
+                    if (existing) {
+                        elementChildren.push(existing);
+                    } else {
+                        let prefix = spool.stepname;
+                        if (prefix === undefined) {
+                            prefix = spool.procstep;
+                        }
+                        const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
+                            vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
+                        spoolNode.iconPath = utils.applyIcons(spoolNode);
+                        spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.getSessionName(), spool] };
+                        elementChildren.push(spoolNode);
                     }
-                    const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
-                        vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
-                    spoolNode.iconPath = utils.applyIcons(spoolNode);
-                    spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.getSessionName(), spool] };
-                    this.children.push(spoolNode);
                 });
                 this.iconPath = utils.applyIcons(this, "open");
             } else {
@@ -166,20 +166,26 @@ export class Job extends vscode.TreeItem {
                     } else {
                         nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
                     }
-                    const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
-                    jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
-                    jobNode.contextValue = "job";
-                    if (!jobNode.iconPath) {
-                        jobNode.iconPath = utils.applyIcons(jobNode);
+                    const existing = this.children.find((element) => element.label.trim() === nodeTitle );
+                    if (existing) {
+                        elementChildren.push(existing);
+                    } else {
+                        const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
+                        jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
+                        jobNode.contextValue = "job";
+                        if (!jobNode.iconPath) {
+                            jobNode.iconPath = utils.applyIcons(jobNode);
+                        }
+                        elementChildren.push(jobNode);
                     }
-                    this.children.push(jobNode);
-                    this.children.sort((a, b) => {
-                        if (a.job.jobid > b.job.jobid) { return 1; }
-                        if (a.job.jobid < b.job.jobid) { return -1; }
-                        return 0;
-                    });
                 });
             }
+            elementChildren.sort((a, b) => {
+                if (a.job.jobid > b.job.jobid) { return 1; }
+                if (a.job.jobid < b.job.jobid) { return -1; }
+                return 0;
+            });
+            this.children = elementChildren;
         }
         this.dirty = false;
         return this.children;
@@ -223,6 +229,12 @@ export class Job extends vscode.TreeItem {
 
     get prefix() {
         return this._prefix;
+    }
+
+    public reset() {
+        utils.labelHack(this);
+        this.children = [];
+        this.dirty = true;
     }
 }
 // tslint:disable-next-line: max-classes-per-file

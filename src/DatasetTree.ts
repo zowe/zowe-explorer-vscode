@@ -128,7 +128,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public deleteSession(node: ZoweNode) {
         // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
         this.refresh();
     }
 
