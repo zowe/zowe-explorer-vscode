@@ -97,6 +97,7 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
     ussFileProvider.mSessionNodes.forEach( (sessNode) => {
         if (sessNode.contextValue === "uss_session") {
             utils.labelHack(sessNode);
+            sessNode.children = [];
             sessNode.dirty = true;
         }
     });

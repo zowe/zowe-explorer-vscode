@@ -27,6 +27,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session,null);
     sessNode.contextValue = "uss_session";
+    sessNode.dirty = true;
     const path = testConst.ussPattern;
     sessNode.fullPath = path + "/group";
 
@@ -102,6 +103,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
         // The method should throw an error.
         const nullNode = new ZoweUSSNode(null, null, null, null, null);
         nullNode.contextValue = "pds";
+        nullNode.dirty = true;
         await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
     }).timeout(TIMEOUT);
 
@@ -115,6 +117,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
         // The method should throw an error.
         const undefinedNode = new ZoweUSSNode(undefined, undefined, undefined, undefined, undefined);
         undefinedNode.contextValue = "pds";
+        undefinedNode.dirty = true;
         // tslint:disable-next-line:max-line-length
         await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
 

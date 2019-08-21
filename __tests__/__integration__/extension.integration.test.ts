@@ -345,6 +345,7 @@ describe("Extension Integration Tests", () => {
             const profiles = await testTree.getChildren();
             profiles[1].dirty = true;
             const children = await profiles[1].getChildren();
+            children[1].dirty = true;
             await extension.openPS(children[1]);
 
             const changedData = "PS Upload Test";
@@ -371,6 +372,7 @@ describe("Extension Integration Tests", () => {
             const profiles = await testTree.getChildren();
             profiles[1].dirty = true;
             const children = await profiles[1].getChildren();
+            children[0].dirty = true;
 
             // Test for member under PO
             const childrenMembers = await testTree.getChildren(children[0]);

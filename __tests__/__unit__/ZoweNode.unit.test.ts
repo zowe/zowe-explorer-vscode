@@ -60,6 +60,7 @@ describe("Unit Tests (Jest)", () => {
     it("Testing that getChildren returns the correct Thenable<ZoweNode[]>", async () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        rootNode.dirty = true;
         rootNode.contextValue = "session";
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
         let rootChildren = await rootNode.getChildren();
@@ -75,6 +76,7 @@ describe("Unit Tests (Jest)", () => {
         // Checking that the rootChildren are what they are expected to be
         expect(rootChildren).toEqual(sampleChildren);
 
+        rootNode.dirty = true;
         // Check the dirty and children variable have been set
         rootChildren = await rootNode.getChildren();
 
@@ -83,10 +85,12 @@ describe("Unit Tests (Jest)", () => {
 
         // Check that error is thrown when label is blank
         const errorNode = new ZoweNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        errorNode.dirty = true;
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
         // Check that label is different when label contains a []
         const rootNode2 = new ZoweNode("root[test]", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        rootNode2.dirty = true;
         rootChildren = await rootNode2.getChildren();
     });
 
@@ -97,7 +101,9 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.None, null, session);
         rootNode.contextValue = "session";
+        rootNode.dirty = true;
         const subNode = new ZoweNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        subNode.dirty = true;
         const subChildren = await subNode.getChildren();
 
         // Creating structure of files and folders under BRTVS99 profile
@@ -121,6 +127,7 @@ describe("Unit Tests (Jest)", () => {
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
             rootNode.contextValue = "session";
             rootNode.pattern = "THROW ERROR";
+            rootNode.dirty = true;
             await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
                 "Error: Throwing an error to check error handling for unit tests!\n"));
         });
@@ -133,7 +140,9 @@ describe("Unit Tests (Jest)", () => {
             // Creating a rootNode
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
             rootNode.contextValue = "session";
+            rootNode.dirty = true;
             const subNode = new ZoweNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+            subNode.dirty = true;
             await expect(subNode.getChildren()).rejects.toEqual(Error("The response from Zowe CLI was not successful"));
         });
 

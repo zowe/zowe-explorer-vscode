@@ -156,7 +156,7 @@ describe("Unit Tests (Jest)", () => {
      * Tests that getChildren() method returns an array of all child nodes of passed ZoweUSSNode
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<session>", async () => {
-
+        testTree.mSessionNodes[1].dirty = true;
         // Waiting until we populate rootChildren with what getChildren return
         const sessChildren = await testTree.getChildren(testTree.mSessionNodes[1]);
         // Creating fake datasets and uss members to test
@@ -190,7 +190,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct ZoweUSSNodes when called and passed an element of type ZoweUSSNode<directory>", async () => {
         const directory = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, null);
-
+        directory.dirty = true;
         // Waiting until we populate rootChildren with what getChildren return
         const dirChildren = await testTree.getChildren(directory);
         // Creating fake directory and files to test

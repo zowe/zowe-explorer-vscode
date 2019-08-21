@@ -105,7 +105,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
         if (zosmfProfile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
 
@@ -128,8 +128,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public deleteSession(node: ZoweNode) {
         // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.refreshElement(node);
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        this.refresh();
     }
 
     /**
@@ -209,9 +209,6 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
         element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
-        if (!isOpen) {
-            element.children = [];
-        }
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
