@@ -12,9 +12,10 @@
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
-import * as brightside from "@brightside/core";
+import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as utils from "../../../src/utils";
+import * as profileLoader from "../../../src/ProfileLoader";
 import * as path from "path";
 
 const Create = jest.fn();
@@ -36,6 +37,7 @@ const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
+const createBasicZosmfSession = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -65,20 +67,31 @@ function getUSSTree() {
     return testUSSTree1;
 }
 
+// const session = new brtimperative.Session({
+//     user: "fake",
+//     password: "fake",
+//     hostname: "fake",
+//     protocol: "https",
+//     type: "basic",
+// });
+
 const session = new brtimperative.Session({
-    user: "fake",
-    password: "fake",
+    base64EncodedAuth: "",
     hostname: "fake",
+    password: "fake",
+    port: 2,
     protocol: "https",
+    rejectUnauthorized: false,
     type: "basic",
+    user: "fake",
 });
 
 const ussNode = getUSSNode();
 const testUSSTree = getUSSTree();
 
-Object.defineProperty(brightside, "Create", { value: Create });
-Object.defineProperty(brightside, "Delete", { value: Delete });
-Object.defineProperty(brightside, "Utilities", { value: Utilities });
+Object.defineProperty(zowe, "Create", { value: Create });
+Object.defineProperty(zowe, "Delete", { value: Delete });
+Object.defineProperty(zowe, "Utilities", { value: Utilities });
 Object.defineProperty(Create, "uss", { value: uss });
 Object.defineProperty(Delete, "ussFile", { value: ussFile });
 Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
@@ -88,6 +101,7 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -136,6 +150,11 @@ describe("ussNodeActions", () => {
         });
     });
     describe("initializingUSSFavorites", () => {
+        // const ZosmfSession = jest.fn();
+
+        // const createBasicZosmfSession = jest.fn();
+        // Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+
         it("initializeUSSFavorites is executed successfully", async () => {
             getConfiguration.mockReturnValueOnce({
                 get: (setting: string) => [
@@ -143,8 +162,23 @@ describe("ussNodeActions", () => {
                     "[test]: /u/myFile.txt{textFile}",
                 ]
             });
+            spyOn(profileLoader, "loadNamedProfile").and.returnValue({profile: {
+                base64EncodedAuth: "",
+                hostname: "fake",
+                password: "fake",
+                port: 2,
+                protocol: "https",
+                rejectUnauthorized: false,
+                type: "basic",
+                user: "fake",
+            }});
+            // spyOn(profileLoader, "loadNamedProfile").and.returnValue(undefined);
+
+            createBasicZosmfSession.mockReturnValue(session);
+
             // createBasicZosmfSession.mockReturnValue(session);
-            spyOn(utils, "getSession").and.returnValue(session);
+            // spyOn(utils, "getSession").and.returnValue(session);
+            // spyOn(zowe.ZosmfSession, "createBasicZosmfSession").and.returnValue(session);
             await ussNodeActions.initializeUSSFavorites(testUSSTree);
             expect(testUSSTree.mFavorites.length).toBe(2);
 
@@ -180,7 +214,7 @@ describe("ussNodeActions", () => {
         });
     });
     describe("uploadFile", () => {
-        Object.defineProperty(brightside, "Upload", {value: Upload});
+        Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
 
         it("should call upload dialog and upload file", async () => {
