@@ -13,14 +13,9 @@
 import * as zowe from "@brightside/core";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import * as extension from "../../../src/extension";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 import * as sinon from "sinon";
 import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
-import { CliProfileManager } from "@brightside/imperative";
 import { USSTree } from "../../../src/USSTree";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";

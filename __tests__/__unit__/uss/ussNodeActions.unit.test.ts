@@ -14,7 +14,6 @@ import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
-import * as utils from "../../../src/utils";
 import * as profileLoader from "../../../src/ProfileLoader";
 import * as path from "path";
 
@@ -139,11 +138,6 @@ describe("ussNodeActions", () => {
         });
     });
     describe("initializingUSSFavorites", () => {
-        // const ZosmfSession = jest.fn();
-
-        // const createBasicZosmfSession = jest.fn();
-        // Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
-
         it("initializeUSSFavorites is executed successfully", async () => {
             getConfiguration.mockReturnValueOnce({
                 get: (setting: string) => [
@@ -151,23 +145,8 @@ describe("ussNodeActions", () => {
                     "[test]: /u/myFile.txt{textFile}",
                 ]
             });
-            spyOn(profileLoader, "loadNamedProfile").and.returnValue({profile: {
-                base64EncodedAuth: "",
-                hostname: "fake",
-                password: "fake",
-                port: 2,
-                protocol: "https",
-                rejectUnauthorized: false,
-                type: "basic",
-                user: "fake",
-            }});
-            // spyOn(profileLoader, "loadNamedProfile").and.returnValue(undefined);
-
+            spyOn(profileLoader, "loadNamedProfile").and.returnValue({profile: session});
             createBasicZosmfSession.mockReturnValue(session);
-
-            // createBasicZosmfSession.mockReturnValue(session);
-            // spyOn(utils, "getSession").and.returnValue(session);
-            // spyOn(zowe.ZosmfSession, "createBasicZosmfSession").and.returnValue(session);
             await ussNodeActions.initializeUSSFavorites(testUSSTree);
             expect(testUSSTree.mFavorites.length).toBe(2);
 
