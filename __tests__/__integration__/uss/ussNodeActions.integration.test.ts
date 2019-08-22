@@ -64,10 +64,10 @@ describe("ussNodeActions integration test", async () => {
             testTree.mFavorites = [];
             // Then, update
             const favorites = [`[${profileName}]: /u/tester1{directory}`,
-                               `[${profileName}]: /u/tester1/testfile{textfile}`,
+                               `[${profileName}]: /u/tester1/testfile1{textfile}`,
                                `['badProfileName']: /u/tester1{directory}`,
                                `[${profileName}]: /u/tester2{directory}`,
-                               `[${profileName}]: /u/tester2/testfile{textfile}`];
+                               `[${profileName}]: /u/tester2/testfile2{textfile}`];
             await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");

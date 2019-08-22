@@ -67,23 +67,12 @@ function getUSSTree() {
     return testUSSTree1;
 }
 
-// const session = new brtimperative.Session({
-//     user: "fake",
-//     password: "fake",
-//     hostname: "fake",
-//     protocol: "https",
-//     type: "basic",
-// });
-
 const session = new brtimperative.Session({
-    base64EncodedAuth: "",
-    hostname: "fake",
-    password: "fake",
-    port: 2,
-    protocol: "https",
-    rejectUnauthorized: false,
-    type: "basic",
     user: "fake",
+    password: "fake",
+    hostname: "fake",
+    protocol: "https",
+    type: "basic",
 });
 
 const ussNode = getUSSNode();
