@@ -31,6 +31,7 @@
     "submitJcl": "Zowe: Submit JCL",
     "submitMember": "Submit Job",
     "uss.addSession": "Zowe: Add Profile",
+    "uss.copyPath": "Copy Path",
     "uss.createDirectory": "Create New Directory",
     "uss.createNode": "Create new file or directory",
     "uss.fullPath": "Search Unix System Services (USS) by Entering a Path",
