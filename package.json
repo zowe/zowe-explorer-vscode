@@ -881,7 +881,8 @@
         "Zowe-Persistent-Favorites": {
           "default": {
             "persistence": true,
-            "favorites": []
+            "favorites": [],
+            "history": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",
           "scope": "window"
@@ -896,7 +897,8 @@
         "Zowe-USS-Persistent-Favorites": {
           "default": {
             "persistence": true,
-            "favorites": []
+            "favorites": [],
+            "history": []
           },
           "description": "%Zowe-Default-Datasets-Persistent-Favorites%",
           "scope": "window"

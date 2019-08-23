@@ -69,5 +69,5 @@ export function applyIcons(node: TreeItem, state?: string ): any {
  * @param {vscode.TreeItem} node - the node element
  */
 export function labelHack( node: TreeItem ): void {
-    node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
+    // node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }

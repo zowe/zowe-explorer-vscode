@@ -137,42 +137,6 @@ export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
         catch (err) {}
 }
 
-export async function initializeUSSFavorites(ussFileProvider: USSTree) {
-    const lines: string[] = vscode.workspace.getConfiguration("Zowe-USS-Persistent-Favorites").get("favorites");
-    lines.forEach(async (line) => {
-        const profileName = line.substring(1, line.lastIndexOf("]"));
-        const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
-        const session = await utils.getSession(profileName);
-        let node: ZoweUSSNode;
-        if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "directory") {
-        node = new ZoweUSSNode(
-            nodeName,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            ussFileProvider.mFavoriteSession,
-            session,
-            "",
-            false,
-            profileName
-        );
-        } else {
-            node = new ZoweUSSNode(
-                nodeName,
-                vscode.TreeItemCollapsibleState.None,
-                ussFileProvider.mFavoriteSession,
-                session,
-                "",
-                false,
-                profileName
-            );
-            node.command = {command: "zowe.uss.ZoweUSSNode.open",
-                            title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
-        }
-        node.contextValue += "f";
-        node.iconPath = utils.applyIcons(node);
-        ussFileProvider.mFavorites.push(node);
-    });
-}
-
 export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
     const fileOpenOptions = {
         canSelectFiles: true,

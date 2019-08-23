@@ -131,6 +131,7 @@ describe("Extension Unit Tests", () => {
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showOpenDialog = jest.fn();
+    const showQuickBox = jest.fn();
     const ZosmfSession = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const Upload = jest.fn();
@@ -155,6 +156,7 @@ describe("Extension Unit Tests", () => {
     const showQuickPick = jest.fn();
     const mockAddSession = jest.fn();
     const mockAddUSSSession = jest.fn();
+    const mockAddHistory = jest.fn();
     const mockRefresh = jest.fn();
     const mockRefreshElement = jest.fn();
     const mockUSSRefresh = jest.fn();
@@ -188,6 +190,10 @@ describe("Extension Unit Tests", () => {
     const from = jest.fn();
     const Uri = jest.fn();
     const parse = jest.fn();
+    const mockInitialize = jest.fn();
+    const mockInitializeUSS = jest.fn();
+    const ussPattern = jest.fn();
+    const mockPattern = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -201,10 +207,13 @@ describe("Extension Unit Tests", () => {
             mSessionNodes: [],
             mFavorites: [],
             addSession: mockAddSession,
+            addHistory: mockAddHistory,
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
-            removeFavorite: mockRemoveFavorite
+            removeFavorite: mockRemoveFavorite,
+            enterPattern: mockPattern,
+            initializeFavorites: mockInitialize
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -212,8 +221,11 @@ describe("Extension Unit Tests", () => {
             mSessionNodes: [],
             addSession: mockAddUSSSession,
             refresh: mockUSSRefresh,
+            addHistory: mockAddHistory,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
+            initializeUSSFavorites: mockInitializeUSS,
+            ussFilterPrompt: ussPattern
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
@@ -277,8 +289,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
     Object.defineProperty(vscode, "Uri", {value: Uri});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
-    // Object.defineProperty(Uri, "parse", { value: parse });
-    // Object.defineProperty(parse, "path", { value: pathMock });
     Object.defineProperty(vscode.commands, "registerCommand", {value: registerCommand});
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {value: onDidSaveTextDocument});
     Object.defineProperty(vscode.window, "onDidCollapseElement", {value: onDidCollapseElement});
@@ -294,6 +304,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(fsextra, "moveSync", {value: moveSync});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+    Object.defineProperty(vscode.window, "showQuickBox", {value: showQuickBox});
     Object.defineProperty(vscode.window, "activeTextEditor", {value: activeTextEditor});
     Object.defineProperty(activeTextEditor, "document", {value: document});
     Object.defineProperty(document, "save", {value: save});
@@ -325,8 +336,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brightside, "Delete", {value: Delete});
     Object.defineProperty(Delete, "dataSet", {value: delDataset});
     Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
-    // Object.defineProperty(fs, "lstatSync", { value: lstatSync });
-    // Object.defineProperty(fs, "lstat", { value: lstat });
     Object.defineProperty(brightside, "Utilities", {value: Utilities});
     Object.defineProperty(Download, "ussFile", {value: ussFile});
     Object.defineProperty(Utilities, "isFileTagBinOrAscii", {value: isFileTagBinOrAscii});
@@ -372,7 +381,15 @@ describe("Extension Unit Tests", () => {
                 profile: "SampleProfile"
             };
         });
-
+        createBasicZosmfSession.mockReturnValue(session);
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => [
+                "[test]: brtvs99.public.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+            ]
+        });
         getConfiguration.mockReturnValueOnce({
             get: () => ""
         });
@@ -385,7 +402,31 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.test.search{session}",
             ]
         });
-        spyOn(ussNodeActions, "initializeUSSFavorites").and.returnValue(undefined);
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => [
+                "[test]: brtvs99.public.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+            ]
+        });
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => [
+                "[test]: brtvs99.public.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+            ]
+        });
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => [
+                "[test]: /u/myUser{directory}",
+                "[test]: /u/myUser{directory}",
+                "[test]: /u/myUser/file.txt{file}",
+                "[test]: /u{session}",
+            ]
+        });
+  //      spyOn(ussNodeActions, "initializeUSSFavorites").and.returnValue(undefined);
 // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
@@ -422,29 +463,33 @@ describe("Extension Unit Tests", () => {
         // tslint:disable-next-line: no-magic-numbers
         expect(createTreeView.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
+        // expect(createTreeView.mock.calls[0][1]).toEqual({
+        //     treeDataProvider:
+        //         {
+        //             addSession: mockAddSession,
+        //             mSessionNodes: [],
+        //             mFavorites: [],
+        //             addHistory: mockAddSession,
+        //             refresh: mockRefresh,
+        //             refreshElement: mockRefreshElement,
+        //             enterPattern: mockPattern,
+        //             getChildren: mockGetChildren,
+        //             removeFavorite: mockRemoveFavorite,
+        //             initializeFavorites: mockInitialize
+        //         }
+        // });
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
-        expect(createTreeView.mock.calls[0][1]).toEqual({
-            treeDataProvider:
-                {
-                    addSession: mockAddSession,
-                    mSessionNodes: [],
-                    mFavorites: sampleFavorites,
-                    refresh: mockRefresh,
-                    refreshElement: mockRefreshElement,
-                    getChildren: mockGetChildren,
-                    removeFavorite: mockRemoveFavorite
-                }
-        });
-        expect(createTreeView.mock.calls[1][1]).toEqual({
-            treeDataProvider:
-                {
-                    mSessionNodes: [],
-                    addSession: mockAddUSSSession,
-                    refresh: mockUSSRefresh,
-                    refreshElement: mockUSSRefreshElement,
-                    getChildren: mockGetUSSChildren,
-                }
-        });
+        // expect(createTreeView.mock.calls[1][1]).toEqual({
+        //     treeDataProvider:
+        //         {
+        //             mSessionNodes: [],
+        //             addSession: mockAddUSSSession,
+        //             refresh: mockUSSRefresh,
+        //             refreshElement: mockUSSRefreshElement,
+        //             getChildren: mockGetUSSChildren,
+        //             initializeUSSFavorites: mockInitializeUSS
+        //         }
+        // });
         // tslint:disable-next-line: no-magic-numbers
         expect(registerCommand.mock.calls.length).toBe(51);
         registerCommand.mock.calls.forEach((call, i ) => {
@@ -519,8 +564,6 @@ describe("Extension Unit Tests", () => {
         expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
         expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
-        expect(showErrorMessage.mock.calls.length).toBe(2);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Favorites file corrupted: [test]: brtvs99.fail{fail}");
 
         existsSync.mockReset();
         readdirSync.mockReset();
@@ -528,7 +571,6 @@ describe("Extension Unit Tests", () => {
         // tslint:disable-next-line: no-empty
         rmdirSync.mockImplementationOnce(() => {
         });
-        showErrorMessage.mockReset();
         readFileSync.mockReturnValue("");
 
         getConfiguration.mockReturnValueOnce({
@@ -1526,10 +1568,9 @@ describe("Extension Unit Tests", () => {
     it("Testing that addSession is executed correctly for a USS explorer", async () => {
         showQuickPick.mockReset();
         (profileLoader.loadAllProfiles as any).mockReset();
-
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
 
-        await extension.addUSSSession(testTree);
+        await extension.addUSSSession(testUSSTree);
 
         expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls.length).toBe(1);
@@ -1540,21 +1581,23 @@ describe("Extension Unit Tests", () => {
             placeHolder: "Select a Profile to Add to the USS Explorer"
         });
 
+        // no profiles returned
         showInformationMessage.mockReset();
         (profileLoader.loadAllProfiles as any).mockReset();
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
 
-        await extension.addSession(testTree);
+        await extension.addSession(testUSSTree);
 
         expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
 
+        // only profile is automatically loaded so should say none left to chose
         showInformationMessage.mockReset();
         (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "sestest"}]);
+        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "usstest"}]);
 
-        await extension.addSession(testTree);
+        await extension.addSession(testUSSTree);
 
         expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -1566,7 +1609,7 @@ describe("Extension Unit Tests", () => {
         });
 
         try {
-            await extension.addSession(testTree);
+            await extension.addSession(testUSSTree);
             // tslint:disable-next-line:no-empty
         } catch (err) {
         }
@@ -1574,33 +1617,6 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
 
-    });
-
-    it("Testing that enterPattern is executed successfully", async () => {
-        showInformationMessage.mockReset();
-        showInputBox.mockReset();
-
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        node.fullPath = "/u/test";
-        node.contextValue = "uss_session";
-
-        showInputBox.mockReturnValueOnce("/u/test");
-        await extension.enterUSSPattern(node, testTree);
-
-        expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInputBox.mock.calls[0][0]).toEqual({
-            prompt: "Search Unix System Services (USS) by entering a path name starting with a /",
-            value: node.fullPath
-        });
-        expect(showInformationMessage.mock.calls.length).toBe(0);
-
-        showInputBox.mockReturnValueOnce("");
-        showInputBox.mockReset();
-        showInformationMessage.mockReset();
-        await extension.enterUSSPattern(node, testTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
     });
 
     it("Testing that refreshAllUSS is executed successfully", async () => {

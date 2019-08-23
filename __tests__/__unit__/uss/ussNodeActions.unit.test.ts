@@ -16,6 +16,7 @@ import * as brightside from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as utils from "../../../src/utils";
 import * as path from "path";
+import * as fs from "fs";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -28,6 +29,7 @@ const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
 const mockRemoveUSSFavorite = jest.fn();
+const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
 const showQuickPick = jest.fn();
@@ -36,6 +38,7 @@ const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
+const existsSync = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -57,7 +60,8 @@ function getUSSTree() {
             refreshAll: mockUSSRefresh,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
-            removeUSSFavorite: mockRemoveUSSFavorite
+            removeUSSFavorite: mockRemoveUSSFavorite,
+            initializeUSSFavorites: mockInitializeFavorites
         };
     });
     const testUSSTree1 = USSTree();
@@ -89,6 +93,7 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+Object.defineProperty(fs, "existsSync", {value: existsSync});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -97,6 +102,7 @@ describe("ussNodeActions", () => {
         testUSSTree.refreshAll.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
+        existsSync.mockReturnValue(true);
     });
     describe("createUSSNodeDialog", () => {
         it("createUSSNode is executed successfully", async () => {
@@ -177,35 +183,7 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
-    describe("initializingUSSFavorites", () => {
-        it("initializeUSSFavorites is executed successfully", async () => {
-            getConfiguration.mockReturnValueOnce({
-                get: (setting: string) => [
-                    "[test]: /u/aDir{directory}",
-                    "[test]: /u/myFile.txt{textFile}",
-                ]
-            });
-            // createBasicZosmfSession.mockReturnValue(session);
-            spyOn(utils, "getSession").and.returnValue(session);
-            await ussNodeActions.initializeUSSFavorites(testUSSTree);
-            expect(testUSSTree.mFavorites.length).toBe(2);
 
-            const expectedUSSFavorites: ZoweUSSNode[] = [
-                new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, session, "",
-                    false, "test"),
-                new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, session, "",
-                    false, "test"),
-            ];
-
-            expectedUSSFavorites.map((node) => node.contextValue += "f");
-            expectedUSSFavorites.forEach((node) => {
-                if (node.contextValue !== "directoryf") {
-                    node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
-                }
-            });
-            expect(testUSSTree.mFavorites).toEqual(expectedUSSFavorites);
-        });
-    });
     describe("renameUSSNode", () => {
         it("should exit if blank input is provided", () => {
             showInputBox.mockReturnValueOnce("");

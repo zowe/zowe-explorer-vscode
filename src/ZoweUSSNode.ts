@@ -26,7 +26,7 @@ import * as utils from "./utils";
 export class ZoweUSSNode extends vscode.TreeItem {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = false;
+    public dirty = true;
     public children: ZoweUSSNode[] = [];
     public binaryFiles = {};
     public profileName = "";
@@ -88,6 +88,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
 
         if (!this.dirty) {
+            if (this.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                this.children = [];
+            }
             return this.children;
         }
 
