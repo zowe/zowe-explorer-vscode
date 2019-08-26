@@ -200,3 +200,12 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
         vscode.window.showErrorMessage(e.message);
     }
 }
+
+/**
+ * Copies full path for the selected Zowe USS node
+ *
+ * @param {ZoweUSSNode} node
+ */
+export async function copyPath(node: ZoweUSSNode) {
+    vscode.env.clipboard.writeText(node.fullPath);
+}
