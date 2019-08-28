@@ -11,6 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
+import { Logger } from "@brightside/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -18,7 +19,6 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { USSTree } from "../../../src/USSTree";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
-import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -66,7 +66,7 @@ describe("ussNodeActions integration test", async () => {
             await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await ussNodeActions.initializeUSSFavorites(testTree);
+            await testTree.initialize(Logger.getAppLogger());
             const ussFavoritesArray = [`[${profileName}]: tester1`,
                                     `[${profileName}]: testfile1`,
                                     `[${profileName}]: tester2`,
