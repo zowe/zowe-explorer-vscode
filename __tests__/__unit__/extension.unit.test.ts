@@ -2190,7 +2190,13 @@ describe("Extension Unit Tests", () => {
                     vols:"3BP001"}]
             }
         };
-
+        const emptyResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: []
+            }
+        };
         createWebviewPanel.mockReturnValue({
                webview: {
                     html: ""
@@ -2203,14 +2209,23 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls[0][1]).toBe(node.label);
         expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
 
-        // mimic a favorite and no attributes
+        // mock a favorite
         dataSetList.mockReturnValueOnce(testResponse);
         dataSetList.mockRestore();
-        const node1 = new ZoweNode("[session]: AUSER.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node1 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node1.contextValue = "pdsf";
+        expect(dataSetList.mock.calls.length).toBe(1);
+
+        // mock a response and no attributes
+        showErrorMessage.mockReset();
+        dataSetList.mockReset();
+        dataSetList.mockReturnValueOnce(emptyResponse);
         await expect(extension.showDSAttributes(node1, testTree)).rejects.toEqual(
-            Error("No matching data set names found for query: AUSER.A996850.TEST1"));
-    });
+            Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(
+            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
+     });
 
     it("tests the issueTsoCommand function", async () => {
         showQuickPick.mockReset();
