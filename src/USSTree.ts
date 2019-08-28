@@ -292,37 +292,51 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
         const lines: string[] = this.mHistory.readFavorites();
-        lines.forEach(async (line) => {
+        lines.forEach((line) => {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
-            const session = await utils.getSession(profileName);
-            let node: ZoweUSSNode;
-            if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "directory") {
-            node = new ZoweUSSNode(
-                nodeName,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                this.mFavoriteSession,
-                session,
-                "",
-                false,
-                profileName
-            );
-            } else {
-                node = new ZoweUSSNode(
-                    nodeName,
-                    vscode.TreeItemCollapsibleState.None,
-                    this.mFavoriteSession,
-                    session,
-                    "",
-                    false,
-                    profileName
-                );
-                node.command = {command: "zowe.uss.ZoweUSSNode.open",
-                                title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
-            }
-            node.contextValue += "f";
-            node.iconPath = utils.applyIcons(node);
-            this.mFavorites.push(node);
+            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
+            try {
+                const zosmfProfile = loadNamedProfile(sesName);
+                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+                let node: ZoweUSSNode;
+                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "directory") {
+                    node = new ZoweUSSNode(
+                        nodeName,
+                        vscode.TreeItemCollapsibleState.Collapsed,
+                        this.mFavoriteSession,
+                        session,
+                        "",
+                        false,
+                        profileName
+                    );
+                } else {
+                    node = new ZoweUSSNode(
+                        nodeName,
+                        vscode.TreeItemCollapsibleState.None,
+                        this.mFavoriteSession,
+                        session,
+                        "",
+                        false,
+                        profileName
+                    );
+                    node.command = {command: "zowe.uss.ZoweUSSNode.open",
+                                    title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
+                }
+                node.contextValue += "f";
+                node.iconPath = utils.applyIcons(node);
+                this.mFavorites.push(node);
+        } catch(e) {
+            vscode.window.showErrorMessage(
+                localize("initializeUSSFavorites.error.profile1",
+                "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
+                localize("intializeUSSFavorites.error.profile2",
+                ". To resolve this, you can create a profile with this name, ") +
+                localize("initializeUSSFavorites.error.profile3",
+                "or remove the favorites with this profile name from the Zowe-USS-Persistent-Favorites setting, ") +
+                localize("initializeUSSFavorites.error.profile4", "which can be found in your VS Code user settings."));
+            return;
+        }
         });
     }
 }
