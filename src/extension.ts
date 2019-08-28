@@ -1144,20 +1144,32 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
         if (favoriteDataSetPattern.test(line)) {
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-            const zosmfProfile = loadNamedProfile(sesName);
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            let node: ZoweNode;
-            if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
-                node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
-                    datasetProvider.mFavoriteSession, session);
-            } else {
-                node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
-                    datasetProvider.mFavoriteSession, session);
-                node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
+            try {
+                const zosmfProfile = loadNamedProfile(sesName);
+                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+                let node: ZoweNode;
+                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
+                    node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
+                        datasetProvider.mFavoriteSession, session);
+                } else {
+                    node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
+                        datasetProvider.mFavoriteSession, session);
+                    node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
+                }
+                node.contextValue += "f";
+                node.iconPath = utils.applyIcons(node);
+                datasetProvider.mFavorites.push(node);
+            } catch(e) {
+                vscode.window.showErrorMessage(
+                    localize("initializeFavorites.error.profile1",
+                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                    localize("intializeFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ") +
+                    localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                continue;
             }
-            node.contextValue += "f";
-            node.iconPath = utils.applyIcons(node);
-            datasetProvider.mFavorites.push(node);
         } else if (favoriteSearchPattern.test(line)) {
             const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
                 vscode.TreeItemCollapsibleState.None, datasetProvider.mFavoriteSession, null);
