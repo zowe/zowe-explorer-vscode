@@ -54,12 +54,17 @@ Array [
   },
   Object {
     "command": "zowe.uss.deleteNode",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
   },
   Object {
+    "command": "zowe.uss.copyPath",
+    "group": "5_copyPath",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
+  },
+  Object {
     "command": "zowe.uss.renameNode",
-    "group": "5_modification@0",
+    "group": "6_modification@0",
     "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
   },
   Object {
@@ -134,7 +139,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteMember",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.explorer && viewItem == member",
   },
   Object {
@@ -169,7 +174,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteMember",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.explorer && viewItem == memberf",
   },
   Object {
@@ -194,7 +199,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteDataset",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.explorer && viewItem == ds",
   },
   Object {
@@ -244,7 +249,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteDataset",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.explorer && viewItem == dsf",
   },
   Object {
@@ -264,7 +269,7 @@ Array [
   },
   Object {
     "command": "zowe.deletePDS",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.explorer && viewItem == pds",
   },
   Object {
@@ -289,7 +294,7 @@ Array [
   },
   Object {
     "command": "zowe.deletePDS",
-    "group": "5_modification@1",
+    "group": "6_modification@1",
     "when": "view == zowe.explorer && viewItem == pdsf",
   },
   Object {
