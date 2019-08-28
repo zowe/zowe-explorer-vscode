@@ -910,7 +910,7 @@
           },
           "description": "%Zowe-Environment%",
           "scope": "window"
-        }        
+        }
       }
     }
   },
