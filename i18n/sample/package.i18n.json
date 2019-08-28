@@ -63,5 +63,6 @@
     "Zowe-Dataset-Search-History": "Toggle if hiatory files persist locally",
     "Zowe-Temp-Folder-Loacation": "Path to temporary folder location",
     "Zowe-Default-Datasets-Persistent-Favorites": "Toggle is favorite files exist locally",
+    "Zowe-Environment": "Environment where the extension is running, default is VSCode",
     "issueTsoCmd": "Zowe: Issue TSO Command..."
 }

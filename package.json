@@ -902,7 +902,15 @@
           },
           "description": "%Zowe-Default-Datasets-Persistent-Favorites%",
           "scope": "window"
-        }
+        },
+        "Zowe-Environment": {
+          "default": {
+            "persistence": true,
+            "framework": "vscode"
+          },
+          "description": "%Zowe-Environment%",
+          "scope": "window"
+        }        
       }
     }
   },

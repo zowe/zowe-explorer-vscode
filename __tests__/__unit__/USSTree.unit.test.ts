@@ -55,7 +55,10 @@ describe("Unit Tests (Jest)", () => {
         get: (setting: string) => [
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
-        ]
+        ],
+        update: jest.fn(()=>{
+            return {};
+        })
     });
     // Filter prompt
     const showInformationMessage = jest.fn();
@@ -63,6 +66,7 @@ describe("Unit Tests (Jest)", () => {
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
+    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
@@ -73,6 +77,11 @@ describe("Unit Tests (Jest)", () => {
     testTree.mSessionNodes[1].contextValue = "uss_session";
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+
+    afterEach(async () => {
+        getConfiguration.mockClear();
+    });
+
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -285,12 +294,6 @@ describe("Unit Tests (Jest)", () => {
     });
 
     it("initialize USSTree is executed successfully", async () => {
-        getConfiguration.mockReturnValueOnce({
-            get: (setting: string) => [
-                "[test]: /u/aDir{directory}",
-                "[test]: /u/myFile.txt{textFile}",
-            ]
-        });
         // const testUSSTree = new USSTree();
         // createBasicZosmfSession.mockReturnValue(session);
         spyOn(utils, "getSession").and.returnValue(session);
@@ -317,7 +320,7 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * USS Filter prompts
      *************************************************************************************************************/
-    it.only("Testing that user filter prompts are executed successfully", async () => {
+    it("Testing that user filter prompts are executed successfully", async () => {
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
@@ -328,7 +331,8 @@ describe("Unit Tests (Jest)", () => {
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/myFiles");
 
-        // Assert edge condition user cancels the input box
+        // Assert edge condition user cancels the input path box
+        showInformationMessage.mockReset();
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
         showInputBox.mockReturnValueOnce(undefined);
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
@@ -340,29 +344,44 @@ describe("Unit Tests (Jest)", () => {
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
 
-        // Mock user selecting first string from list
-        const filterList = [" -- Specify Filter -- ", "/u/thisFile" ];
+        showInformationMessage.mockReset();
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce(undefined);
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+    /*************************************************************************************************************
+     * Testing the onDidConfiguration
+     *************************************************************************************************************/
+    it("Testing the onDidConfiguration", async () => {
+        getConfiguration.mockReturnValue({
+            get: (setting: string) => [
+                "[test]: /u/aDir{directory}",
+                "[test]: /u/myFile.txt{textFile}",
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
+        });
+        const mockAffects = jest.fn();
+        const Event = jest.fn().mockImplementation(() => {
+            return {
+                affectsConfiguration: mockAffects
+            };
+        });
+        const e = new Event();
+        mockAffects.mockReturnValue(true);
 
-        // filter = spyOn(testTree)
-        // const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, undefined, null, null);
-        // node.fullPath = "/u/test";
-        // node.contextValue = "uss_session";
-
-        // showInputBox.mockReturnValueOnce("/u/test");
-        // await testTree.ussFilterPrompt(node);
-
-        // expect(showInputBox.mock.calls.length).toBe(1);
-        // expect(showInputBox.mock.calls[0][0]).toEqual({
-        //     prompt: "Search Unix System Services (USS) by entering a path name starting with a /",
-        //     value: node.fullPath
-        // });
-        // expect(showInformationMessage.mock.calls.length).toBe(0);
-
-        // showInputBox.mockReturnValueOnce("");
-        // showInputBox.mockReset();
-        // showInformationMessage.mockReset();
-        // await testTree.ussFilterPrompt(node);
-
-
+        const enums = jest.fn().mockImplementation(() => {
+            return {
+                Global: 1,
+                Workspace: 2,
+                WorkspaceFolder: 3
+            };
+        });
+        Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
+        await testTree.onDidChangeConfiguration(e);
+        expect(getConfiguration.mock.calls.length).toBe(2);
     });
 });

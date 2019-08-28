@@ -19,7 +19,6 @@ import { PersistentFilters } from "./PersistentFilters";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
-
 /**
  * Creates the USS tree that contains nodes of sessions and data sets
  *
@@ -224,7 +223,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                 setting.favorites = [];
                 setting.history = [];
                 await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema,
-                    setting, vscode.ConfigurationTarget.Global); // MISSED
+                    setting, vscode.ConfigurationTarget.Global);
             }
         }
     }
@@ -245,6 +244,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         if (this.log) {
             this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
+        const sessionNode = node.getSessionNode();
         let remotepath: string = USSTree.defaultDialogText;
 
         const modItems = Array.from(this.mHistory.getHistory());
@@ -267,7 +267,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             const options: vscode.InputBoxOptions = {
                 prompt: localize("ussFilterPrompt.option.prompt.search",
                     "Search Unix System Services (USS) by entering a path name starting with a /"),
-                value: node.fullPath
+                value: sessionNode.fullPath
             };
             // get user input
             remotepath = await vscode.window.showInputBox(options);
@@ -279,15 +279,12 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
 
         // Sanitization: Replace multiple preceding forward slashes with just one forward slash
         const sanitizedPath = remotepath.replace(/\/\/+/, "/");
-        node.tooltip = node.fullPath = sanitizedPath;
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.iconPath = utils.applyIcons(node, "open");
+        sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        sessionNode.iconPath = utils.applyIcons(sessionNode, "open");
         // update the treeview with the new path
-        // TODO figure out why a label change is needed to refresh the treeview,
-        // instead of changing the collapsible state
-        // change label so the treeview updates
-        node.label = `${node.mProfileName} [${sanitizedPath}]`;
-        node.dirty = true;
+        sessionNode.label = `${sessionNode.mProfileName} [${sanitizedPath}]`;
+        sessionNode.dirty = true;
         this.addHistory(sanitizedPath);
     }
 

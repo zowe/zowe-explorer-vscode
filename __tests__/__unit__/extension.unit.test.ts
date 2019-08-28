@@ -382,14 +382,23 @@ describe("Extension Unit Tests", () => {
             };
         });
         createBasicZosmfSession.mockReturnValue(session);
+        // .get("Zowe-Temp-Folder-Location")["folderPath"];
         getConfiguration.mockReturnValueOnce({
-            get: (setting: string) => [
-                "[test]: brtvs99.public.test{pds}",
-                "[test]: brtvs99.test{ds}",
-                "[test]: brtvs99.fail{fail}",
-                "[test]: brtvs99.test.search{session}",
-            ]
+            get: () => "folderpath"
         });
+        // getConfiguration.mockReturnValueOnce({
+        //     get: (setting: string) => [
+        //         "[test]: brtvs99.public.test{pds}",
+        //         "[test]: brtvs99.test{ds}",
+        //         "[test]: brtvs99.fail{fail}",
+        //         "[test]: brtvs99.test.search{session}",
+        //     ]
+        // });
+        // getConfiguration("Zowe-Environment").get("framework");
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => "vscode"
+        });
+
         getConfiguration.mockReturnValueOnce({
             get: () => ""
         });
@@ -572,11 +581,14 @@ describe("Extension Unit Tests", () => {
         rmdirSync.mockImplementationOnce(() => {
         });
         readFileSync.mockReturnValue("");
-
+        // .get("Zowe-Temp-Folder-Location")["folderPath"];
         getConfiguration.mockReturnValueOnce({
             get: () => ""
         });
-
+        // getConfiguration("Zowe-Environment").get("framework");
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => undefined
+        });
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
@@ -617,7 +629,10 @@ describe("Extension Unit Tests", () => {
         unlinkSync.mockImplementationOnce(() => {
             throw (Error("testError"));
         });
-
+        // getConfiguration("Zowe-Environment").get("framework");
+        getConfiguration.mockReturnValueOnce({
+            get: (setting: string) => "theia"
+        });
         await extension.activate(mock);
     });
 

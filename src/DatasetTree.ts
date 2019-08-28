@@ -272,7 +272,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace.getConfiguration().update(DatasetTree.persistenceSchema, setting, vscode.ConfigurationTarget.Global); // MISSED
+                await vscode.workspace.getConfiguration().update(DatasetTree.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
             }
         }
     }
@@ -315,24 +315,15 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     return;
                 }
             }
-        } else {
-            // executing search from saved search in favorites
-            pattern = node.label.substring(node.label.indexOf(":") + 2);
-            const session = node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]"));
-            await this.addSession(this.log, session);
-            node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+            // update the treeview with the new pattern
+            node.label = node.label.trim()+ " ";
+            node.label.trim();
+            node.tooltip = node.pattern = pattern.toUpperCase();
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            node.dirty = true;
+            node.iconPath = utils.applyIcons(node, "open");
+            this.addHistory(node.pattern);
         }
-        // update the treeview with the new pattern
-        // TODO figure out why a label change is needed to refresh the treeview,
-        // instead of changing the collapsible state
-        // change label so the treeview updates
-        node.label = node.label.trim()+ " ";
-        node.label.trim();
-        node.tooltip = node.pattern = pattern.toUpperCase();
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.dirty = true;
-        node.iconPath = utils.applyIcons(node, "open");
-        this.addHistory(node.pattern);
     }
 
     /**
