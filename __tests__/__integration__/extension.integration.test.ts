@@ -488,6 +488,29 @@ describe("Extension Integration Tests", () => {
             const gotCalled = showErrorStub.calledWith("Favorites file corrupted: " + corruptedFavorite);
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
+
+      it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+            const profileName = testConst.profile.name;
+            // Reset testTree's favorites to be empty
+            testTree.mFavorites = [];
+            // Then, update
+            const favorites = [`[${profileName}]: ${pattern}.EXT.PDS{pds}`,
+                               `[${profileName}]: ${pattern}.EXT.PS{ds}`,
+                               `['badProfileName']: ${pattern}.EXT.PS{ds}`,
+                               `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
+                               `[${profileName}]: ${pattern}.EXT{session}`];
+            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+                { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
+            const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
+            await extension.initializeFavorites(testTree);
+            const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
+                                    `[${profileName}]: ${pattern}.EXT.PS`,
+                                    `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
+                                    `[${profileName}]: ${pattern}.EXT`];
+            const gotCalledOnce = showErrorStub.calledOnce;
+            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
+            expect(gotCalledOnce).to.equal(true);
+        }).timeout(TIMEOUT);
     });
 });
 
