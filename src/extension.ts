@@ -1205,8 +1205,8 @@ export async function openPS(node: ZoweNode) {
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening data set..."
-                }, () => {
-                return zowe.Download.dataSet(node.getSession(), label, {
+            }, function downloadDataset() {
+                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
                     file: getDocumentFilePath(label, node)
                 });
             });
@@ -1544,8 +1544,8 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
             await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "Opening USS file...",
-        }, () => {
-            return zowe.Download.ussFile(node.getSession(), node.fullPath, {
+        }, function downloadUSSFile() {
+            return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
                 file: getUSSDocumentFilePath(node),
                 binary: chooseBinary
             });

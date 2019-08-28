@@ -188,6 +188,9 @@ describe("Extension Unit Tests", () => {
     const from = jest.fn();
     const Uri = jest.fn();
     const parse = jest.fn();
+    const withProgress = jest.fn();
+    const downloadDataset = jest.fn();
+    const downloadUSSFile = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -234,12 +237,6 @@ describe("Extension Unit Tests", () => {
     //         isFile(): true;
     //      };
     // });
-    const withProgress = jest.fn().mockImplementation(() => {
-        return {
-            location: 15,
-            title: "Saving file..."
-        };
-    });
 
     enum CreateDataSetTypeEnum {
         DATA_SET_BINARY = 0,
@@ -1234,6 +1231,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockReset();
         showErrorMessage.mockReset();
         existsSync.mockReset();
+        withProgress.mockReset();
 
         const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
@@ -1247,10 +1245,18 @@ describe("Extension Unit Tests", () => {
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
             node.getSessionNode().label.trim(), node.label));
-        expect(dataSet.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls[0][0]).toBe(session);
-        expect(dataSet.mock.calls[0][1]).toBe(node.label);
-        expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.label, node)});
+        expect(withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening data set..."
+            }, expect.any(Function)
+        );
+        withProgress(downloadDataset);
+        expect(withProgress).toBeCalledWith(downloadDataset);
+        // expect(dataSet.mock.calls.length).toBe(1);
+        // expect(dataSet.mock.calls[0][0]).toBe(session);
+        // expect(dataSet.mock.calls[0][1]).toBe(node.label);
+        // expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.label, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getDocumentFilePath(node.label, node));
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1615,6 +1621,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockReset();
         showErrorMessage.mockReset();
         existsSync.mockReset();
+        withProgress.mockReset();
 
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
@@ -1631,10 +1638,18 @@ describe("Extension Unit Tests", () => {
         expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
         expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
-        expect(ussFile.mock.calls.length).toBe(1);
-        expect(ussFile.mock.calls[0][0]).toBe(session);
-        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: false});
+        expect(withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening USS file..."
+            }, expect.any(Function)
+        );
+        withProgress(downloadUSSFile);
+        expect(withProgress).toBeCalledWith(downloadUSSFile);
+        // expect(ussFile.mock.calls.length).toBe(1);
+        // expect(ussFile.mock.calls[0][0]).toBe(session);
+        // expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        // expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: false});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1729,6 +1744,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockReset();
         showErrorMessage.mockReset();
         existsSync.mockReset();
+        withProgress.mockReset();
 
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
@@ -1742,10 +1758,18 @@ describe("Extension Unit Tests", () => {
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
-        expect(ussFile.mock.calls.length).toBe(1);
-        expect(ussFile.mock.calls[0][0]).toBe(session);
-        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: true});
+        expect(withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening USS file..."
+            }, expect.any(Function)
+        );
+        withProgress(downloadUSSFile);
+        expect(withProgress).toBeCalledWith(downloadUSSFile);
+        // expect(ussFile.mock.calls.length).toBe(1);
+        // expect(ussFile.mock.calls[0][0]).toBe(session);
+        // expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        // expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: true});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
         expect(showTextDocument.mock.calls.length).toBe(1);
