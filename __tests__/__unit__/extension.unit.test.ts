@@ -2210,10 +2210,11 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
 
         // mock a favorite
+        dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
-        dataSetList.mockRestore();
         const node1 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node1.contextValue = "pdsf";
+        await extension.showDSAttributes(node1, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
 
         // mock a response and no attributes
