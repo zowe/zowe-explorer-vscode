@@ -33,7 +33,6 @@ jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
-// jest.mock("ProfileLoader");
 
 describe("Extension Unit Tests", () => {
     // Globals
@@ -113,8 +112,6 @@ describe("Extension Unit Tests", () => {
     const getAllProfileNames = jest.fn();
     const createTreeView = jest.fn();
     const createWebviewPanel = jest.fn();
-    // const Uri = jest.fn();
-    // const parse = jest.fn();
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
@@ -126,8 +123,6 @@ describe("Extension Unit Tests", () => {
     const unlinkSync = jest.fn();
     const rmdirSync = jest.fn();
     const readFileSync = jest.fn();
-    // const lstatSync = jest.fn();
-    // const lstat = jest.fn();
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showOpenDialog = jest.fn();
@@ -238,14 +233,6 @@ describe("Extension Unit Tests", () => {
         };
     });
 
-    // const lstatSync = jest.fn().mockImplementation(() => {
-    //     return { lstat };
-    // });
-    // const lstat = jest.fn().mockImplementation(() => {
-    //     return {
-    //         isFile(): true;
-    //      };
-    // });
     const withProgress = jest.fn().mockImplementation(() => {
         return {
             location: 15,
@@ -365,12 +352,7 @@ describe("Extension Unit Tests", () => {
         isFile.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
         readdirSync.mockReturnValue([]);
-        // lstatSync.mockReturnValue(lstat);
         isFile.mockReturnValueOnce(false);
-        // rmdirSync.mockImplementationOnce(() => {
-        //     throw Error;
-        // });
-        // parse.mockReturnValue({path: "lame"});
         (profileLoader.loadNamedProfile as any).mockImplementation(() => {
             return {
                 profile: "SampleProfile"
@@ -382,19 +364,9 @@ describe("Extension Unit Tests", () => {
             };
         });
         createBasicZosmfSession.mockReturnValue(session);
-        // .get("Zowe-Temp-Folder-Location")["folderPath"];
         getConfiguration.mockReturnValueOnce({
             get: () => "folderpath"
         });
-        // getConfiguration.mockReturnValueOnce({
-        //     get: (setting: string) => [
-        //         "[test]: brtvs99.public.test{pds}",
-        //         "[test]: brtvs99.test{ds}",
-        //         "[test]: brtvs99.fail{fail}",
-        //         "[test]: brtvs99.test.search{session}",
-        //     ]
-        // });
-        // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => "vscode"
         });
@@ -435,7 +407,6 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u{session}",
             ]
         });
-  //      spyOn(ussNodeActions, "initializeUSSFavorites").and.returnValue(undefined);
 // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
@@ -466,39 +437,12 @@ describe("Extension Unit Tests", () => {
             dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),
             light: path.join(__dirname, "..", "..", "..", "resources", "light", "pattern.svg")
         };
-        // expect(createBasicZosmfSession.mock.calls.length).toBe(2);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(3);
         // tslint:disable-next-line: no-magic-numbers
         expect(createTreeView.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
-        // expect(createTreeView.mock.calls[0][1]).toEqual({
-        //     treeDataProvider:
-        //         {
-        //             addSession: mockAddSession,
-        //             mSessionNodes: [],
-        //             mFavorites: [],
-        //             addHistory: mockAddSession,
-        //             refresh: mockRefresh,
-        //             refreshElement: mockRefreshElement,
-        //             enterPattern: mockPattern,
-        //             getChildren: mockGetChildren,
-        //             removeFavorite: mockRemoveFavorite,
-        //             initializeFavorites: mockInitialize
-        //         }
-        // });
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
-        // expect(createTreeView.mock.calls[1][1]).toEqual({
-        //     treeDataProvider:
-        //         {
-        //             mSessionNodes: [],
-        //             addSession: mockAddUSSSession,
-        //             refresh: mockUSSRefresh,
-        //             refreshElement: mockUSSRefreshElement,
-        //             getChildren: mockGetUSSChildren,
-        //             initializeUSSFavorites: mockInitializeUSS
-        //         }
-        // });
         // tslint:disable-next-line: no-magic-numbers
         expect(registerCommand.mock.calls.length).toBe(51);
         registerCommand.mock.calls.forEach((call, i ) => {
@@ -2258,6 +2202,14 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSetList.mock.calls[0][1]).toBe(node.label);
         expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
+
+        // mimic a favorite and no attributes
+        dataSetList.mockReturnValueOnce(testResponse);
+        dataSetList.mockRestore();
+        const node1 = new ZoweNode("[session]: AUSER.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node1.contextValue = "pdsf";
+        await expect(extension.showDSAttributes(node1, testTree)).rejects.toEqual(
+            Error("No matching data set names found for query: AUSER.A996850.TEST1"));
     });
 
     it("tests the issueTsoCommand function", async () => {

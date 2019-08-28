@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Call cleanTempDir before continuing
     // this is to handle if the application crashed on a previous execution and
     // VSC didn't get a chance to call our deactivate to cleanup.
-    await cleanTempDir();
+    await deactivate();
 
     try {
         fs.mkdirSync(BRIGHTTEMPFOLDER);
@@ -756,7 +756,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
 
     let label = parent.label.trim();
     if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
-        label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
+        label = parent.label.substring(parent.label.indexOf(":") + 2);
     }
 
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
