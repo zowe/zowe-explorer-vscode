@@ -1214,8 +1214,13 @@ export async function openPS(node: ZoweNode) {
         log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (!fs.existsSync(getDocumentFilePath(label, node))) {
-            await zowe.Download.dataSet(node.getSession(), label, {
-                file: getDocumentFilePath(label, node)
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening data set..."
+            }, function downloadDataset() {
+                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING.
+                    file: getDocumentFilePath(label, node)
+                });
             });
         }
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
@@ -1548,10 +1553,16 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
             const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
-            await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Opening USS file...",
+        }, function downloadUSSFile() {
+            return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
                 file: getUSSDocumentFilePath(node),
                 binary: chooseBinary
             });
+        }
+            );
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
         await vscode.window.showTextDocument(document);
