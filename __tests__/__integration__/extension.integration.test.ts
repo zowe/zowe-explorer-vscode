@@ -11,6 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
+import { Logger, CliProfileManager } from "@brightside/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -20,8 +21,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
-import { CliProfileManager } from "@brightside/imperative";
-import { DatasetTree } from "../../src/DatasetTree";
+import { DatasetTree, createDatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
@@ -452,13 +452,15 @@ describe("Extension Integration Tests", () => {
 
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
+            const log = Logger.getAppLogger();
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
-            await extension.initializeFavorites(testTree);
-            expect(testTree.mFavorites).to.deep.equal([]);
+            const testTree3 = await createDatasetTree(log);
+            expect(testTree3.mFavorites).to.deep.equal([]);
         }).timeout(TIMEOUT);
 
         it("should work when provided a valid Favorites list", async () => {
+            const log = Logger.getAppLogger();
             const profileName = testConst.profile.name;
             const favorites = [`[${profileName}]: ${pattern}.EXT.PDS{pds}`,
                                `[${profileName}]: ${pattern}.EXT.PS{ds}`,
@@ -466,27 +468,28 @@ describe("Extension Integration Tests", () => {
                                `[${profileName}]: ${pattern}.EXT{session}`];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
-            await extension.initializeFavorites(testTree);
+            const testTree3 = await createDatasetTree(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
                                     `[${profileName}]: ${pattern}.EXT.PS`,
                                     `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
                                     `[${profileName}]: ${pattern}.EXT`];
-            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
+            expect(testTree3.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
         }).timeout(TIMEOUT);
 
         it("should show an error message when provided an invalid Favorites list", async () => {
+            const log = Logger.getAppLogger();
             const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
 
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await extension.initializeFavorites(testTree);
+            await createDatasetTree(log);
             const gotCalled = showErrorStub.calledWith("Favorites file corrupted: " + corruptedFavorite);
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
 
-        it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+      it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
@@ -620,36 +623,41 @@ describe("Extension Integration Tests - USS", () => {
 
     describe("Enter USS Pattern", () => {
         it("should output path that match the user-provided path", async () => {
-            const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
-            inputBoxStub.returns(fullUSSPath);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(" -- Specify Filter -- ");
+            const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
+            inputBoxStub2.returns(fullUSSPath);
 
-            await extension.enterUSSPattern(ussSessionNode, ussTestTree);
+            await ussTestTree.ussFilterPrompt(ussSessionNode);
 
             expect(ussTestTree.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
             expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
             expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            // const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
+            const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
 
-            // const childrenFromTree = await ussSessionNode.getChildren();
-            // childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
+            const childrenFromTree = await ussSessionNode.getChildren();
+            childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            // for (const child of childrenFromTree) {
-            //     await ussTestTreeView.reveal(child);
-            //     expect(child).to.deep.equal(ussTestTreeView.selection[0]);
-            // }
+            for (const child of childrenFromTree) {
+                await ussTestTreeView.reveal(child);
+                expect(child).to.deep.equal(ussTestTreeView.selection[0]);
+            }
         }).timeout(TIMEOUT);
 
         it("should pop up a message if the user doesn't enter a USS path", async () => {
-            const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
-            inputBoxStub.returns("");
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(" -- Specify Filter -- ");
+            const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
+            inputBoxStub2.returns("");
 
-            const showInfoStub = sandbox.spy(vscode.window, "showInformationMessage");
-            await extension.enterUSSPattern(ussSessionNode, ussTestTree);
-            const gotCalled = showInfoStub.calledWith("You must enter a path.");
+            const showInfoStub2 = sandbox.spy(vscode.window, "showInformationMessage");
+            await ussTestTree.ussFilterPrompt(ussSessionNode);
+            const gotCalled = showInfoStub2.calledWith("You must enter a path.");
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
     });
+
     describe("Saving a USS File", () => {
 
         it("should download, change, and re-upload a file", async () => {

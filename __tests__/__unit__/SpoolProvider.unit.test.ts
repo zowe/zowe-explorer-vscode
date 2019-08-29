@@ -12,7 +12,6 @@
 import * as spoolprovider from "../../src/SpoolProvider";
 import * as brightside from "@brightside/core";
 import * as vscode from "vscode";
-import * as brtimperative from "@brightside/imperative";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("SpoolProvider Unit Tests", () => {
@@ -48,6 +47,9 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
 
     it("Tests that the URI is encoded", () => {
         const uriMock = jest.fn();

@@ -881,7 +881,8 @@
         "Zowe-Persistent-Favorites": {
           "default": {
             "persistence": true,
-            "favorites": []
+            "favorites": [],
+            "history": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",
           "scope": "window"
@@ -896,9 +897,18 @@
         "Zowe-USS-Persistent-Favorites": {
           "default": {
             "persistence": true,
-            "favorites": []
+            "favorites": [],
+            "history": []
           },
           "description": "%Zowe-Default-Datasets-Persistent-Favorites%",
+          "scope": "window"
+        },
+        "Zowe-Environment": {
+          "default": {
+            "persistence": true,
+            "framework": "vscode"
+          },
+          "description": "%Zowe-Environment%",
           "scope": "window"
         }
       }
