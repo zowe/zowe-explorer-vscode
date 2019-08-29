@@ -23,7 +23,7 @@ import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("DatasetTree Unit Tests", () => {
-    // Globals
+
     const session = new Session({
         user: "fake",
         password: "fake",
@@ -49,22 +49,41 @@ describe("DatasetTree Unit Tests", () => {
         })
     });
 
-
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value:
-            jest.fn(()=>{
-                return {
-                    get: jest.fn(()=>{
-                        return {};
-                    })
-                };
-            })
+    // Filter prompt
+    const showInformationMessage = jest.fn();
+    const showInputBox = jest.fn();
+    const showQuickPick = jest.fn();
+    const filters = jest.fn();
+    const getFilters = jest.fn();
+    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+    Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+    Object.defineProperty(filters, "getFilters", { value: getFilters });
+    getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
+    const getConfiguration = jest.fn();
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    getConfiguration.mockReturnValue({
+        get: (setting: string) => [
+            "[test]: brtvs99.public.test{pds}",
+            "[test]: brtvs99.test{ds}",
+            "[test]: brtvs99.fail{fail}",
+            "[test]: brtvs99.test.search{session}",
+        ],
+        update: jest.fn(()=>{
+            return {};
+        })
     });
+
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
     testTree.mSessionNodes[1].contextValue = "session";
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+
+    afterEach(async () => {
+        getConfiguration.mockClear();
+    });
+
     /*************************************************************************************************************
      * Creates a datasetTree and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -246,6 +265,16 @@ describe("DatasetTree Unit Tests", () => {
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(3);
 
+        // Test adding member already present
+        parent.contextValue = "pdsf";
+        member.contextValue = "member";
+        await testTree.addFavorite(member);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("PDS already in favorites");
+
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(3);
+
         /*************************************************************************************************************
         * Testing that removeFavorite works properly
         *************************************************************************************************************/
@@ -279,4 +308,76 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
     });
+
+     /*************************************************************************************************************
+     * USS Filter prompts
+     *************************************************************************************************************/
+    it("Testing that user filter prompts are executed successfully", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        showInformationMessage.mockReset();
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
+
+        // Assert choosing the new filter specification followed by a path
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual("session");
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+
+        // Assert edge condition user cancels the input path box
+        showInformationMessage.mockReset();
+        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showInputBox.mockReturnValueOnce(undefined);
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
+
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce("HLQ.PROD2.STUFF");
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
+
+        // Assert edge condition user cancels the quick pick
+        showInformationMessage.mockReset();
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce(undefined);
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+    /*************************************************************************************************************
+     * Testing the onDidConfiguration
+     *************************************************************************************************************/
+    it("Testing the onDidConfiguration", async () => {
+        getConfiguration.mockReturnValue({
+            get: (setting: string) => [
+                "[test]: HLQ.PROD2{directory}",
+                "[test]: HLQ.PROD2{textFile}",
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
+        });
+        const mockAffects = jest.fn();
+        const Event = jest.fn().mockImplementation(() => {
+            return {
+                affectsConfiguration: mockAffects
+            };
+        });
+        const e = new Event();
+        mockAffects.mockReturnValue(true);
+
+        const enums = jest.fn().mockImplementation(() => {
+            return {
+                Global: 1,
+                Workspace: 2,
+                WorkspaceFolder: 3
+            };
+        });
+        Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
+        await testTree.onDidChangeConfiguration(e);
+        expect(getConfiguration.mock.calls.length).toBe(2);
+    });
+
 });

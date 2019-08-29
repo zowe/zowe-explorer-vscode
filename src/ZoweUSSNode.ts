@@ -14,6 +14,7 @@ import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import * as extension from "../src/extension";
 import * as utils from "./utils";
 
 /**
@@ -26,7 +27,7 @@ import * as utils from "./utils";
 export class ZoweUSSNode extends vscode.TreeItem {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = false;
+    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     public children: ZoweUSSNode[] = [];
     public binaryFiles = {};
     public profileName = "";
@@ -88,6 +89,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
 
         if (!this.dirty) {
+            if (this.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                this.children = [];
+            }
             return this.children;
         }
 
@@ -160,7 +164,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 }
             }
         });
-        this.dirty = false;
+        if (this.contextValue === "uss_session") {
+            this.dirty = false;
+        }
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
     }
 

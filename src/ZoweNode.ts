@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
+import * as extension from "../src/extension";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -26,7 +27,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 export class ZoweNode extends vscode.TreeItem {
     public command: vscode.Command;
     public pattern = "";
-    public dirty = false;
+    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     public children: ZoweNode[] = [];
 
     /**
@@ -135,7 +136,7 @@ export class ZoweNode extends vscode.TreeItem {
         });
 
         this.dirty = false;
-        if(Object.keys(elementChildren).length === 0) {
+        if (Object.keys(elementChildren).length === 0) {
             return this.children = [new ZoweNode(localize("getChildren.noDataset", "No datasets found"),
             vscode.TreeItemCollapsibleState.None, this, null, true)];
         } else {

@@ -17,6 +17,18 @@ import { IJob, IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 import * as utils from "./utils";
 
+
+/**
+ * Creates the Job tree that contains nodes of sessions, jibs and spool items
+ *
+ * @export
+ */
+export async function createJobsTree(log: Logger) {
+    const tree = new ZosJobsProvider();
+    await tree.addSession(log);
+    return tree;
+}
+
 export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public mSessionNodes: Job[] = [];
 
