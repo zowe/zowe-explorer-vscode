@@ -1218,7 +1218,7 @@ export async function openPS(node: ZoweNode) {
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening data set..."
             }, function downloadDataset() {
-                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING.
+                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
                     file: getDocumentFilePath(label, node)
                 });
             });
