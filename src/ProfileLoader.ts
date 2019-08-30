@@ -51,7 +51,8 @@ export function loadNamedProfile(name: string): IProfileLoaded {
             return profile;
         }
     }
-    throw new Error(localize("loadNamedProfile.error.profileName", "Couldn't find profile named: ") + name);
+    throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
+        + name + localize("loadNamedProfile.error.period", "."));
 }
 
 /**

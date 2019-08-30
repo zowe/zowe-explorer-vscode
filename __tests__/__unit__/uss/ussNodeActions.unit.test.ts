@@ -12,9 +12,9 @@
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
-import * as brightside from "@brightside/core";
+import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
-import * as utils from "../../../src/utils";
+import * as profileLoader from "../../../src/ProfileLoader";
 import * as path from "path";
 
 const Create = jest.fn();
@@ -37,6 +37,7 @@ const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
+const createBasicZosmfSession = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -77,9 +78,9 @@ const session = new brtimperative.Session({
 const ussNode = getUSSNode();
 const testUSSTree = getUSSTree();
 
-Object.defineProperty(brightside, "Create", { value: Create });
-Object.defineProperty(brightside, "Delete", { value: Delete });
-Object.defineProperty(brightside, "Utilities", { value: Utilities });
+Object.defineProperty(zowe, "Create", { value: Create });
+Object.defineProperty(zowe, "Delete", { value: Delete });
+Object.defineProperty(zowe, "Utilities", { value: Utilities });
 Object.defineProperty(Create, "uss", { value: uss });
 Object.defineProperty(Delete, "ussFile", { value: ussFile });
 Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
@@ -90,6 +91,7 @@ Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfigur
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
 Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
+Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -145,8 +147,8 @@ describe("ussNodeActions", () => {
                     "[test]: /u/myFile.txt{textFile}",
                 ]
             });
-            // createBasicZosmfSession.mockReturnValue(session);
-            spyOn(utils, "getSession").and.returnValue(session);
+            spyOn(profileLoader, "loadNamedProfile").and.returnValue({profile: session});
+            createBasicZosmfSession.mockReturnValue(session);
             await ussNodeActions.initializeUSSFavorites(testUSSTree);
             expect(testUSSTree.mFavorites.length).toBe(2);
 
@@ -182,7 +184,7 @@ describe("ussNodeActions", () => {
         });
     });
     describe("uploadFile", () => {
-        Object.defineProperty(brightside, "Upload", {value: Upload});
+        Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
 
         it("should call upload dialog and upload file", async () => {
