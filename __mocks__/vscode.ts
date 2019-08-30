@@ -377,7 +377,7 @@ export namespace workspace {
 		 */
         readonly index: number;
     }
-    
+
 }
 
 export interface InputBoxOptions {
@@ -388,3 +388,12 @@ export interface TextDocument {
     fileName?: string;
 }
 
+/**
+* Namespace describing the environment the editor runs in.
+*/
+export namespace env {
+    /**
+     * The application name of the editor, like 'VS Code'.
+     */
+    export const appName = "Visual Studio Code"
+}
