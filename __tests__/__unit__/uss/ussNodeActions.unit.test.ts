@@ -36,6 +36,7 @@ const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
+const writeText = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -88,6 +89,7 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -212,6 +214,12 @@ describe("ussNodeActions", () => {
             expect(showOpenDialog).toBeCalled();
             expect(openTextDocument).toBeCalled();
             expect(testUSSTree.refresh).toBeCalled();
+        });
+    });
+    describe("copyPath", () => {
+        it("should copy the node's full path to the system clipboard", async () => {
+            await ussNodeActions.copyPath(ussNode);
+            expect(writeText).toBeCalledWith(ussNode.fullPath);
         });
     });
 });

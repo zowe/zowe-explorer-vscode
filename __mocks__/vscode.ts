@@ -388,3 +388,27 @@ export interface TextDocument {
     fileName?: string;
 }
 
+/**
+	* The clipboard provides read and write access to the system's clipboard.
+	*/
+	export interface Clipboard {
+
+		/**
+		 * Writes text into the clipboard.
+		 * @returns A thenable that resolves when writing happened.
+		 */
+		writeText(value: string): Thenable<void>;
+	}
+
+/**
+	* Namespace describing the environment the editor runs in.
+	*/
+	export namespace env {
+
+		/**
+		 * The system clipboard.
+		 */
+        export const clipboard: Clipboard = {
+            writeText(){ return Promise.resolve();}
+        };
+    }
