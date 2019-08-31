@@ -13,6 +13,7 @@
 import * as zowe from "@brightside/core";
 import { Logger } from "@brightside/imperative";
 import * as chai from "chai";
+import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
@@ -35,6 +36,24 @@ describe("USSTree Integration Tests", async () => {
     sessNode.fullPath = path;
     const testTree = new USSTree();
     testTree.mSessionNodes.splice(-1, 0, sessNode);
+    let sandbox;
+
+    beforeEach(async function() {
+        this.timeout(TIMEOUT);
+        sandbox = sinon.createSandbox();
+    });
+
+    afterEach(async function() {
+        this.timeout(TIMEOUT);
+        sandbox.restore();
+    });
+
+    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent-Favorites");
+
+    after(async () => {
+        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
+    });
+
 
     /*************************************************************************************************************
      * Creates a USSTree and checks that its members are all initialized by the constructor

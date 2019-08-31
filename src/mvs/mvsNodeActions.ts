@@ -13,6 +13,12 @@ import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
+import { loadNamedProfile } from "../ProfileLoader";
+import * as utils from "../utils";
+import * as nls from "vscode-nls";
+import * as path from "path";
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {

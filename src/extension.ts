@@ -16,12 +16,12 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
-import { DatasetTree } from "./DatasetTree";
-import { USSTree } from "./USSTree";
+import { DatasetTree, createDatasetTree } from "./DatasetTree";
+import { ZosJobsProvider, Job, createJobsTree } from "./zosjobs";
+import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
-import { ZosJobsProvider, Job } from "./zosjobs";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
 import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
@@ -30,10 +30,12 @@ import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
+
 // Globals
 export let BRIGHTTEMPFOLDER;
 export let USS_DIR;
 export let DS_DIR;
+export let ISTHEIA: boolean = false; // set during activate
 
 let log: Logger;
 /**
@@ -43,18 +45,22 @@ let log: Logger;
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
+    const theia = "theia";
     // Get temp folder location from settings
     let preferencesTempPath: string =
         vscode.workspace.getConfiguration()
         /* tslint:disable:no-string-literal */
         .get("Zowe-Temp-Folder-Location")["folderPath"];
 
+    const fwk: string = vscode.workspace.getConfiguration("Zowe-Environment").get("framework");
+    ISTHEIA = fwk && fwk.toLowerCase() === theia;
+
     defineGlobals(preferencesTempPath);
 
     // Call cleanTempDir before continuing
     // this is to handle if the application crashed on a previous execution and
     // VSC didn't get a chance to call our deactivate to cleanup.
-    await cleanTempDir();
+    await deactivate();
 
     try {
         fs.mkdirSync(BRIGHTTEMPFOLDER);
@@ -80,47 +86,68 @@ export async function activate(context: vscode.ExtensionContext) {
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        // Initialize dataset provider with the created session and the selected pattern
-        datasetProvider = new DatasetTree();
-        await datasetProvider.addSession(log);
-        // Initialize file provider with the created session and the selected fullPath
-        ussFileProvider = new USSTree();
-        await ussFileProvider.addSession(log);
+        // Initialize dataset provider
+        datasetProvider = await createDatasetTree(log);
+        // Initialize uss provider
+        ussFileProvider = await createUSSTree(log);
+        // Initialize Jobs provider with the created session and the selected pattern
+        jobsProvider = await createJobsTree(log);
+
     } catch (err) {
         log.error(localize("initialize.log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
     }
 
-    await initializeFavorites(datasetProvider);
-    await ussActions.initializeUSSFavorites(ussFileProvider);
-
     if (datasetProvider) {
         // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
         const disposable1 = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
         context.subscriptions.push(disposable1);
-        disposable1.onDidCollapseElement( async (e) => {
-            datasetProvider.flipState(e.element, false);
-        });
-        disposable1.onDidExpandElement( async (e) => {
-            datasetProvider.flipState(e.element, true);
-        });
+        if (!ISTHEIA) {
+            disposable1.onDidCollapseElement( async (e) => {
+                datasetProvider.flipState(e.element, false);
+            });
+            disposable1.onDidExpandElement( async (e) => {
+                datasetProvider.flipState(e.element, true);
+            });
+        }
     }
     if (ussFileProvider) {
         const disposable2 = vscode.window.createTreeView("zowe.uss.explorer", { treeDataProvider: ussFileProvider });
         context.subscriptions.push(disposable2);
-        disposable2.onDidCollapseElement( async (e) => {
-            ussFileProvider.flipState(e.element, false);
-        });
-        disposable2.onDidExpandElement( async (e) => {
-            ussFileProvider.flipState(e.element, true);
-        });
+        if (!ISTHEIA) {
+            disposable2.onDidCollapseElement( async (e) => {
+                ussFileProvider.flipState(e.element, false);
+            });
+            disposable2.onDidExpandElement( async (e) => {
+                ussFileProvider.flipState(e.element, true);
+            });
+        }
     }
 
+    let jobView;
+    if (jobsProvider) {
+        jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
+        context.subscriptions.push(jobView);
+        if (!ISTHEIA) {
+            jobView.onDidCollapseElement( async (e: { element: Job; }) => {
+                jobsProvider.flipState(e.element, false);
+            });
+            jobView.onDidExpandElement( async (e: { element: Job; }) => {
+                jobsProvider.flipState(e.element, true);
+            });
+        }
+    }
+
+    const spoolProvider = new SpoolProvider();
+    const providerRegistration = vscode.Disposable.from(
+        vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
+    );
+    context.subscriptions.push(spoolProvider, providerRegistration);
     vscode.commands.registerCommand("zowe.addSession", async () => addSession(datasetProvider));
     vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
-    vscode.commands.registerCommand("zowe.pattern", (node) => enterPattern(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
         log.debug(localize("onDidSaveTextDocument1",
@@ -154,13 +181,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
     vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-        if (e.affectsConfiguration("Zowe-Persistent-Favorites")) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get("Zowe-Persistent-Favorites") };
-            if (!setting.persistence) {
-                setting.favorites = [];
-                await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", setting, vscode.ConfigurationTarget.Global); // MISSED
-            }
-        }
+        datasetProvider.onDidChangeConfiguration(e);
     });
 
     vscode.workspace.onDidChangeConfiguration((e) => {
@@ -183,7 +204,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
     vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
-    vscode.commands.registerCommand("zowe.uss.fullPath", (node) => enterUSSPattern(node, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.fullPath", (node) => ussFileProvider.ussFilterPrompt(node));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
@@ -199,41 +220,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-        if (e.affectsConfiguration("Zowe-USS-Persistent-Favorites")) {
-            const ussSetting: any = { ...vscode.workspace.getConfiguration().get("Zowe-USS-Persistent-Favorites") };
-            if (!ussSetting.persistence) {
-                ussSetting.favorites = [];
-                await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", ussSetting, vscode.ConfigurationTarget.Global);
-            }
-        }
+        ussFileProvider.onDidChangeConfiguration(e);
     });
-
-    // JES
-    try {
-        // Initialize dataset provider with the created session and the selected pattern
-        jobsProvider = new ZosJobsProvider();
-        await jobsProvider.addSession(log);
-    } catch (err) {
-        vscode.window.showErrorMessage(err.message);
-    }
-
-    let jobView;
-    if (jobsProvider) {
-        jobView = vscode.window.createTreeView("zowe.jobs", { treeDataProvider: jobsProvider });
-        context.subscriptions.push(jobView);
-        jobView.onDidCollapseElement( async (e) => {
-            jobsProvider.flipState(e.element, false);
-        });
-        jobView.onDidExpandElement( async (e) => {
-            jobsProvider.flipState(e.element, true);
-        });
-    }
-
-    const spoolProvider = new SpoolProvider();
-    const providerRegistration = vscode.Disposable.from(
-        vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider)
-    );
-    context.subscriptions.push(spoolProvider, providerRegistration);
 
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
@@ -769,7 +757,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
 
     let label = parent.label.trim();
     if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
-        label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
+        label = parent.label.substring(parent.label.indexOf(":") + 2);
     }
 
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
@@ -994,43 +982,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
     node.iconPath = utils.applyIcons(node, "open");
-    datasetProvider.refresh();
-}
-
-/**
- * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
- *
- * @param {ZoweUSSNode} node - The session node
- * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
- * @returns {Promise<void>}
- */
-export async function enterUSSPattern(node: ZoweUSSNode, ussFileProvider: USSTree) {
-    log.debug(localize("enterUSSPattern.log.debug.promptUSSPath", "Prompting the user for a USS path"));
-    let remotepath: string;
-    // manually entering a search
-    const options: vscode.InputBoxOptions = {
-        prompt: localize("enterUSSPattern.option.prompt.search", "Search Unix System Services (USS) by entering a path name starting with a /"),
-        value: node.fullPath
-    };
-    // get user input
-    remotepath = await vscode.window.showInputBox(options);
-    if (!remotepath) {
-        vscode.window.showInformationMessage(localize("enterUSSPattern.enterPath", "You must enter a path."));
-        return;
-    }
-
-    // Sanitization: Replace multiple preceding forward slashes with just one forward slash
-    const sanitizedPath = remotepath.replace(/\/\/+/, "/");
-    node.tooltip = node.fullPath = sanitizedPath;
-    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-    node.iconPath = utils.applyIcons(node, "open");
-    // update the treeview with the new path
-    // TODO figure out why a label change is needed to refresh the treeview,
-    // instead of changing the collapsible state
-    // change label so the treeview updates
-    node.label = `${node.mProfileName} [${sanitizedPath}]`;
-    node.dirty = true;
-    ussFileProvider.refresh();
+    datasetProvider.addHistory(node.pattern);
 }
 
 /**
@@ -1215,8 +1167,13 @@ export async function openPS(node: ZoweNode) {
         log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (!fs.existsSync(getDocumentFilePath(label, node))) {
-            await zowe.Download.dataSet(node.getSession(), label, {
-                file: getDocumentFilePath(label, node)
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening data set..."
+            }, function downloadDataset() {
+                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
+                    file: getDocumentFilePath(label, node)
+                });
             });
         }
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
@@ -1549,10 +1506,16 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
             const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
-            await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Opening USS file...",
+        }, function downloadUSSFile() {
+            return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
                 file: getUSSDocumentFilePath(node),
                 binary: chooseBinary
             });
+        }
+            );
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
         await vscode.window.showTextDocument(document);
