@@ -489,7 +489,7 @@ describe("Extension Integration Tests", () => {
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
 
-      it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+        it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];

@@ -377,7 +377,7 @@ export namespace workspace {
 		 */
         readonly index: number;
     }
-    
+
 }
 
 export interface InputBoxOptions {
@@ -401,14 +401,18 @@ export interface TextDocument {
 	}
 
 /**
-	* Namespace describing the environment the editor runs in.
-	*/
-	export namespace env {
+* Namespace describing the environment the editor runs in.
+*/
+export namespace env {
+    /**
+     * The application name of the editor, like 'VS Code'.
+     */
+    export const appName = "Visual Studio Code"
 
-		/**
-		 * The system clipboard.
-		 */
-        export const clipboard: Clipboard = {
-            writeText(){ return Promise.resolve();}
-        };
-    }
+    /**
+	 * The system clipboard.
+	 */
+    export const clipboard: Clipboard = {
+        writeText(){ return Promise.resolve(); }
+    };
+}

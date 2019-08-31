@@ -45,15 +45,18 @@ let log: Logger;
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
-    const theia = "theia";
     // Get temp folder location from settings
     let preferencesTempPath: string =
         vscode.workspace.getConfiguration()
         /* tslint:disable:no-string-literal */
         .get("Zowe-Temp-Folder-Location")["folderPath"];
 
-    const fwk: string = vscode.workspace.getConfiguration("Zowe-Environment").get("framework");
-    ISTHEIA = fwk && fwk.toLowerCase() === theia;
+    // Determine the runtime framework to support special behavior for Theia
+    const theia = "Eclipse Theia";
+    const appName: string = vscode.env.appName;
+    if (appName && appName === theia) {
+        ISTHEIA = true;
+    }
 
     defineGlobals(preferencesTempPath);
 
