@@ -5,10 +5,5 @@
     "deleteUSSNode.showQuickPick.yes": "Yes",
     "deleteUSSNode.showQuickPick.no": "No",
     "deleteUSSNode.error.node": "Unable to delete node: ",
-    "renameUSSNode.error": "Unable to rename node: ",
-    "initializeUSSFavorites.lines.title": "Open",
-    "initializeUSSFavorites.error.profile1": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ",
-    "intializeUSSFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
-    "initializeUSSFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-USS-Persistent-Favorites setting, ",
-    "initializeUSSFavorites.error.profile4": "which can be found in your VS Code user settings."
+    "renameUSSNode.error": "Unable to rename node: "
 }
