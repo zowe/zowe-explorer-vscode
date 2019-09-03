@@ -43,8 +43,8 @@ describe("Unit Tests (Jest)", () => {
         const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
         const testFile = new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null);
         testFile.contextValue = "textFile";
-        expect(JSON.stringify(rootNode.iconPath)).toContain("folder.svg");
-        expect(JSON.stringify(testDir.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
+        expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
         rootNode.iconPath = "Ref: 'folder.svg'";
         testDir.iconPath = "Ref: 'folder.svg'";
