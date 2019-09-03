@@ -36,16 +36,24 @@ export function applyIcons(node: TreeItem, state?: string ): any {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-open.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-open.svg");
         } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder.svg");
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder-closed.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-closed.svg");
         }
-    } else if (["session", "favorite", "uss_session", "server"].includes(node.contextValue)) {
+    } else if (["favorite"].includes(node.contextValue)) {
         if (state === "open") {
-            light = path.join(__dirname, "..", "..", "resources", "light", "root-folder-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder-open.svg");
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-open.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-open.svg");
         } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "root-folder.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "root-folder.svg");
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-closed.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-closed.svg");
+        }
+    } else if (["session", "uss_session", "server"].includes(node.contextValue)) {
+        if (state === "open") {
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-open.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-open.svg");
+        } else {
+            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-closed.svg");
+            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-closed.svg");
         }
     } else if (["sessionf"].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");

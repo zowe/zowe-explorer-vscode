@@ -167,11 +167,11 @@ describe("Zos Jobs Unit Tests", () => {
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder-open.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("folder-root-default-open.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], false);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("folder-root-default-closed.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[0], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("root-folder-open.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[0].iconPath)).toContain("folder-root-default-open.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
                 testJobsProvider.mSessionNodes[0].session, iJob);
@@ -179,7 +179,7 @@ describe("Zos Jobs Unit Tests", () => {
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
             await testJobsProvider.flipState(job, false);
-            expect(JSON.stringify(job.iconPath)).toContain("folder.svg");
+            expect(JSON.stringify(job.iconPath)).toContain("folder-closed.svg");
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
 

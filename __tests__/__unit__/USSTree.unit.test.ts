@@ -126,7 +126,7 @@ describe("Unit Tests (Jest)", () => {
         sessNode[0].contextValue = "favorite";
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
         sessNode[1].contextValue = "uss_session";
-        sessNode[1].iconPath = utils.applyIcons(sessNode[0]);
+        sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
         sessNode[1].fullPath = "test";
 
         // Checking that the rootChildren are what they are expected to be
@@ -288,7 +288,7 @@ describe("Unit Tests (Jest)", () => {
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(folder, false);
-        expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
     });
