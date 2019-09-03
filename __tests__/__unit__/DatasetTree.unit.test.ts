@@ -304,7 +304,7 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(pds, false);
-        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
     });

@@ -327,15 +327,21 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     return;
                 }
             }
-            // update the treeview with the new pattern
-            node.label = node.label.trim()+ " ";
-            node.label.trim();
-            node.tooltip = node.pattern = pattern.toUpperCase();
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            node.dirty = true;
-            node.iconPath = utils.applyIcons(node, "open");
-            this.addHistory(node.pattern);
+        } else {
+            // executing search from saved search in favorites
+            pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+            const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+            await this.addSession(this.log, session);
+            node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
         }
+        // update the treeview with the new pattern
+        node.label = node.label.trim()+ " ";
+        node.label.trim();
+        node.tooltip = node.pattern = pattern.toUpperCase();
+        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node.dirty = true;
+        node.iconPath = utils.applyIcons(node, "open");
+        this.addHistory(node.pattern);
     }
 
     /**

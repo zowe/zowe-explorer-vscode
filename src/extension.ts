@@ -760,7 +760,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
 
     let label = parent.label.trim();
     if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
-        label = parent.label.substring(parent.label.indexOf(":") + 2);
+        label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
     }
 
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
@@ -969,8 +969,8 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         }
     } else {
         // executing search from saved search in favorites
-        pattern = node.label.substring(node.label.indexOf(":") + 2);
-        const session = node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]"));
+        pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+        const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
         await datasetProvider.addSession(log, session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
     }
