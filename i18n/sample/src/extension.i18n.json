@@ -70,11 +70,7 @@
     "deleteDataSet.notFound.error2": " was probably already deleted.",
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
-    "searchHistory.options.prompt": "Choose -- Specify Filter -- to define a new filter or select a previously defined one",
     "enterPattern.pattern": "You must enter a pattern.",
-    "ussFilterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
-    "ussFilterPrompt.option.prompt.search": "Search Unix System Services (USS) by entering a path name starting with a /",
-    "ussFilterPrompt.enterPath": "You must enter a path.",
     "initializeFavorites.log.debug": "initializing favorites",
     "initializeFavorites.error.profile1": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ",
     "intializeFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
@@ -129,6 +125,5 @@
     "addJobsSession.quickPickOptions.profileAdd": "Select a Profile to Add to the Jobs Explorer",
     "addJobsSession.log.debug.selectedProfile": "User selected profile ",
     "addJobsSession.log.debug.cancelledProfile": "User cancelled profile selection",
-    "addJobsSession.noProfilesAdd": "No more profiles to add",
-    "SpecifyFilter": " -- Specify Filter -- "
+    "addJobsSession.noProfilesAdd": "No more profiles to add"
 }
