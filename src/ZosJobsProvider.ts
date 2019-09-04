@@ -206,6 +206,44 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         }
         });
     }
+
+    /**
+     * Adds a node to the Jobs favorites list
+     *
+     * @param {ZoweUSSNode} node
+     */
+    public async addJobsFavorite(node: Job) {
+        let temp: Job;
+        // temp = new Job(node.fullPath,
+        //     node.collapsibleState,
+        //     this.mFavoriteSession,
+        //     node.getSession(),
+        //     node.mParent.fullPath,
+        //     false,
+        //     node.getSessionNode().mProfileName);
+        // temp.contextValue += "f";
+        // if (temp.contextValue === "textFilef" || temp.contextValue === "binaryFilef") {
+        //     temp.command = { command: "zowe.job.ZoweUSSNode.open", title: "Open", arguments: [temp] };
+        // }
+        // temp.iconPath = utils.applyIcons(node);
+        // if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
+        //     this.mFavorites.push(temp); // testing
+        //     await this.updateFavorites();
+        //     this.refreshElement(this.mFavoriteSession);
+        // }
+    }
+
+    /**
+     * Removes a node from the favorites list
+     *
+     * @param {Job} node
+     */
+    public async removeJobsFavorite(node: Job) {
+        //this.mFavorites = this.mFavorites.filter((temp) =>
+        //    !((temp.fullPath === node.fullPath) && (temp.contextValue.startsWith(node.contextValue))));
+        // await this.updateFavorites();
+        this.refreshElement(this.mFavoriteSession);
+    }
     /**
      * Prompts the user for details that will populates the [TreeView]{@link vscode.TreeView}
      *

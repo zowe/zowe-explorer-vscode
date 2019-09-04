@@ -21,12 +21,27 @@ import * as profileLoader from "../../src/ProfileLoader";
 import { Job } from "../../src/ZoweJobNode";
 import { ZosJobsProvider } from "../../src/ZosJobsProvider";
 
-describe("Zos Jobs Unit Tests", () => {
+describe.only("Zos Jobs Unit Tests", () => {
 
     const GetJobs = jest.fn();
+    const getConfiguration = jest.fn();
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    getConfiguration.mockReturnValue({
+        get: (setting: string) => [
+            "[test]: /u/aDir{directory}",
+            "[test]: /u/myFile.txt{textFile}",
+        ],
+        update: jest.fn(()=>{
+            return {};
+        })
+    });
 
     beforeAll(() => {
         Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
+    });
+    
+    afterAll(() => {
+        jest.resetAllMocks();
     });
 
     describe("ZosJobsProvider Unit Test", () => {
@@ -407,8 +422,7 @@ describe("Zos Jobs Unit Tests", () => {
                 };
             });
             Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
-            const getConfiguration = jest.fn();
-            Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+            getConfiguration.mockReset();
             getConfiguration.mockReturnValue({
                 get: (setting: string) => [
                     "[test]: /u/aDir{directory}",

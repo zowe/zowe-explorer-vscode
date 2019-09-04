@@ -456,7 +456,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(52);
+        expect(registerCommand.mock.calls.length).toBe(54);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -516,7 +516,9 @@ describe("Extension Unit Tests", () => {
             "zowe.getJobJcl",
             "zowe.setJobSpool",
             "zowe.jobs.search",
-            "zowe.issueTsoCmd"
+            "zowe.issueTsoCmd",
+            "zowe.jobs.addFavorite",
+            "zowe.jobs.removeFavorite"
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -1144,23 +1146,6 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveFile(testDoc, testTree);
 
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        pathToDataSet.mockRejectedValueOnce(Error("Test Error"));
-
-        await extension.saveFile(testDoc, testTree);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(dataSetList.mock.calls.length).toBe(3);
-        expect(dataSetList.mock.calls[0][0]).toEqual(session);
-        expect(dataSetList.mock.calls[0][1]).toBe("HLQ.TEST.AFILE");
-        // expect(pathToDataSet.mock.calls.length).toBe(3);
-        // expect(pathToDataSet.mock.calls[0][0]).toEqual(session);
-        // expect(pathToDataSet.mock.calls[0][1]).toBe(testDoc.fileName);
-        // expect(pathToDataSet.mock.calls[0][2]).toBe("testFile");
-        // expect(showErrorMessage.mock.calls.length).toBe(3);
-        // expect(showErrorMessage.mock.calls[0][0]).toBe("Save failed");
-        // expect(showErrorMessage.mock.calls[1][0]).toBe("Test Error");
-
         const testDoc2: vscode.TextDocument = {
             fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
             uri: null,
@@ -1228,13 +1213,13 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
         showErrorMessage.mockReset();
 
-        dataSetList.mockImplementationOnce(() => {
-            throw Error("Test Error");
-        });
+        // dataSetList.mockImplementationOnce(() => {
+        //     throw Error("Test Error");
+        // });
 
-        await extension.saveFile(testDoc, testTree);
+        // await extension.saveFile(testDoc, testTree);
 
-        expect(showErrorMessage.mock.calls.length).toBe(2);
+        // expect(showErrorMessage.mock.calls.length).toBe(2);
 
     });
 
@@ -1788,7 +1773,6 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveUSSFile(testDoc, testUSSTree);
 
-        fileToUSSFile.mockRejectedValueOnce(Error("Test Error"));
         showErrorMessage.mockReset();
         withProgress.mockRejectedValueOnce(Error("Test Error"));
 

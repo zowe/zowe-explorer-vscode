@@ -30,6 +30,9 @@ const DatasetTree = jest.fn().mockImplementation(() => {
 const testTree = DatasetTree();
 
 describe("mvsNodeActions", () => {
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
     it("should call upload dialog and upload file", async () => {
         const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
         const fileUri = {fsPath: "/tmp/foo"};
@@ -41,6 +44,9 @@ describe("mvsNodeActions", () => {
         expect(testTree.refresh).toBeCalled();
     });
     describe("getDatasetLabel", () => {
+        afterEach(() => {
+            jest.resetAllMocks();
+        });
         it("should return default label for dataset", () => {
             const labelName = "dataset.test";
             const node = new ZoweNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);

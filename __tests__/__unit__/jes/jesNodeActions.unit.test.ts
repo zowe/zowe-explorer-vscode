@@ -39,6 +39,9 @@ describe("jesNodeActions", () => {
             "stepname": "",
             "subsystem": ""
         };
+        afterAll(() => {
+            jest.resetAllMocks();
+        });
         it("should return undefined language", () => {
             expect(jesNodeActions.getSpoolLanguage(iJobFile)).toEqual(undefined);
         });
