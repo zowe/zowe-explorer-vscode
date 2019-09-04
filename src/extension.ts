@@ -17,7 +17,8 @@ import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
-import { ZosJobsProvider, Job, createJobsTree } from "./zosjobs";
+import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
+import { Job } from "./ZoweJobNode";
 import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
@@ -270,8 +271,11 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         jobsProvider.setJob(jobView, job);
     });
-
+    vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
     vscode.commands.registerCommand("zowe.issueTsoCmd", async () => issueTsoCommand(outputChannel));
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        jobsProvider.onDidChangeConfiguration(e);
+    });
 }
 
 /**
@@ -1079,66 +1083,6 @@ export function getUSSDocumentFilePath(node: ZoweUSSNode) {
 }
 
 /**
- * Initializes the favorites section by reading from a file
- *
- * @export
- * @param {DatasetTree} datasetProvider
- */
-export async function initializeFavorites(datasetProvider: DatasetTree) {
-    log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
-    const lines: string[] = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites").get("favorites");
-    for (const line of lines) {
-        if (line === "") {
-            continue;
-        }
-        // validate line
-        const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
-        const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
-        if (favoriteDataSetPattern.test(line)) {
-            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-            try {
-                const zosmfProfile = loadNamedProfile(sesName);
-                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-                let node: ZoweNode;
-                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
-                    node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
-                        datasetProvider.mFavoriteSession, session);
-                } else {
-                    node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
-                        datasetProvider.mFavoriteSession, session);
-                    node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
-                }
-                node.contextValue += "f";
-                node.iconPath = utils.applyIcons(node);
-                datasetProvider.mFavorites.push(node);
-            } catch(e) {
-                vscode.window.showErrorMessage(
-                    localize("initializeFavorites.error.profile1",
-                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
-                    localize("intializeFavorites.error.profile2",
-                    ". To resolve this, you can create a profile with this name, ") +
-                    localize("initializeFavorites.error.profile3",
-                    "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ") +
-                    localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
-                continue;
-            }
-        } else if (favoriteSearchPattern.test(line)) {
-            const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
-                vscode.TreeItemCollapsibleState.None, datasetProvider.mFavoriteSession, null);
-            node.command = { command: "zowe.pattern", title: "", arguments: [node] };
-            const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-            const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-            node.iconPath = { light, dark };
-            node.contextValue = "sessionf";
-            node.iconPath = utils.applyIcons(node);
-            datasetProvider.mFavorites.push(node);
-        } else {
-            vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
-        }
-    }
-}
-
-/**
  * Downloads and displays a PS in a text editor view
  *
  * @param {ZoweNode} node
@@ -1565,12 +1509,6 @@ export async function setOwner(job: Job, jobsProvider: ZosJobsProvider) {
 export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
     const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
     job.prefix = newPrefix;
-    jobsProvider.refreshElement(job);
-}
-
-export async function setId(job: Job, jobsProvider: ZosJobsProvider) {
-    const newId = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.id", "Job Id") });
-    job.id = newId;
     jobsProvider.refreshElement(job);
 }
 

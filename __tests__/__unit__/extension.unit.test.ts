@@ -22,7 +22,7 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/ProfileLoader";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
-import { Job } from "../../src/zosjobs";
+import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 
 jest.mock("vscode");
@@ -342,6 +342,10 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.Disposable, "from", {value: from});
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
 
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
     it("Testing that activate correctly executes", async () => {
         createTreeView.mockReturnValue(testTree);
 
@@ -407,6 +411,14 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u{session}",
             ]
         });
+        getConfiguration.mockReturnValue({
+            get: (setting: string) => [
+                "[test]: /u/myUser{directory}",
+                "[test]: /u/myUser{directory}",
+                "[test]: /u/myUser/file.txt{file}",
+                "[test]: /u{session}",
+            ]
+        });
 // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
@@ -444,7 +456,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(51);
+        expect(registerCommand.mock.calls.length).toBe(52);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -503,6 +515,7 @@ describe("Extension Unit Tests", () => {
             "zowe.downloadSpool",
             "zowe.getJobJcl",
             "zowe.setJobSpool",
+            "zowe.jobs.search",
             "zowe.issueTsoCmd"
         ];
         expect(actualCommands).toEqual(expectedCommands);
@@ -1939,6 +1952,12 @@ describe("Extension Unit Tests", () => {
         (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
         createBasicZosmfSession.mockReturnValue(session);
         submitJcl.mockReturnValue(iJob);
+        testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        (profileLoader.loadNamedProfile as any).mockImplementation(() => {
+            return {
+                profile: "SampleProfile"
+            };
+        });
         await extension.submitJcl(testTree);
         expect(submitJcl).toBeCalled();
         expect(showInformationMessage).toBeCalled();

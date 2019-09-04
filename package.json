@@ -214,7 +214,7 @@
       },
       {
         "command": "zowe.uss.refreshAll",
-        "title": "%uss.refreshAll%",
+        "title": "%refreshAll%",
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
@@ -286,7 +286,7 @@
       },
       {
         "command": "zowe.refreshAllJobs",
-        "title": "%refreshAllJobs%",
+        "title": "%refreshAll%",
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
@@ -323,6 +323,14 @@
       {
         "command": "zowe.issueTsoCmd",
         "title": "%issueTsoCmd%"
+      },
+      {
+        "command": "zowe.jobs.search",
+        "title": "%jobs.search%",
+        "icon": {
+          "light": "./resources/light/pattern.svg",
+          "dark": "./resources/dark/pattern.svg"
+        }
       }
     ],
     "menus": {
@@ -702,6 +710,11 @@
         },
         {
           "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.jobs.search",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.setOwner"
         },
         {
@@ -785,6 +798,10 @@
         },
         {
           "command": "zowe.uss.fullPath",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.search",
           "when": "never"
         },
         {
@@ -900,9 +917,18 @@
             "favorites": [],
             "history": []
           },
-          "description": "%Zowe-Default-Datasets-Persistent-Favorites%",
+          "description": "%Zowe-Default-USS-Persistent-Favorites%",
           "scope": "window"
         },
+        "Zowe-Jobs-Persistent-Favorites": {
+          "default": {
+            "persistence": true,
+            "favorites": [],
+            "history": []
+          },
+          "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
+          "scope": "window"
+        },        
         "Zowe-Environment": {
           "default": {
             "persistence": true,

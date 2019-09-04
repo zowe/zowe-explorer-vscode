@@ -237,7 +237,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
      * @param {ZoweUSSNode} node - The session node
-     * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
      * @returns {Promise<void>}
      */
     public async ussFilterPrompt(node: ZoweUSSNode) {

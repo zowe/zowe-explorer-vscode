@@ -1,3 +1,15 @@
 {
-    "Favorites": "Favorites"
+    "Favorites": "Favorites",
+    "ussFilterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
+    "searchHistory.options.prompt": "Choose \"-- Specify Filter --\" to define a new filter or select a previously defined one",
+    "enterPattern.pattern": "No selection made.",
+    "ussFilterPrompt.option.prompt.search": "Search Unix System Services (USS) by entering a path name starting with a /",
+    "ussFilterPrompt.enterPath": "You must enter a path.",
+    "initializeFavorites.log.debug": "initializing favorites",
+    "initializeUSSFavorites.lines.title": "Open",
+    "initializeUSSFavorites.error.profile1": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ",
+    "intializeUSSFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
+    "initializeUSSFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-USS-Persistent-Favorites setting, ",
+    "initializeUSSFavorites.error.profile4": "which can be found in your VS Code user settings.",
+    "SpecifyFilter": " -- Specify Filter -- "
 }

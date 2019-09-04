@@ -60,6 +60,26 @@ describe("Unit Tests (Jest)", () => {
             return {};
         })
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+    const withProgress = jest.fn().mockImplementation(() => {
+        return {
+            location: 15,
+            title: "Saving file..."
+        };
+    });
+    const testResponse = {
+        success: true,
+        commandResponse: "",
+        apiResponse: {
+            items: []
+        }
+    };
+    withProgress.mockReturnValue(testResponse);
+
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
@@ -70,6 +90,8 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
 
     const testTree = new USSTree();
@@ -126,7 +148,7 @@ describe("Unit Tests (Jest)", () => {
         sessNode[0].contextValue = "favorite";
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
         sessNode[1].contextValue = "uss_session";
-        sessNode[1].iconPath = utils.applyIcons(sessNode[0]);
+        sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
         sessNode[1].fullPath = "test";
 
         // Checking that the rootChildren are what they are expected to be
@@ -288,7 +310,7 @@ describe("Unit Tests (Jest)", () => {
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(folder, false);
-        expect(JSON.stringify(folder.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
     });

@@ -19,8 +19,12 @@ import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session, Logger } from "@brightside/imperative";
+import * as zowe from "@brightside/core";
 import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
+import { addSession } from "../../src/extension";
+import { MockMethod } from "../../src/decorators/MockMethod";
+
 
 describe("DatasetTree Unit Tests", () => {
 
@@ -48,6 +52,31 @@ describe("DatasetTree Unit Tests", () => {
             return { name: "defaultprofile" };
         })
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+    const withProgress = jest.fn().mockImplementation(() => {
+        return {
+            location: 15,
+            title: "Saving file..."
+        };
+    });
+
+
+    const testResponse: zowe.IZosFilesResponse[] = [];
+    testResponse.push({
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    items: [
+                        {dsname: "BRTVS99", dsorg: "PS", blksz: "6160", catnm: "ICFCAT.MV.CATALOGB"},
+                        {dsname: "BRTVS99.CA11.SPFTEMP0.CNTL", dsorg: "PO", blksz: "6160", catnm: "ICFCAT.MV.CATALOGA"},
+                        {dsname: "BRTVS99.DDIR", dsorg: "PO", blksz: "6160", catnm: "ICFCAT.MV.CATALOGA"}
+                    ]
+                }
+            });
 
     // Filter prompt
     const showInformationMessage = jest.fn();
@@ -55,10 +84,15 @@ describe("DatasetTree Unit Tests", () => {
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
+    const getDatasetList = jest.fn();
+    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
@@ -80,6 +114,9 @@ describe("DatasetTree Unit Tests", () => {
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
 
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
     afterEach(async () => {
         getConfiguration.mockClear();
     });
@@ -105,7 +142,9 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Tests that getChildren returns valid list of elements", async () => {
         // Waiting until we populate rootChildren with what getChildren return
+        //const mySpy = jest.spyOn(testTree.mSessionNodes[1], "progressDatasetList").mockReturnValueOnce(Promise.resolve(testResponse));
         const rootChildren = await testTree.getChildren();
+
         // Creating a rootNode
         const sessNode = [
             new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null),
@@ -116,9 +155,11 @@ describe("DatasetTree Unit Tests", () => {
         sessNode[1].pattern = "test";
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
         sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
+        //jest.spyOn(sessNode[1], "progressDatasetList").mockReturnValueOnce(Promise.resolve(testResponse));
 
         // Checking that the rootChildren are what they are expected to be
-        expect(sessNode).toEqual(rootChildren);
+        expect(sessNode[0]).toMatchObject(rootChildren[0]);
+        expect(sessNode[1].children).toMatchObject(rootChildren[1].children);
     });
 
     /*************************************************************************************************************
@@ -304,13 +345,13 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(pds, false);
-        expect(JSON.stringify(pds.iconPath)).toContain("folder.svg");
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
     });
 
      /*************************************************************************************************************
-     * USS Filter prompts
+     * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully", async () => {
         testTree.initialize(Logger.getAppLogger());
@@ -345,6 +386,16 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+
+        // Executing from favorites
+        const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
+        vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
+        favoriteSearch.contextValue = "sessionf";
+        const checkSession = jest.spyOn(testTree, "addSession");
+        expect(checkSession).not.toHaveBeenCalled();
+        await testTree.datasetFilterPrompt(favoriteSearch);
+        expect(checkSession).toHaveBeenCalledTimes(1);
+        expect(checkSession).toHaveBeenLastCalledWith(Logger.getAppLogger(), "aProfile");
     });
     /*************************************************************************************************************
      * Testing the onDidConfiguration

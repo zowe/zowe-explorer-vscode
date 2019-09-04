@@ -344,6 +344,11 @@ Array [
     "when": "view == zowe.jobs && viewItem == server",
   },
   Object {
+    "command": "zowe.jobs.search",
+    "group": "inline",
+    "when": "view == zowe.jobs && viewItem == server",
+  },
+  Object {
     "command": "zowe.setOwner",
     "when": "view == zowe.jobs && viewItem == server",
   },

@@ -489,7 +489,8 @@ describe("Extension Integration Tests", () => {
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
 
-      it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+        it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+            const log = Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
@@ -502,7 +503,7 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await extension.initializeFavorites(testTree);
+            await testTree.initialize(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
                                     `[${profileName}]: ${pattern}.EXT.PS`,
                                     `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
