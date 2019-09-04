@@ -20,6 +20,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 import * as path from "path";
 import { loadNamedProfile } from "../ProfileLoader";
+import { ISTHEIA } from "../extension";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -164,4 +165,18 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
     } catch (e) {
         vscode.window.showErrorMessage(e.message);
     }
+}
+
+/**
+ * Copies full path for the selected Zowe USS node
+ *
+ * @param {ZoweUSSNode} node
+ */
+export async function copyPath(node: ZoweUSSNode) {
+    if (ISTHEIA) {
+        // Remove when Theia supports VS Code API for accessing system clipboard
+        vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
+        return;
+    }
+    vscode.env.clipboard.writeText(node.fullPath);
 }

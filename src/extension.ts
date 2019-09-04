@@ -220,6 +220,7 @@ export async function activate(context: vscode.ExtensionContext) {
         async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         ussFileProvider.onDidChangeConfiguration(e);

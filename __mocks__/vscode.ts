@@ -389,6 +389,18 @@ export interface TextDocument {
 }
 
 /**
+	* The clipboard provides read and write access to the system's clipboard.
+	*/
+	export interface Clipboard {
+
+		/**
+		 * Writes text into the clipboard.
+		 * @returns A thenable that resolves when writing happened.
+		 */
+		writeText(value: string): Thenable<void>;
+	}
+
+/**
 * Namespace describing the environment the editor runs in.
 */
 export namespace env {
@@ -396,4 +408,11 @@ export namespace env {
      * The application name of the editor, like 'VS Code'.
      */
     export const appName = "Visual Studio Code"
+
+    /**
+	 * The system clipboard.
+	 */
+    export const clipboard: Clipboard = {
+        writeText(){ return Promise.resolve(); }
+    };
 }

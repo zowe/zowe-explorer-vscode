@@ -38,6 +38,7 @@ const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
+const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 
@@ -94,6 +95,7 @@ Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
 Object.defineProperty(fs, "existsSync", {value: existsSync});
 Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
 
@@ -298,6 +300,12 @@ describe("ussNodeActions", () => {
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
+    });
+    describe("copyPath", () => {
+        it("should copy the node's full path to the system clipboard", async () => {
+            await ussNodeActions.copyPath(ussNode);
+            expect(writeText).toBeCalledWith(ussNode.fullPath);
         });
     });
 });
