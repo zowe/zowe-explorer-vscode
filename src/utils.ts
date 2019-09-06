@@ -31,7 +31,7 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     let light: string;
     let dark: string;
 
-    if (["pds", "pdsf", "directory", "directoryf", "job"].includes(node.contextValue)) {
+    if (["pds", "pdsf", "directory", "directoryf", "job", "jobf"].includes(node.contextValue)) {
         if (state === "open") {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-open.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-open.svg");
@@ -55,7 +55,7 @@ export function applyIcons(node: TreeItem, state?: string ): any {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-closed.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-closed.svg");
         }
-    } else if (["sessionf"].includes(node.contextValue)) {
+    } else if (["sessionf", "serverf", "uss_sessionf"].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
     } else if (["ds", "dsf", "member", "textFile", "textFilef", "spool"].includes(node.contextValue)) {

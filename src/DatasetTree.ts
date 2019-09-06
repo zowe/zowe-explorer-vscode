@@ -234,9 +234,9 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             temp.iconPath =  utils.applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
-            const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-            const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-            temp.iconPath = { light, dark };
+            // const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
+            // const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
+            // temp.iconPath = { light, dark };
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession());

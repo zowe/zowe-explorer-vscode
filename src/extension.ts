@@ -277,7 +277,10 @@ export async function activate(context: vscode.ExtensionContext) {
         jobsProvider.onDidChangeConfiguration(e);
     });
     vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addJobsFavorite(node));
-    vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeJobsFavorite(node));}
+    vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
+    vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
+    vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
+}
 
 /**
  * Allow the user to subbmit a TSO command to the selected server. Response is written

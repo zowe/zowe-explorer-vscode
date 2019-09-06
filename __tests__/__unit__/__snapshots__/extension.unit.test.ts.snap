@@ -381,6 +381,26 @@ Array [
     "when": "view == zowe.jobs && viewItem == job",
   },
   Object {
+    "command": "zowe.jobs.addFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == job",
+  },
+  Object {
+    "command": "zowe.jobs.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == jobf",
+  },
+  Object {
+    "command": "zowe.jobs.removeSearchFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == serverf",
+  },
+  Object {
+    "command": "zowe.jobs.saveSearch",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == server",
+  },
+  Object {
     "command": "zowe.getJobJcl",
     "group": "0_mainframeInteraction",
     "when": "view == zowe.jobs && viewItem == job",

@@ -261,6 +261,22 @@
         }
       },
       {
+        "command": "zowe.jobs.addFavorite",
+        "title": "%addFavorite%"
+      },
+      {
+        "command": "zowe.jobs.removeFavorite",
+        "title": "%removeFavorite%"
+      },
+      {
+        "command": "zowe.jobs.removeSearchFavorite",
+        "title": "%removeSavedSearch%"
+      },
+      {
+        "command": "zowe.jobs.saveSearch",
+        "title": "%saveSearch%"
+      },      
+      {
         "command": "zowe.runModifyCommand",
         "title": "%runModifyCommand%"
       },
@@ -747,6 +763,26 @@
         },
         {
           "when": "view == zowe.jobs && viewItem == job",
+          "command": "zowe.jobs.addFavorite",
+          "group": "4_workspace"
+        },        
+        {
+          "when": "view == zowe.jobs && viewItem == jobf",
+          "command": "zowe.jobs.removeFavorite",
+          "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == serverf",
+          "command": "zowe.jobs.removeSearchFavorite",
+          "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.jobs.saveSearch",
+          "group": "4_workspace"
+        },        
+        {
+          "when": "view == zowe.jobs && viewItem == job",
           "command": "zowe.getJobJcl",
           "group": "0_mainframeInteraction"
         }
@@ -758,6 +794,10 @@
         },
         {
           "command": "zowe.refreshNode",
+          "when": "never"
+        },
+        {
+          "command": "zowe.refreshAll",
           "when": "never"
         },
         {
@@ -817,9 +857,37 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.addSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.submitMember",
           "when": "never"
-        }
+        },
+        {
+          "command": "zowe.uss.addFavorite",
+          "when": "never"
+        },    
+        {
+          "command": "zowe.uss.removeFavorite",
+          "when": "never"
+        }, 
+        {
+          "command": "zowe.jobs.addFavorite",
+          "when": "never"
+        },    
+        {
+          "command": "zowe.jobs.removeFavorite",
+          "when": "never"
+        },  
+        {
+          "command": "zowe.jobs.removeSearchFavorite",
+          "when": "never"
+        },                     
+        {
+          "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        }        
       ]
     },
     "configuration": {

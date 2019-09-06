@@ -19,6 +19,32 @@ import * as utils from "./utils";
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends vscode.TreeItem {
+    public static readonly JobId = "JobId:";
+    public static readonly Owner = "Owner:";
+    public static readonly Prefix = "Prefix:";
+    /**
+     * Static method that creates a display string to represent a search
+     * @param owner - The owner search item
+     * @param prefix - The job prefix search item
+     * @param jobid - A specific jobid search item
+     */
+    public static createSearchLabel(owner: string, prefix: string, jobid: string): string {
+        let revisedCriteria: string = "";
+        jobid = jobid.toUpperCase();
+        const alphaNumeric = new RegExp("^\w+$");
+        if (jobid.trim().length > 1 && !alphaNumeric.test(jobid.trim())) {
+            revisedCriteria = Job.JobId+jobid.trim();
+        } else {
+            if (owner.length>0) {
+                revisedCriteria = Job.Owner+owner.trim()+ " ";
+            }
+            if (prefix.length>0) {
+                revisedCriteria += Job.Prefix+prefix.trim();
+            }
+        }
+        return revisedCriteria;
+    }
+    
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     private children: Job[] = [];
     // tslint:disable-next-line: variable-name
@@ -54,8 +80,9 @@ export class Job extends vscode.TreeItem {
     public async getChildren(): Promise<Job[]> {
         if (this.dirty) {
             const elementChildren = [];
-            if (this.contextValue === "job") {
-                const spools: zowe.IJobFile[] = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+            let spools: zowe.IJobFile[] = [];
+            if (this.contextValue === "job" || this.contextValue === "jobf") {
+                spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
                     if (existing) {
@@ -65,14 +92,16 @@ export class Job extends vscode.TreeItem {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
+                        const sessionName = this.contextValue === "jobf" ?
+                            this.label.substring(1, this.label.lastIndexOf("]")).trim() :
+                            this.getSessionName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         spoolNode.iconPath = utils.applyIcons(spoolNode);
-                        spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.getSessionName(), spool] };
+                        spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [sessionName, spool] };
                         elementChildren.push(spoolNode);
                     }
                 });
-                this.iconPath = utils.applyIcons(this, "open");
             } else {
                 let jobs: zowe.IJob[] = [];
                 if (this.searchId.length > 0 ) {
@@ -111,6 +140,17 @@ export class Job extends vscode.TreeItem {
         this.dirty = false;
         return this.children;
     }
+    public getDetailLabel(): string {
+        return this.contextValue === "Job" || this.contextValue === "Jobf" ?
+            `${this.job.jobname}(${this.job.jobid})`
+            : Job.createSearchLabel(this.owner, this.prefix, this.searchId);
+    }
+
+    public reset() {
+        utils.labelHack(this);
+        this.children = [];
+        this.dirty = true;
+    }
 
     get tooltip(): string {
         if (this.job !== null) {
@@ -119,8 +159,10 @@ export class Job extends vscode.TreeItem {
             } else {
                 return `${this.job.jobname}(${this.job.jobid})`;
             }
+        } else if (this.searchId.length>0) {
+            return `${this.label} - job id: ${this.searchId}`;
         } else {
-            return `${this.label} - owner: ${this._owner} prefix: ${this._prefix}`;
+            return `${this.label} - owner: ${this.owner} prefix: ${this.prefix}`;
         }
     }
 
@@ -161,13 +203,8 @@ export class Job extends vscode.TreeItem {
     get searchId() {
         return this._searchId;
     }
-
-    public reset() {
-        utils.labelHack(this);
-        this.children = [];
-        this.dirty = true;
-    }
 }
+
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,

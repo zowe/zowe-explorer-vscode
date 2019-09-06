@@ -456,7 +456,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(54);
+        expect(registerCommand.mock.calls.length).toBe(56);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -518,7 +518,9 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.search",
             "zowe.issueTsoCmd",
             "zowe.jobs.addFavorite",
-            "zowe.jobs.removeFavorite"
+            "zowe.jobs.removeFavorite",
+            "zowe.jobs.saveSearch",
+            "zowe.jobs.removeSearchFavorite"
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);

@@ -39,7 +39,7 @@ describe.only("Zos Jobs Unit Tests", () => {
     beforeAll(() => {
         Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
     });
-    
+
     afterAll(() => {
         jest.resetAllMocks();
     });
@@ -244,8 +244,9 @@ describe.only("Zos Jobs Unit Tests", () => {
          * Dataset Filter prompts
          *************************************************************************************************************/
         it("Testing that user filter prompts are executed successfully", async () => {
-            const defaultDialogText: string = " -- Specify Owner/Prefix or JobID -- ";
-            testJobsProvider.initialize(Logger.getAppLogger());
+            fail(); // Work in progress
+            const defaultDialogText: string = ZosJobsProvider.defaultDialogText;
+            testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             showInformationMessage.mockReset();
             showQuickPick.mockReset();
             showQuickPick.mockReturnValueOnce(defaultDialogText);
