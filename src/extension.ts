@@ -46,15 +46,18 @@ let log: Logger;
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
  */
 export async function activate(context: vscode.ExtensionContext) {
-    const theia = "theia";
     // Get temp folder location from settings
     let preferencesTempPath: string =
         vscode.workspace.getConfiguration()
         /* tslint:disable:no-string-literal */
         .get("Zowe-Temp-Folder-Location")["folderPath"];
 
-    const fwk: string = vscode.workspace.getConfiguration("Zowe-Environment").get("framework");
-    ISTHEIA = fwk && fwk.toLowerCase() === theia;
+    // Determine the runtime framework to support special behavior for Theia
+    const theia = "Eclipse Theia";
+    const appName: string = vscode.env.appName;
+    if (appName && appName === theia) {
+        ISTHEIA = true;
+    }
 
     defineGlobals(preferencesTempPath);
 
@@ -218,6 +221,7 @@ export async function activate(context: vscode.ExtensionContext) {
         async (node) => ussActions.renameUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         ussFileProvider.onDidChangeConfiguration(e);
@@ -764,7 +768,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
 
     let label = parent.label.trim();
     if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
-        label = parent.label.substring(parent.label.indexOf(":") + 2);
+        label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
     }
 
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
@@ -973,8 +977,8 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         }
     } else {
         // executing search from saved search in favorites
-        pattern = node.label.substring(node.label.indexOf(":") + 2);
-        const session = node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]"));
+        pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+        const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
         await datasetProvider.addSession(log, session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
     }
@@ -1114,8 +1118,13 @@ export async function openPS(node: ZoweNode) {
         log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (!fs.existsSync(getDocumentFilePath(label, node))) {
-            await zowe.Download.dataSet(node.getSession(), label, {
-                file: getDocumentFilePath(label, node)
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening data set..."
+            }, function downloadDataset() {
+                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
+                    file: getDocumentFilePath(label, node)
+                });
             });
         }
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
@@ -1448,10 +1457,16 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
             const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
-            await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Opening USS file...",
+        }, function downloadUSSFile() {
+            return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
                 file: getUSSDocumentFilePath(node),
                 binary: chooseBinary
             });
+        }
+            );
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
         await vscode.window.showTextDocument(document);

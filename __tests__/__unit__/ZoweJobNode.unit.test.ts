@@ -241,10 +241,9 @@ describe.only("Zos Jobs Unit Tests", () => {
         });
 
         /*************************************************************************************************************
-         * Dataset Filter prompts
+         * Jobs Filter prompts
          *************************************************************************************************************/
         it("Testing that user filter prompts are executed successfully", async () => {
-            fail(); // Work in progress
             const defaultDialogText: string = ZosJobsProvider.defaultDialogText;
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             showInformationMessage.mockReset();

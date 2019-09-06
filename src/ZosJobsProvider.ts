@@ -38,10 +38,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
-    public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
 
     private static readonly persistenceSchema: string = "Zowe-Jobs-Persistent-Favorites";
     private static readonly favorites: string = "favorites";
+    private static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
 
     public mSessionNodes: Job[] = [];
     public mFavoriteSession: Job;
@@ -272,26 +272,20 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         }
         let searchCriteria: string = ZosJobsProvider.defaultDialogText;
         if (node.contextValue === "server") {
-            // const modItems = Array.from(this.mHistory.getHistory());
-            const modItems: vscode.QuickPickItem[] = [];
-            for (const item of this.mHistory.getHistory()) {
-                modItems.push(new HistoryItem(item));
-            }
+            const modItems = Array.from(this.mHistory.getHistory());
             if (modItems.length > 0) {
                 // accessing history
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("searchHistory.options.prompt",
                     "Choose \"Create new...\" to define a new filter alternatively select a previously defined filter")
                 };
-
-                modItems.unshift(new EditSwitch(ZosJobsProvider.defaultDialogText, "Click to create a new filter definition"));
+                modItems.unshift(ZosJobsProvider.defaultDialogText);
                 // get user selection
-                const response = await vscode.window.showQuickPick(modItems, options1);
+                searchCriteria = await vscode.window.showQuickPick(modItems, options1);
                 if (!searchCriteria) {
                     vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
                     return;
                 }
-                searchCriteria = response.label;
             }
             if (searchCriteria === ZosJobsProvider.defaultDialogText) {
                 let owner: string;
@@ -402,15 +396,34 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         }
         return revisedCriteria;
     }
+
+
+    // /**
+    //  * Function that interprets a display string to represent a search
+    //  * @param node - a Job node
+    //  */
+    // private createSearchCriteria(node: Job): string {
+    //     let revisedCriteria: string = "";
+    //     const alphaNumeric = new RegExp("^\w+$");
+    //     if (node.searchId.length > 1 && !alphaNumeric.test(node.searchId)) {
+    //         revisedCriteria = ZosJobsProvider.JobId+node.searchId;
+    //     } else {
+    //         if (node.owner.length>0) {
+    //             revisedCriteria = ZosJobsProvider.Owner+node.owner+ " ";
+    //         }
+    //         if (node.prefix.length>0) {
+    //             revisedCriteria += ZosJobsProvider.Prefix+node.prefix;
+    //         }
+    //     }
+    //     return revisedCriteria;
+    // }
     /**
      * Function that takes a search criteria and updates a search node based upon it
      * @param node - a Job node
      * @param storedSearch - The original search string
      */
     private applySearchLabelToNode(node: Job, storedSearch: string) {
-        if (!storedSearch) {
-            return;
-        }
+        // Now interpret criteria
         node.searchId = "";
         node.owner = "*";
         node.prefix = "*";
@@ -460,26 +473,3 @@ class JobDetail implements IJob {
         this.jobid = combined.substring(combined.indexOf("(") + 1, combined.indexOf(")"));
     }
  }
-
-     // tslint:disable-next-line: max-classes-per-file
-class EditSwitch implements vscode.QuickPickItem {
-    public label: string;
-    public detail: string;
-    public description: string;
-
-    constructor(base: string, detail: string) {
-        this.label = base;
-        this.detail = detail;
-    }
-}
-
-    // tslint:disable-next-line: max-classes-per-file
-class HistoryItem implements vscode.QuickPickItem {
-    public label: string;
-    public description: string;
-
-    constructor(base: string, description?: string) {
-        this.label = base;
-        this.description = description;
-    }
-}

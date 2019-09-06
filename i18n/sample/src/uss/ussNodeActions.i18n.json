@@ -5,5 +5,6 @@
     "deleteUSSNode.showQuickPick.yes": "Yes",
     "deleteUSSNode.showQuickPick.no": "No",
     "deleteUSSNode.error.node": "Unable to delete node: ",
-    "renameUSSNode.error": "Unable to rename node: "
+    "renameUSSNode.error": "Unable to rename node: ",
+    "copyPath.infoMessage": "Copy Path is not yet supported in Theia."
 }

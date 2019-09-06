@@ -113,7 +113,6 @@
     "deleteJob.delete": " deleted",
     "setOwner.newOwner.prompt.owner": "Owner",
     "setOwner.newOwner.prompt.prefix": "Prefix",
-    "setOwner.newOwner.prompt.id": "Job Id",
     "addJobsSession.error.load": "Unable to load all profiles: ",
     "addJobsSession.noProfilesDetected": "No profiles detected",
     "addJobsSession.quickPickOptions.profileAdd": "Select a Profile to Add to the Jobs Explorer",
