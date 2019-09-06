@@ -38,10 +38,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
+    public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
 
     private static readonly persistenceSchema: string = "Zowe-Jobs-Persistent-Favorites";
-    private static readonly favorites: string = "favorites";
-    private static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
+
 
     public mSessionNodes: Job[] = [];
     public mFavoriteSession: Job;
