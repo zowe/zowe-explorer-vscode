@@ -272,20 +272,24 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         }
         let searchCriteria: string = ZosJobsProvider.defaultDialogText;
         if (node.contextValue === "server") {
-            const modItems = Array.from(this.mHistory.getHistory());
+            const modItems: vscode.QuickPickItem[] = [];
+            for (const item of this.mHistory.getHistory()) {
+                modItems.push(new HistoryItem(item));
+            }
             if (modItems.length > 0) {
                 // accessing history
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("searchHistory.options.prompt",
                     "Choose \"Create new...\" to define a new filter alternatively select a previously defined filter")
                 };
-                modItems.unshift(ZosJobsProvider.defaultDialogText);
+                modItems.unshift(new EditSwitch(ZosJobsProvider.defaultDialogText, "Click to create a new filter definition"));
                 // get user selection
-                searchCriteria = await vscode.window.showQuickPick(modItems, options1);
-                if (!searchCriteria) {
+                const response = await vscode.window.showQuickPick(modItems, options1);
+                if (!response ) {
                     vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
                     return;
                 }
+                searchCriteria = response.label;
             }
             if (searchCriteria === ZosJobsProvider.defaultDialogText) {
                 let owner: string;
@@ -397,33 +401,15 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         return revisedCriteria;
     }
 
-
-    // /**
-    //  * Function that interprets a display string to represent a search
-    //  * @param node - a Job node
-    //  */
-    // private createSearchCriteria(node: Job): string {
-    //     let revisedCriteria: string = "";
-    //     const alphaNumeric = new RegExp("^\w+$");
-    //     if (node.searchId.length > 1 && !alphaNumeric.test(node.searchId)) {
-    //         revisedCriteria = ZosJobsProvider.JobId+node.searchId;
-    //     } else {
-    //         if (node.owner.length>0) {
-    //             revisedCriteria = ZosJobsProvider.Owner+node.owner+ " ";
-    //         }
-    //         if (node.prefix.length>0) {
-    //             revisedCriteria += ZosJobsProvider.Prefix+node.prefix;
-    //         }
-    //     }
-    //     return revisedCriteria;
-    // }
     /**
      * Function that takes a search criteria and updates a search node based upon it
      * @param node - a Job node
      * @param storedSearch - The original search string
      */
     private applySearchLabelToNode(node: Job, storedSearch: string) {
-        // Now interpret criteria
+        if (!storedSearch) {
+            return;
+        }
         node.searchId = "";
         node.owner = "*";
         node.prefix = "*";
@@ -473,3 +459,24 @@ class JobDetail implements IJob {
         this.jobid = combined.substring(combined.indexOf("(") + 1, combined.indexOf(")"));
     }
  }
+// tslint:disable-next-line: max-classes-per-file
+export class EditSwitch implements vscode.QuickPickItem {
+    public label: string;
+    public detail: string;
+
+    constructor(base: string, detail: string) {
+        this.label = base;
+        this.detail = detail;
+    }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class HistoryItem implements vscode.QuickPickItem {
+    public label: string;
+    public description: string;
+
+    constructor(base: string, description?: string) {
+        this.label = base;
+        this.description = description;
+    }
+}

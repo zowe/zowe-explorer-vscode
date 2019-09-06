@@ -19,7 +19,7 @@ import { Session, Logger } from "@brightside/imperative";
 
 import * as profileLoader from "../../src/ProfileLoader";
 import { Job } from "../../src/ZoweJobNode";
-import { ZosJobsProvider } from "../../src/ZosJobsProvider";
+import { ZosJobsProvider, HistoryItem } from "../../src/ZosJobsProvider";
 
 describe.only("Zos Jobs Unit Tests", () => {
 
@@ -245,10 +245,11 @@ describe.only("Zos Jobs Unit Tests", () => {
          *************************************************************************************************************/
         it("Testing that user filter prompts are executed successfully", async () => {
             const defaultDialogText: string = ZosJobsProvider.defaultDialogText;
+            let qpItem: HistoryItem = new HistoryItem(defaultDialogText, "");
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             showInformationMessage.mockReset();
             showQuickPick.mockReset();
-            showQuickPick.mockReturnValueOnce(defaultDialogText);
+            showQuickPick.mockReturnValueOnce(qpItem);
             showInputBox.mockReset();
             showInputBox.mockReturnValueOnce("MYHLQ");
             showInputBox.mockReturnValueOnce("");
@@ -260,7 +261,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
-            showQuickPick.mockReturnValueOnce(defaultDialogText);
+            showQuickPick.mockReturnValueOnce(qpItem);
             showInputBox.mockReturnValueOnce("*");
             showInputBox.mockReturnValueOnce("STO*");
             showInputBox.mockReturnValueOnce("");
@@ -271,7 +272,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
-            showQuickPick.mockReturnValueOnce(defaultDialogText);
+            showQuickPick.mockReturnValueOnce(qpItem);
             showInputBox.mockReturnValueOnce("MYHLQ");
             showInputBox.mockReturnValueOnce("STO*");
             showInputBox.mockReturnValueOnce("");
@@ -282,7 +283,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
-            showQuickPick.mockReturnValueOnce(defaultDialogText);
+            showQuickPick.mockReturnValueOnce(qpItem);
             showInputBox.mockReturnValueOnce("MYHLQ");
             showInputBox.mockReturnValueOnce("STO*");
             showInputBox.mockReturnValueOnce("STO12345");
@@ -295,14 +296,15 @@ describe.only("Zos Jobs Unit Tests", () => {
 
             // Assert edge condition user cancels the input path box
             showInformationMessage.mockReset();
-            showQuickPick.mockReturnValueOnce(defaultDialogText);
+            showQuickPick.mockReturnValueOnce(qpItem);
             showInputBox.mockReturnValueOnce(undefined);
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for owner or wild card *. Search Cancelled");
 
             showQuickPick.mockReset();
-            showQuickPick.mockReturnValueOnce("Owner:MEHLQ Prefix:*");
+            qpItem = new HistoryItem("Owner:MEHLQ Prefix:*", "");
+            showQuickPick.mockReturnValueOnce(qpItem);
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
