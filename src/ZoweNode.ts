@@ -50,6 +50,7 @@ export class ZoweNode extends vscode.TreeItem {
         } else {
             this.contextValue = "ds";
         }
+        this.tooltip = this.label;
         utils.applyIcons(this);
     }
 
