@@ -1241,7 +1241,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test doc");
 
-        await extension.openPS(node);
+        await extension.openPS(node, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
@@ -1266,7 +1266,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce("test doc");
         const node2 = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
-        await extension.openPS(node2);
+        await extension.openPS(node2, true);
 
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -1277,7 +1277,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
-            await extension.openPS(child);
+            await extension.openPS(child, true);
         } catch (err) {
             // do nothing
         }
@@ -1291,7 +1291,7 @@ describe("Extension Unit Tests", () => {
 
         const child2 = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
-            await extension.openPS(child2);
+            await extension.openPS(child2, true);
         } catch (err) {
             // do nothing
         }
@@ -1299,7 +1299,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
         parent.contextValue = "pdsf";
-        await extension.openPS(child);
+        await extension.openPS(child, true);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
@@ -1307,7 +1307,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
 
         parent.contextValue = "favorite";
-        await extension.openPS(child);
+        await extension.openPS(child, true);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 

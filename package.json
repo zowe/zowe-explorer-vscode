@@ -121,6 +121,10 @@
         "title": "%deletePDS%"
       },
       {
+        "command": "zowe.editMember",
+        "title": "%editMember%"
+      },
+      {
         "command": "zowe.uploadDialog",
         "title": "%uploadDialog%"
       },
@@ -537,6 +541,10 @@
           "when": "view == zowe.explorer && viewItem == memberf",
           "command": "zowe.deleteMember",
           "group": "6_modification@1"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == member",
+          "command": "zowe.editMember"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",

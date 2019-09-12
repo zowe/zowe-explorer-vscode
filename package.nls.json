@@ -18,6 +18,7 @@
     "deleteDataset": "Delete Data Set",
     "deleteMember": "Delete Member",
     "deletePDS": "Delete PDS",
+    "editMember": "Edit",
     "uploadDialog": "Upload Member...",
     "pattern": "Search Data Sets by Entering Patterns",
     "refreshAll": "Zowe: Refresh All",

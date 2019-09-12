@@ -151,7 +151,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
     vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
-    vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
+    vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
         log.debug(localize("onDidSaveTextDocument1",
             "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ") +
@@ -175,6 +175,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.uploadDialog", (node) => mvsActions.uploadDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.editMember", (node) => openPS(node, false));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
@@ -743,7 +744,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
-        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null));
+        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null), true);
         datasetProvider.refresh();
     }
 }
@@ -1147,7 +1148,7 @@ export async function initializeFavorites(datasetProvider: DatasetTree) {
  *
  * @param {ZoweNode} node
  */
-export async function openPS(node: ZoweNode) {
+export async function openPS(node: ZoweNode, previewMember: boolean) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
@@ -1180,7 +1181,12 @@ export async function openPS(node: ZoweNode) {
             });
         }
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-        await vscode.window.showTextDocument(document);
+        if (previewMember === true) {
+            await vscode.window.showTextDocument(document);
+            }
+            else {
+                await vscode.window.showTextDocument(document, {preview: false});
+            }
     } catch (err) {
         log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
