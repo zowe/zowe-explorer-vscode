@@ -420,7 +420,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
           "command": "zowe.uss.deleteNode",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
@@ -430,7 +430,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
           "command": "zowe.uss.renameNode",
-          "group": "6_modification@0"
+          "group": "6_modification@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == textFile",
@@ -505,7 +505,7 @@
         {
           "when": "view == zowe.explorer && viewItem == member",
           "command": "zowe.deleteMember",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == member",
@@ -540,11 +540,12 @@
         {
           "when": "view == zowe.explorer && viewItem == memberf",
           "command": "zowe.deleteMember",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == member",
-          "command": "zowe.editMember"
+          "command": "zowe.editMember",
+          "group": "6_modification@0"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",
@@ -569,7 +570,7 @@
         {
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.deleteDataset",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",
@@ -619,7 +620,7 @@
         {
           "when": "view == zowe.explorer && viewItem == dsf",
           "command": "zowe.deleteDataset",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == dsf",
@@ -639,7 +640,7 @@
         {
           "when": "view == zowe.explorer && viewItem == pds",
           "command": "zowe.deletePDS",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == pds",
@@ -664,7 +665,7 @@
         {
           "when": "view == zowe.explorer && viewItem == pdsf",
           "command": "zowe.deletePDS",
-          "group": "6_modification@1"
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == pdsf",
