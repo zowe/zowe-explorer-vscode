@@ -673,7 +673,7 @@ describe("Extension Integration Tests - USS", () => {
             const localPath = path.join(extension.USS_DIR, "/",  testConst.profile.name,
             dirChildren[0].fullPath);
 
-            await extension.openUSS(dirChildren[0]);
+            await extension.openUSS(dirChildren[0], false, true);
             const doc = await vscode.workspace.openTextDocument(localPath);
 
             const originalData = doc.getText().trim();
@@ -686,7 +686,7 @@ describe("Extension Integration Tests - USS", () => {
             await fs.unlinkSync(localPath);
 
             // Download file
-            await extension.openUSS(dirChildren[0]);
+            await extension.openUSS(dirChildren[0], false, true);
 
             // Change contents back
             fs.writeFileSync(localPath, originalData);

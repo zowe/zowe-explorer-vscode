@@ -35,6 +35,7 @@
     "uss.copyPath": "Copy Path",
     "uss.createDirectory": "Create New Directory",
     "uss.createNode": "Create new file or directory",
+    "uss.editFile": "Edit",
     "uss.fullPath": "Search Unix System Services (USS) by Entering a Path",
     "uss.refreshAll": "Zowe: Refresh All",
     "uss.refreshUSS": "Pull from Mainframe",

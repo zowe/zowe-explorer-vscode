@@ -209,7 +209,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
     vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => ussFileProvider.ussFilterPrompt(node));
-    vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
+    vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node, false, true));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
@@ -222,6 +222,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
+    vscode.commands.registerCommand("zowe.uss.editFile", (node) => openUSS(node, false, false));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         ussFileProvider.onDidChangeConfiguration(e);
@@ -430,7 +431,7 @@ export async function downloadJcl(job: Job) {
  */
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
     node.setBinary(binary);
-    await openUSS(node, true);
+    await openUSS(node, true, true);
     ussFileProvider.refresh();
 }
 
@@ -1492,7 +1493,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  *
  * @param {ZoweUSSNode} node
  */
-export async function openUSS(node: ZoweUSSNode, download = false) {
+export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
@@ -1527,7 +1528,12 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
             );
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
-        await vscode.window.showTextDocument(document);
+        if (previewFile === true) {
+            await vscode.window.showTextDocument(document);
+            }
+            else {
+                await vscode.window.showTextDocument(document, {preview: false});
+            }
     } catch (err) {
         log.error(localize("openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);

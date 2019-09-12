@@ -73,6 +73,10 @@
         "title": "%uss.deleteNode%"
       },
       {
+        "command": "zowe.uss.editFile",
+        "title": "%uss.editFile%"
+      },
+      {
         "command": "zowe.uss.renameNode",
         "title": "%uss.renameNode%"
       },
@@ -426,6 +430,11 @@
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
           "command": "zowe.uss.copyPath",
           "group": "5_copyPath"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.editFile",
+          "group": "6_modification@0"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",

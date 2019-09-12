@@ -1606,7 +1606,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        await extension.openUSS(node);
+        await extension.openUSS(node, false, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
@@ -1633,7 +1633,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce("test.doc");
         const node2 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
 
-        await extension.openUSS(node2);
+        await extension.openUSS(node2, false, true);
 
         ussFile.mockReset();
         openTextDocument.mockReset();
@@ -1644,7 +1644,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
-            await extension.openUSS(child);
+            await extension.openUSS(child, false, true);
         } catch (err) {
             // do nothing
         }
@@ -1658,7 +1658,7 @@ describe("Extension Unit Tests", () => {
 
         const child2 = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, node2, null, null);
         try {
-            await extension.openUSS(child2);
+            await extension.openUSS(child2, false, true);
         } catch (err) {
             // do nothing
         }
@@ -1673,7 +1673,7 @@ describe("Extension Unit Tests", () => {
         badparent.contextValue = "turnip";
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
-            await extension.openUSS(brat);
+            await extension.openUSS(brat, false, true);
 // tslint:disable-next-line: no-empty
         } catch (err) {
         }
@@ -1704,11 +1704,11 @@ describe("Extension Unit Tests", () => {
         child.contextValue = "textfile";
 
         // For each node, make sure that code below the log.debug statement is execute
-        await extension.openUSS(favoriteFile);
+        await extension.openUSS(favoriteFile, false, true);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
 
-        await extension.openUSS(child);
+        await extension.openUSS(child, false, true);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
     });
@@ -1729,7 +1729,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        await extension.openUSS(node);
+        await extension.openUSS(node, false, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
