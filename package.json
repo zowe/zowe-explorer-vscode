@@ -133,6 +133,14 @@
         "title": "%uploadDialog%"
       },
       {
+        "command": "zowe.editMember",
+        "title": "%editMember%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.pattern",
         "title": "%pattern%",
         "icon": {
@@ -214,6 +222,14 @@
         "icon": {
           "light": "./resources/light/newfile.svg",
           "dark": "./resources/dark/newfile.svg"
+        }
+      },
+      {
+        "command": "zowe.uss.editFile",
+        "title": "%uss.editFile%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -403,6 +419,11 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+          "command": "zowe.uss.editFile",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
           "command": "zowe.uss.refreshUSS",
           "group": "inline"
         },
@@ -490,6 +511,11 @@
           "when": "view == zowe.uss.explorer && viewItem == directoryf",
           "command": "zowe.uss.uploadDialog",
           "group": "1_create"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == member",
+          "command": "zowe.editMember",
+          "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == member",
