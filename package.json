@@ -73,10 +73,6 @@
         "title": "%uss.deleteNode%"
       },
       {
-        "command": "zowe.uss.editFile",
-        "title": "%uss.editFile%"
-      },
-      {
         "command": "zowe.uss.renameNode",
         "title": "%uss.renameNode%"
       },
@@ -123,10 +119,6 @@
       {
         "command": "zowe.deletePDS",
         "title": "%deletePDS%"
-      },
-      {
-        "command": "zowe.editMember",
-        "title": "%editMember%"
       },
       {
         "command": "zowe.uploadDialog",
