@@ -8,6 +8,6 @@
     "loadDefaultProfile.error.profile1": "No default zosmf profile found for Zowe CLI.",
     "loadDefaultProfile.error.profile2": " A default zosmf profile created with Zowe CLI is required to use the Zowe extension.",
     "loadDefaultProfile.error.profile3": " Please [create at least one profile with Zowe CLI]",
-    "loadDefaultProfile.error.profile4": "(https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).",
+    "loadDefaultProfile.error.profile4": "(https://docs.zowe.org/stable/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).",
     "loadDefaultProfile.debug.errorText": "Error text:"
 }
