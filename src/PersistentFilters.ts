@@ -101,7 +101,7 @@ export class PersistentFilters {
 
     private async updateHistory() {
         // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration().get(this.schema) };
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.history = this.mHistory;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);

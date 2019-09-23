@@ -365,17 +365,21 @@ describe("Extension Unit Tests", () => {
         });
         createBasicZosmfSession.mockReturnValue(session);
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: () => "folderpath"
         });
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: (setting: string) => "vscode"
         });
 
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: () => ""
         });
 
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
                 "[test]: brtvs99.test{ds}",
@@ -384,6 +388,7 @@ describe("Extension Unit Tests", () => {
             ]
         });
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
                 "[test]: brtvs99.test{ds}",
@@ -392,6 +397,7 @@ describe("Extension Unit Tests", () => {
             ]
         });
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
                 "[test]: brtvs99.test{ds}",
@@ -400,6 +406,7 @@ describe("Extension Unit Tests", () => {
             ]
         });
         getConfiguration.mockReturnValueOnce({
+            persistence: true,
             get: (setting: string) => [
                 "[test]: /u/myUser{directory}",
                 "[test]: /u/myUser{directory}",
@@ -408,6 +415,7 @@ describe("Extension Unit Tests", () => {
             ]
         });
         getConfiguration.mockReturnValue({
+            persistence: true,
             get: (setting: string) => [
                 "[test]: /u/myUser{directory}",
                 "[test]: /u/myUser{directory}",
@@ -1983,14 +1991,16 @@ describe("Extension Unit Tests", () => {
         file.contextValue = "file";
         const subNode = new ZoweNode("pds", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         const member = new ZoweNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
-        const favorite = new ZoweNode("favorite", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        const favoriteSubNode = new ZoweNode("memberf", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        const favoritemember = new ZoweNode("pdsf", vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        const favorite = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        favorite.contextValue = "favorite";
+        const favoriteSubNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favorite, null);
+        favoriteSubNode.contextValue = "dsf";
+        const favoritemember = new ZoweNode("pds", vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        favoritemember.contextValue = "member";
         const gibberish = new ZoweNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         gibberish.contextValue = "gibberish";
         const gibberishSubNode = new ZoweNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
         submitJob.mockReturnValue(iJob);
-
 
         // pds member
         showInformationMessage.mockReset();
@@ -2018,24 +2028,25 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
+        favoriteSubNode.contextValue = "pdsf";
         await extension.submitMember(favoritemember);
         expect(submitJob.mock.calls.length).toBe(1);
-        expect(submitJob.mock.calls[0][1]).toEqual("memberf(pdsf)");
+        expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL(pds)");
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
-
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
 
         // favorite
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        await extension.submitMember(favorite);
+        favoriteSubNode.contextValue = "dsf";
+        await extension.submitMember(favoriteSubNode);
         expect(submitJob.mock.calls.length).toBe(1);
-        expect(submitJob.mock.calls[0][1]).toEqual("favorite");
+        expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL");
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
 
         // gibberish
         showInformationMessage.mockReset();

@@ -96,17 +96,6 @@ describe("DatasetTree Unit Tests", () => {
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    getConfiguration.mockReturnValue({
-        get: (setting: string) => [
-            "[test]: brtvs99.public.test{pds}",
-            "[test]: brtvs99.test{ds}",
-            "[test]: brtvs99.fail{fail}",
-            "[test]: brtvs99.test.search{session}",
-        ],
-        update: jest.fn(()=>{
-            return {};
-        })
-    });
 
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
@@ -142,7 +131,6 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Tests that getChildren returns valid list of elements", async () => {
         // Waiting until we populate rootChildren with what getChildren return
-        //const mySpy = jest.spyOn(testTree.mSessionNodes[1], "progressDatasetList").mockReturnValueOnce(Promise.resolve(testResponse));
         const rootChildren = await testTree.getChildren();
 
         // Creating a rootNode
@@ -155,7 +143,6 @@ describe("DatasetTree Unit Tests", () => {
         sessNode[1].pattern = "test";
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
         sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
-        //jest.spyOn(sessNode[1], "progressDatasetList").mockReturnValueOnce(Promise.resolve(testResponse));
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode[0]).toMatchObject(rootChildren[0]);
@@ -284,6 +271,19 @@ describe("DatasetTree Unit Tests", () => {
         const member = new ZoweNode("Child", vscode.TreeItemCollapsibleState.None,
             parent, null);
 
+        getConfiguration.mockReturnValue({
+            persistence: true,
+            get: (setting: string) => [
+                "[test]: brtvs99.public.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
+        });
+
         await testTree.addFavorite(member);
 
         // Check adding duplicates
@@ -360,6 +360,19 @@ describe("DatasetTree Unit Tests", () => {
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
+
+        getConfiguration.mockReturnValue({
+            persistence: true,
+            get: (setting: string) => [
+                "[test]: brtvs99.public1.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
+        });
 
         // Assert choosing the new filter specification followed by a path
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);

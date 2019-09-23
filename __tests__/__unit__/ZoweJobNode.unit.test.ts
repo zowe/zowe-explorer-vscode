@@ -27,9 +27,10 @@ describe.only("Zos Jobs Unit Tests", () => {
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     getConfiguration.mockReturnValue({
+        persistence: true,
         get: (setting: string) => [
-            "[test]: /u/aDir{directory}",
-            "[test]: /u/myFile.txt{textFile}",
+            "[test]: Owner:stonecc Prefix:*{server}",
+            "[test]: USER1(JOB30148){job}",
         ],
         update: jest.fn(()=>{
             return {};
