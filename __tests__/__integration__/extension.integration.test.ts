@@ -74,25 +74,6 @@ describe("Extension Integration Tests", () => {
         await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
-    describe("TreeView", () => {
-        it("should create the TreeView", async () => {
-            // Initialize dataset provider
-            const datasetProvider = new DatasetTree();
-
-            // Create the TreeView using datasetProvider to create tree structure
-            const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
-
-            const allNodes = await getAllNodes(datasetProvider.mSessionNodes);
-            for (const node of allNodes) {
-                // For each node, select that node in TreeView by calling reveal()
-                await testTreeView.reveal(node);
-                // Test that the node is successfully selected
-                expect(node).to.deep.equal(testTreeView.selection[0]);
-            }
-            testTreeView.dispose();
-        }).timeout(TIMEOUT);
-    });
-
     describe("Creating a Session", () => {
         it("should add a session", async () => {
             // Grab profiles
@@ -693,6 +674,27 @@ describe("Extension Integration Tests - USS", () => {
             await extension.saveUSSFile(doc, ussTestTree);
         }).timeout(TIMEOUT);
     });
+});
+
+describe("TreeView", () => {
+    const expect = chai.expect;
+    chai.use(chaiAsPromised);
+
+    it("should create the TreeView", async () => {
+        // Initialize dataset provider
+        const datasetProvider = new DatasetTree();
+        // Create the TreeView using datasetProvider to create tree structure
+        const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
+
+        const allNodes = await getAllNodes(datasetProvider.mSessionNodes);
+        for (const node of allNodes) {
+            // For each node, select that node in TreeView by calling reveal()
+            await testTreeView.reveal(node);
+            // Test that the node is successfully selected
+            expect(node).to.deep.equal(testTreeView.selection[0]);
+        }
+        testTreeView.dispose();
+    }).timeout(TIMEOUT);
 });
 
 /*************************************************************************************************************
