@@ -313,6 +313,7 @@ Array [
   },
   Object {
     "command": "zowe.saveSearch",
+    "group": "4_workspace",
     "when": "view == zowe.explorer && viewItem == session",
   },
   Object {
@@ -335,6 +336,7 @@ Array [
   },
   Object {
     "command": "zowe.uss.saveSearch",
+    "group": "4_workspace",
     "when": "view == zowe.uss.explorer && viewItem == uss_session",
   },
   Object {
