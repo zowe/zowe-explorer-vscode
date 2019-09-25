@@ -37,6 +37,7 @@ export let BRIGHTTEMPFOLDER;
 export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
+export const FAV_SUFFIX = "f";
 
 let log: Logger;
 /**
@@ -222,6 +223,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
+    vscode.commands.registerCommand("zowe.uss.saveSearch", async (node) => ussFileProvider.addUSSSearchFavorite(node));
+    vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node) => ussFileProvider.removeUSSFavorite(node));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         ussFileProvider.onDidChangeConfiguration(e);

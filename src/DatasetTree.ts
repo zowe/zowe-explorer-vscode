@@ -18,6 +18,7 @@ import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 // import ZoweTree from "./ZoweTree";
 import { PersistentFilters } from "./PersistentFilters";
 import * as utils from "./utils";
+import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -93,7 +94,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                             this.mFavoriteSession, session);
                         node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
                     }
-                    node.contextValue += "f";
+                    node.contextValue += extension.FAV_SUFFIX;
                     node.iconPath = utils.applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
@@ -189,10 +190,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
-
             // Uses loaded profile to create a zosmf session with brightside
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
             node.contextValue = "session";
@@ -240,7 +239,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession());
-            temp.contextValue += "f";
+            temp.contextValue += extension.FAV_SUFFIX;
             if (temp.contextValue === "dsf") {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
@@ -273,7 +272,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
     public async updateFavorites() {
         const settings = this.mFavorites.map((fav) =>
-            fav.label + "{" + fav.contextValue.slice(0, -1) + "}"
+            fav.label + "{" + fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}"
         );
         this.mHistory.updateFavorites(settings);
     }

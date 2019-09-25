@@ -245,6 +245,14 @@
         }
       },
       {
+        "command": "zowe.uss.saveSearch",
+        "title": "%saveSearch%"
+      },
+      {
+        "command": "zowe.uss.removeSavedSearch",
+        "title": "%removeSavedSearch%"
+      },      
+      {
         "command": "zowe.uss.binary",
         "title": "%uss.binary%"
       },
@@ -413,11 +421,6 @@
           "group": "1_create"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem == directoryf",
-          "command": "zowe.uss.removeFavorite",
-          "group": "4_workspace"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
           "command": "zowe.uss.refreshUSS",
           "group": "inline"
@@ -438,7 +441,7 @@
           "group": "0_mainframeInteraction"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
+          "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf && viewItem != uss_sessionf",
           "command": "zowe.uss.deleteNode",
           "group": "6_modification@1"
         },
@@ -448,7 +451,7 @@
           "group": "5_copyPath"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != uss_sessionf ",
           "command": "zowe.uss.renameNode",
           "group": "6_modification@0"
         },
@@ -468,7 +471,7 @@
           "group": "3_systemSpecific"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem == textFilef",
+          "when": "view == zowe.uss.explorer && viewItem != textFile && viewItem != directory && viewItem != binaryFile && viewItem != uss_session",
           "command": "zowe.uss.removeFavorite",
           "group": "4_workspace"
         },
@@ -486,11 +489,6 @@
           "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
           "command": "zowe.uss.text",
           "group": "3_systemSpecific"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
-          "command": "zowe.uss.removeFavorite",
-          "group": "4_workspace"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == directory",
@@ -729,6 +727,14 @@
           "command": "zowe.uss.removeSession"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem == uss_session",
+          "command": "zowe.uss.saveSearch"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == uss_session",
+          "command": "zowe.uss.removeSavedSearch"
+        },        
+        {
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.refreshJobsServer",
           "group": "inline"
@@ -861,6 +867,14 @@
           "command": "zowe.uss.safeSaveUSS",
           "when": "never"
         },
+        {
+          "command": "zowe.uss.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.removeSavedSearch",
+          "when": "never"
+        },        
         {
           "command": "zowe.uss.removeSession",
           "when": "never"

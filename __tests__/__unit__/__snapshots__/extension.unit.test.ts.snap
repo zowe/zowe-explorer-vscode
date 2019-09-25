@@ -28,11 +28,6 @@ Array [
     "when": "view == zowe.uss.explorer && viewItem == directoryf",
   },
   Object {
-    "command": "zowe.uss.removeFavorite",
-    "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem == directoryf",
-  },
-  Object {
     "command": "zowe.uss.refreshUSS",
     "group": "inline",
     "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
@@ -55,7 +50,7 @@ Array [
   Object {
     "command": "zowe.uss.deleteNode",
     "group": "6_modification@1",
-    "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
+    "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf && viewItem != uss_sessionf",
   },
   Object {
     "command": "zowe.uss.copyPath",
@@ -65,7 +60,7 @@ Array [
   Object {
     "command": "zowe.uss.renameNode",
     "group": "6_modification@0",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != uss_sessionf ",
   },
   Object {
     "command": "zowe.uss.binary",
@@ -85,7 +80,7 @@ Array [
   Object {
     "command": "zowe.uss.removeFavorite",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem == textFilef",
+    "when": "view == zowe.uss.explorer && viewItem != textFile && viewItem != directory && viewItem != binaryFile && viewItem != uss_session",
   },
   Object {
     "command": "zowe.uss.text",
@@ -100,11 +95,6 @@ Array [
   Object {
     "command": "zowe.uss.text",
     "group": "3_systemSpecific",
-    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
-  },
-  Object {
-    "command": "zowe.uss.removeFavorite",
-    "group": "4_workspace",
     "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
   },
   Object {
@@ -342,6 +332,14 @@ Array [
   Object {
     "command": "zowe.uss.removeSession",
     "when": "viewItem == uss_session",
+  },
+  Object {
+    "command": "zowe.uss.saveSearch",
+    "when": "view == zowe.uss.explorer && viewItem == uss_session",
+  },
+  Object {
+    "command": "zowe.uss.removeSavedSearch",
+    "when": "view == zowe.uss.explorer && viewItem == uss_session",
   },
   Object {
     "command": "zowe.refreshJobsServer",

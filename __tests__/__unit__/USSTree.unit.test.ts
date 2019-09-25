@@ -20,7 +20,7 @@ import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-
+import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";
 
 
@@ -329,7 +329,7 @@ describe("Unit Tests (Jest)", () => {
                 false, "test"),
         ];
 
-        expectedUSSFavorites.map((node) => node.contextValue += "f");
+        expectedUSSFavorites.map((node) => node.contextValue += extension.FAV_SUFFIX);
         expectedUSSFavorites.forEach((node) => {
             if (node.contextValue !== "directoryf") {
                 node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
