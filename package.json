@@ -421,12 +421,12 @@
           "group": "1_create"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.refreshUSS",
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.safeSaveUSS",
           "group": "inline"
         },
@@ -731,10 +731,6 @@
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
           "command": "zowe.uss.saveSearch",
           "group": "4_workspace"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem == uss_session",
-          "command": "zowe.uss.removeSavedSearch"
         },
         {
           "when": "view == zowe.jobs && viewItem == server",

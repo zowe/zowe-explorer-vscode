@@ -30,12 +30,12 @@ Array [
   Object {
     "command": "zowe.uss.refreshUSS",
     "group": "inline",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
   },
   Object {
     "command": "zowe.uss.safeSaveUSS",
     "group": "inline",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
   },
   Object {
     "command": "zowe.uss.refreshUSS",
@@ -337,10 +337,6 @@ Array [
   Object {
     "command": "zowe.uss.saveSearch",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem == uss_session",
-  },
-  Object {
-    "command": "zowe.uss.removeSavedSearch",
     "when": "view == zowe.uss.explorer && viewItem == uss_session",
   },
   Object {
