@@ -96,7 +96,7 @@ describe("Unit Tests (Jest)", () => {
 
     const testTree = new USSTree();
     testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
-    testTree.mSessionNodes[1].contextValue = "uss_session";
+    testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
 
@@ -111,7 +111,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session, null);
-        testNode.contextValue = "uss_session";
+        testNode.contextValue = extension.USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -147,9 +147,9 @@ describe("Unit Tests (Jest)", () => {
             new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null),
             new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null),
         ];
-        sessNode[0].contextValue = "favorite";
+        sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
-        sessNode[1].contextValue = "uss_session";
+        sessNode[1].contextValue = extension.USS_SESSION_CONTEXT;
         sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
         sessNode[1].fullPath = "test";
 
@@ -271,7 +271,7 @@ describe("Unit Tests (Jest)", () => {
             testTree.mSessionNodes[1], null, "/");
         const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None,
             parentDir, null, "/parent");
-        childFile.contextValue = "textFile";
+        childFile.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
         // Check adding directory
         await testTree.addUSSFavorite(parentDir);
@@ -308,7 +308,7 @@ describe("Unit Tests (Jest)", () => {
         Object.defineProperty(testTree, "refresh", {value: refresh});
         refresh.mockReset();
         const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], session, null);
-        folder.contextValue = "directory";
+        folder.contextValue = extension.USS_DIR_CONTEXT;
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(folder, false);
@@ -333,7 +333,7 @@ describe("Unit Tests (Jest)", () => {
 
         expectedUSSFavorites.map((node) => node.contextValue += extension.FAV_SUFFIX);
         expectedUSSFavorites.forEach((node) => {
-            if (node.contextValue !== "directoryf") {
+            if (node.contextValue !== extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX) {
                 node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
             }
         });

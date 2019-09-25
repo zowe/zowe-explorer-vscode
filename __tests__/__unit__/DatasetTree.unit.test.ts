@@ -22,9 +22,7 @@ import { Session, Logger } from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as utils from "../../src/utils";
 import * as profileLoader from "../../src/ProfileLoader";
-import { addSession } from "../../src/extension";
-import { MockMethod } from "../../src/decorators/MockMethod";
-
+import * as extension from "../../src/extension";
 
 describe("DatasetTree Unit Tests", () => {
 
@@ -99,7 +97,7 @@ describe("DatasetTree Unit Tests", () => {
 
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
-    testTree.mSessionNodes[1].contextValue = "session";
+    testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
 
@@ -138,8 +136,8 @@ describe("DatasetTree Unit Tests", () => {
             new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null),
             new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session),
         ];
-        sessNode[0].contextValue = "favorite";
-        sessNode[1].contextValue = "session";
+        sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
+        sessNode[1].contextValue = extension.DS_SESSION_CONTEXT;
         sessNode[1].pattern = "test";
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
         sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
@@ -307,8 +305,8 @@ describe("DatasetTree Unit Tests", () => {
         expect(testTree.mFavorites.length).toEqual(3);
 
         // Test adding member already present
-        parent.contextValue = "pdsf";
-        member.contextValue = "member";
+        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        member.contextValue = extension.DS_MEMBER_CONTEXT;
         await testTree.addFavorite(member);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("PDS already in favorites");
@@ -376,7 +374,7 @@ describe("DatasetTree Unit Tests", () => {
 
         // Assert choosing the new filter specification followed by a path
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual("session");
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.DS_SESSION_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
 
         // Assert edge condition user cancels the input path box
@@ -403,7 +401,7 @@ describe("DatasetTree Unit Tests", () => {
         // Executing from favorites
         const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
         vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
-        favoriteSearch.contextValue = "sessionf";
+        favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         const checkSession = jest.spyOn(testTree, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
         await testTree.datasetFilterPrompt(favoriteSearch);

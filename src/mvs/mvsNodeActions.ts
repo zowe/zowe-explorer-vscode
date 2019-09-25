@@ -13,7 +13,7 @@ import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
-import * as nls from "vscode-nls";
+import * as extension from "../../src/extension";
 
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {
@@ -35,7 +35,7 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
 }
 
 export function getDatasetLabel(node: ZoweNode) {
-    if (node.mParent && node.mParent.contextValue === "favorite") {
+    if (node.mParent && node.mParent.contextValue === extension.FAVORITE_CONTEXT) {
         const profileEnd = "]: ";
         const profileIndex = node.label.indexOf(profileEnd);
         return node.label.substr(profileIndex + profileEnd.length, node.label.length);

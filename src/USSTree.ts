@@ -60,7 +60,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         this.mSessionNodes = [];
         this.mFavoriteSession = new ZoweUSSNode(localize("Favorites", "Favorites"),
             vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
-        this.mFavoriteSession.contextValue = "favorite";
+        this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mSessionNodes = [this.mFavoriteSession];
         this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
         this.mHistory = new PersistentFilters(USSTree.persistenceSchema);
@@ -84,7 +84,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     public getChildren(element?: ZoweUSSNode): ZoweUSSNode[] | Promise<ZoweUSSNode[]> {
         if (element) {
-            if (element.contextValue === "favorite") {
+            if (element.contextValue === extension.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
             return element.getChildren();
@@ -139,7 +139,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             // Creates ZoweUSSNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                             zosmfProfile.name);
-            node.contextValue = "uss_session";
+            node.contextValue = extension.USS_SESSION_CONTEXT;
             node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
             node.dirty = true;
@@ -173,7 +173,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             false,
             node.getSessionNode().mProfileName);
         temp.contextValue += extension.FAV_SUFFIX;
-        if (temp.contextValue === "textFilef" || temp.contextValue === "binaryFilef") {
+        if (temp.contextValue === extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX ||
+            temp.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
         temp.iconPath = utils.applyIcons(node);
@@ -193,7 +194,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const label = "[" + node.getSessionNode().mProfileName + "]: " + node.fullPath;
         const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
             this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().mProfileName);
-        temp.contextValue = "uss_session" + extension.FAV_SUFFIX;
+        temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         temp.label = temp.fullPath = temp.tooltip = label;
         temp.iconPath =  utils.applyIcons(temp);
         // add a command to execute the search
@@ -234,7 +235,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
+        element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
@@ -268,7 +269,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         }
         let sessionNode = node.getSessionNode();
         let remotepath: string = USSTree.defaultDialogText;
-        if (node.contextValue === "uss_session") {
+        if (node.contextValue === extension.USS_SESSION_CONTEXT) {
             const modItems = Array.from(this.mHistory.getHistory());
             if (modItems.length > 0) {
                 // accessing history
@@ -311,7 +312,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const sanitizedPath = remotepath.replace(/\/\/+/, "/");
         sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        sessionNode.iconPath = utils.applyIcons(sessionNode, "open");
+        sessionNode.iconPath = utils.applyIcons(sessionNode, extension.ICON_STATE_OPEN);
         // update the treeview with the new path
         sessionNode.label = `${sessionNode.mProfileName} [${sanitizedPath}]`;
         sessionNode.dirty = true;
@@ -333,7 +334,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
-                // if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "directory") {
+                // if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.USS_DIR_CONTEXT) {
                     node = new ZoweUSSNode(nodeName,
                         vscode.TreeItemCollapsibleState.Collapsed,
                         this.mFavoriteSession, session, "",
@@ -342,7 +343,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                     const label = "[" + sesName + "]: " + nodeName;
                     node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
                         this.mFavoriteSession, session, null, false, profileName);
-                    node.contextValue = "uss_session";
+                    node.contextValue = extension.USS_SESSION_CONTEXT;
                     node.label = node.fullPath = node.tooltip = label;
                     // add a command to execute the search
                     node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };

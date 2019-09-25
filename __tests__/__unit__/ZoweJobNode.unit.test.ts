@@ -16,7 +16,7 @@ jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
 import { Session, Logger } from "@brightside/imperative";
-
+import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";
 import { Job } from "../../src/ZoweJobNode";
 import { ZosJobsProvider, HistoryItem } from "../../src/ZosJobsProvider";
@@ -257,7 +257,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             // Assert choosing the new filter specification followed by an owner
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual("server");
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -268,7 +268,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             // Assert choosing the new filter specification followed by a prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual("server");
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -279,7 +279,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             // Assert choosing the new filter specification followed by an owner and prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual("server");
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -290,7 +290,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO12345");
             // Assert choosing the new filter specification followed by a Job id
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual("server");
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
@@ -321,7 +321,7 @@ describe.only("Zos Jobs Unit Tests", () => {
             // // Executing from favorites
             // const favoriteSearch = new Job("[aProfile]: HLQ.PROD1.STUFF",
             // vscode.TreeItemCollapsibleState.None, testJobsProvider.mFavoriteSession, null);
-            // favoriteSearch.contextValue = "sessionf";
+            // favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             // const checkSession = jest.spyOn(testJobsProvider, "addSession");
             // expect(checkSession).not.toHaveBeenCalled();
             // await testJobsProvider.searchPrompt(favoriteSearch);

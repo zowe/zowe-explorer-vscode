@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../../src/ZoweNode";
+import * as extension from "../../../src/extension";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -57,7 +58,7 @@ describe("mvsNodeActions", () => {
             const labelNameWithProfile = "[myProfile123]: dataset.test";
             const labelName = "dataset.test";
             const parentNode = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-            parentNode.contextValue = "favorite";
+            parentNode.contextValue = extension.FAVORITE_CONTEXT;
             const node = new ZoweNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
             const label = mvsNodeActions.getDatasetLabel(node);
             expect(label).toEqual(labelName);

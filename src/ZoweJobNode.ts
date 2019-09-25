@@ -81,7 +81,7 @@ export class Job extends vscode.TreeItem {
         if (this.dirty) {
             const elementChildren = [];
             let spools: zowe.IJobFile[] = [];
-            if (this.contextValue === "job" || this.contextValue === "jobf") {
+            if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
                 spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
@@ -92,7 +92,7 @@ export class Job extends vscode.TreeItem {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
-                        const sessionName = this.contextValue === "jobf" ?
+                        const sessionName = this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
                             this.label.substring(1, this.label.lastIndexOf("]")).trim() :
                             this.getSessionName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
@@ -122,7 +122,7 @@ export class Job extends vscode.TreeItem {
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
-                        jobNode.contextValue = "job";
+                        jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
                         if (!jobNode.iconPath) {
                             jobNode.iconPath = utils.applyIcons(jobNode);
                         }
@@ -141,7 +141,7 @@ export class Job extends vscode.TreeItem {
         return this.children;
     }
     public getDetailLabel(): string {
-        return this.contextValue === "Job" || this.contextValue === "Jobf" ?
+        return this.contextValue === "Job" || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
             `${this.job.jobname}(${this.job.jobid})`
             : Job.createSearchLabel(this.owner, this.prefix, this.searchId);
     }
@@ -210,7 +210,7 @@ class Spool extends Job {
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
                 public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
         super(label, mCollapsibleState, mParent, session, job);
-        this.contextValue = "spool";
+        this.contextValue = extension.JOBS_SPOOL_CONTEXT;
         utils.applyIcons(this);
     }
 }

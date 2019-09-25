@@ -98,11 +98,11 @@ describe("Extension Unit Tests", () => {
     };
 
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
-    sessNode.contextValue = "session";
+    sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
 
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    ussNode.contextValue = "uss_session";
+    ussNode.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
@@ -437,9 +437,9 @@ describe("Extension Unit Tests", () => {
             new ZoweNode("[test]: brtvs99.test", vscode.TreeItemCollapsibleState.None, undefined, undefined),
             new ZoweNode("[test]: brtvs99.test.search", vscode.TreeItemCollapsibleState.None, undefined, null)
         ];
-        sampleFavorites[0].contextValue = "pdsf";
-        sampleFavorites[1].contextValue = "dsf";
-        sampleFavorites[2].contextValue = "sessionf";
+        sampleFavorites[0].contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        sampleFavorites[1].contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        sampleFavorites[2].contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         sampleFavorites[1].command = {
             command: "zowe.ZoweNode.openPS",
             title: "",
@@ -643,7 +643,7 @@ describe("Extension Unit Tests", () => {
 
         expect(bufferToDataSet.mock.calls.length).toBe(0);
 
-        parent.contextValue = "pdsf";
+        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.createMember(parent, testTree);
     });
 
@@ -706,7 +706,7 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         showTextDocument.mockReset();
 
-        node.contextValue = "dsf";
+        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(node);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
@@ -714,7 +714,7 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         openTextDocument.mockReset();
 
-        parent.contextValue = "pdsf";
+        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
@@ -722,7 +722,7 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         openTextDocument.mockReset();
 
-        parent.contextValue = "favorite";
+        parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.refreshPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
@@ -971,11 +971,11 @@ describe("Extension Unit Tests", () => {
 
         existsSync.mockReturnValueOnce(true);
         node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node.contextValue = "dsf";
+        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.deleteDataset(node, testTree);
 
         existsSync.mockReturnValueOnce(true);
-        node.contextValue = "pdsf";
+        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, node, null);
         await extension.deleteDataset(child, testTree);
     });
@@ -989,7 +989,7 @@ describe("Extension Unit Tests", () => {
 
         const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = "favorite";
+        node.contextValue = extension.FAVORITE_CONTEXT;
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
@@ -1017,7 +1017,7 @@ describe("Extension Unit Tests", () => {
 
         const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = "pdsf";
+        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
@@ -1062,7 +1062,7 @@ describe("Extension Unit Tests", () => {
 
         const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node.pattern = "TEST";
-        node.contextValue = "session";
+        node.contextValue = extension.DS_SESSION_CONTEXT;
 
         showInputBox.mockReturnValueOnce("test");
         await extension.enterPattern(node, testTree);
@@ -1308,7 +1308,7 @@ describe("Extension Unit Tests", () => {
 
         openTextDocument.mockReset();
         showTextDocument.mockReset();
-        parent.contextValue = "pdsf";
+        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.openPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1316,7 +1316,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockReset();
         openTextDocument.mockReset();
 
-        parent.contextValue = "favorite";
+        parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.openPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1371,21 +1371,21 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        node.contextValue = "dsf";
+        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.safeSave(node);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        parent.contextValue = "pdsf";
+        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.safeSave(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        parent.contextValue = "favorite";
+        parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.safeSave(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
@@ -1449,7 +1449,7 @@ describe("Extension Unit Tests", () => {
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, node, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/");
 
-        node.contextValue = "uss_session";
+        node.contextValue = extension.USS_SESSION_CONTEXT;
         node.fullPath = "/u/myuser";
 
         showErrorMessage.mockReset();
@@ -1512,12 +1512,12 @@ describe("Extension Unit Tests", () => {
         expect(ussFile.mock.calls[0][1]).toEqual("/u/myuser");
 
         ussFile.mockReset();
-        node.contextValue = "directory";
+        node.contextValue = extension.USS_DIR_CONTEXT;
         await extension.refreshUSS(child);
         expect(ussFile.mock.calls[0][1]).toBe("/child");
 
         ussFile.mockReset();
-        parent.contextValue = "directoryf";
+        parent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshUSS(child);
         expect(ussFile.mock.calls[0][1]).toBe("/child");
 
@@ -1702,16 +1702,16 @@ describe("Extension Unit Tests", () => {
 
         // Set up mock favorite session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        favoriteSession.contextValue = "favorite";
+        favoriteSession.contextValue = extension.FAVORITE_CONTEXT;
 
         // Set up favorited nodes (directly under Favorites)
         const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, null, "/");
-        favoriteFile.contextValue = "textfilef";
+        favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/");
-        favoriteParent.contextValue = "directoryf";
+        favoriteParent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
         // Set up child of favoriteDir - make sure we can open the child of a favorited directory
         const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir");
-        child.contextValue = "textfile";
+        child.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
         // For each node, make sure that code below the log.debug statement is execute
         await extension.openUSS(favoriteFile);
@@ -1988,17 +1988,17 @@ describe("Extension Unit Tests", () => {
     it("tests that a pds member is submitted", async () => {
         showErrorMessage.mockReset();
         const rootNode = new ZoweNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
-        rootNode.contextValue = "session";
+        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
         const file = new ZoweNode("file", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         file.contextValue = "file";
-        const subNode = new ZoweNode("pds", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        const member = new ZoweNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
+        const subNode = new ZoweNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const member = new ZoweNode(extension.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
         const favorite = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        favorite.contextValue = "favorite";
+        favorite.contextValue = extension.FAVORITE_CONTEXT;
         const favoriteSubNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favorite, null);
-        favoriteSubNode.contextValue = "dsf";
-        const favoritemember = new ZoweNode("pds", vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
-        favoritemember.contextValue = "member";
+        favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        const favoritemember = new ZoweNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        favoritemember.contextValue = extension.DS_MEMBER_CONTEXT;
         const gibberish = new ZoweNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         gibberish.contextValue = "gibberish";
         const gibberishSubNode = new ZoweNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
@@ -2030,7 +2030,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        favoriteSubNode.contextValue = "pdsf";
+        favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.submitMember(favoritemember);
         expect(submitJob.mock.calls.length).toBe(1);
         expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL(pds)");
@@ -2042,7 +2042,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        favoriteSubNode.contextValue = "dsf";
+        favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.submitMember(favoriteSubNode);
         expect(submitJob.mock.calls.length).toBe(1);
         expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL");
@@ -2215,7 +2215,7 @@ describe("Extension Unit Tests", () => {
                     cdate:"2019/05/08",
                     dev:"3390",
                     dsname:"AUSER.A1557332.A996850.TEST1",
-                    dsntp:"PDS",
+                    dsntp:extension.DS_PDS_CONTEXT,
                     dsorg:"PO",
                     edate:"***None***",
                     extx:"1",
@@ -2255,7 +2255,7 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
         const node1 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node1.contextValue = "pdsf";
+        node1.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.showDSAttributes(node1, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
 

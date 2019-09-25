@@ -17,6 +17,7 @@ import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
 import * as utils from "./utils";
+import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -56,7 +57,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
 
     constructor() {
         this.mFavoriteSession = new Job(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
-        this.mFavoriteSession.contextValue = "favorite";
+        this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
         this.mHistory = new PersistentFilters(ZosJobsProvider.persistenceSchema);
@@ -64,7 +65,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
 
     public getChildren(element?: Job | undefined): vscode.ProviderResult<Job[]> {
         if (element) {
-            if (element.contextValue === "favorite") {
+            if (element.contextValue === extension.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
             return element.getChildren();
@@ -99,7 +100,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
 
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-            node.contextValue = "server";
+            node.contextValue = extension.JOBS_SESSION_CONTEXT;
             node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
             node.dirty = true;
@@ -146,7 +147,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: Job, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
+        element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
@@ -166,10 +167,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             try {
                 const zosmfProfile = loadNamedProfile(sesName);
                 let favJob: Job;
-                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "job") {
+                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.JOBS_JOB_CONTEXT) {
                     favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
                             ZosmfSession.createBasicZosmfSession(zosmfProfile.profile), new JobDetail(nodeName));
-                    favJob.contextValue = "jobf";
+                    favJob.contextValue = extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX;
                     favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
                 } else { // for search
                     favJob = new Job(
@@ -180,7 +181,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                         null
                     );
                     favJob.command = {command: "zowe.jobs.search", title: "", arguments: [favJob]};
-                    favJob.contextValue = "serverf";
+                    favJob.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
                 }
                 favJob.iconPath = utils.applyIcons(favJob);
                 this.mFavorites.push(favJob);
@@ -207,7 +208,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         const favJob = new Job("[" + node.getSessionName() + "]: " +
                                     node.label.substring(0, node.label.lastIndexOf(")") + 1),
         vscode.TreeItemCollapsibleState.Collapsed, node.mParent, node.session, node.job);
-        favJob.contextValue = "jobf";
+        favJob.contextValue = extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX;
         favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         favJob.iconPath = utils.applyIcons(favJob);
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
@@ -228,7 +229,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         favJob.owner = node.owner;
         favJob.prefix = node.prefix;
         favJob.searchId = node.searchId;
-        favJob.contextValue = "serverf";
+        favJob.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
         favJob.iconPath = utils.applyIcons(favJob);
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
@@ -256,7 +257,9 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 // "[" + fav.label.substring(1, fav.label.lastIndexOf("]")) + "]: " +
                 // (fav.label.substring(fav.label.indexOf(": ") + 2, fav.label.indexOf(")") + 1 )).trim() +
                 // fav.getDetailLabel() +
-                "{" + (fav.contextValue === "jobf" ? "job" : "server" ) + "}");
+                "{" + (fav.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
+                        extension.JOBS_JOB_CONTEXT :
+                        extension.JOBS_SESSION_CONTEXT ) + "}");
             await vscode.workspace.getConfiguration().update(ZosJobsProvider.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
         }
     }
@@ -271,7 +274,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         let searchCriteria: string = ZosJobsProvider.defaultDialogText;
-        if (node.contextValue === "server") {
+        if (node.contextValue === extension.JOBS_SESSION_CONTEXT) {
             const modItems: vscode.QuickPickItem[] = [];
             for (const item of this.mHistory.getHistory()) {
                 modItems.push(new HistoryItem(item));
@@ -345,7 +348,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         this.addHistory(searchCriteria);
 
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.iconPath = utils.applyIcons(node.getSessionNode(), "open");
+        node.iconPath = utils.applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
         node.dirty = true;
         this.refreshElement(node);
     }

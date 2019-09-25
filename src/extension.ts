@@ -37,7 +37,22 @@ export let BRIGHTTEMPFOLDER;
 export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
-export const FAV_SUFFIX = "f";
+export const FAV_SUFFIX = "_fav";
+export const INFORMATION_CONTEXT = "information";
+export const FAVORITE_CONTEXT = "favorite";
+export const DS_SESSION_CONTEXT = "session";
+export const DS_PDS_CONTEXT = "pds";
+export const DS_DS_CONTEXT = "ds";
+export const DS_MEMBER_CONTEXT = "member";
+export const DS_TEXT_FILE_CONTEXT = "textFile";
+export const DS_BINARY_FILE_CONTEXT = "binaryFile";
+export const USS_SESSION_CONTEXT = "uss_session";
+export const USS_DIR_CONTEXT = "directory";
+export const JOBS_SESSION_CONTEXT = "server";
+export const JOBS_JOB_CONTEXT = "job";
+export const JOBS_SPOOL_CONTEXT = "spool";
+export const ICON_STATE_OPEN = "open";
+export const ICON_STATE_CLOSED = "closed";
 
 let log: Logger;
 /**
@@ -247,7 +262,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
         jobsProvider.mSessionNodes.forEach((jobNode) => {
-            if (jobNode.contextValue === "server") {
+            if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
                 jobNode.reset();
             }
         });
@@ -521,23 +536,23 @@ export async function submitMember(node: ZoweNode) {
     let label;
     let sesName;
     switch (node.mParent.contextValue) {
-        case ("favorite"): {
+        case (FAVORITE_CONTEXT): {
             const regex = labelregex.exec(node.label);
             sesName = regex[1];
             label = regex[2];
             break;
         }
-        case ("pdsf"): {
+        case (DS_PDS_CONTEXT + FAV_SUFFIX): {
             const regex = labelregex.exec(node.mParent.label);
             sesName = regex[1];
             label = regex[2] + "(" + node.label.trim()+ ")";
             break;
         }
-        case ("session"):
+        case (DS_SESSION_CONTEXT):
             sesName = node.mParent.label;
             label = node.label;
             break;
-        case ("pds"):
+        case (DS_PDS_CONTEXT):
             sesName = node.mParent.mParent.label;
             label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
             break;
@@ -741,7 +756,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         let label = parent.label.trim();
-        if (parent.contextValue === "pdsf") {
+        if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX) {
             label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
         }
 
@@ -770,7 +785,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
 export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
 
     let label = parent.label.trim();
-    if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
+    if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX) {
         label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
     }
 
@@ -899,18 +914,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     let fav = false;
     try {
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 fav = true;
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 fav = true;
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
                 break;
             default:
@@ -966,7 +981,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
 export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree) {
     log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
     let pattern: string;
-    if (node.contextValue === "session") {
+    if (node.contextValue === DS_SESSION_CONTEXT) {
         // manually entering a search
         const options: vscode.InputBoxOptions = {
             prompt: localize("enterPattern.options.prompt", "Search data sets by entering patterns: use a comma to separate multiple patterns"),
@@ -995,7 +1010,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
-    node.iconPath = utils.applyIcons(node, "open");
+    node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
     datasetProvider.addHistory(node.pattern);
 }
 
@@ -1102,16 +1117,16 @@ export async function openPS(node: ZoweNode) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
                 break;
             default:
@@ -1147,7 +1162,7 @@ export async function openPS(node: ZoweNode) {
 export async function refreshAll(datasetProvider: DatasetTree) {
     log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
     datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === "session") {
+        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
@@ -1165,16 +1180,16 @@ export async function refreshPS(node: ZoweNode) {
     let label;
     try {
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim() + "(" + node.label.trim() + ")";
                 break;
             default:
@@ -1209,13 +1224,13 @@ export async function refreshPS(node: ZoweNode) {
 export async function refreshUSS(node: ZoweUSSNode) {
     let label;
     switch (node.mParent.contextValue) {
-        case ("directoryf"):
+        case (USS_DIR_CONTEXT + FAV_SUFFIX):
             label = node.fullPath;
             break;
-        case ("directory"):
+        case (USS_DIR_CONTEXT):
             label = node.fullPath;
             break;
-        case ("uss_session"):
+        case (USS_SESSION_CONTEXT):
             label = node.label;
             break;
         default:
@@ -1255,16 +1270,16 @@ export async function safeSave(node: ZoweNode) {
     let label;
     try {
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.trim().substring(node.label.indexOf(":") + 1).trim();
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
                 break;
             default:
@@ -1441,15 +1456,15 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
             // Handle file path for files in directories and favorited directories
-            case ("directory"):
-            case ("directoryf"):
+            case (USS_DIR_CONTEXT):
+            case (USS_DIR_CONTEXT + FAV_SUFFIX):
                 label = node.fullPath;
                 break;
-            case ("uss_session"):
+            case (USS_SESSION_CONTEXT):
                 label = node.label;
                 break;
             default:

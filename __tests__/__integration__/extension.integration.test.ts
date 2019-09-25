@@ -36,7 +36,7 @@ describe("Extension Integration Tests", () => {
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
-    sessionNode.contextValue = "session";
+    sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
     const testTree = new DatasetTree();
@@ -282,7 +282,7 @@ describe("Extension Integration Tests", () => {
             const searchPattern = pattern + ".search";
             const favoriteSearch = new ZoweNode("[" + testConst.profile.name + "]: " + searchPattern,
                 vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
-            favoriteSearch.contextValue = "sessionf";
+            favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             await extension.enterPattern(favoriteSearch, testTree);
 
             expect(testTree.mSessionNodes[1].pattern).to.equal(searchPattern.toUpperCase());
@@ -523,7 +523,7 @@ describe("Extension Integration Tests - USS", () => {
         null,
         false,
         testConst.profile.name);
-    ussSessionNode.contextValue = "uss_session";
+    ussSessionNode.contextValue = extension.USS_SESSION_CONTEXT;
     const fullUSSPath = testConst.ussPattern;
     ussSessionNode.fullPath = fullUSSPath;
     const ussTestTree = new USSTree();
@@ -550,7 +550,7 @@ describe("Extension Integration Tests - USS", () => {
             // Create the TreeView using ussFileProvider to create tree structure
             const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
 
-            const nonFavorites = ussFileProvider.mSessionNodes.filter((node) => node.contextValue !== "favorite" );
+            const nonFavorites = ussFileProvider.mSessionNodes.filter((node) => node.contextValue !== extension.FAVORITE_CONTEXT );
             const allNodes = await getAllUSSNodes(nonFavorites);
             for (const node of allNodes) {
                 // For each node, select that node in TreeView by calling reveal()

@@ -21,7 +21,7 @@ import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-
+import * as extension from "../../src/extension";
 declare var it: any;
 
 describe("USSTree Integration Tests", async () => {
@@ -31,7 +31,7 @@ describe("USSTree Integration Tests", async () => {
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    sessNode.contextValue = "uss_session";
+    sessNode.contextValue = extension.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
     const testTree = new USSTree();
