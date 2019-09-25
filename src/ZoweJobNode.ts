@@ -44,7 +44,7 @@ export class Job extends vscode.TreeItem {
         }
         return revisedCriteria;
     }
-    
+
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     private children: Job[] = [];
     // tslint:disable-next-line: variable-name

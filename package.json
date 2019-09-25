@@ -706,7 +706,8 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == session",
-          "command": "zowe.saveSearch"
+          "command": "zowe.saveSearch",
+          "group": "4_workspace"
         },
         {
           "when": "view == zowe.explorer && viewItem == session_fav",
@@ -728,7 +729,8 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
-          "command": "zowe.uss.saveSearch"
+          "command": "zowe.uss.saveSearch",
+          "group": "4_workspace"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
