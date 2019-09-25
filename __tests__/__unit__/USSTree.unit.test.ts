@@ -103,7 +103,9 @@ describe("Unit Tests (Jest)", () => {
     afterEach(async () => {
         getConfiguration.mockClear();
     });
-
+    afterAll(() => {
+        jest.resetAllMocks();
+    });
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/

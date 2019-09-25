@@ -40,6 +40,9 @@ describe("Unit Tests (Jest)", () => {
     });
     Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});
 
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
     /*************************************************************************************************************
      * Creates an ZoweNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/

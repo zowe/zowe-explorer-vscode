@@ -14,7 +14,6 @@ import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
-import * as profileLoader from "../../../src/ProfileLoader";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -107,6 +106,9 @@ describe("ussNodeActions", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
         existsSync.mockReturnValue(true);
+    });
+    afterEach(() => {
+        jest.resetAllMocks();
     });
     describe("createUSSNodeDialog", () => {
         it("createUSSNode is executed successfully", async () => {

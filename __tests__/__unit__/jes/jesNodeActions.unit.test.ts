@@ -39,7 +39,7 @@ describe("jesNodeActions", () => {
             "stepname": "",
             "subsystem": ""
         };
-        afterAll(() => {
+        afterEach(() => {
             jest.resetAllMocks();
         });
         it("should return undefined language", () => {
