@@ -251,7 +251,7 @@
       {
         "command": "zowe.uss.removeSavedSearch",
         "title": "%removeSavedSearch%"
-      },      
+      },
       {
         "command": "zowe.uss.binary",
         "title": "%uss.binary%"
@@ -733,7 +733,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
           "command": "zowe.uss.removeSavedSearch"
-        },        
+        },
         {
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.refreshJobsServer",
@@ -874,7 +874,7 @@
         {
           "command": "zowe.uss.removeSavedSearch",
           "when": "never"
-        },        
+        },
         {
           "command": "zowe.uss.removeSession",
           "when": "never"
