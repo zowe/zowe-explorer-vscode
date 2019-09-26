@@ -248,9 +248,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
     });
-    vscode.commands.registerCommand("zowe.deleteJob", (job) => {
-        deleteJob(job);
-    });
+    vscode.commands.registerCommand("zowe.deleteJob", (job) => jobsProvider.deleteJob(job));
     vscode.commands.registerCommand("zowe.runModifyCommand", (job) => {
         modifyCommand(job);
     });
@@ -1511,17 +1509,6 @@ export async function stopCommand(job: Job) {
     try {
         const response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
         vscode.window.showInformationMessage(localize("stopCommand.response", "Command response: ") + response.commandResponse);
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
-    }
-}
-
-export async function deleteJob(job: Job) {
-    try {
-        await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
-        vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + job.job.jobname + "(" + job.job.jobid + ")" +
-        localize("deleteJob.delete", " deleted"));
-
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
     }

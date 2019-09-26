@@ -142,11 +142,17 @@ describe.only("Zos Jobs Unit Tests", () => {
         const showQuickPick = jest.fn();
         const filters = jest.fn();
         const getFilters = jest.fn();
+        const DeleteJobs = jest.fn();
+        const deleteJob = jest.fn();
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
         Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
         Object.defineProperty(filters, "getFilters", { value: getFilters });
+        Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
+        Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
+
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
 
         it("should add the session to the tree", async () => {
             createBasicZosmfSession.mockReturnValue(session);
@@ -154,6 +160,15 @@ describe.only("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.mSessionNodes[1]).toBeDefined();
             expect(testJobsProvider.mSessionNodes[1].label).toEqual("fake");
             expect(testJobsProvider.mSessionNodes[1].tooltip).toEqual("fake - owner: fake prefix: *");
+        });
+
+        it("tests that the user is informed when a job is deleted", async () => {
+            showInformationMessage.mockReset();
+            await testJobsProvider.deleteJob(jobNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toEqual(
+                `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted`
+            );
         });
 
         it("should delete the session", async () => {

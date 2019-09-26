@@ -168,8 +168,6 @@ describe("Extension Unit Tests", () => {
     const save = jest.fn();
     const isFile = jest.fn();
     const load = jest.fn();
-    const DeleteJobs = jest.fn();
-    const deleteJob = jest.fn();
     const GetJobs = jest.fn();
     const getSpoolContentById = jest.fn();
     const getJclForJob = jest.fn();
@@ -322,8 +320,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brightside, "Utilities", {value: Utilities});
     Object.defineProperty(Download, "ussFile", {value: ussFile});
     Object.defineProperty(Utilities, "isFileTagBinOrAscii", {value: isFileTagBinOrAscii});
-    Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
-    Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
     Object.defineProperty(brightside, "GetJobs", {value: GetJobs});
     Object.defineProperty(GetJobs, "getSpoolContentById", {value: getSpoolContentById});
     Object.defineProperty(GetJobs, "getJclForJob", {value: getJclForJob});
@@ -1900,15 +1896,6 @@ describe("Extension Unit Tests", () => {
             prompt: "Owner",
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
-    });
-
-    it("tests that the user is informed when a job is deleted", async () => {
-        showInformationMessage.mockReset();
-        await extension.deleteJob(jobNode);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted`
-        );
     });
 
     it("tests that the spool content is opened in a new document", async () => {

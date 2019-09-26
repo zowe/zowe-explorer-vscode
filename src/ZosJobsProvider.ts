@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { ZosmfSession, IJob } from "@brightside/core";
+import { ZosmfSession, IJob, DeleteJobs } from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
@@ -113,6 +113,17 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
         this.refresh();
     }
+
+    public async deleteJob(node: Job) {
+        try {
+            await DeleteJobs.deleteJob(node.session, node.job.jobname, node.job.jobid);
+            vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
+            localize("deleteJob.delete", " deleted"));
+            this.removeJobsFavorite(this.createJobsFavorite(node));
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+    }
     /**
      * Selects a specific job in the Jobs view
      *
@@ -205,18 +216,14 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      * @param {Job} node
      */
     public async addJobsFavorite(node: Job) {
-        const favJob = new Job("[" + node.getSessionName() + "]: " +
-                                    node.label.substring(0, node.label.lastIndexOf(")") + 1),
-        vscode.TreeItemCollapsibleState.Collapsed, node.mParent, node.session, node.job);
-        favJob.contextValue = extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX;
-        favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
-        favJob.iconPath = utils.applyIcons(favJob);
+        const favJob = this.createJobsFavorite(node);
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
             this.mFavorites.push(favJob); // testing
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
     }
+
     /**
      * Adds a save search to the Jobs favorites list
      *
@@ -244,10 +251,13 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      * @param {Job} node
      */
     public async removeJobsFavorite(node: Job) {
+        const startLength = this.mFavorites.length;
         this.mFavorites = this.mFavorites.filter((temp) =>
            !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))));
-        await this.updateFavorites();
-        this.refreshElement(this.mFavoriteSession);
+        if (startLength !== this.mFavorites.length) {
+            await this.updateFavorites();
+            this.refreshElement(this.mFavoriteSession);
+        }
     }
 
     public async updateFavorites() {
@@ -371,40 +381,6 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     }
 
     /**
-     * Function that creates a display string to represent a search and updates internal values
-     * @param node - a Job node
-     * @param owner - The owner search item
-     * @param prefix - The job prefix search item
-     * @param jobid - A specific jobid search item
-     */
-    private createaSearchCriteria(node: Job, owner: string, prefix: string, jobid: string): string {
-        let revisedCriteria: string = "";
-        jobid = jobid.toUpperCase();
-        const alphaNumeric = new RegExp("^\w+$");
-        if (jobid.trim().length > 1 && !alphaNumeric.test(jobid.trim())) {
-            revisedCriteria = ZosJobsProvider.JobId+jobid.trim();
-            node.searchId = jobid.trim();
-            node.owner = "";
-            node.prefix = "";
-        } else {
-            node.searchId = "";
-            if (owner.length>0) {
-                revisedCriteria = ZosJobsProvider.Owner+owner.trim()+ " ";
-                node.owner = owner.trim();
-            } else {
-                node.owner = "";
-            }
-            if (prefix.length>0) {
-                revisedCriteria += ZosJobsProvider.Prefix+prefix.trim();
-                node.prefix = prefix.trim();
-            } else {
-                node.prefix = "";
-            }
-        }
-        return revisedCriteria;
-    }
-
-    /**
      * Function that takes a search criteria and updates a search node based upon it
      * @param node - a Job node
      * @param storedSearch - The original search string
@@ -434,6 +410,16 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 node.prefix = crit.substring(index).trim();
             }
         }
+    }
+
+    private createJobsFavorite(node: Job) {
+        const favJob = new Job("[" + node.getSessionName() + "]: " +
+                node.label.substring(0, node.label.lastIndexOf(")") + 1),
+                    vscode.TreeItemCollapsibleState.Collapsed, node.mParent, node.session, node.job);
+        favJob.contextValue = extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX;
+        favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
+        favJob.iconPath = utils.applyIcons(favJob);
+        return favJob;
     }
 }
 
