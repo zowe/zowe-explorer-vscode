@@ -280,9 +280,6 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      * @returns {Promise<void>}
      */
     public async searchPrompt(node: Job) {
-        if (this.log) {
-            this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
-        }
         let searchCriteria: string = ZosJobsProvider.defaultDialogText;
         if (node.contextValue === extension.JOBS_SESSION_CONTEXT) {
             const modItems: vscode.QuickPickItem[] = [];

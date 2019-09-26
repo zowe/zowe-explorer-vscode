@@ -109,8 +109,6 @@
     "modifyCommand.command.prompt": "Modify Command",
     "modifyCommand.response": "Command response: ",
     "stopCommand.response": "Command response: ",
-    "deleteJob.job": "Job ",
-    "deleteJob.delete": " deleted",
     "setOwner.newOwner.prompt.owner": "Owner",
     "setOwner.newOwner.prompt.prefix": "Prefix",
     "addJobsSession.error.load": "Unable to load all profiles: ",
