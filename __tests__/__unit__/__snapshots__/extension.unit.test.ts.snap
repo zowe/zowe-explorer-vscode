@@ -80,7 +80,12 @@ Array [
   Object {
     "command": "zowe.uss.removeFavorite",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem != textFile && viewItem != directory && viewItem != binaryFile && viewItem != uss_session",
+    "when": "view == zowe.uss.explorer && viewItem != textFile && viewItem != directory && viewItem != binaryFile && viewItem != uss_session && viewItem != uss_session_fav",
+  },
+  Object {
+    "command": "zowe.uss.removeSavedSearch",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == uss_session_fav",
   },
   Object {
     "command": "zowe.uss.text",

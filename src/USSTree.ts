@@ -195,12 +195,12 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
             this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().mProfileName);
         temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-        temp.label = temp.fullPath = temp.tooltip = label;
+        temp.fullPath = node.fullPath;
+        temp.label = temp.tooltip = label;
         temp.iconPath =  utils.applyIcons(temp);
-        // add a command to execute the search
         temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
-            this.mFavorites.push(temp); // testing
+            this.mFavorites.push(temp); 
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -344,7 +344,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                     node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
                         this.mFavoriteSession, session, null, false, profileName);
                     node.contextValue = extension.USS_SESSION_CONTEXT;
-                    node.label = node.fullPath = node.tooltip = label;
+                    node.fullPath = nodeName;
+                    node.label = node.tooltip = label;
                     // add a command to execute the search
                     node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
                 } else {
