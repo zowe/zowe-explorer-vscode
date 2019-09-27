@@ -14,6 +14,7 @@ import * as os from "os";
 import * as zowe from "@brightside/core";
 import { CliProfileManager } from "@brightside/imperative";
 import { TreeItem } from "vscode";
+import * as extension from "../src/extension";
 
 /*
  * Created this file to be a place where commonly used functions will be defined.
@@ -31,37 +32,49 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     let light: string;
     let dark: string;
 
-    if (["pds", "pdsf", "directory", "directoryf", "job"].includes(node.contextValue)) {
-        if (state === "open") {
+    if ([extension.DS_PDS_CONTEXT, extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX,
+            extension.USS_DIR_CONTEXT,
+            extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX,
+            extension.JOBS_JOB_CONTEXT,
+            extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
+        if (state === extension.ICON_STATE_OPEN) {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-open.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-open.svg");
         } else {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-closed.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-closed.svg");
         }
-    } else if (["favorite"].includes(node.contextValue)) {
-        if (state === "open") {
+    } else if ([extension.FAVORITE_CONTEXT].includes(node.contextValue)) {
+        if (state === extension.ICON_STATE_OPEN) {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-open.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-open.svg");
         } else {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-closed.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-closed.svg");
         }
-    } else if (["session", "uss_session", "server"].includes(node.contextValue)) {
-        if (state === "open") {
+    } else if ([extension.DS_SESSION_CONTEXT, extension.USS_SESSION_CONTEXT,
+                extension.JOBS_SESSION_CONTEXT].includes(node.contextValue)) {
+        if (state === extension.ICON_STATE_OPEN) {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-open.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-open.svg");
         } else {
             light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-closed.svg");
             dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-closed.svg");
         }
-    } else if (["sessionf"].includes(node.contextValue)) {
+    } else if ([extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX,
+                extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX,
+                extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-    } else if (["ds", "dsf", "member", "textFile", "textFilef", "spool"].includes(node.contextValue)) {
+    } else if ([extension.DS_PDS_CONTEXT,
+                extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX,
+                extension.DS_MEMBER_CONTEXT, extension.DS_TEXT_FILE_CONTEXT,
+                extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
+                extension.JOBS_SPOOL_CONTEXT].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
-    } else if (["binary", "binaryFilef"].includes(node.contextValue)) {
+    } else if ([extension.DS_BINARY_FILE_CONTEXT,
+                extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
     } else {

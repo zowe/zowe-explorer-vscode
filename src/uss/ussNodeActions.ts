@@ -17,9 +17,8 @@ import * as fs from "fs";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-
+import * as extension from "../../src/extension";
 import * as path from "path";
-import { loadNamedProfile } from "../ProfileLoader";
 import { ISTHEIA } from "../extension";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -55,7 +54,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
         ignoreFocusOut: true,
         canPickMany: false
     };
-    const type = await vscode.window.showQuickPick(["Directory", "File"], quickPickOptions);
+    const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
     const isTopLevel = true;
     createUSSNode(node, ussFileProvider, type, isTopLevel);
 }
@@ -75,7 +74,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         return;
     }
     try {
-        const isRecursive = node.contextValue === "directory" ? true : false;
+        const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
         await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
         node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
@@ -96,7 +95,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
  */
 export async function refreshAllUSS(ussFileProvider: USSTree) {
     ussFileProvider.mSessionNodes.forEach( (sessNode) => {
-        if (sessNode.contextValue === "uss_session") {
+        if (sessNode.contextValue === extension.USS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
@@ -113,7 +112,7 @@ export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     try {
         const newNamePath = node.mParent.fullPath + "/" +  newName;
         await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
-        if (node.contextValue === "directory" || node.mParent.contextValue === "uss_session") {
+        if (node.contextValue === extension.USS_DIR_CONTEXT || node.mParent.contextValue === extension.USS_SESSION_CONTEXT) {
             refreshAllUSS(ussFileProvider);
         } else {
             ussFileProvider.refresh();

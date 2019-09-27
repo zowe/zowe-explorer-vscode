@@ -14,12 +14,11 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-
 jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
-
+import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";
 
 describe("Unit Tests (Jest)", () => {
@@ -40,12 +39,15 @@ describe("Unit Tests (Jest)", () => {
     });
     Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});
 
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
     /*************************************************************************************************************
      * Creates an ZoweNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweNode is defined", async () => {
         const testNode = new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, null, session);
-        testNode.contextValue = "session";
+        testNode.contextValue = extension.DS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -61,7 +63,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
         rootNode.dirty = true;
-        rootNode.contextValue = "session";
+        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
         let rootChildren = await rootNode.getChildren();
 
@@ -100,7 +102,7 @@ describe("Unit Tests (Jest)", () => {
     it("Testing that getChildren returns the correct Thenable<ZoweNode[]> for a PO", async () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.None, null, session);
-        rootNode.contextValue = "session";
+        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const subNode = new ZoweNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         subNode.dirty = true;
@@ -125,7 +127,7 @@ describe("Unit Tests (Jest)", () => {
         "it throws an error and the catch block is reached", async () => {
             // Creating a rootNode
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
-            rootNode.contextValue = "session";
+            rootNode.contextValue = extension.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
             await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
@@ -139,7 +141,7 @@ describe("Unit Tests (Jest)", () => {
         "it throws an error and the catch block is reached", async () => {
             // Creating a rootNode
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
-            rootNode.contextValue = "session";
+            rootNode.contextValue = extension.DS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
             subNode.dirty = true;
@@ -153,7 +155,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
         const infoChild = new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null, true);
-        rootNode.contextValue = "session";
+        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
@@ -165,7 +167,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
         const infoChild = new ZoweNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null, true);
-        rootNode.contextValue = "session";
+        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
@@ -175,9 +177,9 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that a member can reach its session properly", async () => {
         // Creating a rootNode
         const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
-        rootNode.contextValue = "session";
-        const subNode = new ZoweNode("pds", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        const member = new ZoweNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
+        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
+        const subNode = new ZoweNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const member = new ZoweNode(extension.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
         await expect(member.getSession()).toBeDefined();
     });
 });

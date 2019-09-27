@@ -14,144 +14,75 @@ import * as zowe from "@brightside/core";
 import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";
-import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
+import * as extension from "./extension";
 import * as utils from "./utils";
-
-
-/**
- * Creates the Job tree that contains nodes of sessions, jibs and spool items
- *
- * @export
- */
-export async function createJobsTree(log: Logger) {
-    const tree = new ZosJobsProvider();
-    await tree.addSession(log);
-    return tree;
-}
-
-export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
-    public mSessionNodes: Job[] = [];
-
-    public mOnDidChangeTreeData: vscode.EventEmitter<Job | undefined> = new vscode.EventEmitter<Job | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<Job | undefined> = this.mOnDidChangeTreeData.event;
-
-    public getChildren(element?: Job | undefined): vscode.ProviderResult<Job[]> {
-        if (element) {
-            return element.getChildren();
-        } else {
-            return this.mSessionNodes;
-        }
-    }
-
-    public getTreeItem(element: Job): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        return element;
-    }
-    public getParent?(element: Job): Job {
-        return element.mParent;
-    }
-
-    /**
-     * Adds a new session to the data set tree
-     *
-     * @param {string} [sessionName] - optional; loads default profile if not passed
-     */
-    public async addSession(log: Logger, sessionName?: string) {
-        // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
-
-        if (zosmfProfile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
-                return;
-            }
-
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-            node.contextValue = "server";
-            node.iconPath = utils.applyIcons(node);
-            this.mSessionNodes.push(node);
-            this.refresh();
-        }
-    }
-
-    public deleteSession(node: Job) {
-        // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.refresh();
-    }
-    /**
-     * Selects a specific job in the Jobs view
-     *
-     * @param {Job}
-     */
-    public setJob(treeView: vscode.TreeView<Job>, job: Job) {
-        treeView.reveal(job, { select: true, focus: true });
-    }
-
-
-    /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refreshElement(element: Job): void {
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
-    }
-
-    /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refresh(): void {
-        this.mOnDidChangeTreeData.fire();
-    }
-
-    /**
-     * Change the state of an expandable node
-     * @param provider the tree view provider
-     * @param element the node being flipped
-     * @param isOpen the intended state of the the tree view provider, true or false
-     */
-    public async flipState(element: Job, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
-    }
-}
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends vscode.TreeItem {
-    public dirty: boolean = true;
+    public static readonly JobId = "JobId:";
+    public static readonly Owner = "Owner:";
+    public static readonly Prefix = "Prefix:";
+    /**
+     * Static method that creates a display string to represent a search
+     * @param owner - The owner search item
+     * @param prefix - The job prefix search item
+     * @param jobid - A specific jobid search item
+     */
+    public static createSearchLabel(owner: string, prefix: string, jobid: string): string {
+        let revisedCriteria: string = "";
+        jobid = jobid.toUpperCase();
+        const alphaNumeric = new RegExp("^\w+$");
+        if (jobid.trim().length > 1 && !alphaNumeric.test(jobid.trim())) {
+            revisedCriteria = Job.JobId+jobid.trim();
+        } else {
+            if (owner.length>0) {
+                revisedCriteria = Job.Owner+owner.trim()+ " ";
+            }
+            if (prefix.length>0) {
+                revisedCriteria += Job.Prefix+prefix.trim();
+            }
+        }
+        return revisedCriteria;
+    }
+
+    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     private children: Job[] = [];
     // tslint:disable-next-line: variable-name
     private _owner: string;
     // tslint:disable-next-line: variable-name
     private _prefix: string;
+    // tslint:disable-next-line: variable-name
+    private _searchId: string;
 
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
                 public mParent: Job, public session: Session, public job: IJob) {
         super(label, mCollapsibleState);
-        this._owner = session.ISession.user;
+        if (session) {
+            this._owner = session.ISession.user;
+        }
         this._prefix = "*";
+        this._searchId = "";
         utils.applyIcons(this);
     }
 
     public getSessionName(): string {
+        return this.getSessionNode().label.trim();
+    }
+
+    public getSessionNode(): Job {
         if(this.mParent == null) {
-            return this.label.trim();
+            return this;
         } else {
-            return this.mParent.getSessionName();
+            return this.mParent;
         }
     }
 
     public async getChildren(): Promise<Job[]> {
         if (this.dirty) {
             const elementChildren = [];
-            if (this.contextValue === "job") {
-                const spools: zowe.IJobFile[] = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+            let spools: zowe.IJobFile[] = [];
+            if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
+                spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
                     if (existing) {
@@ -161,16 +92,23 @@ export class Job extends vscode.TreeItem {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
+                        const sessionName = this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
+                            this.label.substring(1, this.label.lastIndexOf("]")).trim() :
+                            this.getSessionName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         spoolNode.iconPath = utils.applyIcons(spoolNode);
-                        spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [this.getSessionName(), spool] };
+                        spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [sessionName, spool] };
                         elementChildren.push(spoolNode);
                     }
                 });
-                this.iconPath = utils.applyIcons(this, "open");
             } else {
-                const jobs: zowe.IJob[] = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
+                let jobs: zowe.IJob[] = [];
+                if (this.searchId.length > 0 ) {
+                    jobs.push(await zowe.GetJobs.getJob(this.session, this._searchId));
+                } else {
+                    jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
+                }
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -184,7 +122,7 @@ export class Job extends vscode.TreeItem {
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
-                        jobNode.contextValue = "job";
+                        jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
                         if (!jobNode.iconPath) {
                             jobNode.iconPath = utils.applyIcons(jobNode);
                         }
@@ -202,6 +140,17 @@ export class Job extends vscode.TreeItem {
         this.dirty = false;
         return this.children;
     }
+    public getDetailLabel(): string {
+        return this.contextValue === "Job" || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
+            `${this.job.jobname}(${this.job.jobid})`
+            : Job.createSearchLabel(this.owner, this.prefix, this.searchId);
+    }
+
+    public reset() {
+        utils.labelHack(this);
+        this.children = [];
+        this.dirty = true;
+    }
 
     get tooltip(): string {
         if (this.job !== null) {
@@ -210,8 +159,10 @@ export class Job extends vscode.TreeItem {
             } else {
                 return `${this.job.jobname}(${this.job.jobid})`;
             }
+        } else if (this.searchId.length>0) {
+            return `${this.label} - job id: ${this.searchId}`;
         } else {
-            return `${this.label} - owner: ${this._owner} prefix: ${this._prefix}`;
+            return `${this.label} - owner: ${this.owner} prefix: ${this.prefix}`;
         }
     }
 
@@ -243,18 +194,23 @@ export class Job extends vscode.TreeItem {
         return this._prefix;
     }
 
-    public reset() {
-        utils.labelHack(this);
-        this.children = [];
-        this.dirty = true;
+    set searchId(newId: string) {
+        if (newId !== undefined) {
+            this._searchId = newId;
+        }
+    }
+
+    get searchId() {
+        return this._searchId;
     }
 }
+
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
                 public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
         super(label, mCollapsibleState, mParent, session, job);
-        this.contextValue = "spool";
+        this.contextValue = extension.JOBS_SPOOL_CONTEXT;
         utils.applyIcons(this);
     }
 }

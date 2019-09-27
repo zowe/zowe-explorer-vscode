@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../../src/ZoweNode";
+import * as extension from "../../../src/extension";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -30,6 +31,9 @@ const DatasetTree = jest.fn().mockImplementation(() => {
 const testTree = DatasetTree();
 
 describe("mvsNodeActions", () => {
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
     it("should call upload dialog and upload file", async () => {
         const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
         const fileUri = {fsPath: "/tmp/foo"};
@@ -41,6 +45,9 @@ describe("mvsNodeActions", () => {
         expect(testTree.refresh).toBeCalled();
     });
     describe("getDatasetLabel", () => {
+        afterEach(() => {
+            jest.resetAllMocks();
+        });
         it("should return default label for dataset", () => {
             const labelName = "dataset.test";
             const node = new ZoweNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
@@ -51,7 +58,7 @@ describe("mvsNodeActions", () => {
             const labelNameWithProfile = "[myProfile123]: dataset.test";
             const labelName = "dataset.test";
             const parentNode = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-            parentNode.contextValue = "favorite";
+            parentNode.contextValue = extension.FAVORITE_CONTEXT;
             const node = new ZoweNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
             const label = mvsNodeActions.getDatasetLabel(node);
             expect(label).toEqual(labelName);

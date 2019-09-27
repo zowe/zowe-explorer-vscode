@@ -14,7 +14,7 @@ import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
-import * as profileLoader from "../../../src/ProfileLoader";
+import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -45,7 +45,7 @@ const createBasicZosmfSession = jest.fn();
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    ussNode1.contextValue = "uss_session";
+    ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode1.fullPath = "/u/myuser";
     ussNode1.mParent = mParent;
     return ussNode1;
@@ -107,6 +107,9 @@ describe("ussNodeActions", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
         existsSync.mockReturnValue(true);
+    });
+    afterEach(() => {
+        jest.resetAllMocks();
     });
     describe("createUSSNodeDialog", () => {
         it("createUSSNode is executed successfully", async () => {
@@ -205,8 +208,8 @@ describe("ussNodeActions", () => {
         it("should execute rename USS file and and refreshAll the tree", async () => {
             renameUSSFile.mockReset();
             showInputBox.mockReturnValueOnce("new name");
-            ussNode.contextValue = "directory";
-            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "session");
+            ussNode.contextValue = extension.USS_DIR_CONTEXT;
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, extension.DS_SESSION_CONTEXT);
             expect(testUSSTree.refreshAll).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);

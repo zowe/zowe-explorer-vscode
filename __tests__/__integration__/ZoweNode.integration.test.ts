@@ -17,7 +17,7 @@ import * as expect from "expect";
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import * as testConst from "../../resources/testProfileData";
-
+import * as extension from "../../src/extension";
 declare var it: any;
 
 describe("ZoweNode Integration Tests", async () => {
@@ -26,7 +26,7 @@ describe("ZoweNode Integration Tests", async () => {
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
-    sessNode.contextValue = "session";
+    sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
@@ -99,7 +99,7 @@ describe("ZoweNode Integration Tests", async () => {
 
         // The method should throw an error.
         const nullNode = new ZoweNode(null, null, null, null);
-        nullNode.contextValue = "pds";
+        nullNode.contextValue = extension.DS_PDS_CONTEXT;
         nullNode.dirty = true;
         await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
     }).timeout(TIMEOUT);
@@ -113,7 +113,7 @@ describe("ZoweNode Integration Tests", async () => {
 
         // The method should throw an error.
         const undefinedNode = new ZoweNode(undefined, undefined, undefined, undefined);
-        undefinedNode.contextValue = "pds";
+        undefinedNode.contextValue = extension.DS_PDS_CONTEXT;
         undefinedNode.dirty = true;
         // tslint:disable-next-line:max-line-length
         await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");

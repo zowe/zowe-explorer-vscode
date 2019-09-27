@@ -20,7 +20,7 @@ import { ZoweNode } from "../../src/ZoweNode";
 import * as testConst from "../../resources/testProfileData";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-
+import * as extension from "../../src/extension";
 declare var it: any;
 
 describe("DatasetTree Integration Tests", async () => {
@@ -30,7 +30,7 @@ describe("DatasetTree Integration Tests", async () => {
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
-    sessNode.contextValue = "session";
+    sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
     const testTree = new DatasetTree();

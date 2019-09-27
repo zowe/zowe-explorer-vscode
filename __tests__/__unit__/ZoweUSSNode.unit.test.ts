@@ -18,6 +18,7 @@ import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as utils from "../../src/utils";
+import * as extension from "../../src/extension";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -38,11 +39,11 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        rootNode.contextValue = "uss_session";
+        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
         const testFile = new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null);
-        testFile.contextValue = "textFile";
+        testFile.contextValue = extension.DS_TEXT_FILE_CONTEXT;
         expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
@@ -57,7 +58,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session,null);
-        testNode.contextValue = "uss_session";
+        testNode.contextValue = extension.USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -72,7 +73,7 @@ describe("Unit Tests (Jest)", () => {
     it("Testing that getChildren returns the correct Thenable<ZoweUSSNode[]>", async () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        rootNode.contextValue = "directory";
+        rootNode.contextValue = extension.USS_DIR_CONTEXT;
         rootNode.dirty = true;
 
         // Creating structure of files and directories
@@ -111,7 +112,7 @@ describe("Unit Tests (Jest)", () => {
         "it throws an error and the catch block is reached", async () => {
             // Creating a rootNode
             const rootNode = new ZoweUSSNode("toot", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root");
-            rootNode.contextValue = "uss_session";
+            rootNode.contextValue = extension.USS_SESSION_CONTEXT;
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
             await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
@@ -125,7 +126,7 @@ describe("Unit Tests (Jest)", () => {
         "it throws an error and the catch block is reached", async () => {
             // Creating a rootNode
             const rootNode = new ZoweUSSNode("toot", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root");
-            rootNode.contextValue = "uss_session";
+            rootNode.contextValue = extension.USS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweUSSNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
             subNode.fullPath = "THROW ERROR";
@@ -140,7 +141,7 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that passing a session node that is not dirty the getChildren() method is exited early", async () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        rootNode.contextValue = "uss_session";
+        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([]);
     });
@@ -151,7 +152,7 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that passing a session node with no hlq the getChildren() method is exited early", async () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        rootNode.contextValue = "uss_session";
+        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([]);
     });
 
@@ -161,8 +162,8 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that a child can reach its session properly", async () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        rootNode.contextValue = "uss_session";
-        const subNode = new ZoweUSSNode("pds", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
+        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const subNode = new ZoweUSSNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, subNode, null, null);
         await expect(child.getSession()).toBeDefined();
     });
@@ -171,20 +172,20 @@ describe("Unit Tests (Jest)", () => {
      * Checks that setBinary works
      *************************************************************************************************************/
     it("Checks that set Binary works", async () => {
-        const rootNode = new ZoweUSSNode("favorite", vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-        rootNode.contextValue = "favorite";
+        const rootNode = new ZoweUSSNode(extension.FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+        rootNode.contextValue = extension.FAVORITE_CONTEXT;
         const subNode = new ZoweUSSNode("binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, subNode, null, null);
 
         child.setBinary(true);
-        expect(child.contextValue).toEqual("binaryFile");
+        expect(child.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX);
         expect(JSON.stringify(child.iconPath)).toContain("document.svg");
         child.setBinary(false);
-        expect(child.contextValue).toEqual("textFile");
+        expect(child.contextValue).toEqual(extension.DS_TEXT_FILE_CONTEXT);
         subNode.setBinary(true);
-        expect(subNode.contextValue).toEqual("binaryFilef");
+        expect(subNode.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX);
         subNode.setBinary(false);
-        expect(subNode.contextValue).toEqual("textFilef");
+        expect(subNode.contextValue).toEqual(extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX);
     });
 
     /*************************************************************************************************************

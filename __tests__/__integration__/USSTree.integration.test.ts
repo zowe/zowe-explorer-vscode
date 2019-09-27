@@ -21,7 +21,7 @@ import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-
+import * as extension from "../../src/extension";
 declare var it: any;
 
 describe("USSTree Integration Tests", async () => {
@@ -30,8 +30,9 @@ describe("USSTree Integration Tests", async () => {
     chai.use(chaiAsPromised);
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    sessNode.contextValue = "uss_session";
+    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
+         null, session, "", false, testConst.profile.name);
+    sessNode.contextValue = extension.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
     const testTree = new USSTree();
@@ -189,5 +190,30 @@ describe("USSTree Integration Tests", async () => {
         await testTree.addSession(testConst.profile.name);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);
-});
 
+    describe("add USS Favorite for a file and a search", () => {
+        it("should add the selected data set to the treeView", async () => {
+            const log = new Logger(undefined);
+            await testTree.addSession(log);
+            const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode, null, sessNode.fullPath, testConst.profile.name);
+            await testTree.addUSSFavorite(favoriteNode);
+            const filtered = testTree.mFavorites.filter((temp) => temp.label ===
+                `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
+            expect(filtered.length).toEqual(1);
+            expect(filtered[0].label).toContain("file.txt");
+            testTree.mFavorites = [];
+        }).timeout(TIMEOUT);
+
+        it("should add a favorite search", async () => {
+            const log = new Logger(undefined);
+            await testTree.addSession(log);
+            await testTree.addUSSSearchFavorite(sessNode);
+            const filtered = testTree.mFavorites.filter((temp) =>
+                temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);
+            expect(filtered.length).toEqual(1);
+            expect(filtered[0].label).toContain(`[${sessNode.label}]: ${sessNode.fullPath}`);
+            testTree.mFavorites = [];
+        }).timeout(TIMEOUT);
+    });
+});
