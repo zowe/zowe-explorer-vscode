@@ -14,6 +14,11 @@ import * as jesNodeActions from "../../../src/jes/jesNodeActions";
 import * as brightside from "@brightside/core";
 
 describe("jesNodeActions", () => {
+
+    afterAll(() => {
+        jest.resetAllMocks();
+    });
+
     describe("getSpoolLanguage", () => {
         const JESMSGLG = "JESMSGLG";
         const JESJCL = "JESJCL";
@@ -34,6 +39,9 @@ describe("jesNodeActions", () => {
             "stepname": "",
             "subsystem": ""
         };
+        afterEach(() => {
+            jest.resetAllMocks();
+        });
         it("should return undefined language", () => {
             expect(jesNodeActions.getSpoolLanguage(iJobFile)).toEqual(undefined);
         });

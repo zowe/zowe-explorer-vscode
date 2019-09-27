@@ -18,6 +18,7 @@ import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
 // import ZoweTree from "./ZoweTree";
 import { PersistentFilters } from "./PersistentFilters";
 import * as utils from "./utils";
+import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -57,7 +58,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
     constructor() {
         this.mFavoriteSession = new ZoweNode(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null);
-        this.mFavoriteSession.contextValue = "favorite";
+        this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
         this.mHistory = new PersistentFilters(DatasetTree.persistenceSchema);
@@ -85,7 +86,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     const zosmfProfile = loadNamedProfile(sesName);
                     const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                     let node: ZoweNode;
-                    if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
+                    if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.DS_PDS_CONTEXT) {
                         node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
                             this.mFavoriteSession, session);
                     } else {
@@ -93,7 +94,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                             this.mFavoriteSession, session);
                         node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
                     }
-                    node.contextValue += "f";
+                    node.contextValue += extension.FAV_SUFFIX;
                     node.iconPath = utils.applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
@@ -114,7 +115,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
                 const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
                 node.iconPath = { light, dark };
-                node.contextValue = "sessionf";
+                node.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
                 node.iconPath = utils.applyIcons(node);
                 this.mFavorites.push(node);
             } else {
@@ -141,7 +142,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public getChildren(element?: ZoweNode): ZoweNode[] | Promise<ZoweNode[]> {
         if (element) {
-            if (element.contextValue === "favorite") {
+            if (element.contextValue === extension.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
             return element.getChildren();
@@ -189,13 +190,11 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
-
             // Uses loaded profile to create a zosmf session with brightside
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
-            node.contextValue = "session";
+            node.contextValue = extension.DS_SESSION_CONTEXT;
             node.iconPath = utils.applyIcons(node);
             this.mSessionNodes.push(node);
             this.refresh();
@@ -220,28 +219,28 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public async addFavorite(node: ZoweNode) {
         let temp: ZoweNode;
-        if (node.contextValue === "member") {
-            if (node.mParent.contextValue === "pdsf") {
+        if (node.contextValue === extension.DS_MEMBER_CONTEXT) {
+            if (node.mParent.contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
                 vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
             this.addFavorite(node.mParent);
             return;
-        } else if (node.contextValue === "session") {
+        } else if (node.contextValue === extension.DS_SESSION_CONTEXT) {
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession());
-            temp.contextValue = "sessionf";
+            temp.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             temp.iconPath =  utils.applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
-            const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-            const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-            temp.iconPath = { light, dark };
+            // const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
+            // const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
+            // temp.iconPath = { light, dark };
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession());
-            temp.contextValue += "f";
-            if (temp.contextValue === "dsf") {
+            temp.contextValue += extension.FAV_SUFFIX;
+            if (temp.contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
             temp.iconPath = utils.applyIcons(temp);
@@ -273,7 +272,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
     public async updateFavorites() {
         const settings = this.mFavorites.map((fav) =>
-            fav.label + "{" + fav.contextValue.slice(0, -1) + "}"
+            fav.label + "{" + fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}"
         );
         this.mHistory.updateFavorites(settings);
     }
@@ -297,7 +296,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string = DatasetTree.defaultDialogText;
-        if (node.contextValue === "session") {
+        if (node.contextValue === extension.DS_SESSION_CONTEXT) {
             const modItems = Array.from(this.mHistory.getHistory());
             if (modItems.length > 0) {
                 // accessing history
@@ -340,7 +339,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         node.tooltip = node.pattern = pattern.toUpperCase();
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         node.dirty = true;
-        node.iconPath = utils.applyIcons(node, "open");
+        node.iconPath = utils.applyIcons(node, extension.ICON_STATE_OPEN);
         this.addHistory(node.pattern);
     }
 
@@ -351,7 +350,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? "open" : "closed");
+        element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }

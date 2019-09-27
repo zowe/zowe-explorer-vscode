@@ -20,42 +20,37 @@ Array [
   Object {
     "command": "zowe.uss.createFile",
     "group": "1_create",
-    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+    "when": "view == zowe.uss.explorer && viewItem == directory_fav",
   },
   Object {
     "command": "zowe.uss.createFolder",
     "group": "1_create",
-    "when": "view == zowe.uss.explorer && viewItem == directoryf",
-  },
-  Object {
-    "command": "zowe.uss.removeFavorite",
-    "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+    "when": "view == zowe.uss.explorer && viewItem == directory_fav",
   },
   Object {
     "command": "zowe.uss.refreshUSS",
     "group": "inline",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
   },
   Object {
     "command": "zowe.uss.safeSaveUSS",
     "group": "inline",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
   },
   Object {
     "command": "zowe.uss.refreshUSS",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
   },
   Object {
     "command": "zowe.uss.safeSaveUSS",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
   },
   Object {
     "command": "zowe.uss.deleteNode",
     "group": "6_modification@1",
-    "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFilef && viewItem != binaryFilef && viewItem != directoryf",
+    "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFile_fav && viewItem != binaryFile_fav && viewItem != directory_fav && viewItem != uss_session_fav",
   },
   Object {
     "command": "zowe.uss.copyPath",
@@ -65,7 +60,7 @@ Array [
   Object {
     "command": "zowe.uss.renameNode",
     "group": "6_modification@0",
-    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != uss_session_fav",
   },
   Object {
     "command": "zowe.uss.binary",
@@ -80,12 +75,17 @@ Array [
   Object {
     "command": "zowe.uss.binary",
     "group": "3_systemSpecific",
-    "when": "view == zowe.uss.explorer && viewItem == textFilef",
+    "when": "view == zowe.uss.explorer && viewItem == textFile_fav",
   },
   Object {
     "command": "zowe.uss.removeFavorite",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem == textFilef",
+    "when": "view == zowe.uss.explorer && viewItem != textFile && viewItem != directory && viewItem != binaryFile && viewItem != uss_session && viewItem != uss_session_fav",
+  },
+  Object {
+    "command": "zowe.uss.removeSavedSearch",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == uss_session_fav",
   },
   Object {
     "command": "zowe.uss.text",
@@ -100,12 +100,7 @@ Array [
   Object {
     "command": "zowe.uss.text",
     "group": "3_systemSpecific",
-    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
-  },
-  Object {
-    "command": "zowe.uss.removeFavorite",
-    "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem == binaryFilef",
+    "when": "view == zowe.uss.explorer && viewItem == binaryFile_fav",
   },
   Object {
     "command": "zowe.uss.uploadDialog",
@@ -115,7 +110,7 @@ Array [
   Object {
     "command": "zowe.uss.uploadDialog",
     "group": "1_create",
-    "when": "view == zowe.uss.explorer && viewItem == directoryf",
+    "when": "view == zowe.uss.explorer && viewItem == directory_fav",
   },
   Object {
     "command": "zowe.refreshNode",
@@ -155,27 +150,27 @@ Array [
   Object {
     "command": "zowe.refreshNode",
     "group": "inline",
-    "when": "view == zowe.explorer && viewItem == memberf",
+    "when": "view == zowe.explorer && viewItem == member_fav",
   },
   Object {
     "command": "zowe.safeSave",
     "group": "inline",
-    "when": "view == zowe.explorer && viewItem == memberf",
+    "when": "view == zowe.explorer && viewItem == member_fav",
   },
   Object {
     "command": "zowe.refreshNode",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.explorer && viewItem == memberf",
+    "when": "view == zowe.explorer && viewItem == member_fav",
   },
   Object {
     "command": "zowe.safeSave",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.explorer && viewItem == memberf",
+    "when": "view == zowe.explorer && viewItem == member_fav",
   },
   Object {
     "command": "zowe.deleteMember",
     "group": "6_modification@1",
-    "when": "view == zowe.explorer && viewItem == memberf",
+    "when": "view == zowe.explorer && viewItem == member_fav",
   },
   Object {
     "command": "zowe.refreshNode",
@@ -220,42 +215,42 @@ Array [
   Object {
     "command": "zowe.refreshNode",
     "group": "inline",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.safeSave",
     "group": "inline",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.refreshNode",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.safeSave",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.showDSAttributes",
     "group": "2_information",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.submitMember",
     "group": "3_systemSpecific",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.deleteDataset",
     "group": "6_modification@1",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.removeFavorite",
     "group": "4_workspace",
-    "when": "view == zowe.explorer && viewItem == dsf",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.createMember",
@@ -285,27 +280,27 @@ Array [
   Object {
     "command": "zowe.createMember",
     "group": "1_create",
-    "when": "view == zowe.explorer && viewItem == pdsf",
+    "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
     "command": "zowe.showDSAttributes",
     "group": "2_information",
-    "when": "view == zowe.explorer && viewItem == pdsf",
+    "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
     "command": "zowe.deletePDS",
     "group": "6_modification@1",
-    "when": "view == zowe.explorer && viewItem == pdsf",
+    "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
     "command": "zowe.uploadDialog",
     "group": "1_create",
-    "when": "view == zowe.explorer && viewItem == pdsf",
+    "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
     "command": "zowe.removeFavorite",
     "group": "4_workspace",
-    "when": "view == zowe.explorer && viewItem == pdsf",
+    "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
     "command": "zowe.pattern",
@@ -323,11 +318,12 @@ Array [
   },
   Object {
     "command": "zowe.saveSearch",
+    "group": "4_workspace",
     "when": "view == zowe.explorer && viewItem == session",
   },
   Object {
     "command": "zowe.removeSavedSearch",
-    "when": "view == zowe.explorer && viewItem == sessionf",
+    "when": "view == zowe.explorer && viewItem == session_fav",
   },
   Object {
     "command": "zowe.uss.fullPath",
@@ -344,7 +340,17 @@ Array [
     "when": "viewItem == uss_session",
   },
   Object {
+    "command": "zowe.uss.saveSearch",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == uss_session",
+  },
+  Object {
     "command": "zowe.refreshJobsServer",
+    "group": "inline",
+    "when": "view == zowe.jobs && viewItem == server",
+  },
+  Object {
+    "command": "zowe.jobs.search",
     "group": "inline",
     "when": "view == zowe.jobs && viewItem == server",
   },
@@ -379,6 +385,26 @@ Array [
     "command": "zowe.downloadSpool",
     "group": "inline",
     "when": "view == zowe.jobs && viewItem == job",
+  },
+  Object {
+    "command": "zowe.jobs.addFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == job",
+  },
+  Object {
+    "command": "zowe.jobs.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == job_fav",
+  },
+  Object {
+    "command": "zowe.jobs.removeSearchFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == server_fav",
+  },
+  Object {
+    "command": "zowe.jobs.saveSearch",
+    "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == server",
   },
   Object {
     "command": "zowe.getJobJcl",

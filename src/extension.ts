@@ -17,7 +17,8 @@ import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
-import { ZosJobsProvider, Job, createJobsTree } from "./zosjobs";
+import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
+import { Job } from "./ZoweJobNode";
 import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
@@ -36,6 +37,22 @@ export let BRIGHTTEMPFOLDER;
 export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
+export const FAV_SUFFIX = "_fav";
+export const INFORMATION_CONTEXT = "information";
+export const FAVORITE_CONTEXT = "favorite";
+export const DS_SESSION_CONTEXT = "session";
+export const DS_PDS_CONTEXT = "pds";
+export const DS_DS_CONTEXT = "ds";
+export const DS_MEMBER_CONTEXT = "member";
+export const DS_TEXT_FILE_CONTEXT = "textFile";
+export const DS_BINARY_FILE_CONTEXT = "binaryFile";
+export const USS_SESSION_CONTEXT = "uss_session";
+export const USS_DIR_CONTEXT = "directory";
+export const JOBS_SESSION_CONTEXT = "server";
+export const JOBS_JOB_CONTEXT = "job";
+export const JOBS_SPOOL_CONTEXT = "spool";
+export const ICON_STATE_OPEN = "open";
+export const ICON_STATE_CLOSED = "closed";
 
 let log: Logger;
 /**
@@ -221,6 +238,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
+    vscode.commands.registerCommand("zowe.uss.saveSearch", async (node) => ussFileProvider.addUSSSearchFavorite(node));
+    vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node) => ussFileProvider.removeUSSFavorite(node));
 
     vscode.workspace.onDidChangeConfiguration(async (e) => {
         ussFileProvider.onDidChangeConfiguration(e);
@@ -229,9 +248,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
         getSpoolContent(session, spool);
     });
-    vscode.commands.registerCommand("zowe.deleteJob", (job) => {
-        deleteJob(job);
-    });
+    vscode.commands.registerCommand("zowe.deleteJob", (job) => jobsProvider.deleteJob(job));
     vscode.commands.registerCommand("zowe.runModifyCommand", (job) => {
         modifyCommand(job);
     });
@@ -243,7 +260,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
         jobsProvider.mSessionNodes.forEach((jobNode) => {
-            if (jobNode.contextValue === "server") {
+            if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
                 jobNode.reset();
             }
         });
@@ -274,8 +291,15 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         jobsProvider.setJob(jobView, job);
     });
-
+    vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
     vscode.commands.registerCommand("zowe.issueTsoCmd", async () => issueTsoCommand(outputChannel));
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        jobsProvider.onDidChangeConfiguration(e);
+    });
+    vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node) => jobsProvider.addJobsFavorite(node));
+    vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
+    vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
+    vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
 }
 
 /**
@@ -510,23 +534,23 @@ export async function submitMember(node: ZoweNode) {
     let label;
     let sesName;
     switch (node.mParent.contextValue) {
-        case ("favorite"): {
+        case (FAVORITE_CONTEXT): {
             const regex = labelregex.exec(node.label);
             sesName = regex[1];
             label = regex[2];
             break;
         }
-        case ("pdsf"): {
+        case (DS_PDS_CONTEXT + FAV_SUFFIX): {
             const regex = labelregex.exec(node.mParent.label);
             sesName = regex[1];
             label = regex[2] + "(" + node.label.trim()+ ")";
             break;
         }
-        case ("session"):
+        case (DS_SESSION_CONTEXT):
             sesName = node.mParent.label;
             label = node.label;
             break;
-        case ("pds"):
+        case (DS_PDS_CONTEXT):
             sesName = node.mParent.mParent.label;
             label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
             break;
@@ -730,7 +754,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         let label = parent.label.trim();
-        if (parent.contextValue === "pdsf") {
+        if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX) {
             label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
         }
 
@@ -759,7 +783,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
 export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
 
     let label = parent.label.trim();
-    if (parent.contextValue === "pdsf" || parent.contextValue === "dsf") {
+    if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX) {
         label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
     }
 
@@ -888,18 +912,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     let fav = false;
     try {
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 fav = true;
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 fav = true;
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
                 break;
             default:
@@ -955,7 +979,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
 export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree) {
     log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
     let pattern: string;
-    if (node.contextValue === "session") {
+    if (node.contextValue === DS_SESSION_CONTEXT) {
         // manually entering a search
         const options: vscode.InputBoxOptions = {
             prompt: localize("enterPattern.options.prompt", "Search data sets by entering patterns: use a comma to separate multiple patterns"),
@@ -984,7 +1008,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
-    node.iconPath = utils.applyIcons(node, "open");
+    node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
     datasetProvider.addHistory(node.pattern);
 }
 
@@ -1083,66 +1107,6 @@ export function getUSSDocumentFilePath(node: ZoweUSSNode) {
 }
 
 /**
- * Initializes the favorites section by reading from a file
- *
- * @export
- * @param {DatasetTree} datasetProvider
- */
-export async function initializeFavorites(datasetProvider: DatasetTree) {
-    log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
-    const lines: string[] = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites").get("favorites");
-    for (const line of lines) {
-        if (line === "") {
-            continue;
-        }
-        // validate line
-        const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
-        const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
-        if (favoriteDataSetPattern.test(line)) {
-            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-            try {
-                const zosmfProfile = loadNamedProfile(sesName);
-                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-                let node: ZoweNode;
-                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === "pds") {
-                    node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
-                        datasetProvider.mFavoriteSession, session);
-                } else {
-                    node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
-                        datasetProvider.mFavoriteSession, session);
-                    node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
-                }
-                node.contextValue += "f";
-                node.iconPath = utils.applyIcons(node);
-                datasetProvider.mFavorites.push(node);
-            } catch(e) {
-                vscode.window.showErrorMessage(
-                    localize("initializeFavorites.error.profile1",
-                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
-                    localize("intializeFavorites.error.profile2",
-                    ". To resolve this, you can create a profile with this name, ") +
-                    localize("initializeFavorites.error.profile3",
-                    "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ") +
-                    localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
-                continue;
-            }
-        } else if (favoriteSearchPattern.test(line)) {
-            const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
-                vscode.TreeItemCollapsibleState.None, datasetProvider.mFavoriteSession, null);
-            node.command = { command: "zowe.pattern", title: "", arguments: [node] };
-            const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-            const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-            node.iconPath = { light, dark };
-            node.contextValue = "sessionf";
-            node.iconPath = utils.applyIcons(node);
-            datasetProvider.mFavorites.push(node);
-        } else {
-            vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
-        }
-    }
-}
-
-/**
  * Downloads and displays a PS in a text editor view
  *
  * @param {ZoweNode} node
@@ -1151,16 +1115,16 @@ export async function openPS(node: ZoweNode) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
                 break;
             default:
@@ -1196,7 +1160,7 @@ export async function openPS(node: ZoweNode) {
 export async function refreshAll(datasetProvider: DatasetTree) {
     log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
     datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === "session") {
+        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
@@ -1214,16 +1178,16 @@ export async function refreshPS(node: ZoweNode) {
     let label;
     try {
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim() + "(" + node.label.trim() + ")";
                 break;
             default:
@@ -1258,13 +1222,13 @@ export async function refreshPS(node: ZoweNode) {
 export async function refreshUSS(node: ZoweUSSNode) {
     let label;
     switch (node.mParent.contextValue) {
-        case ("directoryf"):
+        case (USS_DIR_CONTEXT + FAV_SUFFIX):
             label = node.fullPath;
             break;
-        case ("directory"):
+        case (USS_DIR_CONTEXT):
             label = node.fullPath;
             break;
-        case ("uss_session"):
+        case (USS_SESSION_CONTEXT):
             label = node.label;
             break;
         default:
@@ -1304,16 +1268,16 @@ export async function safeSave(node: ZoweNode) {
     let label;
     try {
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.trim().substring(node.label.indexOf(":") + 1).trim();
                 break;
-            case ("pdsf"):
+            case (DS_PDS_CONTEXT + FAV_SUFFIX):
                 label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
                 break;
-            case ("session"):
+            case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
                 break;
-            case ("pds"):
+            case (DS_PDS_CONTEXT):
                 label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
                 break;
             default:
@@ -1490,15 +1454,15 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
-            case ("favorite"):
+            case (FAVORITE_CONTEXT):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
             // Handle file path for files in directories and favorited directories
-            case ("directory"):
-            case ("directoryf"):
+            case (USS_DIR_CONTEXT):
+            case (USS_DIR_CONTEXT + FAV_SUFFIX):
                 label = node.fullPath;
                 break;
-            case ("uss_session"):
+            case (USS_SESSION_CONTEXT):
                 label = node.label;
                 break;
             default:
@@ -1550,17 +1514,6 @@ export async function stopCommand(job: Job) {
     }
 }
 
-export async function deleteJob(job: Job) {
-    try {
-        await zowe.DeleteJobs.deleteJob(job.session, job.job.jobname, job.job.jobid);
-        vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + job.job.jobname + "(" + job.job.jobid + ")" +
-        localize("deleteJob.delete", " deleted"));
-
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
-    }
-}
-
 export async function getSpoolContent(session: string, spool: IJobFile) {
     try {
         const uri = encodeJobFile(session, spool);
@@ -1580,12 +1533,6 @@ export async function setOwner(job: Job, jobsProvider: ZosJobsProvider) {
 export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
     const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
     job.prefix = newPrefix;
-    jobsProvider.refreshElement(job);
-}
-
-export async function setId(job: Job, jobsProvider: ZosJobsProvider) {
-    const newId = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.id", "Job Id") });
-    job.id = newId;
     jobsProvider.refreshElement(job);
 }
 

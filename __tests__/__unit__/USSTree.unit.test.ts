@@ -20,7 +20,7 @@ import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-
+import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";
 
 
@@ -60,6 +60,26 @@ describe("Unit Tests (Jest)", () => {
             return {};
         })
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+    const withProgress = jest.fn().mockImplementation(() => {
+        return {
+            location: 15,
+            title: "Saving file..."
+        };
+    });
+    const testResponse = {
+        success: true,
+        commandResponse: "",
+        apiResponse: {
+            items: []
+        }
+    };
+    withProgress.mockReturnValue(testResponse);
+
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
@@ -70,24 +90,28 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
 
     const testTree = new USSTree();
     testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
-    testTree.mSessionNodes[1].contextValue = "uss_session";
+    testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
 
     afterEach(async () => {
         getConfiguration.mockClear();
     });
-
+    afterAll(() => {
+        jest.resetAllMocks();
+    });
     /*************************************************************************************************************
      * Creates an ZoweUSSNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         const testNode = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.None, null, session, null);
-        testNode.contextValue = "uss_session";
+        testNode.contextValue = extension.USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -123,9 +147,9 @@ describe("Unit Tests (Jest)", () => {
             new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null),
             new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null),
         ];
-        sessNode[0].contextValue = "favorite";
+        sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
         sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
-        sessNode[1].contextValue = "uss_session";
+        sessNode[1].contextValue = extension.USS_SESSION_CONTEXT;
         sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
         sessNode[1].fullPath = "test";
 
@@ -247,7 +271,7 @@ describe("Unit Tests (Jest)", () => {
             testTree.mSessionNodes[1], null, "/");
         const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None,
             parentDir, null, "/parent");
-        childFile.contextValue = "textFile";
+        childFile.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
         // Check adding directory
         await testTree.addUSSFavorite(parentDir);
@@ -284,7 +308,7 @@ describe("Unit Tests (Jest)", () => {
         Object.defineProperty(testTree, "refresh", {value: refresh});
         refresh.mockReset();
         const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], session, null);
-        folder.contextValue = "directory";
+        folder.contextValue = extension.USS_DIR_CONTEXT;
         await testTree.flipState(folder, true);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(folder, false);
@@ -307,9 +331,9 @@ describe("Unit Tests (Jest)", () => {
                 false, "test"),
         ];
 
-        expectedUSSFavorites.map((node) => node.contextValue += "f");
+        expectedUSSFavorites.map((node) => node.contextValue += extension.FAV_SUFFIX);
         expectedUSSFavorites.forEach((node) => {
-            if (node.contextValue !== "directoryf") {
+            if (node.contextValue !== extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX) {
                 node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
             }
         });

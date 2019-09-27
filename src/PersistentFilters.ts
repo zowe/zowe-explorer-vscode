@@ -19,6 +19,7 @@ import * as vscode from "vscode";
  */
 export class PersistentFilters {
     private static readonly favorites: string = "favorites";
+    private static readonly history: string = "history";
 
     public schema: string;
     public mHistory: string[] = [];
@@ -31,7 +32,10 @@ export class PersistentFilters {
     }
 
     public readFavorites(): string[] {
-        return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
+        if (vscode.workspace.getConfiguration(this.schema)) {
+            return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
+        }
+        return [];
     }
 
     public async updateFavorites(favorites: string[]) {
@@ -84,7 +88,10 @@ export class PersistentFilters {
      *
      */
     private async initializeHistory() {
-        const lines: string[] = vscode.workspace.getConfiguration(this.schema).get("history");
+        let lines: string[];
+        if (vscode.workspace.getConfiguration(this.schema)) {
+            lines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.history);
+        }
         if (lines) {
             this.mHistory = lines;
         } else {
@@ -94,7 +101,7 @@ export class PersistentFilters {
 
     private async updateHistory() {
         // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration().get(this.schema) };
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.history = this.mHistory;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);

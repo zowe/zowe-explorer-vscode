@@ -52,11 +52,11 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 public mProfileName?: string) {
         super(label, collapsibleState);
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-            this.contextValue = "directory";
+            this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
-            this.contextValue = "binaryFile";
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
         } else {
-            this.contextValue = "textFile";
+            this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
         }
         if (this.parentPath) {
             this.fullPath = this.tooltip = this.parentPath + "/" + label;
@@ -65,7 +65,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (this.mParent && this.mParent.contextValue === "favorite") {
+        if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
@@ -83,8 +83,9 @@ export class ZoweUSSNode extends vscode.TreeItem {
      * @returns {Promise<ZoweUSSNode[]>}
      */
     public async getChildren(): Promise<ZoweUSSNode[]> {
-        if ((!this.fullPath && this.contextValue === "uss_session") ||
-                (this.contextValue === "textFile" || this.contextValue === "binaryFile")) {
+        if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
+                (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
+                    this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
             return [];
         }
 
@@ -164,7 +165,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 }
             }
         });
-        if (this.contextValue === "uss_session") {
+        if (this.contextValue === extension.USS_SESSION_CONTEXT) {
             this.dirty = false;
         }
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
@@ -191,14 +192,15 @@ export class ZoweUSSNode extends vscode.TreeItem {
     public setBinary(binary: boolean) {
         this.binary = binary;
         if(this.binary){
-            this.contextValue = "binaryFile";
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
-            this.contextValue = "textFile";
+            this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.mParent && this.mParent.contextValue === "favorite") {
-            this.binary ? this.contextValue = "binaryFilef" : this.contextValue = "textFilef";
+        if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+            this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
+             this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
         utils.applyIcons(this);
         this.dirty = true;

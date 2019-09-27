@@ -33,30 +33,35 @@ describe("ProfileLoader", () => {
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
 
-    (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
+    beforeEach(() => {
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
 
-        const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
-            return {
-                status,
-                stdout: {
-                    toString: jest.fn(() => {
-                        return stdout;
-                    })
-                },
-                stderr: {
-                    toString: jest.fn(() => {
-                        return stderr;
-                    })
-                },
+            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
+                return {
+                    status,
+                    stdout: {
+                        toString: jest.fn(() => {
+                            return stdout;
+                        })
+                    },
+                    stderr: {
+                        toString: jest.fn(() => {
+                            return stderr;
+                        })
+                    },
+                };
             };
-        };
 
-        if (args[0].indexOf("getAllProfiles") >= 0) {
-            return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
-        } else {
-            // load default profile
-            return createFakeChildProcess(0, JSON.stringify(profileOne), "");
-        }
+            if (args[0].indexOf("getAllProfiles") >= 0) {
+                return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
+            } else {
+                // load default profile
+                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
+            }
+        });
+    });
+    afterEach(() => {
+        jest.resetAllMocks();
     });
 
     it("should return a named profile", () => {

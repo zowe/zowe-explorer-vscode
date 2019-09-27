@@ -42,13 +42,13 @@ export class ZoweNode extends vscode.TreeItem {
                 public mParent: ZoweNode, private session: Session, information: boolean = false) {
         super(label, collapsibleState);
         if (information) {
-            this.contextValue = "information";
+            this.contextValue = extension.INFORMATION_CONTEXT;
         } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-            this.contextValue = "pds";
+            this.contextValue = extension.DS_PDS_CONTEXT;
         } else if (mParent && mParent.mParent !== null) {
-            this.contextValue = "member";
+            this.contextValue = extension.DS_MEMBER_CONTEXT;
         } else {
-            this.contextValue = "ds";
+            this.contextValue = extension.DS_DS_CONTEXT;
         }
         this.tooltip = this.label;
         utils.applyIcons(this);
@@ -60,12 +60,14 @@ export class ZoweNode extends vscode.TreeItem {
      * @returns {Promise<ZoweNode[]>}
      */
     public async getChildren(): Promise<ZoweNode[]> {
-        if ((!this.pattern && this.contextValue === "session")){
+        if ((!this.pattern && this.contextValue === extension.DS_SESSION_CONTEXT)){
             return [new ZoweNode(localize("getChildren.search", "Use the search button to display datasets"),
                                  vscode.TreeItemCollapsibleState.None, this, null, true)];
         }
 
-        if (this.contextValue === "ds" || this.contextValue === "member" || this.contextValue === "information") {
+        if (this.contextValue === extension.DS_DS_CONTEXT ||
+            this.contextValue === extension.DS_MEMBER_CONTEXT ||
+            this.contextValue === extension.INFORMATION_CONTEXT) {
             return [];
         }
 
@@ -87,7 +89,7 @@ export class ZoweNode extends vscode.TreeItem {
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
         try {
-            if (this.contextValue === "session") {
+            if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
@@ -120,7 +122,7 @@ export class ZoweNode extends vscode.TreeItem {
                     const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
                     // temp.iconPath = utils.applyIcons(temp);
                     elementChildren[temp.label] = temp;
-                } else if (this.contextValue === "session") {
+                } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweNode for a PS
                     const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};

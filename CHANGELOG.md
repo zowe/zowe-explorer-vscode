@@ -2,6 +2,19 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.25.0
+
+- Add Edit to context menu for MVS and USS Tree. Thanks to Rodney-Wilson 
+- Restructured all search and filters dialogs to incorporate a recall/history function. @Colin-Stone
+- Added Search Favorite for USS Favorites. @Colin-Stone
+- Added Job and Search Favorite for Jobs. @Colin-Stone
+- Provided support for specifying jobs by job id. @Colin-Stone
+- Fixed issue with submitting datasets job link. @Colin-Stone
+- Fixed label for Jobs Refresh All. @Colin-Stone
+- Minor icon improvement to distinguish Favorites from LPAR's. @Colin-Stone
+- Support copy path Thanks @lauren-li
+- Progress Bar animation on opening large files. Thanks to Rodney-Wilson 
+
 ## 0.24.1
 
 - Fixed issue when saving USS files
