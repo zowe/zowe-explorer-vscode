@@ -456,7 +456,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(60);
+        expect(registerCommand.mock.calls.length).toBe(61);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -1307,7 +1307,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.openPS(child);
+        await extension.openPS(child, true);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
@@ -1315,7 +1315,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
-        await extension.openPS(child);
+        await extension.openPS(child, true);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
