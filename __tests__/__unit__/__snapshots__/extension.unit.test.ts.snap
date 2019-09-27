@@ -28,6 +28,16 @@ Array [
     "when": "view == zowe.uss.explorer && viewItem == directory_fav",
   },
   Object {
+    "command": "zowe.uss.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == directory_fav",
+  },
+  Object {
+    "command": "zowe.uss.editFile",
+    "group": "inline",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directoryf",
+  },
+  Object {
     "command": "zowe.uss.refreshUSS",
     "group": "inline",
     "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
@@ -49,7 +59,7 @@ Array [
   },
   Object {
     "command": "zowe.uss.deleteNode",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.uss.explorer && viewItem != uss_session && viewItem != favorite && viewItem != textFile_fav && viewItem != binaryFile_fav && viewItem != directory_fav && viewItem != uss_session_fav",
   },
   Object {
@@ -58,8 +68,13 @@ Array [
     "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
   },
   Object {
-    "command": "zowe.uss.renameNode",
+    "command": "zowe.uss.editFile",
     "group": "6_modification@0",
+    "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+  },
+  Object {
+    "command": "zowe.uss.renameNode",
+    "group": "6_modification@1",
     "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != uss_session_fav",
   },
   Object {
@@ -113,6 +128,11 @@ Array [
     "when": "view == zowe.uss.explorer && viewItem == directory_fav",
   },
   Object {
+    "command": "zowe.editMember",
+    "group": "inline",
+    "when": "view == zowe.explorer && viewItem == member",
+  },
+  Object {
     "command": "zowe.refreshNode",
     "group": "inline",
     "when": "view == zowe.explorer && viewItem == member",
@@ -134,7 +154,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteMember",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == member",
   },
   Object {
@@ -169,8 +189,13 @@ Array [
   },
   Object {
     "command": "zowe.deleteMember",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == member_fav",
+  },
+  Object {
+    "command": "zowe.editMember",
+    "group": "6_modification@0",
+    "when": "view == zowe.explorer && viewItem == member",
   },
   Object {
     "command": "zowe.refreshNode",
@@ -194,7 +219,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteDataset",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == ds",
   },
   Object {
@@ -244,7 +269,7 @@ Array [
   },
   Object {
     "command": "zowe.deleteDataset",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
@@ -264,7 +289,7 @@ Array [
   },
   Object {
     "command": "zowe.deletePDS",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == pds",
   },
   Object {
@@ -289,7 +314,7 @@ Array [
   },
   Object {
     "command": "zowe.deletePDS",
-    "group": "6_modification@1",
+    "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {

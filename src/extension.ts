@@ -168,7 +168,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
     vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
-    vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node));
+    vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true));
     vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
         log.debug(localize("onDidSaveTextDocument1",
             "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ") +
@@ -192,6 +192,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.uploadDialog", (node) => mvsActions.uploadDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.editMember", (node) => openPS(node, false));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
@@ -225,7 +226,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
     vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
     vscode.commands.registerCommand("zowe.uss.fullPath", (node) => ussFileProvider.ussFilterPrompt(node));
-    vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node));
+    vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node, false, true));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
@@ -238,6 +239,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
+    vscode.commands.registerCommand("zowe.uss.editFile", (node) => openUSS(node, false, false));
     vscode.commands.registerCommand("zowe.uss.saveSearch", async (node) => ussFileProvider.addUSSSearchFavorite(node));
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node) => ussFileProvider.removeUSSFavorite(node));
 
@@ -453,7 +455,7 @@ export async function downloadJcl(job: Job) {
  */
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
     node.setBinary(binary);
-    await openUSS(node, true);
+    await openUSS(node, true, true);
     ussFileProvider.refresh();
 }
 
@@ -767,7 +769,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
-        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null));
+        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null), true);
         datasetProvider.refresh();
     }
 }
@@ -1111,7 +1113,7 @@ export function getUSSDocumentFilePath(node: ZoweUSSNode) {
  *
  * @param {ZoweNode} node
  */
-export async function openPS(node: ZoweNode) {
+export async function openPS(node: ZoweNode, previewMember: boolean) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
@@ -1144,7 +1146,12 @@ export async function openPS(node: ZoweNode) {
             });
         }
         const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-        await vscode.window.showTextDocument(document);
+        if (previewMember === true) {
+            await vscode.window.showTextDocument(document);
+            }
+            else {
+                await vscode.window.showTextDocument(document, {preview: false});
+            }
     } catch (err) {
         log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
@@ -1450,7 +1457,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  *
  * @param {ZoweUSSNode} node
  */
-export async function openUSS(node: ZoweUSSNode, download = false) {
+export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean) {
     try {
         let label: string;
         switch (node.mParent.contextValue) {
@@ -1485,7 +1492,12 @@ export async function openUSS(node: ZoweUSSNode, download = false) {
             );
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
-        await vscode.window.showTextDocument(document);
+        if (previewFile === true) {
+            await vscode.window.showTextDocument(document);
+            }
+            else {
+                await vscode.window.showTextDocument(document, {preview: false});
+            }
     } catch (err) {
         log.error(localize("openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);

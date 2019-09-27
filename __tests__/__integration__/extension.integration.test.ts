@@ -304,7 +304,7 @@ describe("Extension Integration Tests", () => {
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
             const node = new ZoweNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
-            await extension.openPS(node);
+            await extension.openPS(node, true);
             expect(path.relative(vscode.window.activeTextEditor.document.fileName,
                 extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal("");
             expect(fs.existsSync(extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
@@ -313,7 +313,7 @@ describe("Extension Integration Tests", () => {
         it("should display an error message when openPS is passed an invalid node", async () => {
             const node = new ZoweNode(pattern + ".GARBAGE", vscode.TreeItemCollapsibleState.None, sessionNode, null);
             const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await expect(extension.openPS(node)).to.eventually.be.rejectedWith(Error);
+            await expect(extension.openPS(node, true)).to.eventually.be.rejectedWith(Error);
 
             const called = errorMessageStub.called;
             expect(called).to.equal(true);
@@ -327,7 +327,7 @@ describe("Extension Integration Tests", () => {
             profiles[1].dirty = true;
             const children = await profiles[1].getChildren();
             children[1].dirty = true;
-            await extension.openPS(children[1]);
+            await extension.openPS(children[1], true);
 
             const changedData = "PS Upload Test";
 
@@ -339,7 +339,7 @@ describe("Extension Integration Tests", () => {
             await extension.saveFile(doc, testTree);
 
             // Download file
-            await extension.openPS(children[1]);
+            await extension.openPS(children[1], true);
 
             expect(doc.getText().trim()).to.deep.equal("PS Upload Test");
 
@@ -357,7 +357,7 @@ describe("Extension Integration Tests", () => {
 
             // Test for member under PO
             const childrenMembers = await testTree.getChildren(children[0]);
-            await extension.openPS(childrenMembers[0]);
+            await extension.openPS(childrenMembers[0], true);
 
             const changedData2 = "PO Member Upload Test";
 
@@ -369,7 +369,7 @@ describe("Extension Integration Tests", () => {
             extension.saveFile(doc2, testTree);
 
             // Download file
-            await extension.openPS(childrenMembers[0]);
+            await extension.openPS(childrenMembers[0], true);
 
             expect(doc2.getText().trim()).to.deep.equal("PO Member Upload Test");
 
@@ -655,7 +655,7 @@ describe("Extension Integration Tests - USS", () => {
             const localPath = path.join(extension.USS_DIR, "/",  testConst.profile.name,
             dirChildren[0].fullPath);
 
-            await extension.openUSS(dirChildren[0]);
+            await extension.openUSS(dirChildren[0], false, true);
             const doc = await vscode.workspace.openTextDocument(localPath);
 
             const originalData = doc.getText().trim();
@@ -668,7 +668,7 @@ describe("Extension Integration Tests - USS", () => {
             await fs.unlinkSync(localPath);
 
             // Download file
-            await extension.openUSS(dirChildren[0]);
+            await extension.openUSS(dirChildren[0], false, true);
 
             // Change contents back
             fs.writeFileSync(localPath, originalData);
