@@ -437,11 +437,6 @@
           "group": "1_create"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem == directory_fav",
-          "command": "zowe.uss.removeFavorite",
-          "group": "4_workspace"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != uss_session_fav && viewItem != directory && viewItem != directory_fav",
           "command": "zowe.uss.editFile",
           "group": "inline"
@@ -457,12 +452,12 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.refreshUSS",
           "group": "0_mainframeInteraction"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.safeSaveUSS",
           "group": "0_mainframeInteraction"
         },
@@ -472,12 +467,12 @@
           "group": "6_modification@2"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != uss_session_fav",
           "command": "zowe.uss.copyPath",
           "group": "5_copyPath"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav",
+          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.editFile",
           "group": "6_modification@0"
         },
