@@ -17,7 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 /**
  * Name of the master branch
  */
-def MASTER_BRANCH = "master"
+def MASTER_BRANCH = "add-release-tags"
 
 /**
  * TOKEN ID where secret is stored
@@ -126,7 +126,7 @@ pipeline {
           } else {
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-              sh "npx vsce publish -p $TOKEN"
+              // sh "npx vsce publish -p $TOKEN"
             }
 
             sh "git config --global user.name \"zowe-robot\""
