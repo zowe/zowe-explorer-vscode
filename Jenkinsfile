@@ -17,7 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 /**
  * Name of the master branch
  */
-def MASTER_BRANCH = "master"
+def MASTER_BRANCH = "add-release-tags"
 
 /**
  * TOKEN ID where secret is stored
