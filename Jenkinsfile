@@ -126,7 +126,7 @@ pipeline {
           } else {
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-              sh "npx vsce publish -p $TOKEN"
+              // sh "npx vsce publish -p $TOKEN"
             }
 
             sh "git config --global user.name \"zowe-robot\""
