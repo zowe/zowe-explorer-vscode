@@ -24,6 +24,11 @@ def MASTER_BRANCH = "master"
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
 
+/**
+ * TOKEN ID where secret is stored
+ */
+def ZOWE_ROBOT_TOKEN = "zowe-robot-github"
+
 def PIPELINE_CONTROL = [
   ci_skip: false
 ]
@@ -123,6 +128,14 @@ pipeline {
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
               sh "npx vsce publish -p $TOKEN"
             }
+
+            // sh "git config set user.name zowe-robot"
+            // sh "git config set user.email zowe.robot@gmail.com"
+            
+            // withCredentials([string(credentialsId: ZOWE_ROBOT_TOKEN, variable: 'TOKEN')]) {
+              sh "git tag v${vscodePackageJson.version}"
+              sh "git push --tags"
+            // }
           }
         } }
       }
