@@ -129,13 +129,12 @@ pipeline {
               sh "npx vsce publish -p $TOKEN"
             }
 
-            // sh "git config set user.name zowe-robot"
-            // sh "git config set user.email zowe.robot@gmail.com"
-            
-            // withCredentials([string(credentialsId: ZOWE_ROBOT_TOKEN, variable: 'TOKEN')]) {
-              sh "git tag v${vscodePackageJson.version}"
-              sh "git push --tags"
-            // }
+            sh "git config --global user.name \"zowe-robot\""
+            sh "git config --global user.email \"zowe.robot@gmail.com\""
+            sh "git tag v${vscodePackageJson.version}"
+            withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
+              sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+            }
           }
         } }
       }
