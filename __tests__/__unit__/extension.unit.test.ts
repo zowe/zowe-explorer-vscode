@@ -20,7 +20,7 @@ import * as path from "path";
 import * as brightside from "@brightside/core";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
-import * as profileLoader from "../../src/ProfileLoader";
+import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
@@ -256,13 +256,15 @@ describe("Extension Unit Tests", () => {
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
+    const mockLoadNamedProfile = jest.fn();
+    Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
-            return [{name: "firstName"}, {name: "secondName"}];
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"}
+            };
         })
     });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});
 
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
@@ -334,8 +336,22 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.Disposable, "from", {value: from});
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
 
+
+    beforeEach(() => {
+        mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
+    });
+
     afterEach(() => {
-        jest.resetAllMocks();
+        jest.clearAllMocks();
     });
 
     it("Testing that activate correctly executes", async () => {
@@ -349,29 +365,28 @@ describe("Extension Unit Tests", () => {
         readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
         readdirSync.mockReturnValue([]);
         isFile.mockReturnValueOnce(false);
-        (profileLoader.loadNamedProfile as any).mockImplementation(() => {
-            return {
-                profile: "SampleProfile"
-            };
-        });
-        (profileLoader.loadDefaultProfile as any).mockImplementation(() => {
-            return {
-                profile: "SampleProfile"
-            };
-        });
         createBasicZosmfSession.mockReturnValue(session);
         getConfiguration.mockReturnValueOnce({
             persistence: true,
-            get: () => "folderpath"
+            get: () => "folderpath",
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         getConfiguration.mockReturnValueOnce({
             persistence: true,
-            get: (setting: string) => "vscode"
+            get: (setting: string) => "vscode",
+            update: jest.fn(()=>{
+                return {};
+            })
         });
 
         getConfiguration.mockReturnValueOnce({
             persistence: true,
-            get: () => ""
+            get: () => "",
+            update: jest.fn(()=>{
+                return {};
+            })
         });
 
         getConfiguration.mockReturnValueOnce({
@@ -381,7 +396,10 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.test{ds}",
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         getConfiguration.mockReturnValueOnce({
             persistence: true,
@@ -390,7 +408,10 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.test{ds}",
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         getConfiguration.mockReturnValueOnce({
             persistence: true,
@@ -399,7 +420,10 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.test{ds}",
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         getConfiguration.mockReturnValueOnce({
             persistence: true,
@@ -408,7 +432,10 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser{directory}",
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         getConfiguration.mockReturnValue({
             persistence: true,
@@ -417,8 +444,19 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser{directory}",
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
+        const enums = jest.fn().mockImplementation(() => {
+            return {
+                Global: 1,
+                Workspace: 2,
+                WorkspaceFolder: 3
+            };
+        });
+        Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
 // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
@@ -549,11 +587,17 @@ describe("Extension Unit Tests", () => {
         readFileSync.mockReturnValue("");
         // .get("Zowe-Temp-Folder-Location")["folderPath"];
         getConfiguration.mockReturnValueOnce({
-            get: () => ""
+            get: () => "",
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
-            get: (setting: string) => undefined
+            get: (setting: string) => undefined,
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => [
@@ -561,13 +605,19 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.test{ds}",
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
 
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => [
                 "",
-            ]
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         existsSync.mockReturnValueOnce(true);
 
@@ -584,7 +634,10 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReturnValueOnce({
             get: () => {
                 return [""];
-            }
+            },
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         unlinkSync.mockImplementationOnce(() => {
             return;
@@ -597,7 +650,10 @@ describe("Extension Unit Tests", () => {
         });
         // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
-            get: (setting: string) => "theia"
+            get: (setting: string) => "theia",
+            update: jest.fn(()=>{
+                return {};
+            })
         });
         await extension.activate(mock);
     });
@@ -739,12 +795,15 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that addSession is executed successfully", async () => {
         showQuickPick.mockReset();
-
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
         await extension.addSession(testTree);
-
-        // expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -754,46 +813,55 @@ describe("Extension Unit Tests", () => {
         });
 
         showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
-
-        await extension.addSession(testTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
-
-        showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
-        await extension.addSession(testTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
-
-        showErrorMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
-            throw (Error("testError"));
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined
+                };
+            })
         });
 
-        try {
-            await extension.addSession(testTree);
-            // tslint:disable-next-line:no-empty
-        } catch (err) {
-        }
+        await extension.addSession(testTree);
 
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
+
+        // showInformationMessage.mockReset();
+        // (profileLoader.loadAllProfiles as any).mockReset();
+        // (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
+        // await extension.addSession(testTree);
+
+        // expect(showInformationMessage.mock.calls.length).toBe(1);
+        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
+
+        // showErrorMessage.mockReset();
+        // (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
+        //     throw (Error("testError"));
+        // });
+
+        // try {
+        //     await extension.addSession(testTree);
+        //     // tslint:disable-next-line:no-empty
+        // } catch (err) {
+        // }
+
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
+        // expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
 
     });
 
     it("Testing that addJobsSession is executed successfully", async () => {
         showQuickPick.mockReset();
-
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
         await extension.addJobsSession(testJobsTree);
-
-        // expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -803,35 +871,40 @@ describe("Extension Unit Tests", () => {
         });
 
         showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
-
-        await extension.addJobsSession(testJobsTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
-
-        showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
-        await extension.addJobsSession(testJobsTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
-
-        showErrorMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
-            throw (Error("testError"));
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined
+                };
+            })
         });
+        await extension.addJobsSession(testJobsTree);
 
-        try {
-            await extension.addJobsSession(testJobsTree);
-            // tslint:disable-next-line:no-empty
-        } catch (err) {
-        }
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+        //  TODO these should be tests on the profileLoader file
+        // showInformationMessage.mockReset();
+        // (profileLoader.loadAllProfiles as any).mockReset();
+        // (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
+        // await extension.addJobsSession(testJobsTree);
 
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
+        // expect(showInformationMessage.mock.calls.length).toBe(1);
+        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+
+        // showErrorMessage.mockReset();
+        // (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
+        //     throw (Error("testError"));
+        // });
+
+        // try {
+        //     await extension.addJobsSession(testJobsTree);
+        //     // tslint:disable-next-line:no-empty
+        // } catch (err) {
+        // }
+
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
+        // expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
 
     });
 
@@ -1088,7 +1161,7 @@ describe("Extension Unit Tests", () => {
         await extension.enterPattern(favoriteSample, testTree);
 
         expect(mockAddSession.mock.calls.length).toBe(1);
-        expect(mockAddSession.mock.calls[0][1]).toEqual("sestest");
+        expect(mockAddSession.mock.calls[0][0]).toEqual("sestest");
     });
 
     it("Testing that saveFile is executed successfully", async () => {
@@ -1540,12 +1613,8 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that addSession is executed correctly for a USS explorer", async () => {
         showQuickPick.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"}, {name: "secondName"}]);
 
         await extension.addUSSSession(testUSSTree);
-
-        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName","secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -1556,39 +1625,43 @@ describe("Extension Unit Tests", () => {
 
         // no profiles returned
         showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined
+                };
+            })
+        });
 
         await extension.addSession(testUSSTree);
-
-        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
 
         // only profile is automatically loaded so should say none left to chose
-        showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "usstest"}]);
+        // showInformationMessage.mockReset();
+        // (profileLoader.loadAllProfiles as any).mockReset();
+        // (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "usstest"}]);
 
-        await extension.addSession(testUSSTree);
+        // await extension.addSession(testUSSTree);
 
-        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+        // expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
+        // expect(showInformationMessage.mock.calls.length).toBe(1);
+        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
 
-        showErrorMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
-            throw (Error("testError"));
-        });
+        // showErrorMessage.mockReset();
+        // (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
+        //     throw (Error("testError"));
+        // });
 
-        try {
-            await extension.addSession(testUSSTree);
-            // tslint:disable-next-line:no-empty
-        } catch (err) {
-        }
+        // try {
+        //     await extension.addSession(testUSSTree);
+        //     // tslint:disable-next-line:no-empty
+        // } catch (err) {
+        // }
 
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
+        // expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
 
     });
 
@@ -1749,10 +1822,6 @@ describe("Extension Unit Tests", () => {
         );
         withProgress(downloadUSSFile);
         expect(withProgress).toBeCalledWith(downloadUSSFile);
-        // expect(ussFile.mock.calls.length).toBe(1);
-        // expect(ussFile.mock.calls[0][0]).toBe(session);
-        // expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        // expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: true});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -1957,16 +2026,9 @@ describe("Extension Unit Tests", () => {
 
     it("tests that the jcl is submitted", async () => {
         showInformationMessage.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{ name: "firstName" }, { name: "secondName" }]);
         createBasicZosmfSession.mockReturnValue(session);
         submitJcl.mockReturnValue(iJob);
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
-        (profileLoader.loadNamedProfile as any).mockImplementation(() => {
-            return {
-                profile: "SampleProfile"
-            };
-        });
         await extension.submitJcl(testTree);
         expect(submitJcl).toBeCalled();
         expect(showInformationMessage).toBeCalled();
@@ -2262,9 +2324,6 @@ describe("Extension Unit Tests", () => {
     it("tests the issueTsoCommand function", async () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        (profileLoader.loadAllProfiles as any).mockReset();
-
-        (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "firstName"},{name: "secondName"}]);
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo");
@@ -2272,7 +2331,6 @@ describe("Extension Unit Tests", () => {
 
         await extension.issueTsoCommand(outputChannel);
 
-        expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({

@@ -20,6 +20,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
+import { Profiles } from "../Profiles";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -102,6 +103,7 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
         }
     });
     ussFileProvider.refresh();
+    Profiles.getInstance().refresh();
 }
 
 export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {

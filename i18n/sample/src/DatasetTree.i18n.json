@@ -3,7 +3,7 @@
     "initializeFavorites.log.debug": "initializing favorites",
     "initializeFavorites.error.profile1": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ",
     "intializeFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
-    "initializeFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ",
+    "initializeFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ",
     "initializeFavorites.error.profile4": "which can be found in your VS Code user settings.",
     "initializeFavorites.fileCorrupted": "Favorites file corrupted: ",
     "addFavorite": "PDS already in favorites",

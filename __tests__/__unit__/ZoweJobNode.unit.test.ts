@@ -17,15 +17,24 @@ import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
 import { Session, Logger } from "@brightside/imperative";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
+import * as profileLoader from "../../src/Profiles";
 import { Job } from "../../src/ZoweJobNode";
-import { ZosJobsProvider, HistoryItem } from "../../src/ZosJobsProvider";
+import { ZosJobsProvider, HistoryItem, createJobsTree } from "../../src/ZosJobsProvider";
 
-describe.only("Zos Jobs Unit Tests", () => {
+describe("Zos Jobs Unit Tests", () => {
 
     const GetJobs = jest.fn();
     const getConfiguration = jest.fn();
+    const target = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    const enums = jest.fn().mockImplementation(() => {
+        return {
+            Global: 1,
+            Workspace: 2,
+            WorkspaceFolder: 3
+        };
+    });
+    Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
     getConfiguration.mockReturnValue({
         persistence: true,
         get: (setting: string) => [
@@ -57,8 +66,6 @@ describe.only("Zos Jobs Unit Tests", () => {
         Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
         Object.defineProperty(GetJobs, "getJobsByOwnerAndPrefix", { value: getJobsByOwnerAndPrefix });
         Object.defineProperty(GetJobs, "getJob", { value: getJob });
-
-        const testJobsProvider = new ZosJobsProvider();
 
         const session = new Session({
             user: "fake",
@@ -153,17 +160,38 @@ describe.only("Zos Jobs Unit Tests", () => {
         Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
 
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
+        const mockLoadNamedProfile = jest.fn();
+
+        beforeEach(() => {
+            mockLoadNamedProfile.mockReturnValue({name:"fake", profile: {name:"fake", type:"zosmf", profile:{name:"fake", type:"zosmf"}}});
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstProfileName"}, {name: "fake"}],
+                        defaultProfile: {name: "firstProfileName"},
+                        loadNamedProfile: mockLoadNamedProfile
+                    };
+                })
+            });
+        });
+
+        afterEach(() => {
+            jest.resetAllMocks();
+        });
 
         it("should add the session to the tree", async () => {
             createBasicZosmfSession.mockReturnValue(session);
-            await testJobsProvider.addSession(log, "fake");
-            expect(testJobsProvider.mSessionNodes[1]).toBeDefined();
-            expect(testJobsProvider.mSessionNodes[1].label).toEqual("fake");
-            expect(testJobsProvider.mSessionNodes[1].tooltip).toEqual("fake - owner: fake prefix: *");
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const sessions = testJobsProvider.mSessionNodes.length;
+            await testJobsProvider.addSession("fake");
+            expect(testJobsProvider.mSessionNodes[sessions]).toBeDefined();
+            expect(testJobsProvider.mSessionNodes[sessions].label).toEqual("fake");
+            expect(testJobsProvider.mSessionNodes[sessions].tooltip).toEqual("fake - owner: fake prefix: *");
         });
 
         it("tests that the user is informed when a job is deleted", async () => {
             showInformationMessage.mockReset();
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             await testJobsProvider.deleteJob(jobNode);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toEqual(
@@ -172,14 +200,16 @@ describe.only("Zos Jobs Unit Tests", () => {
         });
 
         it("should delete the session", async () => {
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             testJobsProvider.deleteSession(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes.length).toBe(1);
         });
 
         it("should get the jobs of the session", async () => {
             createBasicZosmfSession.mockReturnValue(session);
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            await testJobsProvider.addSession(log, "fake");
+            await testJobsProvider.addSession("fake");
             const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
             expect(jobs.length).toBe(2);
             expect(jobs[0].job.jobid).toEqual(iJob.jobid);
@@ -191,7 +221,9 @@ describe.only("Zos Jobs Unit Tests", () => {
         it("should get the jobs of the session on id", async () => {
             createBasicZosmfSession.mockReturnValue(session);
             getJob.mockReturnValue(iJob);
-            await testJobsProvider.addSession(log, "fake");
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
+            await testJobsProvider.addSession("fake");
             testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
             testJobsProvider.mSessionNodes[1].dirty = true;
             const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
@@ -202,6 +234,8 @@ describe.only("Zos Jobs Unit Tests", () => {
 
         it("should set the owner to the session userid", async () => {
             createBasicZosmfSession.mockReturnValue(session);
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
             const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
             const job = jobs[0];
             job.owner = "";
@@ -212,6 +246,8 @@ describe.only("Zos Jobs Unit Tests", () => {
 
         it("should set the prefix to the default and specific value", async () => {
             createBasicZosmfSession.mockReturnValue(session);
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
             const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
             const job = jobs[0];
             job.prefix = "";
@@ -223,6 +259,8 @@ describe.only("Zos Jobs Unit Tests", () => {
 
         it("should set the search jobid to a specific value", async () => {
             createBasicZosmfSession.mockReturnValue(session);
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
             const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
             const job = jobs[0];
             job.searchId = "JOB12345";
@@ -232,6 +270,7 @@ describe.only("Zos Jobs Unit Tests", () => {
 
         it("Testing that expand tree is executed successfully", async () => {
             const refresh = jest.fn();
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
@@ -261,6 +300,7 @@ describe.only("Zos Jobs Unit Tests", () => {
          *************************************************************************************************************/
         it("Testing that user filter prompts are executed successfully", async () => {
             const defaultDialogText: string = ZosJobsProvider.defaultDialogText;
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             let qpItem: HistoryItem = new HistoryItem(defaultDialogText, "");
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             showInformationMessage.mockReset();
@@ -431,15 +471,6 @@ describe.only("Zos Jobs Unit Tests", () => {
             });
             const e = new Event();
             mockAffects.mockReturnValue(true);
-
-            const enums = jest.fn().mockImplementation(() => {
-                return {
-                    Global: 1,
-                    Workspace: 2,
-                    WorkspaceFolder: 3
-                };
-            });
-            Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
             getConfiguration.mockReset();
             getConfiguration.mockReturnValue({
                 get: (setting: string) => [

@@ -12,7 +12,7 @@
 import * as spoolprovider from "../../src/SpoolProvider";
 import * as brightside from "@brightside/core";
 import * as vscode from "vscode";
-import * as profileLoader from "../../src/ProfileLoader";
+import { Profiles } from "../../src/Profiles";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: brightside.IJobFile = {
@@ -47,6 +47,31 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
+
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"}
+            };
+        })
+    });
+    Object.defineProperty(Profiles, "getDefaultProfile", {
+        value: jest.fn(() => {
+            return {
+                name: "firstName"
+            };
+        })
+    });
+    Object.defineProperty(Profiles, "loadNamedProfile", {
+        value: jest.fn(() => {
+            return {
+                name: "firstName"
+            };
+        })
+    });
+    const loader = Profiles.getInstance();
+ 
     afterEach(() => {
         jest.resetAllMocks();
     });
@@ -72,12 +97,20 @@ describe("SpoolProvider Unit Tests", () => {
 
     it("Tests that the spool content is returned", () => {
         const getAllProfileNames = jest.fn();
-        const load = jest.fn();
+        const loadNamedProfile = jest.fn();
         const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
-        Object.defineProperty(profileLoader, "loadNamedProfile", { value: jest.fn(() => {
-            return {name: "testSession"};
-        }) });
+        const mockLoadNamedProfile = jest.fn();
+        mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
         Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
         Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
         getSpoolContentById.mockReturnValue("spool content");
