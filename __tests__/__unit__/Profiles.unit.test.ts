@@ -18,7 +18,6 @@ import { Logger } from "@brightside/imperative";
 
 import * as ProfileLoader from "../../src/ProfileLoader";
 import { Profiles } from "../../src/Profiles";
-import { tsImportEqualsDeclaration } from "@babel/types";
 
 describe.only("Profile class unit tests", () => {
     const showInformationMessage = jest.fn();
