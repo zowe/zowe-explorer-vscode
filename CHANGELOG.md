@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.26.0
+
+- Added Persistence for profiles selection. @Colin-Stone
+- Performance enhancements for Profile loading operations. @Colin-Stone
+- Filter rewording. @Colin-Stone
+
 ## 0.25.0
 
 - Add Edit to context menu for MVS and USS Tree. Thanks to Rodney-Wilson

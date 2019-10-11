@@ -283,7 +283,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                 // accessing history
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("searchHistory.options.prompt",
-                    "Choose \"-- Specify Filter --\" to define a new filter or select a previously defined one")
+                    "Choose \"Create new...\" to define a new filter or select a previously defined filter")
                 };
                 modItems.unshift(USSTree.defaultDialogText);
                 // get user selection

@@ -297,7 +297,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 // accessing history
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("searchHistory.options.prompt",
-                    "Choose \"Create new...\" to define a new filter alternatively select a previously defined filter")
+                    "Choose \"Create new...\" to define a new filter or select a previously defined filter")
                 };
                 modItems.unshift(new EditSwitch(ZosJobsProvider.defaultDialogText, "Click to create a new filter definition"));
                 // get user selection
