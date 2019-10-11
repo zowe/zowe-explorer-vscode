@@ -70,7 +70,6 @@ describe("SpoolProvider Unit Tests", () => {
             };
         })
     });
-    const loader = Profiles.getInstance();
 
     afterEach(() => {
         jest.resetAllMocks();
@@ -96,8 +95,6 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("Tests that the spool content is returned", () => {
-        const getAllProfileNames = jest.fn();
-        const loadNamedProfile = jest.fn();
         const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
         const mockLoadNamedProfile = jest.fn();

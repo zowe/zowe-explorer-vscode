@@ -23,7 +23,6 @@ import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
 import { Profiles } from "../../src/Profiles";
 
-
 describe("Unit Tests (Jest)", () => {
     // Globals
     const session = new Session({
