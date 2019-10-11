@@ -826,29 +826,6 @@ describe("Extension Unit Tests", () => {
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
-
-        // showInformationMessage.mockReset();
-        // (profileLoader.loadAllProfiles as any).mockReset();
-        // (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
-        // await extension.addSession(testTree);
-
-        // expect(showInformationMessage.mock.calls.length).toBe(1);
-        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
-
-        // showErrorMessage.mockReset();
-        // (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
-        //     throw (Error("testError"));
-        // });
-
-        // try {
-        //     await extension.addSession(testTree);
-        //     // tslint:disable-next-line:no-empty
-        // } catch (err) {
-        // }
-
-        // expect(showErrorMessage.mock.calls.length).toBe(1);
-        // expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
-
     });
 
     it("Testing that addJobsSession is executed successfully", async () => {
@@ -883,29 +860,6 @@ describe("Extension Unit Tests", () => {
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
-        //  TODO these should be tests on the profileLoader file
-        // showInformationMessage.mockReset();
-        // (profileLoader.loadAllProfiles as any).mockReset();
-        // (profileLoader.loadAllProfiles as any).mockReturnValueOnce([]);
-        // await extension.addJobsSession(testJobsTree);
-
-        // expect(showInformationMessage.mock.calls.length).toBe(1);
-        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
-
-        // showErrorMessage.mockReset();
-        // (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
-        //     throw (Error("testError"));
-        // });
-
-        // try {
-        //     await extension.addJobsSession(testJobsTree);
-        //     // tslint:disable-next-line:no-empty
-        // } catch (err) {
-        // }
-
-        // expect(showErrorMessage.mock.calls.length).toBe(1);
-        // expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
-
     });
 
     it("Testing that createFile is executed successfully", async () => {
@@ -1274,33 +1228,16 @@ describe("Extension Unit Tests", () => {
         };
 
         dataSetList.mockReset();
-//        pathToDataSet.mockReset();
         showErrorMessage.mockReset();
 
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = true;
-//        pathToDataSet.mockResolvedValueOnce(testResponse);
 
         await extension.saveFile(testDoc3, testTree);
-
-        // expect(pathToDataSet.mock.calls.length).toBe(1);
-        // expect(pathToDataSet.mock.calls[0][0]).toEqual(session);
-        // expect(pathToDataSet.mock.calls[0][1]).toBe(testDoc3.fileName);
-        // expect(pathToDataSet.mock.calls[0][2]).toBe("testFile(mem)");
-
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
-
-        // dataSetList.mockImplementationOnce(() => {
-        //     throw Error("Test Error");
-        // });
-
-        // await extension.saveFile(testDoc, testTree);
-
-        // expect(showErrorMessage.mock.calls.length).toBe(2);
-
     });
 
     it("Testing that refreshAll is executed successfully", async () => {
@@ -1637,32 +1574,6 @@ describe("Extension Unit Tests", () => {
         await extension.addSession(testUSSTree);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
-
-        // only profile is automatically loaded so should say none left to chose
-        // showInformationMessage.mockReset();
-        // (profileLoader.loadAllProfiles as any).mockReset();
-        // (profileLoader.loadAllProfiles as any).mockReturnValueOnce([{name: "usstest"}]);
-
-        // await extension.addSession(testUSSTree);
-
-        // expect((profileLoader.loadAllProfiles as any).mock.calls.length).toBe(1);
-        // expect(showInformationMessage.mock.calls.length).toBe(1);
-        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
-
-        // showErrorMessage.mockReset();
-        // (profileLoader.loadAllProfiles as any).mockImplementationOnce(() => {
-        //     throw (Error("testError"));
-        // });
-
-        // try {
-        //     await extension.addSession(testUSSTree);
-        //     // tslint:disable-next-line:no-empty
-        // } catch (err) {
-        // }
-
-        // expect(showErrorMessage.mock.calls.length).toBe(1);
-        // expect(showErrorMessage.mock.calls[0][0]).toEqual("Unable to load all profiles: testError");
-
     });
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
@@ -1702,10 +1613,6 @@ describe("Extension Unit Tests", () => {
         );
         withProgress(downloadUSSFile);
         expect(withProgress).toBeCalledWith(downloadUSSFile);
-        // expect(ussFile.mock.calls.length).toBe(1);
-        // expect(ussFile.mock.calls[0][0]).toBe(session);
-        // expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        // expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node), binary: false});
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getUSSDocumentFilePath(node));
         expect(showTextDocument.mock.calls.length).toBe(1);

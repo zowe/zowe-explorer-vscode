@@ -71,7 +71,7 @@ describe("SpoolProvider Unit Tests", () => {
         })
     });
     const loader = Profiles.getInstance();
- 
+
     afterEach(() => {
         jest.resetAllMocks();
     });

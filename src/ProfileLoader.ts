@@ -40,22 +40,6 @@ export function loadAllProfiles(): IProfileLoaded[] {
 }
 
 /**
- * Load a specific profile. Works the same way as loadAllProfiles, then
- * finds the specific named profile
- * @param name the name of the profile you would like to load
- */
-export function loadNamedProfile(name: string): IProfileLoaded {
-    const allProfiles = loadAllProfiles();
-    for (const profile of allProfiles) {
-        if (profile.name === name && profile.type === "zosmf") {
-            return profile;
-        }
-    }
-    throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
-        + name + localize("loadNamedProfile.error.period", "."));
-}
-
-/**
  * Load the default zosmf profile
  */
 export function loadDefaultProfile(log: Logger): IProfileLoaded {

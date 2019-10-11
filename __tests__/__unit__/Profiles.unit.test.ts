@@ -11,15 +11,12 @@
 
 jest.mock("vscode");
 jest.mock("child_process");
-jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
 import { Logger } from "@brightside/imperative";
-
-import * as ProfileLoader from "../../src/ProfileLoader";
 import { Profiles } from "../../src/Profiles";
 
-describe.only("Profile class unit tests", () => {
+describe("Profile class unit tests", () => {
     const showInformationMessage = jest.fn();
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 
@@ -28,26 +25,15 @@ describe.only("Profile class unit tests", () => {
 
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
-    const profileThree = { name: "profileX", profile: {}, type: "abcde" };
 
-    const loadAllProfiles = jest.fn().mockReturnValue([
-        { name: "profile1", profile: {}, type: "zosmf" },
-        { name: "profile2", profile: {}, type: "zosmf" }]
-    );
-    const loadDefaultProfile = jest.fn().mockReturnValue(
-        { name: "profile1", profile: {}, type: "zosmf" },
-    );
-    Object.defineProperty(ProfileLoader, "loadAllProfiles", { value: loadAllProfiles });
-    Object.defineProperty(ProfileLoader, "loadDefaultProfile", { value: loadDefaultProfile });
+    const mockJSONParse = jest.spyOn(JSON, "parse");
 
     beforeEach(() => {
-        loadAllProfiles.mockReturnValue([
-            { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" }]
-        );
-        loadDefaultProfile.mockReturnValue(
-            { name: "profile1", profile: {}, type: "zosmf" },
-        );
+        mockJSONParse.mockReturnValue({
+            overrides: {
+                CredentialManager: false
+            }
+        });
     });
     afterEach(() => {
        jest.resetAllMocks();
@@ -62,13 +48,6 @@ describe.only("Profile class unit tests", () => {
         const profiles = await Profiles.createInstance(log);
         const loadedProfiles = profiles.allProfiles;
         expect(loadedProfiles).toEqual([profileOne, profileTwo]);
-    });
-
-    it("should return a message if no profiles available ", async () => {
-        loadAllProfiles.mockReturnValueOnce([]);
-        const profiles = await Profiles.createInstance(log);
-        const loadedProfiles = profiles.allProfiles;
-        expect(loadedProfiles).toEqual([]);
     });
 
     it("should return a default profile", async () => {
@@ -93,5 +72,74 @@ describe.only("Profile class unit tests", () => {
             success = true;
         }
         expect(success).toBe(true);
+    });
+
+    it("should route through to spawn. Covers conditional test", async () => {
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
+            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
+                return {
+                    status: 0,
+                    stdout: {
+                        toString: jest.fn(() => {
+                            return stdout;
+                        })
+                    },
+                    stderr: {
+                        toString: jest.fn(() => {
+                            return stderr;
+                        })
+                    },
+                };
+            };
+            if (args[0].indexOf("getAllProfiles") >= 0) {
+                return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
+            } else {
+                // load default profile
+                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
+            }
+        });
+        mockJSONParse.mockReturnValueOnce({
+            overrides: {
+                CredentialManager: "ANO"
+            }
+        });
+        mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
+        mockJSONParse.mockReturnValueOnce(profileOne);
+        await Profiles.createInstance(log);
+        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+        expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
+    });
+    it("should route through to spawn. Coverage of error handling", async () => {
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
+            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
+                return {
+                    status: 0,
+                    stdout: {
+                        toString: jest.fn(() => {
+                            return stdout;
+                        })
+                    },
+                    stderr: {
+                        toString: jest.fn(() => {
+                            return stderr;
+                        })
+                    },
+                };
+            };
+            if (args[0].indexOf("getAllProfiles") >= 0) {
+                return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
+            } else {
+                // load default profile
+                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
+            }
+        });
+        mockJSONParse.mockReturnValueOnce({
+            overrides: undefined
+        });
+        mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
+        mockJSONParse.mockReturnValueOnce(profileOne);
+        await Profiles.createInstance(log);
+        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+        expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
     });
 });

@@ -9,9 +9,12 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger } from "@brightside/imperative";
-import { loadAllProfiles, loadDefaultProfile } from "./ProfileLoader";
+import { IProfileLoaded, Logger, CliProfileManager } from "@brightside/imperative";
 import * as nls from "vscode-nls";
+import * as os from "os";
+import * as fs from "fs";
+import * as path from "path";
+import * as ProfileLoader from "./ProfileLoader";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export class Profiles {
@@ -24,11 +27,11 @@ export class Profiles {
         return Profiles.loader;
     }
     private static loader: Profiles;
-
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
 
-    constructor(public log: Logger) {}
+    private spawnValue: number = -1;
+    private constructor(public log: Logger) {}
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
@@ -43,7 +46,35 @@ export class Profiles {
         return this.defaultProfile;
     }
     public async refresh() {
-        this.allProfiles = await loadAllProfiles();
-        this.defaultProfile = await loadDefaultProfile(this.log);
+        if (this.isSpawnReqd() === 0) {
+            this.allProfiles = ProfileLoader.loadAllProfiles();
+            this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
+        } else {
+            const profileManager = new CliProfileManager({
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+                type: "zosmf"
+            });
+            this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
+                return profile.type === "zosmf";
+            });
+            this.defaultProfile = (await profileManager.load({ loadDefault: true }));
+        }
+    }
+
+    private isSpawnReqd() {
+        if (this.spawnValue === -1) {
+            const homedir = os.homedir();
+            this.spawnValue = 0;
+            try {
+                const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
+                const settings = JSON.parse(fs.readFileSync(fileName).toString());
+                const value = settings.overrides.CredentialManager;
+                this.spawnValue = value !== false ? 0 : 1;
+            } catch (error) {
+                // default to spawn
+                this.spawnValue = 0;
+            }
+        }
+        return this.spawnValue;
     }
 }
