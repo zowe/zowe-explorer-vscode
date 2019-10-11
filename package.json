@@ -1025,11 +1025,12 @@
           "description": "%Zowe-Default-Datasets-PS%",
           "scope": "window"
         },
-        "Zowe-Persistent-Favorites": {
+        "Zowe-DS-Persistent": {
           "default": {
             "persistence": true,
             "favorites": [],
-            "history": []
+            "history": [],
+            "sessions": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",
           "scope": "window"
@@ -1041,20 +1042,22 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
-        "Zowe-USS-Persistent-Favorites": {
+        "Zowe-USS-Persistent": {
           "default": {
             "persistence": true,
             "favorites": [],
-            "history": []
+            "history": [],
+            "sessions": []
           },
           "description": "%Zowe-Default-USS-Persistent-Favorites%",
           "scope": "window"
         },
-        "Zowe-Jobs-Persistent-Favorites": {
+        "Zowe-Jobs-Persistent": {
           "default": {
             "persistence": true,
             "favorites": [],
-            "history": []
+            "history": [],
+            "sessions": []
           },
           "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
           "scope": "window"

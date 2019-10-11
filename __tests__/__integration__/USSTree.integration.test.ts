@@ -49,10 +49,10 @@ describe("USSTree Integration Tests", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent-Favorites");
+    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
 
@@ -184,7 +184,7 @@ describe("USSTree Integration Tests", async () => {
     it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
         const len = testTree.mSessionNodes.length;
         const log = new Logger(undefined);
-        await testTree.addSession(log);
+        await testTree.addSession();
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
         testTree.deleteSession(testTree.mSessionNodes[len]);
         await testTree.addSession(testConst.profile.name);
@@ -194,7 +194,7 @@ describe("USSTree Integration Tests", async () => {
     describe("add USS Favorite for a file and a search", () => {
         it("should add the selected data set to the treeView", async () => {
             const log = new Logger(undefined);
-            await testTree.addSession(log);
+            await testTree.addSession();
             const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
                 sessNode, null, sessNode.fullPath, testConst.profile.name);
             await testTree.addUSSFavorite(favoriteNode);
@@ -207,7 +207,7 @@ describe("USSTree Integration Tests", async () => {
 
         it("should add a favorite search", async () => {
             const log = new Logger(undefined);
-            await testTree.addSession(log);
+            await testTree.addSession();
             await testTree.addUSSSearchFavorite(sessNode);
             const filtered = testTree.mFavorites.filter((temp) =>
                 temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);

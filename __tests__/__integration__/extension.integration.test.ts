@@ -68,10 +68,10 @@ describe("Extension Integration Tests", () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites");
+    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
@@ -434,7 +434,7 @@ describe("Extension Integration Tests", () => {
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
             const log = Logger.getAppLogger();
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
             expect(testTree3.mFavorites).to.deep.equal([]);
@@ -447,7 +447,7 @@ describe("Extension Integration Tests", () => {
                                `[${profileName}]: ${pattern}.EXT.PS{ds}`,
                                `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
                                `[${profileName}]: ${pattern}.EXT{session}`];
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
@@ -461,7 +461,7 @@ describe("Extension Integration Tests", () => {
             const log = Logger.getAppLogger();
             const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
 
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
@@ -481,7 +481,7 @@ describe("Extension Integration Tests", () => {
                                `['badProfileName']: ${pattern}.EXT.PS{ds}`,
                                `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
                                `[${profileName}]: ${pattern}.EXT{session}`];
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await testTree.initialize(log);

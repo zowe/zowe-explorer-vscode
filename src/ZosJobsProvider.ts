@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { ZosmfSession, IJob, DeleteJobs } from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
-import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
+import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
 import * as utils from "./utils";
@@ -30,8 +30,8 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  */
 export async function createJobsTree(log: Logger) {
     const tree = new ZosJobsProvider();
-    await tree.addSession(log);
     await tree.initializeJobsTree(log);
+    await tree.addSession();
     return tree;
 }
 
@@ -41,8 +41,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public static readonly Prefix = "Prefix:";
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
 
-    private static readonly persistenceSchema: string = "Zowe-Jobs-Persistent-Favorites";
-
+    private static readonly persistenceSchema: string = "Zowe-Jobs-Persistent";
 
     public mSessionNodes: Job[] = [];
     public mFavoriteSession: Job;
@@ -81,36 +80,44 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     }
 
     /**
-     * Adds a new session to the data set tree
+     * Adds a session to the data set tree
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(log: Logger, sessionName?: string) {
+    public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
-
-        if (zosmfProfile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
-                return;
+        if (sessionName) {
+            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (zosmfProfile) {
+                this.addSingleSession(zosmfProfile);
             }
-
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
-            node.contextValue = extension.JOBS_SESSION_CONTEXT;
-            node.iconPath = utils.applyIcons(node);
-            this.mSessionNodes.push(node);
-            node.dirty = true;
-            this.refresh();
+        } else {
+            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const zosmfProfile of zosmfProfiles) {
+                // If session is already added, do nothing
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                    continue;
+                }
+                for (const session of this.mHistory.getSessions()) {
+                    if (session === zosmfProfile.name) {
+                        this.addSingleSession(zosmfProfile);
+                    }
+                }
+            }
+            if (this.mSessionNodes.length === 1) {
+                this.addSingleSession(Profiles.getInstance().defaultProfile);
+            }
         }
+        this.refresh();
     }
 
     public deleteSession(node: Job) {
-        // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        let revisedLabel =  node.label;
+        if (revisedLabel.includes("[")) {
+            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
+        }
+        this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
 
@@ -176,7 +183,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
-                const zosmfProfile = loadNamedProfile(sesName);
+                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 let favJob: Job;
                 if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.JOBS_JOB_CONTEXT) {
                     favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
@@ -203,7 +210,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 localize("initializeJobsFavorites.error.profile2",
                 ". To resolve this, you can create a profile with this name, ") +
                 localize("initializeJobsFavorites.error.profile3",
-                "or remove the favorites with this profile name from the Zowe-Jobs-Persistent-Favorites setting, ") +
+                "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, ") +
                 localize("initializeJobsFavorites.error.profile4", "which can be found in your VS Code user settings."));
             return;
         }
@@ -348,7 +355,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             // executing search from saved search in favorites
             searchCriteria = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
             const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(this.log, session);
+            await this.addSession(session);
             node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
             this.applySearchLabelToNode(node, searchCriteria);
         }
@@ -417,6 +424,28 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         favJob.iconPath = utils.applyIcons(favJob);
         return favJob;
+    }
+
+    /**
+     * Adds a single session to the jobs tree
+     *
+     */
+    private async addSingleSession(zosmfProfile: IProfileLoaded) {
+        if (zosmfProfile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a zosmf session with brightside
+            const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
+            node.contextValue = extension.JOBS_SESSION_CONTEXT;
+            node.iconPath = utils.applyIcons(node);
+            node.dirty = true;
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(zosmfProfile.name);
+        }
     }
 }
 

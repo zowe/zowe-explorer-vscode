@@ -25,7 +25,7 @@ import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile } from "@brightside/core";
-import { loadNamedProfile, loadAllProfiles } from "./ProfileLoader";
+import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
@@ -105,6 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
+        await Profiles.createInstance(log);
 
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
@@ -249,6 +250,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
             });
             jobsProvider.refresh();
+            Profiles.getInstance().refresh();
         });
         vscode.commands.registerCommand("zowe.addJobsSession", () => addJobsSession(jobsProvider));
         vscode.commands.registerCommand("zowe.setOwner", (node) => {
@@ -302,15 +304,10 @@ export async function activate(context: vscode.ExtensionContext) {
  * @param outputChannel The Output Channel to write the command and response to
  */
 export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
-    let allProfiles: IProfileLoaded[];
+    const profiles = Profiles.getInstance();
+    const allProfiles: IProfileLoaded[] = profiles.allProfiles;
     let sesName: string;
     let zosmfProfile: IProfileLoaded;
-    try {
-        allProfiles = loadAllProfiles();
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("submitJcl.error.message", "Unable to load all profiles: ") + err.message);
-        throw (err);
-    }
 
     const profileNamesList = allProfiles.map((profile) => {
         return profile.name;
@@ -463,16 +460,10 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
+    const profiles = await Profiles.getInstance();
     let sesName;
     if(regExp === null){
-        let allProfiles: IProfileLoaded[];
-        try {
-            allProfiles = loadAllProfiles();
-        } catch (err) {
-            vscode.window.showErrorMessage(localize("submitJcl.error", "Unable to load all profiles: ") + err);
-            throw (err);
-        }
-
+        const allProfiles: IProfileLoaded[] = profiles.allProfiles;
         const profileNamesList = allProfiles.map((profile) => {
             return profile.name;
         });
@@ -501,7 +492,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
         documentSession = sesNode.getSession();
     } else {
         // if submitting from favorites, a session might not exist for this node
-        const zosmfProfile = loadNamedProfile(sesName);
+        const zosmfProfile = profiles.loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
     if (documentSession == null) {
@@ -572,14 +563,7 @@ export async function submitMember(node: ZoweNode) {
  * @param {DatasetTree} datasetProvider - our datasetTree object
  */
 export async function addSession(datasetProvider: DatasetTree) {
-    let allProfiles;
-    try {
-        allProfiles = loadAllProfiles();
-    } catch (err) {
-        log.error(localize("addSession.log.error.addingSession", "Error encountered when adding session! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("addSession.error.loadProfiles", "Unable to load all profiles: ") + err.message);
-        throw (err);
-    }
+    const allProfiles = (await Profiles.getInstance()).allProfiles;
 
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
@@ -604,7 +588,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
-            await datasetProvider.addSession(log, chosenProfile);
+            await datasetProvider.addSession(chosenProfile);
         } else {
             log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
@@ -623,15 +607,7 @@ export async function addSession(datasetProvider: DatasetTree) {
  * @param {USSTree} ussFileProvider - our ussTree object
  */
 export async function addUSSSession(ussFileProvider: USSTree) {
-    let allProfiles;
-    try {
-        allProfiles = loadAllProfiles();
-    } catch (err) {
-        log.error(localize("addUSSSession.log.error", "Error encountered when adding USS session: ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("addUSSSession.error.loadProfile", "Unable to load all profiles: ") + err.message);
-        // TODO MISSED TESTING
-        throw (err);
-    }
+    const allProfiles = (await Profiles.getInstance()).allProfiles;
 
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
@@ -656,7 +632,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug(localize("addUSSSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
-            await ussFileProvider.addSession(log, chosenProfile);
+            await ussFileProvider.addSession(chosenProfile);
         } else {
             log.debug(localize("addUSSSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
@@ -971,7 +947,9 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
  * @returns {Promise<void>}
  */
 export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree) {
-    log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
+    if (log) {
+        log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
+    }
     let pattern: string;
     if (node.contextValue === DS_SESSION_CONTEXT) {
         // manually entering a search
@@ -989,7 +967,7 @@ export async function enterPattern(node: ZoweNode, datasetProvider: DatasetTree)
         // executing search from saved search in favorites
         pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
         const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-        await datasetProvider.addSession(log, session);
+        await datasetProvider.addSession(session);
         node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
     }
 
@@ -1166,6 +1144,7 @@ export async function refreshAll(datasetProvider: DatasetTree) {
         }
     });
     datasetProvider.refresh();
+    Profiles.getInstance().refresh();
 }
 
 /**
@@ -1364,7 +1343,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         log.debug(localize("saveFile.log.debug.sessionNode", "couldn't find session node, loading profile with CLI profile manager"));
-        const zosmfProfile = loadNamedProfile(sesName);
+        const zosmfProfile = (await Profiles.getInstance()).loadNamedProfile(sesName);
         documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     }
     if (documentSession == null) {
@@ -1543,7 +1522,7 @@ export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
 export async function addJobsSession(datasetProvider: ZosJobsProvider) {
     let allProfiles;
     try {
-        allProfiles = loadAllProfiles();
+        allProfiles = allProfiles = (await Profiles.getInstance()).allProfiles;
     } catch (err) {
         vscode.window.showErrorMessage(localize("addJobsSession.error.load", "Unable to load all profiles: ") + err.message);
         throw (err);
@@ -1572,7 +1551,7 @@ export async function addJobsSession(datasetProvider: ZosJobsProvider) {
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile) {
             log.debug(localize("addJobsSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
-            await datasetProvider.addSession(log, chosenProfile);
+            await datasetProvider.addSession(chosenProfile);
         } else {
             log.debug(localize("addJobsSession.log.debug.cancelledProfile", "User cancelled profile selection"));
         }

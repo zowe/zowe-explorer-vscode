@@ -14,14 +14,14 @@ jest.mock("fs");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
-jest.mock("../../src/ProfileLoader");
+jest.mock("../../src/Profiles");
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session, Logger } from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as utils from "../../src/utils";
-import * as profileLoader from "../../src/ProfileLoader";
+import { Profiles } from "../../src/Profiles";
 import * as extension from "../../src/extension";
 
 describe("DatasetTree Unit Tests", () => {
@@ -35,21 +35,6 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {
-        value: jest.fn((name: string) => {
-            return { name };
-        })
-    });
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }];
-        })
-    });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {
-        value: jest.fn(() => {
-            return { name: "defaultprofile" };
-        })
-    });
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -61,7 +46,6 @@ describe("DatasetTree Unit Tests", () => {
             title: "Saving file..."
         };
     });
-
 
     const testResponse: zowe.IZosFilesResponse[] = [];
     testResponse.push({
@@ -94,7 +78,38 @@ describe("DatasetTree Unit Tests", () => {
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-
+    getConfiguration.mockReturnValue({
+        persistence: true,
+        get: (setting: string) => [
+            "[test]: brtvs99.public1.test{pds}",
+            "[test]: brtvs99.test{ds}",
+            "[test]: brtvs99.fail{fail}",
+            "[test]: brtvs99.test.search{session}",
+        ],
+        update: jest.fn(()=>{
+            return {};
+        })
+    });
+    const enums = jest.fn().mockImplementation(() => {
+        return {
+            Global: 1,
+            Workspace: 2,
+            WorkspaceFolder: 3
+        };
+    });
+    Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"},
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
+    Profiles.createInstance(Logger.getAppLogger());
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
@@ -254,9 +269,9 @@ describe("DatasetTree Unit Tests", () => {
     it("Test the addSession command ", async () => {
         const log = new Logger(undefined);
 
-        testTree.addSession(log);
+        testTree.addSession();
 
-        testTree.addSession(log, "fake");
+        testTree.addSession("fake");
     });
 
     /*************************************************************************************************************
@@ -328,7 +343,14 @@ describe("DatasetTree Unit Tests", () => {
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        const startLength = testTree.mSessionNodes.length;
+        testTree.mSessionNodes.push(new ZoweNode("testSess2", vscode.TreeItemCollapsibleState.Collapsed, null, session));
+        testTree.addSession("testSess2");
+        testTree.mSessionNodes[startLength].contextValue = extension.DS_SESSION_CONTEXT;
+        testTree.mSessionNodes[startLength].pattern = "test";
+        testTree.mSessionNodes[startLength].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+        testTree.deleteSession(testTree.mSessionNodes[startLength]);
+        expect(testTree.mSessionNodes.length).toEqual(startLength);
     });
 
 
@@ -352,25 +374,13 @@ describe("DatasetTree Unit Tests", () => {
      * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully", async () => {
+
         testTree.initialize(Logger.getAppLogger());
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
-
-        getConfiguration.mockReturnValue({
-            persistence: true,
-            get: (setting: string) => [
-                "[test]: brtvs99.public1.test{pds}",
-                "[test]: brtvs99.test{ds}",
-                "[test]: brtvs99.fail{fail}",
-                "[test]: brtvs99.test.search{session}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
 
         // Assert choosing the new filter specification followed by a path
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
@@ -406,7 +416,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(checkSession).not.toHaveBeenCalled();
         await testTree.datasetFilterPrompt(favoriteSearch);
         expect(checkSession).toHaveBeenCalledTimes(1);
-        expect(checkSession).toHaveBeenLastCalledWith(Logger.getAppLogger(), "aProfile");
+        expect(checkSession).toHaveBeenLastCalledWith("aProfile");
     });
     /*************************************************************************************************************
      * Testing the onDidConfiguration
@@ -429,15 +439,6 @@ describe("DatasetTree Unit Tests", () => {
         });
         const e = new Event();
         mockAffects.mockReturnValue(true);
-
-        const enums = jest.fn().mockImplementation(() => {
-            return {
-                Global: 1,
-                Workspace: 2,
-                WorkspaceFolder: 3
-            };
-        });
-        Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
         await testTree.onDidChangeConfiguration(e);
         expect(getConfiguration.mock.calls.length).toBe(2);
     });

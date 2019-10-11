@@ -14,7 +14,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
-import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
+import { Profiles } from "./Profiles";
 // import ZoweTree from "./ZoweTree";
 import { PersistentFilters } from "./PersistentFilters";
 import * as utils from "./utils";
@@ -29,8 +29,8 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  */
 export async function createDatasetTree(log: Logger) {
     const tree = new DatasetTree();
-    await tree.addSession(log);
     await tree.initialize(log);
+    await tree.addSession();
     return tree;
 }
 
@@ -43,7 +43,7 @@ export async function createDatasetTree(log: Logger) {
  */
 export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
-    private static readonly persistenceSchema: string = "Zowe-Persistent-Favorites";
+    private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
     private static readonly defaultDialogText: string = localize("SpecifyFilter", " -- Specify Filter -- ");
 
     public mSessionNodes: ZoweNode[];
@@ -83,7 +83,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
-                    const zosmfProfile = loadNamedProfile(sesName);
+                    const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                     const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                     let node: ZoweNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.DS_PDS_CONTEXT) {
@@ -104,7 +104,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                         localize("intializeFavorites.error.profile2",
                         ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ") +
+                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ") +
                         localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
                     continue;
                 }
@@ -182,23 +182,31 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(log: Logger, sessionName?: string) {
+    public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
-        if (zosmfProfile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
-                return;
+        if (sessionName) {
+            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (zosmfProfile) {
+                this.addSingleSession(zosmfProfile);
             }
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
-            node.contextValue = extension.DS_SESSION_CONTEXT;
-            node.iconPath = utils.applyIcons(node);
-            this.mSessionNodes.push(node);
-            this.refresh();
+        } else {
+            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const zosmfProfile of zosmfProfiles) {
+                // If session is already added, do nothing
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                    continue;
+                }
+                for (const session of this.mHistory.getSessions()) {
+                    if (session === zosmfProfile.name) {
+                        this.addSingleSession(zosmfProfile);
+                    }
+                }
+            }
+            if (this.mSessionNodes.length === 1) {
+                this.addSingleSession(Profiles.getInstance().defaultProfile);
+            }
         }
+        this.refresh();
     }
 
     /**
@@ -207,8 +215,12 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param {ZoweNode} [node]
      */
     public deleteSession(node: ZoweNode) {
-        // Removes deleted session from mSessionNodes
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        let revisedLabel =  node.label;
+        if (revisedLabel.includes("[")) {
+            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
+        }
+        this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
 
@@ -330,7 +342,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             // executing search from saved search in favorites
             pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
             const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(this.log, session);
+            await this.addSession(session);
             node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
         }
         // update the treeview with the new pattern
@@ -353,5 +365,26 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
+    }
+
+    /**
+     * Adds a single session to the data set tree
+     *
+     */
+    private addSingleSession(zosmfProfile: IProfileLoaded) {
+        if (zosmfProfile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a zosmf session with brightside
+            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
+            node.contextValue = extension.DS_SESSION_CONTEXT;
+            node.iconPath = utils.applyIcons(node);
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(zosmfProfile.name);
+        }
     }
 }

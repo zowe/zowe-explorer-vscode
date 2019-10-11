@@ -14,15 +14,14 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-jest.mock("../../src/ProfileLoader");
+jest.mock("../../src/Profiles");
 import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
-
+import { Profiles } from "../../src/Profiles";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -34,21 +33,6 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {
-        value: jest.fn((name: string) => {
-            return { name };
-        })
-    });
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }];
-        })
-    });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {
-        value: jest.fn(() => {
-            return { name: "defaultprofile" };
-        })
-    });
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     getConfiguration.mockReturnValue({
@@ -99,7 +83,17 @@ describe("Unit Tests (Jest)", () => {
     testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
-
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"},
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
     afterEach(async () => {
         getConfiguration.mockClear();
     });
@@ -255,11 +249,10 @@ describe("Unit Tests (Jest)", () => {
      * Test the addSession command
      *************************************************************************************************************/
     it("Test the addSession command ", async () => {
-        const log = new Logger(undefined);
 
-        testTree.addSession(log);
+        testTree.addSession();
 
-        testTree.addSession(log, "fake");
+        testTree.addSession("fake");
     });
 
     /*************************************************************************************************************
@@ -287,7 +280,14 @@ describe("Unit Tests (Jest)", () => {
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        const startLength = testTree.mSessionNodes.length;
+        testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess2", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
+        testTree.addSession("ussTestSess2");
+        testTree.mSessionNodes[startLength].contextValue = extension.USS_SESSION_CONTEXT;
+        testTree.mSessionNodes[startLength].fullPath = "test";
+        testTree.mSessionNodes[startLength].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+        testTree.deleteSession(testTree.mSessionNodes[startLength]);
+        expect(testTree.mSessionNodes.length).toEqual(startLength);
     });
 
     /*************************************************************************************************************
@@ -318,8 +318,17 @@ describe("Unit Tests (Jest)", () => {
     });
 
     it("initialize USSTree is executed successfully", async () => {
-        // const testUSSTree = new USSTree();
-        // createBasicZosmfSession.mockReturnValue(session);
+        const mockLoadNamedProfile = jest.fn();
+        mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
         spyOn(utils, "getSession").and.returnValue(session);
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         expect(testTree1.mFavorites.length).toBe(2);
