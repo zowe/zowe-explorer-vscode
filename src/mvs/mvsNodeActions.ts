@@ -13,6 +13,7 @@ import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
+import * as extension from "../../src/extension";
 
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {
@@ -33,9 +34,19 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
     datasetProvider.refresh();
 }
 
+export function getDatasetLabel(node: ZoweNode) {
+    if (node.mParent && node.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        const profileEnd = "]: ";
+        const profileIndex = node.label.indexOf(profileEnd);
+        return node.label.substr(profileIndex + profileEnd.length, node.label.length);
+    }
+    return node.label;
+}
+
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
-        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, node.label);
+        const datasetName = getDatasetLabel(node);
+        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
     } catch (e) {
         vscode.window.showErrorMessage(e.message);
     }

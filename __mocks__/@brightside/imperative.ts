@@ -78,9 +78,16 @@ export class DefaultCredentialManager {
 
 // tslint:disable-next-line:max-classes-per-file
 export class Logger {
-    static initLogger(loggingConfig: IConfigLogging): any {
+    public static initLogger(loggingConfig: IConfigLogging): any {
     }
-    static getAppLogger(): Logger {
+    public static getAppLogger(): Logger {
         return log4js.getLogger("app");
+    }
+}
+
+// tslint:disable-next-line:max-classes-per-file
+export class TextUtils {
+    public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
+        return JSON.stringify(object);
     }
 }

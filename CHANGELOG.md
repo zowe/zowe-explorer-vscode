@@ -2,6 +2,54 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.25.0
+
+- Add Edit to context menu for MVS and USS Tree. Thanks to Rodney-Wilson
+- Restructured all search and filters dialogs to incorporate a recall/history function. @Colin-Stone
+- Added Search Favorite for USS Favorites. @Colin-Stone
+- Added Job and Search Favorite for Jobs. @Colin-Stone
+- Provided support for specifying jobs by job id. @Colin-Stone
+- Fixed issue with submitting datasets job link. @Colin-Stone
+- Fixed label for Jobs Refresh All. @Colin-Stone
+- Minor icon improvement to distinguish Favorites from LPAR's. @Colin-Stone
+- Support copy path Thanks @lauren-li
+- Progress Bar animation on opening large files. Thanks to Rodney-Wilson
+
+## 0.24.1
+
+- Fixed issue when saving USS files
+
+## 0.24.0
+
+- Updated Localization Documentation and Added Update Dictionary Script. Thanks to @evannwu20
+- Show stepname or procstep alongside spool name. Thanks @crshnburn
+- Add command to issue TSO command. Thanks @crshnburn
+- Added icons for files and folders. Thanks to @Colin-Stone
+
+## 0.23.2
+
+- Fixed issue when saving datasets in Windows
+
+## 0.23.1
+
+- Refined dataset suffix solution by restricting to explicit names only
+
+## 0.23.0
+
+- Add support for localization. Thanks to @evannwu20
+- Correctly determine if file is binary for saving. Thanks @crshnburn
+- Fix Default profile error message with friendlier version. Thanks @lauren-li
+- Context menu grouping for MVS and USS. Thanks @lauren-li
+- Preference to Specify Temp Folder. Thanks to @adambattenburg
+- Store local version of dataset with a suffix if appropriate to enable syntax highlighting. Thanks to @Colin-Stone
+
+## 0.22.0
+
+- Add ability to create directories or files on the root node. Thanks to @kristinochka
+- Add ability to upload files through regular OS browse dialog on regular nodes and favorites. Thanks to @kristinochka
+- Add USS File Refresh and USS Safe Save. Thanks to @adambattenburg
+- Honor the file tag (binary or ascii) if not specified. Thanks to @Colin-Stone
+
 ## 0.21.0
 
 - Added the Upload member to datasets. Thanks Kristina Mayo

@@ -18,20 +18,35 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 
 After you install the Zowe extension, meet the following prerequisites:
 
-* [Install Zowe CLI](https://zowe.github.io/docs-site/latest/user-guide/cli-installcli.html#methods-to-install-zowe-cli) on your PC.
+* [Install Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html#methods-to-install-zowe-cli) on your PC.
   
-    **Important!** To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
-* [Create at least one Zowe CLI 'zosmf' profile](https://zowe.github.io/docs-site/latest/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).
+> **Important!**: To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
+
+* [Create at least one Zowe CLI 'zosmf' profile](https://docs.zowe.org/stable/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).
 
 ## Configuration and usage tips
 
 You can alter the behavior of the extension in the following ways:
 
 * **Data set Safe Save:** The Visual Studio Code **Save** functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension **Safe Save** functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
-* **Data set creation settings:** You can change the default creation settings for various data set types. Navigate to the Settings for this extension for more info.
 * **Data set persistence settings:** You can toggle the persistence of any data sets that are present under your **Favorites** tab.
   
 **Tip:** By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as COBOL.
+
+### Advanced Configuration
+
+> **WARNING**: Specifying these preferences incorrectly, may cause the extension to fail.
+
+Extension preferences can also be modified in the `Settings` for this extension. They can be customized in the following ways:
+
+* **Data set creation settings:** You can change the default creation settings for various data set types.
+* **Temp Folder Location:** You can change the default folder location, for where temporary files are stored. In order to set in `Settings`, use the example below.
+
+```json
+"Zowe-Temp-Folder-Location": {
+    "folderPath": "/path/to/directory"
+  }
+```
 
 ## Sample use cases
 
