@@ -240,3 +240,5 @@ Your file is uploaded.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
 ![Add Profile](./docs/images/profile2.gif?raw=true "Add Profile")
+
+Thank You
