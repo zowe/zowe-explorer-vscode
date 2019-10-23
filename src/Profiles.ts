@@ -9,13 +9,24 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
 import * as ProfileLoader from "./ProfileLoader";
+import { URL } from "url";
+import * as vscode from "vscode";
+import * as zowe from "@brightside/core";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+let IConnection: {
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    reject_unauthorized: boolean;
+}
 
 export class Profiles {
     public static async createInstance(log: Logger) {
@@ -59,6 +70,129 @@ export class Profiles {
             });
             this.defaultProfile = (await profileManager.load({ loadDefault: true }));
         }
+    }
+
+    public listProfile(){
+        this.allProfiles = ProfileLoader.loadAllProfiles();
+        this.allProfiles.map((profile) => {
+            return profile.name;
+        });
+        return this.allProfiles;
+    }
+
+    public async createNewConnection() {
+        let url: URL;
+        let profileName: string;
+        let userName: string;
+        let passWord: string;
+        let zosmfURL: string;
+        let rejectUnauthorize: boolean;
+        let options: vscode.InputBoxOptions;
+
+        const validateUrl = (newUrl: string) => {
+            try {
+                url = new URL(newUrl);
+            } catch (error) {
+                return false;
+            }
+            return url.port ? true : false;
+        };
+
+        options = {
+            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+            value: profileName
+        };
+        profileName = await vscode.window.showInputBox(options);
+        if (!profileName) {
+            vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Profile Name was not supplied. Operation Cancelled"));
+            return;
+        }
+
+        zosmfURL = await vscode.window.showInputBox({
+            ignoreFocusOut: true,
+            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "http(s)://url:port"),
+            prompt: localize("createNewConnection.option.prompt.url",
+            "Enter a z/OSMF URL in the format 'http(s)://url:port'."),
+            validateInput: (text: string) => (validateUrl(text) ? "" : "Please enter a valid URL."),
+            value: zosmfURL
+        });
+
+        if (!zosmfURL) {
+            vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
+                    "No valid value for z/OSMF URL. Operation Cancelled"));
+            return;
+        }
+
+        options = {
+            placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name (Optional)"),
+            prompt: localize("createNewConnection.option.prompt.userName", "Optional: Enter the user name for the connection"),
+            value: userName
+        };
+        userName = await vscode.window.showInputBox(options);
+
+        options = {
+            placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password (Optional)"),
+            prompt: localize("createNewConnection.option.prompt.userName", "Optional: Enter a password for the connection"),
+            value: passWord
+        };
+        passWord = await vscode.window.showInputBox(options);
+
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+
+        const selectRU = [ "True - Reject connections with self-signed certificates",
+                           "False - Accept connections with self-signed certificates" ];
+
+        const ruOptions = Array.from(selectRU);
+
+        const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
+
+        if (chosenRU === ruOptions[0]) {
+            rejectUnauthorize = true;
+        } else if (chosenRU === ruOptions[1]) {
+            rejectUnauthorize = false;
+        } else {
+            vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
+                    "Operation Cancelled"));
+            return;
+        }
+
+        for (const verifyProfile of this.listProfile()) {
+            if (verifyProfile.name === profileName) {
+                vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
+                "Profile name already exists. Please create a profile using a different name"));
+                return;
+            }
+        }
+
+        IConnection = null;
+        IConnection = {
+            name: profileName,
+            host: url.hostname,
+            port: Number(url.port),
+            username: userName,
+            password: passWord,
+            reject_unauthorized: rejectUnauthorize,
+        };
+
+        const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
+        // we have to mock a few things to get the Imperative.init to work properly
+        (process.mainModule as any).filename = require.resolve("@brightside/core");
+        ((process.mainModule as any).paths as any).unshift(mainZoweDir);
+        // we need to call Imperative.init so that any installed credential manager plugins are loaded
+        await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+        const zosmfProfile = await new CliProfileManager({
+            profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
+            type: "zosmf"
+        }).save({profile: IConnection, name: IConnection.name, type: "zosmf"});
+        zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+        vscode.window.showInformationMessage("Profile " + profileName + " was created.");
+
     }
 
     private isSpawnReqd() {

@@ -564,6 +564,7 @@ export async function submitMember(node: ZoweNode) {
  */
 export async function addSession(datasetProvider: DatasetTree) {
     const allProfiles = (await Profiles.getInstance()).allProfiles;
+    const createNewProfile = "Create a New Connection to z/OS";
 
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
@@ -581,19 +582,24 @@ export async function addSession(datasetProvider: DatasetTree) {
     }
     if (profileNamesList.length > 0) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("addSession.quickPickOption", "Select a Profile to Add to the Data Set Explorer"),
+            placeHolder: localize("addSession.quickPickOption",
+            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"),
             ignoreFocusOut: true,
             canPickMany: false
         };
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
-        if (chosenProfile) {
+        if (chosenProfile === createNewProfile) {
+            log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+            await Profiles.getInstance().createNewConnection();
+        } else if(chosenProfile) {
             log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
             await datasetProvider.addSession(chosenProfile);
         } else {
             log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     } else {
-        vscode.window.showInformationMessage(localize("addSession.noProfilesAdd", "No more profiles to add"));
+        log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+        await Profiles.getInstance().createNewConnection();
     }
 }
 
