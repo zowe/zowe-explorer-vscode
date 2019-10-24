@@ -87,12 +87,6 @@ export class Profiles { // Processing stops if there are no profiles detected
         return this.allProfiles;
     }
 
-    public DSTree(profileName){
-        const DSTree = new DatasetTree();
-        DSTree.addSession(profileName);
-        DSTree.refresh();
-    }
-
     public async createNewConnection() {
         let url: URL;
         let profileName: string;
@@ -139,7 +133,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         }
 
         options = {
-            placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name (Optional)"),
+            placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
             prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection"),
             value: userName
         };
@@ -152,7 +146,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         }
 
         options = {
-            placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password (Optional)"),
+            placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
             prompt: localize("createNewConnection.option.prompt.userName", "Enter a password for the connection"),
             value: passWord
         };
@@ -216,9 +210,6 @@ export class Profiles { // Processing stops if there are no profiles detected
         }).save({profile: IConnection, name: IConnection.name, type: "zosmf"});
         await zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-
-        this.listProfile();
-        this.DSTree(profileName);
 
     }
 
