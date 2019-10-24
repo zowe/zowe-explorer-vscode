@@ -576,10 +576,11 @@ export async function addSession(datasetProvider: DatasetTree) {
                 sessionNode.label.trim() === profileName
             )
         );
-    } else {
-        vscode.window.showInformationMessage(localize("addSession.noProfile", "No profiles detected"));
-        return;
     }
+    // } else {
+    //     vscode.window.showInformationMessage(localize("addSession.noProfile", "No profiles detected"));
+    //     return;
+    // }
     if (profileNamesList.length > 0) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("addSession.quickPickOption",
@@ -587,6 +588,7 @@ export async function addSession(datasetProvider: DatasetTree) {
             ignoreFocusOut: true,
             canPickMany: false
         };
+        profileNamesList.unshift(createNewProfile);
         const chosenProfile = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         if (chosenProfile === createNewProfile) {
             log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
@@ -600,6 +602,7 @@ export async function addSession(datasetProvider: DatasetTree) {
     } else {
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         await Profiles.getInstance().createNewConnection();
+
     }
 }
 
