@@ -90,8 +90,7 @@ export class Profiles { // Processing stops if there are no profiles detected
     public DSTree(profileName){
         const DSTree = new DatasetTree();
         DSTree.addSession(profileName);
-        const add = new DatasetTree();
-        add.refresh();
+        DSTree.refresh();
     }
 
     public async createNewConnection() {
@@ -218,7 +217,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         await zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");
 
-        ProfileLoader.loadAllProfiles();
+        this.listProfile();
         this.DSTree(profileName);
 
     }
