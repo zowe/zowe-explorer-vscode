@@ -95,10 +95,6 @@ describe("Unit Tests (Jest)", () => {
         rootNode2.dirty = true;
         rootChildren = await rootNode2.getChildren();
 
-        //Check label is favourite 
-        // const rootNode = new ZoweNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session);
-        // rootNode.label = "Favourites";
-        // rootChildren = await rootNode.getChildren();
     });
 
     /*************************************************************************************************************
