@@ -197,7 +197,7 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 5. From the drop-down, click the **Specify Filter** button and enter the patterns that you want to filter.  
   The data sets that match your pattern(s) display in the explorer tree.
 
-![Entering a root path](?raw=true "Entering a root path")
+![Entering a root path](https://github.com/CForrest97/temp/blob/master/USS-Entering-Root-Path.gif?raw=true "Entering a root path")
 <br /><br />
 
 ### Selecting from history recall
@@ -208,7 +208,7 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 4. Click the **Search USS system by entering a path** magnifying glass.
 5. From the drop-down, select the Profile that you want.
 
-![History recall](?raw=true "History Recall")
+![History recall](https://github.com/CForrest97/temp/blob/master/USS-Search-From-History.gif?raw=true "History Recall")
 <br /><br />
 
 # Data Sets
