@@ -61,7 +61,7 @@ Review the following use cases to understand how to use this extension.
 2. Click the **Search Data Sets** magnifying glass.
 3. From the drop-down, either select the profile you want to add or search using the **Search Bar**
 
-![Add profile](https://github.com/CForrest97/temp/blob/master/Add%20profile.gif?raw=true "Add profile")
+![Add profile](https://github.com/CForrest97/temp/blob/master/Data%20Set%20Add%20profile.gif?raw=true "Add profile")
 <br /><br />
 
 ### Refresh all
@@ -80,7 +80,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 # USS
 
-Populated USS list view (Static GIF)
+![USS View](https://github.com/CForrest97/temp/blob/master/Populated-USS-List-View.png?raw=true "USS View")
+<br /><br />
 
 ## Menu Functions
 
@@ -147,7 +148,7 @@ Populated USS list view (Static GIF)
 1. Right click the Directory/File you want to make a favourite.
 2. Click the **Add Favourite** button to add the Directory/File to your Favourites list.
 
-![Adding Favourites](?raw=true "Adding Favourites")
+![Adding Favourites](https://github.com/CForrest97/temp/blob/master/USS-Add-Favourite.gif?raw=true "Adding Favourites")
 <br /><br />
 
 ### Rename
@@ -180,9 +181,10 @@ Populated USS list view (Static GIF)
 4. Select the **Delete** button and press yes in the confirmation dropdown.
    The file is deleted.
 
-### File open describe how files are opened by clicking on them and show a static (part) view of a file highlighted with syntax (For example a log file or shell script.
+### File opened with syntax highlighting
 
-
+![Syntax Highlighted](https://github.com/CForrest97/temp/blob/master/USS-Syntax-Highlighted-File.png?raw=true "Syntax Highlighted")
+<br /><br />
 
 ## Searching
 
@@ -251,7 +253,7 @@ Your Data Set member is uploaded.
 
 **Note:** If someone else has made changes to the Data Set member while you were editing it, you can merge your conflicts before uploading to the mainframe.
 
-![Upload Data Set member](https://github.com/CForrest97/temp/blob/master/Upload-new-member.gif?raw=true "Upload Data Set member")
+![Upload Data Set member](https://github.com/CForrest97/temp/blob/master/Dataset-Upload-new-member.gif?raw=true "Upload Data Set member")
 <br /><br />
 
 ### Show Data Set Attributes
@@ -259,7 +261,7 @@ Your Data Set member is uploaded.
 1. Right Click the Data Set member that you want to find out about more.
 2. Click the **Show Data Set attributes** button.
 
-![Show Data Set Attributes](https://github.com/CForrest97/temp/blob/master/Dataset%20attributes.png?raw=true"Show Data Set Attributes")
+![Show Data Set Attributes](https://github.com/CForrest97/temp/blob/master/Dataset%20attributes.png?raw=true "Show Data Set Attributes")
 <br /><br />
 
 ### Delete Data Set
@@ -278,9 +280,10 @@ Your Data Set member is uploaded.
 ![Delete Data Set](https://github.com/CForrest97/temp/blob/master/Delete-dataset.gif?raw=true "Upload Data Set member")
 <br /><br />
 
-### File open describe how files are opened by clicking on them and show a static (part) view of a file highlighted with syntax (For example a JCL file or cobol file.
+### File opened with syntax highlighting
 
-
+![Syntax Highlighted](https://github.com/CForrest97/temp/blob/master/DataSet%20Syntax%20highlighted%20file.png?raw=true "Syntax Highlighted")
+<br /><br />
 
 ## Searching
 
@@ -295,18 +298,18 @@ Your Data Set member is uploaded.
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can prepend or append any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-![Entering a root path](https://github.com/CForrest97/temp/blob/master/Searching-using-comma.gif?raw=true "Entering a root path")
+![Entering a root path](https://github.com/CForrest97/temp/blob/master/Dataset-Searching-using-comma.gif?raw=true "Entering a root path")
 <br /><br />
 
 ### Selecting from history recall
 
- Navigate to your explorer tree.
-1. Open the **DATA SETS** bar.
-2. Select the profile that you want to filter.
-3. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-4. From the drop-down, select the Data set that you want.
+1. Navigate to your explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, select the Data set that you want.
 
-![History recall](https://github.com/CForrest97/temp/blob/master/Searching-using-history.gif?raw=true "History Recall")
+![History recall](https://github.com/CForrest97/temp/blob/master/Dataset-Searching-using-history.gif?raw=true "History Recall")
 <br /><br />
 
 ## Favourites
@@ -336,7 +339,7 @@ Your Data Set member is uploaded.
 1. Right cick the Job you want to issue the modify command on.
 2. Click the **Issue Modify Command** button.
 
-![Modify Command](?raw=true "Modify Command")
+![Modify Command](https://github.com/CForrest97/temp/blob/master/Jobs-Issue-Modify-Command.gif?raw=true "Modify Command")
 <br /><br />
 
 ### Issue Stop Command
@@ -344,16 +347,8 @@ Your Data Set member is uploaded.
 1. Right cick the Job you want to issue the modify command on.
 2. Click the **Issue Stop Command** button.
 
-![Stop Command](?raw=true "Stop Command")
+![Stop Command](https://github.com/CForrest97/temp/blob/master/Jobs-Issue-Stop-Command.gif?raw=true "Stop Command")
 <br /><br />
-
-### Create New Member
-
-
-
-### Upload New Member
-
-
 
 ### Delete Job
 
@@ -365,33 +360,24 @@ Your Data Set member is uploaded.
 
 ### Download Spool
 
+1. Navigate to your explorer tree.
+2. Open the **Jobs** bar.
+3. Open a profile.
+4. Click the **Download Spool** button for the Job you want. 
 
+![Download Spool](https://github.com/CForrest97/temp/blob/master/Jobs-Download-Spool.gif?raw=true "Download Spool")
+<br /><br />
 
 ### Issue TSO Command
 
+1. Press _Cmnd+Shift+P_ together
+2. Press the **Zowe:Issue TSO Command** button
+3. Select the profile you want to issue the command on
+4. Type in your command
 
-
-
-
-
-
-
-### Download, edit, and upload an existing file
-
-1. Click the file that you want to download.
-
-    **Note:** To view the files within a directory, click the directory to expand the tree.
-
-    The file displays in the text editor window of VSC.
-
-    **Note:** If you have defined file associations with syntax coloring the suffix of your file will be marked up.
-
-2. Edit the document.
-3. Type Ctrl-s or Command-s (OSx) to save the file
-
-Your file is uploaded.  
-
-![Edit](./docs/images/editUSS.gif?raw=true "Edit")
+![Issue TSO Command](https://github.com/CForrest97/temp/blob/master/Jobs-Issue-TSO-Command.gif?raw=true "Issue TSO Command")
 <br /><br />
+
+
 
 
