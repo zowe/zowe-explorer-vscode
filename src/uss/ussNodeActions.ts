@@ -57,7 +57,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
     };
     const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
     const isTopLevel = true;
-    createUSSNode(node, ussFileProvider, type, isTopLevel);
+    return createUSSNode(node, ussFileProvider, type, isTopLevel);
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
@@ -103,7 +103,7 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
         }
     });
     ussFileProvider.refresh();
-    Profiles.getInstance().refresh();
+    return Profiles.getInstance().refresh();
 }
 
 export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
