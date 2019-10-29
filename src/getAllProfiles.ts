@@ -9,6 +9,7 @@
 *                                                                                 *
 */
 
+// tslint:disable-next-line: no-implicit-dependencies
 import { Imperative, CliProfileManager, ImperativeConfig } from "@brightside/imperative";
 import * as path from "path";
 

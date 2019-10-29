@@ -11,6 +11,7 @@
 
 import { spawnSync } from "child_process";
 import * as path from "path";
+// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";

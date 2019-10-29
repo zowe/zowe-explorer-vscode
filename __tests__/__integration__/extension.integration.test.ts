@@ -11,6 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
+// tslint:disable-next-line: no-implicit-dependencies
 import { Logger, CliProfileManager } from "@brightside/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -21,10 +22,12 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
+import * as utils from "../../src/utils";
 import { DatasetTree, createDatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
+import { ZosJobsProvider } from "../../src/ZosJobsProvider";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -605,10 +608,10 @@ describe("Extension Integration Tests - USS", () => {
 
     describe("Enter USS Pattern", () => {
         it("should output path that match the user-provided path", async () => {
-            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
-            inputBoxStub1.returns(" -- Specify Filter -- ");
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns(fullUSSPath);
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(fullUSSPath));
 
             await ussTestTree.ussFilterPrompt(ussSessionNode);
 
@@ -629,10 +632,11 @@ describe("Extension Integration Tests - USS", () => {
 
         it("should pop up a message if the user doesn't enter a USS path", async () => {
             const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
-            inputBoxStub1.returns(" -- Specify Filter -- ");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns("");
-
             const showInfoStub2 = sandbox.spy(vscode.window, "showInformationMessage");
             await ussTestTree.ussFilterPrompt(ussSessionNode);
             const gotCalled = showInfoStub2.calledWith("You must enter a path.");

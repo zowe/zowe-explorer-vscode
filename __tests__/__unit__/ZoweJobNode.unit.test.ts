@@ -15,11 +15,13 @@ jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
+// tslint:disable-next-line: no-implicit-dependencies
 import { Session, Logger } from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/Profiles";
+import * as utils from "../../src/utils";
 import { Job } from "../../src/ZoweJobNode";
-import { ZosJobsProvider, HistoryItem, createJobsTree } from "../../src/ZosJobsProvider";
+import { ZosJobsProvider, createJobsTree } from "../../src/ZosJobsProvider";
 
 describe("Zos Jobs Unit Tests", () => {
 
@@ -147,6 +149,7 @@ describe("Zos Jobs Unit Tests", () => {
         const showInformationMessage = jest.fn();
         const showInputBox = jest.fn();
         const showQuickPick = jest.fn();
+        const createQuickPick = jest.fn();
         const filters = jest.fn();
         const getFilters = jest.fn();
         const DeleteJobs = jest.fn();
@@ -154,6 +157,7 @@ describe("Zos Jobs Unit Tests", () => {
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+        Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
         Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
         Object.defineProperty(filters, "getFilters", { value: getFilters });
         Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
@@ -298,52 +302,58 @@ describe("Zos Jobs Unit Tests", () => {
         /*************************************************************************************************************
          * Jobs Filter prompts
          *************************************************************************************************************/
-        it("Testing that user filter prompts are executed successfully", async () => {
+        it("Testing that user filter prompts are executed successfully theia specific route", async () => {
+            let theia = true;
+            Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
+
             const defaultDialogText: string = ZosJobsProvider.defaultDialogText;
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            let qpItem: HistoryItem = new HistoryItem(defaultDialogText, "");
+            let qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             showInformationMessage.mockReset();
             showQuickPick.mockReset();
             showQuickPick.mockReturnValueOnce(qpItem);
             showInputBox.mockReset();
-            showInputBox.mockReturnValueOnce("MYHLQ");
+            showInputBox.mockReturnValueOnce("MYHLQY");
             showInputBox.mockReturnValueOnce("");
-            showInputBox.mockReturnValueOnce("");
-            // Assert choosing the new filter specification followed by an owner
+            showInputBox.mockReturnValueOnce(""); // need the jobId in this case
+            // Assert choosing the new filter option followed by an owner
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
-            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
+            showInputBox.mockReset();
             showQuickPick.mockReturnValueOnce(qpItem);
-            showInputBox.mockReturnValueOnce("*");
-            showInputBox.mockReturnValueOnce("STO*");
             showInputBox.mockReturnValueOnce("");
-            // Assert choosing the new filter specification followed by a prefix
+            showInputBox.mockReturnValueOnce("STO*");
+            // Assert choosing the new filter option followed by a prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
+            showInputBox.mockReset();
             showQuickPick.mockReturnValueOnce(qpItem);
-            showInputBox.mockReturnValueOnce("MYHLQ");
+            showInputBox.mockReturnValueOnce("MYHLQX");
             showInputBox.mockReturnValueOnce("STO*");
-            showInputBox.mockReturnValueOnce("");
-            // Assert choosing the new filter specification followed by an owner and prefix
+            // Assert choosing the new filter option followed by an owner and prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
-            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
+            qpItem = testJobsProvider.createId;
+            showInputBox.mockReset();
+            showQuickPick.mockReset();
+            // showInputBox.mockReturnValueOnce("");
+            // showInputBox.mockReturnValueOnce("");
             showQuickPick.mockReturnValueOnce(qpItem);
-            showInputBox.mockReturnValueOnce("MYHLQ");
-            showInputBox.mockReturnValueOnce("STO*");
             showInputBox.mockReturnValueOnce("STO12345");
-            // Assert choosing the new filter specification followed by a Job id
+            // Assert choosing the new filter option followed by a Job id
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
@@ -352,14 +362,15 @@ describe("Zos Jobs Unit Tests", () => {
 
             // Assert edge condition user cancels the input path box
             showInformationMessage.mockReset();
-            showQuickPick.mockReturnValueOnce(qpItem);
+            showInputBox.mockReset();
             showInputBox.mockReturnValueOnce(undefined);
+            showQuickPick.mockReturnValueOnce(qpItem);
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for owner or wild card *. Search Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
 
             showQuickPick.mockReset();
-            qpItem = new HistoryItem("Owner:MEHLQ Prefix:*", "");
+            qpItem = new utils.FilterItem("Owner:MEHLQ Prefix:*");
             showQuickPick.mockReturnValueOnce(qpItem);
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ");
@@ -373,6 +384,8 @@ describe("Zos Jobs Unit Tests", () => {
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
 
+            theia = false;
+
             // // Executing from favorites
             // const favoriteSearch = new Job("[aProfile]: HLQ.PROD1.STUFF",
             // vscode.TreeItemCollapsibleState.None, testJobsProvider.mFavoriteSession, null);
@@ -382,6 +395,87 @@ describe("Zos Jobs Unit Tests", () => {
             // await testJobsProvider.searchPrompt(favoriteSearch);
             // expect(checkSession).toHaveBeenCalledTimes(1);
             // expect(checkSession).toHaveBeenLastCalledWith(Logger.getAppLogger(), "aProfile");
+        });
+        it("Testing that user filter prompts are executed successfully VSCode specific route", async () => {
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            let qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
+            testJobsProvider.initializeJobsTree(Logger.getAppLogger());
+            createQuickPick.mockReturnValue({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [testJobsProvider.createOwner, testJobsProvider.createId],
+                value: "MYHLQ",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+            showInformationMessage.mockReset();
+            showInputBox.mockReturnValueOnce("MYHLQ");
+            showInputBox.mockReturnValueOnce("");
+            showInputBox.mockReturnValueOnce(""); // need the jobId in this case
+            // Assert choosing the new filter option followed by an owner
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
+            expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
+            expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+
+            // showInputBox.mockReset();
+            showInputBox.mockReturnValueOnce("");
+            showInputBox.mockReturnValueOnce("STO*");
+            // Assert choosing the new filter option followed by a prefix
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
+            expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
+            expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+
+            showInputBox.mockReturnValueOnce("MYHLQ");
+            showInputBox.mockReturnValueOnce("STO*");
+            // Assert choosing the new filter option followed by an owner and prefix
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
+            expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
+            expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
+
+            qpItem = testJobsProvider.createId;
+            showInputBox.mockReturnValueOnce("STO12345");
+            // Assert choosing the new filter option followed by a Job id
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(extension.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
+            expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
+            expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
+
+            // Assert edge condition user cancels the input path box
+            showInformationMessage.mockReset();
+            showInputBox.mockReturnValueOnce(undefined);
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
+
+            qpItem = new utils.FilterItem("Owner:MEHLQ2 Prefix:*");
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ2");
+            expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
+
+            // Assert edge condition user cancels the quick pick
+            showInformationMessage.mockReset();
+            qpItem = undefined;
+            await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
         });
     });
 

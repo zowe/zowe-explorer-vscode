@@ -10,6 +10,7 @@
 */
 
 import * as zowe from "@brightside/core";
+// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import * as utils from "./utils";
 import * as vscode from "vscode";
@@ -40,10 +41,8 @@ export async function createUSSTree(log: Logger) {
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
-
+    public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
-    private static readonly favorites: string = "favorites";
-    private static readonly defaultDialogText: string = localize("SpecifyFilter", " -- Specify Filter -- ");
 
     public mSessionNodes: ZoweUSSNode[];
     public mFavoriteSession: ZoweUSSNode;
@@ -276,33 +275,54 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         let sessionNode = node.getSessionNode();
-        let remotepath: string = USSTree.defaultDialogText;
+        let remotepath: string;
         if (node.contextValue === extension.USS_SESSION_CONTEXT) {
-            const modItems = Array.from(this.mHistory.getHistory());
-            if (modItems.length > 0) {
-                // accessing history
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("searchHistory.options.prompt",
-                    "Choose \"Create new...\" to define a new filter or select a previously defined filter")
-                };
-                modItems.unshift(USSTree.defaultDialogText);
-                // get user selection
-                remotepath = await vscode.window.showQuickPick(modItems, options1);
-                if (!remotepath) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                    return;
+            if (this.mHistory.getHistory().length > 0) {
+
+                const createPick = new utils.FilterDescriptor(USSTree.defaultDialogText);
+                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new utils.FilterItem(element));
+                if (extension.ISTHEIA) {
+                    const options1: vscode.QuickPickOptions = {
+                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                    };
+                    // get user selection
+                    const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                    if (!choice) {
+                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                        return;
+                    }
+                    remotepath = choice === createPick ? "" : choice.label;
+                } else {
+                    const quickpick = vscode.window.createQuickPick();
+                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                    quickpick.items = [createPick, ...items];
+                    quickpick.ignoreFocusOut = true;
+                    quickpick.show();
+                    const choice = await utils.resolveQuickPickHelper(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                        return;
+                    }
+                    if (choice instanceof utils.FilterDescriptor) {
+                        if (quickpick.value) {
+                            remotepath = quickpick.value;
+                        }
+                    } else {
+                        remotepath = choice.label;
+                    }
                 }
             }
-            if (remotepath === USSTree.defaultDialogText) {
-                // manually entering a search
+            if (!remotepath) {
+                // manually entering a search - switch to an input box
                 const options: vscode.InputBoxOptions = {
                     prompt: localize("ussFilterPrompt.option.prompt.search",
-                        "Search Unix System Services (USS) by entering a path name starting with a /"),
+                        "Create a new filter"),
                     value: sessionNode.fullPath
                 };
                 // get user input
                 remotepath = await vscode.window.showInputBox(options);
-                if (!remotepath) {
+                if (!remotepath || remotepath.length === 0) {
                     vscode.window.showInformationMessage(localize("ussFilterPrompt.enterPath", "You must enter a path."));
                     return;
                 }
@@ -342,7 +362,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
-                // if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.USS_DIR_CONTEXT) {
                     node = new ZoweUSSNode(nodeName,
                         vscode.TreeItemCollapsibleState.Collapsed,
                         this.mFavoriteSession, session, "",

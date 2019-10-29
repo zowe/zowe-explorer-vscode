@@ -12,9 +12,12 @@
 import * as path from "path";
 import * as os from "os";
 import * as zowe from "@brightside/core";
+// tslint:disable-next-line: no-implicit-dependencies
 import { CliProfileManager } from "@brightside/imperative";
-import { TreeItem } from "vscode";
+import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /*
  * Created this file to be a place where commonly used functions will be defined.
@@ -66,8 +69,8 @@ export function applyIcons(node: TreeItem, state?: string ): any {
                 extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-    } else if ([extension.DS_PDS_CONTEXT,
-                extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX,
+    } else if ([extension.DS_DS_CONTEXT,
+                extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
                 extension.DS_MEMBER_CONTEXT, extension.DS_TEXT_FILE_CONTEXT,
                 extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
                 extension.JOBS_SPOOL_CONTEXT].includes(node.contextValue)) {
@@ -87,8 +90,44 @@ export function applyIcons(node: TreeItem, state?: string ): any {
 /**
  * For no obvious reason a label change is often required to make a node repaint.
  * This function does this by adding or removing a blank.
- * @param {vscode.TreeItem} node - the node element
+ * @param {TreeItem} node - the node element
  */
 export function labelHack( node: TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
+}
+
+export function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>) {
+    return new Promise<QuickPickItem | undefined>(
+        (c) => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class FilterItem implements QuickPickItem {
+    constructor(private text: string) { }
+    get label(): string { return this.text; }
+    get description(): string { return ""; }
+    get alwaysShow(): boolean { return false; }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class FilterDescriptor implements QuickPickItem {
+    constructor(private text: string) { }
+    get label(): string { return this.text; }
+    get description(): string { return ""; }
+    get alwaysShow(): boolean { return true; }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class OwnerFilterDescriptor extends FilterDescriptor {
+    constructor() {
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner",
+        "Owner/Prefix Job Search"));
+    }
+}
+// tslint:disable-next-line: max-classes-per-file
+export class JobIdFilterDescriptor extends FilterDescriptor {
+    constructor() {
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId",
+        "Job Id search"));
+    }
 }

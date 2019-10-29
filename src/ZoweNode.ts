@@ -11,6 +11,7 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
+// tslint:disable-next-line: no-implicit-dependencies
 import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";

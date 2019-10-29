@@ -8,8 +8,9 @@
     "initializeFavorites.fileCorrupted": "Favorites file corrupted: ",
     "addFavorite": "PDS already in favorites",
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
-    "searchHistory.options.prompt": "Choose \"-- Specify Filter --\" to define a new filter or select a previously defined one",
-    "enterPattern.pattern": "You must enter a pattern.",
+    "searchHistory.options.prompt": "Select a filter",
+    "enterPattern.pattern": "No selection made.",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
-    "SpecifyFilter": " -- Specify Filter -- "
+    "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
+    "ussFilterPrompt.option.prompt.search": "Create a new filter"
 }

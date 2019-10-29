@@ -10,16 +10,16 @@
 */
 
 import * as zowe from "@brightside/core";
+// tslint:disable-next-line: no-implicit-dependencies
+import { IProfileLoaded, Logger } from "@brightside/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
-import { ZoweNode } from "./ZoweNode";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
-import { Profiles } from "./Profiles";
-// import ZoweTree from "./ZoweTree";
-import { PersistentFilters } from "./PersistentFilters";
-import * as utils from "./utils";
-import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
+import * as extension from "../src/extension";
+import { PersistentFilters } from "./PersistentFilters";
+import { Profiles } from "./Profiles";
+import * as utils from "./utils";
+import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -44,7 +44,7 @@ export async function createDatasetTree(log: Logger) {
 export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
     private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
-    private static readonly defaultDialogText: string = localize("SpecifyFilter", " -- Specify Filter -- ");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
 
     public mSessionNodes: ZoweNode[];
     public mFavoriteSession: ZoweNode;
@@ -307,34 +307,54 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
-        let pattern: string = DatasetTree.defaultDialogText;
+        let pattern: string;
         if (node.contextValue === extension.DS_SESSION_CONTEXT) {
-            const modItems = Array.from(this.mHistory.getHistory());
-            if (modItems.length > 0) {
-                // accessing history
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("searchHistory.options.prompt",
-                        "Choose \"Create new...\" to define a new filter or select a previously defined filter")
-                };
-                modItems.unshift(DatasetTree.defaultDialogText);
-                // get user selection
-                pattern = await vscode.window.showQuickPick(modItems, options1);
-                if (!pattern) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                    return;
+            if (this.mHistory.getHistory().length > 0) {
+                const createPick = new utils.FilterDescriptor(DatasetTree.defaultDialogText);
+                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new utils.FilterItem(element));
+                if (extension.ISTHEIA) {
+                    const options1: vscode.QuickPickOptions = {
+                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                    };
+                    // get user selection
+                    const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                    if (!choice) {
+                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                        return;
+                    }
+                    pattern = choice === createPick ? "" : choice.label;
+                } else {
+                    const quickpick = vscode.window.createQuickPick();
+                    quickpick.items = [createPick, ...items];
+                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                    quickpick.ignoreFocusOut = true;
+                    quickpick.show();
+                    const choice = await utils.resolveQuickPickHelper(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                        return;
+                    }
+                    if (choice instanceof utils.FilterDescriptor) {
+                        if (quickpick.value) {
+                            pattern = quickpick.value;
+                        }
+                    } else {
+                        pattern = choice.label;
+                    }
                 }
             }
-            if (pattern === DatasetTree.defaultDialogText) {
+            if (!pattern) {
                 // manually entering a search
                 const options2: vscode.InputBoxOptions = {
                     prompt: localize("enterPattern.options.prompt",
                                         "Search data sets by entering patterns: use a comma to separate multiple patterns"),
-                    value: node.pattern
+                    value: node.pattern,
                 };
                 // get user input
                 pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
+                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
             }

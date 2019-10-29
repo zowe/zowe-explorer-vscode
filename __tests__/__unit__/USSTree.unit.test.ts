@@ -15,6 +15,7 @@ jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
 jest.mock("../../src/Profiles");
+// tslint:disable-next-line: no-implicit-dependencies
 import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
@@ -67,10 +68,12 @@ describe("Unit Tests (Jest)", () => {
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
+    const createQuickPick = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
@@ -353,7 +356,9 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * USS Filter prompts
      *************************************************************************************************************/
-    it("Testing that user filter prompts are executed successfully", async () => {
+    it("Testing that user filter prompts are executed successfully, theia specific route", async () => {
+        let theia = true;
+        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
@@ -366,14 +371,16 @@ describe("Unit Tests (Jest)", () => {
 
         // Assert edge condition user cancels the input path box
         showInformationMessage.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
+        showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
 
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce("/u/thisFile");
+        showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
 
@@ -383,7 +390,109 @@ describe("Unit Tests (Jest)", () => {
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        theia = false;
     });
+
+    it("Testing that user filter prompts are executed successfully, VSCode route", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        let qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        expect(qpItem.description).toBeFalsy();
+        expect(qpItem.alwaysShow).toBe(true);
+
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        let entered;
+
+        // Assert edge condition user cancels the input path box
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        // Normal route chooses create new then enters a value
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("/U/HARRY");
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
+
+        // User cancels out of input field
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce(undefined);
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
+
+        // User enters a value in the QuickPick and presses create new
+        entered = "/U/HLQ/BIGSTUFF";
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showInformationMessage.mockReset();
+        // Assert choosing the new filter specification but fills in path in QuickPick
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.USS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/BIGSTUFF");
+
+        showQuickPick.mockReset();
+        qpItem = new utils.FilterItem("/U/HLQ/STUFF");
+        expect(qpItem.description).toBeFalsy();
+        expect(qpItem.alwaysShow).toBe(false);
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
+
+        // Assert edge condition user cancels from the quick pick
+        showInformationMessage.mockReset();
+        qpItem = undefined;
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
     /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/
