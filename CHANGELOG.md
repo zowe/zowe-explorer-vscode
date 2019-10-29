@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.26.1
+
+- Fix vulnerabilities related to brightside-core
+
 ## 0.26.0
 
 - Added Persistence for profiles selection. @Colin-Stone

@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -1125,8 +1125,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "2.28.2",
-    "@brightside/imperative": "2.4.6",
+    "@brightside/core": "2.32.1",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
