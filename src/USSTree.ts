@@ -10,6 +10,7 @@
 */
 
 import * as zowe from "@brightside/core";
+// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import * as utils from "./utils";
 import * as vscode from "vscode";
@@ -186,8 +187,13 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
         temp.iconPath = utils.applyIcons(node);
+        const sessionContext = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
-            this.mFavorites.push(temp); // testing
+            this.mFavorites.push(temp);
+            this.mFavorites.sort((a, b) => (
+                a.contextValue === sessionContext && b.contextValue !== sessionContext ? -1 :
+                b.contextValue === sessionContext && a.contextValue !== sessionContext ? 1 :
+                a > b ? 1 : -1));
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }

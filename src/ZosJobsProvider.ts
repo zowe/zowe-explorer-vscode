@@ -224,8 +224,13 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      */
     public async addJobsFavorite(node: Job) {
         const favJob = this.createJobsFavorite(node);
+        const sessionContext = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
-            this.mFavorites.push(favJob); // testing
+            this.mFavorites.push(favJob);
+            this.mFavorites.sort((a, b) => (
+                a.contextValue === sessionContext && b.contextValue !== sessionContext ? -1 :
+                b.contextValue === sessionContext && a.contextValue !== sessionContext ? 1 :
+                a > b ? 1 : -1));
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }

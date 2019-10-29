@@ -257,13 +257,16 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             }
             temp.iconPath = utils.applyIcons(temp);
         }
-
+        const sessionContext = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) =>
             (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
             this.mFavorites.push(temp);
+            this.mFavorites.sort((a, b) => (
+                a.contextValue === sessionContext && b.contextValue !== sessionContext ? -1 :
+                b.contextValue === sessionContext && a.contextValue !== sessionContext ? 1 :
+                a > b ? 1 : -1));
             await this.updateFavorites();
-            this.refresh();
             this.refreshElement(this.mFavoriteSession);
         }
     }
