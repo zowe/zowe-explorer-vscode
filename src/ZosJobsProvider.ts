@@ -446,37 +446,42 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 revisedCriteria += Job.Prefix+prefix.trim();
             }
         }
-        return revisedCriteria;
+        return revisedCriteria.trim();
     }
     public interpretFreeform(input: string): string {
         let jobId: string;
         let owner: string;
         let prefix: string;
 
+
+        // test if it's like our stored structure
+        const criteria: string[] = input.split(" ");
+        criteria.forEach((crit, index) => {
+            if (crit.toUpperCase().indexOf(ZosJobsProvider.JobId.toUpperCase()) > -1 && criteria.length >= index + 2) {
+                jobId = criteria[index+1].trim().toUpperCase();
+            }
+            if (crit.toUpperCase().indexOf(ZosJobsProvider.Owner.toUpperCase()) > -1 && criteria.length >= index + 2) {
+                owner = criteria[index+1].trim().toUpperCase();
+            }
+            if (crit.toUpperCase().indexOf(ZosJobsProvider.Prefix.toUpperCase()) > -1 && criteria.length >= index + 2) {
+                prefix = criteria[index+1].trim().toUpperCase();
+            }
+        });
         // test for a jobId on it's own
         const jobPattern = new RegExp("[a-zA-Z]{3}[0-9]{5}");
         const jobs = jobPattern.exec(input);
         if (jobs && jobs.length>0) {
             return this.createSearchLabel("*", "*", jobs[0]);
         }
-        // test if it's like our stored structure
-        const criteria: string[] = input.split(" ");
-        for (const crit of criteria) {
-            let index = crit.indexOf(ZosJobsProvider.JobId);
-            if (index > -1) {
-                index += ZosJobsProvider.JobId.length;
-                jobId = crit.substring(index).trim().toUpperCase();
-            }
-            index = crit.indexOf(ZosJobsProvider.Owner);
-            if (index > -1) {
-                index += ZosJobsProvider.Owner.length;
-                owner = crit.substring(index).trim().toUpperCase();
-            }
-            index = crit.indexOf(ZosJobsProvider.Prefix);
-            if (index > -1) {
-                index += ZosJobsProvider.Prefix.length;
-                prefix = crit.substring(index).trim().toUpperCase();
-            }
+        if (!owner && !prefix && !jobId) {
+            const validPattern = new RegExp("[a-zA-Z0-9*]{2,8}");
+            criteria.forEach((crit, index) => {
+                if (index === 0 && validPattern.test(crit)) {
+                    owner = crit.trim();
+                } else if (index === 1 && validPattern.test(crit)) {
+                    prefix = crit.trim();
+                }
+            });
         }
         return this.createSearchLabel(owner, prefix, jobId);
     }

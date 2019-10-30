@@ -306,7 +306,6 @@ describe("Zos Jobs Unit Tests", () => {
             let theia = true;
             Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
 
-            const defaultDialogText: string = ZosJobsProvider.defaultDialogText;
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             let qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
@@ -386,16 +385,18 @@ describe("Zos Jobs Unit Tests", () => {
 
             theia = false;
 
-            // // Executing from favorites
-            // const favoriteSearch = new Job("[aProfile]: HLQ.PROD1.STUFF",
-            // vscode.TreeItemCollapsibleState.None, testJobsProvider.mFavoriteSession, null);
-            // favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            // const checkSession = jest.spyOn(testJobsProvider, "addSession");
-            // expect(checkSession).not.toHaveBeenCalled();
-            // await testJobsProvider.searchPrompt(favoriteSearch);
-            // expect(checkSession).toHaveBeenCalledTimes(1);
-            // expect(checkSession).toHaveBeenLastCalledWith(Logger.getAppLogger(), "aProfile");
+            // Executing from favorites
+            const favoriteSearch = new Job("[fake]: Owner:stonecc Prefix:*",
+            vscode.TreeItemCollapsibleState.None, testJobsProvider.mFavoriteSession, session,
+            null);
+            favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+            const checkSession = jest.spyOn(testJobsProvider, "addSession");
+            expect(checkSession).not.toHaveBeenCalled();
+            await testJobsProvider.searchPrompt(favoriteSearch);
+            expect(checkSession).toHaveBeenCalledTimes(1);
+            expect(checkSession).toHaveBeenLastCalledWith("fake");
         });
+
         it("Testing that user filter prompts are executed successfully VSCode specific route", async () => {
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             let qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
@@ -408,7 +409,7 @@ describe("Zos Jobs Unit Tests", () => {
                 activeItems: [qpItem],
                 ignoreFocusOut: true,
                 items: [testJobsProvider.createOwner, testJobsProvider.createId],
-                value: "MYHLQ",
+                value: "",
                 show: jest.fn(()=>{
                     return {};
                 }),
@@ -430,7 +431,7 @@ describe("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
 
-            // showInputBox.mockReset();
+            showInputBox.mockReset();
             showInputBox.mockReturnValueOnce("");
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by a prefix
@@ -476,6 +477,32 @@ describe("Zos Jobs Unit Tests", () => {
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        });
+
+        /*************************************************************************************************************
+         * Specific interpret tests
+         *************************************************************************************************************/
+        it("Testing the interpret routine", async () => {
+            const testJobsProvider = new ZosJobsProvider();
+            expect(testJobsProvider.interpretFreeform("STC01234")).toEqual("JobId:STC01234");
+            expect(testJobsProvider.interpretFreeform("job STC01234")).toEqual("JobId:STC01234");
+            expect(testJobsProvider.interpretFreeform("STC01234 JOB")).toEqual("JobId:STC01234");
+            expect(testJobsProvider.interpretFreeform("JOB12345")).toEqual("JobId:JOB12345");
+            expect(testJobsProvider.interpretFreeform("JOB0123456")).toEqual("JobId:JOB01234");
+            expect(testJobsProvider.interpretFreeform("JOB012345N")).toEqual("JobId:JOB01234");
+            // We interpret this as an owner prefix as the value is invalid as a job
+            expect(testJobsProvider.interpretFreeform("JOB0X25N")).toEqual("Owner:JOB0X25N");
+
+            expect(testJobsProvider.interpretFreeform("MYHLQ*")).toEqual("Owner:MYHLQ*");
+
+            expect(testJobsProvider.interpretFreeform("Owner: MYHLQ pRefix: STYYY*")).toEqual("Owner:MYHLQ Prefix:STYYY*");
+            expect(testJobsProvider.interpretFreeform("jobid: JOB0X25N")).toEqual("JobId:JOB0X25N"); // Although invalid Job ID the user is explicit
+            expect(testJobsProvider.interpretFreeform("MYHLQ")).toEqual("Owner:MYHLQ");
+            // Although invalid Job ID the user is explicit
+            expect(testJobsProvider.interpretFreeform("MYHLQ* myJobname")).toEqual("Owner:MYHLQ* Prefix:myJobname");
+            expect(testJobsProvider.interpretFreeform("MYHLQ* myJob")).toEqual("Owner:MYHLQ* Prefix:myJob");
+            expect(testJobsProvider.interpretFreeform("MYHLQ* myJob*")).toEqual("Owner:MYHLQ* Prefix:myJob*");
+            expect(testJobsProvider.interpretFreeform("* * STC01234")).toEqual("JobId:STC01234");
         });
     });
 
