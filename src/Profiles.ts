@@ -148,6 +148,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         options = {
             placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
             prompt: localize("createNewConnection.option.prompt.userName", "Enter a password for the connection"),
+            password: true,
             value: passWord
         };
         passWord = await vscode.window.showInputBox(options);
@@ -210,7 +211,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         }).save({profile: IConnection, name: IConnection.name, type: "zosmf"});
         await zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-
+        return profileName;
     }
 
     private isSpawnReqd() {
