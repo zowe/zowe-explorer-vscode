@@ -75,6 +75,16 @@ pipeline {
         } }
       }
     }
+    stage('Lint') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm run lint"
+        } }
+      }
+    }
     stage('Build') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
