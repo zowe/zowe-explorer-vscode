@@ -804,12 +804,12 @@ describe("Extension Unit Tests", () => {
             })
         });
         await extension.addSession(testTree);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the Data Set Explorer"
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
         });
 
         showInformationMessage.mockReset();
@@ -839,12 +839,12 @@ describe("Extension Unit Tests", () => {
             })
         });
         await extension.addJobsSession(testJobsTree);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the Jobs Explorer"
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Jobs Explorer"
         });
 
         showInformationMessage.mockReset();
@@ -859,7 +859,7 @@ describe("Extension Unit Tests", () => {
         await extension.addJobsSession(testJobsTree);
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
     });
 
     it("Testing that createFile is executed successfully", async () => {
@@ -1553,11 +1553,11 @@ describe("Extension Unit Tests", () => {
 
         await extension.addUSSSession(testUSSTree);
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName","secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName","secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the USS Explorer"
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer"
         });
 
         // no profiles returned

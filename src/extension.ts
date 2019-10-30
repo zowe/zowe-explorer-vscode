@@ -604,12 +604,8 @@ export async function addSession(datasetProvider: DatasetTree) {
             log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     } else {
-        log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        newprofile = await Profiles.getInstance().createNewConnection();
-        Profiles.getInstance().listProfile();
-        await datasetProvider.addSession(newprofile);
-        await datasetProvider.refresh();
-
+        vscode.window.showInformationMessage(localize("addSession.noProfile", "No profiles detected"));
+        return;
     }
 }
 
@@ -663,11 +659,8 @@ export async function addUSSSession(ussFileProvider: USSTree) {
             log.debug(localize("addUSSSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         }
     } else {
-        log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        newprofile = await Profiles.getInstance().createNewConnection();
-        Profiles.getInstance().listProfile();
-        await ussFileProvider.addSession(newprofile);
-        await ussFileProvider.refresh();
+        vscode.window.showInformationMessage(localize("addUSSSession.noProfile", "No profiles detected"));
+        return;
     }
 }
 
@@ -1589,10 +1582,7 @@ export async function addJobsSession(jobsProvider: ZosJobsProvider) {
             log.debug(localize("addJobsSession.log.debug.cancelledProfile", "User cancelled profile selection"));
         }
     } else {
-        log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        newprofile = await Profiles.getInstance().createNewConnection();
-        Profiles.getInstance().listProfile();
-        await jobsProvider.addSession(newprofile);
-        await jobsProvider.refresh();
+        vscode.window.showInformationMessage(localize("addJobsSession.noProfilesDetected", "No profiles detected"));
+        return;
     }
 }
