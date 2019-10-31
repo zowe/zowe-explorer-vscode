@@ -1,7 +1,7 @@
 {
     "Favorites": "Favorites",
     "ussFilterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
-    "searchHistory.options.prompt": "Choose \"-- Specify Filter --\" to define a new filter or select a previously defined one",
+    "searchHistory.options.prompt": "Choose \"Create new...\" to define a new filter or select a previously defined filter",
     "enterPattern.pattern": "No selection made.",
     "ussFilterPrompt.option.prompt.search": "Search Unix System Services (USS) by entering a path name starting with a /",
     "ussFilterPrompt.enterPath": "You must enter a path.",

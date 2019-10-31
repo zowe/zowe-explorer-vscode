@@ -38,7 +38,8 @@
     ],
     "no-implicit-dependencies": [
       true,
-      "dev"
+      "dev",
+      ["@brightside/imperative"]
     ]
   },
   "linterOptions": {
