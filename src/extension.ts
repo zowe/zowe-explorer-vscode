@@ -15,7 +15,6 @@ import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";

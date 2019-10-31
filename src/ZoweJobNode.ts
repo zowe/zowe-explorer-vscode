@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";

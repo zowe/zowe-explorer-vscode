@@ -13,7 +13,6 @@ jest.mock("vscode");
 jest.mock("child_process");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Logger } from "@brightside/imperative";
 import { Profiles } from "../../src/Profiles";
 

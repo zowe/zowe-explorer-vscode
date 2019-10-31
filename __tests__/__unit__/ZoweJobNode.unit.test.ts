@@ -15,7 +15,6 @@ jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Session, Logger } from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/Profiles";

@@ -18,7 +18,6 @@ jest.mock("../../src/Profiles");
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Session, Logger } from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as utils from "../../src/utils";

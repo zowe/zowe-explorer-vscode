@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import { ZosmfSession, IJob, DeleteJobs } from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { Profiles } from "./Profiles";

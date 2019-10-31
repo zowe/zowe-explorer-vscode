@@ -15,7 +15,6 @@ jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
 jest.mock("../../src/Profiles");
-// tslint:disable-next-line: no-implicit-dependencies
 import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";

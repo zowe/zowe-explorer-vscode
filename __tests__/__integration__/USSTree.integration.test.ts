@@ -11,7 +11,6 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Logger } from "@brightside/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";

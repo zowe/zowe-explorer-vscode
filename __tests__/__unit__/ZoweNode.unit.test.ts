@@ -17,7 +17,6 @@ jest.mock("Session");
 jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
-// tslint:disable-next-line: no-implicit-dependencies
 import { Session } from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";

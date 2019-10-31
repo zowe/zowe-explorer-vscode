@@ -14,7 +14,6 @@ import * as treeMock from "../../src/DatasetTree";
 import * as treeUSSMock from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import { ZoweNode } from "../../src/ZoweNode";
-// tslint:disable-next-line: no-implicit-dependencies
 import * as brtimperative from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as path from "path";

@@ -10,7 +10,6 @@
 */
 
 import * as zowe from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import * as utils from "./utils";
 import * as vscode from "vscode";

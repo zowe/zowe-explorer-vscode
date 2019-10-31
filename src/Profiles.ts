@@ -9,7 +9,6 @@
 *                                                                                 *
 */
 
-// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger, CliProfileManager } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
