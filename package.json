@@ -1126,6 +1126,7 @@
   },
   "dependencies": {
     "@brightside/core": "2.32.1",
+    "@brightside/imperative": "2.7.3",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",

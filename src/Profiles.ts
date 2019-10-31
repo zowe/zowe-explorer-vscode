@@ -15,6 +15,8 @@ import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
 import * as ProfileLoader from "./ProfileLoader";
+import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export class Profiles {
@@ -35,7 +37,8 @@ export class Profiles {
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && profile.type === "zosmf") {
+            if (profile.name === name &&
+                ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type)) {
                 return profile;
             }
         }
@@ -55,7 +58,7 @@ export class Profiles {
                 type: "zosmf"
             });
             this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
-                return profile.type === "zosmf";
+                return ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type);
             });
             this.defaultProfile = (await profileManager.load({ loadDefault: true }));
         }

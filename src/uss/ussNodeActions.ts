@@ -21,6 +21,7 @@ import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
+import { ZoweVscApiRegister } from "../api/ZoweVscApiRegister";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -34,7 +35,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await zowe.Create.uss(node.getSession(), filePath, nodeType);
+            await ZoweVscApiRegister.getInstance().create(node.profile, node.getSession(), filePath, nodeType);
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {

@@ -29,8 +29,10 @@ import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
 
+// Localization support
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 // Globals
 export let BRIGHTTEMPFOLDER;
@@ -55,13 +57,16 @@ export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 
 let log: Logger;
+
 /**
  * The function that runs when the extension is loaded
  *
  * @export
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
+ * @returns {Promise<ZoweVscApiRegister>}
  */
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<ZoweVscApiRegister> {
+
     // Get temp folder location from settings
     let preferencesTempPath: string =
         vscode.workspace.getConfiguration()
@@ -296,6 +301,9 @@ export async function activate(context: vscode.ExtensionContext) {
             });
         }
     }
+
+    // return the Extension's API to other extensions that want to register their APIs.
+    return ZoweVscApiRegister.getInstance();
 }
 
 /**
