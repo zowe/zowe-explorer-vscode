@@ -62,7 +62,13 @@ export class Profiles { // Processing stops if there are no profiles detected
     public async refresh() {
         if (this.isSpawnReqd() === 0) {
             this.allProfiles = ProfileLoader.loadAllProfiles();
+            try {
             this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
+            } catch (err) {
+                // Unable to load a default profile
+                this.log.warn(localize("loadNamedProfile.warn.noDefaultProfile",
+                "Unable to locate a default profile. CLI may not be installed. ")+err.message);
+            }
         } else {
             const profileManager = new CliProfileManager({
                 profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),

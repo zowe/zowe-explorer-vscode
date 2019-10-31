@@ -811,21 +811,6 @@ describe("Extension Unit Tests", () => {
             ignoreFocusOut: true,
             placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
         });
-
-        showInformationMessage.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined
-                };
-            })
-        });
-
-        await extension.addSession(testTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
     });
 
     it("Testing that addJobsSession is executed successfully", async () => {
@@ -846,20 +831,6 @@ describe("Extension Unit Tests", () => {
             ignoreFocusOut: true,
             placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Jobs Explorer"
         });
-
-        showInformationMessage.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined
-                };
-            })
-        });
-        await extension.addJobsSession(testJobsTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
     });
 
     it("Testing that createFile is executed successfully", async () => {
@@ -1559,21 +1530,6 @@ describe("Extension Unit Tests", () => {
             ignoreFocusOut: true,
             placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer"
         });
-
-        // no profiles returned
-        showInformationMessage.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined
-                };
-            })
-        });
-
-        await extension.addSession(testUSSTree);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
     });
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
