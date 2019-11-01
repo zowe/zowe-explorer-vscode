@@ -17,13 +17,6 @@ import { Logger } from "@brightside/imperative";
 import { Profiles } from "../../src/Profiles";
 
 describe("Profile class unit tests", () => {
-    const showInformationMessage = jest.fn();
-    const showInputBox = jest.fn();    
-    const showQuickPick = jest.fn();
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-    Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-    Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
-
     // Mocking log.debug
     const log = Logger.getAppLogger();
 
@@ -78,62 +71,75 @@ describe("Profile class unit tests", () => {
         expect(success).toBe(true);
     });
 
-    it("should create a new connection", async () => {
-        const profiles = await Profiles.createInstance(log);
+    describe("Creating a new connection", () => {
+        let profiles: Profiles;
+        const showInformationMessage = jest.fn();
+        const showInputBox = jest.fn();
+        const showQuickPick = jest.fn();
 
-        // Profile name not supplied
-        showQuickPick.mockReset();
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        showInputBox.mockReset();
-        showInputBox.mockResolvedValueOnce(undefined);
-        await profiles.createNewConnection();
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("Profile Name was not supplied. Operation Cancelled");
+        Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+        Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+        Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
 
-        // Enter z/OS username
-        showQuickPick.mockReset();
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        showInputBox.mockReset();
-        showInputBox.mockResolvedValueOnce("fake");
-        showInputBox.mockResolvedValueOnce("fake/url");
-        await profiles.createNewConnection();
-        expect(showInformationMessage.mock.calls.length).toBe(2);
-        expect(showInformationMessage.mock.calls[1][0]).toBe("Please enter your z/OS username. Operation Cancelled");
+        beforeEach(async () => {
+            profiles = await Profiles.createInstance(log);
+            showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
+        });
 
-        // No valid zosmf value
-        showQuickPick.mockReset();
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        showInputBox.mockReset();
-        showInputBox.mockResolvedValueOnce("fake");
-        showInputBox.mockResolvedValueOnce(undefined);
-        await profiles.createNewConnection();
-        expect(showInformationMessage.mock.calls.length).toBe(3);
-        expect(showInformationMessage.mock.calls[2][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
+        afterEach(() => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+        });
 
-        // Enter z/OS password
-        showQuickPick.mockReset();
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        showInputBox.mockReset();
-        showInputBox.mockResolvedValueOnce("fake");
-        showInputBox.mockResolvedValueOnce("fake/url");
-        showInputBox.mockResolvedValueOnce("fake");        
-        showInputBox.mockResolvedValueOnce(undefined);
-        await profiles.createNewConnection();
-        expect(showInformationMessage.mock.calls.length).toBe(4);
-        expect(showInformationMessage.mock.calls[3][0]).toBe("Please enter your z/OS password. Operation Cancelled");
+        it("should indicate missing property: profile name", async () => {
+            // Profile name not supplied
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.createNewConnection();
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile Name was not supplied. Operation Cancelled");
+        });
 
-        // Operation cancelled
-        showQuickPick.mockReset();
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        showInputBox.mockReset();
-        showInputBox.mockResolvedValueOnce("fake");
-        showInputBox.mockResolvedValueOnce("fake/url");
-        showInputBox.mockResolvedValueOnce("fake");     
-        showInputBox.mockResolvedValueOnce("fake");      
-        showInputBox.mockResolvedValueOnce(undefined);
-        await profiles.createNewConnection();
-        expect(showInformationMessage.mock.calls.length).toBe(5);
-        expect(showInformationMessage.mock.calls[4][0]).toBe("Operation Cancelled");
+        it("should indicate missing property: username", async () => {
+            // Enter z/OS username
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake/url");
+            await profiles.createNewConnection();
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Please enter your z/OS username. Operation Cancelled");
+        });
+
+        it("should indicate missing property: zosmf url", async () => {
+            // No valid zosmf value
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.createNewConnection();
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
+        });
+
+        it("should indicate missing property: password", async () => {
+            // Enter z/OS password
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake/url");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.createNewConnection();
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Please enter your z/OS password. Operation Cancelled");
+        });
+
+        it("should notify that the operation was cancelled", async () => {
+            // Operation cancelled
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake/url");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.createNewConnection();
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
     });
 
     it("should route through to spawn. Covers conditional test", async () => {
@@ -171,6 +177,7 @@ describe("Profile class unit tests", () => {
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
         expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
     });
+
     it("should route through to spawn. Coverage of error handling", async () => {
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
