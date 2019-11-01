@@ -140,7 +140,6 @@ describe("DatasetTree Integration Tests", async () => {
     it("Tests that getParent returns the correct ZoweNode when called on a non-rootNode ZoweNode", async () => {
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChild1: ZoweNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-
         const parent1 = testTree.getParent(sampleChild1);
 
         // It's expected that parent is null because when getParent() is called on a child
@@ -166,7 +165,7 @@ describe("DatasetTree Integration Tests", async () => {
     /*************************************************************************************************************
      * Tests the deleteSession() function
      *************************************************************************************************************/
-    it("Tests the addSession() function by adding a default, deleting, then adding a passed session then deleting", async () => {
+    it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
         for (const sess of testTree.mSessionNodes) {
             if (sess.contextValue === extension.DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
@@ -174,8 +173,12 @@ describe("DatasetTree Integration Tests", async () => {
         }
         const len = testTree.mSessionNodes.length;
         await testTree.addSession();
-        expect(testTree.mSessionNodes.length).toEqual(len + 1);
-        testTree.deleteSession(testTree.mSessionNodes[len]);
+        expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
+        for (const sess of testTree.mSessionNodes) {
+            if (sess.contextValue === extension.DS_SESSION_CONTEXT) {
+                testTree.deleteSession(sess);
+            }
+        }
         await testTree.addSession(testConst.profile.name);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);
