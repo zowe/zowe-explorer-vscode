@@ -21,6 +21,9 @@ import * as zowe from "@brightside/core";
 import { DatasetTree } from "./DatasetTree";
 import { addSession } from "./extension";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+let url: URL;
+let validURL: string;
+let validPort: number;
 let IConnection: {
     name: string;
     host: string;
@@ -93,23 +96,24 @@ export class Profiles { // Processing stops if there are no profiles detected
         return this.allProfiles;
     }
 
+    public validateUrl = (newUrl: string) => {
+        try {
+            url = new URL(newUrl);
+        } catch (error) {
+            return false;
+        }
+        validURL = url.hostname;
+        validPort = Number(url.port);
+        return url.port ? true : false;
+    }
+
     public async createNewConnection() {
-        let url: URL;
         let profileName: string;
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
-
-        const validateUrl = (newUrl: string) => {
-            try {
-                url = new URL(newUrl);
-            } catch (error) {
-                return false;
-            }
-            return url.port ? true : false;
-        };
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
@@ -128,7 +132,7 @@ export class Profiles { // Processing stops if there are no profiles detected
             placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "http(s)://url:port"),
             prompt: localize("createNewConnection.option.prompt.url",
             "Enter a z/OSMF URL in the format 'http(s)://url:port'."),
-            validateInput: (text: string) => (validateUrl(text) ? "" : "Please enter a valid URL."),
+            validateInput: (text: string) => (this.validateUrl(text) ? "" : "Please enter a valid URL."),
             value: zosmfURL
         });
 
@@ -188,8 +192,8 @@ export class Profiles { // Processing stops if there are no profiles detected
             return;
         }
 
-        for (const verifyProfile of this.listProfile()) {
-            if (verifyProfile.name === profileName) {
+        for (const profile of this.allProfiles) {
+            if (profile.name === profileName) {
                 vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
                 "Profile name already exists. Please create a profile using a different name"));
                 return;
@@ -198,8 +202,8 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         IConnection = {
             name: profileName,
-            host: url.hostname,
-            port: Number(url.port),
+            host: validURL,
+            port: validPort,
             user: userName,
             password: passWord,
             rejectUnauthorized: rejectUnauthorize,

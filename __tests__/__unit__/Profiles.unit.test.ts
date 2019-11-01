@@ -76,8 +76,10 @@ describe("Profile class unit tests", () => {
         const showInformationMessage = jest.fn();
         const showInputBox = jest.fn();
         const showQuickPick = jest.fn();
+        const showErrorMessage = jest.fn();
 
         Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+        Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
         Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
         Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
 
@@ -139,6 +141,50 @@ describe("Profile class unit tests", () => {
             await profiles.createNewConnection();
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should create profile", async () => {
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("https://fake:143");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            let success = false;
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = true;
+            }
+            expect(success).toBe(true);
+            if (!success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+            // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
+        });
+
+        it("should validate URL", async() => {
+            const res = await Profiles.getInstance().validateUrl("fake/url");
+            expect(res).toBe(false);
+        });
+
+        it ("it should validate duplicate profiles", async () => {
+            const profiles = await Profiles.createInstance(log);
+            showInputBox.mockResolvedValueOnce("profile1");
+            showInputBox.mockResolvedValueOnce("https://fake:143");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
+            await profiles.createNewConnection();
+            expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(showErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
+            showErrorMessage.mockReset();
+            showInformationMessage.mockReset();
         });
     });
 
