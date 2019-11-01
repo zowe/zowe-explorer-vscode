@@ -167,13 +167,12 @@ describe("Profile class unit tests", () => {
             }
         });
 
-        it("should validate URL", async() => {
+        it("should validate URL", async () => {
             const res = await Profiles.getInstance().validateUrl("fake/url");
             expect(res).toBe(false);
         });
 
-        it ("it should validate duplicate profiles", async () => {
-            const profiles = await Profiles.createInstance(log);
+        it("it should validate duplicate profiles", async () => {
             showInputBox.mockResolvedValueOnce("profile1");
             showInputBox.mockResolvedValueOnce("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
