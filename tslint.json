@@ -37,8 +37,9 @@
       "check-module"
     ],
     "no-implicit-dependencies": [
-      true,
-      "dev"
+      false,
+      "dev",
+      ["@brightside/imperative"]
     ]
   },
   "linterOptions": {
