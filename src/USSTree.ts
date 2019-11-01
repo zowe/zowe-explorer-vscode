@@ -12,7 +12,7 @@
 import * as zowe from "@brightside/core";
 // tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
-import * as utils from "./utils";
+import { applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
@@ -61,7 +61,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mSessionNodes = [this.mFavoriteSession];
-        this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
+        this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mHistory = new PersistentFilters(USSTree.persistenceSchema);
     }
 
@@ -184,14 +184,10 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             temp.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
-        temp.iconPath = utils.applyIcons(node);
-        const sessionContext = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        temp.iconPath = applyIcons(node);
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
-            this.mFavorites.sort((a, b) => (
-                a.contextValue === sessionContext && b.contextValue !== sessionContext ? -1 :
-                b.contextValue === sessionContext && a.contextValue !== sessionContext ? 1 :
-                a > b ? 1 : -1));
+            sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -206,13 +202,14 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const label = "[" + node.getSessionNode().mProfileName + "]: " + node.fullPath;
         const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
             this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().mProfileName);
-        temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
-        temp.iconPath =  utils.applyIcons(temp);
+        temp.iconPath =  applyIcons(temp);
         temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
+            sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -247,7 +244,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
@@ -284,8 +281,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         if (node.contextValue === extension.USS_SESSION_CONTEXT) {
             if (this.mHistory.getHistory().length > 0) {
 
-                const createPick = new utils.FilterDescriptor(USSTree.defaultDialogText);
-                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new utils.FilterItem(element));
+                const createPick = new FilterDescriptor(USSTree.defaultDialogText);
+                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
                 if (extension.ISTHEIA) {
                     const options1: vscode.QuickPickOptions = {
                         placeHolder: localize("searchHistory.options.prompt", "Select a filter")
@@ -303,13 +300,13 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                     quickpick.items = [createPick, ...items];
                     quickpick.ignoreFocusOut = true;
                     quickpick.show();
-                    const choice = await utils.resolveQuickPickHelper(quickpick);
+                    const choice = await resolveQuickPickHelper(quickpick);
                     quickpick.hide();
                     if (!choice) {
                         vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
                         return;
                     }
-                    if (choice instanceof utils.FilterDescriptor) {
+                    if (choice instanceof FilterDescriptor) {
                         if (quickpick.value) {
                             remotepath = quickpick.value;
                         }
@@ -345,7 +342,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const sanitizedPath = remotepath.replace(/\/\/+/, "/");
         sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        sessionNode.iconPath = utils.applyIcons(sessionNode, extension.ICON_STATE_OPEN);
+        sessionNode.iconPath = applyIcons(sessionNode, extension.ICON_STATE_OPEN);
         // update the treeview with the new path
         sessionNode.label = `${sessionNode.mProfileName} [${sanitizedPath}]`;
         sessionNode.dirty = true;
@@ -389,7 +386,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                                     title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
                 }
                 node.contextValue += extension.FAV_SUFFIX;
-                node.iconPath = utils.applyIcons(node);
+                node.iconPath = applyIcons(node);
                 this.mFavorites.push(node);
         } catch(e) {
             vscode.window.showErrorMessage(
@@ -421,7 +418,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              zosmfProfile.name);
             node.contextValue = extension.USS_SESSION_CONTEXT;
-            node.iconPath = utils.applyIcons(node);
+            node.iconPath = applyIcons(node);
             node.dirty = true;
             this.mSessionNodes.push(node);
             this.mHistory.addSession(zosmfProfile.name);

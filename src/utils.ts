@@ -86,6 +86,21 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     return { light, dark };
 }
 
+export function sortTreeItems(favorites: TreeItem[], specificContext ) {
+    favorites.sort((a, b) => {
+        if (a.contextValue === specificContext) {
+            if (b.contextValue === specificContext) {
+                return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+            } else {
+                return -1;
+            }
+        } else if (b.contextValue === specificContext) {
+            return 1;
+        }
+        return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+    });
+}
+
 /**
  * For no obvious reason a label change is often required to make a node repaint.
  * This function does this by adding or removing a blank.

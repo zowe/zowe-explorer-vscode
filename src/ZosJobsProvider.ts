@@ -10,13 +10,13 @@
 */
 
 import * as vscode from "vscode";
-import { ZosmfSession, IJob, DeleteJobs } from "@brightside/core";
+import { ZosmfSession, IJob, DeleteJobs, Utilities } from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
-import { OwnerFilterDescriptor, JobIdFilterDescriptor, applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper } from "./utils";
+import { OwnerFilterDescriptor, JobIdFilterDescriptor, applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -226,13 +226,9 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      */
     public async addJobsFavorite(node: Job) {
         const favJob = this.createJobsFavorite(node);
-        const sessionContext = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
             this.mFavorites.push(favJob);
-            this.mFavorites.sort((a, b) => (
-                a.contextValue === sessionContext && b.contextValue !== sessionContext ? -1 :
-                b.contextValue === sessionContext && a.contextValue !== sessionContext ? 1 :
-                a > b ? 1 : -1));
+            sortTreeItems(this.mFavorites, extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -244,17 +240,19 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      * @param {Job} node
      */
     public async saveSearch(node: Job) {
+        const favSessionContext = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         const favJob = new Job("[" + node.getSessionName() + "]: " +
             this.createSearchLabel(node.owner, node.prefix, node.searchId),
         vscode.TreeItemCollapsibleState.None, node.mParent, node.session, node.job);
         favJob.owner = node.owner;
         favJob.prefix = node.prefix;
         favJob.searchId = node.searchId;
-        favJob.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        favJob.contextValue = favSessionContext;
         favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
         favJob.iconPath = applyIcons(favJob);
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
             this.mFavorites.push(favJob);
+            sortTreeItems(this.mFavorites, favSessionContext);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
