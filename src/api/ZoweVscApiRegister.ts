@@ -12,7 +12,7 @@
 import * as zowe from "@brightside/core";
 import * as imperative from "@brightside/imperative";
 
-import { IZoweVscUssApi, IZoweVscMvsApi } from "./IZoweVscRestApis";
+import { IZoweVscUssApi, IZoweVscMvsApi, IZoweVscApiRegister } from "./IZoweVscRestApis";
 import { ZoweVscZosmfUssRestApi } from "./ZoweVscZosmfRestApi";
 
 /**
@@ -20,7 +20,7 @@ import { ZoweVscZosmfUssRestApi } from "./ZoweVscZosmfRestApi";
  * @export
  * @class ZoweVscApiRegister
  */
-export class ZoweVscApiRegister {
+export class ZoweVscApiRegister implements IZoweVscApiRegister {
 
     /**
      * Access the singleton instance.
@@ -29,9 +29,10 @@ export class ZoweVscApiRegister {
      * @returns
      * @memberof ZoweVscApiRegister
      */
-    public static getInstance() {
+    public static getInstance(): ZoweVscApiRegister {
         return ZoweVscApiRegister.register;
     }
+
     /**
      * This object represents the API that gets exposed to other VS Code extensions
      * that want to contribute alternative implementations such as alternative ways

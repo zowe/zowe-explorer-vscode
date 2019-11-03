@@ -67,3 +67,8 @@ export interface IZoweVscMvsApi extends IZoweVscCommonApi {
     dataSet(session: imperative.Session, filter: string): Promise<zowe.IZosFilesResponse>;
     allMembers(session: imperative.Session, dataSetName: string): Promise<zowe.IZosFilesResponse>;
 }
+
+
+export interface IZoweVscApiRegister {
+    registerUssApi(ussApi: IZoweVscUssApi): void;
+}
