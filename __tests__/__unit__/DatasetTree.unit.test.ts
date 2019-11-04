@@ -329,9 +329,27 @@ describe("DatasetTree Unit Tests", () => {
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(3);
 
+        testTree.mSessionNodes[1].pattern = "aHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(4);
+
+        testTree.mSessionNodes[1].pattern = "zHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(5);
+
+        testTree.mSessionNodes[1].pattern = "rHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(6);
+
         /*************************************************************************************************************
         * Testing that removeFavorite works properly
         *************************************************************************************************************/
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
