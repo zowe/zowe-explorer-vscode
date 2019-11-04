@@ -108,6 +108,19 @@ pipeline {
         } }
       }
     }
+    stage('Codecov') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          withCredentials([usernamePassword(credentialsId: 'CODECOV_ZOWE_VSCODE', usernameVariable: 'CODECOV_USERNAME', passwordVariable: 'CODECOV_TOKEN')]) {
+              sh "curl -s https://codecov.io/bash | bash -s"
+          }
+        } }
+      }
+    }
     stage('Audit') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
