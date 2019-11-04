@@ -276,9 +276,6 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         const settings: any = { ...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema) };
         if (settings.persistence) {
             settings.favorites = this.mFavorites.map((fav) => fav.label +
-                // "[" + fav.label.substring(1, fav.label.lastIndexOf("]")) + "]: " +
-                // (fav.label.substring(fav.label.indexOf(": ") + 2, fav.label.indexOf(")") + 1 )).trim() +
-                // fav.getDetailLabel() +
                 "{" + (fav.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
                         extension.JOBS_JOB_CONTEXT :
                         extension.JOBS_SESSION_CONTEXT ) + "}");

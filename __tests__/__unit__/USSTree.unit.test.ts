@@ -310,7 +310,7 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Testing that addUSSFavorite sorting works
      *************************************************************************************************************/
-    it("Testing that addUSSFavorite works properly", async () => {
+    it("Testing that addUSSSearchFavorite works properly", async () => {
         testTree.mFavorites = [];
         const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             testTree.mSessionNodes[1], null, "/");
