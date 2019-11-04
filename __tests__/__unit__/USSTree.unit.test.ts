@@ -151,6 +151,11 @@ describe("Unit Tests (Jest)", () => {
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
+
+        // Additional tests for favorite icon state coverage
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-closed.svg");
+        await testTree.flipState(sessNode[0], true);
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-open.svg");
     });
 
     /*************************************************************************************************************
@@ -303,6 +308,45 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
+     * Testing that addUSSFavorite sorting works
+     *************************************************************************************************************/
+    it("Testing that addUSSFavorite works properly", async () => {
+        testTree.mFavorites = [];
+        const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null, "/");
+        let childFile = new ZoweUSSNode("abcd", vscode.TreeItemCollapsibleState.None,
+            parentDir, null, "/parent");
+        childFile.contextValue = extension.USS_SESSION_CONTEXT;
+
+        // Check adding file
+        await testTree.addUSSFavorite(childFile);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+
+        childFile = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.None,
+        parentDir, null, "/parent");
+        childFile.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.addUSSFavorite(childFile);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(2);
+
+        testTree.mSessionNodes[1].fullPath = "/z1234";
+        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(3);
+
+        testTree.mSessionNodes[1].fullPath = "/a1234";
+        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(4);
+
+        testTree.mSessionNodes[1].fullPath = "/r1234";
+        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(5);
+    });
+
+    /*************************************************************************************************************
      * Testing that expand tree is executed successfully
      *************************************************************************************************************/
     it("Testing that expand tree is executed successfully", async () => {
@@ -331,7 +375,6 @@ describe("Unit Tests (Jest)", () => {
                 };
             })
         });
-        spyOn(utils, "getSession").and.returnValue(session);
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         expect(testTree1.mFavorites.length).toBe(2);
 

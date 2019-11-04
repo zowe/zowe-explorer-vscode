@@ -205,6 +205,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
 
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
+        temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         temp.iconPath =  applyIcons(temp);
         temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {

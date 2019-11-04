@@ -23,13 +23,6 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * I noticed we have a lot of repetition of some common
  * functionality in many places.
  */
-export async function getSession(profileName: string) {
-    const zosmfProfile = await new CliProfileManager({
-        profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-        type: "zosmf"
-    }).load({name: profileName});
-    return zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-}
 export function applyIcons(node: TreeItem, state?: string ): any {
     let light: string;
     let dark: string;
