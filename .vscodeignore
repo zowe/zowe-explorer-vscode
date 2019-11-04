@@ -9,6 +9,7 @@ resources/testProfileData.ts
 resources/Favorites.txt
 results/**
 src/**
+.codecov.yml
 .gitignore
 tsconfig.json
 tslint.json
