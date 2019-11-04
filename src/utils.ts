@@ -23,13 +23,6 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * I noticed we have a lot of repetition of some common
  * functionality in many places.
  */
-export async function getSession(profileName: string) {
-    const zosmfProfile = await new CliProfileManager({
-        profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-        type: "zosmf"
-    }).load({name: profileName});
-    return zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-}
 export function applyIcons(node: TreeItem, state?: string ): any {
     let light: string;
     let dark: string;
@@ -84,6 +77,21 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     }
     node.iconPath = { light, dark };
     return { light, dark };
+}
+
+export function sortTreeItems(favorites: TreeItem[], specificContext ) {
+    favorites.sort((a, b) => {
+        if (a.contextValue === specificContext) {
+            if (b.contextValue === specificContext) {
+                return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+            } else {
+                return -1;
+            }
+        } else if (b.contextValue === specificContext) {
+            return 1;
+        }
+        return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+    });
 }
 
 /**

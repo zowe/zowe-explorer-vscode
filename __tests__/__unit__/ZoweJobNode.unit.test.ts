@@ -28,16 +28,8 @@ describe("Zos Jobs Unit Tests", () => {
     const getConfiguration = jest.fn();
     const target = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    const enums = jest.fn().mockImplementation(() => {
-        return {
-            Global: 1,
-            Workspace: 2,
-            WorkspaceFolder: 3
-        };
-    });
-    Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
     getConfiguration.mockReturnValue({
-        persistence: true,
+        // persistence: true,
         get: (setting: string) => [
             "[test]: Owner:stonecc Prefix:*{server}",
             "[test]: USER1(JOB30148){job}",
@@ -46,6 +38,15 @@ describe("Zos Jobs Unit Tests", () => {
             return {};
         })
     });
+
+    const enums = jest.fn().mockImplementation(() => {
+        return {
+            Global: 1,
+            Workspace: 2,
+            WorkspaceFolder: 3
+        };
+    });
+    Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
 
     beforeAll(() => {
         Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
@@ -503,8 +504,61 @@ describe("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.interpretFreeform("MYHLQ* myJob*")).toEqual("Owner:MYHLQ* Prefix:myJob*");
             expect(testJobsProvider.interpretFreeform("* * STC01234")).toEqual("JobId:STC01234");
         });
-    });
 
+        /*************************************************************************************************************
+         * Testing that add search and Favorite sorting works
+         *************************************************************************************************************/
+        it("Testing that add Search Favorite works properly", async () => {
+            getConfiguration.mockReset();
+            getConfiguration.mockReturnValue({
+                get: (setting: string) => [
+                    "[test]: Owner:stonecc Prefix:*{server}",
+                    "[test]: USER1(JOB30148){job}",
+                ],
+                update: jest.fn(()=>{
+                    return {};
+                })
+            });
+            const testTree = await createJobsTree(Logger.getAppLogger());
+            testTree.mFavorites = [];
+            const job = new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
+            testTree.mSessionNodes[1].session, iJob);
+
+            // Check adding job
+            await testTree.addJobsFavorite(job);
+            expect(testTree.mFavorites.length).toEqual(1);
+
+            testTree.mSessionNodes[1].owner = "myHLQ";
+            testTree.mSessionNodes[1].prefix = "*";
+            await testTree.saveSearch(testTree.mSessionNodes[1]);
+            // tslint:disable-next-line: no-magic-numbers
+            expect(testTree.mFavorites.length).toEqual(2);
+
+            testTree.mSessionNodes[1].owner = "*";
+            testTree.mSessionNodes[1].prefix = "aH*";
+            await testTree.saveSearch(testTree.mSessionNodes[1]);
+            // tslint:disable-next-line: no-magic-numbers
+            expect(testTree.mFavorites.length).toEqual(3);
+
+            testTree.mSessionNodes[1].owner = "*";
+            testTree.mSessionNodes[1].prefix = "*";
+            testTree.mSessionNodes[1].searchId = "JOB1234";
+            await testTree.saveSearch(testTree.mSessionNodes[1]);
+            // tslint:disable-next-line: no-magic-numbers
+            expect(testTree.mFavorites.length).toEqual(4);
+            expect(testTree.mFavorites[0].label).toEqual("[firstProfileName]: JobId:JOB1234");
+            expect(testTree.mFavorites[1].label).toEqual("[firstProfileName]: Owner:* Prefix:aH*");
+            expect(testTree.mFavorites[2].label).toEqual("[firstProfileName]: Owner:myHLQ Prefix:*");
+            // tslint:disable-next-line: no-magic-numbers
+            expect(testTree.mFavorites[3].label).toEqual("[firstProfileName]: MYHLQ(JOB1283)");
+
+            testTree.removeJobsFavorite(testTree.mFavorites[0]);
+            testTree.removeJobsFavorite(testTree.mFavorites[0]);
+            testTree.removeJobsFavorite(testTree.mFavorites[0]);
+            testTree.removeJobsFavorite(testTree.mFavorites[0]);
+            expect(testTree.mFavorites).toEqual([]);
+        });
+    });
 
     describe("JobSpool Unit Test", () => {
         const getSpoolFiles = jest.fn();
