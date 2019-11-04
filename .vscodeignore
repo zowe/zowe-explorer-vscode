@@ -3,6 +3,7 @@ __tests__/**
 .vscode/**
 .vscode-test/**
 out/__tests__/**
+out/src/__mocks__/**
 out/resources/testProfileData.*
 out/**/*.map
 resources/testProfileData.ts
