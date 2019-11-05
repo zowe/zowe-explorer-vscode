@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.27.0
+
+- Name change to Zowe Explorer
+- Enhancements to the History recall 'QuickPick' dialogs. @Colin-Stone
+- Favorites are now sorted. @Colin-Stone
+
 ## 0.26.1
 
 - Fix vulnerabilities related to brightside-core
