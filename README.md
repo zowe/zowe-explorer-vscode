@@ -14,6 +14,7 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 * [USS](#uss)
 * [Data Sets](#data-sets)
 * [Jobs](#jobs)
+* [Extras](#extras)
 
 **Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](./docs/README.md) file that is located in the docs folder of this repository.
 
@@ -57,6 +58,8 @@ Review the following use cases to understand how to use this extension.
 
 ### Add profile
 
+You can add a profile for your data sets/jobs/uss files
+
 1. Navigate to your explorer tree.
 2. Click the **Search Data Sets** magnifying glass.
 3. From the drop-down, either select the profile you want to add or search using the **Search Bar**
@@ -65,6 +68,8 @@ Review the following use cases to understand how to use this extension.
 <br /><br />
 
 ### Refresh all
+
+Refresh the list of data sets/jobs/uss files
 
 1. Navigate to your explorer tree.
 2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar as illustrated by the following screen:
@@ -76,7 +81,10 @@ Review the following use cases to understand how to use this extension.
 
 ### Integrated function
 
-Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job submitted link, click on link and see job spool output in Jobs view
+You can submit JCL files from data sets view and see the job spool output in jobs view
+
+![Submit JCL](docs/images/Submit-JCL.gif "Submit JCL")
+<br /><br />
 
 # USS
 
@@ -87,7 +95,7 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 ### Create a new File or Directory 
 
-#### Directory
+#### Create Directory
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -98,7 +106,7 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 ![Create new directory](docs/images/USS-Create-New-Directory.gif "Create new directory")
 <br /><br />
 
-#### File
+#### Create File
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -111,6 +119,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 ### Pull from the Mainframe
 
+You can pull USS files from the mainframe
+
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
 3. Open a profile.
@@ -121,6 +131,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 <br /><br />
 
 ### Safe Save
+
+You can save your USS files and merge any confilcts it may have
 
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
@@ -134,6 +146,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 ### Toggle Binary
 
+You can show the binary data of a file that changes the data transfer type to Image
+
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
 3. Open a profile.
@@ -145,6 +159,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 ### Add Favourite
 
+Add your favourite USS file to make it more accessible
+
 1. Right click the Directory/File you want to make a favourite.
 2. Click the **Add Favourite** button to add the Directory/File to your Favourites list.
 
@@ -153,32 +169,34 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 ### Rename
 
+You can rename a directory/file
+
 1. Right click the Directory/File you want to make a rename.
 2. Click the **Rename** button to rename the Directory/File.
-3. Rename the file and press enter to complete the renaming process.
+3. Rename the file and click enter to complete the renaming process.
 
 ![Rename](docs/images/USS-Rename.gif "Rename")
 <br /><br />
 
 ### Delete a File or Directory
 
-#### Directory
+#### Delete Directory
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
 3. Select a directory you want to remove.
-4. Select the **Delete** button and press yes in the confirmation dropdown.
+4. Select the **Delete** button and click yes in the confirmation dropdown.
    The directory and all child files and directories are deleted.
 
 ![Delete a directory](docs/images/USS-Delete.gif "Delete a directory")
 <br /><br />
 
-#### File
+#### Delete File
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
 3. Select a file you want to remove.
-4. Select the **Delete** button and press yes in the confirmation dropdown.
+4. Select the **Delete** button and click yes in the confirmation dropdown.
    The file is deleted.
 
 ### File opened with syntax highlighting
@@ -189,6 +207,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 ## Searching
 
 ### Entering a root path
+
+You can search multiple USS files by entering a path with commas in between
 
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
@@ -201,6 +221,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 <br /><br />
 
 ### Selecting from history recall
+
+You can search previous USS file paths easily
 
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
@@ -241,6 +263,8 @@ Dynamic gif showing JCL being submitted from Datasets view. Popup showing Job su
 
 ### Upload new member
 
+You can upload a data set member enabling you to transfer data between the host and the workstation
+
 1. Click the Data Set member that you want to download.
 
     **Note:** To view the members of a Data Set, click the Data Set to expand the tree.
@@ -257,6 +281,8 @@ Your Data Set member is uploaded.
 <br /><br />
 
 ### Show Data Set Attributes
+
+You can see the different attributes of a data set such as the migration state
 
 1. Right Click the Data Set member that you want to find out about more.
 2. Click the **Show Data Set attributes** button.
@@ -289,6 +315,8 @@ Your Data Set member is uploaded.
 
 ### Entering a root path
 
+You can search multiple data sets by entering a path with commas in between
+
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select the profile that you want to filter.
@@ -303,6 +331,8 @@ Your Data Set member is uploaded.
 
 ### Selecting from history recall
 
+You can search previous data set paths easily
+
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select the profile that you want to filter.
@@ -315,6 +345,8 @@ Your Data Set member is uploaded.
 ## Favourites
 
 ### Adding favourites
+
+Add your favourite data sets to make then more accessible
 
 1. Right click the Data Set you want to make a favourite
 2. Click the **Add Favourite** button to add the Data Set to your Favourites list
@@ -336,6 +368,8 @@ Your Data Set member is uploaded.
 
 ### Issue Modify Command
 
+Use the modify command to pass information to a job or started task
+
 1. Right cick the Job you want to issue the modify command on.
 2. Click the **Issue Modify Command** button.
 
@@ -343,6 +377,8 @@ Your Data Set member is uploaded.
 <br /><br />
 
 ### Issue Stop Command
+
+Use the Stop command to stop system functions and jobs in execution
 
 1. Right cick the Job you want to issue the modify command on.
 2. Click the **Issue Stop Command** button.
@@ -357,6 +393,8 @@ Your Data Set member is uploaded.
 
 ### Download Spool
 
+You can use this operation to retrieve the contents of a job spool file
+
 1. Navigate to your explorer tree.
 2. Open the **Jobs** bar.
 3. Open a profile.
@@ -365,10 +403,14 @@ Your Data Set member is uploaded.
 ![Download Spool](docs/images/Jobs-Download-Spool.gif "Download Spool")
 <br /><br />
 
+# Extras
+
 ### Issue TSO Command
 
-1. Press _Cmnd+Shift+P_ together
-2. Press the **Zowe:Issue TSO Command** button
+You can issue TSO commands such as Allocate or Exec against a profile.
+
+1. Use _Cmnd+Shift+P_ 
+2. Click the **Zowe:Issue TSO Command** button
 3. Select the profile you want to issue the command on
 4. Type in your command
 
