@@ -44,7 +44,23 @@ const extensionConfig = {
             {
                 test: /\.ts|\.tsx$/,
                 exclude: /node_modules/,
-                use: 'ts-loader'
+                use:[{
+					// vscode-nls-dev loader:
+					// * rewrite nls-calls
+					loader: 'vscode-nls-dev/lib/webpack-loader',
+					options: {
+						base: 'src'
+					}
+                }, {
+					// configure TypeScript loader:
+					// * enable sources maps for end-to-end source maps
+					loader: 'ts-loader',
+					options: {
+						compilerOptions: {
+							"sourceMap": true,
+						}
+					}
+				}]
             }
         ]
     },
