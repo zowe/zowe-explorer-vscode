@@ -86,16 +86,16 @@ You can submit JCL files from data sets view and see the job spool output in job
 ![Submit JCL](docs/images/Submit-JCL.gif "Submit JCL")
 <br /><br />
 
-# USS
+## Unix System Services (USS)
 
 ![USS View](docs/images/Populated-USS-List-View.png "USS View")
 <br /><br />
 
-## Menu Functions
+### USS File Menu Functions
 
-### Create a new File or Directory 
+#### Create a new File or Directory
 
-#### Create Directory
+##### Create a Directory
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -106,7 +106,7 @@ You can submit JCL files from data sets view and see the job spool output in job
 ![Create new directory](docs/images/USS-Create-New-Directory.gif "Create new directory")
 <br /><br />
 
-#### Create File
+##### Create File
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -117,7 +117,7 @@ You can submit JCL files from data sets view and see the job spool output in job
 ![Create new file](docs/images/USS-Create-New-File.gif "Create new file")
 <br /><br />
 
-### Pull from the Mainframe
+#### Pull from the Mainframe
 
 You can pull USS files from the mainframe
 
@@ -125,12 +125,12 @@ You can pull USS files from the mainframe
 2. Open the **USS** bar.
 3. Open a profile.
 4. Right click the file you want to pull.
-5. Click the **Pull from Mainframe** button. 
+5. Click the **Pull from Mainframe** button.
 
 ![Pull from Mainframe](docs/images/USS-Pull-From-Mainframe.gif "Pull from Mainframe")
 <br /><br />
 
-### Safe Save
+#### Safe Save
 
 You can save your USS files and merge any confilcts it may have
 
@@ -139,25 +139,25 @@ You can save your USS files and merge any confilcts it may have
 3. Open a profile.
 4. Download and edit a file.
 5. Click the **Safe Save, merge if necessary** button for the file that you opened in the explorer tree.
-6. Resolve merge conflicts if necessary. 
+6. Resolve merge conflicts if necessary.
 
 ![Safe Save](docs/images/USS-Safe-Save-Merge-If-Necessary.gif "Safe Save")
 <br /><br />
 
-### Toggle Binary
+#### Toggle Binary
 
 You can show the binary data of a file that changes the data transfer type to Image
 
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
 3. Open a profile.
-4. Right click the file you want to toggle the binary for. 
+4. Right click the file you want to toggle the binary for.
 5. Click the **Toggle Binary** button.
 
 ![Toggle binary](docs/images/USS-Toggle-Binary.gif "Toggle Binary")
 <br /><br />
 
-### Add Favourite
+#### Add Favourite
 
 Add your favourite USS file to make it more accessible
 
@@ -167,7 +167,7 @@ Add your favourite USS file to make it more accessible
 ![Adding Favourites](docs/images/USS-Add-Favourite.gif "Adding Favourites")
 <br /><br />
 
-### Rename
+#### Rename
 
 You can rename a directory/file
 
@@ -178,9 +178,9 @@ You can rename a directory/file
 ![Rename](docs/images/USS-Rename.gif "Rename")
 <br /><br />
 
-### Delete a File or Directory
+#### Delete a File or Directory
 
-#### Delete Directory
+##### Delete Directory
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -191,7 +191,7 @@ You can rename a directory/file
 ![Delete a directory](docs/images/USS-Delete.gif "Delete a directory")
 <br /><br />
 
-#### Delete File
+##### Delete File
 
 1. Navigate to your explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -199,14 +199,14 @@ You can rename a directory/file
 4. Select the **Delete** button and click yes in the confirmation dropdown.
    The file is deleted.
 
-### File opened with syntax highlighting
+#### USS File opened with syntax highlighting
 
 ![Syntax Highlighted](docs/images/USS-Syntax-Highlighted-File.png "Syntax Highlighted")
 <br /><br />
 
-## Searching
+### USS Search
 
-### Entering a root path
+#### Entering a root path
 
 You can search multiple USS files by entering a path with commas in between
 
@@ -220,7 +220,7 @@ You can search multiple USS files by entering a path with commas in between
 ![Entering a root path](docs/images/USS-Entering-Root-Path.gif "Entering a root path")
 <br /><br />
 
-### Selecting from history recall
+#### Selecting USS path from history recall
 
 You can search previous USS file paths easily
 
@@ -233,14 +233,14 @@ You can search previous USS file paths easily
 ![History recall](docs/images/USS-Search-From-History.gif "History Recall")
 <br /><br />
 
-# Data Sets
+## Data Sets
 
 ![Data Set View](docs/images/Populated-dataset-view.png "Data Set View")
 <br /><br />
 
-## Menu functions
+### Dataset Menu functions
 
-### Create Data Set
+#### Create Data Set
 
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
@@ -252,7 +252,7 @@ You can search previous USS file paths easily
 ![Create Data Set](docs/images/Create-new-dataset.gif "Create Data Set")
 <br /><br />
 
-### Create new member
+#### Create new member
 
 1. To create a member, right-click the Data Set and select **Create New Member**.
 2. Enter a name for the member.
@@ -261,7 +261,7 @@ You can search previous USS file paths easily
 ![Create Data Set member](docs/images/Create-new-member.gif "Create Data Set member")
 <br /><br />
 
-### Upload new member
+#### Upload new member
 
 You can upload a data set member enabling you to transfer data between the host and the workstation
 
@@ -280,7 +280,7 @@ Your Data Set member is uploaded.
 ![Upload Data Set member](docs/images/Dataset-Upload-new-member.gif "Upload Data Set member")
 <br /><br />
 
-### Show Data Set Attributes
+#### Show Data Set Attributes
 
 You can see the different attributes of a data set such as the migration state
 
@@ -290,7 +290,7 @@ You can see the different attributes of a data set such as the migration state
 ![Show Data Set Attributes](docs/images/Dataset-attributes.png "Show Data Set Attributes")
 <br /><br />
 
-### Delete Data Set
+#### Delete Data Set
 
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
@@ -306,14 +306,14 @@ You can see the different attributes of a data set such as the migration state
 ![Delete Data Set](docs/images/Delete-dataset.gif "Upload Data Set member")
 <br /><br />
 
-### File opened with syntax highlighting
+#### Dataset opened with syntax highlighting
 
 ![Syntax Highlighted](docs/images/DataSet-Syntax-highlighted-file.png "Syntax Highlighted")
 <br /><br />
 
-## Searching
+### Datasets Search
 
-### Entering a root path
+#### Entering a Dataset qualifier
 
 You can search multiple data sets by entering a path with commas in between
 
@@ -329,7 +329,7 @@ You can search multiple data sets by entering a path with commas in between
 ![Entering a root path](docs/images/Dataset-Searching-using-comma.gif "Entering a root path")
 <br /><br />
 
-### Selecting from history recall
+#### Selecting dataset qualifier from history recall
 
 You can search previous data set paths easily
 
@@ -342,9 +342,9 @@ You can search previous data set paths easily
 ![History recall](docs/images/Dataset-Searching-using-history.gif "History Recall")
 <br /><br />
 
-## Favourites
+### Favourites
 
-### Adding favourites
+#### Adding favourites
 
 Add your favourite data sets to make then more accessible
 
@@ -354,19 +354,19 @@ Add your favourite data sets to make then more accessible
 ![Adding Favourites](docs/images/Add-favourite-dataset.gif "Adding Favourites")
 <br /><br />
 
-# Jobs
+## Jobs
 
-## Menu Functions
+### Job Menu Functions
 
-### Get JCL of a File
+#### Get JCL for a File
 
-1. Right cick the Job you want the JCL of.
+1. Right cick the Job you want the JCL for.
 2. Click the **Get JCL** button.
 
 ![Get JCL of a File](docs/images/Jobs-Get-JCL.gif "Get JCL of a File")
 <br /><br />
 
-### Issue Modify Command
+#### Issue Modify Command
 
 Use the modify command to pass information to a job or started task
 
@@ -376,7 +376,7 @@ Use the modify command to pass information to a job or started task
 ![Modify Command](docs/images/Jobs-Issue-Modify-Command.gif "Modify Command")
 <br /><br />
 
-### Issue Stop Command
+#### Issue Stop Command
 
 Use the Stop command to stop system functions and jobs in execution
 
@@ -386,30 +386,30 @@ Use the Stop command to stop system functions and jobs in execution
 ![Stop Command](docs/images/Jobs-Issue-Stop-Command.gif "Stop Command")
 <br /><br />
 
-### Delete Job
+#### Delete Job
 
 1. Hover your mouse over the job you want to delete
 2. Click the **Delete** trash can button.
 
-### Download Spool
+#### Download Spool
 
 You can use this operation to retrieve the contents of a job spool file
 
 1. Navigate to your explorer tree.
 2. Open the **Jobs** bar.
 3. Open a profile.
-4. Click the **Download Spool** button for the Job you want. 
+4. Click the **Download Spool** button for the Job you want.
 
 ![Download Spool](docs/images/Jobs-Download-Spool.gif "Download Spool")
 <br /><br />
 
-# Extras
+## Additional functionality
 
-### Issue TSO Command
+### Issue a TSO Command
 
 You can issue TSO commands such as Allocate or Exec against a profile.
 
-1. Use _Cmnd+Shift+P_ 
+1. Use _Cmnd+Shift+P_
 2. Click the **Zowe:Issue TSO Command** button
 3. Select the profile you want to issue the command on
 4. Type in your command
