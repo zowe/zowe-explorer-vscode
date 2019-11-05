@@ -93,7 +93,7 @@ You can submit JCL files from data sets view and see the job spool output in job
 
 ## Menu Functions
 
-### Create a new File or Directory
+### Create a new File or Directory 
 
 #### Create Directory
 
@@ -125,7 +125,7 @@ You can pull USS files from the mainframe
 2. Open the **USS** bar.
 3. Open a profile.
 4. Right click the file you want to pull.
-5. Click the **Pull from Mainframe** button.
+5. Click the **Pull from Mainframe** button. 
 
 ![Pull from Mainframe](docs/images/USS-Pull-From-Mainframe.gif "Pull from Mainframe")
 <br /><br />
@@ -139,7 +139,7 @@ You can save your USS files and merge any confilcts it may have
 3. Open a profile.
 4. Download and edit a file.
 5. Click the **Safe Save, merge if necessary** button for the file that you opened in the explorer tree.
-6. Resolve merge conflicts if necessary.
+6. Resolve merge conflicts if necessary. 
 
 ![Safe Save](docs/images/USS-Safe-Save-Merge-If-Necessary.gif "Safe Save")
 <br /><br />
@@ -151,7 +151,7 @@ You can show the binary data of a file that changes the data transfer type to Im
 1. Navigate to your explorer tree.
 2. Open the **USS** bar.
 3. Open a profile.
-4. Right click the file you want to toggle the binary for.
+4. Right click the file you want to toggle the binary for. 
 5. Click the **Toggle Binary** button.
 
 ![Toggle binary](docs/images/USS-Toggle-Binary.gif "Toggle Binary")
@@ -391,9 +391,6 @@ Use the Stop command to stop system functions and jobs in execution
 1. Hover your mouse over the job you want to delete
 2. Click the **Delete** trash can button.
 
-![Delete Job](docs/images/Jobs-Delete.gif "Delete Job")
-<br /><br />
-
 ### Download Spool
 
 You can use this operation to retrieve the contents of a job spool file
@@ -401,21 +398,9 @@ You can use this operation to retrieve the contents of a job spool file
 1. Navigate to your explorer tree.
 2. Open the **Jobs** bar.
 3. Open a profile.
-4. Click the **Download Spool** button for the Job you want.
+4. Click the **Download Spool** button for the Job you want. 
 
 ![Download Spool](docs/images/Jobs-Download-Spool.gif "Download Spool")
-<br /><br />
-
-## Favourites
-
-### Adding favourites
-
-Add your favourite jobs to make then more accessible
-
-1. Right click the Job you want to make a favourite
-2. Click the **Add Favourite** button to add the Job to your Favourites list
-
-![Adding Favourites](docs/images/Jobs-Add-Favourites.gif "Adding Favourites")
 <br /><br />
 
 # Extras
@@ -424,7 +409,7 @@ Add your favourite jobs to make then more accessible
 
 You can issue TSO commands such as Allocate or Exec against a profile.
 
-1. Use _Cmnd+Shift+P_
+1. Use _Cmnd+Shift+P_ 
 2. Click the **Zowe:Issue TSO Command** button
 3. Select the profile you want to issue the command on
 4. Type in your command
