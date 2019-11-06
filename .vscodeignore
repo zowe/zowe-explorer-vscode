@@ -2,9 +2,7 @@ __mocks__/**
 __tests__/**
 .vscode/**
 .vscode-test/**
-out/__tests__/**
-out/resources/testProfileData.*
-out/**/*.map
+out
 resources/testProfileData.ts
 resources/Favorites.txt
 results/**
@@ -14,3 +12,14 @@ tsconfig.json
 tslint.json
 *.vsix
 logs/**
+.markdownlint.json
+CODEOWNERS
+gulpfile.js
+Jenkinsfile
+LICENSE_HEADER
+stringUpdateScript.js
+webpack.config.js
+dco_signoffs
+docs
+i18n
+scripts
