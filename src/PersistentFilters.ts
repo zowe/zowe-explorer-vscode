@@ -61,19 +61,21 @@ export class PersistentFilters {
      * @param {string} criteria - a line of search criteria
      */
     public async addHistory(criteria: string) {
-        // Remove any entries that match
-        this.mHistory = this.mHistory.filter( (element) => {
-            return element.trim() !== criteria.trim();
-        });
+        if (criteria) {
+            // Remove any entries that match
+            this.mHistory = this.mHistory.filter( (element) => {
+                return element.trim() !== criteria.trim();
+            });
 
-        // Add value to front of stack
-        this.mHistory.unshift(criteria);
+            // Add value to front of stack
+            this.mHistory.unshift(criteria);
 
-        // If list getting too large remove last entry
-        if (this.mHistory.length > this.maxHistory) {
-            this.mHistory.pop();
+            // If list getting too large remove last entry
+            if (this.mHistory.length > this.maxHistory) {
+                this.mHistory.pop();
+            }
+            this.updateHistory();
         }
-        this.updateHistory();
     }
 
     public getHistory() {

@@ -66,13 +66,13 @@ describe("DatasetTree Unit Tests", () => {
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
-    const getDatasetList = jest.fn();
+    const createQuickPick = jest.fn();
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
-
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
@@ -329,9 +329,27 @@ describe("DatasetTree Unit Tests", () => {
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(3);
 
+        testTree.mSessionNodes[1].pattern = "aHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(4);
+
+        testTree.mSessionNodes[1].pattern = "zHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(5);
+
+        testTree.mSessionNodes[1].pattern = "rHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(6);
+
         /*************************************************************************************************************
         * Testing that removeFavorite works properly
         *************************************************************************************************************/
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
@@ -373,12 +391,13 @@ describe("DatasetTree Unit Tests", () => {
      /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
-    it("Testing that user filter prompts are executed successfully", async () => {
-
+    it("Testing that user filter prompts are executed successfully, theia route", async () => {
+        let theia = true;
+        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
         testTree.initialize(Logger.getAppLogger());
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
 
@@ -389,14 +408,16 @@ describe("DatasetTree Unit Tests", () => {
 
         // Assert edge condition user cancels the input path box
         showInformationMessage.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
+        showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
 
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce("HLQ.PROD2.STUFF");
+        showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("HLQ.PROD2.STUFF"));
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
 
@@ -407,7 +428,10 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        theia = false;
+    });
 
+    it("Testing that user filter prompts are executed successfully for favorites", async () => {
         // Executing from favorites
         const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
         vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
@@ -418,6 +442,102 @@ describe("DatasetTree Unit Tests", () => {
         expect(checkSession).toHaveBeenCalledTimes(1);
         expect(checkSession).toHaveBeenLastCalledWith("aProfile");
     });
+
+    it("Testing that user filter prompts are executed successfully, VSCode route", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        let qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        let entered;
+
+        // Assert edge condition user cancels the input path box
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        // Normal route chooses create new then enters a value
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("HARRY.PROD");
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HARRY.PROD");
+
+        // User cancels out of input field
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce(undefined);
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
+
+        // User enters a value in the QuickPick and presses create new
+        entered = "HLQ.PROD1.STUFF";
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showInformationMessage.mockReset();
+        // Assert choosing the new filter specification but fills in path in QuickPick
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+
+        showQuickPick.mockReset();
+        qpItem = new utils.FilterItem("HLQ.PROD2.STUFF");
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
+
+        // Assert edge condition user cancels from the quick pick
+        showInformationMessage.mockReset();
+        qpItem = undefined;
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
     /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/

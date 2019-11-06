@@ -15,6 +15,7 @@ import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";
 import * as extension from "./extension";
+import { ZosJobsProvider } from "./ZosJobsProvider";
 import * as utils from "./utils";
 
 // tslint:disable-next-line: max-classes-per-file
@@ -22,28 +23,6 @@ export class Job extends vscode.TreeItem {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
-    /**
-     * Static method that creates a display string to represent a search
-     * @param owner - The owner search item
-     * @param prefix - The job prefix search item
-     * @param jobid - A specific jobid search item
-     */
-    public static createSearchLabel(owner: string, prefix: string, jobid: string): string {
-        let revisedCriteria: string = "";
-        jobid = jobid.toUpperCase();
-        const alphaNumeric = new RegExp("^\w+$");
-        if (jobid.trim().length > 1 && !alphaNumeric.test(jobid.trim())) {
-            revisedCriteria = Job.JobId+jobid.trim();
-        } else {
-            if (owner.length>0) {
-                revisedCriteria = Job.Owner+owner.trim()+ " ";
-            }
-            if (prefix.length>0) {
-                revisedCriteria += Job.Prefix+prefix.trim();
-            }
-        }
-        return revisedCriteria;
-    }
 
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     private children: Job[] = [];
@@ -139,11 +118,6 @@ export class Job extends vscode.TreeItem {
         }
         this.dirty = false;
         return this.children;
-    }
-    public getDetailLabel(): string {
-        return this.contextValue === "Job" || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
-            `${this.job.jobname}(${this.job.jobid})`
-            : Job.createSearchLabel(this.owner, this.prefix, this.searchId);
     }
 
     public reset() {
