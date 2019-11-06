@@ -11,6 +11,10 @@ The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The
 * [Prerequisites](#prerequisites)
 * [Configuration and usage tips](#configuration-and-usage-tips)
 * [Sample use cases](#sample-use-cases)
+* [USS](#uss)
+* [Data Sets](#data-sets)
+* [Jobs](#jobs)
+* [Extras](#extras)
 
 **Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](./docs/README.md) file that is located in the docs folder of this repository.
 
@@ -52,76 +56,241 @@ Extension preferences can also be modified in the `Settings` for this extension.
 
 Review the following use cases to understand how to use this extension.
 
-### View data sets and use multiple filters
+### Add profile
+
+You can add a profile for your data sets/jobs/uss files
 
 1. Navigate to your explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, enter the patterns that you want to filter.  
-  The data sets that match your pattern(s) display in the explorer tree.
+2. Click the **Search Data Sets** magnifying glass.
+3. From the drop-down, either select the profile you want to add or search using the **Search Bar**
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can prepend or append any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
-
-![Enter Pattern](https://github.com/mheuzey/temp/blob/master/resources/gifs/patterns.gif?raw=true "Enter Pattern")
+![Add profile](docs/images/Data-Set-Add-profile.gif "Add Profile")
 <br /><br />
 
-### Refresh the list of data sets
+### Refresh all
+
+Refresh the list of data sets/jobs/uss files
 
 1. Navigate to your explorer tree.
 2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar as illustrated by the following screen:
 
-![Refresh All](https://github.com/mheuzey/temp/blob/master/resources/gifs/refreshAll.gif?raw=true "Refresh All")
+**Tip:** This technique can also be used for the USS and Jobs section
+
+![Refresh All](docs/images/Refresh-all.gif "Refresh All")
 <br /><br />
 
-### Download, edit, and upload an existing PDS member
+### Integrated function
 
-1. Navigate to your explorer tree.
-2. Open the **DATA SETS** bar.
-3. Open a profile.  
-4. Click the PDS member (or PS) that you want to download.
+You can submit JCL files from data sets view and see the job spool output in jobs view
 
-    **Note:** To view the members of a PDS, click the PDS to expand the tree.
-
-    The PDS member displays in the text editor window of VSC.
-5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Safe Save** button.
-
-Your PDS member (or PS) is uploaded.  
-
-**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
-
-![Edit](https://github.com/mheuzey/temp/blob/master/resources/gifs/download_edit_upload.gif?raw=true "Edit")
+![Submit JCL](docs/images/Submit-JCL.gif "Submit JCL")
 <br /><br />
 
-### Use Safe Save to prevent merge conflicts
+## Unix System Services (USS)
+
+![USS View](docs/images/Populated-USS-List-View.png "USS View")
+<br /><br />
+
+### USS File Menu Functions
+
+#### Create a new File or Directory
+
+##### Create a Directory
 
 1. Navigate to your explorer tree.
-2. Open the **DATA SETS** bar.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory that you want to add the new directory to.
+4. Select the **Create directory** button and specify the directory name.
+   The directory is created.
+
+![Create new directory](docs/images/USS-Create-New-Directory.gif "Create new directory")
+<br /><br />
+
+##### Create File
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory that you want to add the new file to.
+4. Select the **Create file** button and specify the file name.
+   The file is created.
+
+![Create new file](docs/images/USS-Create-New-File.gif "Create new file")
+<br /><br />
+
+#### Pull from the Mainframe
+
+You can pull USS files from the mainframe
+
+1. Navigate to your explorer tree.
+2. Open the **USS** bar.
 3. Open a profile.
-4. Download and edit a data set.
-5. Click the **Safe Save** button for the data set that you opened in the explorer tree.
+4. Right click the file you want to pull.
+5. Click the **Pull from Mainframe** button.
+
+![Pull from Mainframe](docs/images/USS-Pull-From-Mainframe.gif "Pull from Mainframe")
+<br /><br />
+
+#### Safe Save
+
+You can save your USS files and merge any confilcts it may have
+
+1. Navigate to your explorer tree.
+2. Open the **USS** bar.
+3. Open a profile.
+4. Download and edit a file.
+5. Click the **Safe Save, merge if necessary** button for the file that you opened in the explorer tree.
 6. Resolve merge conflicts if necessary.
 
-![Safe Save](https://github.com/mheuzey/temp/blob/master/resources/gifs/safesave.gif?raw=true "Safe Save")
+![Safe Save](docs/images/USS-Safe-Save-Merge-If-Necessary.gif "Safe Save")
 <br /><br />
 
-### Create a new PDS and a PDS member
+#### Toggle Binary
+
+You can show the binary data of a file that changes the data transfer type to Image
+
+1. Navigate to your explorer tree.
+2. Open the **USS** bar.
+3. Open a profile.
+4. Right click the file you want to toggle the binary for.
+5. Click the **Toggle Binary** button.
+
+![Toggle binary](docs/images/USS-Toggle-Binary.gif "Toggle Binary")
+<br /><br />
+
+#### Add Favourite
+
+Add your favourite USS file to make it more accessible
+
+1. Right click the Directory/File you want to make a favourite.
+2. Click the **Add Favourite** button to add the Directory/File to your Favourites list.
+
+![Adding Favourites](docs/images/USS-Add-Favourite.gif "Adding Favourites")
+<br /><br />
+
+#### Rename
+
+You can rename a directory/file
+
+1. Right click the Directory/File you want to make a rename.
+2. Click the **Rename** button to rename the Directory/File.
+3. Rename the file and click enter to complete the renaming process.
+
+![Rename](docs/images/USS-Rename.gif "Rename")
+<br /><br />
+
+#### Delete a File or Directory
+
+##### Delete Directory
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory you want to remove.
+4. Select the **Delete** button and click yes in the confirmation dropdown.
+   The directory and all child files and directories are deleted.
+
+![Delete a directory](docs/images/USS-Delete.gif "Delete a directory")
+<br /><br />
+
+##### Delete File
+
+1. Navigate to your explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a file you want to remove.
+4. Select the **Delete** button and click yes in the confirmation dropdown.
+   The file is deleted.
+
+#### USS File opened with syntax highlighting
+
+![Syntax Highlighted](docs/images/USS-Syntax-Highlighted-File.png "Syntax Highlighted")
+<br /><br />
+
+### USS Search
+
+#### Entering a root path
+
+You can search multiple USS files by entering a path with commas in between
+
+1. Navigate to your explorer tree.
+2. Open the **USS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search USS system by entering a path** magnifying glass.
+5. From the drop-down, click the **Specify Filter** button and enter the patterns that you want to filter.  
+  The data sets that match your pattern(s) display in the explorer tree.
+
+![Entering a root path](docs/images/USS-Entering-Root-Path.gif "Entering a root path")
+<br /><br />
+
+#### Selecting USS path from history recall
+
+You can search previous USS file paths easily
+
+1. Navigate to your explorer tree.
+2. Open the **USS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search USS system by entering a path** magnifying glass.
+5. From the drop-down, select the Profile that you want.
+
+![History recall](docs/images/USS-Search-From-History.gif "History Recall")
+<br /><br />
+
+## Data Sets
+
+![Data Set View](docs/images/Populated-dataset-view.png "Data Set View")
+<br /><br />
+
+### Dataset Menu functions
+
+#### Create Data Set
 
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select the **Create New Data Set** button to specify the profile that you want to use to create the data set.
-4. From the drop-down menu, select the type of PDS that you want to create.
-5. Enter a name for the PDS.
-   The PDS is created.
-6. To create a member, right-click the PDS and select **Create New Member**.
-7. Enter a name for the member.
-   The member is created.
+4. From the drop-down menu, select the type of Data Set that you want to create.
+5. Enter a name for the Data Set.
+   The Data Set is created.
 
-![Create](https://github.com/mheuzey/temp/blob/master/resources/gifs/new_pds_new_member.gif?raw=true "Create")
+![Create Data Set](docs/images/Create-new-dataset.gif "Create Data Set")
 <br /><br />
 
-### Delete a PDS member and a PDS
+#### Create new member
+
+1. To create a member, right-click the Data Set and select **Create New Member**.
+2. Enter a name for the member.
+   The member is created.
+
+![Create Data Set member](docs/images/Create-new-member.gif "Create Data Set member")
+<br /><br />
+
+#### Upload new member
+
+You can upload a data set member enabling you to transfer data between the host and the workstation
+
+1. Click the Data Set member that you want to download.
+
+    **Note:** To view the members of a Data Set, click the Data Set to expand the tree.
+
+    The Data Set member displays in the text editor window of VSC.
+2. Edit the document.
+3. Navigate back to the Data Set member in the explorer tree, and click the **Safe Save** button.
+
+Your Data Set member is uploaded.  
+
+**Note:** If someone else has made changes to the Data Set member while you were editing it, you can merge your conflicts before uploading to the mainframe.
+
+![Upload Data Set member](docs/images/Dataset-Upload-new-member.gif "Upload Data Set member")
+<br /><br />
+
+#### Show Data Set Attributes
+
+You can see the different attributes of a data set such as the migration state
+
+1. Right Click the Data Set member that you want to find out about more.
+2. Click the **Show Data Set attributes** button.
+
+![Show Data Set Attributes](docs/images/Dataset-attributes.png "Show Data Set Attributes")
+<br /><br />
+
+#### Delete Data Set
 
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
@@ -132,111 +301,118 @@ Your PDS member (or PS) is uploaded.
     **Note:** Alternatively, you can select 'No' to cancel the deletion.
 6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
 
-    **Note:** You can delete a PDS before you you delete its members.
+    **Note:** You can delete a PDS before you delete its members.
 
-![Delete](https://github.com/mheuzey/temp/blob/master/resources/gifs/delete_pds_delete_member.gif?raw=true "Delete")
+![Delete Data Set](docs/images/Delete-dataset.gif "Upload Data Set member")
 <br /><br />
 
-### View and access multiple profiles simultaneously
+#### Dataset opened with syntax highlighting
+
+![Syntax Highlighted](docs/images/DataSet-Syntax-highlighted-file.png "Syntax Highlighted")
+<br /><br />
+
+### Datasets Search
+
+#### Entering a Dataset qualifier
+
+You can search multiple data sets by entering a path with commas in between
 
 1. Navigate to your explorer tree.
 2. Open the **DATA SETS** bar.
-3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
-4. Select the profile that you want to add to the view as illustrated by the following screen.
-
-![Add Profile](https://github.com/mheuzey/temp/blob/master/resources/gifs/addProfile.gif?raw=true "Add Profile")
-<br /><br />
-
-### Add and edit information that defines how to create data sets
-
-1. Navigate to to File, Preferences, Settings.
-2. In the section **Default User Settings**, scroll to **Zowe Configuration** and expand the options.
-3. Click the **Edit** button to the left of the Data Set settings that you want to edit.
-4. Select **Copy to Settings**.
-5. Edit the settings as needed.
-
-### View Unix System Services (USS) files
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
 3. Select the profile that you want to filter.
-4. Click the **Search Unix System Services (USS) by Entering a Path** magnifying glass.
-5. From the drop-down, enter the path that you want as the root of your displayed tree.  
-  All child files and directories of that root file are displayed in the explorer tree.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, click the **Specify Filter** button and enter the patterns that you want to filter.
+  The data sets that match your pattern(s) display in the explorer tree.
 
-  **Note:** You will not be able to expand directories or files that you are not authorised for.
+**Tip:** To provide multiple filters, separate entries with a comma. You can prepend or append any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-  ![Enter Path](./docs/images/path.gif?raw=true "Enter Path")
+![Entering a root path](docs/images/Dataset-Searching-using-comma.gif "Entering a root path")
 <br /><br />
 
-### Refresh the list of files
+#### Selecting dataset qualifier from history recall
+
+You can search previous data set paths easily
 
 1. Navigate to your explorer tree.
-2. Click **Refresh All** button on the right of the **Unix System Services (USS)** explorer bar as illustrated by the following screen:
+2. Open the **DATA SETS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, select the Data set that you want.
 
-![Refresh All](./docs/images/refreshUSS.gif?raw=true "Refresh All")
+![History recall](docs/images/Dataset-Searching-using-history.gif "History Recall")
 <br /><br />
 
-### Download, edit, and upload an existing file
+### Favourites
 
-1. Click the file that you want to download.
+#### Adding favourites
 
-    **Note:** To view the files within a directory, click the directory to expand the tree.
+Add your favourite data sets to make then more accessible
 
-    The file displays in the text editor window of VSC.
+1. Right click the Data Set you want to make a favourite
+2. Click the **Add Favourite** button to add the Data Set to your Favourites list
 
-    **Note:** If you have defined file associations with syntax coloring the suffix of your file will be marked up.
-
-2. Edit the document.
-3. Type Ctrl-s or Command-s (OSx) to save the file
-
-Your file is uploaded.  
-
-![Edit](./docs/images/editUSS.gif?raw=true "Edit")
+![Adding Favourites](docs/images/Add-favourite-dataset.gif "Adding Favourites")
 <br /><br />
 
-### Creating and deleting files and directories
+## Jobs
 
-#### Create a directory
+### Job Menu Functions
 
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory that you want to add the new directory to.
-4. Select the **Create directory** button and specify the directory name.
-   The directory is created.
+#### Get JCL for a File
 
-#### Create a file
+1. Right cick the Job you want the JCL for.
+2. Click the **Get JCL** button.
 
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory that you want to add the new file to.
-4. Select the **Create file** button and specify the file name.
-   The file is created.
-
-#### Delete a file
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a file you want to remove.
-4. Select the **Delete** button and press yes in the confirmation dropdown.
-   The file is deleted.
-
-#### Delete a directory
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory you want to remove.
-4. Select the **Delete** button and press yes in the confirmation dropdown.
-   The directory and all child files and directories are deleted.
-
-![Create and Delete](./docs/images/CreateDelete.gif?raw=true "Create and Delete")
+![Get JCL of a File](docs/images/Jobs-Get-JCL.gif "Get JCL of a File")
 <br /><br />
 
-### View and access multiple USS profiles simultaneously
+#### Issue Modify Command
+
+Use the modify command to pass information to a job or started task
+
+1. Right cick the Job you want to issue the modify command on.
+2. Click the **Issue Modify Command** button.
+
+![Modify Command](docs/images/Jobs-Issue-Modify-Command.gif "Modify Command")
+<br /><br />
+
+#### Issue Stop Command
+
+Use the Stop command to stop system functions and jobs in execution
+
+1. Right cick the Job you want to issue the modify command on.
+2. Click the **Issue Stop Command** button.
+
+![Stop Command](docs/images/Jobs-Issue-Stop-Command.gif "Stop Command")
+<br /><br />
+
+#### Delete Job
+
+1. Hover your mouse over the job you want to delete
+2. Click the **Delete** trash can button.
+
+#### Download Spool
+
+You can use this operation to retrieve the contents of a job spool file
 
 1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Click the **Add Profile** button on the right of the **Unix System Services (USS)** explorer bar.
-4. Select the profile that you want to add to the view as illustrated by the following screen.
+2. Open the **Jobs** bar.
+3. Open a profile.
+4. Click the **Download Spool** button for the Job you want.
 
-![Add Profile](./docs/images/profile2.gif?raw=true "Add Profile")
+![Download Spool](docs/images/Jobs-Download-Spool.gif "Download Spool")
+<br /><br />
+
+## Additional functionality
+
+### Issue a TSO Command
+
+You can issue TSO commands such as Allocate or Exec against a profile.
+
+1. Use _Cmnd+Shift+P_
+2. Click the **Zowe:Issue TSO Command** button
+3. Select the profile you want to issue the command on
+4. Type in your command
+
+![Issue TSO Command](docs/images/Jobs-Issue-TSO-Command.gif "Issue TSO Command")
+<br /><br />
