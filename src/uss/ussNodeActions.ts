@@ -35,7 +35,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await ZoweVscApiRegister.getInstance().create(node.profile, node.getSession(), filePath, nodeType);
+            await ZoweVscApiRegister.getUssApi(node.profile).create(node.getSession(), filePath, nodeType);
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
@@ -56,7 +56,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
         ignoreFocusOut: true,
         canPickMany: false
     };
-    const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
+    const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "file"], quickPickOptions);
     const isTopLevel = true;
     return createUSSNode(node, ussFileProvider, type, isTopLevel);
 }
@@ -77,7 +77,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
     try {
         const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-        await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
+        await ZoweVscApiRegister.getUssApi(node.profile).delete(node.getSession(), nodePath, isRecursive);
         node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {

@@ -9,10 +9,9 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
 import * as imperative from "@brightside/imperative";
 
-import { IZoweVscUssApi, IZoweVscMvsApi, IZoweVscApiRegister } from "./IZoweVscRestApis";
+import { ZoweVscApi } from "./IZoweVscRestApis";
 import { ZoweVscZosmfUssRestApi } from "./ZoweVscZosmfRestApi";
 
 /**
@@ -20,7 +19,7 @@ import { ZoweVscZosmfUssRestApi } from "./ZoweVscZosmfRestApi";
  * @export
  * @class ZoweVscApiRegister
  */
-export class ZoweVscApiRegister implements IZoweVscApiRegister {
+export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
 
     /**
      * Access the singleton instance.
@@ -34,6 +33,17 @@ export class ZoweVscApiRegister implements IZoweVscApiRegister {
     }
 
     /**
+     * Static lookup of an API for USS for a given profile.
+     * @private
+     * @param {string} profileType
+     * @returns
+     * @memberof ZoweVscApiRegister
+     */
+    public static getUssApi(profile: imperative.IProfileLoaded): ZoweVscApi.IUss {
+        return ZoweVscApiRegister.getInstance().getUssApi(profile);
+    }
+
+    /**
      * This object represents the API that gets exposed to other VS Code extensions
      * that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
@@ -41,12 +51,12 @@ export class ZoweVscApiRegister implements IZoweVscApiRegister {
     private static register: ZoweVscApiRegister = new ZoweVscApiRegister();
 
     // These are the different API registries available to extenders
-    private zoweVscUssApiImplementations = new Map<string, IZoweVscUssApi>();
-    private zoweVscMvsApiImplementations = new Map<string, IZoweVscMvsApi>(); // TODO
+    private zoweVscUssApiImplementations = new Map<string, ZoweVscApi.IUss>();
+    private zoweVscMvsApiImplementations = new Map<string, ZoweVscApi.IMvs>(); // TODO
 
     /**
      * Creates an instance of ZoweVscApiRegister.
-     * @param {IZoweVscUssApi} [ussApi] Optional. If none provided then it will be initialized with a zOSMF Api.
+     * @param {ZoweVscApi.IUss} [ussApi] Optional. If none provided then it will be initialized with a zOSMF Api.
      */
     private constructor() {
         this.registerUssApi(new ZoweVscZosmfUssRestApi());
@@ -54,9 +64,9 @@ export class ZoweVscApiRegister implements IZoweVscApiRegister {
 
     /**
      * Other VS Code extension need to call this to register their USS APIs.
-     * @param {IZoweVscUssApi} ussApi
+     * @param {ZoweVscApi.IUss} ussApi
      */
-    public registerUssApi(ussApi: IZoweVscUssApi): void {
+    public registerUssApi(ussApi: ZoweVscApi.IUss): void {
         if (ussApi && ussApi.getProfileTypeName()) {
             this.zoweVscUssApiImplementations.set(ussApi.getProfileTypeName(), ussApi);
         } else {
@@ -91,39 +101,14 @@ export class ZoweVscApiRegister implements IZoweVscApiRegister {
         return [...this.zoweVscMvsApiImplementations.keys()];
     }
 
-    // ** Start Common API Methods
-    public createSession(profile: imperative.IProfileLoaded): imperative.Session {
-        return this.getUssApi(profile).createSession(profile.profile);
-    }
-
-    // ** Start of USS Methods
-
-    public async fileList(
-        profile: imperative.IProfileLoaded,
-        session: imperative.Session,
-        path: string): Promise<zowe.IZosFilesResponse>{
-        return this.getUssApi(profile).fileList(session, path);
-    }
-
-    public async create(
-        profile: imperative.IProfileLoaded,
-        session: imperative.Session,
-        ussPath: string,
-        type: string,
-        mode?: string): Promise<string> {
-        return this.getUssApi(profile).create(session, ussPath, type, mode);
-    }
-
-    // ** Private utility methods
-
     /**
-     * Shortcut to look up an API for USS.
+     * Lookup of an API for USS for a given profile.
      * @private
      * @param {string} profileType
      * @returns
      * @memberof ZoweVscApiRegister
      */
-    private getUssApi(profile: imperative.IProfileLoaded): IZoweVscUssApi {
+    public getUssApi(profile: imperative.IProfileLoaded): ZoweVscApi.IUss {
         if (profile && profile.type && this.registeredUssApiTypes().includes(profile.type)) {
             return this.zoweVscUssApiImplementations.get(profile.type);
         }

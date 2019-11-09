@@ -1222,7 +1222,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
             throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
     }
     try {
-        await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+        await ZoweVscApiRegister.getUssApi(node.profile).getContents(node.getSession(), node.fullPath, {
             file: getUSSDocumentFilePath(node)
         });
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
@@ -1298,7 +1298,8 @@ export async function safeSaveUSS(node: ZoweUSSNode) {
     try {
         // Switch case from `safeSave` not needed, as we will only ever receive a file
         log.debug("Invoking safesave for USS file " + node.fullPath);
-        await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+        await ZoweVscApiRegister.getUssApi(node.profile).getContents(
+            node.getSession(), node.fullPath, {
             file: getUSSDocumentFilePath(node)
         });
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
@@ -1418,7 +1419,8 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary);  // TODO MISSED TESTING
+            return ZoweVscApiRegister.getUssApi(sesNode.profile)
+                .putContents(documentSession, doc.fileName, remote, binary);  // TODO MISSED TESTING
         });
         if (response.success) {
             vscode.window.showInformationMessage(response.commandResponse);
@@ -1458,16 +1460,19 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
         log.debug(localize("openUSS.log.debug.request", "requesting to open a uss file ") + label);
         // if local copy exists, open that instead of pulling from mainframe
         if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
-            const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
+            const chooseBinary = node.binary ||
+                await ZoweVscApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.getSession(), node.fullPath);
             await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: "Opening USS file...",
-        }, function downloadUSSFile() {
-            return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
-                file: getUSSDocumentFilePath(node),
-                binary: chooseBinary
-            });
-        }
+                    location: vscode.ProgressLocation.Notification,
+                    title: "Opening USS file...",
+                }, function downloadUSSFile() {
+                    return ZoweVscApiRegister.getUssApi(node.profile).getContents(
+                        node.getSession(), node.fullPath, { // TODO MISSED TESTING
+                            file: getUSSDocumentFilePath(node),
+                            binary: chooseBinary
+                        }
+                    );
+                }
             );
         }
         const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
