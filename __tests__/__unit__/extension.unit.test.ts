@@ -836,7 +836,7 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        showQuickPick.mockReset();
+
         showQuickPick.mockResolvedValueOnce("firstName");
         await extension.addSession(testTree);
     });
@@ -853,7 +853,7 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        showQuickPick.mockReset();
+
         showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
         try {
             await extension.addSession(testTree);
@@ -893,7 +893,7 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        showQuickPick.mockReset();
+
         showQuickPick.mockResolvedValueOnce("firstName");
         await extension.addJobsSession(testJobsTree);
     });
@@ -909,8 +909,7 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        Object.defineProperty(profileLoader.Profiles.getInstance, "createNewConnection", {value: jest.fn()});
-        showQuickPick.mockReset();
+
         showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
         try {
             await extension.addJobsSession(testJobsTree);
@@ -1629,7 +1628,7 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        showQuickPick.mockReset();
+
         showQuickPick.mockResolvedValueOnce("firstName");
         await extension.addUSSSession(testUSSTree);
     });
@@ -1645,8 +1644,7 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        Object.defineProperty(profileLoader.Profiles.getInstance, "createNewConnection", {value: jest.fn()});
-        showQuickPick.mockReset();
+
         showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
         try {
             await extension.addUSSSession(testUSSTree);

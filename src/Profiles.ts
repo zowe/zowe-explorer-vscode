@@ -214,7 +214,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         try {
             newp = await this.saveProfile(IConnection, IConnection.name, "zosmf");
         } catch (error) {
-            throw (error);
+            vscode.window.showErrorMessage(error.message);
         }
         await zowe.ZosmfSession.createBasicZosmfSession(newp);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");

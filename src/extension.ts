@@ -590,12 +590,12 @@ export async function addSession(datasetProvider: DatasetTree) {
         try {
             newprofile = await Profiles.getInstance().createNewConnection();
         } catch (error) {
-            throw (error);
+            vscode.window.showErrorMessage(error.message);
         }
         try {
             Profiles.getInstance().listProfile();
         } catch (error) {
-            throw (error);
+            vscode.window.showErrorMessage(error.message);
         }
         await datasetProvider.addSession(newprofile);
         await datasetProvider.refresh();
@@ -644,12 +644,12 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         try {
             newprofile = await Profiles.getInstance().createNewConnection();
         } catch (error) {
-            throw (error);
+            vscode.window.showErrorMessage(error.message);
         }
         try {
             Profiles.getInstance().listProfile();
         } catch (error) {
-            throw (error);
+            vscode.window.showErrorMessage(error.message);
         }
         await ussFileProvider.addSession(newprofile);
         await ussFileProvider.refresh();
@@ -1565,12 +1565,12 @@ export async function addJobsSession(jobsProvider: ZosJobsProvider) {
             try {
                 newprofile = await Profiles.getInstance().createNewConnection();
             } catch (error) {
-                throw (error);
+                vscode.window.showErrorMessage(error.message);
             }
             try {
                 Profiles.getInstance().listProfile();
             } catch (error) {
-                throw (error);
+                vscode.window.showErrorMessage(error.message);
             }
             await jobsProvider.addSession(newprofile);
             await jobsProvider.refresh();
