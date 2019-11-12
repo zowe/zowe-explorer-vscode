@@ -975,7 +975,7 @@ describe("Extension Unit Tests", () => {
         delDataset.mockRejectedValueOnce(Error("not found"));
         showQuickPick.mockResolvedValueOnce("Yes");
 
-        await extension.deleteDataset(node, testTree);
+        await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error("not found"));
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably already deleted.");
@@ -985,7 +985,7 @@ describe("Extension Unit Tests", () => {
         delDataset.mockRejectedValueOnce(Error(""));
         showQuickPick.mockResolvedValueOnce("Yes");
 
-        await extension.deleteDataset(child, testTree);
+        await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
@@ -1076,7 +1076,7 @@ describe("Extension Unit Tests", () => {
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
-        await extension.deleteDataset(child, testTree);
+        await expect(extension.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0].message).toEqual("deleteDataSet() called from invalid node.");
     });
