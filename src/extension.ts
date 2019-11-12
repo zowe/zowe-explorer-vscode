@@ -46,6 +46,7 @@ export const DS_DS_CONTEXT = "ds";
 export const DS_MEMBER_CONTEXT = "member";
 export const DS_TEXT_FILE_CONTEXT = "textFile";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
+export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const USS_SESSION_CONTEXT = "uss_session";
 export const USS_DIR_CONTEXT = "directory";
 export const JOBS_SESSION_CONTEXT = "server";

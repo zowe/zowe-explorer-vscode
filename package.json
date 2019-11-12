@@ -729,6 +729,21 @@
           "group": "4_workspace"
         },
         {
+          "when": "view == zowe.explorer && viewItem == migr",
+          "command": "zowe.showDSAttributes",
+          "group": "2_information"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == migr",
+          "command": "zowe.addFavorite",
+          "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == migr_fav",
+          "command": "zowe.removeFavorite",
+          "group": "4_workspace"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == session",
           "command": "zowe.pattern",
           "group": "inline"
