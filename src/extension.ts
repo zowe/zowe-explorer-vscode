@@ -909,6 +909,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         } else {
             vscode.window.showErrorMessage(err);
         }
+        throw err;
     }
 
     // remove node from tree
