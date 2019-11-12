@@ -587,8 +587,16 @@ export async function addSession(datasetProvider: DatasetTree) {
     const chosenProfile = await vscode.window.showQuickPick([createNewProfile, ...profileNamesList], quickPickOptions);
     if (chosenProfile === createNewProfile) {
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        newprofile = await Profiles.getInstance().createNewConnection();
-        Profiles.getInstance().listProfile();
+        try {
+            newprofile = await Profiles.getInstance().createNewConnection();
+        } catch (error) {
+            throw (error);
+        }
+        try {
+            Profiles.getInstance().listProfile();
+        } catch (error) {
+            throw (error);
+        }
         await datasetProvider.addSession(newprofile);
         await datasetProvider.refresh();
     } else if(chosenProfile) {
@@ -633,8 +641,16 @@ export async function addUSSSession(ussFileProvider: USSTree) {
     const chosenProfile = await vscode.window.showQuickPick([createNewProfile, ...profileNamesList], quickPickOptions);
     if (chosenProfile === createNewProfile) {
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        newprofile = await Profiles.getInstance().createNewConnection();
-        Profiles.getInstance().listProfile();
+        try {
+            newprofile = await Profiles.getInstance().createNewConnection();
+        } catch (error) {
+            throw (error);
+        }
+        try {
+            Profiles.getInstance().listProfile();
+        } catch (error) {
+            throw (error);
+        }
         await ussFileProvider.addSession(newprofile);
         await ussFileProvider.refresh();
     } else if(chosenProfile) {
@@ -1546,8 +1562,16 @@ export async function addJobsSession(jobsProvider: ZosJobsProvider) {
         const chosenProfile = await vscode.window.showQuickPick([createNewProfile, ...profileNamesList], quickPickOptions);
         if (chosenProfile === createNewProfile) {
             log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-            newprofile = await Profiles.getInstance().createNewConnection();
-            Profiles.getInstance().listProfile();
+            try {
+                newprofile = await Profiles.getInstance().createNewConnection();
+            } catch (error) {
+                throw (error);
+            }
+            try {
+                Profiles.getInstance().listProfile();
+            } catch (error) {
+                throw (error);
+            }
             await jobsProvider.addSession(newprofile);
             await jobsProvider.refresh();
         } else if(chosenProfile) {

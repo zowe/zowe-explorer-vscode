@@ -150,26 +150,31 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            let success = false;
+            let success = true;
             // Do more test
             try {
                 await profiles.createNewConnection();
             } catch (error) {
-                success = true;
+                success = false;
             }
             expect(success).toBe(true);
-            if (!success) {
+            if (success) {
                 expect(showInformationMessage.mock.calls.length).toBe(1);
-                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created");
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
             } else {
                 expect(showInformationMessage.mock.calls.length).toBe(0);
-            // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
             }
         });
 
         it("should validate URL", async () => {
             const res = await Profiles.getInstance().validateUrl("fake/url");
             expect(res).toBe(false);
+        });
+
+        it("should validate URL", async () => {
+            const res = await Profiles.getInstance().validateUrl("https://fake:143");
+            expect(res).toBe(true);
         });
 
         it("it should validate duplicate profiles", async () => {
@@ -221,6 +226,11 @@ describe("Profile class unit tests", () => {
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
         expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
+        try {
+            expect(Profiles.getInstance().listProfile()).toEqual([profileOne, profileTwo]);
+        } catch (error) {
+            // Do Nothing
+        }
     });
 
     it("should route through to spawn. Coverage of error handling", async () => {
@@ -255,5 +265,10 @@ describe("Profile class unit tests", () => {
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
         expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
+        try {
+            expect(Profiles.getInstance().listProfile()).toEqual([profileOne, profileTwo]);
+        } catch (error) {
+            // Do Nothing
+        }
     });
 });

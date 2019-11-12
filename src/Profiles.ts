@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
 import * as fs from "fs";
@@ -209,6 +209,19 @@ export class Profiles { // Processing stops if there are no profiles detected
             rejectUnauthorized: rejectUnauthorize,
         };
 
+        let newp: IProfile;
+
+        try {
+            newp = await this.saveProfile(IConnection, IConnection.name, "zosmf");
+        } catch (error) {
+            throw (error);
+        }
+        await zowe.ZosmfSession.createBasicZosmfSession(newp);
+        vscode.window.showInformationMessage("Profile " + profileName + " was created.");
+        return profileName;
+    }
+
+    private async saveProfile(prof, nme, typ) {
         const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
         // we have to mock a few things to get the Imperative.init to work properly
         (process.mainModule as any).filename = require.resolve("@brightside/core");
@@ -218,10 +231,8 @@ export class Profiles { // Processing stops if there are no profiles detected
         const zosmfProfile = await new CliProfileManager({
             profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
             type: "zosmf"
-        }).save({profile: IConnection, name: IConnection.name, type: "zosmf"});
-        await zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-        vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-        return profileName;
+        }).save({profile: prof, name: nme, type: typ});
+        return zosmfProfile.profile;
     }
 
     private isSpawnReqd() {
