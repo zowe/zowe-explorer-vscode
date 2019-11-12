@@ -1131,6 +1131,7 @@
     "jsdom": "11.11.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
+    "mem": ">=4.0.0",
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
