@@ -233,6 +233,19 @@ describe("Profile class unit tests", () => {
         }
     });
 
+    it("should call listProfile", async () => {
+        Object.defineProperty(Profiles.getInstance, "listProfile", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                };
+            })
+        });
+        const res = await Profiles.getInstance().listProfile();
+        expect(res).not.toBeNull();
+    });
+
     it("should route through to spawn. Coverage of error handling", async () => {
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {

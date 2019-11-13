@@ -831,6 +831,27 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
+                    allProfiles: [],
+                    defaultProfile: undefined
+                };
+            })
+        });
+
+        await extension.addSession(testTree);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
+        });
+
+    });
+
+    it("Testing that addSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"}
                 };
@@ -2362,6 +2383,21 @@ describe("Extension Unit Tests", () => {
             placeHolder: "Select the Profile to use to submit the command"
         });
         expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand function", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined,
+                };
+            })
+        });
+        await extension.issueTsoCommand(outputChannel);
+        expect(expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available"));
     });
 
     it("tests the issueTsoCommand error function", async () => {

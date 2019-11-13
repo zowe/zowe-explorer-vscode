@@ -89,10 +89,18 @@ export class Profiles { // Processing stops if there are no profiles detected
     }
 
     public listProfile(){
-        this.allProfiles = ProfileLoader.loadAllProfiles();
-        this.allProfiles.map((profile) => {
-            return profile.name;
-        });
+        try {
+            this.allProfiles = ProfileLoader.loadAllProfiles();
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        try {
+            this.allProfiles.map((profile) => {
+                return profile.name;
+            });
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
         return this.allProfiles;
     }
 
@@ -224,14 +232,31 @@ export class Profiles { // Processing stops if there are no profiles detected
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
         const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
         // we have to mock a few things to get the Imperative.init to work properly
-        (process.mainModule as any).filename = require.resolve("@brightside/core");
-        ((process.mainModule as any).paths as any).unshift(mainZoweDir);
-        // we need to call Imperative.init so that any installed credential manager plugins are loaded
-        await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-        const zosmfProfile = await new CliProfileManager({
-            profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
-            type: "zosmf"
-        }).save({profile: ProfileInfo, name: ProfileName, type: ProfileType});
+        try {
+            (process.mainModule as any).filename = require.resolve("@brightside/core");
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        try {
+            ((process.mainModule as any).paths as any).unshift(mainZoweDir);
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        try {
+            // we need to call Imperative.init so that any installed credential manager plugins are loaded
+            await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        let zosmfProfile: IProfile;
+        try {
+            zosmfProfile = await new CliProfileManager({
+                profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
+                type: "zosmf"
+            }).save({profile: ProfileInfo, name: ProfileName, type: ProfileType});
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
         return zosmfProfile.profile;
     }
 
