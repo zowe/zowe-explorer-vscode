@@ -88,7 +88,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         }
     }
 
-    public listProfile(){
+    public listProfile() {
         try {
             this.allProfiles = ProfileLoader.loadAllProfiles();
         } catch (error) {

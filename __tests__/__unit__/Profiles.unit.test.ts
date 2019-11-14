@@ -13,8 +13,9 @@ jest.mock("vscode");
 jest.mock("child_process");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger } from "@brightside/imperative";
+import { Logger, profileLoadError } from "@brightside/imperative";
 import { Profiles } from "../../src/Profiles";
+import * as loader from "../../src/ProfileLoader";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -197,16 +198,8 @@ describe("Profile class unit tests", () => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
                 return {
                     status: 0,
-                    stdout: {
-                        toString: jest.fn(() => {
-                            return stdout;
-                        })
-                    },
-                    stderr: {
-                        toString: jest.fn(() => {
-                            return stderr;
-                        })
-                    },
+                    stdout,
+                    stderr
                 };
             };
             if (args[0].indexOf("getAllProfiles") >= 0) {
@@ -226,27 +219,40 @@ describe("Profile class unit tests", () => {
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
         expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
-        try {
-            expect(Profiles.getInstance().listProfile()).toEqual([profileOne, profileTwo]);
-        } catch (error) {
-            // Do Nothing
-        }
     });
 
     it("should call listProfile", async () => {
-        Object.defineProperty(Profiles.getInstance, "listProfile", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                };
-            })
-        });
-        const res = await Profiles.getInstance().listProfile();
-        expect(res).not.toBeNull();
+        const res = (await Profiles.createInstance(log)).listProfile();
+        expect(res).toEqual([profileOne, profileTwo]);
     });
 
     it("should route through to spawn. Coverage of error handling", async () => {
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
+            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
+                return {
+                    status: 0,
+                    stdout,
+                    stderr
+                };
+            };
+            if (args[0].indexOf("getAllProfiles") >= 0) {
+                return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
+            } else {
+                // load default profile
+                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
+            }
+        });
+        mockJSONParse.mockReturnValueOnce({
+            overrides: undefined
+        });
+        mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
+        mockJSONParse.mockReturnValueOnce(profileOne);
+        await Profiles.createInstance(log);
+        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+        expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
+    });
+
+    it("should handle loadDefaultProfile throwing an error", async () => {
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
                 return {
@@ -267,7 +273,7 @@ describe("Profile class unit tests", () => {
                 return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
             } else {
                 // load default profile
-                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
+                return createFakeChildProcess(1, "", "");
             }
         });
         mockJSONParse.mockReturnValueOnce({
@@ -275,13 +281,17 @@ describe("Profile class unit tests", () => {
         });
         mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
         mockJSONParse.mockReturnValueOnce(profileOne);
-        await Profiles.createInstance(log);
-        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
-        expect(Profiles.getInstance().defaultProfile).toEqual(profileOne);
-        try {
-            expect(Profiles.getInstance().listProfile()).toEqual([profileOne, profileTwo]);
-        } catch (error) {
-            // Do Nothing
-        }
+        const checkLoader = jest.spyOn(loader, "loadDefaultProfile");
+        // Mocking log.debug
+        const logA = new Logger(undefined);
+        Object.defineProperty(logA, "warn", {
+            value: jest.fn()
+        });
+        const mockWarn = jest.spyOn(logA, "warn");
+        await Profiles.createInstance(logA);
+        expect(checkLoader).toHaveBeenCalledTimes(1);
+        expect(mockWarn.mock.calls.length).toBe(1);
+        expect(mockWarn.mock.calls[0][0]).toContain("Unable to locate a default profile. CLI may not be installed.");
     });
+
 });
