@@ -1,6 +1,6 @@
 # Zowe Explorer
 
-Zowe&trade; Explorer extension modernizes the way developers and sytem administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
+Zowe&trade; Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
 * Enables developers to create, modify, and upload data set and USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
@@ -18,11 +18,12 @@ Zowe&trade; Explorer extension modernizes the way developers and sytem administr
 
 ## Prerequisites
 
-To use Zowe Explorer, you need to create at least one Zowe CLI `zosmf` profile. 
+To use Zowe Explorer, you need to create at least one Zowe CLI `zosmf` profile.
 
 **Notes:**
-  * You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
-  * Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
+
+* You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
+* Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
 
 Create a Zowe CLI `zosmf` profile.
 
@@ -36,7 +37,7 @@ Create a Zowe CLI `zosmf` profile.
 3. Select the **Create a New Connection to z/OS** option.
 4. Follow the instructions, and enter all required information to complete the profile creation.
 
-![New Connection](../docs/images/ZE-create-new-connection.gif?raw=true "New Connection")
+![New Connection](docs/images/ZE-create-new-connection.gif?raw=true "New Connection")
 <br /><br />
 
 You successfully created a Zowe CLI `zosmf` profile. Now you can use all the functionalities of the extension.
@@ -48,6 +49,33 @@ Use the following tips to familiarize yourself with the extension and make the b
 * **Data set persistence settings:** You can enable the persistence of any data sets and USS files by adding them to the **Favorites** tab. Right-click on a data set or USS file and click **Add Favorite**.
 
 * By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM Z Open Editor](https://marketplace.visualstudio.com/items?itemName=IBM.zopeneditor).
+
+### Advanced Configuration
+
+You can modify Zowe Explorer preferences in the extension `Setting` in the following ways:
+
+* **Temp Folder Location:** You can change the default folder location where temporary files are stored. For example, use the following script:
+
+```json
+"Zowe-Temp-Folder-Location": {
+    "folderPath": "/path/to/directory"
+  }
+```
+
+where **/path/to/directory** is the folder location that you specify.
+
+* **Data set creation settings:** You can change the default creation settings for various data set types.
+
+1. Navigate to the extension configuration manager.
+2. In the section **Extensions**, scroll to **Zowe Configuration** and expand the options.
+3. Click the **Edit in settings.json** button under the Data Set settings that you want to edit.
+4. Edit the settings as needed.
+5. Save the settings.
+
+
+![Configure Zowe settings](docs/images/ZE-Configuration.gif?raw=true "Configure Zowe settings")
+<br /><br />
+
 
 ## Sample use cases
 
@@ -69,27 +97,6 @@ You can use the following functionalties when interacting with data set:
 * **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
 * **Submit a JCL**: You can submit a jcl from a chosen data set.
 
-#### Advanced Configuration
-
-You can modify Zowe Explorer preferences in the extension `Setting` in the following ways:
-
-* **Data set creation settings:** You can change the default creation settings for various data set types.
-
-* **Temp Folder Location:** You can change the default folder location where temporary files are stored. For example, use the following script:
-
-```json
-"Zowe-Temp-Folder-Location": {
-    "folderPath": "/path/to/directory"
-  }
-```
-  where:
-  * **"/path/to/directory"**
-    
-    the folder location that you specify.
-
-![Configure Zowe settings](../../ZE-Configuration.gif?raw=true "Configure Zowe settings")
-<br /><br />
-
 #### View data sets and use multiple filters
 
 1. Navigate to the explorer tree.
@@ -101,7 +108,7 @@ You can modify Zowe Explorer preferences in the extension `Setting` in the follo
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
-![View Data Set](../../ZE-multiple-search.gif?raw=true "View Data Set")
+![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
 #### Refresh the list of data sets
@@ -126,7 +133,7 @@ Your PDS member (or PS) is uploaded.
 
 **Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
 
-![Edit](../../ZE-download-edit.gif?raw=true "Edit")
+![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
 #### Use Safe Save to prevent merge conflicts
@@ -138,7 +145,7 @@ Your PDS member (or PS) is uploaded.
 5. Click the **Safe Save** button for the data set that you opened in the explorer tree.
 6. Resolve merge conflicts if necessary.
 
-![Safe Save](../../ZE-safe-save.gif?raw=true "Safe Save")
+![Safe Save](docs/images/ZE-safe-save.gif?raw=true "Safe Save")
 <br /><br />
 
 #### Create a new PDS and a PDS member
@@ -153,7 +160,7 @@ Your PDS member (or PS) is uploaded.
 7. Enter a name for the member.
    The member is created.
 
-![Create](../../ZE-cre-pds-member.gif?raw=true "Create")
+![Create](docs/images/ZE-cre-pds-member.gif?raw=true "Create")
 <br /><br />
 
 #### Delete a PDS member and PDS
@@ -169,7 +176,7 @@ Your PDS member (or PS) is uploaded.
 
     **Note:** You can delete a PDS before you delete its members.
 
-![Delete](../../ZE-del-pds-member.gif?raw=true "Delete")
+![Delete](docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
 #### View and access multiple profiles simultaneously
@@ -179,17 +186,11 @@ Your PDS member (or PS) is uploaded.
 3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-![Add Profile](../../ZE-mult-profiles.gif?raw=true "Add Profile")
+![Add Profile](docs/images/ZE-mult-profiles.gif?raw=true "Add Profile")
 <br /><br />
 
-#### Add and edit information that defines how to create data sets
-
-1. Navigate to to File, Preferences, Settings.
-2. In the section **Default User Settings**, scroll to **Zowe Configuration** and expand the options.
-3. Click the **Edit** button to the left of the Data Set settings that you want to edit.
-4. Select **Copy to Settings**.
-5. Edit the settings as needed.
 ---
+
 ### USS
 
 You can use the following functionalties when interacting with USS files:
@@ -210,7 +211,7 @@ You can use the following functionalties when interacting with USS files:
 
   **Note:** You will not be able to expand directories or files that you are not authorised for.
 
-  ![Enter Path](../../ZE-path.gif?raw=true "Enter Path")
+  ![Enter Path](docs/images/ZE-path.gif?raw=true "Enter Path")
 <br /><br />
 
 #### Refresh the list of files
@@ -218,7 +219,7 @@ You can use the following functionalties when interacting with USS files:
 1. Navigate to the explorer tree.
 2. Click **Refresh All** button on the right of the **Unix System Services (USS)** explorer bar as illustrated by the following screen:
 
-![Refresh All](../../ZE-refreshUSS.gif?raw=true "Refresh All")
+![Refresh All](docs/images/ZE-refreshUSS.gif?raw=true "Refresh All")
 <br /><br />
 
 #### Download, edit, and upload an existing file
@@ -236,7 +237,7 @@ You can use the following functionalties when interacting with USS files:
 
 Your file is uploaded.  
 
-![Edit](../../ZE-editUSS.gif?raw=true "Edit")
+![Edit](docs/images/ZE-editUSS.gif?raw=true "Edit")
 <br /><br />
 
 #### Creating and deleting files and directories
@@ -273,7 +274,7 @@ Your file is uploaded.
 4. Select the **Delete** button and press yes in the confirmation dropdown.
    The directory and all child files and directories are deleted.
 
-![Create and Delete](../../ZE-CreateDelete.gif?raw=true "Create and Delete")
+![Create and Delete](docs/images/ZE-CreateDelete.gif?raw=true "Create and Delete")
 <br /><br />
 
 #### View and access multiple USS profiles simultaneously
@@ -283,7 +284,7 @@ Your file is uploaded.
 3. Click the **Add Session** button on the right of the **Unix System Services (USS)** explorer bar.
 4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-![View Profiles](../../ZE-profile2.gif?raw=true "View Profiles")
+![View Profiles](docs/images/ZE-profile2.gif?raw=true "View Profiles")
 <br /><br />
 
 ---
@@ -302,7 +303,7 @@ You can use the following functionalties when interacting with Jobs:
 3. Select a directory with JCL files.
 4. Right-click on the JCL you want to view, and click **Get JCL**.
 
-![View JOB](../../ZE-jobs-get-jcl.gif?raw=true "View JOB")
+![View JOB](docs/images/ZE-jobs-get-jcl.gif?raw=true "View JOB")
 <br /><br />
 
 #### Download spool content
@@ -313,7 +314,7 @@ You can use the following functionalties when interacting with Jobs:
 4. Click the **Download** icon next to a folder with the spool content.
 5. Save the file on your computer.
 
-![Download Spool](../../ZE-jobs-download-spool.gif?raw=true "Download Spool")
+![Download Spool](docs/images/ZE-jobs-download-spool.gif?raw=true "Download Spool")
 <br /><br />
 
 ---
@@ -326,8 +327,7 @@ Zowe Explorer also enables you to issue TSO command. You can issue such commands
 
 1. Press the **F1** key on your keyboard.
 2. Select the **Zowe:Issue TSO Command** option.
-3. Select your profile. 
+3. Select your profile.
 4. Issue a TSO command.
 
-![Issue a TSO command](../../ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a TSO command")
-<br /><br />
+![Issue a TSO command](docs/images/ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a TSO command")
