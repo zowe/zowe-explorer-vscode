@@ -114,7 +114,7 @@ export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
     try {
         const newNamePath = node.mParent.fullPath + "/" +  newName;
-        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
+        await ZoweVscApiRegister.getUssApi(node.profile).rename(node.getSession(), node.fullPath, newNamePath);
         if (node.contextValue === extension.USS_DIR_CONTEXT || node.mParent.contextValue === extension.USS_SESSION_CONTEXT) {
             refreshAllUSS(ussFileProvider);
         } else {
@@ -163,7 +163,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
+        await ZoweVscApiRegister.getUssApi(node.profile).putContents(node.getSession(), doc.fileName, ussName);
     } catch (e) {
         vscode.window.showErrorMessage(e.message);
     }

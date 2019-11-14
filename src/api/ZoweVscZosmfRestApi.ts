@@ -48,4 +48,13 @@ export class ZoweVscZosmfUssRestApi implements ZoweVscApi.IUss {
     public async delete(session: imperative.Session, fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
         return zowe.Delete.ussFile(session, fileName, recursive);
     }
+
+    public async rename(session: imperative.Session, oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {
+        const result = await zowe.Utilities.renameUSSFile(session, oldFilePath, newFilePath);
+        return {
+            success: true,
+            commandResponse: null,
+            apiResponse: result
+        };
+    }
 }

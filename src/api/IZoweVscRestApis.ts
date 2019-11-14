@@ -124,7 +124,14 @@ export namespace ZoweVscApi {
         delete(
             session: imperative.Session,
             fileName: string,
-            recursive?: boolean): Promise<zowe.IZosFilesResponse>;
+            recursive?: boolean
+        ): Promise<zowe.IZosFilesResponse>;
+
+        rename(
+            session: imperative.Session,
+            oldFilePath: string,
+            newFilePath: string
+        ): Promise<zowe.IZosFilesResponse>;
     }
 
     // TODO
