@@ -72,10 +72,8 @@ where **/path/to/directory** is the folder location that you specify.
 4. Edit the settings as needed.
 5. Save the settings.
 
-
 ![Configure Zowe settings](docs/images/ZE-Configuration.gif?raw=true "Configure Zowe settings")
 <br /><br />
-
 
 ## Sample use cases
 
@@ -152,7 +150,7 @@ Your PDS member (or PS) is uploaded.
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Select the **Create New Data Set** button to specify the profile that you want to use to create the data set.
+3. Click the **Create New Data Set** button to specify the profile that you want to create the data set with.
 4. From the drop-down menu, select the type of PDS that you want to create.
 5. Enter a name for the PDS.
    The PDS is created.
@@ -242,7 +240,7 @@ Your file is uploaded.
 
 #### Creating and deleting files and directories
 
-**Create a directory**
+#### Create a directory
 
 1. Navigate to the explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -250,7 +248,7 @@ Your file is uploaded.
 4. Select the **Create directory** button and specify the directory name.
    The directory is created.
 
-**Create a file**
+#### Create a file
 
 1. Navigate to the explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -258,7 +256,7 @@ Your file is uploaded.
 4. Select the **Create file** button and specify the file name.
    The file is created.
 
-**Delete a file**
+#### Delete a file
 
 1. Navigate to the explorer tree.
 2. Open the **Unix System Services (USS)** bar.
@@ -266,7 +264,7 @@ Your file is uploaded.
 4. Select the **Delete** button and press yes in the confirmation dropdown.
    The file is deleted.
 
-**Delete a directory**
+#### Delete a directory
 
 1. Navigate to the explorer tree.
 2. Open the **Unix System Services (USS)** bar.
