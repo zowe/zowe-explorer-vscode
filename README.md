@@ -1,298 +1,164 @@
-# Visual Studio Code Extension for Zowe
+# Zowe Explorer
 
-The Visual Studio Code (VSC) Extension for Zowe lets you interact with data sets that are stored on IBM z/OS mainframes. You can explore data sets, view their contents, make changes, and upload the changes to the mainframe. Interacting with data sets from VSC can be more convenient than using command-line interfaces or 3270 emulators.
+Zowe&trade; Explorer extension modernizes the way developers and sytem administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
- **Important!** To use the VSC Extension for Zowe, you must install Zowe CLI version **`2.0.0`** or later.
+* Enables developers to create, modify, and upload data set and USS files directly to a z/OS mainframe.
+* Provides a more streamlined way to access data sets, uss files and jobs.
+* Lets you create and use Zowe CLI `zosmf` compatible profiles.
 
-The VSC Extension for Zowe is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
+**Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
+
+**Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
 
 ## Contents
 
 * [Prerequisites](#prerequisites)
-* [Configuration and usage tips](#configuration-and-usage-tips)
+* [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
-* [USS](#uss)
-* [Data Sets](#data-sets)
-* [Jobs](#jobs)
-* [Extras](#extras)
-
-**Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](./docs/README.md) file that is located in the docs folder of this repository.
 
 ## Prerequisites
 
-After you install the Zowe extension, meet the following prerequisites:
+To use Zowe Explorer, you need to create at least one Zowe CLI `zosmf` profile. 
 
-* [Install Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html#methods-to-install-zowe-cli) on your PC.
-  
-> **Important!**: To use the VSC Extension for Zowe, you must install Zowe CLI version `2.0.0` or later.
+**Notes:**
+  * You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
+  * Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
 
-* [Create at least one Zowe CLI 'zosmf' profile](https://docs.zowe.org/stable/user-guide/cli-configuringcli.html#creating-zowe-cli-profiles).
+Create a Zowe CLI `zosmf` profile.
 
-## Configuration and usage tips
+**Follow these steps:**
 
-You can alter the behavior of the extension in the following ways:
+1. Navigate to the explorer tree.
+2. Click the **+** sign next to the **DATA SETS**, **USS** or **JOBS** bar.
 
-* **Data set Safe Save:** The Visual Studio Code **Save** functionality will overwrite data set contents on the mainframe. To prevent conflicts, use the Zowe extension **Safe Save** functionality to compare changes made with initial mainframe contents before saving. For more information, see [Use Safe Save to prevent merge conflicts](#use-safe-save-to-prevent-merge-conflicts).
-* **Data set persistence settings:** You can toggle the persistence of any data sets that are present under your **Favorites** tab.
-  
-**Tip:** By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as COBOL.
+   **Note:** If you already have a profile, select it from the drop-down menu.
 
-### Advanced Configuration
+3. Select the **Create a New Connection to z/OS** option.
+4. Follow the instructions, and enter all required information to complete the profile creation.
 
-> **WARNING**: Specifying these preferences incorrectly, may cause the extension to fail.
+![New Connection](../docs/images/ZE-create-new-connection.gif?raw=true "New Connection")
+<br /><br />
 
-Extension preferences can also be modified in the `Settings` for this extension. They can be customized in the following ways:
+You successfully created a Zowe CLI `zosmf` profile. Now you can use all the functionalities of the extension.
+
+## Usage tips
+
+Use the following tips to familiarize yourself with the extension and make the best use of it:
+
+* **Data set persistence settings:** You can enable the persistence of any data sets and USS files by adding them to the **Favorites** tab. Right-click on a data set or USS file and click **Add Favorite**.
+
+* By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM Z Open Editor](https://marketplace.visualstudio.com/items?itemName=IBM.zopeneditor).
+
+## Sample use cases
+
+Review the following use cases to understand how to use Zowe Explorer.
+
+* [Data Sets](#data-sets)
+* [USS](#uss)
+* [JOBS](#jobs)
+* [Extras](#extras)
+
+### Data Sets
+
+You can use the following functionalties when interacting with data set:
+
+* **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
+* **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
+* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe.
+* **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
+* **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
+* **Submit a JCL**: You can submit a jcl from a chosen data set.
+
+#### Advanced Configuration
+
+You can modify Zowe Explorer preferences in the extension `Setting` in the following ways:
 
 * **Data set creation settings:** You can change the default creation settings for various data set types.
-* **Temp Folder Location:** You can change the default folder location, for where temporary files are stored. In order to set in `Settings`, use the example below.
+
+* **Temp Folder Location:** You can change the default folder location where temporary files are stored. For example, use the following script:
 
 ```json
 "Zowe-Temp-Folder-Location": {
     "folderPath": "/path/to/directory"
   }
 ```
+  where:
+  * **"/path/to/directory"**
+    
+    the folder location that you specify.
 
-## Sample use cases
-
-Review the following use cases to understand how to use this extension.
-
-### Add profile
-
-You can add a profile for your data sets/jobs/uss files
-
-1. Navigate to your explorer tree.
-2. Click the **Search Data Sets** magnifying glass.
-3. From the drop-down, either select the profile you want to add or search using the **Search Bar**
-
-![Add profile](docs/images/Data-Set-Add-profile.gif "Add Profile")
+![Configure Zowe settings](../../ZE-Configuration.gif?raw=true "Configure Zowe settings")
 <br /><br />
 
-### Refresh all
+#### View data sets and use multiple filters
 
-Refresh the list of data sets/jobs/uss files
-
-1. Navigate to your explorer tree.
-2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar as illustrated by the following screen:
-
-**Tip:** This technique can also be used for the USS and Jobs section
-
-![Refresh All](docs/images/Refresh-all.gif "Refresh All")
-<br /><br />
-
-### Integrated function
-
-You can submit JCL files from data sets view and see the job spool output in jobs view
-
-![Submit JCL](docs/images/Submit-JCL.gif "Submit JCL")
-<br /><br />
-
-## Unix System Services (USS)
-
-![USS View](docs/images/Populated-USS-List-View.png "USS View")
-<br /><br />
-
-### USS File Menu Functions
-
-#### Create a new File or Directory
-
-##### Create a Directory
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory that you want to add the new directory to.
-4. Select the **Create directory** button and specify the directory name.
-   The directory is created.
-
-![Create new directory](docs/images/USS-Create-New-Directory.gif "Create new directory")
-<br /><br />
-
-##### Create File
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory that you want to add the new file to.
-4. Select the **Create file** button and specify the file name.
-   The file is created.
-
-![Create new file](docs/images/USS-Create-New-File.gif "Create new file")
-<br /><br />
-
-#### Pull from the Mainframe
-
-You can pull USS files from the mainframe
-
-1. Navigate to your explorer tree.
-2. Open the **USS** bar.
-3. Open a profile.
-4. Right click the file you want to pull.
-5. Click the **Pull from Mainframe** button.
-
-![Pull from Mainframe](docs/images/USS-Pull-From-Mainframe.gif "Pull from Mainframe")
-<br /><br />
-
-#### Safe Save
-
-You can save your USS files and merge any confilcts it may have
-
-1. Navigate to your explorer tree.
-2. Open the **USS** bar.
-3. Open a profile.
-4. Download and edit a file.
-5. Click the **Safe Save, merge if necessary** button for the file that you opened in the explorer tree.
-6. Resolve merge conflicts if necessary.
-
-![Safe Save](docs/images/USS-Safe-Save-Merge-If-Necessary.gif "Safe Save")
-<br /><br />
-
-#### Toggle Binary
-
-You can show the binary data of a file that changes the data transfer type to Image
-
-1. Navigate to your explorer tree.
-2. Open the **USS** bar.
-3. Open a profile.
-4. Right click the file you want to toggle the binary for.
-5. Click the **Toggle Binary** button.
-
-![Toggle binary](docs/images/USS-Toggle-Binary.gif "Toggle Binary")
-<br /><br />
-
-#### Add Favourite
-
-Add your favourite USS file to make it more accessible
-
-1. Right click the Directory/File you want to make a favourite.
-2. Click the **Add Favourite** button to add the Directory/File to your Favourites list.
-
-![Adding Favourites](docs/images/USS-Add-Favourite.gif "Adding Favourites")
-<br /><br />
-
-#### Rename
-
-You can rename a directory/file
-
-1. Right click the Directory/File you want to make a rename.
-2. Click the **Rename** button to rename the Directory/File.
-3. Rename the file and click enter to complete the renaming process.
-
-![Rename](docs/images/USS-Rename.gif "Rename")
-<br /><br />
-
-#### Delete a File or Directory
-
-##### Delete Directory
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a directory you want to remove.
-4. Select the **Delete** button and click yes in the confirmation dropdown.
-   The directory and all child files and directories are deleted.
-
-![Delete a directory](docs/images/USS-Delete.gif "Delete a directory")
-<br /><br />
-
-##### Delete File
-
-1. Navigate to your explorer tree.
-2. Open the **Unix System Services (USS)** bar.
-3. Select a file you want to remove.
-4. Select the **Delete** button and click yes in the confirmation dropdown.
-   The file is deleted.
-
-#### USS File opened with syntax highlighting
-
-![Syntax Highlighted](docs/images/USS-Syntax-Highlighted-File.png "Syntax Highlighted")
-<br /><br />
-
-### USS Search
-
-#### Entering a root path
-
-You can search multiple USS files by entering a path with commas in between
-
-1. Navigate to your explorer tree.
-2. Open the **USS** bar.
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
 3. Select the profile that you want to filter.
-4. Click the **Search USS system by entering a path** magnifying glass.
-5. From the drop-down, click the **Specify Filter** button and enter the patterns that you want to filter.  
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, enter the patterns that you want to filter.  
   The data sets that match your pattern(s) display in the explorer tree.
 
-![Entering a root path](docs/images/USS-Entering-Root-Path.gif "Entering a root path")
+**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+
+![View Data Set](../../ZE-multiple-search.gif?raw=true "View Data Set")
 <br /><br />
 
-#### Selecting USS path from history recall
+#### Refresh the list of data sets
 
-You can search previous USS file paths easily
+1. Navigate to the explorer tree.
+2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar.
 
-1. Navigate to your explorer tree.
-2. Open the **USS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search USS system by entering a path** magnifying glass.
-5. From the drop-down, select the Profile that you want.
+#### Download, edit, and upload existing PDS members
 
-![History recall](docs/images/USS-Search-From-History.gif "History Recall")
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Open a profile.  
+4. Click the PDS member (or PS) that you want to download.
+
+    **Note:** To view the members of a PDS, click the PDS to expand the tree.
+
+    The PDS member displays in the text editor window of VSC.
+5. Edit the document.
+6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Safe Save** button.
+
+Your PDS member (or PS) is uploaded.  
+
+**Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
+
+![Edit](../../ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
-## Data Sets
+#### Use Safe Save to prevent merge conflicts
 
-![Data Set View](docs/images/Populated-dataset-view.png "Data Set View")
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Open a profile.
+4. Download and edit a data set.
+5. Click the **Safe Save** button for the data set that you opened in the explorer tree.
+6. Resolve merge conflicts if necessary.
+
+![Safe Save](../../ZE-safe-save.gif?raw=true "Safe Save")
 <br /><br />
 
-### Dataset Menu functions
+#### Create a new PDS and a PDS member
 
-#### Create Data Set
-
-1. Navigate to your explorer tree.
+1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Select the **Create New Data Set** button to specify the profile that you want to use to create the data set.
-4. From the drop-down menu, select the type of Data Set that you want to create.
-5. Enter a name for the Data Set.
-   The Data Set is created.
-
-![Create Data Set](docs/images/Create-new-dataset.gif "Create Data Set")
-<br /><br />
-
-#### Create new member
-
-1. To create a member, right-click the Data Set and select **Create New Member**.
-2. Enter a name for the member.
+4. From the drop-down menu, select the type of PDS that you want to create.
+5. Enter a name for the PDS.
+   The PDS is created.
+6. To create a member, right-click the PDS and select **Create New Member**.
+7. Enter a name for the member.
    The member is created.
 
-![Create Data Set member](docs/images/Create-new-member.gif "Create Data Set member")
+![Create](../../ZE-cre-pds-member.gif?raw=true "Create")
 <br /><br />
 
-#### Upload new member
+#### Delete a PDS member and PDS
 
-You can upload a data set member enabling you to transfer data between the host and the workstation
-
-1. Click the Data Set member that you want to download.
-
-    **Note:** To view the members of a Data Set, click the Data Set to expand the tree.
-
-    The Data Set member displays in the text editor window of VSC.
-2. Edit the document.
-3. Navigate back to the Data Set member in the explorer tree, and click the **Safe Save** button.
-
-Your Data Set member is uploaded.  
-
-**Note:** If someone else has made changes to the Data Set member while you were editing it, you can merge your conflicts before uploading to the mainframe.
-
-![Upload Data Set member](docs/images/Dataset-Upload-new-member.gif "Upload Data Set member")
-<br /><br />
-
-#### Show Data Set Attributes
-
-You can see the different attributes of a data set such as the migration state
-
-1. Right Click the Data Set member that you want to find out about more.
-2. Click the **Show Data Set attributes** button.
-
-![Show Data Set Attributes](docs/images/Dataset-attributes.png "Show Data Set Attributes")
-<br /><br />
-
-#### Delete Data Set
-
-1. Navigate to your explorer tree.
+1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Open the profile and PDS containing the member.
 4. Right-click on the PDS member that you want to delete and select **Delete Member**.
@@ -303,116 +169,165 @@ You can see the different attributes of a data set such as the migration state
 
     **Note:** You can delete a PDS before you delete its members.
 
-![Delete Data Set](docs/images/Delete-dataset.gif "Upload Data Set member")
+![Delete](../../ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
 
-#### Dataset opened with syntax highlighting
+#### View and access multiple profiles simultaneously
 
-![Syntax Highlighted](docs/images/DataSet-Syntax-highlighted-file.png "Syntax Highlighted")
-<br /><br />
-
-### Datasets Search
-
-#### Entering a Dataset qualifier
-
-You can search multiple data sets by entering a path with commas in between
-
-1. Navigate to your explorer tree.
+1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
+3. Click the **Add Profile** button on the right of the **DATA SET** explorer bar.
+4. Select the profile that you want to add to the view as illustrated by the following screen.
+
+![Add Profile](../../ZE-mult-profiles.gif?raw=true "Add Profile")
+<br /><br />
+
+#### Add and edit information that defines how to create data sets
+
+1. Navigate to to File, Preferences, Settings.
+2. In the section **Default User Settings**, scroll to **Zowe Configuration** and expand the options.
+3. Click the **Edit** button to the left of the Data Set settings that you want to edit.
+4. Select **Copy to Settings**.
+5. Edit the settings as needed.
+---
+### USS
+
+You can use the following functionalties when interacting with USS files:
+
+* **View Unix System Services (USS) files**: You can view multiple USS files simultaneously.
+* **Download, edit, and upload existing USS files**: You can instantly pull USS files from the mainframe, edit them and upload back.
+* **Create and delete USS files and directories**: Enables you to easily create and delete both USS files and directories.
+* **View and access multiple profiles simultaneously**: Enables to work with USS files from multiple profiles.
+
+#### View Unix System Services (USS) files
+
+1. Navigate to the explorer tree.
+2. Open the **Unix System Services (USS)** bar.
 3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, click the **Specify Filter** button and enter the patterns that you want to filter.
-  The data sets that match your pattern(s) display in the explorer tree.
+4. Click the **Search Unix System Services (USS) by Entering a Path** magnifying glass.
+5. From the drop-down, enter the path that you want as the root of your displayed tree.  
+  All child files and directories of that root file are displayed in the explorer tree.
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can prepend or append any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+  **Note:** You will not be able to expand directories or files that you are not authorised for.
 
-![Entering a root path](docs/images/Dataset-Searching-using-comma.gif "Entering a root path")
+  ![Enter Path](../../ZE-path.gif?raw=true "Enter Path")
 <br /><br />
 
-#### Selecting dataset qualifier from history recall
+#### Refresh the list of files
 
-You can search previous data set paths easily
+1. Navigate to the explorer tree.
+2. Click **Refresh All** button on the right of the **Unix System Services (USS)** explorer bar as illustrated by the following screen:
 
-1. Navigate to your explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, select the Data set that you want.
-
-![History recall](docs/images/Dataset-Searching-using-history.gif "History Recall")
+![Refresh All](../../ZE-refreshUSS.gif?raw=true "Refresh All")
 <br /><br />
 
-### Favourites
+#### Download, edit, and upload an existing file
 
-#### Adding favourites
+1. Click the file that you want to download.
 
-Add your favourite data sets to make then more accessible
+    **Note:** To view the files within a directory, click the directory to expand the tree.
 
-1. Right click the Data Set you want to make a favourite
-2. Click the **Add Favourite** button to add the Data Set to your Favourites list
+    The file displays in the text editor window of VSC.
 
-![Adding Favourites](docs/images/Add-favourite-dataset.gif "Adding Favourites")
+    **Note:** If you have defined file associations with syntax coloring the suffix of your file will be marked up.
+
+2. Edit the document.
+3. Type Ctrl-s or Command-s (OSx) to save the file
+
+Your file is uploaded.  
+
+![Edit](../../ZE-editUSS.gif?raw=true "Edit")
 <br /><br />
 
-## Jobs
+#### Creating and deleting files and directories
 
-### Job Menu Functions
+**Create a directory**
 
-#### Get JCL for a File
+1. Navigate to the explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory that you want to add the new directory to.
+4. Select the **Create directory** button and specify the directory name.
+   The directory is created.
 
-1. Right cick the Job you want the JCL for.
-2. Click the **Get JCL** button.
+**Create a file**
 
-![Get JCL of a File](docs/images/Jobs-Get-JCL.gif "Get JCL of a File")
+1. Navigate to the explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory that you want to add the new file to.
+4. Select the **Create file** button and specify the file name.
+   The file is created.
+
+**Delete a file**
+
+1. Navigate to the explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a file you want to remove.
+4. Select the **Delete** button and press yes in the confirmation dropdown.
+   The file is deleted.
+
+**Delete a directory**
+
+1. Navigate to the explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Select a directory you want to remove.
+4. Select the **Delete** button and press yes in the confirmation dropdown.
+   The directory and all child files and directories are deleted.
+
+![Create and Delete](../../ZE-CreateDelete.gif?raw=true "Create and Delete")
 <br /><br />
 
-#### Issue Modify Command
+#### View and access multiple USS profiles simultaneously
 
-Use the modify command to pass information to a job or started task
+1. Navigate to the explorer tree.
+2. Open the **Unix System Services (USS)** bar.
+3. Click the **Add Session** button on the right of the **Unix System Services (USS)** explorer bar.
+4. Select the profile that you want to add to the view as illustrated by the following screen.
 
-1. Right cick the Job you want to issue the modify command on.
-2. Click the **Issue Modify Command** button.
-
-![Modify Command](docs/images/Jobs-Issue-Modify-Command.gif "Modify Command")
+![View Profiles](../../ZE-profile2.gif?raw=true "View Profiles")
 <br /><br />
 
-#### Issue Stop Command
+---
 
-Use the Stop command to stop system functions and jobs in execution
+### JOBS
 
-1. Right cick the Job you want to issue the modify command on.
-2. Click the **Issue Stop Command** button.
+You can use the following functionalties when interacting with Jobs:
 
-![Stop Command](docs/images/Jobs-Issue-Stop-Command.gif "Stop Command")
+* **View a job**: You can view multiple jobs simultaneously.
+* **Download spool content**: You can download spool content on your computer.
+
+#### View a job
+
+1. Navigate to the explorer tree.
+2. Open the **JOBS** bar.
+3. Select a directory with JCL files.
+4. Right-click on the JCL you want to view, and click **Get JCL**.
+
+![View JOB](../../ZE-jobs-get-jcl.gif?raw=true "View JOB")
 <br /><br />
 
-#### Delete Job
+#### Download spool content
 
-1. Hover your mouse over the job you want to delete
-2. Click the **Delete** trash can button.
+1. Navigate to the explorer tree.
+2. Open the **JOBS** bar.
+3. Select a directory with JCL files.
+4. Click the **Download** icon next to a folder with the spool content.
+5. Save the file on your computer.
 
-#### Download Spool
-
-You can use this operation to retrieve the contents of a job spool file
-
-1. Navigate to your explorer tree.
-2. Open the **Jobs** bar.
-3. Open a profile.
-4. Click the **Download Spool** button for the Job you want.
-
-![Download Spool](docs/images/Jobs-Download-Spool.gif "Download Spool")
+![Download Spool](../../ZE-jobs-download-spool.gif?raw=true "Download Spool")
 <br /><br />
 
-## Additional functionality
+---
 
-### Issue a TSO Command
+### Extras
 
-You can issue TSO commands such as Allocate or Exec against a profile.
+#### Issue TSO commands
 
-1. Use _Cmnd+Shift+P_
-2. Click the **Zowe:Issue TSO Command** button
-3. Select the profile you want to issue the command on
-4. Type in your command
+Zowe Explorer also enables you to issue TSO command. You can issue such commands as Allocate or Exec against a profile.
 
-![Issue TSO Command](docs/images/Jobs-Issue-TSO-Command.gif "Issue TSO Command")
+1. Press the **F1** key on your keyboard.
+2. Select the **Zowe:Issue TSO Command** option.
+3. Select your profile. 
+4. Issue a TSO command.
+
+![Issue a TSO command](../../ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a TSO command")
 <br /><br />
