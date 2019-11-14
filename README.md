@@ -1,5 +1,7 @@
 # Zowe Explorer
 
+[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+
 Zowe&trade; Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
 * Enables developers to create, modify, and upload data set and USS files directly to a z/OS mainframe.
@@ -25,7 +27,7 @@ To use Zowe Explorer, you need to create at least one Zowe CLI `zosmf` profile.
 * You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
 * Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
 
-Create a Zowe CLI `zosmf` profile.
+### Create a Zowe CLI `zosmf` profile.
 
 **Follow these steps:**
 
@@ -48,7 +50,7 @@ Use the following tips to familiarize yourself with the extension and make the b
 
 * **Data set persistence settings:** You can enable the persistence of any data sets and USS files by adding them to the **Favorites** tab. Right-click on a data set or USS file and click **Add Favorite**.
 
-* By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM Z Open Editor](https://marketplace.visualstudio.com/items?itemName=IBM.zopeneditor).
+* By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM Z Open Editor](https://marketplace.visualstudio.com/items?itemName=IBM.zopeneditor) or [Code4z](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.code4z-extension-pack).
 
 ### Advanced Configuration
 
