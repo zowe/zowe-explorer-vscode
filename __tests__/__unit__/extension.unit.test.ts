@@ -804,15 +804,30 @@ describe("Extension Unit Tests", () => {
             })
         });
         await extension.addSession(testTree);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the Data Set Explorer"
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
         });
+    });
 
-        showInformationMessage.mockReset();
+    it("Call Change File type", async () => {
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
+        const res = extension.changeFileType(node, false, testUSSTree);
+        expect(res).not.toBeUndefined();
+    });
+
+    it("Test Get Profile", async () => {
+        const ProfNode = new ZoweNode("[sestest1,sestest2]", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        await extension.getProfile(ProfNode);
+        expect(ProfNode).not.toBeUndefined();
+    });
+
+    it("Testing that addSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -823,9 +838,49 @@ describe("Extension Unit Tests", () => {
         });
 
         await extension.addSession(testTree);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
+        });
 
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
+    });
+
+    it("Testing that addSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        showQuickPick.mockResolvedValueOnce("firstName");
+        await extension.addSession(testTree);
+    });
+
+    it("Testing that addSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    createNewConnection: "fake"
+                };
+            })
+        });
+
+        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
+        try {
+            await extension.addSession(testTree);
+        } catch (error) {
+            // Do Nothing
+        }
     });
 
     it("Testing that addJobsSession is executed successfully", async () => {
@@ -839,27 +894,49 @@ describe("Extension Unit Tests", () => {
             })
         });
         await extension.addJobsSession(testJobsTree);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName", "secondName"]);
         // tslint:disable-next-line
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the Jobs Explorer"
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Jobs Explorer"
         });
+    });
 
-        showInformationMessage.mockReset();
+    it("Testing that addJobsSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [],
-                    defaultProfile: undefined
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
                 };
             })
         });
-        await extension.addJobsSession(testJobsTree);
 
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No more profiles to add");
+        showQuickPick.mockResolvedValueOnce("firstName");
+        await extension.addJobsSession(testJobsTree);
+    });
+
+    it("Testing that addJobsSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
+        try {
+            await extension.addJobsSession(testJobsTree);
+        } catch (error) {
+            // Do Nothing
+        }
     });
 
     it("Testing that createFile is executed successfully", async () => {
@@ -1553,28 +1630,50 @@ describe("Extension Unit Tests", () => {
 
         await extension.addUSSSession(testUSSTree);
         expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName","secondName"]);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName","secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select a Profile to Add to the USS Explorer"
+            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer"
         });
+    });
 
-        // no profiles returned
-        showInformationMessage.mockReset();
+    it("Testing that addUSSSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [],
-                    defaultProfile: undefined
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
                 };
             })
         });
 
-        await extension.addSession(testUSSTree);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles detected");
+        showQuickPick.mockResolvedValueOnce("firstName");
+        await extension.addUSSSession(testUSSTree);
     });
+
+    it("Testing that addUSSSession is executed successfully", async () => {
+        // tslint:disable-next-line: prefer-const
+        showQuickPick.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
+        try {
+            await extension.addUSSSession(testUSSTree);
+        } catch (error) {
+            // Do Nothing
+        }
+    });
+
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
         const spy = jest.fn(testTree.refresh);
@@ -1883,6 +1982,13 @@ describe("Extension Unit Tests", () => {
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
 
+    it("tests that the spool content is not opened in a new document", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        await extension.getSpoolContent(undefined, undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
     it("tests that a stop command is issued", async () => {
         showInformationMessage.mockReset();
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
@@ -1891,6 +1997,13 @@ describe("Extension Unit Tests", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
             "Command response: fake response"
         );
+    });
+
+    it("tests that a stop command is not issued", async () => {
+        showInformationMessage.mockReset();
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await extension.stopCommand(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests that a modify command is issued", async () => {
@@ -1903,6 +2016,15 @@ describe("Extension Unit Tests", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
             "Command response: fake response"
         );
+    });
+
+    it("tests that a modify command is not issued", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValue("modify");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await extension.modifyCommand(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests that the spool is downloaded", async () => {
@@ -1921,6 +2043,13 @@ describe("Extension Unit Tests", () => {
         );
     });
 
+    it("tests that the spool is not downloaded", async () => {
+        const fileUri = {fsPath: "/tmp/foo"};
+        showOpenDialog.mockReturnValue([fileUri]);
+        await extension.downloadSpool(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
     it("tests that the jcl is downloaded", async () => {
         getJclForJob.mockReset();
         openTextDocument.mockReset();
@@ -1929,6 +2058,14 @@ describe("Extension Unit Tests", () => {
         expect(getJclForJob).toBeCalled();
         expect(openTextDocument).toBeCalled();
         expect(showTextDocument).toBeCalled();
+    });
+
+    it("tests that the jcl is not downloaded", async () => {
+        getJclForJob.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        await extension.downloadJcl(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests that the jcl is submitted", async () => {
@@ -2246,5 +2383,33 @@ describe("Extension Unit Tests", () => {
             placeHolder: "Select the Profile to use to submit the command"
         });
         expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand function", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined,
+                };
+            })
+        });
+        await extension.issueTsoCommand(outputChannel);
+        expect(expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available"));
+    });
+
+    it("tests the issueTsoCommand error function", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(undefined);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 });
