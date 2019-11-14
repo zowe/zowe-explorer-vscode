@@ -27,7 +27,7 @@ To use Zowe Explorer, you need to create at least one Zowe CLI `zosmf` profile.
 * You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
 * Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
 
-### Create a Zowe CLI `zosmf` profile.
+### Create a Zowe CLI `zosmf` profile
 
 **Follow these steps:**
 
