@@ -15,19 +15,23 @@ Zowe&trade; Explorer extension modernizes the way developers and system administ
 ## Contents
 
 * [Prerequisites](#prerequisites)
+* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
 ## Prerequisites
 
-To use Zowe Explorer, you need to create at least one Zowe CLI `zosmf` profile.
+Ensure the you meet the following prerequisites before using the extension:
+
+* Access to z/OSMF.
+* At least, one Zowe CLI `zosmf` profile.
 
 **Notes:**
 
 * You can use your existing Zowe CLI `zosmf` profiles that are created with the Zowe CLI v.2.0.0 or later.
 * Zowe CLI `zosmf` profiles that are created in Zowe Explorer can be interchangeably used in the Zowe CLI.
 
-### Create a Zowe CLI `zosmf` profile
+### Create a Zowe CLI z/OSMF profile
 
 **Follow these steps:**
 
@@ -48,9 +52,9 @@ You successfully created a Zowe CLI `zosmf` profile. Now you can use all the fun
 
 Use the following tips to familiarize yourself with the extension and make the best use of it:
 
-* **Data set persistence settings:** You can enable the persistence of any data sets and USS files by adding them to the **Favorites** tab. Right-click on a data set or USS file and click **Add Favorite**.
+* **Data set, USS and jobs persistence settings:** You can enable the persistence of any data sets, USS files and jobs by adding them to the **Favorites** tab. Right-click on a data set, USS file or jobs and click **Add Favorite**.
 
-* By default, Visual Studio Code does not highlight data set syntax. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM Z Open Editor](https://marketplace.visualstudio.com/items?itemName=IBM.zopeneditor) or [Code4z](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.code4z-extension-pack).
+* **Syntax highlighter:** Zowe Explorer supports syntax hightlighters for data sets. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM-JCL](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-jcl), [IBM-Assembler](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-assembler) or [Code4z](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.code4z-extension-pack).
 
 ### Advanced Configuration
 
@@ -70,7 +74,7 @@ where **/path/to/directory** is the folder location that you specify.
 
 1. Navigate to the extension configuration manager.
 2. In the section **Extensions**, scroll to **Zowe Configuration** and expand the options.
-3. Click the **Edit in settings.json** button under the Data Set settings that you want to edit.
+3. Click the **Edit in settings.json** button under Data Set, USS or JOBS settings that you want to edit.
 4. Edit the settings as needed.
 5. Save the settings.
 
@@ -88,7 +92,7 @@ Review the following use cases to understand how to use Zowe Explorer.
 
 ### Data Sets
 
-You can use the following functionalties when interacting with data set:
+You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
@@ -193,7 +197,7 @@ Your PDS member (or PS) is uploaded.
 
 ### USS
 
-You can use the following functionalties when interacting with USS files:
+You can use the following functionalities when interacting with USS files:
 
 * **View Unix System Services (USS) files**: You can view multiple USS files simultaneously.
 * **Download, edit, and upload existing USS files**: You can instantly pull USS files from the mainframe, edit them and upload back.
@@ -291,7 +295,7 @@ Your file is uploaded.
 
 ### JOBS
 
-You can use the following functionalties when interacting with Jobs:
+You can use the following functionalities when interacting with Jobs:
 
 * **View a job**: You can view multiple jobs simultaneously.
 * **Download spool content**: You can download spool content on your computer.
