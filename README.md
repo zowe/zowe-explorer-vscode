@@ -21,7 +21,7 @@ Zowe&trade; Explorer extension modernizes the way developers and system administ
 
 ## Prerequisites
 
-Ensure the you meet the following prerequisites before using the extension:
+Ensure that you meet the following prerequisites before using the extension:
 
 * Access to z/OSMF.
 * At least, one Zowe CLI `zosmf` profile.
