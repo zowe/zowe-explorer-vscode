@@ -54,7 +54,7 @@ Use the following tips to familiarize yourself with the extension and make the b
 
 * **Data set, USS and jobs persistence settings:** You can enable the persistence of any data sets, USS files and jobs by adding them to the **Favorites** tab. Right-click on a data set, USS file or jobs and click **Add Favorite**.
 
-* **Syntax highlighter:** Zowe Explorer supports syntax hightlighters for data sets. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM-JCL](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-jcl), [IBM-Assembler](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-assembler) or [Code4z](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.code4z-extension-pack).
+* **Syntax highlighter:** Zowe Explorer supports syntax hightlighters for data sets. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM-JCL](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-jcl) or [IBM-Assembler](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-assembler).
 
 ### Advanced Configuration
 
