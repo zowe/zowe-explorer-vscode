@@ -68,6 +68,10 @@ export function applyIcons(node: TreeItem, state?: string ): any {
                 extension.JOBS_SPOOL_CONTEXT].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
         dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
+    } else if ([extension.DS_MIGRATED_FILE_CONTEXT,
+                extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
+        light = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
+        dark = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
     } else if ([extension.DS_BINARY_FILE_CONTEXT,
                 extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
         light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
