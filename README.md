@@ -43,7 +43,7 @@ Ensure that you meet the following prerequisites before using the extension:
 3. Select the **Create a New Connection to z/OS** option.
 4. Follow the instructions, and enter all required information to complete the profile creation.
 
-![New Connection](docs/images/ZE-create-new-connection.gif?raw=true "New Connection")
+![New Connection](docs/images/ZE-newProfiles.gif?raw=true "New Connection")
 <br /><br />
 
 You successfully created a Zowe CLI `zosmf` profile. Now you can use all the functionalities of the extension.
