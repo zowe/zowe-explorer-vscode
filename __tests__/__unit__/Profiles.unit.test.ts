@@ -178,8 +178,19 @@ describe("Profile class unit tests", () => {
             expect(res).toBe(true);
         });
 
+        it("should validate https:<no_port> url", async () => {
+            const res = await Profiles.getInstance().validateUrl("https://10.142.0.23/some/path");
+            expect(res).toBe(true);
+        });
+
+
         it("should validate https:443 url", async () => {
             const res = await Profiles.getInstance().validateUrl("https://10.142.0.23:443");
+            expect(res).toBe(true);
+        });
+
+        it("should validate http:<no_port> url", async () => {
+            const res = await Profiles.getInstance().validateUrl("http://10.142.0.23/some/path");
             expect(res).toBe(true);
         });
 
