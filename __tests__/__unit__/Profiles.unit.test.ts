@@ -34,7 +34,7 @@ describe("Profile class unit tests", () => {
         });
     });
     afterEach(() => {
-       jest.resetAllMocks();
+        jest.resetAllMocks();
     });
 
     it("should create an instance", async () => {
@@ -81,8 +81,8 @@ describe("Profile class unit tests", () => {
 
         Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
         Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-        Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-        Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+        Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+        Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 
         beforeEach(async () => {
             profiles = await Profiles.createInstance(log);
@@ -193,44 +193,58 @@ describe("Profile class unit tests", () => {
         });
 
         it("should validate URL", async () => {
-            const res = await Profiles.getInstance().validateUrl("fake/url");
-            expect(res).toBe(false);
+            const res = await Profiles.getInstance().validateAndParseUrl("fake/url");
+            expect(res.valid).toBe(false);
         });
 
         it("should validate URL", async () => {
-            const res = await Profiles.getInstance().validateUrl("https://fake:143");
-            expect(res).toBe(true);
+            const res = await Profiles.getInstance().validateAndParseUrl("https://fake:143");
+            expect(res.valid).toBe(true);
+            expect(res.host).toBe("fake");
+            // tslint:disable-next-line
+            expect(res.port).toBe(143);
+
         });
 
         it("should validate https:<no_port> url", async () => {
-            const res = await Profiles.getInstance().validateUrl("https://10.142.0.23/some/path");
-            expect(res).toBe(true);
+            const res = await Profiles.getInstance().validateAndParseUrl("https://10.142.0.23/some/path");
+            expect(res.valid).toBe(true);
+            expect(res.host).toBe("10.142.0.23");
+            // tslint:disable-next-line
+            expect(res.port).toBe(443);
         });
-
 
         it("should validate https:443 url", async () => {
-            const res = await Profiles.getInstance().validateUrl("https://10.142.0.23:443");
-            expect(res).toBe(true);
+            const res = await Profiles.getInstance().validateAndParseUrl("https://10.142.0.23:443");
+            expect(res.valid).toBe(true);
+            expect(res.host).toBe("10.142.0.23");
+            // tslint:disable-next-line
+            expect(res.port).toBe(443);
         });
 
-        it("should validate http:<no_port> url", async () => {
-            const res = await Profiles.getInstance().validateUrl("http://10.142.0.23/some/path");
-            expect(res).toBe(true);
+        it("should reject http:<no_port> url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("http://10.142.0.23/some/path");
+            expect(res.valid).toBe(false);
         });
 
-        it("should validate http:80 url", async () => {
-            const res = await Profiles.getInstance().validateUrl("http://fake:80");
-            expect(res).toBe(true);
+        it("should reject out of range port url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("http://10.142.0.23:9999999999/some/path");
+            expect(res.valid).toBe(false);
+        });
+
+        it("should reject http:80 url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("http://fake:80");
+            expect(res.valid).toBe(false);
         });
 
         it("should reject ftp protocol url", async () => {
-            const res = await Profiles.getInstance().validateUrl("ftp://fake:80");
-            expect(res).toBe(false);
+            const res = await Profiles.getInstance().validateAndParseUrl("ftp://fake:80");
+            expect(res.valid).toBe(false);
         });
 
         it("should reject invalid url syntax", async () => {
-            const res = await Profiles.getInstance().validateUrl("https://fake::80");
-            expect(res).toBe(false);
+            const res = await Profiles.getInstance().validateAndParseUrl("https://fake::80");
+            expect(res.valid).toBe(false);
         });
 
 

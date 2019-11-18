@@ -19,9 +19,12 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as ProfileLoader from "./ProfileLoader";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-let url: URL;
-let validHost: string;
-let validPort: number;
+interface IUrlValidator {
+    valid: boolean;
+    host: string;
+    port: number;
+}
+
 let IConnection: {
     name: string;
     host: string;
@@ -102,36 +105,40 @@ export class Profiles { // Processing stops if there are no profiles detected
         return this.allProfiles;
     }
 
-    public validateUrl = (newUrl: string) => {
+    public validateAndParseUrl = (newUrl: string): IUrlValidator => {
 
-        const validProtocols: string[] = ["https", "http"];
+        let url: URL;
+        const validProtocols: string[] = ["https"];
         const DEFAULT_HTTPS_PORT: number = 443;
-        const DEFAULT_HTTP_PORT: number = 80;
+
+        const validationResult: IUrlValidator = {
+            valid: false,
+            host: null,
+            port: null
+        };
+
         try {
             url = new URL(newUrl);
         } catch (error) {
-            return false;
+            return validationResult;
         }
 
+        // overkill with only one valid protocol, but we may expand profile types and protocols in the future?
         if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
-            return false;
+            return validationResult;
         }
 
-        // if port string is empty, set http/https defaults
+        // if port is empty, set https defaults
         if (!url.port.trim()) {
-            switch (url.protocol) {
-                case "https":
-                    validPort = DEFAULT_HTTPS_PORT;
-                case "http":
-                    validPort = DEFAULT_HTTP_PORT;
-                    break;
-            }
+            validationResult.port = DEFAULT_HTTPS_PORT;
         }
         else {
-            validPort = Number(url.port);
+            validationResult.port = Number(url.port);
         }
-        validHost = url.hostname;
-        return true;
+
+        validationResult.host = url.hostname;
+        validationResult.valid = true;
+        return validationResult;
     }
 
     public async createNewConnection() {
@@ -158,8 +165,8 @@ export class Profiles { // Processing stops if there are no profiles detected
             ignoreFocusOut: true,
             placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "http(s)://url:port"),
             prompt: localize("createNewConnection.option.prompt.url",
-                "Enter a z/OSMF URL in the format 'http(s)://url:port'."),
-            validateInput: (text: string) => (this.validateUrl(text) ? "" : "Please enter a valid URL."),
+                "Enter a z/OSMF URL in the format 'https://url:port'."),
+            validateInput: (text: string) => (this.validateAndParseUrl(text).valid ? "" : "Please enter a valid URL."),
             value: zosmfURL
         });
 
@@ -168,6 +175,8 @@ export class Profiles { // Processing stops if there are no profiles detected
                 "No valid value for z/OSMF URL. Operation Cancelled"));
             return;
         }
+
+        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
@@ -229,8 +238,8 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         IConnection = {
             name: profileName,
-            host: validHost,
-            port: validPort,
+            host: zosmfUrlParsed.host,
+            port: zosmfUrlParsed.port,
             user: userName,
             password: passWord,
             rejectUnauthorized: rejectUnauthorize,
