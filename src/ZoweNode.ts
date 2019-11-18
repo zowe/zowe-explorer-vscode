@@ -9,9 +9,9 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";

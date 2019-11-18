@@ -11,11 +11,11 @@
 
 jest.mock("vscode");
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 import * as vscode from "vscode";
-import * as brightside from "@brightside/core";
-import { Session, Logger } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Session, Logger } from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/Profiles";
 import * as utils from "../../src/utils";
@@ -49,7 +49,7 @@ describe("Zos Jobs Unit Tests", () => {
     Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
 
     beforeAll(() => {
-        Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
+        Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
     });
 
     afterAll(() => {
@@ -64,7 +64,7 @@ describe("Zos Jobs Unit Tests", () => {
         const getJobsByOwnerAndPrefix = jest.fn();
         const getJob = jest.fn();
 
-        Object.defineProperty(brightside, "ZosmfSession", { value: ZosmfSession });
+        Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
         Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
         Object.defineProperty(GetJobs, "getJobsByOwnerAndPrefix", { value: getJobsByOwnerAndPrefix });
         Object.defineProperty(GetJobs, "getJob", { value: getJob });
@@ -93,7 +93,7 @@ describe("Zos Jobs Unit Tests", () => {
             })
         });
 
-        const iJob: brightside.IJob = {
+        const iJob: zowe.IJob = {
             "jobid": "JOB1234",
             "jobname": "TESTJOB",
             "files-url": "fake/files",
@@ -119,7 +119,7 @@ describe("Zos Jobs Unit Tests", () => {
             "url": "fake/url"
         };
 
-        const iJobComplete: brightside.IJob = {
+        const iJobComplete: zowe.IJob = {
             "jobid": "JOB1235",
             "jobname": "TESTJOB",
             "files-url": "fake/files",
@@ -160,7 +160,7 @@ describe("Zos Jobs Unit Tests", () => {
         Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
         Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
         Object.defineProperty(filters, "getFilters", { value: getFilters });
-        Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
+        Object.defineProperty(zowe, "DeleteJobs", {value: DeleteJobs});
         Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
 
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
@@ -563,7 +563,7 @@ describe("Zos Jobs Unit Tests", () => {
     describe("JobSpool Unit Test", () => {
         const getSpoolFiles = jest.fn();
 
-        Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
+        Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
         Object.defineProperty(GetJobs, "getSpoolFiles", { value: getSpoolFiles });
 
         const session = new Session({
@@ -574,7 +574,7 @@ describe("Zos Jobs Unit Tests", () => {
             type: "basic",
         });
 
-        const iJob: brightside.IJob = {
+        const iJob: zowe.IJob = {
             "jobid": "JOB1234",
             "jobname": "TESTJOB",
             "files-url": "fake/files",
@@ -600,7 +600,7 @@ describe("Zos Jobs Unit Tests", () => {
             "url": "fake/url"
         };
 
-        const iJobFile: brightside.IJobFile = {
+        const iJobFile: zowe.IJobFile = {
             "byte-count": 128,
             "job-correlator": "",
             "record-count": 1,

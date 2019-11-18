@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";

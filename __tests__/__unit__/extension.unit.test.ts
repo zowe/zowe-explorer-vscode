@@ -14,10 +14,10 @@ import * as treeMock from "../../src/DatasetTree";
 import * as treeUSSMock from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import { ZoweNode } from "../../src/ZoweNode";
-import * as brtimperative from "@brightside/imperative";
+import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as path from "path";
-import * as brightside from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
@@ -27,8 +27,8 @@ import * as utils from "../../src/utils";
 
 jest.mock("vscode");
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("DatasetTree");
@@ -36,7 +36,7 @@ jest.mock("USSTree");
 
 describe("Extension Unit Tests", () => {
     // Globals
-    const session = new brtimperative.Session({
+    const session = new imperative.Session({
         user: "fake",
         password: "fake",
         hostname: "fake",
@@ -44,7 +44,7 @@ describe("Extension Unit Tests", () => {
         type: "basic",
     });
 
-    const iJob: brightside.IJob = {
+    const iJob: zowe.IJob = {
         "jobid": "JOB1234",
         "jobname": "TESTJOB",
         "files-url": "fake/files",
@@ -70,7 +70,7 @@ describe("Extension Unit Tests", () => {
         "url": "fake/url"
     };
 
-    const iJobFile: brightside.IJobFile = {
+    const iJobFile: zowe.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
@@ -267,7 +267,7 @@ describe("Extension Unit Tests", () => {
     });
 
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
-    Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
+    Object.defineProperty(imperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
     Object.defineProperty(vscode, "Uri", {value: Uri});
@@ -293,15 +293,15 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(document, "save", {value: save});
     Object.defineProperty(document, "getText", {value: getText});
     Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
-    Object.defineProperty(brightside, "ZosmfSession", {value: ZosmfSession});
+    Object.defineProperty(zowe, "ZosmfSession", {value: ZosmfSession});
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
-    Object.defineProperty(brightside, "Upload", {value: Upload});
+    Object.defineProperty(zowe, "Upload", {value: Upload});
     Object.defineProperty(Upload, "bufferToDataSet", {value: bufferToDataSet});
     Object.defineProperty(Upload, "pathToDataSet", {value: pathToDataSet});
     Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
-    Object.defineProperty(brightside, "Create", {value: Create});
+    Object.defineProperty(zowe, "Create", {value: Create});
     Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
-    Object.defineProperty(brightside, "List", {value: List});
+    Object.defineProperty(zowe, "List", {value: List});
     Object.defineProperty(List, "dataSet", {value: dataSetList});
     Object.defineProperty(List, "fileList", {value: fileList});
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
@@ -312,25 +312,25 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
-    Object.defineProperty(brightside, "Download", {value: Download});
+    Object.defineProperty(zowe, "Download", {value: Download});
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
     Object.defineProperty(treeUSSMock, "USSTree", {value: USSTree});
-    Object.defineProperty(brightside, "Delete", {value: Delete});
+    Object.defineProperty(zowe, "Delete", {value: Delete});
     Object.defineProperty(Delete, "dataSet", {value: delDataset});
-    Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
-    Object.defineProperty(brightside, "Utilities", {value: Utilities});
+    Object.defineProperty(zowe, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
+    Object.defineProperty(zowe, "Utilities", {value: Utilities});
     Object.defineProperty(Download, "ussFile", {value: ussFile});
     Object.defineProperty(Utilities, "isFileTagBinOrAscii", {value: isFileTagBinOrAscii});
-    Object.defineProperty(brightside, "GetJobs", {value: GetJobs});
+    Object.defineProperty(zowe, "GetJobs", {value: GetJobs});
     Object.defineProperty(GetJobs, "getSpoolContentById", {value: getSpoolContentById});
     Object.defineProperty(GetJobs, "getJclForJob", {value: getJclForJob});
-    Object.defineProperty(brightside, "DownloadJobs", {value: DownloadJobs});
+    Object.defineProperty(zowe, "DownloadJobs", {value: DownloadJobs});
     Object.defineProperty(DownloadJobs, "downloadAllSpoolContentCommon", {value: downloadAllSpoolContentCommon});
-    Object.defineProperty(brightside, "SubmitJobs", {value: SubmitJobs});
+    Object.defineProperty(zowe, "SubmitJobs", {value: SubmitJobs});
     Object.defineProperty(SubmitJobs, "submitJcl", {value: submitJcl});
     Object.defineProperty(SubmitJobs, "submitJob", {value: submitJob});
-    Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
+    Object.defineProperty(zowe, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
     Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider});
     Object.defineProperty(vscode.Disposable, "from", {value: from});

@@ -9,9 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
-import { IProfileLoaded, Logger } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "./ZoweUSSNode";

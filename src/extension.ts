@@ -9,13 +9,13 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded } from "@zowe/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -23,8 +23,6 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
-// tslint:disable-next-line: no-duplicate-imports
-import { IJobFile } from "@brightside/core";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
@@ -1518,7 +1516,7 @@ export async function stopCommand(job: Job) {
     }
 }
 
-export async function getSpoolContent(session: string, spool: IJobFile) {
+export async function getSpoolContent(session: string, spool: zowe.IJobFile) {
     try {
         const uri = encodeJobFile(session, spool);
         const document = await vscode.workspace.openTextDocument(uri);

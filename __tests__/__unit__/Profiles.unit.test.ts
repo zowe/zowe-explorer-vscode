@@ -13,7 +13,7 @@ jest.mock("vscode");
 jest.mock("child_process");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, profileLoadError } from "@brightside/imperative";
+import { Logger } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
 import * as loader from "../../src/ProfileLoader";
 

@@ -9,8 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";

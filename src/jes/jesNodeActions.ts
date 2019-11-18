@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IJobFile } from "@brightside/core";
+import { IJobFile } from "@zowe/cli";
 
 export function getSpoolLanguage(spool: IJobFile) {
     const name = spool.ddname.toLocaleUpperCase();

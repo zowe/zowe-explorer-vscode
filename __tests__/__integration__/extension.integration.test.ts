@@ -10,8 +10,8 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
-import { Logger, CliProfileManager } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Logger, CliProfileManager } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";

@@ -9,9 +9,9 @@
 *                                                                                 *
 */
 
-jest.mock("@brightside/core");
+jest.mock("@zowe/cli");
 import * as jesNodeActions from "../../../src/jes/jesNodeActions";
-import * as brightside from "@brightside/core";
+import * as zowe from "@zowe/cli";
 
 describe("jesNodeActions", () => {
 
@@ -23,7 +23,7 @@ describe("jesNodeActions", () => {
         const JESMSGLG = "JESMSGLG";
         const JESJCL = "JESJCL";
         const JESYSMSG = "JESYSMSG";
-        const iJobFile: brightside.IJobFile = {
+        const iJobFile: zowe.IJobFile = {
             "byte-count": 128,
             "job-correlator": "",
             "record-count": 1,

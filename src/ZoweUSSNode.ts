@@ -9,8 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import { Session } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Session } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();

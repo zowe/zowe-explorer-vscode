@@ -11,8 +11,8 @@
 
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
-import * as brtimperative from "@brightside/imperative";
-import * as zowe from "@brightside/core";
+import * as imperative from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
@@ -72,7 +72,7 @@ function getUSSTree() {
     return testUSSTree1;
 }
 
-const session = new brtimperative.Session({
+const session = new imperative.Session({
     user: "fake",
     password: "fake",
     hostname: "fake",

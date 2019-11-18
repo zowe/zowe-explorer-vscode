@@ -10,12 +10,9 @@
 */
 
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
-// tslint:disable-next-line: no-duplicate-imports
-import { IJob, IJobFile } from "@brightside/core";
+import * as zowe from "@zowe/cli";
+import { Session } from "@zowe/imperative";
 import * as extension from "./extension";
-import { ZosJobsProvider } from "./ZosJobsProvider";
 import * as utils from "./utils";
 
 // tslint:disable-next-line: max-classes-per-file
@@ -34,7 +31,7 @@ export class Job extends vscode.TreeItem {
     private _searchId: string;
 
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: Job, public session: Session, public job: IJob) {
+                public mParent: Job, public session: Session, public job: zowe.IJob) {
         super(label, mCollapsibleState);
         if (session) {
             this._owner = session.ISession.user;
@@ -182,7 +179,7 @@ export class Job extends vscode.TreeItem {
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
-                public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
+                public session: Session, public spool: zowe.IJobFile, public job: zowe.IJob, public parent: Job) {
         super(label, mCollapsibleState, mParent, session, job);
         this.contextValue = extension.JOBS_SPOOL_CONTEXT;
         utils.applyIcons(this);

@@ -10,7 +10,7 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
 import * as vscode from "vscode";

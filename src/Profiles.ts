@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
 import * as fs from "fs";
@@ -17,9 +17,7 @@ import * as path from "path";
 import * as ProfileLoader from "./ProfileLoader";
 import { URL } from "url";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import { DatasetTree } from "./DatasetTree";
-import { addSession } from "./extension";
+import * as zowe from "@zowe/cli";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 let url: URL;
 let validURL: string;
@@ -230,10 +228,10 @@ export class Profiles { // Processing stops if there are no profiles detected
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
+        const mainZoweDir = path.join(require.resolve("@zowe/cli"), "..", "..", "..", "..");
         // we have to mock a few things to get the Imperative.init to work properly
         try {
-            (process.mainModule as any).filename = require.resolve("@brightside/core");
+            (process.mainModule as any).filename = require.resolve("@zowe/cli");
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -244,7 +242,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         }
         try {
             // we need to call Imperative.init so that any installed credential manager plugins are loaded
-            await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+            await Imperative.init({ configurationModule: require.resolve("@zowe/cli/lib/imperative.js") });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }

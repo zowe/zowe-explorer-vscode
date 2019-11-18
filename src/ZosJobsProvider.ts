@@ -10,9 +10,8 @@
 */
 
 import * as vscode from "vscode";
-import { ZosmfSession, IJob, DeleteJobs, Utilities } from "@brightside/core";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
-// tslint:disable-next-line: no-duplicate-imports
+import { ZosmfSession, IJob, DeleteJobs } from "@zowe/cli";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
