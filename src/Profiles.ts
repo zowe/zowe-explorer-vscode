@@ -20,7 +20,7 @@ import * as nls from "vscode-nls";
 import * as ProfileLoader from "./ProfileLoader";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 let url: URL;
-let validURL: string;
+let validHost: string;
 let validPort: number;
 let IConnection: {
     name: string;
@@ -115,6 +115,21 @@ export class Profiles { // Processing stops if there are no profiles detected
         if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
             return false;
         }
+
+        // if port string is empty, set http/https defaults
+        if (!url.port.trim()) {
+            switch (url.protocol) {
+                case "https":
+                    validPort = 443;
+                case "http":
+                    validPort = 80;                   
+                break;
+            }
+        }
+        else {
+            validPort = Number(url.port);
+        }
+        validHost = url.hostname;
         return true;
     }
 
@@ -213,7 +228,7 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         IConnection = {
             name: profileName,
-            host: validURL,
+            host: validHost,
             port: validPort,
             user: userName,
             password: passWord,

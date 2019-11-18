@@ -168,6 +168,30 @@ describe("Profile class unit tests", () => {
             }
         });
 
+        it("should create profile https+443", async () => {
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("https://fake.url:443");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            let success = true;
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = false;
+            }
+            expect(success).toBe(true);
+            if (success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
+        });
+
         it("should validate URL", async () => {
             const res = await Profiles.getInstance().validateUrl("fake/url");
             expect(res).toBe(false);
