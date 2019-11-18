@@ -9,17 +9,15 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile } from "@brightside/imperative";
-import * as nls from "vscode-nls";
-import * as os from "os";
+import * as zowe from "@brightside/core";
+import { CliProfileManager, Imperative, ImperativeConfig, IProfile, IProfileLoaded, Logger } from "@brightside/imperative";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
-import * as ProfileLoader from "./ProfileLoader";
 import { URL } from "url";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import { DatasetTree } from "./DatasetTree";
-import { addSession } from "./extension";
+import * as nls from "vscode-nls";
+import * as ProfileLoader from "./ProfileLoader";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 let url: URL;
 let validURL: string;
@@ -105,14 +103,19 @@ export class Profiles { // Processing stops if there are no profiles detected
     }
 
     public validateUrl = (newUrl: string) => {
+
+        const validProtocols: string[] = ["https", "http"];
+
         try {
             url = new URL(newUrl);
         } catch (error) {
             return false;
         }
-        validURL = url.hostname;
-        validPort = Number(url.port);
-        return url.port ? true : false;
+        
+        if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
+            return false;
+        }
+        return true;
     }
 
     public async createNewConnection() {

@@ -11,11 +11,11 @@
 
 jest.mock("vscode");
 jest.mock("child_process");
-import * as vscode from "vscode";
+import { Logger } from "@brightside/imperative";
 import * as child_process from "child_process";
-import { Logger, profileLoadError } from "@brightside/imperative";
-import { Profiles } from "../../src/Profiles";
+import * as vscode from "vscode";
 import * as loader from "../../src/ProfileLoader";
+import { Profiles } from "../../src/Profiles";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -177,6 +177,27 @@ describe("Profile class unit tests", () => {
             const res = await Profiles.getInstance().validateUrl("https://fake:143");
             expect(res).toBe(true);
         });
+
+        it("should validate https:443 url", async () => {
+            const res = await Profiles.getInstance().validateUrl("https://10.142.0.23:443");
+            expect(res).toBe(true);
+        });
+
+        it("should validate http:80 url", async () => {
+            const res = await Profiles.getInstance().validateUrl("http://fake:80");
+            expect(res).toBe(true);
+        });
+
+        it("should reject ftp protocol url", async () => {
+            const res = await Profiles.getInstance().validateUrl("ftp://fake:80");
+            expect(res).toBe(false);
+        });
+
+        it("should reject invalid url syntax", async () => {
+            const res = await Profiles.getInstance().validateUrl("https://fake::80");
+            expect(res).toBe(false);
+        });
+
 
         it("it should validate duplicate profiles", async () => {
             showInputBox.mockResolvedValueOnce("profile1");
