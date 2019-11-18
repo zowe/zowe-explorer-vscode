@@ -48,6 +48,7 @@ export class Profiles { // Processing stops if there are no profiles detected
     public defaultProfile: IProfileLoaded;
 
     private spawnValue: number = -1;
+    private initValue: number = -1;
     private constructor(public log: Logger) {}
 
     public loadNamedProfile(name: string): IProfileLoaded {
@@ -242,11 +243,14 @@ export class Profiles { // Processing stops if there are no profiles detected
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
+        if (this.initValue === -1) {
+            try {
             // we need to call Imperative.init so that any installed credential manager plugins are loaded
-            await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+                await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            this.initValue = 0;
         }
         let zosmfProfile: IProfile;
         try {
