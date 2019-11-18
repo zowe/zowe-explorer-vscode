@@ -163,7 +163,7 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         zosmfURL = await vscode.window.showInputBox({
             ignoreFocusOut: true,
-            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "http(s)://url:port"),
+            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
             prompt: localize("createNewConnection.option.prompt.url",
                 "Enter a z/OSMF URL in the format 'https://url:port'."),
             validateInput: (text: string) => (this.validateAndParseUrl(text).valid ? "" : "Please enter a valid URL."),
