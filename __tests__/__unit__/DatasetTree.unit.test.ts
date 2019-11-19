@@ -551,4 +551,28 @@ describe("DatasetTree Unit Tests", () => {
         expect(getConfiguration.mock.calls.length).toBe(2);
     });
 
+    it("Should rename a favorited node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+
+        testTree.addFavorite(node);
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        testTree.renameFavorite(node, newLabel);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+        expect(testTree.mFavorites[0].label).toBe(`[${sessionNode.label.trim()}]: ${newLabel}`);
+    });
+
+    it("Should rename a node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        sessionNode.children.push(node);
+        testTree.renameNode(sessionNode.label.trim(), "node", newLabel);
+
+        expect(sessionNode.children[sessionNode.children.length-1].label).toBe(newLabel);
+        sessionNode.children.pop();
+    });
 });
