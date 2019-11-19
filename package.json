@@ -106,6 +106,10 @@
         "title": "%showDSAttributes%"
       },
       {
+        "command": "zowe.renameDataSet",
+        "title": "%renameDataSet%"
+      },
+      {
         "command": "zowe.deleteDataset",
         "title": "%deleteDataset%"
       },
@@ -639,6 +643,11 @@
           "group": "2_information"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -679,6 +688,11 @@
           "group": "4_workspace"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -704,6 +718,11 @@
           "group": "1_create"
         },
         {
+          "when": "view == zowe.explorer && viewItem == pds",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -727,6 +746,11 @@
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.removeFavorite",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
         },
         {
           "when": "view == zowe.explorer && viewItem == session",
@@ -1125,7 +1149,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "2.32.1",
+    "@brightside/core": "^2.33.0",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
