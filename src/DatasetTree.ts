@@ -303,14 +303,18 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
-            try {
-                node = await Profiles.getInstance().promptCredentials(node);
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+        try {
+            if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+                try {
+                    node = await Profiles.getInstance().promptCredentials(node);
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                await this.refreshElement(node);
+                await this.refresh();
             }
-            await this.refreshElement(node);
-            await this.refresh();
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
         }
         if (node !== undefined) {
             if (node.contextValue === extension.DS_SESSION_CONTEXT) {

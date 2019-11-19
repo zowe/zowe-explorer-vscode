@@ -109,7 +109,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake/url");
             await profiles.createNewConnection();
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Please enter your z/OS username. Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
 
         it("should indicate missing property: zosmf url", async () => {
@@ -129,7 +129,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection();
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Please enter your z/OS password. Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
 
         it("should notify that the operation was cancelled", async () => {
