@@ -2,6 +2,18 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.28.0
+
+- Provide ability to add new profiles in explorer. Thanks @crawr, @jellypuno
+- Recognize migrated dataset context. @Colin-Stone
+- Fix dataset delete fails silently bug. @Colin-Stone
+
+## 0.27.0
+
+- Name change to Zowe Explorer
+- Enhancements to the History recall 'QuickPick' dialogs. @Colin-Stone
+- Favorites are now sorted. @Colin-Stone
+
 ## 0.26.1
 
 - Fix vulnerabilities related to brightside-core

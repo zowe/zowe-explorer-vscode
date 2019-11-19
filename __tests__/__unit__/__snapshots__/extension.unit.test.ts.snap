@@ -343,6 +343,21 @@ Array [
     "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
+    "command": "zowe.showDSAttributes",
+    "group": "2_information",
+    "when": "view == zowe.explorer && viewItem == migr",
+  },
+  Object {
+    "command": "zowe.addFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.explorer && viewItem == migr",
+  },
+  Object {
+    "command": "zowe.removeFavorite",
+    "group": "4_workspace",
+    "when": "view == zowe.explorer && viewItem == migr_fav",
+  },
+  Object {
     "command": "zowe.pattern",
     "group": "inline",
     "when": "view == zowe.explorer && viewItem == session",

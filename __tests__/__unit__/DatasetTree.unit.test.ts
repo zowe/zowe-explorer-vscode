@@ -47,19 +47,6 @@ describe("DatasetTree Unit Tests", () => {
         };
     });
 
-    const testResponse: zowe.IZosFilesResponse[] = [];
-    testResponse.push({
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    items: [
-                        {dsname: "BRTVS99", dsorg: "PS", blksz: "6160", catnm: "ICFCAT.MV.CATALOGB"},
-                        {dsname: "BRTVS99.CA11.SPFTEMP0.CNTL", dsorg: "PO", blksz: "6160", catnm: "ICFCAT.MV.CATALOGA"},
-                        {dsname: "BRTVS99.DDIR", dsorg: "PO", blksz: "6160", catnm: "ICFCAT.MV.CATALOGA"}
-                    ]
-                }
-            });
-
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
@@ -208,6 +195,7 @@ describe("DatasetTree Unit Tests", () => {
         // Creating fake datasets and dataset members to test
         const sampleChildren: ZoweNode[] = [
             new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null),
+            new ZoweNode("BRTVS99.CA10", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null, extension.DS_MIGRATED_FILE_CONTEXT),
             new ZoweNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
         ];

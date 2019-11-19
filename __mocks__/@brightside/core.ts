@@ -50,6 +50,7 @@ export namespace List {
                 apiResponse: {
                     items: [
                         new Items("BRTVS99", "PS", null),
+                        new Items("BRTVS99.CA10", null, null, "YES"),
                         new Items("BRTVS99.CA11.SPFTEMP0.CNTL", "PO", null),
                         new Items("BRTVS99.DDIR", "PO", null)
                     ]
@@ -83,7 +84,7 @@ export namespace List {
     }
 
     export class Items {
-        constructor(public dsname: string, public dsorg: string, public member: string) {
+        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) {
         }
     }
 

@@ -1,5 +1,5 @@
 {
-    "displayName": "Zowe",
+    "displayName": "Zowe Explorer",
     "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
     "viewsContainers.activitybar": "Zowe",
     "zowe.explorer": "Data Sets",
@@ -67,5 +67,10 @@
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
     "issueTsoCmd" : "Zowe: Issue TSO Command...",
-    "renameDataSet" : "Rename Data Set"
+    "renameDataSet" : "Rename Data Set",
+    "profile.configuration.title": "Zowe z/OSMF Profiles",
+    "profile.configuration.name": "Profile Name",
+    "profile.configuration.url": "z/OSMF URL",
+    "profile.configuration.user": "z/OSMF User Name",
+    "profile.configuration.ru": "Profile Reject Unauthorize"
   }
