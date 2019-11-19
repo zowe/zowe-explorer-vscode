@@ -168,6 +168,54 @@ describe("Profile class unit tests", () => {
             }
         });
 
+        it("should create 2 consecutive profiles", async () => {
+            let success = true;
+            showInputBox.mockResolvedValueOnce("fake1");
+            showInputBox.mockResolvedValueOnce("https://fake1:143");
+            showInputBox.mockResolvedValueOnce("fake1");
+            showInputBox.mockResolvedValueOnce("fake1");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = false;
+            }
+            expect(success).toBe(true);
+            if (success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
+
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+            showInputBox.mockResolvedValueOnce("fake2");
+            showInputBox.mockResolvedValueOnce("https://fake2:143");
+            showInputBox.mockResolvedValueOnce("fake2");
+            showInputBox.mockResolvedValueOnce("fake2");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            success = true;
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = false;
+            }
+            expect(success).toBe(true);
+            if (success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
+        });
+
         it("should validate URL", async () => {
             const res = await Profiles.getInstance().validateUrl("fake/url");
             expect(res).toBe(false);
