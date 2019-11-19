@@ -2284,5 +2284,26 @@ describe("Extension Unit Tests", () => {
             expect(renameDataSet.mock.calls.length).toBe(1);
             expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
         });
+        it("Should throw an error if zowe.Rename.dataSet throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSet.mockImplementation(() => { throw defaultError });
+
+            const child = new ZoweNode("[sessNode]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.DELETE.NODE.NEW");
+            try {
+                await extension.renameDataSet(child, testTree);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
+            expect(error).toBe(defaultError);
+        });
     });
 });
