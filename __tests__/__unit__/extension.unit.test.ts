@@ -2290,7 +2290,7 @@ describe("Extension Unit Tests", () => {
 
             showInputBox.mockReset();
             renameDataSet.mockReset();
-            renameDataSet.mockImplementation(() => { throw defaultError });
+            renameDataSet.mockImplementation(() => { throw defaultError; });
 
             const child = new ZoweNode("[sessNode]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             child.contextValue = "ds_fav";

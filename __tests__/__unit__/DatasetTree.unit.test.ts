@@ -561,29 +561,30 @@ describe("DatasetTree Unit Tests", () => {
         mockAffects.mockReturnValue(true);
         await testTree.onDidChangeConfiguration(e);
         expect(getConfiguration.mock.calls.length).toBe(2);
-    }); 
-    
+    });
+
     it("Should rename a favorited node", async () => {
-        const session = testTree.mSessionNodes[1];
+        const sessionNode = testTree.mSessionNodes[1];
         const newLabel = "USER.NEW.LABEL";
         testTree.mFavorites = [];
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, session, null);
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
 
         testTree.addFavorite(node);
-        node.label = `[${session.label.trim()}]: ${node.label}`;
-        testTree.renameFavorite(node, newLabel)
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        testTree.renameFavorite(node, newLabel);
 
         expect(testTree.mFavorites.length).toEqual(1);
-        expect(testTree.mFavorites[0].label).toBe(`[${session.label.trim()}]: ${newLabel}`);
+        expect(testTree.mFavorites[0].label).toBe(`[${sessionNode.label.trim()}]: ${newLabel}`);
     });
 
     it("Should rename a node", async () => {
-        const session = testTree.mSessionNodes[1];
+        const sessionNode = testTree.mSessionNodes[1];
         const newLabel = "USER.NEW.LABEL";
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, session, null);
-        session.children.push(node);
-        testTree.renameNode(session.label.trim(), "node", newLabel);
-        
-        expect(session.children[3].label).toBe(newLabel);
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        sessionNode.children.push(node);
+        testTree.renameNode(sessionNode.label.trim(), "node", newLabel);
+
+        // tslint:disable-next-line:no-magic-numbers
+        expect(sessionNode.children[3].label).toBe(newLabel);
     });
 });
