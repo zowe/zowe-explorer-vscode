@@ -2442,6 +2442,7 @@ describe("Extension Unit Tests", () => {
             expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
             expect(error).toBe(defaultError);
         });
+    });
 
     it("tests the issueTsoCommand function", async () => {
         showQuickPick.mockReset();

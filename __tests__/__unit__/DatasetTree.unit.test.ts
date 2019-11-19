@@ -572,7 +572,7 @@ describe("DatasetTree Unit Tests", () => {
         sessionNode.children.push(node);
         testTree.renameNode(sessionNode.label.trim(), "node", newLabel);
 
-        // tslint:disable-next-line:no-magic-numbers
-        expect(sessionNode.children[3].label).toBe(newLabel);
+        expect(sessionNode.children[sessionNode.children.length-1].label).toBe(newLabel);
+        sessionNode.children.pop();
     });
 });
