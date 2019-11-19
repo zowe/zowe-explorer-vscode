@@ -219,12 +219,12 @@ export class Profiles { // Processing stops if there are no profiles detected
         return profileName;
     }
 
-    public async promptCredentials(node: ZoweNode) {
+    public async promptCredentials(sessName) {
         let userName: string;
         let passWord: string;
         let options: vscode.InputBoxOptions;
 
-        const loadProfile = this.loadNamedProfile(node.label);
+        const loadProfile = this.loadNamedProfile(sessName);
         const loadSession = loadProfile.profile as ISession;
 
         if (!loadSession.user) {
@@ -267,10 +267,10 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         const updProfile: IProfile = loadSession;
         const updSession: Session = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
-        node.getSession().ISession.user = updSession.ISession.user;
-        node.getSession().ISession.password = updSession.ISession.password;
-        node.getSession().ISession.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-        return node;
+        // node.getSession().ISession.user = updSession.ISession.user;
+        // node.getSession().ISession.password = updSession.ISession.password;
+        // node.getSession().ISession.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+        return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {

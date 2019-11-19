@@ -53,6 +53,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public readonly onDidChangeTreeData: vscode.Event<ZoweNode | undefined> = this.mOnDidChangeTreeData.event;
     private mHistory: PersistentFilters;
     private log: Logger;
+    private validProfile: number = -1;
 
     constructor() {
         this.mFavoriteSession = new ZoweNode(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null);
@@ -303,20 +304,36 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
+        let usrNme: string;
+        let passWrd: string;
+        let baseEncd: string;
         try {
             if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
                 try {
-                    node = await Profiles.getInstance().promptCredentials(node);
+                    const values = await Profiles.getInstance().promptCredentials(node.label);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
+                    }
                 } catch (error) {
                     vscode.window.showErrorMessage(error.message);
                 }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    node.getSession().ISession.user = usrNme;
+                    node.getSession().ISession.password = passWrd;
+                    node.getSession().ISession.base64EncodedAuth = baseEncd;
+                    this.validProfile = 0;
+                }
                 await this.refreshElement(node);
                 await this.refresh();
+            } else {
+                this.validProfile = 0;
             }
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        if (node !== undefined) {
+        if (this.validProfile === 0) {
             if (node.contextValue === extension.DS_SESSION_CONTEXT) {
                 if (this.mHistory.getHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);

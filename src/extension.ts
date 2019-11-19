@@ -593,14 +593,15 @@ export async function addSession(datasetProvider: DatasetTree) {
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
-            Profiles.getInstance().listProfile();
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+        if (newprofile !== undefined) {
+            try {
+                await Profiles.getInstance().listProfile();
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            await datasetProvider.addSession(newprofile);
+            await datasetProvider.refresh();
         }
-        await datasetProvider.addSession(newprofile);
-        await datasetProvider.refresh();
-        await Profiles.getInstance().promptCredentials(newprofile);
     } else if(chosenProfile) {
         log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
         await datasetProvider.addSession(chosenProfile);
@@ -648,13 +649,15 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
-            Profiles.getInstance().listProfile();
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+        if (newprofile !== undefined) {
+            try {
+                await Profiles.getInstance().listProfile();
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            await ussFileProvider.addSession(newprofile);
+            await ussFileProvider.refresh();
         }
-        await ussFileProvider.addSession(newprofile);
-        await ussFileProvider.refresh();
     } else if(chosenProfile) {
         log.debug(localize("addUSSSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
         await ussFileProvider.addSession(chosenProfile);
@@ -673,6 +676,10 @@ export async function addUSSSession(ussFileProvider: USSTree) {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
+    let usrNme: string;
+    let passWrd: string;
+    let baseEncd: string;
+    let validProfile: number = -1;
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
@@ -688,14 +695,27 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
 
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
-            node = await Profiles.getInstance().promptCredentials(node);
+            const values = await Profiles.getInstance().promptCredentials(node.label);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
+            this.validProfile = 0;
+        }
         await datasetProvider.refreshElement(node);
         await datasetProvider.refresh();
+    } else {
+        validProfile = 0;
     }
-    if (node !== undefined) {
+    if (validProfile === 0) {
         // get data set type
         const type = await vscode.window.showQuickPick(types, quickPickOptions);
         if (type == null) {
@@ -1582,13 +1602,15 @@ export async function addJobsSession(jobsProvider: ZosJobsProvider) {
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
             }
-            try {
-                Profiles.getInstance().listProfile();
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+            if (newprofile !== undefined) {
+                try {
+                    await Profiles.getInstance().listProfile();
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                await jobsProvider.addSession(newprofile);
+                await jobsProvider.refresh();
             }
-            await jobsProvider.addSession(newprofile);
-            await jobsProvider.refresh();
         } else if(chosenProfile) {
             log.debug(localize("addJobsSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
             await jobsProvider.addSession(chosenProfile);
