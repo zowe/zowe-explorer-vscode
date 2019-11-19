@@ -303,71 +303,82 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        if (node.contextValue === extension.DS_SESSION_CONTEXT) {
-            if (this.mHistory.getHistory().length > 0) {
-                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
-                if (extension.ISTHEIA) {
-                    const options1: vscode.QuickPickOptions = {
-                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
-                    };
-                    // get user selection
-                    const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    pattern = choice === createPick ? "" : choice.label;
-                } else {
-                    const quickpick = vscode.window.createQuickPick();
-                    quickpick.items = [createPick, ...items];
-                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                    quickpick.ignoreFocusOut = true;
-                    quickpick.show();
-                    const choice = await resolveQuickPickHelper(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        if (quickpick.value) {
-                            pattern = quickpick.value;
-                        }
-                    } else {
-                        pattern = choice.label;
-                    }
-                }
+        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+            try {
+                node = await Profiles.getInstance().promptCredentials(node);
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
             }
-            if (!pattern) {
-                // manually entering a search
-                const options2: vscode.InputBoxOptions = {
-                    prompt: localize("enterPattern.options.prompt",
-                                        "Search data sets by entering patterns: use a comma to separate multiple patterns"),
-                    value: node.pattern,
-                };
-                // get user input
-                pattern = await vscode.window.showInputBox(options2);
-                if (!pattern) {
-                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
-                    return;
-                }
-            }
-        } else {
-            // executing search from saved search in favorites
-            pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-            const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(session);
-            node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+            await this.refreshElement(node);
+            await this.refresh();
         }
-        // update the treeview with the new pattern
-        node.label = node.label.trim()+ " ";
-        node.label.trim();
-        node.tooltip = node.pattern = pattern.toUpperCase();
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.dirty = true;
-        node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
-        this.addHistory(node.pattern);
+        if (node !== undefined) {
+            if (node.contextValue === extension.DS_SESSION_CONTEXT) {
+                if (this.mHistory.getHistory().length > 0) {
+                    const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    if (extension.ISTHEIA) {
+                        const options1: vscode.QuickPickOptions = {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                        };
+                        // get user selection
+                        const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        pattern = choice === createPick ? "" : choice.label;
+                    } else {
+                        const quickpick = vscode.window.createQuickPick();
+                        quickpick.items = [createPick, ...items];
+                        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                        quickpick.ignoreFocusOut = true;
+                        quickpick.show();
+                        const choice = await resolveQuickPickHelper(quickpick);
+                        quickpick.hide();
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        if (choice instanceof FilterDescriptor) {
+                            if (quickpick.value) {
+                                pattern = quickpick.value;
+                            }
+                        } else {
+                            pattern = choice.label;
+                        }
+                    }
+                }
+                if (!pattern) {
+                    // manually entering a search
+                    const options2: vscode.InputBoxOptions = {
+                        prompt: localize("enterPattern.options.prompt",
+                                            "Search data sets by entering patterns: use a comma to separate multiple patterns"),
+                        value: node.pattern,
+                    };
+                    // get user input
+                    pattern = await vscode.window.showInputBox(options2);
+                    if (!pattern) {
+                        vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
+                        return;
+                    }
+                }
+            } else {
+                // executing search from saved search in favorites
+                pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                await this.addSession(session);
+                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+            }
+            // update the treeview with the new pattern
+            node.label = node.label.trim()+ " ";
+            node.label.trim();
+            node.tooltip = node.pattern = pattern.toUpperCase();
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            node.dirty = true;
+            node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
+            this.addHistory(node.pattern);
+        }
     }
 
     /**

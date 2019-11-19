@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile, Session, ISession } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
 import * as fs from "fs";
@@ -20,6 +20,7 @@ import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import { DatasetTree } from "./DatasetTree";
 import { addSession } from "./extension";
+import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 let url: URL;
 let validURL: string;
@@ -48,6 +49,7 @@ export class Profiles { // Processing stops if there are no profiles detected
     public defaultProfile: IProfileLoaded;
 
     private spawnValue: number = -1;
+    private initValue: number = -1;
     private constructor(public log: Logger) {}
 
     public loadNamedProfile(name: string): IProfileLoaded {
@@ -151,31 +153,19 @@ export class Profiles { // Processing stops if there are no profiles detected
         }
 
         options = {
-            placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
+            placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "Optional: User Name"),
             prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection"),
             value: userName
         };
         userName = await vscode.window.showInputBox(options);
 
-        if (!userName) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
-                    "Please enter your z/OS username. Operation Cancelled"));
-            return;
-        }
-
         options = {
-            placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
+            placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Optional: Password"),
             prompt: localize("createNewConnection.option.prompt.userName", "Enter a password for the connection"),
             password: true,
             value: passWord
         };
         passWord = await vscode.window.showInputBox(options);
-
-        if (!passWord) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
-                    "Please enter your z/OS password. Operation Cancelled"));
-            return;
-        }
 
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
@@ -214,7 +204,7 @@ export class Profiles { // Processing stops if there are no profiles detected
             port: validPort,
             user: userName,
             password: passWord,
-            rejectUnauthorized: rejectUnauthorize,
+            rejectUnauthorized: rejectUnauthorize
         };
 
         let newProfile: IProfile;
@@ -227,6 +217,60 @@ export class Profiles { // Processing stops if there are no profiles detected
         await zowe.ZosmfSession.createBasicZosmfSession(newProfile);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");
         return profileName;
+    }
+
+    public async promptCredentials(node: ZoweNode) {
+        let userName: string;
+        let passWord: string;
+        let options: vscode.InputBoxOptions;
+
+        const loadProfile = this.loadNamedProfile(node.label);
+        const loadSession = loadProfile.profile as ISession;
+
+        if (!loadSession.user) {
+
+            options = {
+                placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
+                prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection"),
+                value: userName
+            };
+            userName = await vscode.window.showInputBox(options);
+
+            if (!userName) {
+                vscode.window.showErrorMessage(localize("createNewConnection.enterzosmfURL",
+                        "Please enter your z/OS username. Operation Cancelled"));
+                return;
+            } else {
+                loadSession.user = userName;
+            }
+        }
+
+        if (!loadSession.password) {
+            passWord = loadSession.password;
+
+            options = {
+                placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
+                prompt: localize("createNewConnection.option.prompt.userName", "Enter a password for the connection"),
+                password: true,
+                value: passWord
+            };
+            passWord = await vscode.window.showInputBox(options);
+
+            if (!passWord) {
+                vscode.window.showErrorMessage(localize("createNewConnection.enterzosmfURL",
+                        "Please enter your z/OS password. Operation Cancelled"));
+                return;
+            } else {
+                loadSession.password = passWord;
+            }
+        }
+
+        const updProfile: IProfile = loadSession;
+        const updSession: Session = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
+        node.getSession().ISession.user = updSession.ISession.user;
+        node.getSession().ISession.password = updSession.ISession.password;
+        node.getSession().ISession.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+        return node;
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
@@ -242,11 +286,14 @@ export class Profiles { // Processing stops if there are no profiles detected
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
+        if (this.initValue === -1) {
+            try {
             // we need to call Imperative.init so that any installed credential manager plugins are loaded
-            await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+                await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            this.initValue = 0;
         }
         let zosmfProfile: IProfile;
         try {

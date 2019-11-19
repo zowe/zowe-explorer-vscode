@@ -15,7 +15,7 @@ import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ISession } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -600,6 +600,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         }
         await datasetProvider.addSession(newprofile);
         await datasetProvider.refresh();
+        await Profiles.getInstance().promptCredentials(newprofile);
     } else if(chosenProfile) {
         log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
         await datasetProvider.addSession(chosenProfile);
@@ -684,51 +685,63 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
-    // get data set type
-    const type = await vscode.window.showQuickPick(types, quickPickOptions);
-    if (type == null) {
-        log.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
-        return;
-    } else {
-        log.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
+
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+        try {
+            node = await Profiles.getInstance().promptCredentials(node);
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        await datasetProvider.refreshElement(node);
+        await datasetProvider.refresh();
     }
+    if (node !== undefined) {
+        // get data set type
+        const type = await vscode.window.showQuickPick(types, quickPickOptions);
+        if (type == null) {
+            log.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
+            return;
+        } else {
+            log.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
+        }
 
-    let typeEnum;
-    let createOptions;
-    switch (type) {
-        case localize("createFile.dataSetBinary", "Data Set Binary"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
-            break;
-        case localize("createFile.dataSetC", "Data Set C"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
-            break;
-        case localize("createFile.dataSetClassic", "Data Set Classic"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
-            break;
-        case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
-            break;
-        case localize("createFile.dataSetSequential", "Data Set Sequential"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
-            break;
-    }
+        let typeEnum;
+        let createOptions;
+        switch (type) {
+            case localize("createFile.dataSetBinary", "Data Set Binary"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+                break;
+            case localize("createFile.dataSetC", "Data Set C"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+                break;
+            case localize("createFile.dataSetClassic", "Data Set Classic"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+                break;
+            case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+                break;
+            case localize("createFile.dataSetSequential", "Data Set Sequential"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+                break;
+        }
 
-    // get name of data set
-    const name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
+        // get name of data set
+        const name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
 
-    try {
-        await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
-        node.dirty = true;
-        datasetProvider.refresh();
-    } catch (err) {
-        log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-        throw (err);
+        try {
+            await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
+            node.dirty = true;
+            datasetProvider.refresh();
+        } catch (err) {
+            log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(err.message);
+            throw (err);
+        }
     }
 }
 
