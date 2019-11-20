@@ -22,7 +22,7 @@ const extensionConfig = {
         extension: path.resolve(basePath, 'src/extension.ts')
     },
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, 'out'),
         filename: '[name].js',
         libraryTarget: 'commonjs',
         devtoolModuleFilenameTemplate: '../[resource-path]'
