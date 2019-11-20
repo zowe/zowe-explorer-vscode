@@ -265,8 +265,12 @@ export class Profiles { // Processing stops if there are no profiles detected
             try {
                 const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
                 const settings = JSON.parse(fs.readFileSync(fileName).toString());
-                const value = settings.overrides.CredentialManager;
-                this.spawnValue = value !== false ? 0 : 1;
+
+                if (settings.overrides.CredentialManager !== null && settings.overrides.CredentialManager !== undefined) {
+                  this.spawnValue = settings.overrides.CredentialManager !== false ? 0 : 1;
+                } else if (settings.overrides["credential-manager"] !== null && settings.overrides["credential-manager"] !== undefined) {
+                  this.spawnValue = settings.overrides["credential-manager"] !== false ? 0 : 1;
+                }
             } catch (error) {
                 // default to spawn
                 this.spawnValue = 0;
