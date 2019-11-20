@@ -53,6 +53,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
     public createOwner = new OwnerFilterDescriptor();
     public createId = new JobIdFilterDescriptor();
 
+    private validProfile: number = -1;
     private mHistory: PersistentFilters;
     private log: Logger;
 
@@ -293,119 +294,150 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
         const hasHistory = this.mHistory.getHistory().length > 0;
-        if (node.contextValue === extension.JOBS_SESSION_CONTEXT) { // This is the profile object context
-            if (hasHistory) { // Check if user has created some history
-                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
-                if (extension.ISTHEIA) { // Theia doesn't work properly when directly creating a QuickPick
-                    const options1: vscode.QuickPickOptions = {
-                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
-                    };
-                    // get user selection
-                    choice = (await vscode.window.showQuickPick([this.createOwner, this.createId, ...items], options1));
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
+        let usrNme: string;
+        let passWrd: string;
+        let baseEncd: string;
+        try {
+            if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(node.label);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
                     }
-                    searchCriteria = choice === this.createOwner || choice === this.createId ? "" : choice.label;
-                } else { // VSCode route to create a QuickPick
-                    const quickpick = vscode.window.createQuickPick();
-                    quickpick.items = [this.createOwner, this.createId,  ...items];
-                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                    quickpick.ignoreFocusOut = true;
-                    quickpick.show();
-                    choice = await resolveQuickPickHelper(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        if ( quickpick.value.length > 0) {
-                            searchCriteria = this.interpretFreeform(quickpick.value);
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    node.session.ISession.user = usrNme;
+                    node.session.ISession.password = passWrd;
+                    node.session.ISession.base64EncodedAuth = baseEncd;
+                    this.validProfile = 0;
+                }
+                await this.refreshElement(node);
+                await this.refresh();
+            } else {
+                this.validProfile = 0;
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (this.validProfile === 0) {
+            if (node.contextValue === extension.JOBS_SESSION_CONTEXT) { // This is the profile object context
+                if (hasHistory) { // Check if user has created some history
+                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    if (extension.ISTHEIA) { // Theia doesn't work properly when directly creating a QuickPick
+                        const options1: vscode.QuickPickOptions = {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                        };
+                        // get user selection
+                        choice = (await vscode.window.showQuickPick([this.createOwner, this.createId, ...items], options1));
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
                         }
-                    } else {
-                        searchCriteria = choice.label;
+                        searchCriteria = choice === this.createOwner || choice === this.createId ? "" : choice.label;
+                    } else { // VSCode route to create a QuickPick
+                        const quickpick = vscode.window.createQuickPick();
+                        quickpick.items = [this.createOwner, this.createId,  ...items];
+                        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                        quickpick.ignoreFocusOut = true;
+                        quickpick.show();
+                        choice = await resolveQuickPickHelper(quickpick);
+                        quickpick.hide();
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        if (choice instanceof FilterDescriptor) {
+                            if ( quickpick.value.length > 0) {
+                                searchCriteria = this.interpretFreeform(quickpick.value);
+                            }
+                        } else {
+                            searchCriteria = choice.label;
+                        }
                     }
                 }
-            }
-            if (!searchCriteria) { // Do we have anything to search with yet?
-                // if (searchCriteria === ZosJobsProvider.defaultDialogText) {
-                let options: vscode.InputBoxOptions;
-                let owner: string;
-                let prefix: string;
-                let jobid: string;
-                // manually entering a search
-                if (!hasHistory || choice === this.createOwner) { // User has selected owner/prefix option
-                    options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.owner",
-                        "Enter the Job Owner. Default is *."),
-                        value: node.owner
-                    };
-                    // get user input
-                    owner = await vscode.window.showInputBox(options);
-                    if (owner === undefined) {
-                        vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                        return;
-                    }
-                    if (!owner) {
-                        owner = "*";
-                    }
-                    owner = owner.toUpperCase();
-                    options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
-                        value: node.prefix
-                    };
-                    // get user input
-                    prefix = await vscode.window.showInputBox(options);
-                    if (prefix === undefined) {
-                        vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                        return;
-                    }
-                    if (!prefix) {
-                        prefix = "*";
-                    }
-                    prefix = prefix.toUpperCase();
-                    if (!hasHistory || choice === this.createId) {
+                if (!searchCriteria) { // Do we have anything to search with yet?
+                    // if (searchCriteria === ZosJobsProvider.defaultDialogText) {
+                    let options: vscode.InputBoxOptions;
+                    let owner: string;
+                    let prefix: string;
+                    let jobid: string;
+                    // manually entering a search
+                    if (!hasHistory || choice === this.createOwner) { // User has selected owner/prefix option
+                        options = {
+                            prompt: localize("jobsFilterPrompt.option.prompt.owner",
+                            "Enter the Job Owner. Default is *."),
+                            value: node.owner
+                        };
+                        // get user input
+                        owner = await vscode.window.showInputBox(options);
+                        if (owner === undefined) {
+                            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                            return;
+                        }
+                        if (!owner) {
+                            owner = "*";
+                        }
+                        owner = owner.toUpperCase();
+                        options = {
+                            prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
+                            value: node.prefix
+                        };
+                        // get user input
+                        prefix = await vscode.window.showInputBox(options);
+                        if (prefix === undefined) {
+                            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                            return;
+                        }
+                        if (!prefix) {
+                            prefix = "*";
+                        }
+                        prefix = prefix.toUpperCase();
+                        if (!hasHistory || choice === this.createId) {
+                            options = {
+                                prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
+                                value: node.searchId
+                            };
+                            // get user input
+                            jobid = await vscode.window.showInputBox(options);
+                            if (jobid === undefined) {
+                                vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                                return;
+                            }
+                        }
+                    } else { // User has selected JobId option
                         options = {
                             prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
                             value: node.searchId
                         };
                         // get user input
                         jobid = await vscode.window.showInputBox(options);
-                        if (jobid === undefined) {
+                        if (!jobid) {
                             vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
                             return;
                         }
                     }
-                } else { // User has selected JobId option
-                    options = {
-                        prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
-                        value: node.searchId
-                    };
-                    // get user input
-                    jobid = await vscode.window.showInputBox(options);
-                    if (!jobid) {
-                        vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                        return;
-                    }
+                    searchCriteria = this.createSearchLabel(owner, prefix, jobid);
                 }
-                searchCriteria = this.createSearchLabel(owner, prefix, jobid);
+                this.applySearchLabelToNode(node, searchCriteria);
+            } else {
+                // executing search from saved search in favorites
+                searchCriteria = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                await this.addSession(session);
+                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                this.applySearchLabelToNode(node, searchCriteria);
             }
-            this.applySearchLabelToNode(node, searchCriteria);
-        } else {
-            // executing search from saved search in favorites
-            searchCriteria = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-            const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(session);
-            node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
-            this.applySearchLabelToNode(node, searchCriteria);
-        }
-        this.addHistory(searchCriteria);
+            this.addHistory(searchCriteria);
 
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.iconPath = applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
-        node.dirty = true;
-        this.refreshElement(node);
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            node.iconPath = applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
+            node.dirty = true;
+            this.refreshElement(node);
+        }
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {

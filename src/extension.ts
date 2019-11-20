@@ -15,7 +15,7 @@ import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded, ISession } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -55,6 +55,10 @@ export const JOBS_SPOOL_CONTEXT = "spool";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 
+let usrNme: string;
+let passWrd: string;
+let baseEncd: string;
+let validProfile: number = -1;
 let log: Logger;
 /**
  * The function that runs when the extension is loaded
@@ -241,8 +245,31 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.runStopCommand", (job) => {
             stopCommand(job);
         });
-        vscode.commands.registerCommand("zowe.refreshJobsServer", (node) => {
-            jobsProvider.refreshElement(node);
+        vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => {
+            if ((!node.session.ISession.user ) || (!node.session.ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(node.label);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    node.session.ISession.user = usrNme;
+                    node.session.ISession.password = passWrd;
+                    node.session.ISession.base64EncodedAuth = baseEncd;
+                    node.owner = usrNme;
+                    validProfile = 0;
+                }
+            } else {
+                validProfile = 0;
+            }
+            if (validProfile === 0) {
+                await jobsProvider.refreshElement(node);
+            }
         });
         vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
             jobsProvider.mSessionNodes.forEach((jobNode) => {
@@ -321,6 +348,25 @@ export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
         };
         sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         zosmfProfile = allProfiles.filter((profile) => profile.name === sesName)[0];
+        const updProfile = zosmfProfile.profile as ISession;
+        if ((!updProfile.user) || (!updProfile.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(zosmfProfile.name);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                updProfile.user = usrNme;
+                updProfile.password = passWrd;
+                updProfile.base64EncodedAuth = baseEncd;
+                zosmfProfile.profile = updProfile as IProfile;
+            }
+        }
     } else {
         vscode.window.showInformationMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
     }
@@ -676,10 +722,6 @@ export async function addUSSSession(ussFileProvider: USSTree) {
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
-    let usrNme: string;
-    let passWrd: string;
-    let baseEncd: string;
-    let validProfile: number = -1;
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
