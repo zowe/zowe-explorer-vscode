@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.29.0
+
+- Provide ability to rename datasets. Thanks @CForrest97
+- Fix URL parsing. @MarkAckert
+- Fixed `AppSettings` error message. @jellypuno
+
 ## 0.28.0
 
 - Provide ability to add new profiles in explorer. Thanks @crawr, @jellypuno
