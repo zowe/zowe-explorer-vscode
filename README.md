@@ -23,7 +23,7 @@ Zowe&trade; Explorer extension modernizes the way developers and system administ
 
 Ensure that you meet the following prerequisites before using the extension:
 
-* Configured [z/OSMF](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
+* Configured TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 * Zowe CLI `zosmf` profile.
 
 **Notes:**
