@@ -1159,6 +1159,7 @@
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
+    "tslint": "5.17.0",
     "typescript": "^3.5.1",
     "vsce": "^1.60.0",
     "vscode": "^1.1.30",
@@ -1171,7 +1172,6 @@
     "gulp-cli": "^2.2.0",
     "gulp-fs": "0.0.2",
     "jsdoc": "^3.6.3",
-    "tslint": "^5.17.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {
