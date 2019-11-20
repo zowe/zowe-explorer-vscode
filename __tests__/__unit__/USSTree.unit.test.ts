@@ -14,15 +14,14 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-jest.mock("../../src/ProfileLoader");
+jest.mock("../../src/Profiles");
 import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
-
+import { Profiles } from "../../src/Profiles";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -34,21 +33,6 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {
-        value: jest.fn((name: string) => {
-            return { name };
-        })
-    });
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }];
-        })
-    });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {
-        value: jest.fn(() => {
-            return { name: "defaultprofile" };
-        })
-    });
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     getConfiguration.mockReturnValue({
@@ -83,10 +67,12 @@ describe("Unit Tests (Jest)", () => {
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
+    const createQuickPick = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
@@ -99,7 +85,17 @@ describe("Unit Tests (Jest)", () => {
     testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
-
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"},
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
     afterEach(async () => {
         getConfiguration.mockClear();
     });
@@ -155,6 +151,11 @@ describe("Unit Tests (Jest)", () => {
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
+
+        // Additional tests for favorite icon state coverage
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-closed.svg");
+        await testTree.flipState(sessNode[0], true);
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-open.svg");
     });
 
     /*************************************************************************************************************
@@ -255,11 +256,10 @@ describe("Unit Tests (Jest)", () => {
      * Test the addSession command
      *************************************************************************************************************/
     it("Test the addSession command ", async () => {
-        const log = new Logger(undefined);
 
-        testTree.addSession(log);
+        testTree.addSession();
 
-        testTree.addSession(log, "fake");
+        testTree.addSession("fake");
     });
 
     /*************************************************************************************************************
@@ -287,7 +287,14 @@ describe("Unit Tests (Jest)", () => {
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        const startLength = testTree.mSessionNodes.length;
+        testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess2", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
+        testTree.addSession("ussTestSess2");
+        testTree.mSessionNodes[startLength].contextValue = extension.USS_SESSION_CONTEXT;
+        testTree.mSessionNodes[startLength].fullPath = "test";
+        testTree.mSessionNodes[startLength].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+        testTree.deleteSession(testTree.mSessionNodes[startLength]);
+        expect(testTree.mSessionNodes.length).toEqual(startLength);
     });
 
     /*************************************************************************************************************
@@ -298,6 +305,45 @@ describe("Unit Tests (Jest)", () => {
         testTree.removeUSSFavorite(testTree.mFavorites[0]);
 
         expect(testTree.mFavorites).toEqual([]);
+    });
+
+    /*************************************************************************************************************
+     * Testing that addUSSFavorite sorting works
+     *************************************************************************************************************/
+    it("Testing that addUSSSearchFavorite works properly", async () => {
+        testTree.mFavorites = [];
+        const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null, "/");
+        let childFile = new ZoweUSSNode("abcd", vscode.TreeItemCollapsibleState.None,
+            parentDir, null, "/parent");
+        childFile.contextValue = extension.USS_SESSION_CONTEXT;
+
+        // Check adding file
+        await testTree.addUSSFavorite(childFile);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+
+        childFile = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.None,
+        parentDir, null, "/parent");
+        childFile.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.addUSSFavorite(childFile);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(2);
+
+        testTree.mSessionNodes[1].fullPath = "/z1234";
+        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(3);
+
+        testTree.mSessionNodes[1].fullPath = "/a1234";
+        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(4);
+
+        testTree.mSessionNodes[1].fullPath = "/r1234";
+        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(5);
     });
 
     /*************************************************************************************************************
@@ -318,9 +364,17 @@ describe("Unit Tests (Jest)", () => {
     });
 
     it("initialize USSTree is executed successfully", async () => {
-        // const testUSSTree = new USSTree();
-        // createBasicZosmfSession.mockReturnValue(session);
-        spyOn(utils, "getSession").and.returnValue(session);
+        const mockLoadNamedProfile = jest.fn();
+        mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         expect(testTree1.mFavorites.length).toBe(2);
 
@@ -344,7 +398,9 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * USS Filter prompts
      *************************************************************************************************************/
-    it("Testing that user filter prompts are executed successfully", async () => {
+    it("Testing that user filter prompts are executed successfully, theia specific route", async () => {
+        let theia = true;
+        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
@@ -357,14 +413,16 @@ describe("Unit Tests (Jest)", () => {
 
         // Assert edge condition user cancels the input path box
         showInformationMessage.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
+        showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
 
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce("/u/thisFile");
+        showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
 
@@ -374,7 +432,109 @@ describe("Unit Tests (Jest)", () => {
         await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        theia = false;
     });
+
+    it("Testing that user filter prompts are executed successfully, VSCode route", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        let qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        expect(qpItem.description).toBeFalsy();
+        expect(qpItem.alwaysShow).toBe(true);
+
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        let entered;
+
+        // Assert edge condition user cancels the input path box
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        // Normal route chooses create new then enters a value
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("/U/HARRY");
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
+
+        // User cancels out of input field
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce(undefined);
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
+
+        // User enters a value in the QuickPick and presses create new
+        entered = "/U/HLQ/BIGSTUFF";
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showInformationMessage.mockReset();
+        // Assert choosing the new filter specification but fills in path in QuickPick
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.USS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/BIGSTUFF");
+
+        showQuickPick.mockReset();
+        qpItem = new utils.FilterItem("/U/HLQ/STUFF");
+        expect(qpItem.description).toBeFalsy();
+        expect(qpItem.alwaysShow).toBe(false);
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
+
+        // Assert edge condition user cancels from the quick pick
+        showInformationMessage.mockReset();
+        qpItem = undefined;
+        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
     /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/

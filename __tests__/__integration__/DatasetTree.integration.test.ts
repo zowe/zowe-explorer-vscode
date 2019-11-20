@@ -11,13 +11,13 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
-import { Logger } from "@brightside/imperative";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import * as testConst from "../../resources/testProfileData";
+import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -35,12 +35,20 @@ describe("DatasetTree Integration Tests", async () => {
     sessNode.pattern = pattern + ".PUBLIC";
     const testTree = new DatasetTree();
     testTree.mSessionNodes.splice(-1, 0, sessNode);
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites");
+    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+    });
+    let sandbox;
+
+    beforeEach(async () => {
+        sandbox = sinon.createSandbox();
     });
 
+    afterEach(async () => {
+        sandbox.restore();
+    });
     /*************************************************************************************************************
      * Creates a datasetTree and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -132,7 +140,6 @@ describe("DatasetTree Integration Tests", async () => {
     it("Tests that getParent returns the correct ZoweNode when called on a non-rootNode ZoweNode", async () => {
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChild1: ZoweNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-
         const parent1 = testTree.getParent(sampleChild1);
 
         // It's expected that parent is null because when getParent() is called on a child
@@ -158,12 +165,20 @@ describe("DatasetTree Integration Tests", async () => {
     /*************************************************************************************************************
      * Tests the deleteSession() function
      *************************************************************************************************************/
-    it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
+    it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
+        for (const sess of testTree.mSessionNodes) {
+            if (sess.contextValue === extension.DS_SESSION_CONTEXT) {
+                testTree.deleteSession(sess);
+            }
+        }
         const len = testTree.mSessionNodes.length;
-        const log = new Logger(undefined);
-        await testTree.addSession(log);
-        expect(testTree.mSessionNodes.length).toEqual(len + 1);
-        testTree.deleteSession(testTree.mSessionNodes[len]);
+        await testTree.addSession();
+        expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
+        for (const sess of testTree.mSessionNodes) {
+            if (sess.contextValue === extension.DS_SESSION_CONTEXT) {
+                testTree.deleteSession(sess);
+            }
+        }
         await testTree.addSession(testConst.profile.name);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);

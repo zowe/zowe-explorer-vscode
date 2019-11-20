@@ -21,10 +21,12 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as testConst from "../../resources/testProfileData";
 import * as vscode from "vscode";
+import * as utils from "../../src/utils";
 import { DatasetTree, createDatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
+import { ZosJobsProvider } from "../../src/ZosJobsProvider";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -68,10 +70,10 @@ describe("Extension Integration Tests", () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-Persistent-Favorites");
+    const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
     describe("Creating a Session", () => {
@@ -381,6 +383,102 @@ describe("Extension Integration Tests", () => {
         // TODO add tests for saving data set from favorites
     });
 
+    describe("Renaming a Data Set", () => {
+        const beforeDataSetName = `${pattern}.RENAME.BEFORE.TEST`;
+        const afterDataSetName = `${pattern}.RENAME.AFTER.TEST`;
+
+        describe("Success Scenarios", () => {
+            afterEach(async () => {
+                await Promise.all([
+                    zowe.Delete.dataSet(sessionNode.getSession(), beforeDataSetName),
+                    zowe.Delete.dataSet(sessionNode.getSession(), afterDataSetName),
+                ].map((p) => p.catch((err) => err)));
+            });
+            describe("Rename Sequential Data Set", () => {
+                beforeEach(async () => {
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                        beforeDataSetName
+                    ).catch((err) => err);
+                });
+                it("should rename a data set", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    try {
+                        const testNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(afterDataSetName);
+
+                        await extension.renameDataSet(testNode, testTree);
+                        beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).to.be.equal(undefined);
+
+                    expect(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expect(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
+            });
+            describe("Rename Partitioned Data Set", () => {
+                beforeEach(async () => {
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        beforeDataSetName
+                    ).catch((err) => err);
+                });
+                it("should rename a data set", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    try {
+                        const testNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(afterDataSetName);
+
+                        await extension.renameDataSet(testNode, testTree);
+                        beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).to.be.equal(undefined);
+
+                    expect(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expect(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
+            });
+        });
+        describe("Failure Scenarios", () => {
+            describe("Rename Sequential Data Set", () => {
+                it("should throw an error if a missing data set name is provided", async () => {
+                    let error;
+
+                    try {
+                        const testNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns("MISSING.DATA.SET");
+
+                        await extension.renameDataSet(testNode, testTree);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).not.to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
+        });
+    });
+
     describe("Updating Temp Folder", () => {
         // define paths
         const testingPath = path.join(__dirname, "..", "..", "..", "test");
@@ -434,7 +532,7 @@ describe("Extension Integration Tests", () => {
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
             const log = Logger.getAppLogger();
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
             expect(testTree3.mFavorites).to.deep.equal([]);
@@ -447,7 +545,7 @@ describe("Extension Integration Tests", () => {
                                `[${profileName}]: ${pattern}.EXT.PS{ds}`,
                                `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
                                `[${profileName}]: ${pattern}.EXT{session}`];
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
@@ -461,7 +559,7 @@ describe("Extension Integration Tests", () => {
             const log = Logger.getAppLogger();
             const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
 
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
@@ -481,7 +579,7 @@ describe("Extension Integration Tests", () => {
                                `['badProfileName']: ${pattern}.EXT.PS{ds}`,
                                `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
                                `[${profileName}]: ${pattern}.EXT{session}`];
-            await vscode.workspace.getConfiguration().update("Zowe-Persistent-Favorites",
+            await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await testTree.initialize(log);
@@ -605,10 +703,10 @@ describe("Extension Integration Tests - USS", () => {
 
     describe("Enter USS Pattern", () => {
         it("should output path that match the user-provided path", async () => {
-            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
-            inputBoxStub1.returns(" -- Specify Filter -- ");
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns(fullUSSPath);
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(fullUSSPath));
 
             await ussTestTree.ussFilterPrompt(ussSessionNode);
 
@@ -629,10 +727,11 @@ describe("Extension Integration Tests - USS", () => {
 
         it("should pop up a message if the user doesn't enter a USS path", async () => {
             const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
-            inputBoxStub1.returns(" -- Specify Filter -- ");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns("");
-
             const showInfoStub2 = sandbox.spy(vscode.window, "showInformationMessage");
             await ussTestTree.ussFilterPrompt(ussSessionNode);
             const gotCalled = showInfoStub2.calledWith("You must enter a path.");

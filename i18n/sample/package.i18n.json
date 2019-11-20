@@ -1,5 +1,5 @@
 {
-    "displayName": "Zowe",
+    "displayName": "Zowe Explorer",
     "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
     "viewsContainers.activitybar": "Zowe",
     "zowe.explorer": "Data Sets",
@@ -42,7 +42,7 @@
     "uss.binary": "Toggle Binary",
     "uss.uploadDialog": "Upload Files...",
     "uss.text": "Toggle Text",
-    "jobs.search": "Search for Jobs using attributes",
+    "jobs.search": "Search Jobs using Attributes",
     "deleteJob": "Delete Job",
     "runModifyCommand": "Issue Modify command",
     "runStopCommand": "Issue Stop command",

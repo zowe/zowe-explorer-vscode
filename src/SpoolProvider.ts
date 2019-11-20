@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
-import { loadNamedProfile } from "./ProfileLoader";
+import { Profiles } from "./Profiles";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
 
@@ -21,7 +21,7 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
 
     public provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {
         const [sessionName, spool] = decodeJobFile(uri);
-        const zosMfProfile = loadNamedProfile(sessionName);
+        const zosMfProfile = Profiles.getInstance().loadNamedProfile(sessionName);
         const session = zowe.ZosmfSession.createBasicZosmfSession(zosMfProfile.profile);
         return zowe.GetJobs.getSpoolContentById(session, spool.jobname, spool.jobid, spool.id);
     }

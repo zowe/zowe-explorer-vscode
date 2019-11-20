@@ -20,6 +20,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
+import { Profiles } from "../Profiles";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -56,7 +57,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
     };
     const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
     const isTopLevel = true;
-    createUSSNode(node, ussFileProvider, type, isTopLevel);
+    return createUSSNode(node, ussFileProvider, type, isTopLevel);
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
@@ -102,6 +103,7 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
         }
     });
     ussFileProvider.refresh();
+    return Profiles.getInstance().refresh();
 }
 
 export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {

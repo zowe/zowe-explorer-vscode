@@ -10,16 +10,15 @@
 */
 
 import * as zowe from "@brightside/core";
+import { IProfileLoaded, Logger } from "@brightside/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
-import { ZoweNode } from "./ZoweNode";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
-import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
-// import ZoweTree from "./ZoweTree";
-import { PersistentFilters } from "./PersistentFilters";
-import * as utils from "./utils";
-import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
+import * as extension from "../src/extension";
+import { PersistentFilters } from "./PersistentFilters";
+import { Profiles } from "./Profiles";
+import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
+import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -29,8 +28,8 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  */
 export async function createDatasetTree(log: Logger) {
     const tree = new DatasetTree();
-    await tree.addSession(log);
     await tree.initialize(log);
+    await tree.addSession();
     return tree;
 }
 
@@ -43,9 +42,8 @@ export async function createDatasetTree(log: Logger) {
  */
 export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
-    private static readonly persistenceSchema: string = "Zowe-Persistent-Favorites";
-    private static readonly defaultDialogText: string = localize("SpecifyFilter", " -- Specify Filter -- ");
-
+    private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
     public mSessionNodes: ZoweNode[];
     public mFavoriteSession: ZoweNode;
     public mFavorites: ZoweNode[] = [];
@@ -59,7 +57,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     constructor() {
         this.mFavoriteSession = new ZoweNode(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null);
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
-        this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
+        this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
         this.mHistory = new PersistentFilters(DatasetTree.persistenceSchema);
     }
@@ -83,7 +81,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
-                    const zosmfProfile = loadNamedProfile(sesName);
+                    const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                     const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                     let node: ZoweNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.DS_PDS_CONTEXT) {
@@ -95,7 +93,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                         node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
                     }
                     node.contextValue += extension.FAV_SUFFIX;
-                    node.iconPath = utils.applyIcons(node);
+                    node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
                     vscode.window.showErrorMessage(
@@ -104,7 +102,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                         localize("intializeFavorites.error.profile2",
                         ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-Persistent-Favorites setting, ") +
+                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ") +
                         localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
                     continue;
                 }
@@ -116,7 +114,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
                 node.iconPath = { light, dark };
                 node.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-                node.iconPath = utils.applyIcons(node);
+                node.iconPath = applyIcons(node);
                 this.mFavorites.push(node);
             } else {
                 vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
@@ -182,23 +180,31 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(log: Logger, sessionName?: string) {
+    public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
-        if (zosmfProfile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
-                return;
+        if (sessionName) {
+            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (zosmfProfile) {
+                this.addSingleSession(zosmfProfile);
             }
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
-            node.contextValue = extension.DS_SESSION_CONTEXT;
-            node.iconPath = utils.applyIcons(node);
-            this.mSessionNodes.push(node);
-            this.refresh();
+        } else {
+            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const zosmfProfile of zosmfProfiles) {
+                // If session is already added, do nothing
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                    continue;
+                }
+                for (const session of this.mHistory.getSessions()) {
+                    if (session === zosmfProfile.name) {
+                        this.addSingleSession(zosmfProfile);
+                    }
+                }
+            }
+            if (this.mSessionNodes.length === 1) {
+                this.addSingleSession(Profiles.getInstance().defaultProfile);
+            }
         }
+        this.refresh();
     }
 
     /**
@@ -207,8 +213,12 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param {ZoweNode} [node]
      */
     public deleteSession(node: ZoweNode) {
-        // Removes deleted session from mSessionNodes
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        let revisedLabel =  node.label;
+        if (revisedLabel.includes("[")) {
+            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
+        }
+        this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
 
@@ -230,12 +240,9 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession());
             temp.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            temp.iconPath =  utils.applyIcons(temp);
+            temp.iconPath =  applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
-            // const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-            // const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-            // temp.iconPath = { light, dark };
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession());
@@ -243,16 +250,49 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             if (temp.contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
-            temp.iconPath = utils.applyIcons(temp);
+            temp.iconPath = applyIcons(temp);
         }
-
+        const sessionContext = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) =>
             (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
             this.mFavorites.push(temp);
+            sortTreeItems(this.mFavorites, extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX);
             await this.updateFavorites();
-            this.refresh();
             this.refreshElement(this.mFavoriteSession);
+        }
+    }
+
+    /**
+     * Renames a node based on the profile and it's label
+     *
+     * @param {string} profileLabel
+     * @param {string} beforeLabel
+     * @param {string} afterLabel
+     */
+
+    public async renameNode(profileLabel: string, beforeLabel: string, afterLabel: string) {
+        const sessionNode = this.mSessionNodes.find((session) => session.label === `${profileLabel} `);
+        if (sessionNode) {
+            const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
+            if (matchingNode) {
+                matchingNode.label = afterLabel;
+                this.refreshElement(matchingNode);
+            }
+        }
+    }
+
+    /**
+     * Renames a node from the favorites list
+     *
+     * @param {ZoweNode} node
+     */
+    public async renameFavorite(node: ZoweNode, newLabel: string) {
+        const matchingNode = this.mFavorites.find((temp) => (temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue)));
+        if (matchingNode) {
+            const prefix = matchingNode.label.substring(0, matchingNode.label.indexOf(":") + 2);
+            matchingNode.label = prefix + newLabel;
+            this.refreshElement(matchingNode);
         }
     }
 
@@ -295,34 +335,54 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
 
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
-        let pattern: string = DatasetTree.defaultDialogText;
+        let pattern: string;
         if (node.contextValue === extension.DS_SESSION_CONTEXT) {
-            const modItems = Array.from(this.mHistory.getHistory());
-            if (modItems.length > 0) {
-                // accessing history
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("searchHistory.options.prompt",
-                        "Choose \"-- Specify Filter --\" to define a new filter or select a previously defined one")
-                };
-                modItems.unshift(DatasetTree.defaultDialogText);
-                // get user selection
-                pattern = await vscode.window.showQuickPick(modItems, options1);
-                if (!pattern) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                    return;
+            if (this.mHistory.getHistory().length > 0) {
+                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                if (extension.ISTHEIA) {
+                    const options1: vscode.QuickPickOptions = {
+                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                    };
+                    // get user selection
+                    const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                    if (!choice) {
+                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                        return;
+                    }
+                    pattern = choice === createPick ? "" : choice.label;
+                } else {
+                    const quickpick = vscode.window.createQuickPick();
+                    quickpick.items = [createPick, ...items];
+                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                    quickpick.ignoreFocusOut = true;
+                    quickpick.show();
+                    const choice = await resolveQuickPickHelper(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                        return;
+                    }
+                    if (choice instanceof FilterDescriptor) {
+                        if (quickpick.value) {
+                            pattern = quickpick.value;
+                        }
+                    } else {
+                        pattern = choice.label;
+                    }
                 }
             }
-            if (pattern === DatasetTree.defaultDialogText) {
+            if (!pattern) {
                 // manually entering a search
                 const options2: vscode.InputBoxOptions = {
                     prompt: localize("enterPattern.options.prompt",
                                         "Search data sets by entering patterns: use a comma to separate multiple patterns"),
-                    value: node.pattern
+                    value: node.pattern,
                 };
                 // get user input
                 pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
+                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
             }
@@ -330,7 +390,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             // executing search from saved search in favorites
             pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
             const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(this.log, session);
+            await this.addSession(session);
             node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
         }
         // update the treeview with the new pattern
@@ -339,7 +399,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         node.tooltip = node.pattern = pattern.toUpperCase();
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         node.dirty = true;
-        node.iconPath = utils.applyIcons(node, extension.ICON_STATE_OPEN);
+        node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
         this.addHistory(node.pattern);
     }
 
@@ -350,8 +410,29 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
+    }
+
+    /**
+     * Adds a single session to the data set tree
+     *
+     */
+    private addSingleSession(zosmfProfile: IProfileLoaded) {
+        if (zosmfProfile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a zosmf session with brightside
+            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
+            node.contextValue = extension.DS_SESSION_CONTEXT;
+            node.iconPath = applyIcons(node);
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(zosmfProfile.name);
+        }
     }
 }

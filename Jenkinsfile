@@ -24,6 +24,11 @@ def MASTER_BRANCH = "master"
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
 
+/**
+ * TOKEN ID where secret is stored
+ */
+def ZOWE_ROBOT_TOKEN = "zowe-robot-github"
+
 def PIPELINE_CONTROL = [
   ci_skip: false
 ]
@@ -70,6 +75,16 @@ pipeline {
         } }
       }
     }
+    stage('Lint') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm run lint"
+        } }
+      }
+    }
     stage('Build') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -90,6 +105,19 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
           sh "npm run test"
+        } }
+      }
+    }
+    stage('Codecov') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          withCredentials([usernamePassword(credentialsId: 'CODECOV_ZOWE_VSCODE', usernameVariable: 'CODECOV_USERNAME', passwordVariable: 'CODECOV_TOKEN')]) {
+              sh "curl -s https://codecov.io/bash | bash -s"
+          }
         } }
       }
     }
@@ -122,6 +150,13 @@ pipeline {
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
               sh "npx vsce publish -p $TOKEN"
+            }
+
+            sh "git config --global user.name \"zowe-robot\""
+            sh "git config --global user.email \"zowe.robot@gmail.com\""
+            sh "git tag v${vscodePackageJson.version}"
+            withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
+              sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
             }
           }
         } }

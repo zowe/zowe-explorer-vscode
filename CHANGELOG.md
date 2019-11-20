@@ -2,6 +2,34 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## 0.29.0
+
+- Provide ability to rename datasets. Thanks @CForrest97
+- Fix URL parsing. @MarkAckert
+- Fixed `AppSettings` error message. @jellypuno
+
+## 0.28.0
+
+- Provide ability to add new profiles in explorer. Thanks @crawr, @jellypuno
+- Recognize migrated dataset context. @Colin-Stone
+- Fix dataset delete fails silently bug. @Colin-Stone
+
+## 0.27.0
+
+- Name change to Zowe Explorer
+- Enhancements to the History recall 'QuickPick' dialogs. @Colin-Stone
+- Favorites are now sorted. @Colin-Stone
+
+## 0.26.1
+
+- Fix vulnerabilities related to brightside-core
+
+## 0.26.0
+
+- Added Persistence for profiles selection. @Colin-Stone
+- Performance enhancements for Profile loading operations. @Colin-Stone
+- Filter rewording. @Colin-Stone
+
 ## 0.25.0
 
 - Add Edit to context menu for MVS and USS Tree. Thanks to Rodney-Wilson

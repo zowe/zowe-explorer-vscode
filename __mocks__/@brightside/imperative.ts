@@ -49,7 +49,7 @@ export class Session {
 // tslint:disable-next-line:class-name
 // tslint:disable-next-line:max-classes-per-file
 export class Profile {
-    constructor(public name: string) { }
+    constructor(public name: string, public type: string) { }
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -58,9 +58,13 @@ export class CliProfileManager {
     constructor(options: ICliOptions) { }
 
     public load(opts: ILoadOptions) {
-        return new BrightProfile(new Profile("TestName"));
+        return { name: "profile1", profile: {}, type: "zosmf" };
     }
-
+    public loadAll() {
+        return [
+            { name: "profile1", profile: {}, type: "zosmf" },
+            { name: "profile2", profile: {}, type: "zosmf" }];
+    }
     public getAllProfileNames(){
         return ["name1", "name2"];
     }

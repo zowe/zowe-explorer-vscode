@@ -14,14 +14,14 @@ jest.mock("fs");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
-jest.mock("../../src/ProfileLoader");
+jest.mock("../../src/Profiles");
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session, Logger } from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as utils from "../../src/utils";
-import * as profileLoader from "../../src/ProfileLoader";
+import { Profiles } from "../../src/Profiles";
 import * as extension from "../../src/extension";
 
 describe("DatasetTree Unit Tests", () => {
@@ -35,21 +35,6 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {
-        value: jest.fn((name: string) => {
-            return { name };
-        })
-    });
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }];
-        })
-    });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {
-        value: jest.fn(() => {
-            return { name: "defaultprofile" };
-        })
-    });
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -62,39 +47,56 @@ describe("DatasetTree Unit Tests", () => {
         };
     });
 
-
-    const testResponse: zowe.IZosFilesResponse[] = [];
-    testResponse.push({
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    items: [
-                        {dsname: "BRTVS99", dsorg: "PS", blksz: "6160", catnm: "ICFCAT.MV.CATALOGB"},
-                        {dsname: "BRTVS99.CA11.SPFTEMP0.CNTL", dsorg: "PO", blksz: "6160", catnm: "ICFCAT.MV.CATALOGA"},
-                        {dsname: "BRTVS99.DDIR", dsorg: "PO", blksz: "6160", catnm: "ICFCAT.MV.CATALOGA"}
-                    ]
-                }
-            });
-
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
-    const getDatasetList = jest.fn();
+    const createQuickPick = jest.fn();
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
-
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-
+    getConfiguration.mockReturnValue({
+        persistence: true,
+        get: (setting: string) => [
+            "[test]: brtvs99.public1.test{pds}",
+            "[test]: brtvs99.test{ds}",
+            "[test]: brtvs99.fail{fail}",
+            "[test]: brtvs99.test.search{session}",
+        ],
+        update: jest.fn(()=>{
+            return {};
+        })
+    });
+    const enums = jest.fn().mockImplementation(() => {
+        return {
+            Global: 1,
+            Workspace: 2,
+            WorkspaceFolder: 3
+        };
+    });
+    Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"},
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
+    Profiles.createInstance(Logger.getAppLogger());
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
@@ -193,6 +195,7 @@ describe("DatasetTree Unit Tests", () => {
         // Creating fake datasets and dataset members to test
         const sampleChildren: ZoweNode[] = [
             new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null),
+            new ZoweNode("BRTVS99.CA10", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null, extension.DS_MIGRATED_FILE_CONTEXT),
             new ZoweNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
             new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
         ];
@@ -254,9 +257,9 @@ describe("DatasetTree Unit Tests", () => {
     it("Test the addSession command ", async () => {
         const log = new Logger(undefined);
 
-        testTree.addSession(log);
+        testTree.addSession();
 
-        testTree.addSession(log, "fake");
+        testTree.addSession("fake");
     });
 
     /*************************************************************************************************************
@@ -314,9 +317,27 @@ describe("DatasetTree Unit Tests", () => {
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(3);
 
+        testTree.mSessionNodes[1].pattern = "aHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(4);
+
+        testTree.mSessionNodes[1].pattern = "zHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(5);
+
+        testTree.mSessionNodes[1].pattern = "rHLQ";
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(6);
+
         /*************************************************************************************************************
         * Testing that removeFavorite works properly
         *************************************************************************************************************/
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
         testTree.removeFavorite(testTree.mFavorites[0]);
@@ -328,7 +349,14 @@ describe("DatasetTree Unit Tests", () => {
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        const startLength = testTree.mSessionNodes.length;
+        testTree.mSessionNodes.push(new ZoweNode("testSess2", vscode.TreeItemCollapsibleState.Collapsed, null, session));
+        testTree.addSession("testSess2");
+        testTree.mSessionNodes[startLength].contextValue = extension.DS_SESSION_CONTEXT;
+        testTree.mSessionNodes[startLength].pattern = "test";
+        testTree.mSessionNodes[startLength].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+        testTree.deleteSession(testTree.mSessionNodes[startLength]);
+        expect(testTree.mSessionNodes.length).toEqual(startLength);
     });
 
 
@@ -351,26 +379,15 @@ describe("DatasetTree Unit Tests", () => {
      /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
-    it("Testing that user filter prompts are executed successfully", async () => {
+    it("Testing that user filter prompts are executed successfully, theia route", async () => {
+        let theia = true;
+        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
         testTree.initialize(Logger.getAppLogger());
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
-
-        getConfiguration.mockReturnValue({
-            persistence: true,
-            get: (setting: string) => [
-                "[test]: brtvs99.public1.test{pds}",
-                "[test]: brtvs99.test{ds}",
-                "[test]: brtvs99.fail{fail}",
-                "[test]: brtvs99.test.search{session}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
 
         // Assert choosing the new filter specification followed by a path
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
@@ -379,14 +396,16 @@ describe("DatasetTree Unit Tests", () => {
 
         // Assert edge condition user cancels the input path box
         showInformationMessage.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
+        showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
 
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce("HLQ.PROD2.STUFF");
+        showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("HLQ.PROD2.STUFF"));
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
 
@@ -397,7 +416,10 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        theia = false;
+    });
 
+    it("Testing that user filter prompts are executed successfully for favorites", async () => {
         // Executing from favorites
         const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
         vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
@@ -406,8 +428,104 @@ describe("DatasetTree Unit Tests", () => {
         expect(checkSession).not.toHaveBeenCalled();
         await testTree.datasetFilterPrompt(favoriteSearch);
         expect(checkSession).toHaveBeenCalledTimes(1);
-        expect(checkSession).toHaveBeenLastCalledWith(Logger.getAppLogger(), "aProfile");
+        expect(checkSession).toHaveBeenLastCalledWith("aProfile");
     });
+
+    it("Testing that user filter prompts are executed successfully, VSCode route", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        let qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        let entered;
+
+        // Assert edge condition user cancels the input path box
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        // Normal route chooses create new then enters a value
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("HARRY.PROD");
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HARRY.PROD");
+
+        // User cancels out of input field
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce(undefined);
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
+
+        // User enters a value in the QuickPick and presses create new
+        entered = "HLQ.PROD1.STUFF";
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showInformationMessage.mockReset();
+        // Assert choosing the new filter specification but fills in path in QuickPick
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+
+        showQuickPick.mockReset();
+        qpItem = new utils.FilterItem("HLQ.PROD2.STUFF");
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
+
+        // Assert edge condition user cancels from the quick pick
+        showInformationMessage.mockReset();
+        qpItem = undefined;
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
     /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/
@@ -429,17 +547,32 @@ describe("DatasetTree Unit Tests", () => {
         });
         const e = new Event();
         mockAffects.mockReturnValue(true);
-
-        const enums = jest.fn().mockImplementation(() => {
-            return {
-                Global: 1,
-                Workspace: 2,
-                WorkspaceFolder: 3
-            };
-        });
-        Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
         await testTree.onDidChangeConfiguration(e);
         expect(getConfiguration.mock.calls.length).toBe(2);
     });
 
+    it("Should rename a favorited node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+
+        testTree.addFavorite(node);
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        testTree.renameFavorite(node, newLabel);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+        expect(testTree.mFavorites[0].label).toBe(`[${sessionNode.label.trim()}]: ${newLabel}`);
+    });
+
+    it("Should rename a node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        sessionNode.children.push(node);
+        testTree.renameNode(sessionNode.label.trim(), "node", newLabel);
+
+        expect(sessionNode.children[sessionNode.children.length-1].label).toBe(newLabel);
+        sessionNode.children.pop();
+    });
 });

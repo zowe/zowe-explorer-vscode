@@ -1,5 +1,5 @@
 {
-    "displayName": "Zowe",
+    "displayName": "Zowe Explorer",
     "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
     "viewsContainers.activitybar": "Zowe",
     "zowe.explorer": "Data Sets",
@@ -42,7 +42,7 @@
     "uss.binary": "Toggle Binary",
     "uss.uploadDialog": "Upload Files...",
     "uss.text": "Toggle Text",
-    "jobs.search": "Search for Jobs using attributes",
+    "jobs.search": "Search Jobs using Attributes",
     "deleteJob": "Delete Job",
     "runModifyCommand": "Issue Modify command",
     "runStopCommand": "Issue Stop command",
@@ -66,5 +66,11 @@
     "Zowe-Default-USS-Persistent-Favorites": "Toggle if USS favorite files persist locally",
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
-    "issueTsoCmd" : "Zowe: Issue TSO Command..."
+    "issueTsoCmd" : "Zowe: Issue TSO Command...",
+    "renameDataSet" : "Rename Data Set",
+    "profile.configuration.title": "Zowe z/OSMF Profiles",
+    "profile.configuration.name": "Profile Name",
+    "profile.configuration.url": "z/OSMF URL",
+    "profile.configuration.user": "z/OSMF User Name",
+    "profile.configuration.ru": "Profile Reject Unauthorize"
   }

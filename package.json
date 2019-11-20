@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.26.0",
+  "version": "0.29.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -14,9 +14,6 @@
     "dataset",
     "zowe"
   ],
-  "engines": {
-    "vscode": "^1.26.0"
-  },
   "categories": [
     "Other"
   ],
@@ -107,6 +104,10 @@
       {
         "command": "zowe.showDSAttributes",
         "title": "%showDSAttributes%"
+      },
+      {
+        "command": "zowe.renameDataSet",
+        "title": "%renameDataSet%"
       },
       {
         "command": "zowe.deleteDataset",
@@ -642,6 +643,11 @@
           "group": "2_information"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -682,6 +688,11 @@
           "group": "4_workspace"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -707,6 +718,11 @@
           "group": "1_create"
         },
         {
+          "when": "view == zowe.explorer && viewItem == pds",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -728,6 +744,26 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.removeFavorite",
+          "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.renameDataSet",
+          "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == migr",
+          "command": "zowe.showDSAttributes",
+          "group": "2_information"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == migr",
+          "command": "zowe.addFavorite",
+          "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == migr_fav",
           "command": "zowe.removeFavorite",
           "group": "4_workspace"
         },
@@ -1025,11 +1061,12 @@
           "description": "%Zowe-Default-Datasets-PS%",
           "scope": "window"
         },
-        "Zowe-Persistent-Favorites": {
+        "Zowe-DS-Persistent": {
           "default": {
             "persistence": true,
             "favorites": [],
-            "history": []
+            "history": [],
+            "sessions": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",
           "scope": "window"
@@ -1041,20 +1078,22 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
-        "Zowe-USS-Persistent-Favorites": {
+        "Zowe-USS-Persistent": {
           "default": {
             "persistence": true,
             "favorites": [],
-            "history": []
+            "history": [],
+            "sessions": []
           },
           "description": "%Zowe-Default-USS-Persistent-Favorites%",
           "scope": "window"
         },
-        "Zowe-Jobs-Persistent-Favorites": {
+        "Zowe-Jobs-Persistent": {
           "default": {
             "persistence": true,
             "favorites": [],
-            "history": []
+            "history": [],
+            "sessions": []
           },
           "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
           "scope": "window"
@@ -1071,7 +1110,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "rimraf dist && gulp build && npm run license && npm run lint && npm run update && webpack --mode production",
+    "vscode:prepublish": "gulp build && npm run license && npm run lint && npm run update && webpack --mode production",
     "build": "gulp build && npm run license && webpack --mode development",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
@@ -1086,6 +1125,9 @@
     "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
     "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\"",
     "clean": "gulp clean"
+  },
+  "engines": {
+    "vscode": "^1.34.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -1113,7 +1155,7 @@
     "jsdom": "11.11.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
-    "rimraf": "^2.6.3",
+    "mem": ">=4.0.0",
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
@@ -1126,8 +1168,7 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@brightside/core": "2.28.2",
-    "@brightside/imperative": "2.4.6",
+    "@brightside/core": "^2.33.0",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
@@ -1150,7 +1191,7 @@
     },
     "globals": {
       "ts-jest": {
-        "tsConfigFile": "tsconfig.json",
+        "tsConfig": "tsconfig.json",
         "diagnostics": false
       }
     },
