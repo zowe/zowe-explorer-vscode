@@ -163,6 +163,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
         vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
         vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.renameDataSet", (node) => renameDataSet(node, datasetProvider));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -825,6 +826,49 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         );
     panel.webview.html = webviewHTML;
 
+}
+
+/**
+ * Rename data sets
+ *
+ * @export
+ * @param {ZoweNode} node - The node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
+    let beforeDataSetName = node.label.trim();
+    let favPrefix;
+    let isFavourite;
+
+    if (node.contextValue.includes(FAV_SUFFIX)) {
+        isFavourite = true;
+        favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
+        beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
+    }
+    const afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
+
+    log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
+    if (afterDataSetName) {
+        try {
+            await zowe.Rename.dataSet(node.getSession(), beforeDataSetName, afterDataSetName);
+            node.label = `${favPrefix}${afterDataSetName}`;
+        } catch (err) {
+            log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+            throw err;
+        }
+        if (isFavourite) {
+            const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
+            datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
+        } else {
+            const temp = node.label;
+            node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
+            datasetProvider.renameFavorite(node, afterDataSetName);
+            node.label = temp;
+        }
+        datasetProvider.refreshElement(node.mParent);
+        datasetProvider.updateFavorites();
+    }
 }
 
 /**

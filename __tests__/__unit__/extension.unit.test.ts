@@ -190,6 +190,11 @@ describe("Extension Unit Tests", () => {
     const mockInitializeUSS = jest.fn();
     const ussPattern = jest.fn();
     const mockPattern = jest.fn();
+    const Rename = jest.fn();
+    const renameDataSet = jest.fn();
+    const mockRenameFavorite = jest.fn();
+    const mockUpdateFavorites = jest.fn();
+    const mockRenameNode = jest.fn();
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -209,7 +214,10 @@ describe("Extension Unit Tests", () => {
             getChildren: mockGetChildren,
             removeFavorite: mockRemoveFavorite,
             enterPattern: mockPattern,
-            initializeFavorites: mockInitialize
+            initializeFavorites: mockInitialize,
+            renameFavorite: mockRenameFavorite,
+            updateFavorites: mockUpdateFavorites,
+            renameNode: mockRenameNode,
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -335,6 +343,8 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider});
     Object.defineProperty(vscode.Disposable, "from", {value: from});
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
+    Object.defineProperty(zowe, "Rename", {value: Rename});
+    Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
 
 
     beforeEach(() => {
@@ -494,7 +504,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(61);
+        expect(registerCommand.mock.calls.length).toBe(62);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -524,6 +534,7 @@ describe("Extension Unit Tests", () => {
             "zowe.submitJcl",
             "zowe.submitMember",
             "zowe.showDSAttributes",
+            "zowe.renameDataSet",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -2383,6 +2394,54 @@ describe("Extension Unit Tests", () => {
             placeHolder: "Select the Profile to use to submit the command"
         });
         expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    describe("Renaming Data Sets", () => {
+        it("Should rename the node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const child = new ZoweNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.DELETE.NODE.NEW");
+            await extension.renameDataSet(child, testTree);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
+        });
+        it("Should rename a favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const child = new ZoweNode("[sessNode]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.DELETE.NODE.NEW");
+            await extension.renameDataSet(child, testTree);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
+        });
+        it("Should throw an error if zowe.Rename.dataSet throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSet.mockImplementation(() => { throw defaultError; });
+
+            const child = new ZoweNode("[sessNode]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.DELETE.NODE.NEW");
+            try {
+                await extension.renameDataSet(child, testTree);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
+            expect(error).toBe(defaultError);
+        });
     });
 
     it("tests the issueTsoCommand function", async () => {

@@ -383,6 +383,102 @@ describe("Extension Integration Tests", () => {
         // TODO add tests for saving data set from favorites
     });
 
+    describe("Renaming a Data Set", () => {
+        const beforeDataSetName = `${pattern}.RENAME.BEFORE.TEST`;
+        const afterDataSetName = `${pattern}.RENAME.AFTER.TEST`;
+
+        describe("Success Scenarios", () => {
+            afterEach(async () => {
+                await Promise.all([
+                    zowe.Delete.dataSet(sessionNode.getSession(), beforeDataSetName),
+                    zowe.Delete.dataSet(sessionNode.getSession(), afterDataSetName),
+                ].map((p) => p.catch((err) => err)));
+            });
+            describe("Rename Sequential Data Set", () => {
+                beforeEach(async () => {
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                        beforeDataSetName
+                    ).catch((err) => err);
+                });
+                it("should rename a data set", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    try {
+                        const testNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(afterDataSetName);
+
+                        await extension.renameDataSet(testNode, testTree);
+                        beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).to.be.equal(undefined);
+
+                    expect(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expect(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
+            });
+            describe("Rename Partitioned Data Set", () => {
+                beforeEach(async () => {
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        beforeDataSetName
+                    ).catch((err) => err);
+                });
+                it("should rename a data set", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    try {
+                        const testNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(afterDataSetName);
+
+                        await extension.renameDataSet(testNode, testTree);
+                        beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).to.be.equal(undefined);
+
+                    expect(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expect(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
+            });
+        });
+        describe("Failure Scenarios", () => {
+            describe("Rename Sequential Data Set", () => {
+                it("should throw an error if a missing data set name is provided", async () => {
+                    let error;
+
+                    try {
+                        const testNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns("MISSING.DATA.SET");
+
+                        await extension.renameDataSet(testNode, testTree);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).not.to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
+        });
+    });
+
     describe("Updating Temp Folder", () => {
         // define paths
         const testingPath = path.join(__dirname, "..", "..", "..", "test");
