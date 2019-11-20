@@ -11,11 +11,11 @@
 
 jest.mock("vscode");
 jest.mock("child_process");
-import * as vscode from "vscode";
+import { Logger } from "@brightside/imperative";
 import * as child_process from "child_process";
-import { Logger, profileLoadError } from "@brightside/imperative";
-import { Profiles } from "../../src/Profiles";
+import * as vscode from "vscode";
 import * as loader from "../../src/ProfileLoader";
+import { Profiles } from "../../src/Profiles";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -34,7 +34,7 @@ describe("Profile class unit tests", () => {
         });
     });
     afterEach(() => {
-       jest.resetAllMocks();
+        jest.resetAllMocks();
     });
 
     it("should create an instance", async () => {
@@ -81,8 +81,8 @@ describe("Profile class unit tests", () => {
 
         Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
         Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-        Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-        Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+        Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+        Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 
         beforeEach(async () => {
             profiles = await Profiles.createInstance(log);
@@ -168,15 +168,133 @@ describe("Profile class unit tests", () => {
             }
         });
 
-        it("should validate URL", async () => {
-            const res = await Profiles.getInstance().validateUrl("fake/url");
-            expect(res).toBe(false);
+        it("should create profile https+443", async () => {
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("https://fake:443");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            let success = true;
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = false;
+            }
+            expect(success).toBe(true);
+            if (success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
+        });
+
+        it("should create 2 consecutive profiles", async () => {
+            let success = true;
+            showInputBox.mockResolvedValueOnce("fake1");
+            showInputBox.mockResolvedValueOnce("https://fake1:143");
+            showInputBox.mockResolvedValueOnce("fake1");
+            showInputBox.mockResolvedValueOnce("fake1");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = false;
+            }
+            expect(success).toBe(true);
+            if (success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
+
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+            showInputBox.mockResolvedValueOnce("fake2");
+            showInputBox.mockResolvedValueOnce("https://fake2:143");
+            showInputBox.mockResolvedValueOnce("fake2");
+            showInputBox.mockResolvedValueOnce("fake2");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            success = true;
+            // Do more test
+            try {
+                await profiles.createNewConnection();
+            } catch (error) {
+                success = false;
+            }
+            expect(success).toBe(true);
+            if (success) {
+                expect(showInformationMessage.mock.calls.length).toBe(1);
+                expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
+            } else {
+                expect(showInformationMessage.mock.calls.length).toBe(0);
+                // expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            }
         });
 
         it("should validate URL", async () => {
-            const res = await Profiles.getInstance().validateUrl("https://fake:143");
-            expect(res).toBe(true);
+            const res = await Profiles.getInstance().validateAndParseUrl("fake/url");
+            expect(res.valid).toBe(false);
         });
+
+        it("should validate URL", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("https://fake:143");
+            expect(res.valid).toBe(true);
+            expect(res.host).toBe("fake");
+            // tslint:disable-next-line
+            expect(res.port).toBe(143);
+
+        });
+
+        it("should validate https:<no_port> url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("https://10.142.0.23/some/path");
+            expect(res.valid).toBe(true);
+            expect(res.host).toBe("10.142.0.23");
+            // tslint:disable-next-line
+            expect(res.port).toBe(443);
+        });
+
+        it("should validate https:443 url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("https://10.142.0.23:443");
+            expect(res.valid).toBe(true);
+            expect(res.host).toBe("10.142.0.23");
+            // tslint:disable-next-line
+            expect(res.port).toBe(443);
+        });
+
+        it("should reject http:<no_port> url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("http://10.142.0.23/some/path");
+            expect(res.valid).toBe(false);
+        });
+
+        it("should reject out of range port url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("http://10.142.0.23:9999999999/some/path");
+            expect(res.valid).toBe(false);
+        });
+
+        it("should reject http:80 url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("http://fake:80");
+            expect(res.valid).toBe(false);
+        });
+
+        it("should reject ftp protocol url", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("ftp://fake:80");
+            expect(res.valid).toBe(false);
+        });
+
+        it("should reject invalid url syntax", async () => {
+            const res = await Profiles.getInstance().validateAndParseUrl("https://fake::80");
+            expect(res.valid).toBe(false);
+        });
+
 
         it("it should validate duplicate profiles", async () => {
             showInputBox.mockResolvedValueOnce("profile1");

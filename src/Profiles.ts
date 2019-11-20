@@ -9,21 +9,22 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile } from "@brightside/imperative";
-import * as nls from "vscode-nls";
-import * as os from "os";
+import * as zowe from "@brightside/core";
+import { CliProfileManager, Imperative, ImperativeConfig, IProfile, IProfileLoaded, Logger } from "@brightside/imperative";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
-import * as ProfileLoader from "./ProfileLoader";
 import { URL } from "url";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import { DatasetTree } from "./DatasetTree";
-import { addSession } from "./extension";
+import * as nls from "vscode-nls";
+import * as ProfileLoader from "./ProfileLoader";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-let url: URL;
-let validURL: string;
-let validPort: number;
+interface IUrlValidator {
+    valid: boolean;
+    host: string;
+    port: number;
+}
+
 let IConnection: {
     name: string;
     host: string;
@@ -48,6 +49,7 @@ export class Profiles { // Processing stops if there are no profiles detected
     public defaultProfile: IProfileLoaded;
 
     private spawnValue: number = -1;
+    private initValue: number = -1;
     private constructor(public log: Logger) {}
 
     public loadNamedProfile(name: string): IProfileLoaded {
@@ -66,11 +68,11 @@ export class Profiles { // Processing stops if there are no profiles detected
         if (this.isSpawnReqd() === 0) {
             this.allProfiles = ProfileLoader.loadAllProfiles();
             try {
-            this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
+                this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
             } catch (err) {
                 // Unable to load a default profile
                 this.log.warn(localize("loadNamedProfile.warn.noDefaultProfile",
-                "Unable to locate a default profile. CLI may not be installed. ")+err.message);
+                    "Unable to locate a default profile. CLI may not be installed. ") + err.message);
             }
         } else {
             const profileManager = new CliProfileManager({
@@ -80,7 +82,7 @@ export class Profiles { // Processing stops if there are no profiles detected
             this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
                 return profile.type === "zosmf";
             });
-            if (this.allProfiles.length > 0 ) {
+            if (this.allProfiles.length > 0) {
                 this.defaultProfile = (await profileManager.load({ loadDefault: true }));
             } else {
                 ProfileLoader.loadDefaultProfile(this.log);
@@ -104,15 +106,40 @@ export class Profiles { // Processing stops if there are no profiles detected
         return this.allProfiles;
     }
 
-    public validateUrl = (newUrl: string) => {
+    public validateAndParseUrl = (newUrl: string): IUrlValidator => {
+
+        let url: URL;
+        const validProtocols: string[] = ["https"];
+        const DEFAULT_HTTPS_PORT: number = 443;
+
+        const validationResult: IUrlValidator = {
+            valid: false,
+            host: null,
+            port: null
+        };
+
         try {
             url = new URL(newUrl);
         } catch (error) {
-            return false;
+            return validationResult;
         }
-        validURL = url.hostname;
-        validPort = Number(url.port);
-        return url.port ? true : false;
+
+        // overkill with only one valid protocol, but we may expand profile types and protocols in the future?
+        if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
+            return validationResult;
+        }
+
+        // if port is empty, set https defaults
+        if (!url.port.trim()) {
+            validationResult.port = DEFAULT_HTTPS_PORT;
+        }
+        else {
+            validationResult.port = Number(url.port);
+        }
+
+        validationResult.host = url.hostname;
+        validationResult.valid = true;
+        return validationResult;
     }
 
     public async createNewConnection() {
@@ -131,24 +158,26 @@ export class Profiles { // Processing stops if there are no profiles detected
         profileName = await vscode.window.showInputBox(options);
         if (!profileName) {
             vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                    "Profile Name was not supplied. Operation Cancelled"));
+                "Profile Name was not supplied. Operation Cancelled"));
             return;
         }
 
         zosmfURL = await vscode.window.showInputBox({
             ignoreFocusOut: true,
-            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "http(s)://url:port"),
+            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
             prompt: localize("createNewConnection.option.prompt.url",
-            "Enter a z/OSMF URL in the format 'http(s)://url:port'."),
-            validateInput: (text: string) => (this.validateUrl(text) ? "" : "Please enter a valid URL."),
+                "Enter a z/OSMF URL in the format 'https://url:port'."),
+            validateInput: (text: string) => (this.validateAndParseUrl(text).valid ? "" : "Please enter a valid URL."),
             value: zosmfURL
         });
 
         if (!zosmfURL) {
             vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
-                    "No valid value for z/OSMF URL. Operation Cancelled"));
+                "No valid value for z/OSMF URL. Operation Cancelled"));
             return;
         }
+
+        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
@@ -159,7 +188,7 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         if (!userName) {
             vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
-                    "Please enter your z/OS username. Operation Cancelled"));
+                "Please enter your z/OS username. Operation Cancelled"));
             return;
         }
 
@@ -173,7 +202,7 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         if (!passWord) {
             vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
-                    "Please enter your z/OS password. Operation Cancelled"));
+                "Please enter your z/OS password. Operation Cancelled"));
             return;
         }
 
@@ -183,8 +212,8 @@ export class Profiles { // Processing stops if there are no profiles detected
             canPickMany: false
         };
 
-        const selectRU = [ "True - Reject connections with self-signed certificates",
-                           "False - Accept connections with self-signed certificates" ];
+        const selectRU = ["True - Reject connections with self-signed certificates",
+            "False - Accept connections with self-signed certificates"];
 
         const ruOptions = Array.from(selectRU);
 
@@ -196,22 +225,22 @@ export class Profiles { // Processing stops if there are no profiles detected
             rejectUnauthorize = false;
         } else {
             vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                    "Operation Cancelled"));
+                "Operation Cancelled"));
             return;
         }
 
         for (const profile of this.allProfiles) {
             if (profile.name === profileName) {
                 vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
-                "Profile name already exists. Please create a profile using a different name"));
+                    "Profile name already exists. Please create a profile using a different name"));
                 return;
             }
         }
 
         IConnection = {
             name: profileName,
-            host: validURL,
-            port: validPort,
+            host: zosmfUrlParsed.host,
+            port: zosmfUrlParsed.port,
             user: userName,
             password: passWord,
             rejectUnauthorized: rejectUnauthorize,
@@ -242,18 +271,21 @@ export class Profiles { // Processing stops if there are no profiles detected
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
+        if (this.initValue === -1) {
+            try {
             // we need to call Imperative.init so that any installed credential manager plugins are loaded
-            await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+                await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            this.initValue = 0;
         }
         let zosmfProfile: IProfile;
         try {
             zosmfProfile = await new CliProfileManager({
                 profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
                 type: "zosmf"
-            }).save({profile: ProfileInfo, name: ProfileName, type: ProfileType});
+            }).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
