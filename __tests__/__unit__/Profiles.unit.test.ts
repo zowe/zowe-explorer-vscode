@@ -98,7 +98,7 @@ describe("Profile class unit tests", () => {
         it("should indicate missing property: profile name", async () => {
             // Profile name not supplied
             showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection();
+            await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile Name was not supplied. Operation Cancelled");
         });
@@ -107,7 +107,7 @@ describe("Profile class unit tests", () => {
             // Enter z/OS username
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake/url");
-            await profiles.createNewConnection();
+            await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
@@ -116,7 +116,7 @@ describe("Profile class unit tests", () => {
             // No valid zosmf value
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection();
+            await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
         });
@@ -127,7 +127,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake/url");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection();
+            await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
@@ -139,7 +139,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection();
+            await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
@@ -154,7 +154,7 @@ describe("Profile class unit tests", () => {
             let success = true;
             // Do more test
             try {
-                await profiles.createNewConnection();
+                await profiles.createNewConnection("fake");
             } catch (error) {
                 success = false;
             }
@@ -178,7 +178,7 @@ describe("Profile class unit tests", () => {
             let success = true;
             // Do more test
             try {
-                await profiles.createNewConnection();
+                await profiles.createNewConnection("fake");
             } catch (error) {
                 success = false;
             }
@@ -202,7 +202,7 @@ describe("Profile class unit tests", () => {
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
             // Do more test
             try {
-                await profiles.createNewConnection();
+                await profiles.createNewConnection("fake");
             } catch (error) {
                 success = false;
             }
@@ -226,7 +226,7 @@ describe("Profile class unit tests", () => {
             success = true;
             // Do more test
             try {
-                await profiles.createNewConnection();
+                await profiles.createNewConnection("fake");
             } catch (error) {
                 success = false;
             }
@@ -303,7 +303,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
-            await profiles.createNewConnection();
+            await profiles.createNewConnection("fake");
             expect(showErrorMessage.mock.calls.length).toBe(1);
             expect(showErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
             showErrorMessage.mockReset();

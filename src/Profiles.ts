@@ -21,6 +21,7 @@ import { DatasetTree } from "./DatasetTree";
 import { addSession } from "./extension";
 import { ZoweNode } from "./ZoweNode";
 import * as ProfileLoader from "./ProfileLoader";
+import { FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 interface IUrlValidator {
     valid: boolean;
@@ -145,25 +146,12 @@ export class Profiles { // Processing stops if there are no profiles detected
         return validationResult;
     }
 
-    public async createNewConnection() {
-        let profileName: string;
+    public async createNewConnection(profileName) {
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
-            value: profileName
-        };
-        profileName = await vscode.window.showInputBox(options);
-        if (!profileName) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                "Profile Name was not supplied. Operation Cancelled"));
-            return;
-        }
 
         zosmfURL = await vscode.window.showInputBox({
             ignoreFocusOut: true,
@@ -257,7 +245,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         const loadProfile = this.loadNamedProfile(sessName);
         const loadSession = loadProfile.profile as ISession;
 
-        if (!loadSession.user) {
+        if (!loadSession.user.trim()) {
 
             options = {
                 placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
@@ -275,8 +263,8 @@ export class Profiles { // Processing stops if there are no profiles detected
             }
         }
 
-        if (!loadSession.password) {
-            passWord = loadSession.password;
+        if (!loadSession.password.trim()) {
+            passWord = loadSession.password.trim();
 
             options = {
                 placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
