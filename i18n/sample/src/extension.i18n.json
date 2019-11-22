@@ -110,5 +110,8 @@
     "addJobsSession.quickPickOptions.profileAdd": "Select a Profile to Add to the Jobs Explorer",
     "addJobsSession.log.debug.selectedProfile": "User selected profile ",
     "addJobsSession.log.debug.cancelledProfile": "User cancelled profile selection",
-    "addJobsSession.noProfilesAdd": "No more profiles to add"
+    "addJobsSession.noProfilesAdd": "No more profiles to add",
+    "renameDataSet.log.debug": "Renaming data set ",
+    "renameDataSet.log.error": "Error encountered when renaming data set! ",
+    "renameDataSet.error": "Unable to rename data set: "
 }
