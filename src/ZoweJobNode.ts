@@ -17,6 +17,8 @@ import { IJob, IJobFile } from "@brightside/core";
 import * as extension from "./extension";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import * as utils from "./utils";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends vscode.TreeItem {

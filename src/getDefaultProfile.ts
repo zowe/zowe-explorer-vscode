@@ -11,6 +11,8 @@
 
 import { Imperative, CliProfileManager, ImperativeConfig } from "@brightside/imperative";
 import * as path from "path";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * Load the default profile of type zosmf and write it out to stdout

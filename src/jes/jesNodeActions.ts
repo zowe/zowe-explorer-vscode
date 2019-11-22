@@ -10,6 +10,8 @@
 */
 
 import { IJobFile } from "@brightside/core";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export function getSpoolLanguage(spool: IJobFile) {
     const name = spool.ddname.toLocaleUpperCase();

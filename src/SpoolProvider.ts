@@ -12,6 +12,8 @@
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import { Profiles } from "./Profiles";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
 

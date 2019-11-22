@@ -10,6 +10,8 @@
 */
 
 import * as vscode from "vscode";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * Standard history and favorite persistance handling routines
