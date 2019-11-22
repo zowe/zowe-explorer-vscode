@@ -5,8 +5,11 @@
         "outDir": "out",
         "jsx": "react",
         "lib": [
-            "es6"
+            "es6", "dom"
         ],
+        "noImplicitUseStrict": true,
+        "removeComments": true,
+        "rootDir": ".",
         "skipLibCheck": true,
         "sourceMap": true,
         /* Strict Type-Checking Option */
@@ -23,9 +26,11 @@
         ".vscode-test"
     ],
     "include": [
-        "src",
+        "src/**/*.ts",
         "__tests__",
         "resources/testProfileData.example.ts",
-        "resources/testProfileData.ts"
+        "resources/testProfileData.ts",
+        "./node_modules/vscode/vscode.d.ts",
+        "./node_modules/vscode/lib/*"
     ]
 }

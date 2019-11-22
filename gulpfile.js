@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 const gulp = require('gulp');
+const filter = require('gulp-filter');
 const path = require('path');
 
 const ts = require('gulp-typescript');
@@ -45,7 +46,7 @@ const addI18nTask = function() {
 		.pipe(gulp.dest('.'));
 };
 
-const buildTask = gulp.series(cleanTask, internalNlsCompileTask, addI18nTask);
+const buildTask = gulp.series(localizationTask);
 
 const doCompile = function (buildNls) {
 	var r = tsProject.src()
@@ -68,6 +69,21 @@ const doCompile = function (buildNls) {
 	return r.pipe(gulp.dest(outDest));
 }
 
+const generateSrcLocBundle = () => {
+	// Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize
+	// PROJECT ID is "<PUBLISHER>.<NAME>" (found in package.json)
+	return tsProject.src()
+		.pipe(sourcemaps.init())
+		.pipe(tsProject()).js
+		.pipe(nls.createMetaDataFiles())
+		.pipe(nls.bundleMetaDataFiles('Zowe.vscode-extension-for-zowe', 'out'))
+		.pipe(nls.bundleLanguageFiles()).
+		pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
+		.pipe(gulp.dest('out'));
+}
+
+const localizationTask = gulp.series(cleanTask, generateSrcLocBundle, add18nTask);
+
 const vscePublishTask = function() {
 	return vsce.publish();
 };
@@ -76,6 +92,8 @@ const vscePackageTask = function() {
 	return vsce.createVSIX();
 };
 
+
+
 gulp.task('default', buildTask);
 
 gulp.task('clean', cleanTask);
@@ -83,6 +101,8 @@ gulp.task('clean', cleanTask);
 gulp.task('compile', gulp.series(cleanTask, internalCompileTask));
 
 gulp.task('build', buildTask);
+
+gulp.task('localization', localizationTask);
 
 gulp.task('publish', gulp.series(buildTask, vscePublishTask));
 

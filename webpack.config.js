@@ -1,74 +1,63 @@
-/*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 
 //@ts-check
+
 'use strict';
+
 const path = require('path');
-var webpack = require("webpack");
-var fs = require("fs");
-var basePath = __dirname;
+
 /**@type {import('webpack').Configuration}*/
-const extensionConfig = {
-    target: 'node',
-    entry: {
-        extension: path.resolve(basePath, 'src/extension.ts')
-    },
-    output: {
+const config = {
+    target: 'node', // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
+	// mode:'development',
+    entry: './src/extension.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+    output: { // the bundle is stored in the 'out' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
         path: path.resolve(__dirname, 'out'),
-        filename: '[name].js',
-        libraryTarget: 'commonjs',
-        devtoolModuleFilenameTemplate: '../[resource-path]'
+        filename: 'extension.js',
+        libraryTarget: "commonjs2",
+        devtoolModuleFilenameTemplate: "../[resource-path]",
     },
-    node: {
-        __dirname: false
-    },
-    stats: 'errors-only',
     devtool: 'source-map',
     externals: {
-        vscode: 'commonjs vscode',
-        keytar: 'commonjs keytar'
+        vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
+        "vscode-nls" : "commonjs vscode-nls"
     },
-    resolve: {
-        extensions: ['.ts', '.js', '.json']
+    resolve: { // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
+        extensions: ['.ts', '.js']
+    },
+    node: {
+        __dirname: false, // leave the __dirname behavior intact
     },
     module: {
-        rules: [
-            {
-                test: /\.ts|\.tsx$/,
-                exclude: /node_modules/,
-                use:[{
-					// vscode-nls-dev loader:
-					// * rewrite nls-calls
-					loader: 'vscode-nls-dev/lib/webpack-loader',
-					options: {
-						base: 'src'
-					}
-                }, {
-					// configure TypeScript loader:
-					// * enable sources maps for end-to-end source maps
-					loader: 'ts-loader',
-					options: {
-						compilerOptions: {
-							"sourceMap": true,
-						}
-					}
-				}]
-            }
-        ]
-    },
-    plugins: [
-        new webpack.BannerPlugin(fs.readFileSync('./LICENSE_HEADER', 'utf8'))
-    ]
-};
+        rules: [{
+            test: /\.ts$/,
+            exclude: /node_modules/,
+            use: [
+                {
+                    // configure TypeScript loader:
+                    // * enable sources maps for end-to-end source maps
+                    loader: 'ts-loader',
+                    options: {
+                        compilerOptions: {
+                            "sourceMap": true,
+                        }
+                    }
+                },
+        ]},
+    ]},
+}
+if (process.argv.includes('--vscode-nls')) {
+	// rewrite nls call when being asked for
+	config.module.rules.unshift({
+		loader: 'vscode-nls-dev/lib/webpack-loader',
+		options: {
+			base: __dirname
+		}
+	})
+}
 
-module.exports = () => {
-    return [extensionConfig];
-};
+
+module.exports = config;
