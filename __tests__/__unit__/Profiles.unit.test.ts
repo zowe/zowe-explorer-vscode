@@ -25,6 +25,15 @@ describe("Profile class unit tests", () => {
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
 
     const mockJSONParse = jest.spyOn(JSON, "parse");
+    const showInformationMessage = jest.fn();
+    const showInputBox = jest.fn();
+    const showQuickPick = jest.fn();
+    const showErrorMessage = jest.fn();
+
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -74,15 +83,8 @@ describe("Profile class unit tests", () => {
 
     describe("Creating a new connection", () => {
         let profiles: Profiles;
-        const showInformationMessage = jest.fn();
-        const showInputBox = jest.fn();
-        const showQuickPick = jest.fn();
-        const showErrorMessage = jest.fn();
 
-        Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-        Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-        Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-        Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+        
 
         beforeEach(async () => {
             profiles = await Profiles.createInstance(log);
@@ -95,13 +97,13 @@ describe("Profile class unit tests", () => {
             showInformationMessage.mockReset();
         });
 
-        it("should indicate missing property: profile name", async () => {
-            // Profile name not supplied
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile Name was not supplied. Operation Cancelled");
-        });
+        // it("should indicate missing property: profile name", async () => {
+        //     // Profile name not supplied
+        //     showInputBox.mockResolvedValueOnce(undefined);
+        //     await profiles.createNewConnection("fake");
+        //     expect(showInformationMessage.mock.calls.length).toBe(1);
+        //     expect(showInformationMessage.mock.calls[0][0]).toBe("Profile Name was not supplied. Operation Cancelled");
+        // });
 
         it("should indicate missing property: username", async () => {
             // Enter z/OS username

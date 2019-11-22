@@ -306,6 +306,7 @@ describe("Zos Jobs Unit Tests", () => {
             let theia = true;
             Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
 
+            createBasicZosmfSession.mockReturnValue(session);
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             let qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
@@ -398,6 +399,7 @@ describe("Zos Jobs Unit Tests", () => {
         });
 
         it("Testing that user filter prompts are executed successfully VSCode specific route", async () => {
+            createBasicZosmfSession.mockReturnValue(session);
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             let qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
