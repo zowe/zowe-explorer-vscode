@@ -73,10 +73,11 @@ const generateSrcLocBundle = () => {
 	return tsProject.src()
 		.pipe(sourcemaps.init())
 		.pipe(tsProject()).js
-		.pipe(nls.createMetaDataFiles())
+        .pipe(nls.createMetaDataFiles())
+        .pipe(createAdditionalLanguageFiles(languages, "i18n"))
 		.pipe(nls.bundleMetaDataFiles('Zowe.vscode-extension-for-zowe', 'out'))
-		.pipe(nls.bundleLanguageFiles()).
-		pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
+		.pipe(nls.bundleLanguageFiles())
+		.pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
 		.pipe(gulp.dest('out'));
 }
 
