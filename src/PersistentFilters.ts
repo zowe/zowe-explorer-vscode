@@ -11,7 +11,10 @@
 
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Standard history and favorite persistance handling routines

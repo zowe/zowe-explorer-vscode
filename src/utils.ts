@@ -16,7 +16,10 @@ import { CliProfileManager } from "@brightside/imperative";
 import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /*
  * Created this file to be a place where commonly used functions will be defined.

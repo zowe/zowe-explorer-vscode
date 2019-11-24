@@ -15,7 +15,10 @@ import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * A type of TreeItem used to represent sessions and data sets

@@ -19,7 +19,10 @@ import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
 import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 import { ZoweNode } from "./ZoweNode";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Creates the Dataset tree that contains nodes of sessions and data sets

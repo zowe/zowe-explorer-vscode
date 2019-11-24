@@ -19,7 +19,10 @@ import { Job } from "./ZoweJobNode";
 import { OwnerFilterDescriptor, JobIdFilterDescriptor, applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items

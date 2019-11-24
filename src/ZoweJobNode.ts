@@ -18,7 +18,10 @@ import * as extension from "./extension";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import * as utils from "./utils";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends vscode.TreeItem {
