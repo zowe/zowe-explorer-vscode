@@ -46,8 +46,6 @@ const addI18nTask = function() {
 		.pipe(gulp.dest('.'));
 };
 
-const buildTask = gulp.series(localizationTask);
-
 const doCompile = function (buildNls) {
 	var r = tsProject.src()
 		.pipe(sourcemaps.init())
@@ -82,7 +80,9 @@ const generateSrcLocBundle = () => {
 		.pipe(gulp.dest('out'));
 }
 
-const localizationTask = gulp.series(cleanTask, generateSrcLocBundle, add18nTask);
+const localizationTask = gulp.series(cleanTask, generateSrcLocBundle, addI18nTask);
+
+const buildTask = gulp.series(localizationTask);
 
 const vscePublishTask = function() {
 	return vsce.publish();
