@@ -17,19 +17,28 @@ const config = {
     output: { // the bundle is stored in the 'out' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
         path: path.resolve(__dirname, 'out'),
         filename: 'extension.js',
-        libraryTarget: "commonjs2",
+        libraryTarget: "commonjs",
         devtoolModuleFilenameTemplate: "../[resource-path]",
     },
     devtool: 'source-map',
     externals: {
+        // Add modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
         vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-        "vscode-nls" : "commonjs vscode-nls"
+        "vscode-nls" : "commonjs vscode-nls",
+        keytar: "commonjs keytar",
+        "spdx-exceptions": "commonjs spdx-exceptions",
+        "spdx-license-ids": "commonjs spdx-license-ids",
+        "spdx-license-ids/deprecated": "commonjs spdx-license-ids/deprecated"
     },
     resolve: { // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
         extensions: ['.ts', '.js']
     },
     node: {
         __dirname: false, // leave the __dirname behavior intact
+    },
+    stats: {
+        // Ignore warnings
+        warnings: false
     },
     module: {
         rules: [{
