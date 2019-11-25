@@ -351,7 +351,7 @@ export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
 export function defineGlobals(tempPath: string | undefined) {
     tempPath !== "" && tempPath !== undefined ?
         BRIGHTTEMPFOLDER = path.join(tempPath, "temp") :
-        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
+        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "resources", "temp");
 
     USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
     DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
