@@ -72,9 +72,9 @@ const generateSrcLocBundle = () => {
 	// PROJECT ID is "<PUBLISHER>.<NAME>" (found in package.json)
 	return tsProject.src()
 		.pipe(sourcemaps.init())
-		.pipe(tsProject()).js
+        .pipe(tsProject()).js
         .pipe(nls.createMetaDataFiles())
-        .pipe(createAdditionalLanguageFiles(languages, "i18n"))
+        .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
 		.pipe(nls.bundleMetaDataFiles('Zowe.vscode-extension-for-zowe', 'out'))
 		.pipe(nls.bundleLanguageFiles())
 		.pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
