@@ -725,11 +725,6 @@ export async function addUSSSession(ussFileProvider: USSTree) {
     quickpick.show();
     choice = await utils.resolveQuickPickHelper(quickpick);
     quickpick.hide();
-    if (!choice) {
-        vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                "Profile Name was not supplied. Operation Cancelled"));
-        return;
-    }
     if (choice instanceof utils.FilterDescriptor) {
         if (quickpick.value) {
             chosenProfile = quickpick.value;
@@ -1749,11 +1744,6 @@ export async function addJobsSession(jobsProvider: ZosJobsProvider) {
         quickpick.show();
         choice = await utils.resolveQuickPickHelper(quickpick);
         quickpick.hide();
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                    "Profile Name was not supplied. Operation Cancelled"));
-            return;
-        }
         if (choice instanceof utils.FilterDescriptor) {
             if (quickpick.value) {
                 chosenProfile = quickpick.value;
