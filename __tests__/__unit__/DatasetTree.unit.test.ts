@@ -582,7 +582,7 @@ describe("DatasetTree Unit Tests", () => {
         const nonFavoritedNode = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
         const favoritedNode = new ZoweNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
         favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        
+
         testTree.mFavorites.push(favoritedNode);
         const foundNode = testTree.findFavoritedNode(nonFavoritedNode);
 

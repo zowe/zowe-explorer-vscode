@@ -305,7 +305,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      */
     public findFavoritedNode(node: ZoweNode) {
         return this.mFavorites.find(
-            temp => (temp.label === `[${node.mParent.label.trim()}]: ${node.label}`) && (temp.contextValue.includes(node.contextValue))
+            (temp) => (temp.label === `[${node.mParent.label.trim()}]: ${node.label}`) && (temp.contextValue.includes(node.contextValue))
         );
     }
     /**
@@ -318,7 +318,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         const nodeLabel = node.label.substring(node.label.indexOf(":") + 2);
         const sessionNode = this.mSessionNodes.find((session) => session.label === `${profileLabel} `);
         if (sessionNode) {
-            return sessionNode.children.find((node) => node.label === nodeLabel);
+            return sessionNode.children.find((temp) => temp.label === nodeLabel);
         }
     }
 

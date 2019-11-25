@@ -479,12 +479,12 @@ describe("Extension Integration Tests", () => {
         });
     });
 
-    describe.only("Copying data sets", () => {
+    describe("Copying data sets", () => {
         describe("Success Scenarios", () => {
             describe("Sequential > Sequential", () => {
                 const fromDataSetName = `${pattern}.COPY.FROM.SET`;
                 const toDataSetName = `${pattern}.COPY.TO.SET`;
-        
+
                 beforeEach(async () => {
                     await Promise.all([
                         zowe.Create.dataSet(
@@ -505,7 +505,7 @@ describe("Extension Integration Tests", () => {
                     await Promise.all([
                         zowe.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
                         zowe.Delete.dataSet(sessionNode.getSession(), toDataSetName),
-                    ].map((p) => p.catch((err) => err)))
+                    ].map((p) => p.catch((err) => err)));
                 });
 
                 it("Should copy a data set", async () => {
@@ -531,9 +531,9 @@ describe("Extension Integration Tests", () => {
             });
             describe("Member > Member", () => {
                 const dataSetName = `${pattern}.COPY.DATA.SET`;
-                const fromMemberName = "file1"
-                const toMemberName = "file2"
-        
+                const fromMemberName = "file1";
+                const toMemberName = "file2";
+
                 beforeEach(async () => {
                     await zowe.Create.dataSet(
                         sessionNode.getSession(),
@@ -558,7 +558,7 @@ describe("Extension Integration Tests", () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-                        
+
                         await extension.copyDataSet(fromNode);
                         await extension.pasteDataSet(parentNode, testTree);
 
@@ -575,8 +575,8 @@ describe("Extension Integration Tests", () => {
             describe("Sequential > Member", () => {
                 const fromDataSetName = `${pattern}.COPY.FROM.SET`;
                 const toDataSetName = `${pattern}.COPY.TO.SET`;
-                const toMemberName = "file2"
-        
+                const toMemberName = "file2";
+
                 beforeEach(async () => {
                     await Promise.all([
                         zowe.Create.dataSet(
@@ -597,7 +597,7 @@ describe("Extension Integration Tests", () => {
                     await Promise.all([
                         zowe.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
                         zowe.Delete.dataSet(sessionNode.getSession(), toDataSetName),
-                    ].map((p) => p.catch((err) => err)))
+                    ].map((p) => p.catch((err) => err)));
                 });
 
                 it("Should copy a data set", async () => {
@@ -612,7 +612,7 @@ describe("Extension Integration Tests", () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-                        
+
                         await extension.copyDataSet(fromNode);
                         await extension.pasteDataSet(toNode, testTree);
 
@@ -629,8 +629,8 @@ describe("Extension Integration Tests", () => {
             describe("Member > Sequential", () => {
                 const fromDataSetName = `${pattern}.COPY.FROM.SET`;
                 const toDataSetName = `${pattern}.COPY.TO.SET`;
-                const fromMemberName = "file1"
-        
+                const fromMemberName = "file1";
+
                 beforeEach(async () => {
                     await Promise.all([
                         zowe.Create.dataSet(
@@ -645,13 +645,17 @@ describe("Extension Integration Tests", () => {
                         ),
                     ].map((p) => p.catch((err) => err)));
 
-                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), `${fromDataSetName}(${fromMemberName})`).catch((err) => err);
+                    await zowe.Upload.bufferToDataSet(
+                        sessionNode.getSession(),
+                        Buffer.from("1234"),
+                        `${fromDataSetName}(${fromMemberName})`,
+                    ).catch((err) => err);
                 });
                 afterEach(async () => {
                     await Promise.all([
                         zowe.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
                         zowe.Delete.dataSet(sessionNode.getSession(), toDataSetName),
-                    ].map((p) => p.catch((err) => err)))
+                    ].map((p) => p.catch((err) => err)));
                 });
 
                 it("Should copy a data set", async () => {

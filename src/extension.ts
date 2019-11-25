@@ -898,7 +898,7 @@ function getNodeLabels(node: ZoweNode) {
 }
 
 /**
- * Copy data sets 
+ * Copy data sets
  *
  * @export
  * @param {ZoweNode} node - The node
@@ -908,7 +908,7 @@ export async function copyDataSet(node: ZoweNode) {
 }
 
 /**
- * Paste data sets 
+ * Paste data sets
  *
  * @export
  * @param {ZoweNode} node - The node
