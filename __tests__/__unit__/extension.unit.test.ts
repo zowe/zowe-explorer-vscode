@@ -195,6 +195,16 @@ describe("Extension Unit Tests", () => {
     const mockRenameFavorite = jest.fn();
     const mockUpdateFavorites = jest.fn();
     const mockRenameNode = jest.fn();
+    const Copy = jest.fn();
+    const copyDataSet = jest.fn();
+    const findFavoritedNode = jest.fn();
+    const findNonFavoritedNode = jest.fn();
+    let mockClipboardData: string;
+    const clipboard = {
+        writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
+        readText: jest.fn().mockImplementation(() => mockClipboardData),
+    };
+    
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15
@@ -218,6 +228,8 @@ describe("Extension Unit Tests", () => {
             renameFavorite: mockRenameFavorite,
             updateFavorites: mockUpdateFavorites,
             renameNode: mockRenameNode,
+            findFavoritedNode,
+            findNonFavoritedNode,
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -345,7 +357,9 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
     Object.defineProperty(brightside, "Rename", {value: Rename});
     Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
-
+    Object.defineProperty(brightside, "Copy", {value: Copy});
+    Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
+    Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
@@ -504,7 +518,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(62);
+        expect(registerCommand.mock.calls.length).toBe(63);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -535,6 +549,7 @@ describe("Extension Unit Tests", () => {
             "zowe.submitMember",
             "zowe.showDSAttributes",
             "zowe.renameDataSet",
+            "zowe.copyDataSet",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -2441,6 +2456,68 @@ describe("Extension Unit Tests", () => {
             expect(renameDataSet.mock.calls.length).toBe(1);
             expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.DELETE.NODE", "HLQ.TEST.DELETE.NODE.NEW");
             expect(error).toBe(defaultError);
+        });
+    });
+    describe.only("Copying Data Sets", () => {
+        it("Should copy the label of a node to the clipboard", async () => {
+            renameDataSet.mockReset();
+
+            const node = new ZoweNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_SESSION_CONTEXT;
+
+            await extension.copyDataSet(node);
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
+        });
+        it("Should copy the label of a favourited node to the clipboard", async () => {
+            renameDataSet.mockReset();
+
+            const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = "ds_fav";
+
+            await extension.copyDataSet(node);
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
+        });
+        it("Should copy the label of a member to the clipboard", async () => {
+            renameDataSet.mockReset();
+
+            const parent = new ZoweNode("HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+            parent.contextValue = extension.DS_PDS_CONTEXT;
+            child.contextValue = extension.DS_MEMBER_CONTEXT;
+            await extension.copyDataSet(child);
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
+        });
+        it("Should copy the label of a favourited member to the clipboard", async () => {
+            renameDataSet.mockReset();
+
+            const parent = new ZoweNode("[sestest]: HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+            parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            child.contextValue = extension.DS_MEMBER_CONTEXT;
+            await extension.copyDataSet(child);
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
+        });
+    });
+    describe.only("Pasting Data Sets", () => {
+        it("Should call zowe.Copy.dataSet when pasting to sequential data set", async () => {
+            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_SESSION_CONTEXT;
+
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
+            await extension.pasteDataSet(node, testTree);
+            
+            expect(copyDataSet.mock.calls.length).toBe(1);
+            expect(copyDataSet).toHaveBeenLastCalledWith(node.getSession(), { dataSetName: "HLQ.TEST.BEFORE.NODE" }, { dataSetName: "HLQ.TEST.TO.NODE" });
+        });
+        it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
+            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_PDS_CONTEXT;
+
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
+            await extension.pasteDataSet(node, testTree);
+            
+            expect(copyDataSet.mock.calls.length).toBe(1);
+            expect(copyDataSet).toHaveBeenLastCalledWith(node.getSession(), { dataSetName: "HLQ.TEST.BEFORE.NODE" }, { dataSetName: "HLQ.TEST.TO.NODE" });
         });
     });
 

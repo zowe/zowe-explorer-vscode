@@ -575,4 +575,18 @@ describe("DatasetTree Unit Tests", () => {
         expect(sessionNode.children[sessionNode.children.length-1].label).toBe(newLabel);
         sessionNode.children.pop();
     });
+
+    it("Should find a favorited node", async () => {
+        testTree.mFavorites = [];
+        const sessionNode = testTree.mSessionNodes[1];
+        const nonFavoritedNode = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const favoritedNode = new ZoweNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        
+        testTree.mFavorites.push(favoritedNode);
+        const foundNode = testTree.findFavoritedNode(nonFavoritedNode);
+
+        expect(foundNode).toBe(favoritedNode);
+        sessionNode.children.pop();
+    });
 });

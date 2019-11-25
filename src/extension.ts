@@ -166,6 +166,8 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
         vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
         vscode.commands.registerCommand("zowe.renameDataSet", (node) => renameDataSet(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
+        vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -873,6 +875,82 @@ export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree
     }
 }
 
+function getNodeLabel(node: ZoweNode) {
+    let profileName;
+    let dataSetName;
+    if (node.contextValue.includes(FAV_SUFFIX)) {
+        profileName = node.label.substring(1, node.label.indexOf("]"));
+        dataSetName = node.label.substring(node.label.indexOf(":") + 2);
+    } else {
+        profileName = node.mParent.label.trim();
+        dataSetName = node.label.trim();
+    }
+
+    return { profileName, dataSetName };
+}
+
+function getNodeLabels(node: ZoweNode) {
+    if (node.contextValue.includes(DS_MEMBER_CONTEXT)) {
+        return { ...getNodeLabel(node.mParent), memberName: node.label.trim() };
+    } else {
+        return getNodeLabel(node);
+    }
+}
+
+/**
+ * Copy data sets 
+ *
+ * @export
+ * @param {ZoweNode} node - The node
+ */
+export async function copyDataSet(node: ZoweNode) {
+    return vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(node)));
+}
+
+/**
+ * Paste data sets 
+ *
+ * @export
+ * @param {ZoweNode} node - The node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
+    const { profileName, dataSetName } = getNodeLabels(node);
+    let memberName;
+
+    if (node.contextValue.includes(DS_PDS_CONTEXT)) {
+        memberName = await vscode.window.showInputBox({ placeHolder: "PLACEHOLDER" });
+    }
+
+    const {
+        dataSetName: beforeDataSetName,
+        memberName: beforeMemberName,
+        profileName: beforeProfileName,
+    } = JSON.parse(await vscode.env.clipboard.readText());
+
+    if(beforeProfileName === profileName) {
+        await zowe.Copy.dataSet(
+            node.getSession(),
+            { dataSetName: beforeDataSetName, memberName: beforeMemberName },
+            { dataSetName, memberName },
+        );
+
+        if (memberName) {
+            datasetProvider.refreshElement(node);
+            let node2;
+            if (node.contextValue.includes(FAV_SUFFIX)) {
+                node2 = datasetProvider.findNonFavoritedNode(node);
+            } else {
+                node2 = datasetProvider.findFavoritedNode(node);
+            }
+            if (node2) {
+                datasetProvider.refreshElement(node2);
+            }
+        } else {
+            refreshPS(node);
+        }
+    }
+}
 /**
  * Recursively deletes directory
  *
