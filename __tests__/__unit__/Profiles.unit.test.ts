@@ -84,8 +84,6 @@ describe("Profile class unit tests", () => {
     describe("Creating a new connection", () => {
         let profiles: Profiles;
 
-        
-
         beforeEach(async () => {
             profiles = await Profiles.createInstance(log);
             showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");

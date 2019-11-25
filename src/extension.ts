@@ -639,11 +639,6 @@ export async function addSession(datasetProvider: DatasetTree) {
     quickpick.show();
     choice = await utils.resolveQuickPickHelper(quickpick);
     quickpick.hide();
-    if (!choice) {
-        vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                "Profile Name was not supplied. Operation Cancelled"));
-        return;
-    }
     if (choice instanceof utils.FilterDescriptor) {
         if (quickpick.value) {
             chosenProfile = quickpick.value;
@@ -685,7 +680,10 @@ export async function addSession(datasetProvider: DatasetTree) {
         log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
         await datasetProvider.addSession(chosenProfile);
     } else {
-        log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+        log.debug(localize("addSession.log.debug.cancelledSelection", "Operation Cancelled"));
+        vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Operation Cancelled"));
+        return;
     }
 }
 
