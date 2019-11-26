@@ -66,5 +66,13 @@
     "Zowe-Default-USS-Persistent-Favorites": "Toggle if USS favorite files persist locally",
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
-    "issueTsoCmd": "Zowe: Issue TSO Command..."
+    "issueTsoCmd": "Zowe: Issue TSO Command...",
+    "renameDataSet": "Rename Data Set",
+    "copyDataSet": "Copy Data Set",
+    "pasteDataSet": "Paste Data Set",
+    "profile.configuration.title": "Zowe z/OSMF Profiles",
+    "profile.configuration.name": "Profile Name",
+    "profile.configuration.url": "z/OSMF URL",
+    "profile.configuration.user": "z/OSMF User Name",
+    "profile.configuration.ru": "Profile Reject Unauthorize"
 }
