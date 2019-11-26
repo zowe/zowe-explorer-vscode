@@ -100,7 +100,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     try {
         // Initialize Imperative Logger
-        const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
+        const loggerConfig = require("../log4jsconfig.json");
+        // const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
         loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
         loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
         loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
