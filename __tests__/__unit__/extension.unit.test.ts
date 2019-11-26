@@ -2952,6 +2952,16 @@ describe("Extension Unit Tests", () => {
      });
 
     it("tests the issueTsoCommand function", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
@@ -3038,11 +3048,111 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo");
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
         await extension.issueTsoCommand(undefined);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand prompt credentials", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand prompt credentials for password only", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand error in prompt credentials", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
