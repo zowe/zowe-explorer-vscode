@@ -14,17 +14,19 @@ Zowe&trade; Explorer extension modernizes the way developers and system administ
 
 ## Contents
 
-* [Prerequisites](#prerequisites)
+* [Software Requirements](#software-requirements)
 * [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
-## Prerequisites
+## Software Requirements
 
 Ensure that you meet the following prerequisites before using the extension:
 
-* Configured TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-* Zowe CLI `zosmf` profile.
+* Configure IBM z/OSMF REST services, including TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
+* [Install Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html).
+* Create at least one Zowe CLI `zosmf` profile.
+* Install Node.js v8.0 or higher. Issue the command `node -v` to check if Node.js is already installed. 
 
 **Notes:**
 
