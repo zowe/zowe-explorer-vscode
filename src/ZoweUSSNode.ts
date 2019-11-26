@@ -49,7 +49,8 @@ export class ZoweUSSNode extends vscode.TreeItem {
                 private session: Session,
                 private parentPath: string,
                 public binary = false,
-                public mProfileName?: string) {
+                public mProfileName?: string,
+                private etag?: string) {
         super(label, collapsibleState);
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
@@ -74,6 +75,7 @@ export class ZoweUSSNode extends vscode.TreeItem {
             this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
+        this.etag = etag ? etag : "";
         utils.applyIcons(this);
     }
 
@@ -204,5 +206,23 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
         utils.applyIcons(this);
         this.dirty = true;
+    }
+
+    /**
+     * Returns the [etag] for this node
+     *
+     * @returns {string}
+     */
+    public getEtag(): string {
+        return this.etag;
+    }
+
+    /**
+     * Set the [etag] for this node
+     *
+     * @returns {void}
+     */
+    public setEtag(etagValue): void {
+        this.etag = etagValue;
     }
 }
