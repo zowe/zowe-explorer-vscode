@@ -316,10 +316,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public findNonFavoritedNode(node: ZoweNode) {
         const profileLabel = node.label.substring(1, node.label.indexOf("]"));
         const nodeLabel = node.label.substring(node.label.indexOf(":") + 2);
-        const sessionNode = this.mSessionNodes.find((session) => session.label === `${profileLabel} `);
-        if (sessionNode) {
-            return sessionNode.children.find((temp) => temp.label === nodeLabel);
-        }
+        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileLabel);
+        return sessionNode.children.find((temp) => temp.label === nodeLabel);
     }
 
     /**

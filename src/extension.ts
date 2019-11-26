@@ -875,7 +875,7 @@ export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree
     }
 }
 
-function getNodeLabel(node: ZoweNode) {
+function getProfileAndDataSetName(node: ZoweNode) {
     let profileName;
     let dataSetName;
     if (node.contextValue.includes(FAV_SUFFIX)) {
@@ -891,9 +891,9 @@ function getNodeLabel(node: ZoweNode) {
 
 function getNodeLabels(node: ZoweNode) {
     if (node.contextValue.includes(DS_MEMBER_CONTEXT)) {
-        return { ...getNodeLabel(node.mParent), memberName: node.label.trim() };
+        return { ...getProfileAndDataSetName(node.mParent), memberName: node.label.trim() };
     } else {
-        return getNodeLabel(node);
+        return getProfileAndDataSetName(node);
     }
 }
 
@@ -901,7 +901,7 @@ function getNodeLabels(node: ZoweNode) {
  * Copy data sets
  *
  * @export
- * @param {ZoweNode} node - The node
+ * @param {ZoweNode} node - The node to copy
  */
 export async function copyDataSet(node: ZoweNode) {
     return vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(node)));
@@ -911,7 +911,7 @@ export async function copyDataSet(node: ZoweNode) {
  * Paste data sets
  *
  * @export
- * @param {ZoweNode} node - The node
+ * @param {ZoweNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
@@ -951,6 +951,7 @@ export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree)
         }
     }
 }
+
 /**
  * Recursively deletes directory
  *
