@@ -297,31 +297,27 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
-        try {
-            if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(node.label);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+        if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(node.label);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
                 }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    node.session.ISession.user = usrNme;
-                    node.session.ISession.password = passWrd;
-                    node.session.ISession.base64EncodedAuth = baseEncd;
-                    this.validProfile = 0;
-                }
-                await this.refreshElement(node);
-                await this.refresh();
-            } else {
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.session.ISession.user = usrNme;
+                node.session.ISession.password = passWrd;
+                node.session.ISession.base64EncodedAuth = baseEncd;
                 this.validProfile = 0;
             }
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await this.refreshElement(node);
+            await this.refresh();
+        } else {
+            this.validProfile = 0;
         }
         if (this.validProfile === 0) {
             if (node.contextValue === extension.JOBS_SESSION_CONTEXT) { // This is the profile object context

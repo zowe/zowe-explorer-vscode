@@ -1149,6 +1149,102 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(0);
     });
 
+    it("tests the createFile for prompt credentials", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            protocol: "https",
+            type: "basic",
+        });
+
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+
+        showQuickPick.mockReset();
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
+        dataSetCreate.mockReset();
+
+        getConfiguration.mockReturnValue("FakeConfig");
+        showInputBox.mockReturnValueOnce("FakeName");
+
+
+        showQuickPick.mockResolvedValueOnce("Data Set Binary");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set C");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set Classic");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
+        await extension.createFile(newsessNode, testTree);
+
+        // tslint:disable-next-line: no-magic-numbers
+        expect(showQuickPick.mock.calls.length).toBe(5);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(getConfiguration.mock.calls.length).toBe(5);
+        expect(getConfiguration.mock.calls[0][0]).toBe("Zowe-Default-Datasets-Binary");
+        expect(getConfiguration.mock.calls[1][0]).toBe("Zowe-Default-Datasets-C");
+        expect(getConfiguration.mock.calls[2][0]).toBe("Zowe-Default-Datasets-Classic");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(getConfiguration.mock.calls[3][0]).toBe("Zowe-Default-Datasets-PDS");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(getConfiguration.mock.calls[4][0]).toBe("Zowe-Default-Datasets-PS");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(showInputBox.mock.calls.length).toBe(5);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(dataSetCreate.mock.calls.length).toBe(5);
+    });
+
+    it("tests the createFile for prompt credentials error", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                };
+            })
+        });
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            protocol: "https",
+            type: "basic",
+        });
+        const createFile = jest.spyOn(extension, "createFile");
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+
+        showQuickPick.mockReset();
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
+        dataSetCreate.mockReset();
+
+        getConfiguration.mockReturnValue("FakeConfig");
+        showInputBox.mockReturnValueOnce("FakeName");
+
+
+        showQuickPick.mockResolvedValueOnce("Data Set Binary");
+        await extension.createFile(newsessNode, testTree);
+        expect(extension.createFile).toHaveBeenCalled();
+    });
+
     it("Testing that deleteDataset is executed successfully", async () => {
         existsSync.mockReset();
         unlinkSync.mockReset();
@@ -2304,6 +2400,88 @@ describe("Extension Unit Tests", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
+        });
+
+        it("tests the refresh Jobs Server for prompt credentials", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        }),
+                    };
+                })
+            });
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                protocol: "https",
+                type: "basic",
+            });
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            newjobNode.contextValue = "server";
+            newjobNode.contextValue = "server";
+            await extension.refreshJobsServer(newjobNode);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("tests the refresh Jobs Server", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        }),
+                    };
+                })
+            });
+
+            createBasicZosmfSession.mockReturnValue(session);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, session, iJob);
+            newjobNode.contextValue = "server";
+            newjobNode.contextValue = "server";
+            await extension.refreshJobsServer(newjobNode);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("tests the refresh Jobs Server with invalid prompt credentials", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                    };
+                })
+            });
+
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                protocol: "https",
+                type: "basic",
+            });
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            newjobNode.contextValue = "server";
+            newjobNode.contextValue = "server";
+            await extension.refreshJobsServer(newjobNode);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
         });
 
         it("Testing that addJobsSession will cancel if there is no profile name", async () => {

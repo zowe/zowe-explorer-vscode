@@ -246,32 +246,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.runStopCommand", (job) => {
             stopCommand(job);
         });
-        vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => {
-            if ((!node.session.ISession.user ) || (!node.session.ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(node.label);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
-                }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    node.session.ISession.user = usrNme;
-                    node.session.ISession.password = passWrd;
-                    node.session.ISession.base64EncodedAuth = baseEncd;
-                    node.owner = usrNme;
-                    validProfile = 0;
-                }
-            } else {
-                validProfile = 0;
-            }
-            if (validProfile === 0) {
-                await jobsProvider.refreshElement(node);
-            }
-        });
+        vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node));
         vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
             jobsProvider.mSessionNodes.forEach((jobNode) => {
                 if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
@@ -1714,6 +1689,34 @@ export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
     const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
+}
+
+export async function refreshJobsServer(node: Job) {
+    const jobsProvider = new ZosJobsProvider();
+    if ((!node.session.ISession.user ) || (!node.session.ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.label);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.session.ISession.user = usrNme;
+            node.session.ISession.password = passWrd;
+            node.session.ISession.base64EncodedAuth = baseEncd;
+            node.owner = usrNme;
+            validProfile = 0;
+        }
+    } else {
+        validProfile = 0;
+    }
+    if (validProfile === 0) {
+        await jobsProvider.refreshElement(node);
+    }
 }
 
 export async function addJobsSession(jobsProvider: ZosJobsProvider) {
