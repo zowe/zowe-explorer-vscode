@@ -164,6 +164,9 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
         vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
         vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.renameDataSet", (node) => renameDataSet(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
+        vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -825,6 +828,146 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         );
     panel.webview.html = webviewHTML;
 
+}
+
+/**
+ * Rename data sets
+ *
+ * @export
+ * @param {ZoweNode} node - The node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
+    let beforeDataSetName = node.label.trim();
+    let favPrefix;
+    let isFavourite;
+
+    if (node.contextValue.includes(FAV_SUFFIX)) {
+        isFavourite = true;
+        favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
+        beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
+    }
+    const afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
+
+    log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
+    if (afterDataSetName) {
+        try {
+            await zowe.Rename.dataSet(node.getSession(), beforeDataSetName, afterDataSetName);
+            node.label = `${favPrefix}${afterDataSetName}`;
+        } catch (err) {
+            log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+            throw err;
+        }
+        if (isFavourite) {
+            const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
+            datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
+        } else {
+            const temp = node.label;
+            node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
+            datasetProvider.renameFavorite(node, afterDataSetName);
+            node.label = temp;
+        }
+        datasetProvider.refreshElement(node.mParent);
+        datasetProvider.updateFavorites();
+    }
+}
+
+function getProfileAndDataSetName(node: ZoweNode) {
+    let profileName;
+    let dataSetName;
+    if (node.contextValue.includes(FAV_SUFFIX)) {
+        profileName = node.label.substring(1, node.label.indexOf("]"));
+        dataSetName = node.label.substring(node.label.indexOf(":") + 2);
+    } else {
+        profileName = node.mParent.label.trim();
+        dataSetName = node.label.trim();
+    }
+
+    return { profileName, dataSetName };
+}
+
+function getNodeLabels(node: ZoweNode) {
+    if (node.contextValue.includes(DS_MEMBER_CONTEXT)) {
+        return { ...getProfileAndDataSetName(node.mParent), memberName: node.label.trim() };
+    } else {
+        return getProfileAndDataSetName(node);
+    }
+}
+
+/**
+ * Copy data sets
+ *
+ * @export
+ * @param {ZoweNode} node - The node to copy
+ */
+export async function copyDataSet(node: ZoweNode) {
+    return vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(node)));
+}
+
+/**
+ * Paste data sets
+ *
+ * @export
+ * @param {ZoweNode} node - The node to paste to
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
+    const { profileName, dataSetName } = getNodeLabels(node);
+    let memberName;
+    let beforeDataSetName;
+    let beforeProfileName;
+    let beforeMemberName;
+
+    if (node.contextValue.includes(DS_PDS_CONTEXT)) {
+        memberName = await vscode.window.showInputBox({ placeHolder: localize("renameDataSet.name", "Name of Data Set Member") });
+        if(!memberName) {
+            return;
+        }
+    }
+
+    try {
+        ({
+            dataSetName: beforeDataSetName,
+            memberName: beforeMemberName,
+            profileName: beforeProfileName,
+        } = JSON.parse(await vscode.env.clipboard.readText()));
+    } catch (err) {
+        throw Error("Invalid clipboard. Copy from data set first");
+    }
+
+    if(beforeProfileName === profileName) {
+        if(memberName) {
+            try {
+                await zowe.Get.dataSet(node.getSession(), `${dataSetName}(${memberName})`);
+                throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
+            } catch(err) {
+                if (!err.message.includes("Member not found")) {
+                    throw err;
+                }
+            }
+        }
+        await zowe.Copy.dataSet(
+            node.getSession(),
+            { dataSetName: beforeDataSetName, memberName: beforeMemberName },
+            { dataSetName, memberName },
+        );
+
+        if (memberName) {
+            datasetProvider.refreshElement(node);
+            let node2;
+            if (node.contextValue.includes(FAV_SUFFIX)) {
+                node2 = datasetProvider.findNonFavoritedNode(node);
+            } else {
+                node2 = datasetProvider.findFavoritedNode(node);
+            }
+            if (node2) {
+                datasetProvider.refreshElement(node2);
+            }
+        } else {
+            refreshPS(node);
+        }
+    }
 }
 
 /**

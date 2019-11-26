@@ -551,4 +551,55 @@ describe("DatasetTree Unit Tests", () => {
         expect(getConfiguration.mock.calls.length).toBe(2);
     });
 
+    it("Should rename a favorited node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+
+        testTree.addFavorite(node);
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        testTree.renameFavorite(node, newLabel);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+        expect(testTree.mFavorites[0].label).toBe(`[${sessionNode.label.trim()}]: ${newLabel}`);
+    });
+
+    it("Should rename a node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        sessionNode.children.push(node);
+        testTree.renameNode(sessionNode.label.trim(), "node", newLabel);
+
+        expect(sessionNode.children[sessionNode.children.length-1].label).toBe(newLabel);
+        sessionNode.children.pop();
+    });
+
+    it("Should find a favorited node", async () => {
+        testTree.mFavorites = [];
+        const sessionNode = testTree.mSessionNodes[1];
+        const nonFavoritedNode = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const favoritedNode = new ZoweNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+
+        testTree.mFavorites.push(favoritedNode);
+        const foundNode = testTree.findFavoritedNode(nonFavoritedNode);
+
+        expect(foundNode).toBe(favoritedNode);
+        testTree.mFavorites.pop();
+    });
+
+    it("Should find a non-favorited node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const nonFavoritedNode = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const favoritedNode = new ZoweNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+
+        sessionNode.children.push(nonFavoritedNode);
+
+        const foundNode = testTree.findNonFavoritedNode(favoritedNode);
+
+        expect(foundNode).toBe(nonFavoritedNode);
+        sessionNode.children.pop();
+    });
 });

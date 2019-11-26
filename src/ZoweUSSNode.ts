@@ -208,6 +208,14 @@ export class ZoweUSSNode extends vscode.TreeItem {
         this.dirty = true;
     }
 
+    public rename(newFullPath: string) {
+        const oldReference = this.shortLabel;
+        this.fullPath = newFullPath;
+        this.shortLabel = newFullPath.substring(newFullPath.lastIndexOf("/"));
+        this.label = this.label.replace(oldReference, this.shortLabel);
+        this.tooltip = this.tooltip.replace(oldReference, this.shortLabel);
+    }
+
     /**
      * Returns the [etag] for this node
      *
@@ -224,5 +232,10 @@ export class ZoweUSSNode extends vscode.TreeItem {
      */
     public setEtag(etagValue): void {
         this.etag = etagValue;
+    /**
+     * helper method to change the node names in one go
+     * @param oldReference string
+     * @param revision string
+     */
     }
 }

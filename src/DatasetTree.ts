@@ -264,6 +264,63 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     }
 
     /**
+     * Renames a node based on the profile and it's label
+     *
+     * @param {string} profileLabel
+     * @param {string} beforeLabel
+     * @param {string} afterLabel
+     */
+
+    public async renameNode(profileLabel: string, beforeLabel: string, afterLabel: string) {
+        const sessionNode = this.mSessionNodes.find((session) => session.label === `${profileLabel} `);
+        if (sessionNode) {
+            const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
+            if (matchingNode) {
+                matchingNode.label = afterLabel;
+                this.refreshElement(matchingNode);
+            }
+        }
+    }
+
+    /**
+     * Renames a node from the favorites list
+     *
+     * @param {ZoweNode} node
+     */
+    public async renameFavorite(node: ZoweNode, newLabel: string) {
+        const matchingNode = this.mFavorites.find(
+            (temp) => (temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))
+        );
+        if (matchingNode) {
+            const prefix = matchingNode.label.substring(0, matchingNode.label.indexOf(":") + 2);
+            matchingNode.label = prefix + newLabel;
+            this.refreshElement(matchingNode);
+        }
+    }
+
+    /**
+     * Finds the equivalent node as a favorite
+     *
+     * @param {ZoweNode} node
+     */
+    public findFavoritedNode(node: ZoweNode) {
+        return this.mFavorites.find(
+            (temp) => (temp.label === `[${node.mParent.label.trim()}]: ${node.label}`) && (temp.contextValue.includes(node.contextValue))
+        );
+    }
+    /**
+     * Finds the equivalent node not as a favorite
+     *
+     * @param {ZoweNode} node
+     */
+    public findNonFavoritedNode(node: ZoweNode) {
+        const profileLabel = node.label.substring(1, node.label.indexOf("]"));
+        const nodeLabel = node.label.substring(node.label.indexOf(":") + 2);
+        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileLabel);
+        return sessionNode.children.find((temp) => temp.label === nodeLabel);
+    }
+
+    /**
      * Removes a node from the favorites list
      *
      * @param {ZoweNode} node
