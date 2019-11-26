@@ -26,7 +26,7 @@ Ensure that you meet the following prerequisites before using the extension:
 * Configure IBM z/OSMF REST services, including TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 * [Install Zowe CLI](https://docs.zowe.org/stable/user-guide/cli-installcli.html).
 * Create at least one Zowe CLI `zosmf` profile.
-* Install Node.js v8.0 or higher. Issue the command `node -v` to check if Node.js is already installed. 
+* Install Node.js v8.0 or higher. Issue the command `node -v` to check if Node.js is already installed.
 
 **Notes:**
 
