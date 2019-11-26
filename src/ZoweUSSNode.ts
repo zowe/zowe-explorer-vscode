@@ -207,7 +207,11 @@ export class ZoweUSSNode extends vscode.TreeItem {
         utils.applyIcons(this);
         this.dirty = true;
     }
-
+    /**
+     * helper method to change the node names in one go
+     * @param oldReference string
+     * @param revision string
+     */
     public rename(newFullPath: string) {
         const oldReference = this.shortLabel;
         this.fullPath = newFullPath;
