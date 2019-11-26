@@ -201,6 +201,8 @@ describe("Extension Unit Tests", () => {
     const copyDataSet = jest.fn();
     const findFavoritedNode = jest.fn();
     const findNonFavoritedNode = jest.fn();
+    const mockSetEtag = jest.fn();
+    const mockGetEtag = jest.fn();
     let mockClipboardData: string;
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
@@ -230,6 +232,8 @@ describe("Extension Unit Tests", () => {
             renameFavorite: mockRenameFavorite,
             updateFavorites: mockUpdateFavorites,
             renameNode: mockRenameNode,
+            getEtag: mockGetEtag,
+            setEtag: mockSetEtag,
             findFavoritedNode,
             findNonFavoritedNode,
         };
@@ -243,7 +247,9 @@ describe("Extension Unit Tests", () => {
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
-            ussFilterPrompt: ussPattern
+            ussFilterPrompt: ussPattern,
+            getEtag: mockGetEtag,
+            setEtag: mockSetEtag,
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
@@ -522,7 +528,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(64);
+        expect(registerCommand.mock.calls.length).toBe(62);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -740,6 +746,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: true});
         dataSet.mockReset();
         showTextDocument.mockReset();
+        
 
         await extension.refreshPS(node);
 
@@ -1454,7 +1461,8 @@ describe("Extension Unit Tests", () => {
         expect(ussFile.mock.calls[0][0]).toBe(node.getSession());
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
         expect(ussFile.mock.calls[0][2]).toEqual({
-            file: extension.getUSSDocumentFilePath(node)
+            file: extension.getUSSDocumentFilePath(node),
+            returnEtag: true,
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.getUSSDocumentFilePath(node)));
