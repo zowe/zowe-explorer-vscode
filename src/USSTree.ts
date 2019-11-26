@@ -388,17 +388,17 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                 node.contextValue += extension.FAV_SUFFIX;
                 node.iconPath = applyIcons(node);
                 this.mFavorites.push(node);
-        } catch(e) {
-            vscode.window.showErrorMessage(
-                localize("initializeUSSFavorites.error.profile1",
-                "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
-                localize("intializeUSSFavorites.error.profile2",
-                ". To resolve this, you can create a profile with this name, ") +
-                localize("initializeUSSFavorites.error.profile3",
-                "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, ") +
-                localize("initializeUSSFavorites.error.profile4", "which can be found in your VS Code user settings."));
-            return;
-        }
+            } catch(e) {
+                vscode.window.showErrorMessage(
+                    localize("initializeUSSFavorites.error.profile1",
+                    "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
+                    localize("intializeUSSFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeUSSFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, ") +
+                    localize("initializeUSSFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                return;
+            }
         });
     }
 
