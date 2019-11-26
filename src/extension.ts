@@ -917,18 +917,38 @@ export async function copyDataSet(node: ZoweNode) {
 export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
     const { profileName, dataSetName } = getNodeLabels(node);
     let memberName;
+    let beforeDataSetName;
+    let beforeProfileName;
+    let beforeMemberName;
 
     if (node.contextValue.includes(DS_PDS_CONTEXT)) {
-        memberName = await vscode.window.showInputBox({ placeHolder: "PLACEHOLDER" });
+        memberName = await vscode.window.showInputBox({ placeHolder: localize("renameDataSet.name", "Name of Data Set Member") });
+        if(!memberName) {
+            return;
+        }
     }
 
-    const {
-        dataSetName: beforeDataSetName,
-        memberName: beforeMemberName,
-        profileName: beforeProfileName,
-    } = JSON.parse(await vscode.env.clipboard.readText());
+    try {
+        ({
+            dataSetName: beforeDataSetName,
+            memberName: beforeMemberName,
+            profileName: beforeProfileName,
+        } = JSON.parse(await vscode.env.clipboard.readText()));
+    } catch (err) {
+        throw Error("Invalid clipboard. Copy from data set first");
+    }
 
     if(beforeProfileName === profileName) {
+        if(memberName) {
+            try {
+                await zowe.Get.dataSet(node.getSession(), `${dataSetName}(${memberName})`);
+                throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
+            } catch(err) {
+                if (!err.message.includes("Member not found")) {
+                    throw err;
+                }
+            }
+        }
         await zowe.Copy.dataSet(
             node.getSession(),
             { dataSetName: beforeDataSetName, memberName: beforeMemberName },

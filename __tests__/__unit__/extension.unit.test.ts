@@ -142,6 +142,8 @@ describe("Extension Unit Tests", () => {
     const dataSet = jest.fn();
     const ussFile = jest.fn();
     const List = jest.fn();
+    const Get = jest.fn();
+    const dataSetGet = jest.fn();
     const fileToUSSFile = jest.fn();
     const dataSetList = jest.fn();
     const fileList = jest.fn();
@@ -321,6 +323,8 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
     Object.defineProperty(brightside, "Create", {value: Create});
     Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
+    Object.defineProperty(brightside, "Get", {value: Get});
+    Object.defineProperty(Get, "dataSet", {value: dataSetGet});
     Object.defineProperty(brightside, "List", {value: List});
     Object.defineProperty(List, "dataSet", {value: dataSetList});
     Object.defineProperty(List, "fileList", {value: fileList});
@@ -2515,6 +2519,9 @@ describe("Extension Unit Tests", () => {
             );
         });
         it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
+            dataSetGet.mockImplementation(() => {
+                throw Error("Member not found");
+            });
             const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
@@ -2532,7 +2539,30 @@ describe("Extension Unit Tests", () => {
                 { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
         });
+        it("Should throw an error when pasting to a member that already exists", async () => {
+            let error;
+            dataSetGet.mockImplementation(() => "DATA");
+            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_PDS_CONTEXT;
+            showInputBox.mockResolvedValueOnce("mem1");
+
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
+
+            try {
+                await extension.pasteDataSet(node, testTree);
+            } catch(err) {
+                error = err;
+            }
+
+            expect(error).toBeTruthy();
+            expect(error.message).toBe("HLQ.TEST.TO.NODE(mem1) already exists. You cannot replace a member");
+            expect(copyDataSet.mock.calls.length).toBe(0);
+            dataSetGet.mockReset();
+        });
         it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
+            dataSetGet.mockImplementation(() => {
+                throw Error("Member not found");
+            });
             const favoritedNode = new ZoweNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
             const nonFavoritedNode = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);

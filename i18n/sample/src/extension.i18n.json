@@ -113,5 +113,6 @@
     "addJobsSession.noProfilesAdd": "No more profiles to add",
     "renameDataSet.log.debug": "Renaming data set ",
     "renameDataSet.log.error": "Error encountered when renaming data set! ",
+    "renameDataSet.name": "Name of Data Set Member",
     "renameDataSet.error": "Unable to rename data set: "
 }
