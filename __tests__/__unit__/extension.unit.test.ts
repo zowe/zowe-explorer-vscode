@@ -2533,19 +2533,24 @@ describe("Extension Unit Tests", () => {
             );
         });
         it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
-            const node = new ZoweNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-            showInputBox.mockResolvedValueOnce("mem1");
+            const favoritedNode = new ZoweNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            const nonFavoritedNode = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            findNonFavoritedNode.mockImplementation(() => nonFavoritedNode);
 
+            showInputBox.mockResolvedValueOnce("mem1");
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await extension.pasteDataSet(node, testTree);
+            await extension.pasteDataSet(favoritedNode, testTree);
 
             expect(copyDataSet.mock.calls.length).toBe(1);
             expect(findNonFavoritedNode).toHaveBeenLastCalledWith(
-                node,
+                favoritedNode,
+            );
+            expect(mockRefreshElement).toHaveBeenLastCalledWith(
+                nonFavoritedNode,
             );
             expect(copyDataSet).toHaveBeenLastCalledWith(
-                node.getSession(),
+                favoritedNode.getSession(),
                 { dataSetName: "HLQ.TEST.BEFORE.NODE" },
                 { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
