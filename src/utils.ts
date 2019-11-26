@@ -36,49 +36,49 @@ export function applyIcons(node: TreeItem, state?: string ): any {
             extension.JOBS_JOB_CONTEXT,
             extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
         if (state === extension.ICON_STATE_OPEN) {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-open.svg");
+            light = path.join(__dirname, "..", "resources", "light", "folder-open.svg");
+            dark = path.join(__dirname, "..", "resources", "dark", "folder-open.svg");
         } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-closed.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-closed.svg");
+            light = path.join(__dirname, "..", "resources", "light", "folder-closed.svg");
+            dark = path.join(__dirname, "..", "resources", "dark", "folder-closed.svg");
         }
     } else if ([extension.FAVORITE_CONTEXT].includes(node.contextValue)) {
         if (state === extension.ICON_STATE_OPEN) {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-open.svg");
+            light = path.join(__dirname, "..", "resources", "light", "folder-root-favorite-open.svg");
+            dark = path.join(__dirname, "..", "resources", "dark", "folder-root-favorite-open.svg");
         } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-closed.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-closed.svg");
+            light = path.join(__dirname, "..", "resources", "light", "folder-root-favorite-closed.svg");
+            dark = path.join(__dirname, "..", "resources", "dark", "folder-root-favorite-closed.svg");
         }
     } else if ([extension.DS_SESSION_CONTEXT, extension.USS_SESSION_CONTEXT,
                 extension.JOBS_SESSION_CONTEXT].includes(node.contextValue)) {
         if (state === extension.ICON_STATE_OPEN) {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-open.svg");
+            light = path.join(__dirname, "..", "resources", "light", "folder-root-default-open.svg");
+            dark = path.join(__dirname, "..", "resources", "dark", "folder-root-default-open.svg");
         } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-closed.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-closed.svg");
+            light = path.join(__dirname, "..", "resources", "light", "folder-root-default-closed.svg");
+            dark = path.join(__dirname, "..", "resources", "dark", "folder-root-default-closed.svg");
         }
     } else if ([extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX,
                 extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX,
                 extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
+        light = path.join(__dirname, "..", "resources", "light", "pattern.svg");
+        dark = path.join(__dirname, "..", "resources", "dark", "pattern.svg");
     } else if ([extension.DS_DS_CONTEXT,
                 extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
                 extension.DS_MEMBER_CONTEXT, extension.DS_TEXT_FILE_CONTEXT,
                 extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
                 extension.JOBS_SPOOL_CONTEXT].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
+        light = path.join(__dirname, "..", "resources", "light", "document.svg");
+        dark = path.join(__dirname, "..", "resources", "dark", "document.svg");
     } else if ([extension.DS_MIGRATED_FILE_CONTEXT,
                 extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
+        light = path.join(__dirname, "..", "resources", "dark", "document.svg");
+        dark = path.join(__dirname, "..", "resources", "light", "document.svg");
     } else if ([extension.DS_BINARY_FILE_CONTEXT,
                 extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
+        light = path.join(__dirname, "..", "resources", "light", "document.svg");
+        dark = path.join(__dirname, "..", "resources", "dark", "document.svg");
     } else {
         return undefined;
     }
