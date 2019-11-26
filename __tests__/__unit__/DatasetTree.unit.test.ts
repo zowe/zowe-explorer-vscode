@@ -605,7 +605,7 @@ describe("DatasetTree Unit Tests", () => {
 
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
-        
+
         await testTree.datasetFilterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
@@ -635,7 +635,7 @@ describe("DatasetTree Unit Tests", () => {
                 };
             })
         });
-        
+
         await testTree.datasetFilterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");

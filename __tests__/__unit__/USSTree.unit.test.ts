@@ -598,7 +598,7 @@ describe("Unit Tests (Jest)", () => {
 
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
-        
+
         await testTree.ussFilterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
@@ -628,7 +628,7 @@ describe("Unit Tests (Jest)", () => {
                 };
             })
         });
-        
+
         await testTree.ussFilterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");

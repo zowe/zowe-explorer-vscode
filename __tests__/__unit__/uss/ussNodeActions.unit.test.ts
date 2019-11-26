@@ -18,7 +18,6 @@ import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
 import { Profiles } from "../../../src/Profiles";
-import { Session } from "@brightside/imperative";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -166,7 +165,7 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new Session({
+            const sessionwocred = new brtimperative.Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -189,21 +188,21 @@ describe("ussNodeActions", () => {
                     };
                 })
             });
-    
+
             showInputBox.mockReturnValueOnce("fake");
             showInputBox.mockReturnValueOnce("fake");
-            
+
             await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
-    
+
             expect(testUSSTree.refresh).toHaveBeenCalled();
-    
+
         });
-    
+
         it("tests the uss filter prompt credentials error", async () => {
             showQuickPick.mockReset();
-            showInputBox.mockReset();            
+            showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new Session({
+            const sessionwocred = new brtimperative.Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -223,10 +222,10 @@ describe("ussNodeActions", () => {
                     };
                 })
             });
-            
+
             await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
-    
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();    
+
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
     describe("deleteUSSNode", () => {
@@ -382,7 +381,7 @@ describe("ussNodeActions", () => {
         });
         it("test theia specific route", async () => {
             showInformationMessage.mockReset();
-            let theia = true;
+            const theia = true;
             Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
             await ussNodeActions.copyPath(ussNode);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Copy Path is not yet supported in Theia.");
