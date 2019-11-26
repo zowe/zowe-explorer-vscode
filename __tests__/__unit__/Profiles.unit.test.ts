@@ -226,12 +226,24 @@ describe("Profile class unit tests", () => {
         });
 
         it("should prompt credentials", async () => {
-            const promptProfile = {name: "profile1", profile: {user: "fake", password: "1234"}};
+            const promptProfile = {name: "profile1", profile: {Session: {ISession: {user: "fake", password: "1234"}}}};
             const session  = (await ZosmfSession.createBasicZosmfSession(promptProfile.profile) as ISession);
-            Object.defineProperty(Profiles.getInstance, "promptCredentials", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        updSession: session
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        loadNamedProfile: promptProfile,
+                        promptCredentials: jest.fn(()=> {
+                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                    };
+                })
+            });
+            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+                value: jest.fn(() => {
+                    return {
+                        ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"}
                     };
                 })
             });
@@ -240,7 +252,7 @@ describe("Profile class unit tests", () => {
             const res = await profiles.promptCredentials(promptProfile.name);
             expect(res[0]).toBe("fake");
             expect(res[1]).toBe("fake");
-            expect(res[2]).toBe("");
+            expect(res[2]).toBe("fake");
         });
 
         it("should prompt credentials: username invalid", async () => {
