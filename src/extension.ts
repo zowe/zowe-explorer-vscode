@@ -783,7 +783,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             node.getSession().ISession.user = usrNme;
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
-            this.validProfile = 0;
+            validProfile = 0;
         }
         await datasetProvider.refreshElement(node);
         await datasetProvider.refresh();

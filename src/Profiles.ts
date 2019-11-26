@@ -275,8 +275,8 @@ export class Profiles { // Processing stops if there are no profiles detected
             }
         }
 
-        const updSession = (await zowe.ZosmfSession.createBasicZosmfSession(loadSession) as ISession);
-        return [updSession.user, updSession.password, updSession.base64EncodedAuth];
+        const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+        return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
