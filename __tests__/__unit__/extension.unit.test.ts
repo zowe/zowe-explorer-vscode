@@ -2518,6 +2518,33 @@ describe("Extension Unit Tests", () => {
                 { dataSetName: "HLQ.TEST.TO.NODE" },
             );
         });
+        it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
+            let error;
+            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_SESSION_CONTEXT;
+            clipboard.writeText("INVALID");
+            try {
+                await extension.pasteDataSet(node, testTree);
+            } catch(err) {
+                error = err;
+            }
+
+            expect(error).toBeTruthy();
+            expect(error.message).toContain("Invalid clipboard. Copy from data set first");
+            expect(copyDataSet.mock.calls.length).toBe(0);
+        });
+        it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
+            dataSetGet.mockImplementation(() => {
+                throw Error("Member not found");
+            });
+            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_PDS_CONTEXT;
+
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
+            await extension.pasteDataSet(node, testTree);
+
+            expect(copyDataSet.mock.calls.length).toBe(0);
+        });
         it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
             dataSetGet.mockImplementation(() => {
                 throw Error("Member not found");
