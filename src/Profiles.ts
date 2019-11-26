@@ -17,11 +17,7 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
-import { DatasetTree } from "./DatasetTree";
-import { addSession } from "./extension";
-import { ZoweNode } from "./ZoweNode";
 import * as ProfileLoader from "./ProfileLoader";
-import { FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 interface IUrlValidator {
     valid: boolean;
@@ -100,13 +96,9 @@ export class Profiles { // Processing stops if there are no profiles detected
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
-            this.allProfiles.map((profile) => {
-                return profile.name;
-            });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
+        this.allProfiles.map((profile) => {
+            return profile.name;
+        });
         return this.allProfiles;
     }
 
@@ -245,7 +237,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         const loadProfile = this.loadNamedProfile(sessName);
         const loadSession = loadProfile.profile as ISession;
 
-        if (!loadSession.user.trim()) {
+        if (!loadSession.user) {
 
             options = {
                 placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
@@ -263,8 +255,8 @@ export class Profiles { // Processing stops if there are no profiles detected
             }
         }
 
-        if (!loadSession.password.trim()) {
-            passWord = loadSession.password.trim();
+        if (!loadSession.password) {
+            passWord = loadSession.password;
 
             options = {
                 placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
@@ -279,16 +271,12 @@ export class Profiles { // Processing stops if there are no profiles detected
                         "Please enter your z/OS password. Operation Cancelled"));
                 return;
             } else {
-                loadSession.password = passWord;
+                loadSession.password = passWord.trim();
             }
         }
 
-        const updProfile: IProfile = loadSession;
-        const updSession: Session = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
-        // node.getSession().ISession.user = updSession.ISession.user;
-        // node.getSession().ISession.password = updSession.ISession.password;
-        // node.getSession().ISession.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-        return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        const updSession = (await zowe.ZosmfSession.createBasicZosmfSession(loadSession) as ISession);
+        return [updSession.user, updSession.password, updSession.base64EncodedAuth];
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
