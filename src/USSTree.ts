@@ -283,31 +283,27 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
-        try {
-            if ((!node.getSession().ISession.user.trim()) || (!node.getSession().ISession.password.trim())) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(node.label);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+        if ((!(node.getSession().ISession.user).trim()) || (!(node.getSession().ISession.password).trim())) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(node.label);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
                 }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    node.getSession().ISession.user = usrNme;
-                    node.getSession().ISession.password = passWrd;
-                    node.getSession().ISession.base64EncodedAuth = baseEncd;
-                    this.validProfile = 0;
-                }
-                await this.refreshElement(node);
-                await this.refresh();
-            } else {
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
                 this.validProfile = 0;
             }
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await this.refreshElement(node);
+            await this.refresh();
+        } else {
+            this.validProfile = 0;
         }
         if (this.validProfile === 0) {
             if (node.contextValue === extension.USS_SESSION_CONTEXT) {

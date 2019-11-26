@@ -64,6 +64,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
             }
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
+            return;
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
             node.getSession().ISession.user = usrNme;
@@ -202,7 +203,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
  * @param {ZoweUSSNode} node
  */
 export async function copyPath(node: ZoweUSSNode) {
-    if (ISTHEIA) {
+    if (extension.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
         vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
         return;
