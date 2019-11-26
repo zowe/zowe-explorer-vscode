@@ -4,7 +4,7 @@
 
 Zowe&trade; Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
-* Enables developers to create, modify, and upload data set and USS files directly to a z/OS mainframe.
+* Enables developers to create, modify, rename, and upload data set and USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
 * Lets you create and use Zowe CLI `zosmf` compatible profiles.
 
@@ -39,6 +39,7 @@ Ensure that you meet the following prerequisites before using the extension:
 2. Click the **+** sign next to the **DATA SETS**, **USS** or **JOBS** bar.
 
    **Note:** If you already have a profile, select it from the drop-down menu.
+   <!-- Add a note that username and pw are optional during the creation stage. Later though they need to be specified. When exactly? When a user tries to use it inside the ZE. Also, while trying to use this profile in the CLI, the CLI will notify the user that the profile misses the credential information. -->
 
 3. Select the **Create a New Connection to z/OS** option.
 4. Follow the instructions, and enter all required information to complete the profile creation.
@@ -95,8 +96,9 @@ Review the following use cases to understand how to use Zowe Explorer.
 You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
+* **Rename data sets**: You can rename specified data sets.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
-* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe.
+<!-- TODO This becomes the default save option* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe. -->
 * **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
 * **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
 * **Submit a JCL**: You can submit a jcl from a chosen data set.
@@ -119,6 +121,34 @@ You can use the following functionalities when interacting with data set:
 
 1. Navigate to the explorer tree.
 2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar.
+
+<!-- TODO #### Rename data sets
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, enter the patterns that you want to filter.  
+  The data sets that match your pattern(s) display in the explorer tree.
+
+**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+
+![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+<br /><br /> -->
+
+<!-- TODO #### Copy data sets
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, enter the patterns that you want to filter.  
+  The data sets that match your pattern(s) display in the explorer tree.
+
+**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+
+![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+<br /><br /> -->
 
 #### Download, edit, and upload existing PDS members
 
@@ -200,6 +230,7 @@ Your PDS member (or PS) is uploaded.
 You can use the following functionalities when interacting with USS files:
 
 * **View Unix System Services (USS) files**: You can view multiple USS files simultaneously.
+* **Rename USS files**: You can rename specified USS files.
 * **Download, edit, and upload existing USS files**: You can instantly pull USS files from the mainframe, edit them and upload back.
 * **Create and delete USS files and directories**: Enables you to easily create and delete both USS files and directories.
 * **View and access multiple profiles simultaneously**: Enables to work with USS files from multiple profiles.
@@ -225,6 +256,35 @@ You can use the following functionalities when interacting with USS files:
 
 ![Refresh All](docs/images/ZE-refreshUSS.gif?raw=true "Refresh All")
 <br /><br />
+
+<!-- TODO #### Rename USS files
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, enter the patterns that you want to filter.  
+  The data sets that match your pattern(s) display in the explorer tree.
+
+**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+
+![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+<br /><br /> -->
+
+<!-- TODO #### Copy USS files
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select the profile that you want to filter.
+4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
+5. From the drop-down, enter the patterns that you want to filter.  
+  The data sets that match your pattern(s) display in the explorer tree.
+
+**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
+
+![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+<br /><br /> -->
+
 
 #### Download, edit, and upload an existing file
 
