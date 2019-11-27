@@ -43,7 +43,7 @@ Ensure that you meet the following prerequisites before using the extension:
 
 3. Select the **Create a New Connection to z/OS** option.
 
-   **Note:** While creating a new profile, user name and password are optional fields, so you may omit entering them. The system will prompt you to specify your credentials when you use such a profile.
+   **Note:** When you create a new profile, user name and password are now optional fields. However, the system will prompt you to specify your credentials when you use the new profile.
 
 4. Follow the instructions, and enter all required information to complete the profile creation.
 
