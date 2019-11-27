@@ -91,8 +91,10 @@ describe("Extension Integration Tests", () => {
             );
 
             // Mock user selecting first profile from list
-            const stub = sandbox.stub(vscode.window, "showQuickPick");
-            stub.returns(profileNamesList[0]);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
             await extension.addSession(testTree);
             expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
@@ -703,7 +705,7 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
 
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}\\temp`);
 
             // Remove directory for subsequent tests
             extension.cleanDir(testingPath);
@@ -721,7 +723,7 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
             { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
 
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}\\temp`);
 
             // Remove directory for subsequent tests
             extension.cleanDir(providedPathOne);
@@ -882,8 +884,10 @@ describe("Extension Integration Tests - USS", () => {
             );
 
             // Mock user selecting first profile from list
-            const stub = sandbox.stub(vscode.window, "showQuickPick");
-            stub.returns(profileNamesList[0]);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
             await extension.addUSSSession(ussTestTree);
             expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
