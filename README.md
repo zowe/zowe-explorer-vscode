@@ -14,15 +14,16 @@ Zowe&trade; Explorer extension modernizes the way developers and system administ
 
 ## Contents
 
-* [Prerequisites](#prerequisites)
+* [Software Requirements](#software-requirements)
 * [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
-## Prerequisites
+## Software Requirements
 
 Ensure that you meet the following prerequisites before using the extension:
 
+* Installed [Node.js](https://nodejs.org/en/download/) v8.0 or later.
 * Configured TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 * Zowe CLI `zosmf` profile.
 
@@ -39,9 +40,11 @@ Ensure that you meet the following prerequisites before using the extension:
 2. Click the **+** sign next to the **DATA SETS**, **USS** or **JOBS** bar.
 
    **Note:** If you already have a profile, select it from the drop-down menu.
-   <!-- Add a note that username and pw are optional during the creation stage. Later though they need to be specified. When exactly? When a user tries to use it inside the ZE. Also, while trying to use this profile in the CLI, the CLI will notify the user that the profile misses the credential information. -->
 
 3. Select the **Create a New Connection to z/OS** option.
+
+   **Note:** While creating a new profile, user name and password are optional fields, so you may omit entering them. The system will prompt you to specify your credentials when you use such a profile.
+
 4. Follow the instructions, and enter all required information to complete the profile creation.
 
 ![New Connection](docs/images/ZE-newProfiles.gif?raw=true "New Connection")
@@ -122,32 +125,15 @@ You can use the following functionalities when interacting with data set:
 1. Navigate to the explorer tree.
 2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar.
 
-<!-- TODO #### Rename data sets
+#### Rename data sets
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, enter the patterns that you want to filter.  
-  The data sets that match your pattern(s) display in the explorer tree.
+3. Select a data set you want to rename.
+4. Right-click the data set and select the **Rename Data Set** option.
+5. Change the name of the data set.
 
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
-
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
-<br /><br /> -->
-
-<!-- TODO #### Copy data sets
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, enter the patterns that you want to filter.  
-  The data sets that match your pattern(s) display in the explorer tree.
-
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
-
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
+![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br /> -->
 
 #### Download, edit, and upload existing PDS members
@@ -257,34 +243,13 @@ You can use the following functionalities when interacting with USS files:
 ![Refresh All](docs/images/ZE-refreshUSS.gif?raw=true "Refresh All")
 <br /><br />
 
-<!-- TODO #### Rename USS files
+#### Rename USS files
 
 1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, enter the patterns that you want to filter.  
-  The data sets that match your pattern(s) display in the explorer tree.
-
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
-
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
-<br /><br /> -->
-
-<!-- TODO #### Copy USS files
-
-1. Navigate to the explorer tree.
-2. Open the **DATA SETS** bar.
-3. Select the profile that you want to filter.
-4. Click the **Search Data Sets by Entering Patterns** magnifying glass.
-5. From the drop-down, enter the patterns that you want to filter.  
-  The data sets that match your pattern(s) display in the explorer tree.
-
-**Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
-
-![View Data Set](docs/images/ZE-multiple-search.gif?raw=true "View Data Set")
-<br /><br /> -->
-
+2. Open the **USS** bar.
+3. Select a USS file you want to rename.
+4. Right-click the USS file and select the **Rename USS file** option.
+5. Change the name of the USS file.
 
 #### Download, edit, and upload an existing file
 
