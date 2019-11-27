@@ -50,6 +50,7 @@
     "renameDataSet.log.debug": "Renaming data set ",
     "renameDataSet.log.error": "Error encountered when renaming data set! ",
     "renameDataSet.error": "Unable to rename data set: ",
+    "renameDataSet.name": "Name of Data Set Member",
     "deactivate.error": "Unable to delete temporary folder. ",
     "deleteDataset.log.debug": "Deleting data set ",
     "deleteDataset.quickPickOption": "Are you sure you want to delete ",
