@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "outDir": "out",
+        "jsx": "react",
+        "lib": [
+            "es6", "dom"
+        ],
+        "noImplicitUseStrict": true,
+        "removeComments": true,
+        "rootDir": ".",
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "strict": false,
+        "noUnusedLocals": false,
+        "experimentalDecorators": true
+    },
+    "exclude": [
+        "node_modules",
+        ".vscode-test"
+    ],
+    "include": [
+        "__tests__",
+        "resources/testProfileData.example.ts",
+        "resources/testProfileData.ts"
+    ]
+  }
+  

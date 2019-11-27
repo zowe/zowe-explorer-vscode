@@ -1116,6 +1116,7 @@
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "npm run test:unit",
+    "pretest": "tsc -p test.tsconfig.json && webpack --mode development --vscode-nls --watch --info-verbosity verbose",
     "update": "node stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
