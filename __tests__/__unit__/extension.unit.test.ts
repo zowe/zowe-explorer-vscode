@@ -24,7 +24,6 @@ import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
-import { IZosFilesResponse } from "@brightside/core";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -741,8 +740,8 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: true});
         dataSet.mockReset();
         showTextDocument.mockReset();
-        
-        const response: IZosFilesResponse = {
+
+        const response: brightside.IZosFilesResponse = {
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -1370,7 +1369,7 @@ describe("Extension Unit Tests", () => {
         const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValue(null);
-        const response: IZosFilesResponse = {
+        const response: brightside.IZosFilesResponse = {
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -1467,13 +1466,13 @@ describe("Extension Unit Tests", () => {
         ussFile.mockReset();
         showTextDocument.mockReset();
         executeCommand.mockReset();
-        const response: IZosFilesResponse = {
+        const response: brightside.IZosFilesResponse = {
             success: true,
             commandResponse: null,
             apiResponse: {
                 etag: "132"
             }
-        }
+        };
         ussFile.mockReturnValueOnce(response);
         await extension.refreshUSS(node);
 
@@ -1620,7 +1619,7 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
         existsSync.mockReset();
         withProgress.mockReset();
-        
+
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
@@ -1629,7 +1628,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        const response: IZosFilesResponse = {
+        const response: brightside.IZosFilesResponse = {
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -1757,7 +1756,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        const response: IZosFilesResponse = {
+        const response: brightside.IZosFilesResponse = {
             success: true,
             commandResponse: null,
             apiResponse: {
