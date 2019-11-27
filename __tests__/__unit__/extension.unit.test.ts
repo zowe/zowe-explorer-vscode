@@ -101,7 +101,7 @@ describe("Extension Unit Tests", () => {
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
 
-    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, null, "123");
     ussNode.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
@@ -1263,7 +1263,6 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
 
         dataSetList.mockResolvedValueOnce(testResponse);
-
         await extension.saveFile(testDoc, testTree);
 
         expect(dataSetList.mock.calls.length).toBe(1);
@@ -1278,6 +1277,7 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
 
         testTree.getChildren.mockReturnValueOnce([sessNode]);
+        dataSetList.mockResolvedValueOnce(testResponse);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = true;
         pathToDataSet.mockResolvedValueOnce(testResponse);
@@ -1811,8 +1811,9 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
+        ussNode.mProfileName = "usstest";
         testUSSTree.getChildren.mockReturnValueOnce([
-            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
+            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, session, "/")]);
 
         testResponse.apiResponse.items = ["Item1"];
         fileToUSSFile.mockReset();
