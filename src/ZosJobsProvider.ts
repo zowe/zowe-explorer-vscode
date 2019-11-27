@@ -542,7 +542,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
-            // Uses loaded profile to create a zosmf session with brightside
+            // Uses loaded profile to create a zosmf session with Zowe
             const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);

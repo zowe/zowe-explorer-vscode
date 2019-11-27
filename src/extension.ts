@@ -667,7 +667,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
  * TODO: Consider changing configuration to allow "custom" data set specifications
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * @export
- * @param {ZoweNode} node - Desired Brightside session
+ * @param {ZoweNode} node - Desired Zowe session
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {

@@ -107,7 +107,7 @@ export class ZoweNode extends vscode.TreeItem {
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
         responses.forEach((response) => {
-            // Throws reject if the brightside command does not throw an error but does not succeed
+            // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
             }

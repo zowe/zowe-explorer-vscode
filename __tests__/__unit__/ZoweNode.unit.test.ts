@@ -125,7 +125,7 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Checks that the catch block is reached when an error is thrown
      *************************************************************************************************************/
-    it("Checks that when bright.List.dataSet/allMembers() causes an error on the brightside call, " +
+    it("Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
         "it throws an error and the catch block is reached", async () => {
             // Creating a rootNode
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);

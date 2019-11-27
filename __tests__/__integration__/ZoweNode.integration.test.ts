@@ -23,7 +23,7 @@ declare var it: any;
 describe("ZoweNode Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
-    // Uses loaded profile to create a zosmf session with brightside
+    // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
