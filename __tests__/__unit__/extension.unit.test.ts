@@ -2505,7 +2505,7 @@ describe("Extension Unit Tests", () => {
 
             const parent = new ZoweNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             const child = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
-            
+
             child.contextValue = extension.DS_MEMBER_CONTEXT;
 
             showInputBox.mockResolvedValueOnce("mem2");
