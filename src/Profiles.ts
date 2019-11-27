@@ -170,8 +170,8 @@ export class Profiles { // Processing stops if there are no profiles detected
         userName = await vscode.window.showInputBox(options);
 
         options = {
-            placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.userName", "Enter a password for the connection"),
+            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter a password for the connection"),
             password: true,
             value: passWord
         };
@@ -240,14 +240,14 @@ export class Profiles { // Processing stops if there are no profiles detected
         if (!loadSession.user) {
 
             options = {
-                placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "User Name"),
-                prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection"),
+                placeHolder: localize("promptcredentials.option.prompt.userName.placeholder", "User Name"),
+                prompt: localize("promptcredentials.option.prompt.userName", "Enter the user name for the connection"),
                 value: userName
             };
             userName = await vscode.window.showInputBox(options);
 
             if (!userName) {
-                vscode.window.showErrorMessage(localize("createNewConnection.enterzosmfURL",
+                vscode.window.showErrorMessage(localize("promptcredentials.invalidusername",
                         "Please enter your z/OS username. Operation Cancelled"));
                 return;
             } else {
@@ -259,15 +259,15 @@ export class Profiles { // Processing stops if there are no profiles detected
             passWord = loadSession.password;
 
             options = {
-                placeHolder: localize("createNewConnection.option.prompt.passWord.placeholder", "Password"),
-                prompt: localize("createNewConnection.option.prompt.userName", "Enter a password for the connection"),
+                placeHolder: localize("promptcredentials.option.prompt.passWord.placeholder", "Password"),
+                prompt: localize("promptcredentials.option.prompt.password", "Enter a password for the connection"),
                 password: true,
                 value: passWord
             };
             passWord = await vscode.window.showInputBox(options);
 
             if (!passWord) {
-                vscode.window.showErrorMessage(localize("createNewConnection.enterzosmfURL",
+                vscode.window.showErrorMessage(localize("promptcredentials.invalidpassword",
                         "Please enter your z/OS password. Operation Cancelled"));
                 return;
             } else {
