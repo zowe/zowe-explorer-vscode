@@ -641,4 +641,31 @@ describe("DatasetTree Unit Tests", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
     });
+
+    it("Should find a favorited node", async () => {
+        testTree.mFavorites = [];
+        const sessionNode = testTree.mSessionNodes[1];
+        const nonFavoritedNode = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const favoritedNode = new ZoweNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+
+        testTree.mFavorites.push(favoritedNode);
+        const foundNode = testTree.findFavoritedNode(nonFavoritedNode);
+
+        expect(foundNode).toBe(favoritedNode);
+        testTree.mFavorites.pop();
+    });
+
+    it("Should find a non-favorited node", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const nonFavoritedNode = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const favoritedNode = new ZoweNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+
+        sessionNode.children.push(nonFavoritedNode);
+
+        const foundNode = testTree.findNonFavoritedNode(favoritedNode);
+
+        expect(foundNode).toBe(nonFavoritedNode);
+        sessionNode.children.pop();
+    });
 });

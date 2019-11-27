@@ -30,6 +30,7 @@ const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
 const mockRemoveUSSFavorite = jest.fn();
+const mockAddUSSFavorite = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
@@ -53,17 +54,30 @@ function getUSSNode() {
     return ussNode1;
 }
 
+function getFavoriteUSSNode() {
+    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    mParent.contextValue = extension.FAVORITE_CONTEXT;
+    ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+    ussNodeF.fullPath = "/u/myuser/usstest";
+    ussNodeF.tooltip = "/u/myuser/usstest";
+    ussNodeF.mParent = mParent;
+    return ussNodeF;
+}
+
 function getUSSTree() {
     const ussNode1= getUSSNode();
+    const ussNodeFav= getFavoriteUSSNode();
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
-            mFavorites: [],
+            mFavorites: [ussNodeFav],
             addSession: mockAddUSSSession,
             refresh: mockUSSRefresh,
             refreshAll: mockUSSRefresh,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
+            addUSSFavorite: mockAddUSSFavorite,
             removeUSSFavorite: mockRemoveUSSFavorite,
             initializeUSSFavorites: mockInitializeFavorites
         };
@@ -83,6 +97,7 @@ const session = new brtimperative.Session({
 });
 
 const ussNode = getUSSNode();
+const ussFavNode = getFavoriteUSSNode();
 const testUSSTree = getUSSTree();
 
 Object.defineProperty(zowe, "Create", { value: Create });
@@ -279,7 +294,7 @@ describe("ussNodeActions", () => {
             showInputBox.mockReturnValueOnce("new name");
             ussNode.contextValue = extension.USS_DIR_CONTEXT;
             await ussNodeActions.renameUSSNode(ussNode, testUSSTree, extension.DS_SESSION_CONTEXT);
-            expect(testUSSTree.refreshAll).toHaveBeenCalled();
+            // expect(testUSSTree.refreshAll).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
         });
@@ -300,6 +315,15 @@ describe("ussNodeActions", () => {
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
+        it("should execute rename favorite USS file", async () => {
+            showInputBox.mockReturnValueOnce("new name");
+            await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
+            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+            expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
+            expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
         });
     });
     describe("uploadFile", () => {
@@ -379,13 +403,12 @@ describe("ussNodeActions", () => {
             await ussNodeActions.copyPath(ussNode);
             expect(writeText).toBeCalledWith(ussNode.fullPath);
         });
-        it("test theia specific route", async () => {
-            showInformationMessage.mockReset();
-            const theia = true;
+        it("should not copy the node's full path to the system clipboard if theia", async () => {
+            let theia = true;
             Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
             await ussNodeActions.copyPath(ussNode);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Copy Path is not yet supported in Theia.");
+            expect(writeText).not.toBeCalled();
+            theia = false;
         });
-
     });
 });
