@@ -2,6 +2,19 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+# 1.0.0
+
+- Improvements to Save and Safe Save functionality. Thanks Alexandru-Dumitru
+- VSCode centric Connection settings. . Thanks @crawr, @jellypuno
+- Dataset and Dataset member copy and renaming function. Thanks @CForrest97
+- Support for Theia
+- Resiliance updates:
+    - for default profiles
+    - deleting a dataset in use
+    - testing improvements and coverage
+    - rationalizing deliverables
+    - performance improvements
+
 ## 0.29.0
 
 - Provide ability to rename datasets. Thanks @CForrest97
