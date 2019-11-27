@@ -168,6 +168,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.renameDataSet", (node) => renameDataSet(node, datasetProvider));
         vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => renameDataSetMember(node, datasetProvider));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -969,6 +970,59 @@ export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree)
         } else {
             refreshPS(node);
         }
+    }
+}
+
+/**
+ * Rename data set members
+ *
+ * @export
+ * @param {ZoweNode} node - The node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function renameDataSetMember(node: ZoweNode, datasetProvider: DatasetTree) {
+    const beforeMemberName = node.label.trim();
+    let dataSetName;
+    let profileLabel;
+
+    if (node.mParent.contextValue.includes(FAV_SUFFIX)) {
+        profileLabel = node.mParent.label.substring(0, node.mParent.label.indexOf(":") + 2);
+        dataSetName = node.mParent.label.substring(node.mParent.label.indexOf(":") + 2);
+    } else {
+        dataSetName = node.mParent.label.trim();
+    }
+    const afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
+
+    log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
+    if (afterMemberName) {
+        try {
+            await zowe.Rename.dataSetMember(node.getSession(), dataSetName, beforeMemberName, afterMemberName);
+            node.label = `${profileLabel}${afterMemberName}`;
+        } catch (err) {
+            log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+            throw err;
+        }
+        if (node.mParent.contextValue.includes(FAV_SUFFIX)) {
+            const nonFavoritedParent = datasetProvider.findNonFavoritedNode(node.mParent);
+            if (nonFavoritedParent) {
+                const nonFavoritedMember = nonFavoritedParent.children.find(child => child.label === beforeMemberName);
+                if (nonFavoritedMember) {
+                    nonFavoritedMember.label = afterMemberName;
+                    datasetProvider.refreshElement(nonFavoritedParent);
+                }
+            }
+        } else {
+            const favoritedParent = datasetProvider.findFavoritedNode(node.mParent);
+            if (favoritedParent) {
+                const favoritedMember = favoritedParent.children.find(child => child.label === beforeMemberName);
+                if (favoritedMember) {
+                    favoritedMember.label = afterMemberName;
+                    datasetProvider.refreshElement(favoritedParent);
+                }
+            }
+        }
+        datasetProvider.refreshElement(node.mParent);
     }
 }
 
