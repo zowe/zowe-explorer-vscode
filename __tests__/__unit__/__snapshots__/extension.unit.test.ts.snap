@@ -173,6 +173,16 @@ Array [
     "when": "view == zowe.explorer && viewItem == member",
   },
   Object {
+    "command": "zowe.renameDataSetMember",
+    "group": "6_modification@2",
+    "when": "view == zowe.explorer && viewItem == member",
+  },
+  Object {
+    "command": "zowe.renameDataSetMember",
+    "group": "6_modification@2",
+    "when": "view == zowe.explorer && viewItem == member_fav",
+  },
+  Object {
     "command": "zowe.refreshNode",
     "group": "inline",
     "when": "view == zowe.explorer && viewItem == ds",
