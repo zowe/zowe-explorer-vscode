@@ -13,8 +13,6 @@ const del = require('del');
 const nls = require('vscode-nls-dev');
 
 const tsProject = ts.createProject('./tsconfig.json', { typescript });
-const PUBLISHER = 'Zowe';
-const EXTENSION_NAME= 'vscode-extension-for-zowe'
 const outDest = 'out';
 
 // If all VS Code languages are supported, you can use nls.coreLanguages
@@ -41,7 +39,7 @@ const generateLocalizationBundle = () => {
         .pipe(tsProject()).js
         .pipe(nls.createMetaDataFiles())
         .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
-		.pipe(nls.bundleMetaDataFiles(PUBLISHER.EXTENSION_NAME, outDest))
+		.pipe(nls.bundleMetaDataFiles('Zowe.vscode-extension-for-zowe', outDest))
 		.pipe(nls.bundleLanguageFiles())
 		.pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
 		.pipe(gulp.dest(outDest));
