@@ -110,23 +110,39 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
     return Profiles.getInstance().refresh();
 }
 
-export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    const newName = await vscode.window.showInputBox({value: node.label});
-    if (!newName) {
-        return;
-    }
-    try {
-        const newNamePath = node.mParent.fullPath + "/" +  newName;
-        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
-        if (node.contextValue === extension.USS_DIR_CONTEXT || node.mParent.contextValue === extension.USS_SESSION_CONTEXT) {
-            refreshAllUSS(ussFileProvider);
-        } else {
+/**
+ * Process for renaming a USS Node. This could be a Favorite Node
+ *
+ * @param {ZoweUSSNode} originalNode
+ * @param {USSTree} ussFileProvider
+ * @param {string} filePath
+ */
+export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
+    // Could be a favorite or regular entry always deal with the regular entry
+    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
+    const oldLabel = isFav ? originalNode.shortLabel : originalNode.label;
+    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+    // Check if an old favorite exists for this node
+    const oldFavorite = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
+        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+    );
+    const newName = await vscode.window.showInputBox({value: oldLabel});
+    if (newName && newName !== oldLabel) {
+        try {
+            const newNamePath = path.join(parentPath + newName);
+            await zowe.Utilities.renameUSSFile(originalNode.getSession(), originalNode.fullPath, newNamePath);
             ussFileProvider.refresh();
+            if (oldFavorite) {
+                ussFileProvider.removeUSSFavorite(oldFavorite);
+                oldFavorite.rename(newNamePath);
+                ussFileProvider.addUSSFavorite(oldFavorite);
+            }
+        } catch (err) {
+            vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+            throw (err);
         }
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
-        throw (err);
     }
+
 }
 
 /**
