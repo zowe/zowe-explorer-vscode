@@ -38,10 +38,10 @@ export class ZoweNode extends vscode.TreeItem {
      * @param {ZoweNode} mParent
      * @param {Session} session
      */
-    constructor(label: string, 
+    constructor(label: string,
                 collapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweNode, 
-                private session: Session, 
+                public mParent: ZoweNode,
+                private session: Session,
                 contextOverride?: string,
                 private etag?: string) {
         super(label, collapsibleState);

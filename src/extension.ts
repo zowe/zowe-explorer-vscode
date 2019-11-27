@@ -1475,7 +1475,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const uploadOptions: IUploadOptions = {
         etag: uploadEtag,
         returnEtag: true
-    }
+    };
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
@@ -1493,17 +1493,17 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
-            if (downloadEtag != uploadEtag) {
+            if (downloadEtag !== uploadEtag) {
                 node.setEtag(downloadEtag);
             }
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."))
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
             // Store document in a separate variable, to be used on merge conflict
             const oldDoc = doc;
             const oldDocText = oldDoc.getText();
             const startPosition = new vscode.Position(0,0);
             const endPosition = new vscode.Position(oldDoc.lineCount,0);
             const deleteRange = new vscode.Range(startPosition, endPosition);
-            await vscode.window.activeTextEditor.edit(editBuilder => {
+            await vscode.window.activeTextEditor.edit((editBuilder) => {
                 // re-write the old content in the editor view
                 editBuilder.delete(deleteRange);
                 editBuilder.insert(startPosition, oldDocText);
@@ -1564,17 +1564,17 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
-            if (downloadEtag != uploadEtag) {
+            if (downloadEtag !== uploadEtag) {
                 node.setEtag(downloadEtag);
             }
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."))
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
             // Store document in a separate variable, to be used on merge conflict
             const oldDoc = doc;
             const oldDocText = oldDoc.getText();
             const startPosition = new vscode.Position(0,0);
             const endPosition = new vscode.Position(oldDoc.lineCount,0);
             const deleteRange = new vscode.Range(startPosition, endPosition);
-            await vscode.window.activeTextEditor.edit(editBuilder => {
+            await vscode.window.activeTextEditor.edit((editBuilder) => {
                 // re-write the old content in the editor view
                 editBuilder.delete(deleteRange);
                 editBuilder.insert(startPosition, oldDocText);
@@ -1616,7 +1616,7 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
         const documentFilePath = getUSSDocumentFilePath(node);
         if (download || !fs.existsSync(documentFilePath)) {
             const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
-            let response = await vscode.window.withProgress({
+            const response = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "Opening USS file...",
         }, function downloadUSSFile() {
