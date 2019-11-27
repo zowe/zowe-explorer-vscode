@@ -24,6 +24,7 @@ import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
+import { IZosFilesResponse } from "@brightside/core";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -201,8 +202,6 @@ describe("Extension Unit Tests", () => {
     const copyDataSet = jest.fn();
     const findFavoritedNode = jest.fn();
     const findNonFavoritedNode = jest.fn();
-    const mockSetEtag = jest.fn();
-    const mockGetEtag = jest.fn();
     let mockClipboardData: string;
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
@@ -232,8 +231,6 @@ describe("Extension Unit Tests", () => {
             renameFavorite: mockRenameFavorite,
             updateFavorites: mockUpdateFavorites,
             renameNode: mockRenameNode,
-            getEtag: mockGetEtag,
-            setEtag: mockSetEtag,
             findFavoritedNode,
             findNonFavoritedNode,
         };
@@ -248,8 +245,6 @@ describe("Extension Unit Tests", () => {
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
             ussFilterPrompt: ussPattern,
-            getEtag: mockGetEtag,
-            setEtag: mockSetEtag,
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
@@ -747,7 +742,14 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         showTextDocument.mockReset();
         
-
+        const response: IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        dataSet.mockReturnValueOnce(response);
         await extension.refreshPS(node);
 
         expect(dataSet.mock.calls.length).toBe(1);
@@ -796,6 +798,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: true});
         dataSet.mockReset();
         showTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(response);
 
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(node);
@@ -804,6 +807,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(response);
 
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(child);
@@ -812,6 +816,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(response);
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.refreshPS(child);
@@ -1365,6 +1370,14 @@ describe("Extension Unit Tests", () => {
         const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValue(null);
+        const response: IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        withProgress.mockReturnValue(response);
         openTextDocument.mockResolvedValueOnce("test doc");
 
         await extension.openPS(node, true);
@@ -1454,7 +1467,14 @@ describe("Extension Unit Tests", () => {
         ussFile.mockReset();
         showTextDocument.mockReset();
         executeCommand.mockReset();
-
+        const response: IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "132"
+            }
+        }
+        ussFile.mockReturnValueOnce(response);
         await extension.refreshUSS(node);
 
         expect(ussFile.mock.calls.length).toBe(1);
@@ -1605,18 +1625,18 @@ describe("Extension Unit Tests", () => {
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
-        downloadUSSFile.mockReturnValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                data: "",
-                etag: "123"
-            }
-        });
-
         isFileTagBinOrAscii.mockReturnValue(false);
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
+
+        const response: IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        withProgress.mockReturnValue(response);
 
         await extension.openUSS(node, false, true);
 
@@ -1691,7 +1711,7 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node.");
     });
 
-    it("Tests that openUSS executes successfully with favorited files", async () => {
+    it("Tests that openUSS executes successfully with favored files", async () => {
         ussFile.mockReset();
         openTextDocument.mockReset();
         showTextDocument.mockReset();
@@ -1707,7 +1727,7 @@ describe("Extension Unit Tests", () => {
         favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/");
         favoriteParent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
-        // Set up child of favoriteDir - make sure we can open the child of a favorited directory
+        // Set up child of favoriteDir - make sure we can open the child of a favored directory
         const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir");
         child.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
@@ -1736,6 +1756,15 @@ describe("Extension Unit Tests", () => {
         isFileTagBinOrAscii.mockReturnValue(true);
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
+
+        const response: IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        withProgress.mockReturnValue(response);
 
         await extension.openUSS(node, false, true);
 
