@@ -1004,7 +1004,7 @@ export async function renameDataSetMember(node: ZoweNode, datasetProvider: Datas
         if (node.mParent.contextValue.includes(FAV_SUFFIX)) {
             const nonFavoritedParent = datasetProvider.findNonFavoritedNode(node.mParent);
             if (nonFavoritedParent) {
-                const nonFavoritedMember = nonFavoritedParent.children.find(child => child.label === beforeMemberName);
+                const nonFavoritedMember = nonFavoritedParent.children.find((child) => child.label === beforeMemberName);
                 if (nonFavoritedMember) {
                     nonFavoritedMember.label = afterMemberName;
                     datasetProvider.refreshElement(nonFavoritedParent);
@@ -1013,7 +1013,7 @@ export async function renameDataSetMember(node: ZoweNode, datasetProvider: Datas
         } else {
             const favoritedParent = datasetProvider.findFavoritedNode(node.mParent);
             if (favoritedParent) {
-                const favoritedMember = favoritedParent.children.find(child => child.label === beforeMemberName);
+                const favoritedMember = favoritedParent.children.find((child) => child.label === beforeMemberName);
                 if (favoritedMember) {
                     favoritedMember.label = afterMemberName;
                     datasetProvider.refreshElement(favoritedParent);
