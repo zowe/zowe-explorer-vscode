@@ -70,6 +70,7 @@
     "renameDataSet": "Rename Data Set",
     "copyDataSet": "Copy Data Set",
     "pasteDataSet": "Paste Data Set",
+    "renameDataSetMember": "Rename Member",
     "profile.configuration.title": "Zowe z/OSMF Profiles",
     "profile.configuration.name": "Profile Name",
     "profile.configuration.url": "z/OSMF URL",

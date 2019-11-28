@@ -91,8 +91,10 @@ describe("Extension Integration Tests", () => {
             );
 
             // Mock user selecting first profile from list
-            const stub = sandbox.stub(vscode.window, "showQuickPick");
-            stub.returns(profileNamesList[0]);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
             await extension.addSession(testTree);
             expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
@@ -425,6 +427,41 @@ describe("Extension Integration Tests", () => {
                     expect(afterList.apiResponse.returnedRows).to.equal(1);
                 }).timeout(TIMEOUT);
             });
+            describe("Rename Member", () => {
+                beforeEach(async () => {
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        beforeDataSetName
+                    ).catch((err) => err);
+                    await zowe.Upload.bufferToDataSet(
+                        sessionNode.getSession(),
+                        new Buffer("abc"),
+                        `${beforeDataSetName}(mem1)`
+                    );
+                });
+                it("should rename a data set member", async () => {
+                    let error;
+                    let list;
+
+                    try {
+                        const parentNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const childNode = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parentNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns("mem2");
+
+                        await extension.renameDataSetMember(childNode, testTree);
+                        list = await zowe.List.allMembers(sessionNode.getSession(), beforeDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).to.be.equal(undefined);
+
+                    expect(list.apiResponse.returnedRows).to.equal(1);
+                    expect(list.apiResponse.items[0].member).to.equal("MEM2");
+                }).timeout(TIMEOUT);
+            });
             describe("Rename Partitioned Data Set", () => {
                 beforeEach(async () => {
                     await zowe.Create.dataSet(
@@ -469,6 +506,24 @@ describe("Extension Integration Tests", () => {
                         inputBoxStub.returns("MISSING.DATA.SET");
 
                         await extension.renameDataSet(testNode, testTree);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error).not.to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
+            describe("Rename Data Set Member", () => {
+                it("should throw an error if a missing data set name is provided", async () => {
+                    let error;
+
+                    try {
+                        const parentNode = new ZoweNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const childNode = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parentNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns("mem2");
+
+                        await extension.renameDataSetMember(childNode, testTree);
                     } catch (err) {
                         error = err;
                     }
@@ -882,8 +937,10 @@ describe("Extension Integration Tests - USS", () => {
             );
 
             // Mock user selecting first profile from list
-            const stub = sandbox.stub(vscode.window, "showQuickPick");
-            stub.returns(profileNamesList[0]);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
             await extension.addUSSSession(ussTestTree);
             expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
