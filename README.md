@@ -100,7 +100,7 @@ You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
 * **Rename data sets**: You can rename specified data sets.
-* **Copy data sets**: You can copy specified data sets.
+* **Copy data sets**: You can copy a specified member inside a dat set.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
 <!-- TODO This becomes the default save option* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe. -->
 * **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
@@ -137,16 +137,17 @@ You can use the following functionalities when interacting with data set:
 ![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
 <br /><br />
 
-<!-- TODO #### Copy data sets
+#### Copy data sets
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Select a data set you want to copy.
-4. Right-click the data set and select the **Copy Data Set** option.
-5. Change the name of the data set.
+3. Select a member you want to copy.
+4. Right-click the member and select the **Copy Data Set** option.
+5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
+6. Enter the name of the copied member.
 
-![Rename Data Set](docs/images/ZE-copy.gif?raw=true "Rename Data Set")
-<br /><br />  -->
+![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+<br /><br />
 
 #### Download, edit, and upload existing PDS members
 
@@ -263,13 +264,13 @@ You can use the following functionalities when interacting with USS files:
 4. Right-click the USS file and select the **Rename USS file** option.
 5. Change the name of the USS file.
 
-<!-- TODO #### Copy USS files
+#### Copy USS files
 
 1. Navigate to the explorer tree.
 2. Open the **USS** bar.
-3. Select a USS file you want to copy.
-4. Right-click the data set and select the **Copy USS file** option.
-5. Change the name of the data set. -->
+3. Right-click the USS file you want to copy and select the **Copy USS file** option.
+4. Right-click the USS directory and select the **Paste USS file** option.
+5. Enter the name of the copied USS file.
 
 #### Download, edit, and upload an existing file
 
