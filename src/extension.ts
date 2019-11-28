@@ -1422,31 +1422,27 @@ export async function openPS(node: ZoweNode, previewMember: boolean) {
     } else {
         sesNamePrompt = node.label;
     }
-    try {
-        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
-                }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
             }
-            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                node.getSession().ISession.user = usrNme;
-                node.getSession().ISession.password = passWrd;
-                node.getSession().ISession.base64EncodedAuth = baseEncd;
-                validProfile = 0;
-            }
-            await datasetProvider.refreshElement(node);
-            await datasetProvider.refresh();
-        } else {
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
         }
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await datasetProvider.refreshElement(node);
+        await datasetProvider.refresh();
+    } else {
+        validProfile = 0;
     }
     if (validProfile === 0) {
         try {
@@ -1796,31 +1792,27 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  */
 export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean) {
     const ussFileProvider = new USSTree();
-    try {
-        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
-                if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
-                }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
             }
-            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                node.getSession().ISession.user = usrNme;
-                node.getSession().ISession.password = passWrd;
-                node.getSession().ISession.base64EncodedAuth = baseEncd;
-                validProfile = 0;
-            }
-            await ussFileProvider.refreshElement(node);
-            await ussFileProvider.refresh();
-        } else {
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
         }
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await ussFileProvider.refreshElement(node);
+        await ussFileProvider.refresh();
+    } else {
+        validProfile = 0;
     }
     if (validProfile === 0) {
         try {
@@ -1895,29 +1887,25 @@ export async function stopCommand(job: Job) {
 export async function getSpoolContent(session: string, spool: IJobFile) {
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     const spoolSess = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-    try {
-        if ((!spoolSess.ISession.user) || (!spoolSess.ISession.password)) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(session);
-                if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
-                }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+    if ((!spoolSess.ISession.user) || (!spoolSess.ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(session);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
             }
-            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                spoolSess.ISession.user = usrNme;
-                spoolSess.ISession.password = passWrd;
-                spoolSess.ISession.base64EncodedAuth = baseEncd;
-                validProfile = 0;
-            }
-        } else {
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            spoolSess.ISession.user = usrNme;
+            spoolSess.ISession.password = passWrd;
+            spoolSess.ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
         }
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+    } else {
+        validProfile = 0;
     }
     if (validProfile === 0) {
         try {

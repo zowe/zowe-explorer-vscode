@@ -1661,6 +1661,114 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
     });
 
+    it("Testing that that openPS credentials prompt is executed successfully", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        const dsNode = new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode.contextValue = extension.DS_SESSION_CONTEXT;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await extension.openPS(dsNode, true);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("Testing that that openPS credentials prompt works with favorites", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.FAVORITE_CONTEXT;
+        const dsNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await extension.openPS(dsNode, true);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("Testing that that openPS credentials prompt ends in error", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        const dsNode = new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode.contextValue = extension.DS_SESSION_CONTEXT;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        await extension.openPS(dsNode, true);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showInformationMessage.mockReset();
+        showErrorMessage.mockReset();
+    });
+
     it("Testing that safeSave is executed successfully", async () => {
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -2288,6 +2396,115 @@ describe("Extension Unit Tests", () => {
         expect(showTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
+    it("Testing that that openUSS credentials prompt is executed successfully", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await extension.openUSS(dsNode, false, true);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("Testing that that openUSS credentials prompt works with favorites", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await extension.openUSS(dsNode, false, true);
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("Testing that that openUSS credentials prompt ends in error", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        await extension.openUSS(dsNode, false, true);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showInformationMessage.mockReset();
+        showErrorMessage.mockReset();
+    });
+
+
     it("Testing that saveUSSFile is executed successfully", async () => {
         const testDoc: vscode.TextDocument = {
             fileName: path.join(extension.USS_DIR, ussNode.label, "testFile"),
@@ -2775,6 +2992,69 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         await extension.getSpoolContent(undefined, undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests that the spool content credentials prompt is executed successfully", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+        newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await extension.getSpoolContent(newjobNode.label, iJobFile);
+        expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("tests that the spool content credentials prompt ends in error", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+        newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
+        await extension.getSpoolContent(newjobNode.label, iJobFile);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        showErrorMessage.mockReset();
     });
 
     it("tests that a stop command is issued", async () => {
