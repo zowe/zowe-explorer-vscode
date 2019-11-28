@@ -1470,12 +1470,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     // Get specific node based on label
     const node = (await sesNode.getChildren()).find((child) =>
         child.label.trim() === label);
-    const uploadEtag = node.getEtag();
-    // define upload options
-    const uploadOptions: IUploadOptions = {
-        etag: uploadEtag,
-        returnEtag: true
-    };
+        // define upload options
+    let uploadOptions: IUploadOptions;
+    if (node) {
+        uploadOptions = {
+            etag: node.getEtag(),
+            returnEtag: true
+        };
+    } else {
+        uploadOptions = {
+            returnEtag: true
+        };
+    }
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
@@ -1542,7 +1548,12 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     // Get specific node based on label
     const node = (await sesNode.getChildren()).find((child) =>
         child.fullPath.trim() === remote);
-    const uploadEtag = node.getEtag();
+    let uploadEtag: string;
+    if (node) {
+        uploadEtag = node.getEtag();
+    } else {
+        uploadEtag = null;
+    }
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
