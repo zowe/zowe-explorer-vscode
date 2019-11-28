@@ -108,8 +108,11 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
+                const sesName = line.substring(1, line.lastIndexOf("]")).trim();
+                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
-                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, null);
+                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session);
                 node.command = { command: "zowe.pattern", title: "", arguments: [node] };
                 const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
                 const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
@@ -364,10 +367,16 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
+        let sesNamePrompt: string;
+        if (node.contextValue.endsWith(extension.FAV_SUFFIX)) {
+            sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+        } else {
+            sesNamePrompt = node.label;
+        }
         try {
             if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
                 try {
-                    const values = await Profiles.getInstance().promptCredentials(node.label);
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
                     if (values !== undefined) {
                         usrNme = values [0];
                         passWrd = values [1];
@@ -446,7 +455,13 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
                 const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
                 await this.addSession(session);
+                const faveNode = node;
                 node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+                    node.getSession().ISession.user = faveNode.getSession().ISession.user;
+                    node.getSession().ISession.password = faveNode.getSession().ISession.password;
+                    node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                }
             }
             // update the treeview with the new pattern
             node.label = node.label.trim()+ " ";

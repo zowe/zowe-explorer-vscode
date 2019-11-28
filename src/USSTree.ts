@@ -20,6 +20,7 @@ import { PersistentFilters } from "./PersistentFilters";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+let validProfile: number = -1;
 
 /**
  * Creates the USS tree that contains nodes of sessions and data sets
@@ -246,9 +247,46 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
-        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
+        if (element.label !== "Favorites") {
+            let usrNme: string;
+            let passWrd: string;
+            let baseEncd: string;
+            try {
+                if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                    try {
+                        const values = await Profiles.getInstance().promptCredentials(element.mProfileName);
+                        if (values !== undefined) {
+                            usrNme = values [0];
+                            passWrd = values [1];
+                            baseEncd = values [2];
+                        }
+                    } catch (error) {
+                        vscode.window.showErrorMessage(error.message);
+                    }
+                    if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                        element.getSession().ISession.user = usrNme;
+                        element.getSession().ISession.password = passWrd;
+                        element.getSession().ISession.base64EncodedAuth = baseEncd;
+                        validProfile = 0;
+                    } else {
+                        return;
+                    }
+                    await this.refreshElement(element);
+                    await this.refresh();
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+        } else {
+            validProfile = 0;
+        }
+        if (validProfile === 0) {
+            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
+        } else {
+            return;
+        }
     }
 
     public async onDidChangeConfiguration(e) {
@@ -285,7 +323,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         let baseEncd: string;
         if ((!(node.getSession().ISession.user).trim()) || (!(node.getSession().ISession.password).trim())) {
             try {
-                const values = await Profiles.getInstance().promptCredentials(node.label);
+                const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
                 if (values !== undefined) {
                     usrNme = values [0];
                     passWrd = values [1];
@@ -362,9 +400,15 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                 remotepath = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
                 const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
                 await this.addSession(session);
+                const faveNode = node;
                 sessionNode = this.mSessionNodes.find((tempNode) =>
                     tempNode.mProfileName === session
                 );
+                if ((!sessionNode.getSession().ISession.user) || (!sessionNode.getSession().ISession.password)) {
+                    sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
+                    sessionNode.getSession().ISession.password = faveNode.getSession().ISession.password;
+                    sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                }
             }
             // Sanitization: Replace multiple preceding forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/\/+/, "/");
