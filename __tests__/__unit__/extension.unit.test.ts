@@ -1271,7 +1271,7 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Data set failed to save. Data set may have been deleted on mainframe.");
 
-        testResponse.apiResponse.items = ["Item1"];
+        testResponse.apiResponse.items = [{dsname: "HLQ.TEST.AFILE"}, {dsname: "HLQ.TEST.AFILE(mem)"}];
         dataSetList.mockReset();
         pathToDataSet.mockReset();
         showErrorMessage.mockReset();
@@ -1784,8 +1784,10 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that saveUSSFile is executed successfully", async () => {
+        withProgress.mockReset();
+
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.USS_DIR, ussNode.label, "testFile"),
+            fileName: path.join(extension.USS_DIR, "usstest", "/u/myuser/testFile"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1811,16 +1813,19 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
-        ussNode.mProfileName = "usstest";
-        testUSSTree.getChildren.mockReturnValueOnce([
-            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, session, "/")]);
 
-        testResponse.apiResponse.items = ["Item1"];
+        fileList.mockResolvedValueOnce(testResponse);
+        ussNode.mProfileName = "usstest";
+        ussNode.dirty = true;
+        testUSSTree.getChildren.mockReturnValueOnce([
+            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
+
+        testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
         fileToUSSFile.mockReset();
         showErrorMessage.mockReset();
 
         testResponse.success = true;
-        fileToUSSFile.mockResolvedValueOnce(testResponse);
+        fileToUSSFile.mockResolvedValue(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
 
         await extension.saveUSSFile(testDoc, testUSSTree);
@@ -1838,59 +1843,6 @@ describe("Extension Unit Tests", () => {
         await extension.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
-
-        const testDoc2: vscode.TextDocument = {
-            fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        testUSSTree.getChildren.mockReturnValueOnce([sessNode]);
-
-        await extension.saveUSSFile(testDoc2, testUSSTree);
-
-        const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        fileToUSSFile.mockReset();
-        showErrorMessage.mockReset();
-
-        testUSSTree.getChildren.mockReturnValueOnce([sessNode]);
-        testResponse.success = true;
-        fileToUSSFile.mockResolvedValueOnce(testResponse);
-
-        await extension.saveUSSFile(testDoc3, testUSSTree);
     });
 
     it("tests that the prefix is set correctly on the job", async () => {
