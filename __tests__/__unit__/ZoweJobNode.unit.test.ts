@@ -276,6 +276,7 @@ describe("Zos Jobs Unit Tests", () => {
 
         it("Testing that expand tree is executed successfully", async () => {
             const refresh = jest.fn();
+            createBasicZosmfSession.mockReturnValue(session);
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();

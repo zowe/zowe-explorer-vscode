@@ -104,9 +104,27 @@ describe("Extension Integration Tests", () => {
     describe("Creating Data Sets and Members", () => {
         it("should create a data set when zowe.createFile is invoked", async () => {
             // Mock user selecting first option from list
-            const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
+            // const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
+            const testFileName = pattern + ".EXT.PS";
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
+
+            const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+            inputBoxStub.returns(testFileName);
+
+            await extension.createFile(sessionNode, testTree);
+
+            // Data set should be created
+            const response = await zowe.List.dataSet(sessionNode.getSession(), testFileName, {});
+            expect(response.success).to.equal(true);
+        }).timeout(TIMEOUT);
+
+        it("should create a PDS data set when zowe.createFile is invoked", async () => {
+            // Mock user selecting first option from list
+            // const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
+            const testFileName = pattern + ".EXT.SAMPLE.PDS";
+            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+            quickPickStub.returns("Data Set Classic");
 
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
@@ -123,7 +141,7 @@ describe("Extension Integration Tests", () => {
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
 
-            const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
+            const testFileName = pattern + ".EXT.PS";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
 
@@ -758,7 +776,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
 
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(testingPath, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(testingPath);
@@ -776,7 +795,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
             { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
 
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(providedPathOne);

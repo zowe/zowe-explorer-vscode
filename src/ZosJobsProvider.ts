@@ -201,6 +201,8 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                     }
                     await this.refreshElement(element);
                     await this.refresh();
+                } else {
+                    this.validProfile = 0;
                 }
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);

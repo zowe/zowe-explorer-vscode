@@ -20,7 +20,6 @@ import { PersistentFilters } from "./PersistentFilters";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-let validProfile: number = -1;
 
 /**
  * Creates the USS tree that contains nodes of sessions and data sets
@@ -267,20 +266,22 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                         element.getSession().ISession.user = usrNme;
                         element.getSession().ISession.password = passWrd;
                         element.getSession().ISession.base64EncodedAuth = baseEncd;
-                        validProfile = 0;
+                        this.validProfile = 0;
                     } else {
                         return;
                     }
                     await this.refreshElement(element);
                     await this.refresh();
+                } else {
+                    this.validProfile = 0;
                 }
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
             }
         } else {
-            validProfile = 0;
+            this.validProfile = 0;
         }
-        if (validProfile === 0) {
+        if (this.validProfile === 0) {
             element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
             element.dirty = true;
             this.mOnDidChangeTreeData.fire(element);

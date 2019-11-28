@@ -54,6 +54,16 @@ describe("DatasetTree Unit Tests", () => {
     const filters = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
+    const createBasicZosmfSession = jest.fn();
+    const ZosmfSession = jest.fn();
+    Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+        value: jest.fn(() => {
+            return {
+                ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"}
+            };
+        })
+    });
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
@@ -365,9 +375,10 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that expand tree is executed successfully", async () => {
         const refresh = jest.fn();
+        createBasicZosmfSession.mockReturnValue(session);
         Object.defineProperty(testTree, "refresh", {value: refresh});
         refresh.mockReset();
-        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
+        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], session);
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(pds, false);
@@ -422,7 +433,7 @@ describe("DatasetTree Unit Tests", () => {
     it("Testing that user filter prompts are executed successfully for favorites", async () => {
         // Executing from favorites
         const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
-        vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
+        vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], session);
         favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         const checkSession = jest.spyOn(testTree, "addSession");
         expect(checkSession).not.toHaveBeenCalled();

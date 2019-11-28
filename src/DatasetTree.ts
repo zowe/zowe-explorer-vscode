@@ -513,6 +513,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     }
                     await this.refreshElement(element);
                     await this.refresh();
+                } else {
+                    this.validProfile = 0;
                 }
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
