@@ -594,6 +594,16 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.explorer && viewItem == member_fav",
+          "command": "zowe.renameDataSetMember",
+          "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.refreshNode",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.refreshNode",
           "group": "0_mainframeInteraction"

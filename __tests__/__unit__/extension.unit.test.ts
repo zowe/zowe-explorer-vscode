@@ -151,6 +151,8 @@ describe("Extension Unit Tests", () => {
     const showTextDocument = jest.fn();
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
+    const createQuickPick = jest.fn();
+    const createNewConnection = jest.fn();
     const mockAddSession = jest.fn();
     const mockAddUSSSession = jest.fn();
     const mockAddHistory = jest.fn();
@@ -270,6 +272,7 @@ describe("Extension Unit Tests", () => {
     testTree.mSessionNodes.push(sessNode);
     Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
     Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
 
     const testUSSTree = USSTree();
     testUSSTree.mSessionNodes = [];
@@ -832,26 +835,6 @@ describe("Extension Unit Tests", () => {
 
     });
 
-    it("Testing that addSession is executed successfully", async () => {
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
-        });
-        await extension.addSession(testTree);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName", "secondName"]);
-        // tslint:disable-next-line
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
-        });
-    });
-
     it("Call Change File type", async () => {
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
         const res = extension.changeFileType(node, false, testUSSTree);
@@ -864,118 +847,256 @@ describe("Extension Unit Tests", () => {
         expect(ProfNode).not.toBeUndefined();
     });
 
-    it("Testing that addSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined
-                };
-            })
+    describe("Add Session Unit Test", () => {
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+
+        beforeEach(() => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {newprofile: "fake"};
+                        }),
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
         });
 
-        await extension.addSession(testTree);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
+        afterEach(() => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
         });
 
-    });
+        it("Testing that addSession will cancel if there is no profile name", async () => {
+            const entered = undefined;
 
-    it("Testing that addSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
-        });
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
 
-        showQuickPick.mockResolvedValueOnce("firstName");
-        await extension.addSession(testTree);
-    });
-
-    it("Testing that addSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    createNewConnection: "fake"
-                };
-            })
-        });
-
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        try {
             await extension.addSession(testTree);
-        } catch (error) {
-            // Do Nothing
-        }
-    });
-
-    it("Testing that addJobsSession is executed successfully", async () => {
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
-        });
-        await extension.addJobsSession(testJobsTree);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName", "secondName"]);
-        // tslint:disable-next-line
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Jobs Explorer"
-        });
-    });
-
-    it("Testing that addJobsSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
+            expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
         });
 
-        showQuickPick.mockResolvedValueOnce("firstName");
-        await extension.addJobsSession(testJobsTree);
-    });
+        it("Testing that addSession with supplied profile name", async () => {
+            const entered = undefined;
+            const addSession = jest.spyOn(extension, "addSession");
 
-    it("Testing that addJobsSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            showInputBox.mockReturnValueOnce("fake");
+            await extension.addSession(testTree);
+            expect(extension.addSession).toHaveBeenCalled();
+
         });
 
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        try {
-            await extension.addJobsSession(testJobsTree);
-        } catch (error) {
-            // Do Nothing
-        }
+        it("Testing that addSession with existing profile", async () => {
+            const entered = "";
+            const addSession = jest.spyOn(extension, "addSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addSession(testTree);
+            expect(extension.addSession).toHaveBeenCalled();
+        });
+
+        it("Testing that addSession with supplied resolveQuickPickHelper", async () => {
+            const entered = "fake";
+            const addSession = jest.spyOn(extension, "addSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addSession(testTree);
+            expect(extension.addSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addSession with undefined profile", async () => {
+            const entered = "";
+            const addSession = jest.spyOn(extension, "addSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: undefined,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addSession(testTree);
+            expect(extension.addSession).toHaveBeenCalled();
+
+        });
+
+
+        it("Testing that addSession if createNewConnection is invalid", async () => {
+            const entered = "fake";
+            const addSession = jest.spyOn(extension, "addSession");
+
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addSession(testTree);
+            expect(extension.addSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addSession if listProfile is invalid", async () => {
+            const entered = "fake";
+            const addSession = jest.spyOn(extension, "addSession");
+
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addSession(testTree);
+            expect(extension.addSession).toHaveBeenCalled();
+
+        });
     });
 
     it("Testing that createFile is executed successfully", async () => {
@@ -1054,6 +1175,102 @@ describe("Extension Unit Tests", () => {
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(0);
+    });
+
+    it("tests the createFile for prompt credentials", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            protocol: "https",
+            type: "basic",
+        });
+
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+
+        showQuickPick.mockReset();
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
+        dataSetCreate.mockReset();
+
+        getConfiguration.mockReturnValue("FakeConfig");
+        showInputBox.mockReturnValueOnce("FakeName");
+
+
+        showQuickPick.mockResolvedValueOnce("Data Set Binary");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set C");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set Classic");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
+        await extension.createFile(newsessNode, testTree);
+        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
+        await extension.createFile(newsessNode, testTree);
+
+        // tslint:disable-next-line: no-magic-numbers
+        expect(showQuickPick.mock.calls.length).toBe(5);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(getConfiguration.mock.calls.length).toBe(5);
+        expect(getConfiguration.mock.calls[0][0]).toBe("Zowe-Default-Datasets-Binary");
+        expect(getConfiguration.mock.calls[1][0]).toBe("Zowe-Default-Datasets-C");
+        expect(getConfiguration.mock.calls[2][0]).toBe("Zowe-Default-Datasets-Classic");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(getConfiguration.mock.calls[3][0]).toBe("Zowe-Default-Datasets-PDS");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(getConfiguration.mock.calls[4][0]).toBe("Zowe-Default-Datasets-PS");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(showInputBox.mock.calls.length).toBe(5);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(dataSetCreate.mock.calls.length).toBe(5);
+    });
+
+    it("tests the createFile for prompt credentials error", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                };
+            })
+        });
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            protocol: "https",
+            type: "basic",
+        });
+        const createFile = jest.spyOn(extension, "createFile");
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+
+        showQuickPick.mockReset();
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
+        dataSetCreate.mockReset();
+
+        getConfiguration.mockReturnValue("FakeConfig");
+        showInputBox.mockReturnValueOnce("FakeName");
+
+
+        showQuickPick.mockResolvedValueOnce("Data Set Binary");
+        await extension.createFile(newsessNode, testTree);
+        expect(extension.createFile).toHaveBeenCalled();
     });
 
     it("Testing that deleteDataset is executed successfully", async () => {
@@ -1560,55 +1777,257 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls[0][0]).toBe("refreshUSS() called from invalid node.");
     });
 
-    it("Testing that addSession is executed correctly for a USS explorer", async () => {
-        showQuickPick.mockReset();
+    describe("Add USS Session Unit Test", () => {
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
-        await extension.addUSSSession(testUSSTree);
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["Create a New Connection to z/OS", "firstName","secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer"
-        });
-    });
-
-    it("Testing that addUSSSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
+        beforeEach(() => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {newprofile: "fake"};
+                        }),
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
         });
 
-        showQuickPick.mockResolvedValueOnce("firstName");
-        await extension.addUSSSession(testUSSTree);
-    });
-
-    it("Testing that addUSSSession is executed successfully", async () => {
-        // tslint:disable-next-line: prefer-const
-        showQuickPick.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
-                };
-            })
+        afterEach(() => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
         });
 
-        showQuickPick.mockResolvedValueOnce("Create a New Connection to z/OS");
-        try {
+        it("Testing that addUSSSession will cancel if there is no profile name", async () => {
+            const entered = undefined;
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addUSSSession(testTree);
+            expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
+        });
+
+        it("Testing that addUSSSession with supplied profile name", async () => {
+            const entered = undefined;
+            const addUSSSession = jest.spyOn(extension, "addUSSSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            showInputBox.mockReturnValueOnce("fake");
             await extension.addUSSSession(testUSSTree);
-        } catch (error) {
-            // Do Nothing
-        }
-    });
+            expect(extension.addUSSSession).toHaveBeenCalled();
 
+        });
+
+        it("Testing that addUSSSession with existing profile", async () => {
+            const entered = "";
+            const addUSSSession = jest.spyOn(extension, "addUSSSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addUSSSession(testUSSTree);
+            expect(extension.addUSSSession).toHaveBeenCalled();
+        });
+
+        it("Testing that addUSSSession with supplied resolveQuickPickHelper", async () => {
+            const entered = "fake";
+            const addUSSSession = jest.spyOn(extension, "addUSSSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addUSSSession(testUSSTree);
+            expect(extension.addUSSSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addUSSSession with undefined profile", async () => {
+            const entered = "";
+            const addUSSSession = jest.spyOn(extension, "addUSSSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: undefined,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addUSSSession(testUSSTree);
+            expect(extension.addUSSSession).toHaveBeenCalled();
+
+        });
+
+
+        it("Testing that addUSSSession if createNewConnection is invalid", async () => {
+            const entered = "fake";
+            const addUSSSession = jest.spyOn(extension, "addUSSSession");
+
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addUSSSession(testUSSTree);
+            expect(extension.addUSSSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addUSSSession if listProfile is invalid", async () => {
+            const entered = "fake";
+            const addUSSSession = jest.spyOn(extension, "addUSSSession");
+
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addUSSSession(testUSSTree);
+            expect(extension.addUSSSession).toHaveBeenCalled();
+
+        });
+    });
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
         const spy = jest.fn(testTree.refresh);
@@ -1847,6 +2266,340 @@ describe("Extension Unit Tests", () => {
         await extension.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
+    });
+
+    describe("Add Jobs Session Unit Test", () => {
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+
+        beforeEach(() => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {newprofile: "fake"};
+                        }),
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
+        });
+
+        afterEach(() => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+        });
+
+        it("tests the refresh Jobs Server for prompt credentials", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        }),
+                    };
+                })
+            });
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                protocol: "https",
+                type: "basic",
+            });
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            newjobNode.contextValue = "server";
+            newjobNode.contextValue = "server";
+            await extension.refreshJobsServer(newjobNode);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("tests the refresh Jobs Server", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        }),
+                    };
+                })
+            });
+
+            createBasicZosmfSession.mockReturnValue(session);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, session, iJob);
+            newjobNode.contextValue = "server";
+            newjobNode.contextValue = "server";
+            await extension.refreshJobsServer(newjobNode);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("tests the refresh Jobs Server with invalid prompt credentials", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                    };
+                })
+            });
+
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                protocol: "https",
+                type: "basic",
+            });
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            newjobNode.contextValue = "server";
+            newjobNode.contextValue = "server";
+            await extension.refreshJobsServer(newjobNode);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("Testing that addJobsSession will cancel if there is no profile name", async () => {
+            const entered = undefined;
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addJobsSession(testJobsTree);
+            expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
+        });
+
+        it("Testing that addJobsSession with supplied profile name", async () => {
+            const entered = undefined;
+            const addJobsSession = jest.spyOn(extension, "addJobsSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            showInputBox.mockReturnValueOnce("fake");
+            await extension.addJobsSession(testJobsTree);
+            expect(extension.addJobsSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addJobsSession with existing profile", async () => {
+            const entered = "";
+            const addJobsSession = jest.spyOn(extension, "addJobsSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addJobsSession(testJobsTree);
+            expect(extension.addJobsSession).toHaveBeenCalled();
+        });
+
+        it("Testing that addJobsSession with supplied resolveQuickPickHelper", async () => {
+            const entered = "fake";
+            const addJobsSession = jest.spyOn(extension, "addJobsSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addJobsSession(testJobsTree);
+            expect(extension.addJobsSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addJobsSession with undefined profile", async () => {
+            const entered = "";
+            const addJobsSession = jest.spyOn(extension, "addJobsSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: undefined,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addJobsSession(testJobsTree);
+            expect(extension.addJobsSession).toHaveBeenCalled();
+
+        });
+
+
+        it("Testing that addJobsSession if createNewConnection is invalid", async () => {
+            const entered = "fake";
+            const addJobsSession = jest.spyOn(extension, "addJobsSession");
+
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addJobsSession(testJobsTree);
+            expect(extension.addJobsSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addJobsSession if listProfile is invalid", async () => {
+            const entered = "fake";
+            const addJobsSession = jest.spyOn(extension, "addJobsSession");
+
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {};
+                        }),
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addJobsSession(testJobsTree);
+            expect(extension.addJobsSession).toHaveBeenCalled();
+
+        });
     });
 
     it("tests that the prefix is set correctly on the job", async () => {
@@ -2272,6 +3025,16 @@ describe("Extension Unit Tests", () => {
      });
 
     it("tests the issueTsoCommand function", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
@@ -2561,11 +3324,111 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo");
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
         await extension.issueTsoCommand(undefined);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand prompt credentials", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand prompt credentials for password only", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(1);
+    });
+
+    it("tests the issueTsoCommand error in prompt credentials", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("/d iplinfo");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await extension.issueTsoCommand(outputChannel);
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });

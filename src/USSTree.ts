@@ -54,6 +54,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
 
     private mHistory: PersistentFilters;
     private log: Logger;
+    private validProfile: number = -1;
 
     constructor() {
         this.mSessionNodes = [];
@@ -279,75 +280,102 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         }
         let sessionNode = node.getSessionNode();
         let remotepath: string;
-        if (node.contextValue === extension.USS_SESSION_CONTEXT) {
-            if (this.mHistory.getHistory().length > 0) {
-
-                const createPick = new FilterDescriptor(USSTree.defaultDialogText);
-                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
-                if (extension.ISTHEIA) {
-                    const options1: vscode.QuickPickOptions = {
-                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
-                    };
-                    // get user selection
-                    const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    remotepath = choice === createPick ? "" : choice.label;
-                } else {
-                    const quickpick = vscode.window.createQuickPick();
-                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                    quickpick.items = [createPick, ...items];
-                    quickpick.ignoreFocusOut = true;
-                    quickpick.show();
-                    const choice = await resolveQuickPickHelper(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        if (quickpick.value) {
-                            remotepath = quickpick.value;
-                        }
-                    } else {
-                        remotepath = choice.label;
-                    }
+        let usrNme: string;
+        let passWrd: string;
+        let baseEncd: string;
+        if ((!(node.getSession().ISession.user).trim()) || (!(node.getSession().ISession.password).trim())) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(node.label);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
                 }
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
             }
-            if (!remotepath) {
-                // manually entering a search - switch to an input box
-                const options: vscode.InputBoxOptions = {
-                    prompt: localize("ussFilterPrompt.option.prompt.search",
-                        "Create a new filter"),
-                    value: sessionNode.fullPath
-                };
-                // get user input
-                remotepath = await vscode.window.showInputBox(options);
-                if (!remotepath || remotepath.length === 0) {
-                    vscode.window.showInformationMessage(localize("ussFilterPrompt.enterPath", "You must enter a path."));
-                    return;
-                }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
+                this.validProfile = 0;
             }
+            await this.refreshElement(node);
+            await this.refresh();
         } else {
-            // executing search from saved search in favorites
-            remotepath = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-            const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(session);
-            sessionNode = this.mSessionNodes.find((tempNode) =>
-                tempNode.mProfileName === session
-            );
+            this.validProfile = 0;
         }
-        // Sanitization: Replace multiple preceding forward slashes with just one forward slash
-        const sanitizedPath = remotepath.replace(/\/\/+/, "/");
-        sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
-        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        sessionNode.iconPath = applyIcons(sessionNode, extension.ICON_STATE_OPEN);
-        // update the treeview with the new path
-        sessionNode.label = `${sessionNode.mProfileName} [${sanitizedPath}]`;
-        sessionNode.dirty = true;
-        this.addHistory(sanitizedPath);
+        if (this.validProfile === 0) {
+            if (node.contextValue === extension.USS_SESSION_CONTEXT) {
+                if (this.mHistory.getHistory().length > 0) {
+
+                    const createPick = new FilterDescriptor(USSTree.defaultDialogText);
+                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    if (extension.ISTHEIA) {
+                        const options1: vscode.QuickPickOptions = {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                        };
+                        // get user selection
+                        const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        remotepath = choice === createPick ? "" : choice.label;
+                    } else {
+                        const quickpick = vscode.window.createQuickPick();
+                        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                        quickpick.items = [createPick, ...items];
+                        quickpick.ignoreFocusOut = true;
+                        quickpick.show();
+                        const choice = await resolveQuickPickHelper(quickpick);
+                        quickpick.hide();
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        if (choice instanceof FilterDescriptor) {
+                            if (quickpick.value) {
+                                remotepath = quickpick.value;
+                            }
+                        } else {
+                            remotepath = choice.label;
+                        }
+                    }
+                }
+                if (!remotepath) {
+                    // manually entering a search - switch to an input box
+                    const options: vscode.InputBoxOptions = {
+                        prompt: localize("ussFilterPrompt.option.prompt.search",
+                            "Create a new filter"),
+                        value: sessionNode.fullPath
+                    };
+                    // get user input
+                    remotepath = await vscode.window.showInputBox(options);
+                    if (!remotepath || remotepath.length === 0) {
+                        vscode.window.showInformationMessage(localize("ussFilterPrompt.enterPath", "You must enter a path."));
+                        return;
+                    }
+                }
+            } else {
+                // executing search from saved search in favorites
+                remotepath = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                await this.addSession(session);
+                sessionNode = this.mSessionNodes.find((tempNode) =>
+                    tempNode.mProfileName === session
+                );
+            }
+            // Sanitization: Replace multiple preceding forward slashes with just one forward slash
+            const sanitizedPath = remotepath.replace(/\/\/+/, "/");
+            sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
+            sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            sessionNode.iconPath = applyIcons(sessionNode, extension.ICON_STATE_OPEN);
+            // update the treeview with the new path
+            sessionNode.label = `${sessionNode.mProfileName} [${sanitizedPath}]`;
+            sessionNode.dirty = true;
+            this.addHistory(sanitizedPath);
+        }
     }
 
     public async initialize(log: Logger) {

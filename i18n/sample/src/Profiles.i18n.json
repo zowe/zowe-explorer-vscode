@@ -1,0 +1,20 @@
+{
+    "loadNamedProfile.error.profileName": "Could not find profile named: ",
+    "loadNamedProfile.error.period": ".",
+    "createNewConnection.option.prompt.url.placeholder": "https://url:port",
+    "createNewConnection.option.prompt.url": "Enter a z/OSMF URL in the format 'https://url:port'.",
+    "createNewConnection.enterzosmfURL": "No valid value for z/OSMF URL. Operation Cancelled",
+    "createNewConnection.option.prompt.userName.placeholder": "Optional: User Name",
+    "createNewConnection.option.prompt.userName": "Enter the user name for the connection",
+    "createNewConnection.option.prompt.passWord.placeholder": "Optional: Password",
+    "createNewConnection.option.prompt.password": "Enter a password for the connection",
+    "createNewConnection.option.prompt.ru.placeholder": "Reject Unauthorized Connections",
+    "createNewConnection.rejectUnauthorize": "Operation Cancelled",
+    "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
+    "promptcredentials.option.prompt.userName.placeholder": "User Name",
+    "promptcredentials.option.prompt.userName": "Enter the user name for the connection",
+    "promptcredentials.invalidusername": "Please enter your z/OS username. Operation Cancelled",
+    "promptcredentials.option.prompt.passWord.placeholder": "Password",
+    "promptcredentials.option.prompt.password": "Enter a password for the connection",
+    "promptcredentials.invalidpassword": "Please enter your z/OS password. Operation Cancelled"
+}
