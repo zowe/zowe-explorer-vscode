@@ -1553,7 +1553,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
-            if (downloadEtag !== uploadEtag) {
+            if (downloadEtag !== node.getEtag()) {
                 node.setEtag(downloadEtag);
             }
             vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
