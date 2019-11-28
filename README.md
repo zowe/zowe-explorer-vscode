@@ -4,7 +4,7 @@
 
 Zowe&trade; Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
-* Enables developers to create, modify, rename, and upload data set and USS files directly to a z/OS mainframe.
+* Enables developers to create, modify, rename, copy and upload data set and USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
 * Lets you create and use Zowe CLI `zosmf` compatible profiles.
 
@@ -100,6 +100,7 @@ You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
 * **Rename data sets**: You can rename specified data sets.
+* **Copy data sets**: You can copy specified data sets.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
 <!-- TODO This becomes the default save option* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe. -->
 * **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
@@ -134,7 +135,18 @@ You can use the following functionalities when interacting with data set:
 5. Change the name of the data set.
 
 ![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
-<br /><br /> -->
+<br /><br />
+
+<!-- TODO #### Copy data sets
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select a data set you want to copy.
+4. Right-click the data set and select the **Copy Data Set** option.
+5. Change the name of the data set.
+
+![Rename Data Set](docs/images/ZE-copy.gif?raw=true "Rename Data Set")
+<br /><br />  -->
 
 #### Download, edit, and upload existing PDS members
 
@@ -250,6 +262,14 @@ You can use the following functionalities when interacting with USS files:
 3. Select a USS file you want to rename.
 4. Right-click the USS file and select the **Rename USS file** option.
 5. Change the name of the USS file.
+
+<!-- TODO #### Copy USS files
+
+1. Navigate to the explorer tree.
+2. Open the **USS** bar.
+3. Select a USS file you want to copy.
+4. Right-click the data set and select the **Copy USS file** option.
+5. Change the name of the data set. -->
 
 #### Download, edit, and upload an existing file
 
