@@ -481,9 +481,50 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
-        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
+        if (element.label !== "Favorites") {
+            let usrNme: string;
+            let passWrd: string;
+            let baseEncd: string;
+            let sesNamePrompt: string;
+            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
+            } else {
+                sesNamePrompt = element.label;
+            }
+            try {
+                if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                    try {
+                        const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                        if (values !== undefined) {
+                            usrNme = values [0];
+                            passWrd = values [1];
+                            baseEncd = values [2];
+                        }
+                    } catch (error) {
+                        vscode.window.showErrorMessage(error.message);
+                    }
+                    if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                        element.getSession().ISession.user = usrNme;
+                        element.getSession().ISession.password = passWrd;
+                        element.getSession().ISession.base64EncodedAuth = baseEncd;
+                        this.validProfile = 0;
+                    } else {
+                        return;
+                    }
+                    await this.refreshElement(element);
+                    await this.refresh();
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+        } else {
+            this.validProfile = 0;
+        }
+        if (this.validProfile === 0) {
+            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
+        }
     }
 
     /**
