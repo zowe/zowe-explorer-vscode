@@ -373,31 +373,27 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         } else {
             sesNamePrompt = node.label;
         }
-        try {
-            if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
                 }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    node.getSession().ISession.user = usrNme;
-                    node.getSession().ISession.password = passWrd;
-                    node.getSession().ISession.base64EncodedAuth = baseEncd;
-                    this.validProfile = 0;
-                }
-                await this.refreshElement(node);
-                await this.refresh();
-            } else {
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
                 this.validProfile = 0;
             }
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await this.refreshElement(node);
+            await this.refresh();
+        } else {
+            this.validProfile = 0;
         }
         if (this.validProfile === 0) {
             if (node.contextValue === extension.DS_SESSION_CONTEXT) {
@@ -491,33 +487,29 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
             } else {
                 sesNamePrompt = element.label;
             }
-            try {
-                if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
-                    try {
-                        const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                        if (values !== undefined) {
-                            usrNme = values [0];
-                            passWrd = values [1];
-                            baseEncd = values [2];
-                        }
-                    } catch (error) {
-                        vscode.window.showErrorMessage(error.message);
+            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
                     }
-                    if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                        element.getSession().ISession.user = usrNme;
-                        element.getSession().ISession.password = passWrd;
-                        element.getSession().ISession.base64EncodedAuth = baseEncd;
-                        this.validProfile = 0;
-                    } else {
-                        return;
-                    }
-                    await this.refreshElement(element);
-                    await this.refresh();
-                } else {
-                    this.validProfile = 0;
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
                 }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.getSession().ISession.user = usrNme;
+                    element.getSession().ISession.password = passWrd;
+                    element.getSession().ISession.base64EncodedAuth = baseEncd;
+                    this.validProfile = 0;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 0;
             }
         } else {
             this.validProfile = 0;

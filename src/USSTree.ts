@@ -250,33 +250,29 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             let usrNme: string;
             let passWrd: string;
             let baseEncd: string;
-            try {
-                if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
-                    try {
-                        const values = await Profiles.getInstance().promptCredentials(element.mProfileName);
-                        if (values !== undefined) {
-                            usrNme = values [0];
-                            passWrd = values [1];
-                            baseEncd = values [2];
-                        }
-                    } catch (error) {
-                        vscode.window.showErrorMessage(error.message);
+            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(element.mProfileName);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
                     }
-                    if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                        element.getSession().ISession.user = usrNme;
-                        element.getSession().ISession.password = passWrd;
-                        element.getSession().ISession.base64EncodedAuth = baseEncd;
-                        this.validProfile = 0;
-                    } else {
-                        return;
-                    }
-                    await this.refreshElement(element);
-                    await this.refresh();
-                } else {
-                    this.validProfile = 0;
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
                 }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.getSession().ISession.user = usrNme;
+                    element.getSession().ISession.password = passWrd;
+                    element.getSession().ISession.base64EncodedAuth = baseEncd;
+                    this.validProfile = 0;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 0;
             }
         } else {
             this.validProfile = 0;
@@ -285,8 +281,6 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
             element.dirty = true;
             this.mOnDidChangeTreeData.fire(element);
-        } else {
-            return;
         }
     }
 
