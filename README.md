@@ -100,9 +100,8 @@ You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
 * **Rename data sets**: You can rename specified data sets.
-* **Copy data sets**: You can copy a specified member inside a dat set.
+* **Copy data sets**: You can copy a specified member inside a data set.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
-<!-- TODO This becomes the default save option* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe. -->
 * **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
 * **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
 * **Submit a JCL**: You can submit a jcl from a chosen data set.
@@ -263,14 +262,6 @@ You can use the following functionalities when interacting with USS files:
 3. Select a USS file you want to rename.
 4. Right-click the USS file and select the **Rename USS file** option.
 5. Change the name of the USS file.
-
-#### Copy USS files
-
-1. Navigate to the explorer tree.
-2. Open the **USS** bar.
-3. Right-click the USS file you want to copy and select the **Copy USS file** option.
-4. Right-click the USS directory and select the **Paste USS file** option.
-5. Enter the name of the copied USS file.
 
 #### Download, edit, and upload an existing file
 
