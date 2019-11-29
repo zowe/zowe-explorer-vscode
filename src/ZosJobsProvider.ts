@@ -178,34 +178,30 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             } else {
                 sesNamePrompt = element.label;
             }
-            try {
-                if ((!element.session.ISession.user) || (!element.session.ISession.password)) {
-                    try {
-                        const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                        if (values !== undefined) {
-                            usrNme = values [0];
-                            passWrd = values [1];
-                            baseEncd = values [2];
-                        }
-                    } catch (error) {
-                        vscode.window.showErrorMessage(error.message);
+            if ((!element.session.ISession.user) || (!element.session.ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
                     }
-                    if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                        element.session.ISession.user = usrNme;
-                        element.session.ISession.password = passWrd;
-                        element.session.ISession.base64EncodedAuth = baseEncd;
-                        element.owner = usrNme;
-                        this.validProfile = 0;
-                    } else {
-                        return;
-                    }
-                    await this.refreshElement(element);
-                    await this.refresh();
-                } else {
-                    this.validProfile = 0;
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
                 }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.session.ISession.user = usrNme;
+                    element.session.ISession.password = passWrd;
+                    element.session.ISession.base64EncodedAuth = baseEncd;
+                    element.owner = usrNme;
+                    this.validProfile = 0;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 0;
             }
         } else {
             this.validProfile = 0;
@@ -214,8 +210,6 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
             element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
             element.dirty = true;
             this.mOnDidChangeTreeData.fire(element);
-        } else {
-            return;
         }
     }
 

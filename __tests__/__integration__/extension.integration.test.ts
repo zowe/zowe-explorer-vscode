@@ -104,8 +104,7 @@ describe("Extension Integration Tests", () => {
     describe("Creating Data Sets and Members", () => {
         it("should create a data set when zowe.createFile is invoked", async () => {
             // Mock user selecting first option from list
-            // const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-            const testFileName = pattern + ".EXT.PS";
+            const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
 
@@ -141,7 +140,7 @@ describe("Extension Integration Tests", () => {
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
             quickPickStub.returns("Data Set Sequential");
 
-            const testFileName = pattern + ".EXT.PS";
+            const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
 
