@@ -194,19 +194,19 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                     element.session.ISession.password = passWrd;
                     element.session.ISession.base64EncodedAuth = baseEncd;
                     element.owner = usrNme;
-                    this.validProfile = 0;
+                    this.validProfile = 1;
                 } else {
                     return;
                 }
                 await this.refreshElement(element);
                 await this.refresh();
             } else {
-                this.validProfile = 0;
+                this.validProfile = 1;
             }
         } else {
-            this.validProfile = 0;
+            this.validProfile = 1;
         }
-        if (this.validProfile === 0) {
+        if (this.validProfile === 1) {
             element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
             element.dirty = true;
             this.mOnDidChangeTreeData.fire(element);
@@ -360,6 +360,8 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 node.session.ISession.base64EncodedAuth = baseEncd;
                 node.owner = usrNme;
                 this.validProfile = 0;
+            } else {
+                return;
             }
             await this.refreshElement(node);
             await this.refresh();

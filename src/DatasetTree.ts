@@ -389,6 +389,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 node.getSession().ISession.password = passWrd;
                 node.getSession().ISession.base64EncodedAuth = baseEncd;
                 this.validProfile = 0;
+            } else {
+                return;
             }
             await this.refreshElement(node);
             await this.refresh();
@@ -502,19 +504,19 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     element.getSession().ISession.user = usrNme;
                     element.getSession().ISession.password = passWrd;
                     element.getSession().ISession.base64EncodedAuth = baseEncd;
-                    this.validProfile = 0;
+                    this.validProfile = 1;
                 } else {
                     return;
                 }
                 await this.refreshElement(element);
                 await this.refresh();
             } else {
-                this.validProfile = 0;
+                this.validProfile = 1;
             }
         } else {
-            this.validProfile = 0;
+            this.validProfile = 1;
         }
-        if (this.validProfile === 0) {
+        if (this.validProfile === 1) {
             element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
             element.dirty = true;
             this.mOnDidChangeTreeData.fire(element);

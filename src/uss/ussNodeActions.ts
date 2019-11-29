@@ -71,6 +71,8 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
+        } else {
+            return;
         }
         await ussFileProvider.refreshElement(node);
         await ussFileProvider.refresh();

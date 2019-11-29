@@ -793,6 +793,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
+        } else {
+            return;
         }
         await datasetProvider.refreshElement(node);
         await datasetProvider.refresh();
@@ -1438,6 +1440,8 @@ export async function openPS(node: ZoweNode, previewMember: boolean) {
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
+        } else {
+            return;
         }
         await datasetProvider.refreshElement(node);
         await datasetProvider.refresh();
@@ -1808,6 +1812,8 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
+        } else {
+            return;
         }
         await ussFileProvider.refreshElement(node);
         await ussFileProvider.refresh();
