@@ -91,8 +91,10 @@ describe("Extension Integration Tests", () => {
             );
 
             // Mock user selecting first profile from list
-            const stub = sandbox.stub(vscode.window, "showQuickPick");
-            stub.returns(profileNamesList[0]);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
             await extension.addSession(testTree);
             expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
@@ -935,8 +937,10 @@ describe("Extension Integration Tests - USS", () => {
             );
 
             // Mock user selecting first profile from list
-            const stub = sandbox.stub(vscode.window, "showQuickPick");
-            stub.returns(profileNamesList[0]);
+            const inputBoxStub1 = sandbox.stub(vscode.window, "showQuickPick");
+            inputBoxStub1.returns(new utils.FilterDescriptor("\uFF0B " + "Create a New Connection to z/OS"));
+            const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
+            stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
             await extension.addUSSSession(ussTestTree);
             expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
