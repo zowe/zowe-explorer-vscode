@@ -1598,6 +1598,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
 
     // get session from session name
     let documentSession;
+    let node;
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
         child.label.trim() === sesName);
     if (sesNode) {
@@ -1628,21 +1629,20 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             vscode.window.showErrorMessage(err.message + "\n" + err.stack);
         }
     }
-    // Get specific node based on label
-    const node = (await sesNode.getChildren()).find((child) =>
-        child.label.trim() === label);
-        // define upload options
-    let uploadOptions: IUploadOptions;
-    if (node) {
-        uploadOptions = {
-            etag: node.getEtag(),
-            returnEtag: true
-        };
+    // Get specific node based on label and parent tree (session / favorites)
+    if (sesNode.children.length === 0) {
+        node = datasetProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${label}`));
     } else {
-        uploadOptions = {
-            returnEtag: true
-        };
+        node = (await sesNode.getChildren()).find((child) =>
+            child.label.trim() === label);
     }
+
+    // define upload options
+    const uploadOptions: IUploadOptions = {
+        etag: node.getEtag(),
+        returnEtag: true
+    };
+
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
@@ -1652,10 +1652,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);  // TODO MISSED TESTING
-            // setting local etag with the new etag from the updated file on mainframe
+            // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse[0].etag);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await zowe.Download.dataSet(node.getSession(),label, {
+            const downloadResponse = await zowe.Download.dataSet(node.getSession(), label, {
                 file: doc.fileName,
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
@@ -1701,29 +1701,34 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     // get session from session name
     let documentSession;
     let binary;
+    let node;
     const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mProfileName && child.mProfileName.trim()=== sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
-    // Get specific node based on label
-    const node = (await sesNode.getChildren()).find((child) =>
-        child.fullPath.trim() === remote);
-    let uploadEtag: string;
-    if (node) {
-        uploadEtag = node.getEtag();
+    // Get specific node based on label and parent tree (session / favorites)
+    if (sesNode.children.length === 0) {
+        node = ussFileProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${remote}`));
     } else {
-        uploadEtag = null;
+        node = (await sesNode.getChildren()).find((child) =>
+        child.fullPath.trim() === remote);
     }
+
+    // define upload options
+    const etagToUpload: string = node.getEtag();
+    const returnEtag: boolean = true;
+
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary, null, uploadEtag, true);  // TODO MISSED TESTING
+            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse.etag);
         // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
@@ -1736,7 +1741,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
-            if (downloadEtag !== uploadEtag) {
+            if (downloadEtag !== etagToUpload) {
                 node.setEtag(downloadEtag);
             }
             vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));

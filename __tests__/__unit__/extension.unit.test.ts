@@ -124,6 +124,7 @@ describe("Extension Unit Tests", () => {
     const rmdirSync = jest.fn();
     const readFileSync = jest.fn();
     const showErrorMessage = jest.fn();
+    const showWarningMessage = jest.fn();
     const showInputBox = jest.fn();
     const showOpenDialog = jest.fn();
     const showQuickBox = jest.fn();
@@ -312,6 +313,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(fs, "readFileSync", {value: readFileSync});
     Object.defineProperty(fsextra, "moveSync", {value: moveSync});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+    Object.defineProperty(vscode.window, "showWarningMessage", {value: showWarningMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(vscode.window, "showQuickBox", {value: showQuickBox});
     Object.defineProperty(vscode.window, "activeTextEditor", {value: activeTextEditor});
@@ -335,7 +337,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
-    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
@@ -1479,6 +1480,7 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
+        sessNode.children.push(new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null));
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
@@ -1571,6 +1573,24 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
+
+        testTree.getChildren.mockReturnValueOnce([sessNode]);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        testResponse.success = false;
+        testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
+        withProgress.mockResolvedValueOnce(testResponse);
+        dataSet.mockReset();
+        const downloadResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                etag: ""
+            }
+        };
+        dataSet.mockResolvedValue(downloadResponse);
+
+        await extension.saveFile(testDoc, testTree);
+        expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
     });
 
     it("Testing that refreshAll is executed successfully", async () => {
@@ -2240,9 +2260,9 @@ describe("Extension Unit Tests", () => {
         fileList.mockResolvedValueOnce(testResponse);
         ussNode.mProfileName = "usstest";
         ussNode.dirty = true;
+        ussNode.children.push(new ZoweUSSNode("/u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"));
         testUSSTree.getChildren.mockReturnValueOnce([
             new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
-
         testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
         fileToUSSFile.mockReset();
         showErrorMessage.mockReset();
@@ -2266,6 +2286,28 @@ describe("Extension Unit Tests", () => {
         await extension.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
+
+        showWarningMessage.mockReset();
+        testResponse.success = false;
+        testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
+        testDoc.getText = jest.fn();
+        ussFile.mockReset();
+        withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
+        const downloadResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                etag: ""
+            }
+        };
+        ussFile.mockResolvedValueOnce(downloadResponse);
+        try {
+            await extension.saveUSSFile(testDoc, testUSSTree);
+        } catch (e) {
+            // this is OK. We are interested in the next expect (showWarninMessage) to fullfil
+            expect(e.message).toBe("vscode.Position is not a constructor");
+        }
+        expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
     });
 
     describe("Add Jobs Session Unit Test", () => {
