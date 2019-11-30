@@ -118,23 +118,6 @@ describe("Extension Integration Tests", () => {
             expect(response.success).to.equal(true);
         }).timeout(TIMEOUT);
 
-        it("should create a PDS data set when zowe.createFile is invoked", async () => {
-            // Mock user selecting first option from list
-            // const testFileName = pattern + ".EXT.CREATE.DATASET.TEST";
-            const testFileName = pattern + ".EXT.SAMPLE.PDS";
-            const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-            quickPickStub.returns("Data Set Classic");
-
-            const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
-            inputBoxStub.returns(testFileName);
-
-            await extension.createFile(sessionNode, testTree);
-
-            // Data set should be created
-            const response = await zowe.List.dataSet(sessionNode.getSession(), testFileName, {});
-            expect(response.success).to.equal(true);
-        }).timeout(TIMEOUT);
-
         it("should display an error message when creating a data set that already exists", async () => {
             // Mock user selecting first option from list
             const quickPickStub = sandbox.stub(vscode.window, "showQuickPick");

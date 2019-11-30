@@ -67,6 +67,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
 
     public getChildren(element?: Job | undefined): vscode.ProviderResult<Job[]> {
         if (element) {
+            // solution for optional credentials. Owner is having error on initialization.
+            if (element.owner === "") {
+                return;
+            }
             if (element.contextValue === extension.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
