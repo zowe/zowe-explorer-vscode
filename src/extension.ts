@@ -1597,8 +1597,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const sesName = ending.substring(0, ending.indexOf(path.sep));
 
     // get session from session name
-    let documentSession;
-    let node;
+    let documentSession: Session;
+    let node: ZoweNode;
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
         child.label.trim() === sesName);
     if (sesNode) {
@@ -1633,15 +1633,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     if (sesNode.children.length === 0) {
         node = datasetProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${label}`));
     } else {
-        node = (await sesNode.getChildren()).find((child) =>
-            child.label.trim() === label);
+        const nodes = await utils.getAllNodes([sesNode]);
+        node = await nodes.find((child) => child.label.trim() === label);
     }
 
     // define upload options
-    const uploadOptions: IUploadOptions = {
-        etag: node.getEtag(),
-        returnEtag: true
-    };
+    let uploadOptions: IUploadOptions;
+    if (node) {
+        uploadOptions = {
+            etag: node.getEtag(),
+            returnEtag: true
+        };
+    }
 
     try {
         const uploadResponse = await vscode.window.withProgress({
@@ -1655,7 +1658,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse[0].etag);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await zowe.Download.dataSet(node.getSession(), label, {
+            const downloadResponse = await zowe.Download.dataSet(documentSession, label, {
                 file: doc.fileName,
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
@@ -1699,9 +1702,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
 
     // get session from session name
-    let documentSession;
+    let documentSession: Session;
     let binary;
-    let node;
+    let node: ZoweUSSNode;
     const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mProfileName && child.mProfileName.trim()=== sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
@@ -1711,13 +1714,17 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     if (sesNode.children.length === 0) {
         node = ussFileProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${remote}`));
     } else {
-        node = (await sesNode.getChildren()).find((child) =>
-        child.fullPath.trim() === remote);
+        const nodes = await utils.getAllUSSNodes([sesNode]);
+        node = await nodes.find((child) => child.fullPath.trim() === remote);
     }
 
     // define upload options
-    const etagToUpload: string = node.getEtag();
-    const returnEtag: boolean = true;
+    let etagToUpload: string;
+    let returnEtag: boolean;
+    if (node) {
+        etagToUpload = node.getEtag();
+        returnEtag = true;
+    }
 
     try {
         const uploadResponse = await vscode.window.withProgress({
@@ -1736,7 +1743,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
         }
     } catch (err) {
         if (err.message.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            const downloadResponse = await zowe.Download.ussFile(documentSession, node.fullPath, {
                 file: getUSSDocumentFilePath(node),
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
