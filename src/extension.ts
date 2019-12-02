@@ -29,7 +29,6 @@ import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
-import { booleanLiteral } from "@babel/types";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 
@@ -1649,7 +1648,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     node = await nodes.find((zNode) => {
         // dataset in Favorites
         if (zNode.contextValue === DS_FAV_CONTEXT) {
-            return (zNode.label === `[${sesName}]: ${label}`)
+            return (zNode.label === `[${sesName}]: ${label}`);
         // member in Favorites
         } else if (zNode.contextValue === DS_MEMBER_CONTEXT && isFromFavorites) {
             const zNodeDetails = getProfileAndDataSetName(zNode);
@@ -1663,7 +1662,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             return false;
         }
     });
-    
+
     // define upload options
     let uploadOptions: IUploadOptions;
     if (node) {
