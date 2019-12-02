@@ -1633,7 +1633,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     if (sesNode.children.length === 0) {
         node = datasetProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${label}`));
     } else {
-        const nodes = await utils.getAllNodes([sesNode]);
+        const nodes = await utils.concatChildNodes([sesNode]);
         node = await nodes.find((child) => child.label.trim() === label);
     }
 
@@ -1714,7 +1714,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     if (sesNode.children.length === 0) {
         node = ussFileProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${remote}`));
     } else {
-        const nodes = await utils.getAllUSSNodes([sesNode]);
+        const nodes = await utils.concatUSSChildNodes([sesNode]);
         node = await nodes.find((child) => child.fullPath.trim() === remote);
     }
 
