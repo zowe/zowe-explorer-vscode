@@ -1739,15 +1739,12 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     }
     // Get specific node based on label and parent tree (session / favorites)
     let nodes: ZoweUSSNode[];
-    let isFromFavorites: boolean;
     if (sesNode.children.length === 0) {
         // saving from favorites
         nodes = await utils.concatUSSChildNodes(ussFileProvider.mFavorites);
-        isFromFavorites = true;
     } else {
         // saving from session
         nodes = await utils.concatUSSChildNodes([sesNode]);
-        isFromFavorites = false;
     }
     node = await nodes.find((zNode) => {
         if (zNode.contextValue === DS_FAV_TEXT_FILE_CONTEXT || zNode.contextValue === DS_TEXT_FILE_CONTEXT) {
