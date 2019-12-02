@@ -7,7 +7,8 @@ Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe
 
 The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
-* Enables developers to create, modify, and upload data set and USS files directly to a z/OS mainframe.
+* Enables developers to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
+* Enables developers to create, modify, rename and upload USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
 * Lets you create and use Zowe CLI `zosmf` compatible profiles.
 
@@ -17,15 +18,16 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 ## Contents
 
-* [Prerequisites](#prerequisites)
+* [Software Requirements](#software-requirements)
 * [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
-## Prerequisites
+## Software Requirements
 
 Ensure that you meet the following prerequisites before using the extension:
 
+* Installed [Node.js](https://nodejs.org/en/download/) v8.0 or later.
 * Configured TSO/E address space services, z/OS data set and file REST interface, and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 * Zowe CLI `zosmf` profile.
 
@@ -44,6 +46,9 @@ Ensure that you meet the following prerequisites before using the extension:
    **Note:** If you already have a profile, select it from the drop-down menu.
 
 3. Select the **Create a New Connection to z/OS** option.
+
+   **Note:** When you create a new profile, user name and password fields are optional. However, the system will prompt you to specify your credentials when you use the new profile.
+
 4. Follow the instructions, and enter all required information to complete the profile creation.
 
 ![New Connection](docs/images/ZE-newProfiles.gif?raw=true "New Connection")
@@ -98,8 +103,9 @@ Review the following use cases to understand how to use Zowe Explorer.
 You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
+* **Rename data sets**: You can rename specified data sets.
+* **Copy data sets**: You can copy a specified data sets and memebers.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
-* **Use Safe Save to prevent merge conflicts**: The safe save option lets you prevent any conflicts which might arise if data sets were edited directly in the mainframe.
 * **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
 * **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
 * **Submit a JCL**: You can submit a jcl from a chosen data set.
@@ -123,6 +129,29 @@ You can use the following functionalities when interacting with data set:
 1. Navigate to the explorer tree.
 2. Click **Refresh All** button on the right of the **DATA SETS** explorer bar.
 
+#### Rename data sets
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select a data set you want to rename.
+4. Right-click the data set and select the **Rename Data Set** option.
+5. Change the name of the data set.
+
+![Rename Data Set](docs/images/ZE-rename.gif?raw=true "Rename Data Set")
+<br /><br />
+
+#### Copy data sets
+
+1. Navigate to the explorer tree.
+2. Open the **DATA SETS** bar.
+3. Select a member you want to copy.
+4. Right-click the member and select the **Copy Data Set** option.
+5. Right-click the data set where the member belongs and select the **Paste Data Set** option.
+6. Enter the name of the copied member.
+
+![Copy Data Set](docs/images/ZE-copy.gif?raw=true "Copy Data Set")
+<br /><br />
+
 #### Download, edit, and upload existing PDS members
 
 1. Navigate to the explorer tree.
@@ -134,7 +163,7 @@ You can use the following functionalities when interacting with data set:
 
     The PDS member displays in the text editor window of VSC.
 5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Safe Save** button.
+6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
 
 Your PDS member (or PS) is uploaded.  
 
@@ -143,16 +172,16 @@ Your PDS member (or PS) is uploaded.
 ![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
-#### Use Safe Save to prevent merge conflicts
+#### Use the save option to prevent merge conflicts
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Open a profile.
 4. Download and edit a data set.
-5. Click the **Safe Save** button for the data set that you opened in the explorer tree.
+5. Click the **Save** button for the data set that you opened in the explorer tree.
 6. Resolve merge conflicts if necessary.
 
-![Safe Save](docs/images/ZE-safe-save.gif?raw=true "Safe Save")
+![Save](docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
 
 #### Create a new PDS and a PDS member
@@ -203,6 +232,7 @@ Your PDS member (or PS) is uploaded.
 You can use the following functionalities when interacting with USS files:
 
 * **View Unix System Services (USS) files**: You can view multiple USS files simultaneously.
+* **Rename USS files**: You can rename specified USS files.
 * **Download, edit, and upload existing USS files**: You can instantly pull USS files from the mainframe, edit them and upload back.
 * **Create and delete USS files and directories**: Enables you to easily create and delete both USS files and directories.
 * **View and access multiple profiles simultaneously**: Enables to work with USS files from multiple profiles.
@@ -228,6 +258,14 @@ You can use the following functionalities when interacting with USS files:
 
 ![Refresh All](docs/images/ZE-refreshUSS.gif?raw=true "Refresh All")
 <br /><br />
+
+#### Rename USS files
+
+1. Navigate to the explorer tree.
+2. Open the **USS** bar.
+3. Select a USS file you want to rename.
+4. Right-click the USS file and select the **Rename USS file** option.
+5. Change the name of the USS file.
 
 #### Download, edit, and upload an existing file
 
