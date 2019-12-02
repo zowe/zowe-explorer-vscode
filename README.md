@@ -4,7 +4,8 @@
 
 Zowe&trade; Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
-* Enables developers to create, modify, rename, copy and upload data set and USS files directly to a z/OS mainframe.
+* Enables developers to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
+* Enables developers to create, modify, rename and upload USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
 * Lets you create and use Zowe CLI `zosmf` compatible profiles.
 
@@ -100,7 +101,7 @@ You can use the following functionalities when interacting with data set:
 
 * **View data sets and use multiple filters**: You can view multiple data sets simultaneously and apply filters to show specified data sets.
 * **Rename data sets**: You can rename specified data sets.
-* **Copy data sets**: You can copy a specified member inside a data set.
+* **Copy data sets**: You can copy a specified data sets and memebers.
 * **Download, edit, and upload existing PDS members**: You can instantly pull data sets and data set members from the mainframe, edit them and upload back.
 * **Create and delete data sets and data set members**: Enables you to easily create and delete both data sets and their members.
 * **View and access multiple profiles simultaneously**: Enables to work with data sets from multiple profiles.
