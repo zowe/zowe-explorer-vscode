@@ -160,7 +160,7 @@ You can use the following functionalities when interacting with data set:
 
     The PDS member displays in the text editor window of VSC.
 5. Edit the document.
-6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Safe Save** button.
+6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
 
 Your PDS member (or PS) is uploaded.  
 
@@ -169,16 +169,16 @@ Your PDS member (or PS) is uploaded.
 ![Edit](docs/images/ZE-download-edit.gif?raw=true "Edit")
 <br /><br />
 
-#### Use Safe Save to prevent merge conflicts
+#### Use the save option to prevent merge conflicts
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
 3. Open a profile.
 4. Download and edit a data set.
-5. Click the **Safe Save** button for the data set that you opened in the explorer tree.
+5. Click the **Save** button for the data set that you opened in the explorer tree.
 6. Resolve merge conflicts if necessary.
 
-![Safe Save](docs/images/ZE-safe-save.gif?raw=true "Safe Save")
+![Save](docs/images/ZE-safe-save.gif?raw=true "Save")
 <br /><br />
 
 #### Create a new PDS and a PDS member
