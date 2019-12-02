@@ -1712,7 +1712,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     }
     // Get specific node based on label and parent tree (session / favorites)
     if (sesNode.children.length === 0) {
-        node = ussFileProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${remote}`));
+        node = ussFileProvider.mFavorites.find((zNode) => (zNode.fullPath.trim() === `${remote}`));
     } else {
         const nodes = await utils.concatUSSChildNodes([sesNode]);
         node = await nodes.find((child) => child.fullPath.trim() === remote);
