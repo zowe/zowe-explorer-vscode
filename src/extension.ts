@@ -15,7 +15,7 @@ import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -55,6 +55,10 @@ export const JOBS_SPOOL_CONTEXT = "spool";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 
+let usrNme: string;
+let passWrd: string;
+let baseEncd: string;
+let validProfile: number = -1;
 let log: Logger;
 /**
  * The function that runs when the extension is loaded
@@ -168,6 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.renameDataSet", (node) => renameDataSet(node, datasetProvider));
         vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => renameDataSetMember(node, datasetProvider));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -244,9 +249,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.runStopCommand", (job) => {
             stopCommand(job);
         });
-        vscode.commands.registerCommand("zowe.refreshJobsServer", (node) => {
-            jobsProvider.refreshElement(node);
-        });
+        vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node));
         vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
             jobsProvider.mSessionNodes.forEach((jobNode) => {
                 if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
@@ -324,6 +327,25 @@ export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
         };
         sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         zosmfProfile = allProfiles.filter((profile) => profile.name === sesName)[0];
+        const updProfile = zosmfProfile.profile as ISession;
+        if ((!updProfile.user) || (!updProfile.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(zosmfProfile.name);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                updProfile.user = usrNme;
+                updProfile.password = passWrd;
+                updProfile.base64EncodedAuth = baseEncd;
+                zosmfProfile.profile = updProfile as IProfile;
+            }
+        }
     } else {
         vscode.window.showInformationMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
     }
@@ -570,44 +592,76 @@ export async function addSession(datasetProvider: DatasetTree) {
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
     let newprofile: any;
+    let chosenProfile: string;
+    let choice: vscode.QuickPickItem;
+    let profileName: string;
 
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
     if (profileNamesList.length > 0) {
-        profileNamesList = profileNamesList.filter((profileName) =>
+        profileNamesList = profileNamesList.filter((profileNames) =>
             // Find all cases where a profile is not already displayed
             !datasetProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.label.trim() === profileName
+                sessionNode.label.trim() === profileNames
             )
         );
     }
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("addSession.quickPickOption",
-        "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"),
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    const chosenProfile = await vscode.window.showQuickPick([createNewProfile, ...profileNamesList], quickPickOptions);
-    if (chosenProfile === createNewProfile) {
+    const createPick = new utils.FilterDescriptor("\uFF0B " + createNewProfile);
+    const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new utils.FilterItem(element));
+    const quickpick = vscode.window.createQuickPick();
+    quickpick.items = [createPick, ...items];
+    quickpick.placeholder = localize("addSession.quickPickOption",
+    "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer");
+    quickpick.ignoreFocusOut = true;
+    quickpick.show();
+    choice = await utils.resolveQuickPickHelper(quickpick);
+    quickpick.hide();
+    if (choice instanceof utils.FilterDescriptor) {
+        if (quickpick.value) {
+            chosenProfile = quickpick.value;
+        } else {
+            const options = {
+            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+            value: profileName
+            };
+            profileName = await vscode.window.showInputBox(options);
+            if (!profileName) {
+                vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Profile Name was not supplied. Operation Cancelled"));
+                return;
+            }
+            quickpick.value = profileName;
+            chosenProfile = quickpick.value;
+        }
+    } else {
+        chosenProfile = choice.label;
+    }
+    if (chosenProfile === quickpick.value) {
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
-            newprofile = await Profiles.getInstance().createNewConnection();
+            newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
-            Profiles.getInstance().listProfile();
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+        if (newprofile !== undefined) {
+            try {
+                await Profiles.getInstance().listProfile();
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            await datasetProvider.addSession(newprofile);
+            await datasetProvider.refresh();
         }
-        await datasetProvider.addSession(newprofile);
-        await datasetProvider.refresh();
     } else if(chosenProfile) {
         log.debug(localize("addSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
         await datasetProvider.addSession(chosenProfile);
     } else {
-        log.debug(localize("addSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+        log.debug(localize("addSession.log.debug.cancelledSelection", "Operation Cancelled"));
+        vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Operation Cancelled"));
+        return;
     }
 }
 
@@ -624,39 +678,68 @@ export async function addUSSSession(ussFileProvider: USSTree) {
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
     let newprofile: any;
+    let chosenProfile: string;
+    let choice: vscode.QuickPickItem;
+    let profileName: string;
 
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
     if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((profileName) =>
+        profileNamesList = profileNamesList.filter((profileNames) =>
             // Find all cases where a profile is not already displayed
             !ussFileProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.mProfileName === profileName
+                sessionNode.mProfileName === profileNames
             )
         );
     }
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("addSession.quickPickOption",
-        "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer"),
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    const chosenProfile = await vscode.window.showQuickPick([createNewProfile, ...profileNamesList], quickPickOptions);
-    if (chosenProfile === createNewProfile) {
+    const createPick = new utils.FilterDescriptor("\uFF0B " + createNewProfile);
+    const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new utils.FilterItem(element));
+    const quickpick = vscode.window.createQuickPick();
+    quickpick.items = [createPick, ...items];
+    quickpick.placeholder =localize("addSession.quickPickOption",
+    "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
+    quickpick.ignoreFocusOut = true;
+    quickpick.show();
+    choice = await utils.resolveQuickPickHelper(quickpick);
+    quickpick.hide();
+    if (choice instanceof utils.FilterDescriptor) {
+        if (quickpick.value) {
+            chosenProfile = quickpick.value;
+        } else {
+            const options = {
+            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+            value: profileName
+            };
+            profileName = await vscode.window.showInputBox(options);
+            if (!profileName) {
+                vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Profile Name was not supplied. Operation Cancelled"));
+                return;
+            }
+            quickpick.value = profileName;
+            chosenProfile = quickpick.value;
+        }
+    } else {
+        chosenProfile = choice.label;
+    }
+    if (chosenProfile === quickpick.value) {
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
-            newprofile = await Profiles.getInstance().createNewConnection();
+            newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        try {
-            Profiles.getInstance().listProfile();
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+        if (newprofile !== undefined) {
+            try {
+                await Profiles.getInstance().listProfile();
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            await ussFileProvider.addSession(newprofile);
+            await ussFileProvider.refresh();
         }
-        await ussFileProvider.addSession(newprofile);
-        await ussFileProvider.refresh();
     } else if(chosenProfile) {
         log.debug(localize("addUSSSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
         await ussFileProvider.addSession(chosenProfile);
@@ -687,51 +770,76 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
-    // get data set type
-    const type = await vscode.window.showQuickPick(types, quickPickOptions);
-    if (type == null) {
-        log.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
-        return;
+
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.label);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
+            validProfile = 0;
+        }
+        await datasetProvider.refreshElement(node);
+        await datasetProvider.refresh();
     } else {
-        log.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
+        validProfile = 0;
     }
+    if (validProfile === 0) {
+        // get data set type
+        const type = await vscode.window.showQuickPick(types, quickPickOptions);
+        if (type == null) {
+            log.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
+            return;
+        } else {
+            log.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
+        }
 
-    let typeEnum;
-    let createOptions;
-    switch (type) {
-        case localize("createFile.dataSetBinary", "Data Set Binary"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
-            break;
-        case localize("createFile.dataSetC", "Data Set C"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
-            break;
-        case localize("createFile.dataSetClassic", "Data Set Classic"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
-            break;
-        case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
-            break;
-        case localize("createFile.dataSetSequential", "Data Set Sequential"):
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
-            break;
-    }
+        let typeEnum;
+        let createOptions;
+        switch (type) {
+            case localize("createFile.dataSetBinary", "Data Set Binary"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+                break;
+            case localize("createFile.dataSetC", "Data Set C"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+                break;
+            case localize("createFile.dataSetClassic", "Data Set Classic"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+                break;
+            case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+                break;
+            case localize("createFile.dataSetSequential", "Data Set Sequential"):
+                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+                break;
+        }
 
-    // get name of data set
-    const name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
+        // get name of data set
+        const name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
 
-    try {
-        await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
-        node.dirty = true;
-        datasetProvider.refresh();
-    } catch (err) {
-        log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-        throw (err);
+        try {
+            await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
+            node.dirty = true;
+            datasetProvider.refresh();
+        } catch (err) {
+            log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(err.message);
+            throw (err);
+        }
     }
 }
 
@@ -969,6 +1077,59 @@ export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree)
         } else {
             refreshPS(node);
         }
+    }
+}
+
+/**
+ * Rename data set members
+ *
+ * @export
+ * @param {ZoweNode} node - The node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function renameDataSetMember(node: ZoweNode, datasetProvider: DatasetTree) {
+    const beforeMemberName = node.label.trim();
+    let dataSetName;
+    let profileLabel;
+
+    if (node.mParent.contextValue.includes(FAV_SUFFIX)) {
+        profileLabel = node.mParent.label.substring(0, node.mParent.label.indexOf(":") + 2);
+        dataSetName = node.mParent.label.substring(node.mParent.label.indexOf(":") + 2);
+    } else {
+        dataSetName = node.mParent.label.trim();
+    }
+    const afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
+
+    log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
+    if (afterMemberName) {
+        try {
+            await zowe.Rename.dataSetMember(node.getSession(), dataSetName, beforeMemberName, afterMemberName);
+            node.label = `${profileLabel}${afterMemberName}`;
+        } catch (err) {
+            log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+            throw err;
+        }
+        if (node.mParent.contextValue.includes(FAV_SUFFIX)) {
+            const nonFavoritedParent = datasetProvider.findNonFavoritedNode(node.mParent);
+            if (nonFavoritedParent) {
+                const nonFavoritedMember = nonFavoritedParent.children.find((child) => child.label === beforeMemberName);
+                if (nonFavoritedMember) {
+                    nonFavoritedMember.label = afterMemberName;
+                    datasetProvider.refreshElement(nonFavoritedParent);
+                }
+            }
+        } else {
+            const favoritedParent = datasetProvider.findFavoritedNode(node.mParent);
+            if (favoritedParent) {
+                const favoritedMember = favoritedParent.children.find((child) => child.label === beforeMemberName);
+                if (favoritedMember) {
+                    favoritedMember.label = afterMemberName;
+                    datasetProvider.refreshElement(favoritedParent);
+                }
+            }
+        }
+        datasetProvider.refreshElement(node.mParent);
     }
 }
 
@@ -1683,42 +1844,99 @@ export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
     jobsProvider.refreshElement(job);
 }
 
+export async function refreshJobsServer(node: Job) {
+    const jobsProvider = new ZosJobsProvider();
+    if ((!node.session.ISession.user ) || (!node.session.ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.label);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.session.ISession.user = usrNme;
+            node.session.ISession.password = passWrd;
+            node.session.ISession.base64EncodedAuth = baseEncd;
+            node.owner = usrNme;
+            validProfile = 0;
+        }
+    } else {
+        validProfile = 0;
+    }
+    if (validProfile === 0) {
+        await jobsProvider.refreshElement(node);
+    }
+}
+
 export async function addJobsSession(jobsProvider: ZosJobsProvider) {
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
     let newprofile: any;
+    let chosenProfile: string;
+    let choice: vscode.QuickPickItem;
+    let profileName: string;
 
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
     if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((profileName) =>
+        profileNamesList = profileNamesList.filter((profileNames) =>
             // Find all cases where a profile is not already displayed
             !jobsProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.label.trim() === profileName
+                sessionNode.label.trim() === profileNames
             )
         );
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("addSession.quickPickOption",
-            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Jobs Explorer"),
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-        const chosenProfile = await vscode.window.showQuickPick([createNewProfile, ...profileNamesList], quickPickOptions);
-        if (chosenProfile === createNewProfile) {
+        const createPick = new utils.FilterDescriptor("\uFF0B " + createNewProfile);
+        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new utils.FilterItem(element));
+        const quickpick = vscode.window.createQuickPick();
+        quickpick.items = [createPick, ...items];
+        quickpick.placeholder = localize("addSession.quickPickOption",
+        "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Jobs Explorer");
+        quickpick.ignoreFocusOut = true;
+        quickpick.show();
+        choice = await utils.resolveQuickPickHelper(quickpick);
+        quickpick.hide();
+        if (choice instanceof utils.FilterDescriptor) {
+            if (quickpick.value) {
+                chosenProfile = quickpick.value;
+            } else {
+                const options = {
+                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+                value: profileName
+                };
+                profileName = await vscode.window.showInputBox(options);
+                if (!profileName) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                        "Profile Name was not supplied. Operation Cancelled"));
+                    return;
+                }
+                quickpick.value = profileName;
+                chosenProfile = quickpick.value;
+            }
+        } else {
+            chosenProfile = choice.label;
+        }
+        if (chosenProfile === quickpick.value) {
             log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
             try {
-                newprofile = await Profiles.getInstance().createNewConnection();
+                newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
             }
-            try {
-                Profiles.getInstance().listProfile();
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+            if (newprofile !== undefined) {
+                try {
+                    await Profiles.getInstance().listProfile();
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                await jobsProvider.addSession(newprofile);
+                await jobsProvider.refresh();
             }
-            await jobsProvider.addSession(newprofile);
-            await jobsProvider.refresh();
         } else if(chosenProfile) {
             log.debug(localize("addJobsSession.log.debug.selectedProfile", "User selected profile ") + chosenProfile);
             await jobsProvider.addSession(chosenProfile);

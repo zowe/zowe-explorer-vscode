@@ -2,7 +2,10 @@
 
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 
-Zowe&trade; Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
+Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe CLI](https://github.com/zowe/community#zowe-cli) sub-project.  
+[Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
+
+The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
 * Enables developers to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
 * Enables developers to create, modify, rename and upload USS files directly to a z/OS mainframe.
