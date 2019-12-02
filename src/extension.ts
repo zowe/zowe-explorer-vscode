@@ -29,6 +29,7 @@ import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
+import { booleanLiteral } from "@babel/types";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 
@@ -40,15 +41,19 @@ export let ISTHEIA: boolean = false; // set during activate
 export const FAV_SUFFIX = "_fav";
 export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";
+export const DS_FAV_CONTEXT = "ds_fav";
+export const PDS_FAV_CONTEXT = "pds_fav";
 export const DS_SESSION_CONTEXT = "session";
 export const DS_PDS_CONTEXT = "pds";
 export const DS_DS_CONTEXT = "ds";
 export const DS_MEMBER_CONTEXT = "member";
 export const DS_TEXT_FILE_CONTEXT = "textFile";
+export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const USS_SESSION_CONTEXT = "uss_session";
 export const USS_DIR_CONTEXT = "directory";
+export const USS_FAV_DIR_CONTEXT = "directory_fav";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
@@ -1630,13 +1635,35 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         }
     }
     // Get specific node based on label and parent tree (session / favorites)
+    let nodes: ZoweNode[];
+    let isFromFavorites: boolean;
     if (sesNode.children.length === 0) {
-        node = datasetProvider.mFavorites.find((zNode) => (zNode.label === `[${sesName}]: ${label}`));
+        // saving from favorites
+        nodes = await utils.concatChildNodes(datasetProvider.mFavorites);
+        isFromFavorites = true;
     } else {
-        const nodes = await utils.concatChildNodes([sesNode]);
-        node = await nodes.find((child) => child.label.trim() === label);
+        // saving from session
+        nodes = await utils.concatChildNodes([sesNode]);
+        isFromFavorites = false;
     }
-
+    node = await nodes.find((zNode) => {
+        // dataset in Favorites
+        if (zNode.contextValue === DS_FAV_CONTEXT) {
+            return (zNode.label === `[${sesName}]: ${label}`)
+        // member in Favorites
+        } else if (zNode.contextValue === DS_MEMBER_CONTEXT && isFromFavorites) {
+            const zNodeDetails = getProfileAndDataSetName(zNode);
+            return (`${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `[${sesName}]: ${label}`);
+        } else if (zNode.contextValue === DS_MEMBER_CONTEXT && !isFromFavorites) {
+            const zNodeDetails = getProfileAndDataSetName(zNode);
+            return (`${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`);
+        } else if (zNode.contextValue === DS_DS_CONTEXT) {
+            return (zNode.label.trim() === label);
+        } else {
+            return false;
+        }
+    });
+    
     // define upload options
     let uploadOptions: IUploadOptions;
     if (node) {
@@ -1711,12 +1738,24 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
+    let nodes: ZoweUSSNode[];
+    let isFromFavorites: boolean;
     if (sesNode.children.length === 0) {
-        node = ussFileProvider.mFavorites.find((zNode) => (zNode.fullPath.trim() === `${remote}`));
+        // saving from favorites
+        nodes = await utils.concatUSSChildNodes(ussFileProvider.mFavorites);
+        isFromFavorites = true;
     } else {
-        const nodes = await utils.concatUSSChildNodes([sesNode]);
-        node = await nodes.find((child) => child.fullPath.trim() === remote);
+        // saving from session
+        nodes = await utils.concatUSSChildNodes([sesNode]);
+        isFromFavorites = false;
     }
+    node = await nodes.find((zNode) => {
+        if (zNode.contextValue === DS_FAV_TEXT_FILE_CONTEXT || zNode.contextValue === DS_TEXT_FILE_CONTEXT) {
+            return (zNode.fullPath.trim() === remote);
+        } else {
+            return false;
+        }
+    });
 
     // define upload options
     let etagToUpload: string;
