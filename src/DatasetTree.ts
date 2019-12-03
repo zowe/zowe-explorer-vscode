@@ -108,8 +108,11 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
+                const sesName = line.substring(1, line.lastIndexOf("]")).trim();
+                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
-                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, null);
+                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session);
                 node.command = { command: "zowe.pattern", title: "", arguments: [node] };
                 const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
                 const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
@@ -364,31 +367,35 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
-        try {
-            if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(node.label);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+        let sesNamePrompt: string;
+        if (node.contextValue.endsWith(extension.FAV_SUFFIX)) {
+            sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+        } else {
+            sesNamePrompt = node.label;
+        }
+        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
                 }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    node.getSession().ISession.user = usrNme;
-                    node.getSession().ISession.password = passWrd;
-                    node.getSession().ISession.base64EncodedAuth = baseEncd;
-                    this.validProfile = 0;
-                }
-                await this.refreshElement(node);
-                await this.refresh();
-            } else {
-                this.validProfile = 0;
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
             }
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
+                this.validProfile = 0;
+            } else {
+                return;
+            }
+            await this.refreshElement(node);
+            await this.refresh();
+        } else {
+            this.validProfile = 0;
         }
         if (this.validProfile === 0) {
             if (node.contextValue === extension.DS_SESSION_CONTEXT) {
@@ -446,7 +453,13 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
                 const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
                 await this.addSession(session);
+                const faveNode = node;
                 node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+                    node.getSession().ISession.user = faveNode.getSession().ISession.user;
+                    node.getSession().ISession.password = faveNode.getSession().ISession.password;
+                    node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                }
             }
             // update the treeview with the new pattern
             node.label = node.label.trim()+ " ";
@@ -466,9 +479,48 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
-        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
+        if (element.label !== "Favorites") {
+            let usrNme: string;
+            let passWrd: string;
+            let baseEncd: string;
+            let sesNamePrompt: string;
+            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
+            } else {
+                sesNamePrompt = element.label;
+            }
+            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.getSession().ISession.user = usrNme;
+                    element.getSession().ISession.password = passWrd;
+                    element.getSession().ISession.base64EncodedAuth = baseEncd;
+                    this.validProfile = 1;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 1;
+            }
+        } else {
+            this.validProfile = 1;
+        }
+        if (this.validProfile === 1) {
+            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
+        }
     }
 
     /**
