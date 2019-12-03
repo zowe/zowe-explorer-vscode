@@ -205,6 +205,8 @@ describe("Extension Unit Tests", () => {
     const copyDataSet = jest.fn();
     const findFavoritedNode = jest.fn();
     const findNonFavoritedNode = jest.fn();
+    const concatChildNodes = jest.fn();
+    const concatUSSChildNodes = jest.fn();
     let mockClipboardData: string;
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
@@ -293,6 +295,8 @@ describe("Extension Unit Tests", () => {
         })
     });
 
+    Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
+    Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
@@ -1480,11 +1484,9 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
-        sessNode.children.push(new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null));
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
-
         dataSetList.mockResolvedValueOnce(testResponse);
         await extension.saveFile(testDoc, testTree);
 
@@ -1494,19 +1496,39 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Data set failed to save. Data set may have been deleted on mainframe.");
 
+        const node = new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        sessNode.children.push(node);
         testResponse.apiResponse.items = [{dsname: "HLQ.TEST.AFILE"}, {dsname: "HLQ.TEST.AFILE(mem)"}];
         dataSetList.mockReset();
         pathToDataSet.mockReset();
         showErrorMessage.mockReset();
-
+        concatChildNodes.mockReset();
+        const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
+        mockSetEtag.mockReset();
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: [{
+                etag: "123"
+            }]
+        };
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         dataSetList.mockResolvedValueOnce(testResponse);
+        withProgress.mockResolvedValueOnce(uploadResponse);
         testResponse.success = true;
         pathToDataSet.mockResolvedValueOnce(testResponse);
 
         await extension.saveFile(testDoc, testTree);
 
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
+        expect(mockSetEtag).toHaveBeenCalledTimes(1);
+        expect(mockSetEtag).toHaveBeenCalledWith("123");
+
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = false;
@@ -1565,17 +1587,24 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
         showErrorMessage.mockReset();
 
+        sessNode.children.push(new ZoweNode("HLQ.TEST.AFILE(mem)", vscode.TreeItemCollapsibleState.None, sessNode, null));
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = true;
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce(sessNode.children);
 
         await extension.saveFile(testDoc3, testTree);
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
 
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce(sessNode.children);
         testResponse.success = false;
         testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
         withProgress.mockResolvedValueOnce(testResponse);
@@ -1591,6 +1620,7 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveFile(testDoc, testTree);
         expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
+        expect(concatChildNodes.mock.calls.length).toBe(1);
     });
 
     it("Testing that refreshAll is executed successfully", async () => {
@@ -2260,19 +2290,27 @@ describe("Extension Unit Tests", () => {
         fileList.mockResolvedValueOnce(testResponse);
         ussNode.mProfileName = "usstest";
         ussNode.dirty = true;
-        ussNode.children.push(new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"));
+        const node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        ussNode.children.push(node);
         testUSSTree.getChildren.mockReturnValueOnce([
             new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
         testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
         fileToUSSFile.mockReset();
         showErrorMessage.mockReset();
-
+        concatUSSChildNodes.mockReset();
+        const mockGetEtag = jest.spyOn(node, "getEtag").mockImplementation(() => "123");
         testResponse.success = true;
         fileToUSSFile.mockResolvedValue(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
-
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         await extension.saveUSSFile(testDoc, testUSSTree);
 
+        expect(concatUSSChildNodes.mock.calls.length).toBe(1);
+        expect(mockGetEtag).toBeCalledTimes(1);
+        expect(mockGetEtag).toReturnWith("123");
+
+        concatUSSChildNodes.mockReset();
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         testResponse.success = false;
         testResponse.commandResponse = "Save failed";
         fileToUSSFile.mockResolvedValueOnce(testResponse);
@@ -2280,6 +2318,11 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveUSSFile(testDoc, testUSSTree);
 
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Save failed");
+
+        concatUSSChildNodes.mockReset();
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         showErrorMessage.mockReset();
         withProgress.mockRejectedValueOnce(Error("Test Error"));
 
@@ -2287,6 +2330,8 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
 
+        concatUSSChildNodes.mockReset();
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         showWarningMessage.mockReset();
         testResponse.success = false;
         testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
