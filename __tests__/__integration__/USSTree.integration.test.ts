@@ -182,12 +182,16 @@ describe("USSTree Integration Tests", async () => {
      * Tests the deleteSession() function
      *************************************************************************************************************/
     it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
-        const len = testTree.mSessionNodes.length;
+        let len = testTree.mSessionNodes.length;
         const log = new Logger(undefined);
         await testTree.addSession();
-        expect(testTree.mSessionNodes.length).toEqual(len + 1);
-        testTree.deleteSession(testTree.mSessionNodes[len]);
-        await testTree.addSession(testConst.profile.name);
+        expect(testTree.mSessionNodes.length).toBeGreaterThanOrEqual(len + 1);
+        len = testTree.mSessionNodes.length;
+        const testNode = testTree.mSessionNodes[len - 1];
+        testTree.deleteSession(testNode);
+        len--;
+        expect(testTree.mSessionNodes.length).toEqual(len);
+        await testTree.addSession(testNode.label);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);
 

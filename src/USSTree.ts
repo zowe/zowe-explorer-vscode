@@ -121,10 +121,10 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     /**
      * Adds a new session to the uss files tree
      *
-     * @param {string} [sessionName] - optional; loads default profile if not passed
+     * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      */
     public async addSession(sessionName?: string) {
-        // Loads profile associated with passed sessionName, default if none passed
+        // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (zosmfProfile) {
