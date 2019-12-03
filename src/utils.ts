@@ -148,11 +148,11 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export async function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
+export function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
     let allNodes = new Array<ZoweUSSNode>();
 
     for (const node of nodes) {
-        allNodes = allNodes.concat(await concatUSSChildNodes(await node.children));
+        allNodes = allNodes.concat(concatUSSChildNodes(node.children));
         allNodes.push(node);
     }
 
@@ -162,11 +162,11 @@ export async function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export async function concatChildNodes(nodes: ZoweNode[]) {
+export function concatChildNodes(nodes: ZoweNode[]) {
     let allNodes = new Array<ZoweNode>();
 
     for (const node of nodes) {
-        allNodes = allNodes.concat(await concatChildNodes(await node.children));
+        allNodes = allNodes.concat(concatChildNodes(node.children));
         allNodes.push(node);
     }
 

@@ -1638,11 +1638,11 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     let isFromFavorites: boolean;
     if (sesNode.children.length === 0) {
         // saving from favorites
-        nodes = await utils.concatChildNodes(datasetProvider.mFavorites);
+        nodes = utils.concatChildNodes(datasetProvider.mFavorites);
         isFromFavorites = true;
     } else {
         // saving from session
-        nodes = await utils.concatChildNodes([sesNode]);
+        nodes = utils.concatChildNodes([sesNode]);
         isFromFavorites = false;
     }
     node = await nodes.find((zNode) => {
@@ -1740,10 +1740,10 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     let nodes: ZoweUSSNode[];
     if (sesNode.children.length === 0) {
         // saving from favorites
-        nodes = await utils.concatUSSChildNodes(ussFileProvider.mFavorites);
+        nodes = utils.concatUSSChildNodes(ussFileProvider.mFavorites);
     } else {
         // saving from session
-        nodes = await utils.concatUSSChildNodes([sesNode]);
+        nodes = utils.concatUSSChildNodes([sesNode]);
     }
     node = await nodes.find((zNode) => {
         if (zNode.contextValue === DS_FAV_TEXT_FILE_CONTEXT || zNode.contextValue === DS_TEXT_FILE_CONTEXT) {
