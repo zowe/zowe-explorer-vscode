@@ -110,6 +110,18 @@
         "title": "%renameDataSet%"
       },
       {
+        "command": "zowe.copyDataSet",
+        "title": "%copyDataSet%"
+      },
+      {
+        "command": "zowe.pasteDataSet",
+        "title": "%pasteDataSet%"
+      },
+      {
+        "command": "zowe.renameDataSetMember",
+        "title": "%renameDataSetMember%"
+      },
+      {
         "command": "zowe.deleteDataset",
         "title": "%deleteDataset%"
       },
@@ -573,6 +585,11 @@
           "group": "3_systemSpecific"
         },
         {
+          "when": "view == zowe.explorer && viewItem == member",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == member_fav",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -603,6 +620,16 @@
           "group": "6_modification@0"
         },
         {
+          "when": "view == zowe.explorer && viewItem == member",
+          "command": "zowe.renameDataSetMember",
+          "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == member_fav",
+          "command": "zowe.renameDataSetMember",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -646,6 +673,16 @@
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.renameDataSet",
           "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds_fav",
@@ -693,6 +730,16 @@
           "group": "6_modification@2"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -723,6 +770,11 @@
           "group": "6_modification@2"
         },
         {
+          "when": "view == zowe.explorer && viewItem == pds",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -751,6 +803,16 @@
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.renameDataSet",
           "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
         },
         {
           "when": "view == zowe.explorer && viewItem == migr",
@@ -1130,13 +1192,13 @@
     "vscode": "^1.34.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.4",
+    "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
-    "@types/vscode": "^1.34.0",
+    "@types/vscode": "^1.40.0",
     "@types/yargs": "^11.0.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
@@ -1145,29 +1207,29 @@
     "del": "^4.1.1",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
-    "glob": "^7.1.2",
+    "glob": "^7.1.6",
     "gulp": "^4.0.2",
     "gulp-filter": "^5.1.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
     "jest": "^24.8.0",
-    "jest-html-reporter": "^2.4.0",
+    "jest-html-reporter": "^2.7.0",
     "jsdom": "11.11.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
-    "mem": ">=4.0.0",
+    "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
-    "ts-jest": "^24.0.2",
+    "ts-jest": "^24.2.0",
     "tslint": "5.17.0",
-    "typescript": "^3.5.1",
-    "vsce": "^1.60.0",
+    "typescript": "^3.7.2",
+    "vsce": "^1.70.0",
     "vscode": "^1.1.30",
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@zowe/cli": "6.4.1",
     "@types/fs-extra": "^7.0.0",
+    "@zowe/cli": "^6.5.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
     "gulp-fs": "0.0.2",
