@@ -152,7 +152,7 @@ export async function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
     let allNodes = new Array<ZoweUSSNode>();
 
     for (const node of nodes) {
-        allNodes = allNodes.concat(await concatUSSChildNodes(await node.getChildren()));
+        allNodes = allNodes.concat(await concatUSSChildNodes(await node.children));
         allNodes.push(node);
     }
 
@@ -166,7 +166,7 @@ export async function concatChildNodes(nodes: ZoweNode[]) {
     let allNodes = new Array<ZoweNode>();
 
     for (const node of nodes) {
-        allNodes = allNodes.concat(await concatChildNodes(await node.getChildren()));
+        allNodes = allNodes.concat(await concatChildNodes(await node.children));
         allNodes.push(node);
     }
 

@@ -1480,7 +1480,7 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
-        sessNode.children.push(new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null));
+        sessNode.children.push(new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null));
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
@@ -2260,7 +2260,7 @@ describe("Extension Unit Tests", () => {
         fileList.mockResolvedValueOnce(testResponse);
         ussNode.mProfileName = "usstest";
         ussNode.dirty = true;
-        ussNode.children.push(new ZoweUSSNode("/u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"));
+        ussNode.children.push(new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"));
         testUSSTree.getChildren.mockReturnValueOnce([
             new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
         testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
