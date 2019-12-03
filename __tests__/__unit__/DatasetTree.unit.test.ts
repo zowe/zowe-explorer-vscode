@@ -54,6 +54,16 @@ describe("DatasetTree Unit Tests", () => {
     const filters = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
+    const createBasicZosmfSession = jest.fn();
+    const ZosmfSession = jest.fn();
+    Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+        value: jest.fn(() => {
+            return {
+                ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"}
+            };
+        })
+    });
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
@@ -365,15 +375,110 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that expand tree is executed successfully", async () => {
         const refresh = jest.fn();
+        createBasicZosmfSession.mockReturnValue(session);
         Object.defineProperty(testTree, "refresh", {value: refresh});
         refresh.mockReset();
-        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
+        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], session);
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
         await testTree.flipState(pds, false);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-closed.svg");
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Testing that expand tree is executed for favorites", async () => {
+        const pds = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], session);
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+        await testTree.flipState(pds, false);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-closed.svg");
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Testing that expand tree with credential prompt is executed successfully", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], sessionwocred);
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+        await testTree.flipState(pds, false);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-closed.svg");
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Testing that expand tree with credential prompt is executed successfully for favorites", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+        const pds = new ZoweNode("[test]: BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], sessionwocred);
+        pds.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).toContain("pattern.svg");
+    });
+
+    it("Testing that expand tree with credential prompt ends in error", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
+        const pds = new ZoweNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], sessionwocred);
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
+        await testTree.flipState(pds, false);
+        expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-closed.svg");
+        await testTree.flipState(pds, true);
+        expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
     });
 
      /*************************************************************************************************************
@@ -422,7 +527,7 @@ describe("DatasetTree Unit Tests", () => {
     it("Testing that user filter prompts are executed successfully for favorites", async () => {
         // Executing from favorites
         const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
-        vscode.TreeItemCollapsibleState.None, testTree.mFavoriteSession, null);
+        vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], session);
         favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         const checkSession = jest.spyOn(testTree, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
@@ -605,6 +710,55 @@ describe("DatasetTree Unit Tests", () => {
 
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
+
+        await testTree.datasetFilterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+
+    });
+
+    it("tests the dataset filter prompt credentials, favorite route", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        testTree.initialize(Logger.getAppLogger());
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        const dsNode = new ZoweNode("[testSess2]: node", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode);
+        const dsNode2 = new ZoweNode("testSess2", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode2.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode2);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["", "", ""];
+                    }),
+                };
+            })
+        });
+
+        const spyMe = new DatasetTree();
+        Object.defineProperty(spyMe, "datasetFilterPrompt", {
+            value: jest.fn(() => {
+                return {
+                    tempNode: dsNode2,
+                    mSessionNodes: {Session: {ISession: {user: "", password: "", base64EncodedAuth: ""}}}
+                };
+            })
+        });
 
         await testTree.datasetFilterPrompt(dsNode);
 

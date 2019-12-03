@@ -770,10 +770,16 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
+    let sesNamePrompt: string;
+    if (node.contextValue.endsWith(FAV_SUFFIX)) {
+        sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+    } else {
+        sesNamePrompt = node.label;
+    }
 
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(node.label);
+            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
             if (values !== undefined) {
                 usrNme = values [0];
                 passWrd = values [1];
@@ -787,6 +793,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
+        } else {
+            return;
         }
         await datasetProvider.refreshElement(node);
         await datasetProvider.refresh();
@@ -1409,48 +1417,81 @@ export function getUSSDocumentFilePath(node: ZoweUSSNode) {
  * @param {ZoweNode} node
  */
 export async function openPS(node: ZoweNode, previewMember: boolean) {
-    try {
-        let label: string;
-        switch (node.mParent.contextValue) {
-            case (FAVORITE_CONTEXT):
-                label = node.label.substring(node.label.indexOf(":") + 1).trim();
-                break;
-            case (DS_PDS_CONTEXT + FAV_SUFFIX):
-                label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
-                break;
-            case (DS_SESSION_CONTEXT):
-                label = node.label.trim();
-                break;
-            case (DS_PDS_CONTEXT):
-                label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
-                break;
-            default:
-                vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
-                throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
+    const datasetProvider = new DatasetTree();
+    let sesNamePrompt: string;
+    if (node.contextValue.endsWith(FAV_SUFFIX)) {
+        sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+    } else {
+        sesNamePrompt = node.label;
+    }
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
         }
-        log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
-        // if local copy exists, open that instead of pulling from mainframe
-        if (!fs.existsSync(getDocumentFilePath(label, node))) {
-            await vscode.window.withProgress({
-                location: vscode.ProgressLocation.Notification,
-                title: "Opening data set..."
-            }, function downloadDataset() {
-                return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
-                    file: getDocumentFilePath(label, node)
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
+            validProfile = 0;
+        } else {
+            return;
+        }
+        await datasetProvider.refreshElement(node);
+        await datasetProvider.refresh();
+    } else {
+        validProfile = 0;
+    }
+    if (validProfile === 0) {
+        try {
+            let label: string;
+            switch (node.mParent.contextValue) {
+                case (FAVORITE_CONTEXT):
+                    label = node.label.substring(node.label.indexOf(":") + 1).trim();
+                    break;
+                case (DS_PDS_CONTEXT + FAV_SUFFIX):
+                    label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
+                    break;
+                case (DS_SESSION_CONTEXT):
+                    label = node.label.trim();
+                    break;
+                case (DS_PDS_CONTEXT):
+                    label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
+                    break;
+                default:
+                    vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
+                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
+            }
+            log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
+            // if local copy exists, open that instead of pulling from mainframe
+            if (!fs.existsSync(getDocumentFilePath(label, node))) {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: "Opening data set..."
+                }, function downloadDataset() {
+                    return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
+                        file: getDocumentFilePath(label, node)
+                    });
                 });
-            });
+            }
+            const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
+            if (previewMember === true) {
+                await vscode.window.showTextDocument(document);
+                }
+                else {
+                    await vscode.window.showTextDocument(document, {preview: false});
+                }
+        } catch (err) {
+            log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(err.message);
+            throw (err);
         }
-        const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-        if (previewMember === true) {
-            await vscode.window.showTextDocument(document);
-            }
-            else {
-                await vscode.window.showTextDocument(document, {preview: false});
-            }
-    } catch (err) {
-        log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-        throw (err);
     }
 }
 
@@ -1754,50 +1795,77 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  * @param {ZoweUSSNode} node
  */
 export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean) {
-    try {
-        let label: string;
-        switch (node.mParent.contextValue) {
-            case (FAVORITE_CONTEXT):
-                label = node.label.substring(node.label.indexOf(":") + 1).trim();
-                break;
-            // Handle file path for files in directories and favorited directories
-            case (USS_DIR_CONTEXT):
-            case (USS_DIR_CONTEXT + FAV_SUFFIX):
-                label = node.fullPath;
-                break;
-            case (USS_SESSION_CONTEXT):
-                label = node.label;
-                break;
-            default:
-                vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
-                throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
-        }
-        log.debug(localize("openUSS.log.debug.request", "requesting to open a uss file ") + label);
-        // if local copy exists, open that instead of pulling from mainframe
-        if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
-            const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
-            await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: "Opening USS file...",
-        }, function downloadUSSFile() {
-            return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
-                file: getUSSDocumentFilePath(node),
-                binary: chooseBinary
-            });
-        }
-            );
-        }
-        const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
-        if (previewFile === true) {
-            await vscode.window.showTextDocument(document);
+    const ussFileProvider = new USSTree();
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
             }
-            else {
-                await vscode.window.showTextDocument(document, {preview: false});
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
+            validProfile = 0;
+        } else {
+            return;
+        }
+        await ussFileProvider.refreshElement(node);
+        await ussFileProvider.refresh();
+    } else {
+        validProfile = 0;
+    }
+    if (validProfile === 0) {
+        try {
+            let label: string;
+            switch (node.mParent.contextValue) {
+                case (FAVORITE_CONTEXT):
+                    label = node.label.substring(node.label.indexOf(":") + 1).trim();
+                    break;
+                // Handle file path for files in directories and favorited directories
+                case (USS_DIR_CONTEXT):
+                case (USS_DIR_CONTEXT + FAV_SUFFIX):
+                    label = node.fullPath;
+                    break;
+                case (USS_SESSION_CONTEXT):
+                    label = node.label;
+                    break;
+                default:
+                    vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
+                    throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
             }
-    } catch (err) {
-        log.error(localize("openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-        throw (err);
+            log.debug(localize("openUSS.log.debug.request", "requesting to open a uss file ") + label);
+            // if local copy exists, open that instead of pulling from mainframe
+            if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
+                const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
+                await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Opening USS file...",
+            }, function downloadUSSFile() {
+                return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
+                    file: getUSSDocumentFilePath(node),
+                    binary: chooseBinary
+                });
+            }
+                );
+            }
+            const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
+            if (previewFile === true) {
+                await vscode.window.showTextDocument(document);
+                }
+                else {
+                    await vscode.window.showTextDocument(document, {preview: false});
+                }
+        } catch (err) {
+            log.error(localize("openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(err.message);
+            throw (err);
+        }
     }
 }
 
@@ -1823,12 +1891,36 @@ export async function stopCommand(job: Job) {
 }
 
 export async function getSpoolContent(session: string, spool: IJobFile) {
-    try {
-        const uri = encodeJobFile(session, spool);
-        const document = await vscode.workspace.openTextDocument(uri);
-        await vscode.window.showTextDocument(document);
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+    const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
+    const spoolSess = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+    if ((!spoolSess.ISession.user) || (!spoolSess.ISession.password)) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(session);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            spoolSess.ISession.user = usrNme;
+            spoolSess.ISession.password = passWrd;
+            spoolSess.ISession.base64EncodedAuth = baseEncd;
+            validProfile = 0;
+        }
+    } else {
+        validProfile = 0;
+    }
+    if (validProfile === 0) {
+        try {
+            const uri = encodeJobFile(session, spool);
+            const document = await vscode.workspace.openTextDocument(uri);
+            await vscode.window.showTextDocument(document);
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
     }
 }
 
@@ -1846,9 +1938,15 @@ export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
 
 export async function refreshJobsServer(node: Job) {
     const jobsProvider = new ZosJobsProvider();
+    let sesNamePrompt: string;
+    if (node.contextValue.endsWith(FAV_SUFFIX)) {
+        sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+    } else {
+        sesNamePrompt = node.label;
+    }
     if ((!node.session.ISession.user ) || (!node.session.ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(node.label);
+            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
             if (values !== undefined) {
                 usrNme = values [0];
                 passWrd = values [1];
