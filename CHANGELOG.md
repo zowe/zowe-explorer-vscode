@@ -2,7 +2,7 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## 1.0.0
+## `1.0.0`
 
 - VSCode centric Connection settings. . Thanks @crawr, @jellypuno
   - Credential prompting in profiles and favorite . Thanks @crawr, @jellypuno
