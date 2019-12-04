@@ -109,7 +109,12 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 }
             } else if (favoriteSearchPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                let zosmfProfile: IProfileLoaded;
+                try {
+                    zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
                     vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session);
