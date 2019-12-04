@@ -67,6 +67,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
 
     public getChildren(element?: Job | undefined): vscode.ProviderResult<Job[]> {
         if (element) {
+            // solution for optional credentials. Owner is having error on initialization.
+            if (element.owner === "") {
+                return;
+            }
             if (element.contextValue === extension.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
@@ -168,9 +172,49 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: Job, isOpen: boolean = false) {
-        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
+        if (element.label !== "Favorites") {
+            let usrNme: string;
+            let passWrd: string;
+            let baseEncd: string;
+            let sesNamePrompt: string;
+            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
+            } else {
+                sesNamePrompt = element.label;
+            }
+            if ((!element.session.ISession.user) || (!element.session.ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.session.ISession.user = usrNme;
+                    element.session.ISession.password = passWrd;
+                    element.session.ISession.base64EncodedAuth = baseEncd;
+                    element.owner = usrNme;
+                    this.validProfile = 1;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 1;
+            }
+        } else {
+            this.validProfile = 1;
+        }
+        if (this.validProfile === 1) {
+            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
+        }
     }
 
     /**
@@ -297,9 +341,15 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
+        let sesNamePrompt: string;
+        if (node.contextValue.endsWith(extension.FAV_SUFFIX)) {
+            sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+        } else {
+            sesNamePrompt = node.label;
+        }
         if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
             try {
-                const values = await Profiles.getInstance().promptCredentials(node.label);
+                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
                 if (values !== undefined) {
                     usrNme = values [0];
                     passWrd = values [1];
@@ -312,7 +362,10 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 node.session.ISession.user = usrNme;
                 node.session.ISession.password = passWrd;
                 node.session.ISession.base64EncodedAuth = baseEncd;
+                node.owner = usrNme;
                 this.validProfile = 0;
+            } else {
+                return;
             }
             await this.refreshElement(node);
             await this.refresh();
@@ -423,8 +476,14 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 // executing search from saved search in favorites
                 searchCriteria = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
                 const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                const faveNode = node;
                 await this.addSession(session);
                 node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
+                    node.session.ISession.user = faveNode.session.ISession.user;
+                    node.session.ISession.password = faveNode.session.ISession.password;
+                    node.session.ISession.base64EncodedAuth = faveNode.session.ISession.base64EncodedAuth;
+                }
                 this.applySearchLabelToNode(node, searchCriteria);
             }
             this.addHistory(searchCriteria);

@@ -56,7 +56,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
     let validProfile: number = -1;
     if ((!node.getSession().ISession.user.trim()) || (!node.getSession().ISession.password.trim())) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(node.label);
+            const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
             if (values !== undefined) {
                 usrNme = values [0];
                 passWrd = values [1];
@@ -71,6 +71,8 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
             node.getSession().ISession.password = passWrd;
             node.getSession().ISession.base64EncodedAuth = baseEncd;
             validProfile = 0;
+        } else {
+            return;
         }
         await ussFileProvider.refreshElement(node);
         await ussFileProvider.refresh();

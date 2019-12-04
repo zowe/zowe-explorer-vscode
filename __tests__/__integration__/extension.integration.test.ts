@@ -758,7 +758,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
 
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(testingPath, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(testingPath);
@@ -776,7 +777,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
             { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
 
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(providedPathOne);
