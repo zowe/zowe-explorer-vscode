@@ -113,7 +113,10 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                 try {
                     zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
+                        "Initialization Error: Could not find profile named: ")
+                        + sesName + localize("loadNamedProfile.error.period", "."));
+                    continue;
                 }
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
