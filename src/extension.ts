@@ -1657,6 +1657,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     }
     if (documentSession == null) {
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
     const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
@@ -1677,7 +1678,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     // Get specific node based on label and parent tree (session / favorites)
     let nodes: ZoweNode[];
     let isFromFavorites: boolean;
-    if (sesNode.children.length === 0) {
+    if (!sesNode || sesNode.children.length === 0) {
         // saving from favorites
         nodes = utils.concatChildNodes(datasetProvider.mFavorites);
         isFromFavorites = true;
@@ -1779,7 +1780,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     }
     // Get specific node based on label and parent tree (session / favorites)
     let nodes: ZoweUSSNode[];
-    if (sesNode.children.length === 0) {
+    if (!sesNode || sesNode.children.length === 0) {
         // saving from favorites
         nodes = utils.concatUSSChildNodes(ussFileProvider.mFavorites);
     } else {

@@ -294,7 +294,6 @@ describe("Extension Unit Tests", () => {
             };
         })
     });
-
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
@@ -1537,6 +1536,25 @@ describe("Extension Unit Tests", () => {
             validateRange: null,
             validatePosition: null
         };
+        const testDoc0: vscode.TextDocument = {
+            fileName: path.join(extension.DS_DIR, "HLQ.TEST.AFILE"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
 
         const testResponse = {
             success: true,
@@ -1545,6 +1563,36 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
+        // If session node is not defined, it should take the session from Profile
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            protocol: "https",
+            type: "basic",
+        });
+        // testing if no session is defined (can happen while saving from favorites)
+        const nodeWitoutSession = new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, null, null);
+        testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
+        concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
+        createBasicZosmfSession.mockReturnValueOnce(sessionwocred);
+        await extension.saveFile(testDoc0, testTree);
+        expect(createBasicZosmfSession.mock.calls.length).toBe(1);
+        expect(createBasicZosmfSession.mock.results[0].value).toEqual(sessionwocred);
+
+        // testing if no documentSession is found (no session + no profile)
+        createBasicZosmfSession.mockReset();
+        testTree.getChildren.mockReset();
+        showErrorMessage.mockReset();
+        testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
+        createBasicZosmfSession.mockReturnValueOnce(null);
+        await extension.saveFile(testDoc0, testTree);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Couldn't locate session when saving data set!");
+
+        testTree.getChildren.mockReset();
+        createBasicZosmfSession.mockReset();
+
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
