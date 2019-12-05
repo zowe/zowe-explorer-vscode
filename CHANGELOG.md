@@ -9,7 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Dataset and Dataset member copy and renaming function. Thanks @CForrest97
 - Theia support including documentation.
 - Improvements to Save and Safe Save functionality. Thanks Alexandru-Dumitru
-- Reliability and Resiliance updates:
+- Reliability and Resilience updates:
   - for default profiles
   - for deleting a dataset in use
   - testing improvements and coverage
