@@ -8,7 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - Credential prompting in profiles and favorite . Thanks @crawr, @jellypuno
 - Dataset and Dataset member copy and renaming function. Thanks @CForrest97
 - Theia support including documentation.
-- Improvements to Save and Safe Save functionality. Thanks Alexandru-Dumitru
+- Save improvements implementing improved Safe Save functionality as the default behavior. Thanks Alexandru-Dumitru
 - Reliability and Resilience updates:
   - for default profiles
   - for deleting a dataset in use
