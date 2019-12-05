@@ -101,7 +101,7 @@ describe("Extension Unit Tests", () => {
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
 
-    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, null, "123");
     ussNode.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
@@ -124,6 +124,7 @@ describe("Extension Unit Tests", () => {
     const rmdirSync = jest.fn();
     const readFileSync = jest.fn();
     const showErrorMessage = jest.fn();
+    const showWarningMessage = jest.fn();
     const showInputBox = jest.fn();
     const showOpenDialog = jest.fn();
     const showQuickBox = jest.fn();
@@ -204,6 +205,8 @@ describe("Extension Unit Tests", () => {
     const copyDataSet = jest.fn();
     const findFavoritedNode = jest.fn();
     const findNonFavoritedNode = jest.fn();
+    const concatChildNodes = jest.fn();
+    const concatUSSChildNodes = jest.fn();
     let mockClipboardData: string;
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
@@ -246,7 +249,7 @@ describe("Extension Unit Tests", () => {
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
-            ussFilterPrompt: ussPattern
+            ussFilterPrompt: ussPattern,
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
@@ -291,7 +294,8 @@ describe("Extension Unit Tests", () => {
             };
         })
     });
-
+    Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
+    Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
@@ -312,6 +316,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(fs, "readFileSync", {value: readFileSync});
     Object.defineProperty(fsextra, "moveSync", {value: moveSync});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+    Object.defineProperty(vscode.window, "showWarningMessage", {value: showWarningMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(vscode.window, "showQuickBox", {value: showQuickBox});
     Object.defineProperty(vscode.window, "activeTextEditor", {value: activeTextEditor});
@@ -335,7 +340,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
-    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
@@ -528,7 +532,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(65);
+        expect(registerCommand.mock.calls.length).toBe(63);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -552,7 +556,6 @@ describe("Extension Unit Tests", () => {
             "zowe.editMember",
             "zowe.removeSession",
             "zowe.removeFavorite",
-            "zowe.safeSave",
             "zowe.saveSearch",
             "zowe.removeSavedSearch",
             "zowe.submitJcl",
@@ -567,7 +570,6 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
-            "zowe.uss.safeSaveUSS",
             "zowe.uss.fullPath",
             "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
@@ -750,13 +752,22 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         showTextDocument.mockReset();
 
+        const response: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        dataSet.mockReturnValueOnce(response);
         await extension.refreshPS(node);
 
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSet.mock.calls[0][1]).toBe(node.label);
         expect(dataSet.mock.calls[0][2]).toEqual({
-            file: path.join(extension.DS_DIR, node.getSessionNode().label, node.label )
+            file: path.join(extension.DS_DIR, node.getSessionNode().label, node.label),
+            returnEtag: true
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
@@ -797,6 +808,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: true});
         dataSet.mockReset();
         showTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(response);
 
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(node);
@@ -805,6 +817,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(response);
 
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(child);
@@ -813,6 +826,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(response);
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.refreshPS(child);
@@ -822,12 +836,6 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
         dataSet.mockReset();
         openTextDocument.mockReset();
-        parent.contextValue = "turnip";
-        await extension.safeSave(child);
-        expect(openTextDocument.mock.calls.length).toBe(0);
-        expect(dataSet.mock.calls.length).toBe(0);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("safeSave() called from invalid node.");
 
     });
 
@@ -1528,6 +1536,25 @@ describe("Extension Unit Tests", () => {
             validateRange: null,
             validatePosition: null
         };
+        const testDoc0: vscode.TextDocument = {
+            fileName: path.join(extension.DS_DIR, "HLQ.TEST.AFILE"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
 
         const testResponse = {
             success: true,
@@ -1536,12 +1563,40 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
+        // If session node is not defined, it should take the session from Profile
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            protocol: "https",
+            type: "basic",
+        });
+        // testing if no session is defined (can happen while saving from favorites)
+        const nodeWitoutSession = new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, null, null);
+        testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
+        concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
+        createBasicZosmfSession.mockReturnValueOnce(sessionwocred);
+        await extension.saveFile(testDoc0, testTree);
+        expect(createBasicZosmfSession.mock.calls.length).toBe(1);
+        expect(createBasicZosmfSession.mock.results[0].value).toEqual(sessionwocred);
+
+        // testing if no documentSession is found (no session + no profile)
+        createBasicZosmfSession.mockReset();
+        testTree.getChildren.mockReset();
+        showErrorMessage.mockReset();
+        testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
+        createBasicZosmfSession.mockReturnValueOnce(null);
+        await extension.saveFile(testDoc0, testTree);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Couldn't locate session when saving data set!");
+
+        testTree.getChildren.mockReset();
+        createBasicZosmfSession.mockReset();
+
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
-
         dataSetList.mockResolvedValueOnce(testResponse);
-
         await extension.saveFile(testDoc, testTree);
 
         expect(dataSetList.mock.calls.length).toBe(1);
@@ -1550,18 +1605,39 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Data set failed to save. Data set may have been deleted on mainframe.");
 
-        testResponse.apiResponse.items = ["Item1"];
+        const node = new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        sessNode.children.push(node);
+        testResponse.apiResponse.items = [{dsname: "HLQ.TEST.AFILE"}, {dsname: "HLQ.TEST.AFILE(mem)"}];
         dataSetList.mockReset();
         pathToDataSet.mockReset();
         showErrorMessage.mockReset();
-
+        concatChildNodes.mockReset();
+        const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
+        mockSetEtag.mockReset();
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: [{
+                etag: "123"
+            }]
+        };
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        withProgress.mockResolvedValueOnce(uploadResponse);
         testResponse.success = true;
         pathToDataSet.mockResolvedValueOnce(testResponse);
 
         await extension.saveFile(testDoc, testTree);
 
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
+        expect(mockSetEtag).toHaveBeenCalledTimes(1);
+        expect(mockSetEtag).toHaveBeenCalledWith("123");
+
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = false;
@@ -1620,14 +1696,40 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
         showErrorMessage.mockReset();
 
+        sessNode.children.push(new ZoweNode("HLQ.TEST.AFILE(mem)", vscode.TreeItemCollapsibleState.None, sessNode, null));
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = true;
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce(sessNode.children);
 
         await extension.saveFile(testDoc3, testTree);
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+
         testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
+
+        testTree.getChildren.mockReturnValueOnce([sessNode]);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce(sessNode.children);
+        testResponse.success = false;
+        testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
+        withProgress.mockResolvedValueOnce(testResponse);
+        dataSet.mockReset();
+        const downloadResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                etag: ""
+            }
+        };
+        dataSet.mockResolvedValue(downloadResponse);
+
+        await extension.saveFile(testDoc, testTree);
+        expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
+        expect(concatChildNodes.mock.calls.length).toBe(1);
     });
 
     it("Testing that refreshAll is executed successfully", async () => {
@@ -1647,6 +1749,14 @@ describe("Extension Unit Tests", () => {
         const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValue(null);
+        const response: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        withProgress.mockReturnValue(response);
         openTextDocument.mockResolvedValueOnce("test doc");
 
         await extension.openPS(node, true);
@@ -1824,126 +1934,6 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
     });
 
-    it("Testing that safeSave is executed successfully", async () => {
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        showInformationMessage.mockReset();
-
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-
-        openTextDocument.mockResolvedValueOnce("test");
-
-        await extension.safeSave(node);
-
-        expect(dataSet.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls[0][0]).toBe(session);
-        expect(dataSet.mock.calls[0][1]).toBe(node.label);
-        expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.label, node)});
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label.trim(), node.label ));
-        expect(showTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls[0][0]).toBe("test");
-        expect(save.mock.calls.length).toBe(1);
-
-        dataSet.mockReset();
-        dataSet.mockRejectedValueOnce(Error("not found"));
-
-        await extension.safeSave(node);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably deleted.");
-
-        dataSet.mockReset();
-        showErrorMessage.mockReset();
-        dataSet.mockRejectedValueOnce(Error(""));
-
-        await extension.safeSave(child);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
-
-        openTextDocument.mockResolvedValueOnce("test");
-        openTextDocument.mockResolvedValueOnce("test");
-
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.safeSave(node);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls.length).toBe(1);
-
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.safeSave(child);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls.length).toBe(1);
-
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        parent.contextValue = extension.FAVORITE_CONTEXT;
-        await extension.safeSave(child);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls.length).toBe(1);
-
-        showErrorMessage.mockReset();
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        parent.contextValue = "turnip";
-        await extension.safeSave(child);
-        expect(openTextDocument.mock.calls.length).toBe(0);
-        expect(dataSet.mock.calls.length).toBe(0);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("safeSave() called from invalid node.");
-    });
-
-    it("Testing that safeSaveUSS is executed successfully", async () => {
-        ussFile.mockReset();
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        showInformationMessage.mockReset();
-        save.mockReset();
-
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
-        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, null);
-
-        openTextDocument.mockResolvedValueOnce("test");
-
-        await extension.safeSaveUSS(node);
-
-        expect(ussFile.mock.calls.length).toBe(1);
-        expect(ussFile.mock.calls[0][0]).toBe(node.getSession());
-        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
-        expect(ussFile.mock.calls[0][2]).toEqual({file: extension.getUSSDocumentFilePath(node)});
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.getUSSDocumentFilePath(node)));
-        expect(showTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls[0][0]).toBe("test");
-        expect(save.mock.calls.length).toBe(1);
-
-        ussFile.mockReset();
-        ussFile.mockRejectedValueOnce(Error("not found"));
-
-        await extension.safeSaveUSS(node);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.fullPath + " was probably deleted.");
-
-        ussFile.mockReset();
-        showErrorMessage.mockReset();
-        ussFile.mockRejectedValueOnce(Error(""));
-
-        await extension.safeSaveUSS(child);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
-    });
-
     it("Testing that refreshUSS correctly executes with and without error", async () => {
         const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, node, null, "/");
@@ -1958,14 +1948,22 @@ describe("Extension Unit Tests", () => {
         ussFile.mockReset();
         showTextDocument.mockReset();
         executeCommand.mockReset();
-
+        const response: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "132"
+            }
+        };
+        ussFile.mockReturnValueOnce(response);
         await extension.refreshUSS(node);
 
         expect(ussFile.mock.calls.length).toBe(1);
         expect(ussFile.mock.calls[0][0]).toBe(node.getSession());
         expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
         expect(ussFile.mock.calls[0][2]).toEqual({
-            file: extension.getUSSDocumentFilePath(node)
+            file: extension.getUSSDocumentFilePath(node),
+            returnEtag: true,
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.getUSSDocumentFilePath(node)));
@@ -2314,6 +2312,15 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
+        const response: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        withProgress.mockReturnValue(response);
+
         await extension.openUSS(node, false, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
@@ -2387,7 +2394,7 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node.");
     });
 
-    it("Tests that openUSS executes successfully with favorited files", async () => {
+    it("Tests that openUSS executes successfully with favored files", async () => {
         ussFile.mockReset();
         openTextDocument.mockReset();
         showTextDocument.mockReset();
@@ -2403,7 +2410,7 @@ describe("Extension Unit Tests", () => {
         favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/");
         favoriteParent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
-        // Set up child of favoriteDir - make sure we can open the child of a favorited directory
+        // Set up child of favoriteDir - make sure we can open the child of a favored directory
         const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir");
         child.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
@@ -2432,6 +2439,15 @@ describe("Extension Unit Tests", () => {
         isFileTagBinOrAscii.mockReturnValue(true);
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
+
+        const response: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123"
+            }
+        };
+        withProgress.mockReturnValue(response);
 
         await extension.openUSS(node, false, true);
 
@@ -2555,8 +2571,10 @@ describe("Extension Unit Tests", () => {
 
 
     it("Testing that saveUSSFile is executed successfully", async () => {
+        withProgress.mockReset();
+
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.USS_DIR, ussNode.label, "testFile"),
+            fileName: path.join(extension.USS_DIR, "usstest", "/u/myuser/testFile"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -2582,19 +2600,31 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
+
+        fileList.mockResolvedValueOnce(testResponse);
+        ussNode.mProfileName = "usstest";
+        ussNode.dirty = true;
+        const node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        ussNode.children.push(node);
         testUSSTree.getChildren.mockReturnValueOnce([
             new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
-
-        testResponse.apiResponse.items = ["Item1"];
+        testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
         fileToUSSFile.mockReset();
         showErrorMessage.mockReset();
-
+        concatUSSChildNodes.mockReset();
+        const mockGetEtag = jest.spyOn(node, "getEtag").mockImplementation(() => "123");
         testResponse.success = true;
-        fileToUSSFile.mockResolvedValueOnce(testResponse);
+        fileToUSSFile.mockResolvedValue(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
-
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         await extension.saveUSSFile(testDoc, testUSSTree);
 
+        expect(concatUSSChildNodes.mock.calls.length).toBe(1);
+        expect(mockGetEtag).toBeCalledTimes(1);
+        expect(mockGetEtag).toReturnWith("123");
+
+        concatUSSChildNodes.mockReset();
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         testResponse.success = false;
         testResponse.commandResponse = "Save failed";
         fileToUSSFile.mockResolvedValueOnce(testResponse);
@@ -2602,6 +2632,11 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveUSSFile(testDoc, testUSSTree);
 
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Save failed");
+
+        concatUSSChildNodes.mockReset();
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         showErrorMessage.mockReset();
         withProgress.mockRejectedValueOnce(Error("Test Error"));
 
@@ -2609,58 +2644,29 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
 
-        const testDoc2: vscode.TextDocument = {
-            fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
+        concatUSSChildNodes.mockReset();
+        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
+        showWarningMessage.mockReset();
+        testResponse.success = false;
+        testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
+        testDoc.getText = jest.fn();
+        ussFile.mockReset();
+        withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
+        const downloadResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                etag: ""
+            }
         };
-
-        testUSSTree.getChildren.mockReturnValueOnce([sessNode]);
-
-        await extension.saveUSSFile(testDoc2, testUSSTree);
-
-        const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        fileToUSSFile.mockReset();
-        showErrorMessage.mockReset();
-
-        testUSSTree.getChildren.mockReturnValueOnce([sessNode]);
-        testResponse.success = true;
-        fileToUSSFile.mockResolvedValueOnce(testResponse);
-
-        await extension.saveUSSFile(testDoc3, testUSSTree);
+        ussFile.mockResolvedValueOnce(downloadResponse);
+        try {
+            await extension.saveUSSFile(testDoc, testUSSTree);
+        } catch (e) {
+            // this is OK. We are interested in the next expect (showWarninMessage) to fullfil
+            expect(e.message).toBe("vscode.Position is not a constructor");
+        }
+        expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
     });
 
     describe("Add Jobs Session Unit Test", () => {
