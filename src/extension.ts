@@ -24,7 +24,7 @@ import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 // tslint:disable-next-line: no-duplicate-imports
-import { IJobFile } from "@brightside/core";
+import { IJobFile, IUploadOptions } from "@brightside/core";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
@@ -40,15 +40,19 @@ export let ISTHEIA: boolean = false; // set during activate
 export const FAV_SUFFIX = "_fav";
 export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";
+export const DS_FAV_CONTEXT = "ds_fav";
+export const PDS_FAV_CONTEXT = "pds_fav";
 export const DS_SESSION_CONTEXT = "session";
 export const DS_PDS_CONTEXT = "pds";
 export const DS_DS_CONTEXT = "ds";
 export const DS_MEMBER_CONTEXT = "member";
 export const DS_TEXT_FILE_CONTEXT = "textFile";
+export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const USS_SESSION_CONTEXT = "uss_session";
 export const USS_DIR_CONTEXT = "directory";
+export const USS_FAV_DIR_CONTEXT = "directory_fav";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
@@ -163,7 +167,6 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.editMember", (node) => openPS(node, false));
         vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
         vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
-        vscode.commands.registerCommand("zowe.safeSave", async (node) => safeSave(node));
         vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
         vscode.commands.registerCommand("zowe.removeSavedSearch", async (node) => datasetProvider.removeFavorite(node));
         vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
@@ -205,7 +208,6 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.uss.addSession", async () => addUSSSession(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
-        vscode.commands.registerCommand("zowe.uss.safeSaveUSS", async (node) => safeSaveUSS(node));
         vscode.commands.registerCommand("zowe.uss.fullPath", (node) => ussFileProvider.ussFilterPrompt(node));
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node, false, true));
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
@@ -306,7 +308,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 /**
- * Allow the user to subbmit a TSO command to the selected server. Response is written
+ * Allow the user to submit a TSO command to the selected server. Response is written
  * to the output channel.
  * @param outputChannel The Output Channel to write the command and response to
  */
@@ -1470,15 +1472,18 @@ export async function openPS(node: ZoweNode, previewMember: boolean) {
             }
             log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
             // if local copy exists, open that instead of pulling from mainframe
-            if (!fs.existsSync(getDocumentFilePath(label, node))) {
-                await vscode.window.withProgress({
+            const documentFilePath = getDocumentFilePath(label, node);
+            if (!fs.existsSync(documentFilePath)) {
+                const response = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: "Opening data set..."
                 }, function downloadDataset() {
                     return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
-                        file: getDocumentFilePath(label, node)
+                        file: documentFilePath,
+                        returnEtag: true
                     });
                 });
+                node.setEtag(response.apiResponse.etag);
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             if (previewMember === true) {
@@ -1537,10 +1542,14 @@ export async function refreshPS(node: ZoweNode) {
             default:
                 throw Error(localize("refreshPS.error.invalidNode", "refreshPS() called from invalid node."));
         }
-        await zowe.Download.dataSet(node.getSession(), label, {
-            file: getDocumentFilePath(label, node)
+        const documentFilePath = getDocumentFilePath(label, node);
+        const response = await zowe.Download.dataSet(node.getSession(), label, {
+            file: documentFilePath,
+            returnEtag: true
         });
-        const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
+        node.setEtag(response.apiResponse.etag);
+
+        const document = await vscode.workspace.openTextDocument(documentFilePath);
         vscode.window.showTextDocument(document);
         // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
         if (document.isDirty) {
@@ -1580,10 +1589,14 @@ export async function refreshUSS(node: ZoweUSSNode) {
             throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
     }
     try {
-        await zowe.Download.ussFile(node.getSession(), node.fullPath, {
-            file: getUSSDocumentFilePath(node)
+        const ussDocumentFilePath = getUSSDocumentFilePath(node);
+        const response = await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+            file: ussDocumentFilePath,
+            returnEtag: true
         });
-        const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
+        node.setEtag(response.apiResponse.etag);
+
+        const document = await vscode.workspace.openTextDocument(ussDocumentFilePath);
         vscode.window.showTextDocument(document);
         // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
         if (document.isDirty) {
@@ -1596,77 +1609,6 @@ export async function refreshUSS(node: ZoweUSSNode) {
             localize("refreshUSS.file2", " was probably deleted."));
         } else {
             vscode.window.showErrorMessage(err);
-        }
-    }
-}
-
-/**
- * Checks if there are changes on the mainframe before pushing changes
- *
- * @export
- * @param {ZoweNode} node The node which represents the dataset
- */
-export async function safeSave(node: ZoweNode) {
-
-    log.debug(localize("safeSave.log.debug.request", "safe save requested for node: ") + node.label);
-    let label;
-    try {
-        switch (node.mParent.contextValue) {
-            case (FAVORITE_CONTEXT):
-                label = node.label.trim().substring(node.label.indexOf(":") + 1).trim();
-                break;
-            case (DS_PDS_CONTEXT + FAV_SUFFIX):
-                label = node.mParent.label.substring(node.mParent.label.indexOf(":") + 1).trim() + "(" + node.label.trim()+ ")";
-                break;
-            case (DS_SESSION_CONTEXT):
-                label = node.label.trim();
-                break;
-            case (DS_PDS_CONTEXT):
-                label = node.mParent.label.trim() + "(" + node.label.trim()+ ")";
-                break;
-            default:
-                throw Error(localize("safeSave.error.invalidNode", "safeSave() called from invalid node."));
-        }
-        log.debug(localize("safeSave.log.debug.invoke", "Invoking safesave for data set ") + label);
-        await zowe.Download.dataSet(node.getSession(), label, {
-            file: getDocumentFilePath(label, node)
-        });
-        const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-        await vscode.window.showTextDocument(document);
-        await vscode.window.activeTextEditor.document.save();
-    } catch (err) {
-        if (err.message.includes(localize("safeSave.error.notFound", "not found"))) {
-            vscode.window.showInformationMessage(localize("safeSave.file1", "Unable to find file: ") + label +
-            localize("safeSave.file2", " was probably deleted."));
-        } else {
-            vscode.window.showErrorMessage(err.message);
-        }
-    }
-}
-
-/**
- * Checks if there are changes on the mainframe before pushing changes
- *
- * @export
- * @param {ZoweUSSNode} node The node which represents the file
- */
-export async function safeSaveUSS(node: ZoweUSSNode) {
-
-    log.debug("safe save requested for node: " + node.label);
-    try {
-        // Switch case from `safeSave` not needed, as we will only ever receive a file
-        log.debug("Invoking safesave for USS file " + node.fullPath);
-        await zowe.Download.ussFile(node.getSession(), node.fullPath, {
-            file: getUSSDocumentFilePath(node)
-        });
-        const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
-        await vscode.window.showTextDocument(document);
-        await vscode.window.activeTextEditor.document.save();
-    } catch (err) {
-        if (err.message.includes("not found")) {
-            vscode.window.showInformationMessage(`Unable to find file: ${node.fullPath} was probably deleted.`);
-        } else {
-            vscode.window.showErrorMessage(err.message);
         }
     }
 }
@@ -1700,7 +1642,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const sesName = ending.substring(0, ending.indexOf(path.sep));
 
     // get session from session name
-    let documentSession;
+    let documentSession: Session;
+    let node: ZoweNode;
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
         child.label.trim() === sesName);
     if (sesNode) {
@@ -1714,6 +1657,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     }
     if (documentSession == null) {
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
     }
     // If not a member
     const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
@@ -1731,17 +1675,80 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             vscode.window.showErrorMessage(err.message + "\n" + err.stack);
         }
     }
+    // Get specific node based on label and parent tree (session / favorites)
+    let nodes: ZoweNode[];
+    let isFromFavorites: boolean;
+    if (!sesNode || sesNode.children.length === 0) {
+        // saving from favorites
+        nodes = utils.concatChildNodes(datasetProvider.mFavorites);
+        isFromFavorites = true;
+    } else {
+        // saving from session
+        nodes = utils.concatChildNodes([sesNode]);
+        isFromFavorites = false;
+    }
+    node = await nodes.find((zNode) => {
+        // dataset in Favorites
+        if (zNode.contextValue === DS_FAV_CONTEXT) {
+            return (zNode.label === `[${sesName}]: ${label}`);
+        // member in Favorites
+        } else if (zNode.contextValue === DS_MEMBER_CONTEXT && isFromFavorites) {
+            const zNodeDetails = getProfileAndDataSetName(zNode);
+            return (`${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `[${sesName}]: ${label}`);
+        } else if (zNode.contextValue === DS_MEMBER_CONTEXT && !isFromFavorites) {
+            const zNodeDetails = getProfileAndDataSetName(zNode);
+            return (`${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`);
+        } else if (zNode.contextValue === DS_DS_CONTEXT) {
+            return (zNode.label.trim() === label);
+        } else {
+            return false;
+        }
+    });
+
+    // define upload options
+    let uploadOptions: IUploadOptions;
+    if (node) {
+        uploadOptions = {
+            etag: node.getEtag(),
+            returnEtag: true
+        };
+    }
+
     try {
-        const response = await vscode.window.withProgress({
+        const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
-            return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label);  // TODO MISSED TESTING
+            return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label, uploadOptions);  // TODO MISSED TESTING
         });
-        if (response.success) {
-            vscode.window.showInformationMessage(response.commandResponse);  // TODO MISSED TESTING
+        if (uploadResponse.success) {
+            vscode.window.showInformationMessage(uploadResponse.commandResponse);  // TODO MISSED TESTING
+            // set local etag with the new etag from the updated file on mainframe
+            node.setEtag(uploadResponse.apiResponse[0].etag);
+        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+            const downloadResponse = await zowe.Download.dataSet(documentSession, label, {
+                file: doc.fileName,
+                returnEtag: true});
+            // re-assign etag, so that it can be used with subsequent requests
+            const downloadEtag = downloadResponse.apiResponse.etag;
+            if (downloadEtag !== node.getEtag()) {
+                node.setEtag(downloadEtag);
+            }
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
+            // Store document in a separate variable, to be used on merge conflict
+            const oldDoc = doc;
+            const oldDocText = oldDoc.getText();
+            const startPosition = new vscode.Position(0,0);
+            const endPosition = new vscode.Position(oldDoc.lineCount,0);
+            const deleteRange = new vscode.Range(startPosition, endPosition);
+            await vscode.window.activeTextEditor.edit((editBuilder) => {
+                // re-write the old content in the editor view
+                editBuilder.delete(deleteRange);
+                editBuilder.insert(startPosition, oldDocText);
+            });
+            await vscode.window.activeTextEditor.document.save();
         } else {
-            vscode.window.showErrorMessage(response.commandResponse);
+            vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
         vscode.window.showErrorMessage(err.message);  // TODO MISSED TESTING
@@ -1763,29 +1770,81 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
 
     // get session from session name
-    let documentSession;
+    let documentSession: Session;
     let binary;
+    let node: ZoweUSSNode;
     const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.mProfileName && child.mProfileName.trim()=== sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
+    // Get specific node based on label and parent tree (session / favorites)
+    let nodes: ZoweUSSNode[];
+    if (!sesNode || sesNode.children.length === 0) {
+        // saving from favorites
+        nodes = utils.concatUSSChildNodes(ussFileProvider.mFavorites);
+    } else {
+        // saving from session
+        nodes = utils.concatUSSChildNodes([sesNode]);
+    }
+    node = await nodes.find((zNode) => {
+        if (zNode.contextValue === DS_FAV_TEXT_FILE_CONTEXT || zNode.contextValue === DS_TEXT_FILE_CONTEXT) {
+            return (zNode.fullPath.trim() === remote);
+        } else {
+            return false;
+        }
+    });
+
+    // define upload options
+    let etagToUpload: string;
+    let returnEtag: boolean;
+    if (node) {
+        etagToUpload = node.getEtag();
+        returnEtag = true;
+    }
 
     try {
-        const response = await vscode.window.withProgress({
+        const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary);  // TODO MISSED TESTING
+            return zowe.Upload.fileToUSSFile(documentSession, doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
         });
-        if (response.success) {
-            vscode.window.showInformationMessage(response.commandResponse);
+        if (uploadResponse.success) {
+            vscode.window.showInformationMessage(uploadResponse.commandResponse);
+            // set local etag with the new etag from the updated file on mainframe
+            node.setEtag(uploadResponse.apiResponse.etag);
+        // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
-            vscode.window.showErrorMessage(response.commandResponse);
+            vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
-        log.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
+        if (err.message.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+            const downloadResponse = await zowe.Download.ussFile(documentSession, node.fullPath, {
+                file: getUSSDocumentFilePath(node),
+                returnEtag: true});
+            // re-assign etag, so that it can be used with subsequent requests
+            const downloadEtag = downloadResponse.apiResponse.etag;
+            if (downloadEtag !== etagToUpload) {
+                node.setEtag(downloadEtag);
+            }
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
+            // Store document in a separate variable, to be used on merge conflict
+            const oldDoc = doc;
+            const oldDocText = oldDoc.getText();
+            const startPosition = new vscode.Position(0,0);
+            const endPosition = new vscode.Position(oldDoc.lineCount,0);
+            const deleteRange = new vscode.Range(startPosition, endPosition);
+            await vscode.window.activeTextEditor.edit((editBuilder) => {
+                // re-write the old content in the editor view
+                editBuilder.delete(deleteRange);
+                editBuilder.insert(startPosition, oldDocText);
+            });
+            await vscode.window.activeTextEditor.document.save();
+        } else {
+            log.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
+            vscode.window.showErrorMessage(err.message);
+        }
     }
 }
 
@@ -1841,20 +1900,23 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
             }
             log.debug(localize("openUSS.log.debug.request", "requesting to open a uss file ") + label);
             // if local copy exists, open that instead of pulling from mainframe
-            if (download || !fs.existsSync(getUSSDocumentFilePath(node))) {
+            const documentFilePath = getUSSDocumentFilePath(node);
+            if (download || !fs.existsSync(documentFilePath)) {
                 const chooseBinary = node.binary || await zowe.Utilities.isFileTagBinOrAscii(node.getSession(), node.fullPath);
-                await vscode.window.withProgress({
+                const response = await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening USS file...",
             }, function downloadUSSFile() {
                 return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
-                    file: getUSSDocumentFilePath(node),
-                    binary: chooseBinary
+                    file: documentFilePath,
+                    binary: chooseBinary,
+                    returnEtag: true
                 });
             }
                 );
+                node.setEtag(response.apiResponse.etag);
             }
-            const document = await vscode.workspace.openTextDocument(getUSSDocumentFilePath(node));
+            const document = await vscode.workspace.openTextDocument(documentFilePath);
             if (previewFile === true) {
                 await vscode.window.showTextDocument(document);
                 }

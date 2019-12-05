@@ -38,8 +38,12 @@ export class ZoweNode extends vscode.TreeItem {
      * @param {ZoweNode} mParent
      * @param {Session} session
      */
-    constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweNode, private session: Session, contextOverride?: string) {
+    constructor(label: string,
+                collapsibleState: vscode.TreeItemCollapsibleState,
+                public mParent: ZoweNode,
+                private session: Session,
+                contextOverride?: string,
+                private etag?: string) {
         super(label, collapsibleState);
         if (contextOverride) {
             this.contextValue = contextOverride;
@@ -51,6 +55,7 @@ export class ZoweNode extends vscode.TreeItem {
             this.contextValue = extension.DS_DS_CONTEXT;
         }
         this.tooltip = this.label;
+        this.etag = etag ? etag : "";
         utils.applyIcons(this);
     }
 
@@ -163,5 +168,23 @@ export class ZoweNode extends vscode.TreeItem {
      */
     public getSessionNode(): ZoweNode {
         return this.session ? this : this.mParent.getSessionNode();
+    }
+
+    /**
+     * Returns the [etag] for this node
+     *
+     * @returns {string}
+     */
+    public getEtag(): string {
+        return this.etag;
+    }
+
+    /**
+     * Set the [etag] for this node
+     *
+     * @returns {void}
+     */
+    public setEtag(etagValue): void {
+        this.etag = etagValue;
     }
 }

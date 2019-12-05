@@ -186,14 +186,6 @@
         "title": "%removeSession%"
       },
       {
-        "command": "zowe.safeSave",
-        "title": "%safeSave%",
-        "icon": {
-          "light": "./resources/light/upload.svg",
-          "dark": "./resources/dark/upload.svg"
-        }
-      },
-      {
         "command": "zowe.saveSearch",
         "title": "%saveSearch%"
       },
@@ -264,14 +256,6 @@
       {
         "command": "zowe.uss.removeSession",
         "title": "%uss.removeSession%"
-      },
-      {
-        "command": "zowe.uss.safeSaveUSS",
-        "title": "%uss.safeSaveUSS%",
-        "icon": {
-          "light": "./resources/light/upload.svg",
-          "dark": "./resources/dark/upload.svg"
-        }
       },
       {
         "command": "zowe.uss.saveSearch",
@@ -461,17 +445,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
-          "command": "zowe.uss.safeSaveUSS",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.refreshUSS",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
-          "command": "zowe.uss.safeSaveUSS",
           "group": "0_mainframeInteraction"
         },
         {
@@ -556,17 +530,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == member",
-          "command": "zowe.safeSave",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -596,17 +560,12 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == member_fav",
-          "command": "zowe.safeSave",
+          "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == member_fav",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member_fav",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -635,18 +594,18 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.explorer && viewItem == member_fav",
+          "command": "zowe.renameDataSetMember",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.safeSave",
+          "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -690,18 +649,23 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds_fav",
-          "command": "zowe.safeSave",
+          "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds_fav",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -977,10 +941,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.safeSave",
-          "when": "never"
-        },
-        {
           "command": "zowe.saveSearch",
           "when": "never"
         },
@@ -998,10 +958,6 @@
         },
         {
           "command": "zowe.uss.refreshUSS",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.safeSaveUSS",
           "when": "never"
         },
         {
@@ -1227,7 +1183,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "^2.35.0",
+    "@brightside/core": "^2.36.0",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
