@@ -97,14 +97,20 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
+                    let appName: string;
+                    if (extension.ISTHEIA === true) {
+                        appName = "Theia";
+                    } else {
+                        appName = "VS Code";
+                    }
                     vscode.window.showErrorMessage(
                         localize("initializeFavorites.error.profile1",
                         "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
                         localize("intializeFavorites.error.profile2",
                         ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ") +
-                        localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                        appName + localize("initializeFavorites.error.profile4", " user settings."));
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
