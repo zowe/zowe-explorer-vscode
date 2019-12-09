@@ -154,11 +154,6 @@ Array [
   },
   Object {
     "command": "zowe.refreshNode",
-    "group": "inline",
-    "when": "view == zowe.explorer && viewItem == member_fav",
-  },
-  Object {
-    "command": "zowe.refreshNode",
     "group": "0_mainframeInteraction",
     "when": "view == zowe.explorer && viewItem == member_fav",
   },
@@ -176,16 +171,6 @@ Array [
     "command": "zowe.renameDataSetMember",
     "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == member",
-  },
-  Object {
-    "command": "zowe.renameDataSetMember",
-    "group": "6_modification@2",
-    "when": "view == zowe.explorer && viewItem == member_fav",
-  },
-  Object {
-    "command": "zowe.refreshNode",
-    "group": "inline",
-    "when": "view == zowe.explorer && viewItem == ds",
   },
   Object {
     "command": "zowe.renameDataSetMember",
@@ -226,21 +211,6 @@ Array [
     "command": "zowe.renameDataSet",
     "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem == ds",
-  },
-  Object {
-    "command": "zowe.copyDataSet",
-    "group": "9_cutcopypaste",
-    "when": "view == zowe.explorer && viewItem == ds",
-  },
-  Object {
-    "command": "zowe.pasteDataSet",
-    "group": "9_cutcopypaste",
-    "when": "view == zowe.explorer && viewItem == ds",
-  },
-  Object {
-    "command": "zowe.refreshNode",
-    "group": "inline",
-    "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
     "command": "zowe.copyDataSet",
