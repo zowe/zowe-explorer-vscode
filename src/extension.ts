@@ -15,7 +15,7 @@ import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session, CredentialManagerFactory, ImperativeError } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -114,6 +114,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
+
+        const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
+        if (service) {
+            const keytar = defineSecurity("keytar");
+            if (keytar) {
+                try {
+                    CredentialManagerFactory.initialize(
+                        {
+                            service
+                        }
+                    );
+                } catch (err) {
+                    throw new ImperativeError({msg: err.toString()});
+                }
+            }
+        }
+
         await Profiles.createInstance(log);
 
         // Initialize dataset provider
@@ -379,6 +396,21 @@ export function defineGlobals(tempPath: string | undefined) {
 
     USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
     DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+}
+
+/**
+ * Imports the neccesary security modules
+ */
+export function defineSecurity(moduleName) {
+    try {
+        return require(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
+        // tslint:disable-next-line: no-empty
+      } catch (err) {}
+    try {
+        return require(`${vscode.env.appRoot}/node_modules/${moduleName}`);
+      // tslint:disable-next-line: no-empty
+      } catch (err) {}
+    return undefined;
 }
 
 /**
