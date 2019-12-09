@@ -115,18 +115,20 @@ export async function activate(context: vscode.ExtensionContext) {
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
-        if (service) {
-            const keytar = defineSecurity("keytar");
-            if (keytar) {
-                try {
-                    CredentialManagerFactory.initialize(
-                        {
-                            service
-                        }
-                    );
-                } catch (err) {
-                    throw new ImperativeError({msg: err.toString()});
+        if (!Profiles.isSpawnReqd()) {
+            const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
+            if (service) {
+                const keytar = defineSecurity("keytar");
+                if (keytar) {
+                    try {
+                        CredentialManagerFactory.initialize(
+                            {
+                                service
+                            }
+                        );
+                    } catch (err) {
+                        throw new ImperativeError({msg: err.toString()});
+                    }
                 }
             }
         }

@@ -44,11 +44,28 @@ export class Profiles { // Processing stops if there are no profiles detected
     public static getInstance() {
         return Profiles.loader;
     }
+    public static isSpawnReqd() {
+        if (this.spawnValue === -1) {
+            const homedir = os.homedir();
+            this.spawnValue = 0;
+            try {
+                const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
+                const settings = JSON.parse(fs.readFileSync(fileName).toString());
+                const value = settings.overrides.CredentialManager;
+                this.spawnValue = value !== false ? 0 : 1;
+            } catch (error) {
+                // default to spawn
+                this.spawnValue = 0;
+            }
+        }
+        return this.spawnValue === 0;
+    }
+
     private static loader: Profiles;
+    private static spawnValue: number = -1;
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
 
-    private spawnValue: number = -1;
     private initValue: number = -1;
     private constructor(public log: Logger) {}
 
@@ -65,7 +82,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         return this.defaultProfile;
     }
     public async refresh() {
-        if (this.isSpawnReqd() === 0) {
+        if (Profiles.isSpawnReqd()) {
             this.allProfiles = ProfileLoader.loadAllProfiles();
             try {
                 this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
@@ -311,22 +328,5 @@ export class Profiles { // Processing stops if there are no profiles detected
             vscode.window.showErrorMessage(error.message);
         }
         return zosmfProfile.profile;
-    }
-
-    private isSpawnReqd() {
-        if (this.spawnValue === -1) {
-            const homedir = os.homedir();
-            this.spawnValue = 0;
-            try {
-                const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
-                const settings = JSON.parse(fs.readFileSync(fileName).toString());
-                const value = settings.overrides.CredentialManager;
-                this.spawnValue = value !== false ? 0 : 1;
-            } catch (error) {
-                // default to spawn
-                this.spawnValue = 0;
-            }
-        }
-        return this.spawnValue;
     }
 }
