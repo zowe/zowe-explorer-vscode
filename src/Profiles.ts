@@ -164,18 +164,30 @@ export class Profiles { // Processing stops if there are no profiles detected
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection"),
+            prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection. Leave blank to not store."),
             value: userName
         };
         userName = await vscode.window.showInputBox(options);
 
+        if (userName === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.enteruserName",
+                "Operation Cancelled"));
+            return;
+        }
+
         options = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter a password for the connection"),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
             password: true,
             value: passWord
         };
         passWord = await vscode.window.showInputBox(options);
+
+        if (passWord === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.enterpassWord",
+                "Operation Cancelled"));
+            return;
+        }
 
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
