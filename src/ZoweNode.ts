@@ -15,6 +15,7 @@ import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
+import { IZoweTreeNode } from "./ZoweTree";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -24,7 +25,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * @class ZoweNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweNode extends vscode.TreeItem {
+export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
     public command: vscode.Command;
     public pattern = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
@@ -57,6 +58,16 @@ export class ZoweNode extends vscode.TreeItem {
         this.tooltip = this.label;
         this.etag = etag ? etag : "";
         utils.applyIcons(this);
+    }
+
+    /**
+     * Implements access to profile name
+     * for {IZoweTreeNode}.
+     *
+     * @returns {string}
+     */
+    public getProfileName(): string {
+        return this.label.trim();
     }
 
     /**
