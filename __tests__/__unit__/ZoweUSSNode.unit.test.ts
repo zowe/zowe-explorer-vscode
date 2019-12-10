@@ -199,4 +199,22 @@ describe("Unit Tests (Jest)", () => {
         utils.labelHack(rootNode);
         expect(rootNode.label === "gappy");
     });
+
+    /*************************************************************************************************************
+     * Checks that getEtag() returns a value
+     *************************************************************************************************************/
+    it("Checks that getEtag() returns a value", async () => {
+        const rootNode = new ZoweUSSNode("gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, null, null, "123");
+        expect(rootNode.getEtag() === "123");
+    });
+
+    /*************************************************************************************************************
+     * Checks that setEtag() assigns a value
+     *************************************************************************************************************/
+    it("Checks that setEtag() assigns a value", async () => {
+        const rootNode = new ZoweUSSNode("gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, null, null, "123");
+        expect(rootNode.getEtag() === "123");
+        rootNode.setEtag("ABC");
+        expect(rootNode.getEtag() === "ABC");
+    });
 });

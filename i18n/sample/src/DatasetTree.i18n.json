@@ -5,6 +5,8 @@
     "intializeFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
     "initializeFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ",
     "initializeFavorites.error.profile4": "which can be found in your VS Code user settings.",
+    "loadNamedProfile.error.profileName": "Initialization Error: Could not find profile named: ",
+    "loadNamedProfile.error.period": ".",
     "initializeFavorites.fileCorrupted": "Favorites file corrupted: ",
     "addFavorite": "PDS already in favorites",
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",

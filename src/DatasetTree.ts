@@ -53,6 +53,7 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public readonly onDidChangeTreeData: vscode.Event<ZoweNode | undefined> = this.mOnDidChangeTreeData.event;
     private mHistory: PersistentFilters;
     private log: Logger;
+    private validProfile: number = -1;
 
     constructor() {
         this.mFavoriteSession = new ZoweNode(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null);
@@ -107,8 +108,19 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
+                const sesName = line.substring(1, line.lastIndexOf("]")).trim();
+                let zosmfProfile: IProfileLoaded;
+                try {
+                    zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                } catch (error) {
+                    vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
+                        "Initialization Error: Could not find profile named: ")
+                        + sesName + localize("loadNamedProfile.error.period", "."));
+                    continue;
+                }
+                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
-                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, null);
+                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session);
                 node.command = { command: "zowe.pattern", title: "", arguments: [node] };
                 const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
                 const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
@@ -288,12 +300,36 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param {ZoweNode} node
      */
     public async renameFavorite(node: ZoweNode, newLabel: string) {
-        const matchingNode = this.mFavorites.find((temp) => (temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue)));
+        const matchingNode = this.mFavorites.find(
+            (temp) => (temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))
+        );
         if (matchingNode) {
             const prefix = matchingNode.label.substring(0, matchingNode.label.indexOf(":") + 2);
             matchingNode.label = prefix + newLabel;
             this.refreshElement(matchingNode);
         }
+    }
+
+    /**
+     * Finds the equivalent node as a favorite
+     *
+     * @param {ZoweNode} node
+     */
+    public findFavoritedNode(node: ZoweNode) {
+        return this.mFavorites.find(
+            (temp) => (temp.label === `[${node.mParent.label.trim()}]: ${node.label}`) && (temp.contextValue.includes(node.contextValue))
+        );
+    }
+    /**
+     * Finds the equivalent node not as a favorite
+     *
+     * @param {ZoweNode} node
+     */
+    public findNonFavoritedNode(node: ZoweNode) {
+        const profileLabel = node.label.substring(1, node.label.indexOf("]"));
+        const nodeLabel = node.label.substring(node.label.indexOf(":") + 2);
+        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileLabel);
+        return sessionNode.children.find((temp) => temp.label === nodeLabel);
     }
 
     /**
@@ -336,71 +372,112 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        if (node.contextValue === extension.DS_SESSION_CONTEXT) {
-            if (this.mHistory.getHistory().length > 0) {
-                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
-                if (extension.ISTHEIA) {
-                    const options1: vscode.QuickPickOptions = {
-                        placeHolder: localize("searchHistory.options.prompt", "Select a filter")
-                    };
-                    // get user selection
-                    const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    pattern = choice === createPick ? "" : choice.label;
-                } else {
-                    const quickpick = vscode.window.createQuickPick();
-                    quickpick.items = [createPick, ...items];
-                    quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                    quickpick.ignoreFocusOut = true;
-                    quickpick.show();
-                    const choice = await resolveQuickPickHelper(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        if (quickpick.value) {
-                            pattern = quickpick.value;
-                        }
-                    } else {
-                        pattern = choice.label;
-                    }
-                }
-            }
-            if (!pattern) {
-                // manually entering a search
-                const options2: vscode.InputBoxOptions = {
-                    prompt: localize("enterPattern.options.prompt",
-                                        "Search data sets by entering patterns: use a comma to separate multiple patterns"),
-                    value: node.pattern,
-                };
-                // get user input
-                pattern = await vscode.window.showInputBox(options2);
-                if (!pattern) {
-                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
-                    return;
-                }
-            }
+        let usrNme: string;
+        let passWrd: string;
+        let baseEncd: string;
+        let sesNamePrompt: string;
+        if (node.contextValue.endsWith(extension.FAV_SUFFIX)) {
+            sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
         } else {
-            // executing search from saved search in favorites
-            pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-            const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(session);
-            node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+            sesNamePrompt = node.label;
         }
-        // update the treeview with the new pattern
-        node.label = node.label.trim()+ " ";
-        node.label.trim();
-        node.tooltip = node.pattern = pattern.toUpperCase();
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.dirty = true;
-        node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
-        this.addHistory(node.pattern);
+        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
+                this.validProfile = 0;
+            } else {
+                return;
+            }
+            await this.refreshElement(node);
+            await this.refresh();
+        } else {
+            this.validProfile = 0;
+        }
+        if (this.validProfile === 0) {
+            if (node.contextValue === extension.DS_SESSION_CONTEXT) {
+                if (this.mHistory.getHistory().length > 0) {
+                    const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    if (extension.ISTHEIA) {
+                        const options1: vscode.QuickPickOptions = {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                        };
+                        // get user selection
+                        const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        pattern = choice === createPick ? "" : choice.label;
+                    } else {
+                        const quickpick = vscode.window.createQuickPick();
+                        quickpick.items = [createPick, ...items];
+                        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                        quickpick.ignoreFocusOut = true;
+                        quickpick.show();
+                        const choice = await resolveQuickPickHelper(quickpick);
+                        quickpick.hide();
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        if (choice instanceof FilterDescriptor) {
+                            if (quickpick.value) {
+                                pattern = quickpick.value;
+                            }
+                        } else {
+                            pattern = choice.label;
+                        }
+                    }
+                }
+                if (!pattern) {
+                    // manually entering a search
+                    const options2: vscode.InputBoxOptions = {
+                        prompt: localize("enterPattern.options.prompt",
+                                            "Search data sets by entering patterns: use a comma to separate multiple patterns"),
+                        value: node.pattern,
+                    };
+                    // get user input
+                    pattern = await vscode.window.showInputBox(options2);
+                    if (!pattern) {
+                        vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
+                        return;
+                    }
+                }
+            } else {
+                // executing search from saved search in favorites
+                pattern = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                await this.addSession(session);
+                const faveNode = node;
+                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+                    node.getSession().ISession.user = faveNode.getSession().ISession.user;
+                    node.getSession().ISession.password = faveNode.getSession().ISession.password;
+                    node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                }
+            }
+            // update the treeview with the new pattern
+            node.label = node.label.trim()+ " ";
+            node.label.trim();
+            node.tooltip = node.pattern = pattern.toUpperCase();
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            node.dirty = true;
+            node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
+            this.addHistory(node.pattern);
+        }
     }
 
     /**
@@ -410,9 +487,48 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: ZoweNode, isOpen: boolean = false) {
-        element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
+        if (element.label !== "Favorites") {
+            let usrNme: string;
+            let passWrd: string;
+            let baseEncd: string;
+            let sesNamePrompt: string;
+            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
+            } else {
+                sesNamePrompt = element.label;
+            }
+            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.getSession().ISession.user = usrNme;
+                    element.getSession().ISession.password = passWrd;
+                    element.getSession().ISession.base64EncodedAuth = baseEncd;
+                    this.validProfile = 1;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 1;
+            }
+        } else {
+            this.validProfile = 1;
+        }
+        if (this.validProfile === 1) {
+            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
+        }
     }
 
     /**

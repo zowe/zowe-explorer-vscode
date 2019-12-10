@@ -38,8 +38,9 @@ export class ZoweVscZosmfUssRestApi implements ZoweVscApi.IUss {
     }
 
     public async putContents(session: imperative.Session, inputFile: string, ussname: string,
-                             binary?: boolean, localEncoding?: string): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.fileToUSSFile(session, inputFile, ussname, binary, localEncoding);
+                             binary?: boolean, localEncoding?: string,
+                             etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
+        return zowe.Upload.fileToUSSFile(session, inputFile, ussname, binary, localEncoding, etag, returnEtag);
     }
     public async create(session: imperative.Session, ussPath: string, type: string, mode?: string): Promise<string> {
         return zowe.Create.uss(session, ussPath, type);

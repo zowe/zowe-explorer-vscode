@@ -93,7 +93,9 @@ export namespace ZoweVscApi {
             inputFile: string,
             ussname: string,
             binary?: boolean,
-            localEncoding?: string
+            localEncoding?: string,
+            etag?: string,
+            returnEtag?: boolean
         ): Promise<zowe.IZosFilesResponse>;
 
         /**

@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.29.0",
+  "version": "1.0.0",
   "publisher": "Zowe",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -110,6 +110,18 @@
         "title": "%renameDataSet%"
       },
       {
+        "command": "zowe.copyDataSet",
+        "title": "%copyDataSet%"
+      },
+      {
+        "command": "zowe.pasteDataSet",
+        "title": "%pasteDataSet%"
+      },
+      {
+        "command": "zowe.renameDataSetMember",
+        "title": "%renameDataSetMember%"
+      },
+      {
         "command": "zowe.deleteDataset",
         "title": "%deleteDataset%"
       },
@@ -172,14 +184,6 @@
       {
         "command": "zowe.removeSession",
         "title": "%removeSession%"
-      },
-      {
-        "command": "zowe.safeSave",
-        "title": "%safeSave%",
-        "icon": {
-          "light": "./resources/light/upload.svg",
-          "dark": "./resources/dark/upload.svg"
-        }
       },
       {
         "command": "zowe.saveSearch",
@@ -252,14 +256,6 @@
       {
         "command": "zowe.uss.removeSession",
         "title": "%uss.removeSession%"
-      },
-      {
-        "command": "zowe.uss.safeSaveUSS",
-        "title": "%uss.safeSaveUSS%",
-        "icon": {
-          "light": "./resources/light/upload.svg",
-          "dark": "./resources/dark/upload.svg"
-        }
       },
       {
         "command": "zowe.uss.saveSearch",
@@ -449,17 +445,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
-          "command": "zowe.uss.safeSaveUSS",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
           "command": "zowe.uss.refreshUSS",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem != favorite && viewItem != uss_session && viewItem != directory && viewItem != directory_fav && viewItem != uss_session_fav",
-          "command": "zowe.uss.safeSaveUSS",
           "group": "0_mainframeInteraction"
         },
         {
@@ -544,17 +530,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == member",
-          "command": "zowe.safeSave",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -573,23 +549,18 @@
           "group": "3_systemSpecific"
         },
         {
+          "when": "view == zowe.explorer && viewItem == member",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == member_fav",
           "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == member_fav",
-          "command": "zowe.safeSave",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member_fav",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member_fav",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -603,23 +574,23 @@
           "group": "6_modification@0"
         },
         {
+          "when": "view == zowe.explorer && viewItem == member",
+          "command": "zowe.renameDataSetMember",
+          "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == member_fav",
+          "command": "zowe.renameDataSetMember",
+          "group": "6_modification@2"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.safeSave",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -648,23 +619,23 @@
           "group": "6_modification@2"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.refreshNode",
           "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds_fav",
-          "command": "zowe.safeSave",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.refreshNode",
-          "group": "0_mainframeInteraction"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds_fav",
-          "command": "zowe.safeSave",
           "group": "0_mainframeInteraction"
         },
         {
@@ -691,6 +662,16 @@
           "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.renameDataSet",
           "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
         },
         {
           "when": "view == zowe.explorer && viewItem == pds",
@@ -723,6 +704,11 @@
           "group": "6_modification@2"
         },
         {
+          "when": "view == zowe.explorer && viewItem == pds",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -751,6 +737,16 @@
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.renameDataSet",
           "group": "6_modification@2"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.copyDataSet",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.pasteDataSet",
+          "group": "9_cutcopypaste"
         },
         {
           "when": "view == zowe.explorer && viewItem == migr",
@@ -915,10 +911,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.safeSave",
-          "when": "never"
-        },
-        {
           "command": "zowe.saveSearch",
           "when": "never"
         },
@@ -936,10 +928,6 @@
         },
         {
           "command": "zowe.uss.refreshUSS",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.safeSaveUSS",
           "when": "never"
         },
         {
@@ -1165,7 +1153,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "^2.33.0",
+    "@brightside/core": "^2.36.0",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
