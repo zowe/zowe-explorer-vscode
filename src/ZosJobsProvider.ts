@@ -16,6 +16,7 @@ import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
+import { IZoweTree } from "./ZoweTree";
 import { OwnerFilterDescriptor, JobIdFilterDescriptor, applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
@@ -36,7 +37,7 @@ export async function createJobsTree(log: Logger) {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
+export class ZosJobsProvider implements IZoweTree<Job> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";

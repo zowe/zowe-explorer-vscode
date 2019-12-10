@@ -96,7 +96,7 @@ describe("Extension Integration Tests", () => {
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
-            await extension.addSession(testTree);
+            await extension.addZoweSession(testTree);
             expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });
@@ -944,7 +944,7 @@ describe("Extension Integration Tests - USS", () => {
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
-            await extension.addUSSSession(ussTestTree);
+            await extension.addZoweSession(ussTestTree);
             expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });

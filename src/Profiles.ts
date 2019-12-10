@@ -142,7 +142,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         return validationResult;
     }
 
-    public async createNewConnection(profileName) {
+    public async createNewConnection(profileName: string): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
@@ -161,7 +161,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         if (!zosmfURL) {
             vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
                 "No valid value for z/OSMF URL. Operation Cancelled"));
-            return;
+            return undefined;
         }
 
         const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
@@ -201,14 +201,14 @@ export class Profiles { // Processing stops if there are no profiles detected
         } else {
             vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
                 "Operation Cancelled"));
-            return;
+            return undefined;
         }
 
         for (const profile of this.allProfiles) {
             if (profile.name === profileName) {
                 vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
                     "Profile name already exists. Please create a profile using a different name"));
-                return;
+                return undefined;
             }
         }
 
