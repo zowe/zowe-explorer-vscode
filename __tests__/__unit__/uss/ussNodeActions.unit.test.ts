@@ -17,6 +17,7 @@ import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
+import { Profiles } from "../../../src/Profiles";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -33,6 +34,7 @@ const mockAddUSSFavorite = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
+const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
 const showOpenDialog = jest.fn();
@@ -107,6 +109,7 @@ Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
 Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
 Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
 Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
 Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
@@ -172,6 +175,106 @@ describe("ussNodeActions", () => {
             }
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
+        it("tests the uss create node credentials", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                port: 443,
+                protocol: "https",
+                type: "basic",
+            });
+            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        }),
+                    };
+                })
+            });
+
+            showInputBox.mockReturnValueOnce("fake");
+            showInputBox.mockReturnValueOnce("fake");
+
+            await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
+
+            expect(testUSSTree.refresh).toHaveBeenCalled();
+
+        });
+
+        it("tests the uss create node credentials operation cancelled", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                port: 443,
+                protocol: "https",
+                type: "basic",
+            });
+            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [undefined, undefined, undefined];
+                        }),
+                    };
+                })
+            });
+
+            await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
+
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+
+        });
+
+        it("tests the uss filter prompt credentials error", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                port: 443,
+                protocol: "https",
+                type: "basic",
+            });
+            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"}
+                    };
+                })
+            });
+
+            await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
+
+            expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
     describe("deleteUSSNode", () => {

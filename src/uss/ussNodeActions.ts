@@ -54,14 +54,45 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
 }
 
 export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: `What would you like to create at ${node.fullPath}?`,
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
-    const isTopLevel = true;
-    return createUSSNode(node, ussFileProvider, type, isTopLevel);
+    let usrNme: string;
+    let passWrd: string;
+    let baseEncd: string;
+    let validProfile: number = -1;
+    if ((!node.getSession().ISession.user.trim()) || (!node.getSession().ISession.password.trim())) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
+            if (values !== undefined) {
+                usrNme = values [0];
+                passWrd = values [1];
+                baseEncd = values [2];
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+            return;
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
+            validProfile = 0;
+        } else {
+            return;
+        }
+        await ussFileProvider.refreshElement(node);
+        await ussFileProvider.refresh();
+    } else {
+        validProfile = 0;
+    }
+    if (validProfile === 0) {
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: `What would you like to create at ${node.fullPath}?`,
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
+        const isTopLevel = true;
+        return createUSSNode(node, ussFileProvider, type, isTopLevel);
+    }
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
@@ -194,7 +225,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
  * @param {ZoweUSSNode} node
  */
 export async function copyPath(node: ZoweUSSNode) {
-    if (ISTHEIA) {
+    if (extension.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
         vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
         return;

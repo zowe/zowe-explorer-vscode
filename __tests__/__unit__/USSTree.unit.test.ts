@@ -15,6 +15,7 @@ jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
 jest.mock("../../src/Profiles");
+import * as brightside from "@brightside/core";
 import { Session, Logger } from "@brightside/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
@@ -363,6 +364,63 @@ describe("Unit Tests (Jest)", () => {
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
     });
 
+    it("Testing that expand tree with credential prompt is executed successfully", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], sessionwocred, null);
+        folder.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+        await testTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Testing that expand tree with credential prompt ends in error", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], sessionwocred, null);
+        folder.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).not.toEqual("folder-open.svg");
+        await testTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).not.toEqual("folder-closed.svg");
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).not.toEqual("folder-open.svg");
+    });
+
     it("initialize USSTree is executed successfully", async () => {
         const mockLoadNamedProfile = jest.fn();
         mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
@@ -567,5 +625,199 @@ describe("Unit Tests (Jest)", () => {
         Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
         await testTree.onDidChangeConfiguration(e);
         expect(getConfiguration.mock.calls.length).toBe(2);
+    });
+
+    it("tests the uss filter prompt credentials", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await testTree.ussFilterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+
+    });
+
+    it("tests the uss filter prompt credentials, favorites route", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const ZosmfSession = jest.fn();
+        Object.defineProperty(brightside, "ZosmfSession", { value: ZosmfSession });
+        const createBasicZosmfSession = jest.fn();
+        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const dsNode = new ZoweUSSNode("[ussTestSess]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred, null, false, "ussTestSess");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                };
+            })
+        });
+        dsNode.mProfileName = "ussTestSess";
+        dsNode.getSession().ISession.user = "";
+        dsNode.getSession().ISession.password = "";
+        dsNode.getSession().ISession.base64EncodedAuth = "";
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode);
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        const spyMe = new USSTree();
+        Object.defineProperty(spyMe, "ussFilterPrompt", {
+            value: jest.fn(() => {
+                return {
+                    tempNode: dsNode,
+                    mSessionNodes: {Session: {ISession: {user: "", password: "", base64EncodedAuth: ""}}, mProfileName: "ussTestSess"}
+                };
+            })
+        });
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: "",
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        await testTree.ussFilterPrompt(dsNode);
+
+        const nodeLength = testTree.mSessionNodes.length - 1;
+        expect(testTree.mSessionNodes[nodeLength].fullPath).toEqual("/u/myFile.txt");
+
+    });
+
+    it("tests the uss filter, favorites route", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const ZosmfSession = jest.fn();
+        Object.defineProperty(brightside, "ZosmfSession", { value: ZosmfSession });
+        const createBasicZosmfSession = jest.fn();
+        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const dsNode = new ZoweUSSNode("[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred, null, false, "ussTestSess2");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["", "", ""];
+                    }),
+                };
+            })
+        });
+        dsNode.mProfileName = "ussTestSess2";
+        dsNode.getSession().ISession.user = "";
+        dsNode.getSession().ISession.password = "";
+        dsNode.getSession().ISession.base64EncodedAuth = "";
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode);
+
+        const spyMe = new USSTree();
+        Object.defineProperty(spyMe, "ussFilterPrompt", {
+            value: jest.fn(() => {
+                return {
+                    tempNode: dsNode,
+                    mSessionNodes: {Session: {ISession: {user: "", password: "", base64EncodedAuth: ""}}}
+                };
+            })
+        });
+
+        await testTree.ussFilterPrompt(dsNode);
+
+        const nodeLength = testTree.mSessionNodes.length - 1;
+        expect(testTree.mSessionNodes[nodeLength].fullPath).toEqual("/u/myFile.txt");
+
+    });
+
+    it("tests the uss filter prompt credentials error", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        await testTree.ussFilterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+
     });
 });

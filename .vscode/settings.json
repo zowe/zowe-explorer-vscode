@@ -11,6 +11,7 @@
         "out": true // set this to false to include "out" folder in search results
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-"typescript.tsc.autoDetect": "off",
-"git.alwaysSignOff": true
+   "typescript.tsc.autoDetect": "off",
+   // Make sure people do not accidentally forget to sign
+   "git.alwaysSignOff": true
 }
