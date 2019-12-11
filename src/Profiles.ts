@@ -155,7 +155,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         });
 
         if (!zosmfURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
+            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
                 "No valid value for z/OSMF URL. Operation Cancelled"));
             return;
         }
@@ -170,7 +170,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         userName = await vscode.window.showInputBox(options);
 
         if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.enteruserName",
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.userName",
                 "Operation Cancelled"));
             return;
         }
@@ -184,7 +184,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         passWord = await vscode.window.showInputBox(options);
 
         if (passWord === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.enterpassWord",
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
                 "Operation Cancelled"));
             return;
         }
