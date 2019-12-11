@@ -44,30 +44,32 @@ export class Profiles { // Processing stops if there are no profiles detected
     public static getInstance() {
         return Profiles.loader;
     }
-    public static isSpawnReqd() {
-        if (this.spawnValue === -1) {
-            const homedir = os.homedir();
-            this.spawnValue = 0;
-            try {
-                const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
-                const settings = JSON.parse(fs.readFileSync(fileName).toString());
-                const value = settings.overrides.CredentialManager;
-                this.spawnValue = value !== false ? 0 : 1;
-            } catch (error) {
-                // default to spawn
-                this.spawnValue = 0;
-            }
-        }
-        return this.spawnValue === 0;
-    }
+    // public static isSpawnReqd() {
+    //     if (this.spawnValue === -1) {
+    //         const homedir = os.homedir();
+    //         this.spawnValue = 0;
+    //         try {
+    //             const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
+    //             const settings = JSON.parse(fs.readFileSync(fileName).toString());
+    //             const value = settings.overrides.CredentialManager;
+    //             this.spawnValue = value !== false ? 0 : 1;
+    //         } catch (error) {
+    //             // default to spawn
+    //             this.spawnValue = 0;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     private static loader: Profiles;
     private static spawnValue: number = -1;
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
 
-    private initValue: number = -1;
+    private initValue: number = 0;
+    private profileManager;
     private constructor(public log: Logger) {}
+
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
@@ -78,24 +80,23 @@ export class Profiles { // Processing stops if there are no profiles detected
         throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
             + name + localize("loadNamedProfile.error.period", "."));
     }
+
     public getDefaultProfile(): IProfileLoaded {
         return this.defaultProfile;
     }
+
     public async refresh() {
-        if (Profiles.isSpawnReqd()) {
-            this.allProfiles = ProfileLoader.loadAllProfiles();
-            try {
-                this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
-            } catch (err) {
-                // Unable to load a default profile
-                this.log.warn(localize("loadNamedProfile.warn.noDefaultProfile",
-                    "Unable to locate a default profile. CLI may not be installed. ") + err.message);
-            }
-        } else {
-            const profileManager = new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-                type: "zosmf"
-            });
+        // if (Profiles.isSpawnReqd()) {
+        //     this.allProfiles = ProfileLoader.loadAllProfiles();
+        //     try {
+        //         this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
+        //     } catch (err) {
+        //         // Unable to load a default profile
+        //         this.log.warn(localize("loadNamedProfile.warn.noDefaultProfile",
+        //             "Unable to locate a default profile. CLI may not be installed. ") + err.message);
+        //     }
+        // } else {
+            const profileManager = await this.getCliProfileManager("zosmf");
             this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
                 return profile.type === "zosmf";
             });
@@ -104,19 +105,14 @@ export class Profiles { // Processing stops if there are no profiles detected
             } else {
                 ProfileLoader.loadDefaultProfile(this.log);
             }
-        }
+        // }
     }
 
     public listProfile() {
-        try {
-            this.allProfiles = ProfileLoader.loadAllProfiles();
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
+        this.refresh();
         this.allProfiles.map((profile) => {
             return profile.name;
         });
-        return this.allProfiles;
     }
 
     public validateAndParseUrl = (newUrl: string): IUrlValidator => {
@@ -297,36 +293,43 @@ export class Profiles { // Processing stops if there are no profiles detected
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
-        // we have to mock a few things to get the Imperative.init to work properly
-        try {
-            (process.mainModule as any).filename = require.resolve("@brightside/core");
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        try {
-            ((process.mainModule as any).paths as any).unshift(mainZoweDir);
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        if (this.initValue === -1) {
-            try {
-            // we need to call Imperative.init so that any installed credential manager plugins are loaded
-                await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
-            }
-            this.initValue = 0;
-        }
+        // const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
+        // // we have to mock a few things to get the Imperative.init to work properly
+        // try {
+        //     (process.mainModule as any).filename = require.resolve("@brightside/core");
+        // } catch (error) {
+        //     vscode.window.showErrorMessage(error.message);
+        // }
+        // try {
+        //     ((process.mainModule as any).paths as any).unshift(mainZoweDir);
+        // } catch (error) {
+        //     vscode.window.showErrorMessage(error.message);
+        // }
+        // if (this.initValue === -1) {
+        //     try {
+        //     // we need to call Imperative.init so that any installed credential manager plugins are loaded
+        //         await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
+        //     } catch (error) {
+        //         vscode.window.showErrorMessage(error.message);
+        //     }
+        //     this.initValue = 0;
+        // }
         let zosmfProfile: IProfile;
         try {
-            zosmfProfile = await new CliProfileManager({
-                profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
-                type: "zosmf"
-            }).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            zosmfProfile = await (await this.getCliProfileManager("zosmf")).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
         return zosmfProfile.profile;
+    }
+
+    private async getCliProfileManager( type: string ) {
+        if (!this.profileManager) {
+            this.profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+                type
+            });
+        }
+        return this.profileManager;
     }
 }

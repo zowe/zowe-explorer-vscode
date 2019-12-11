@@ -115,20 +115,18 @@ export async function activate(context: vscode.ExtensionContext) {
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        if (!Profiles.isSpawnReqd()) {
-            const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
-            if (service) {
-                const keytar = defineSecurity("keytar");
-                if (keytar) {
-                    try {
-                        CredentialManagerFactory.initialize(
-                            {
-                                service
-                            }
-                        );
-                    } catch (err) {
-                        throw new ImperativeError({msg: err.toString()});
-                    }
+        const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
+        if (service) {
+            const keytar = defineSecurity("keytar");
+            if (keytar) {
+                try {
+                    CredentialManagerFactory.initialize(
+                        {
+                            service
+                        }
+                    );
+                } catch (err) {
+                    throw new ImperativeError({msg: err.toString()});
                 }
             }
         }
@@ -683,7 +681,7 @@ export async function addSession(datasetProvider: DatasetTree) {
         }
         if (newprofile !== undefined) {
             try {
-                await Profiles.getInstance().listProfile();
+                await Profiles.getInstance().refresh();
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
             }
@@ -769,7 +767,7 @@ export async function addUSSSession(ussFileProvider: USSTree) {
         }
         if (newprofile !== undefined) {
             try {
-                await Profiles.getInstance().listProfile();
+                await Profiles.getInstance().refresh();
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
             }
@@ -2124,7 +2122,7 @@ export async function addJobsSession(jobsProvider: ZosJobsProvider) {
             }
             if (newprofile !== undefined) {
                 try {
-                    await Profiles.getInstance().listProfile();
+                    await Profiles.getInstance().refresh();
                 } catch (error) {
                     vscode.window.showErrorMessage(error.message);
                 }

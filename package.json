@@ -1102,7 +1102,7 @@
           },
           "description": "%Zowe-Builtin-Security",
           "scope": "window"
-        },        
+        },
         "Zowe-USS-Persistent": {
           "default": {
             "persistence": true,
@@ -1192,10 +1192,12 @@
   "dependencies": {
     "@brightside/core": "^2.36.0",
     "@types/fs-extra": "^7.0.0",
+    "@zowe/imperative": "^4.4.4",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
     "gulp-fs": "0.0.2",
     "jsdoc": "^3.6.3",
+    "keytar": "^5.0.0",
     "tslint": "^5.17.0",
     "vscode-nls": "^4.1.1"
   },
