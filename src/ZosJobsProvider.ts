@@ -16,7 +16,17 @@ import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
-import { OwnerFilterDescriptor, JobIdFilterDescriptor, applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
+import {
+    OwnerFilterDescriptor,
+    JobIdFilterDescriptor,
+    applyIcons,
+    FilterItem,
+    FilterDescriptor,
+    getAppName,
+    resolveQuickPickHelper,
+    sortTreeItems
+} from "./utils";
+import { IZoweTree } from "./ZoweTree";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -36,7 +46,7 @@ export async function createJobsTree(log: Logger) {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
+export class ZosJobsProvider implements IZoweTree<Job> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
@@ -257,8 +267,8 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 localize("initializeJobsFavorites.error.profile2",
                 ". To resolve this, you can create a profile with this name, ") +
                 localize("initializeJobsFavorites.error.profile3",
-                "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, ") +
-                localize("initializeJobsFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your ") +
+                getAppName(extension.ISTHEIA) + localize("initializeJobsFavorites.error.profile4", " user settings."));
             return;
         }
         });

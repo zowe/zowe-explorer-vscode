@@ -109,7 +109,7 @@ export function labelHack( node: TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
 
-export function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>) {
+export async function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>): Promise<QuickPickItem | undefined> {
     return new Promise<QuickPickItem | undefined>(
         (c) => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
 }
@@ -171,4 +171,11 @@ export function concatChildNodes(nodes: ZoweNode[]) {
     }
 
     return allNodes;
+}
+
+/*************************************************************************************************************
+ * Determine IDE name to display based on app environment
+ *************************************************************************************************************/
+export function getAppName(isTheia: boolean) {
+    return isTheia? "Theia" : "VS Code";
 }

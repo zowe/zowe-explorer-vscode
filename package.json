@@ -4,15 +4,22 @@
   "description": "%description%",
   "version": "1.0.0",
   "publisher": "Zowe",
+  "author": "Zowe",
+  "license": "EPL-2.0",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
   },
   "icon": "resources/zowe_logo.png",
   "keywords": [
     "mainframe",
-    "zos",
     "dataset",
-    "zowe"
+    "Zowe",
+    "explorer",
+    "z/OS",
+    "USS",
+    "JES",
+    "MVS",
+    "TSO"
   ],
   "categories": [
     "Other"
@@ -561,11 +568,6 @@
         {
           "when": "view == zowe.explorer && viewItem == member_fav",
           "command": "zowe.refreshNode",
-          "group": "inline"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member_fav",
-          "command": "zowe.refreshNode",
           "group": "0_mainframeInteraction"
         },
         {
@@ -582,16 +584,6 @@
           "when": "view == zowe.explorer && viewItem == member",
           "command": "zowe.renameDataSetMember",
           "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == member_fav",
-          "command": "zowe.renameDataSetMember",
-          "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.refreshNode",
-          "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == member_fav",
@@ -632,21 +624,6 @@
           "when": "view == zowe.explorer && viewItem == ds",
           "command": "zowe.renameDataSet",
           "group": "6_modification@2"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.copyDataSet",
-          "group": "9_cutcopypaste"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.pasteDataSet",
-          "group": "9_cutcopypaste"
-        },
-        {
-          "when": "view == zowe.explorer && viewItem == ds_fav",
-          "command": "zowe.refreshNode",
-          "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",
