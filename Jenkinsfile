@@ -17,7 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 /**
  * Name of the master branch
  */
-def MASTER_BRANCH = "master"
+def MASTER_BRANCH = "v1.0.x"
 
 /**
  * TOKEN ID where secret is stored
@@ -136,7 +136,7 @@ pipeline {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
         // Check for the Master branch or for v##.##.x
-        expression { return BRANCH_NAME == MASTER_BRANCH || BRANCH_NAME == /v\d+\.\d+\.x/ }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
         expression { return !params.SKIP_PUBLISH }
       } }
       steps {
