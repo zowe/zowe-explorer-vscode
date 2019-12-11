@@ -135,7 +135,8 @@ pipeline {
     stage("Publish") {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
-        expression { return BRANCH_NAME == MASTER_BRANCH }
+        // Check for the Master branch or for v##.##.x
+        expression { return BRANCH_NAME == MASTER_BRANCH || BRANCH_NAME == /v\d+\.\d+\.x/ }
         expression { return !params.SKIP_PUBLISH }
       } }
       steps {
