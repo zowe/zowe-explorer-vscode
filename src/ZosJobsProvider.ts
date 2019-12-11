@@ -26,6 +26,7 @@ import {
     resolveQuickPickHelper,
     sortTreeItems
 } from "./utils";
+import { IZoweTree } from "./ZoweTree";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -45,7 +46,7 @@ export async function createJobsTree(log: Logger) {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
+export class ZosJobsProvider implements IZoweTree<Job> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";

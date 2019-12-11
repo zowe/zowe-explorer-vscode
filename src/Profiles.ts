@@ -138,7 +138,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         return validationResult;
     }
 
-    public async createNewConnection(profileName) {
+    public async createNewConnection(profileName: string): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
@@ -155,27 +155,39 @@ export class Profiles { // Processing stops if there are no profiles detected
         });
 
         if (!zosmfURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterzosmfURL",
+            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
                 "No valid value for z/OSMF URL. Operation Cancelled"));
-            return;
+            return undefined;
         }
 
         const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
 
         options = {
-            placeHolder: localize("createNewConnection.option.prompt.userName.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.userName", "Enter the user name for the connection"),
+            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
+            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
             value: userName
         };
         userName = await vscode.window.showInputBox(options);
 
+        if (userName === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                "Operation Cancelled"));
+            return;
+        }
+
         options = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter a password for the connection"),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
             password: true,
             value: passWord
         };
         passWord = await vscode.window.showInputBox(options);
+
+        if (passWord === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
+                "Operation Cancelled"));
+            return;
+        }
 
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
@@ -197,14 +209,14 @@ export class Profiles { // Processing stops if there are no profiles detected
         } else {
             vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
                 "Operation Cancelled"));
-            return;
+            return undefined;
         }
 
         for (const profile of this.allProfiles) {
             if (profile.name === profileName) {
                 vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
                     "Profile name already exists. Please create a profile using a different name"));
-                return;
+                return undefined;
             }
         }
 
@@ -240,8 +252,8 @@ export class Profiles { // Processing stops if there are no profiles detected
         if (!loadSession.user) {
 
             options = {
-                placeHolder: localize("promptcredentials.option.prompt.userName.placeholder", "User Name"),
-                prompt: localize("promptcredentials.option.prompt.userName", "Enter the user name for the connection"),
+                placeHolder: localize("promptcredentials.option.prompt.username.placeholder", "User Name"),
+                prompt: localize("promptcredentials.option.prompt.username", "Enter the user name for the connection"),
                 value: userName
             };
             userName = await vscode.window.showInputBox(options);

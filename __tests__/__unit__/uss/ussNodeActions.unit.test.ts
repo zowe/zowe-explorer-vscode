@@ -25,7 +25,7 @@ const Utilities = jest.fn();
 const uss = jest.fn();
 const ussFile = jest.fn();
 const renameUSSFile = jest.fn();
-const mockAddUSSSession = jest.fn();
+const mockaddZoweSession = jest.fn();
 const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
@@ -72,7 +72,7 @@ function getUSSTree() {
         return {
             mSessionNodes: [],
             mFavorites: [ussNodeFav],
-            addSession: mockAddUSSSession,
+            addSession: mockaddZoweSession,
             refresh: mockUSSRefresh,
             refreshAll: mockUSSRefresh,
             refreshElement: mockUSSRefreshElement,
