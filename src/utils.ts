@@ -177,11 +177,5 @@ export function concatChildNodes(nodes: ZoweNode[]) {
  * Determine IDE name to display based on app environment
  *************************************************************************************************************/
 export function getAppName(isTheia: boolean) {
-    let appName: string;
-    if (isTheia === true) {
-        appName = "Theia";
-    } else {
-        appName = "VS Code";
-    }
-    return appName;
+    return isTheia? "Theia" : "VS Code";
 }
