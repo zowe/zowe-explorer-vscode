@@ -172,3 +172,10 @@ export function concatChildNodes(nodes: ZoweNode[]) {
 
     return allNodes;
 }
+
+/*************************************************************************************************************
+ * Determine IDE name to display based on app environment
+ *************************************************************************************************************/
+export function getAppName(isTheia: boolean) {
+    return isTheia? "Theia" : "VS Code";
+}

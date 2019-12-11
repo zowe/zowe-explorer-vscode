@@ -17,7 +17,7 @@ import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
-import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
+import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -104,8 +104,8 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         localize("intializeFavorites.error.profile2",
                         ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ") +
-                        localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings."));
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
