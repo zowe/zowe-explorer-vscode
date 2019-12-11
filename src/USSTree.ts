@@ -14,6 +14,7 @@ import * as zowe from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as vscode from "vscode";
+import { IZoweTree } from "./ZoweTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
@@ -40,7 +41,7 @@ export async function createUSSTree(log: Logger) {
  * @class USSTree
  * @implements {vscode.TreeDataProvider}
  */
-export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
+export class USSTree implements IZoweTree<ZoweUSSNode> {
     public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
 
