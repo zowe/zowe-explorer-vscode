@@ -1272,6 +1272,14 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     } catch (err) {
         // do nothing
     }
+
+    // refresh member view
+    if (node.mParent) {
+        let parent = node.mParent;
+        datasetProvider.refreshElement(parent);
+    } else {
+        datasetProvider.refresh();
+    }
 }
 
 /**
