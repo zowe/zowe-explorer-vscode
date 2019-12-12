@@ -9,6 +9,6 @@
     "initializeUSSFavorites.lines.title": "Open",
     "initializeUSSFavorites.error.profile1": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ",
     "intializeUSSFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
-    "initializeUSSFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, ",
-    "initializeUSSFavorites.error.profile4": "which can be found in your VS Code user settings."
+    "initializeUSSFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ",
+    "initializeUSSFavorites.error.profile4": " user settings."
 }

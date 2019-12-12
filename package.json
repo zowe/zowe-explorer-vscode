@@ -4,15 +4,22 @@
   "description": "%description%",
   "version": "1.0.0",
   "publisher": "Zowe",
+  "author": "Zowe",
+  "license": "EPL-2.0",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
   },
   "icon": "resources/zowe_logo.png",
   "keywords": [
     "mainframe",
-    "zos",
     "dataset",
-    "zowe"
+    "Zowe",
+    "explorer",
+    "z/OS",
+    "USS",
+    "JES",
+    "MVS",
+    "TSO"
   ],
   "categories": [
     "Other"
