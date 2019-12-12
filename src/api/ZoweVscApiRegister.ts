@@ -13,6 +13,7 @@ import * as imperative from "@brightside/imperative";
 
 import { ZoweVscApi } from "./IZoweVscRestApis";
 import { ZoweVscZosmfUssRestApi } from "./ZoweVscZosmfRestApi";
+import { ZoweVscFtpUssRestApi } from "./ZoweVscFtpRestApi";
 
 /**
  * The API register that gets exposed to other VS Code extensions to contribute their implementations.
@@ -60,6 +61,7 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
      */
     private constructor() {
         this.registerUssApi(new ZoweVscZosmfUssRestApi());
+        this.registerUssApi(new ZoweVscFtpUssRestApi());
     }
 
     /**
