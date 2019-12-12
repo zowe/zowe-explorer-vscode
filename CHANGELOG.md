@@ -2,6 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.0.1`
+
+- Remove duplicate commands #376. Thanks @lauren-li
+- Update localization for v1.0.0 #374. Thanks @lauren-li
+- Update keywords #383. @zFernand0
+- Update package json files #391. @zFernand0
+- Fixed adding sessions in Theia #382. Thanks @phaumer
+- Add validation for undefined username and password + more cosmetic fix #378. Thanks @jellypuno
+- Update incorrect profile message #387. Thanks @lauren-li
+
 ## `1.0.0`
 
 - VSCode centric Connection settings. . Thanks @crawr, @jellypuno
