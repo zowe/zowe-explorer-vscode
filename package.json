@@ -1162,6 +1162,7 @@
   "dependencies": {
     "@brightside/core": "^2.36.0",
     "@types/fs-extra": "^7.0.0",
+    "@zowe/cli": "^6.5.0",
     "fs-extra": "^8.0.1",
     "gulp-cli": "^2.2.0",
     "gulp-fs": "0.0.2",
