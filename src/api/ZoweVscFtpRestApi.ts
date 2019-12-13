@@ -10,6 +10,7 @@
 */
 
 import * as fs from "fs";
+import * as crypto from "crypto";
 import * as zowe from "@brightside/core";  // import the ftp plugin REST API instead
 import * as imperative from "@brightside/imperative";
 
@@ -17,7 +18,8 @@ import { ZoweVscApi } from "./IZoweVscRestApis";
 // tslint:disable: no-submodule-imports
 import { IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/doc/IZosFTPProfile";
 import { FTPConfig } from "@zowe/zos-ftp-for-zowe-cli/lib/api/FTPConfig";
-import { StreamUtils } from "@zowe/zos-ftp-for-zowe-cli/lib/api/StreamUtils";
+// import { StreamUtils } from "@zowe/zos-ftp-for-zowe-cli/lib/api/StreamUtils";
+import { Client as BasicFtpClient } from "basic-ftp";
 
 export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
 
@@ -65,23 +67,36 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
     }
 
     public async isFileTagBinOrAscii(session: imperative.Session, USSFileName: string): Promise<boolean> {
-        return false; // TODO: needs to be implemented in FTP CLI Plugin or here
+        return false; // TODO: needs to be implemented checking file type
     }
 
     public async getContents(session: imperative.Session, ussFileName: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
-        const transferType = options.binary ? "binary" : "ascii";
+        // const transferType = options.binary ? "binary" : "ascii";
+        const transferType = options.binary ? "TYPE I" : "TYPE A";
         const targetFile = options.file;
-        const connection = await this.ftpClient(session.ISession);
-
-        const contentStreamPromise = connection.getDataset(ussFileName, transferType, true);
-        const writable = fs.createWriteStream(targetFile);
-        await StreamUtils.streamToStream(1, contentStreamPromise, writable);
-
+        imperative.IO.createDirsSyncFromFilePath(targetFile);
         const result: zowe.IZosFilesResponse = {
-            success: true,
+            success: false,
             commandResponse: "",
-            apiResponse: { items: [] }
+            apiResponse: {}
         };
+
+        // TODO: one fix bug is fixed: https://github.com/zowe/zowe-cli-ftp-plugin/issues/23
+        // const connection = await this.ftpClient(session.ISession);
+        // const contentStreamPromise = connection.getDataset(ussFileName, transferType, true);
+        const writable = fs.createWriteStream(targetFile);
+        // await StreamUtils.streamToStream(1, contentStreamPromise, writable);
+        // Alternative ftp client for now
+        const ftpClient = await this.ftpBasicClient(session.ISession);
+        if (ftpClient) {
+            await ftpClient.send(transferType);
+            const sbsendeol = "SBSENDEOL=CRLF";
+            await ftpClient.send("SITE FILETYPE=SEQ TRAILINGBLANKS " + sbsendeol);
+            await ftpClient.downloadTo(writable, ussFileName);
+            ftpClient.close();
+            result.success = true;
+            result.apiResponse.etag = await this.hashFile(targetFile);
+        }
         return result;
     }
 
@@ -115,5 +130,44 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
             port: session.port,
             secureFtp: false
         });
+    }
+
+    private async ftpBasicClient(session: imperative.ISession): Promise<BasicFtpClient> {
+
+        const client = new BasicFtpClient();
+        client.ftp.verbose = true;
+        try {
+            await client.access({
+                host: session.hostname,
+                user: session.user,
+                password: session.password,
+                secure: false
+            });
+        }
+        catch(err) {
+            return undefined;
+        }
+        return client;
+    }
+
+    private async hashFile(filename: string): Promise<string> {
+        try {
+            const hash = crypto.createHash("sha1");
+            const input = fs.createReadStream(filename);
+            await input.on("readable", () => {
+                // Only one element is going to be produced by the
+                // hash stream.
+                const data = input.read();
+                if (data) {
+                    hash.update(data);
+                } else {
+                    return;
+                }
+            });
+            return `${hash.digest("hex")}`;
+        }
+        catch (err) {
+            return "not-available";
+        }
     }
 }
