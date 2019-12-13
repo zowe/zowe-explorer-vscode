@@ -1113,6 +1113,7 @@ describe("Extension Unit Tests", () => {
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(sessNode, testTree);
+        expect(testTree.addHistory).toBeCalledWith("FakeName");
         showQuickPick.mockResolvedValueOnce("Data Set C");
         await extension.createFile(sessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Classic");
@@ -1163,7 +1164,6 @@ describe("Extension Unit Tests", () => {
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
-
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();

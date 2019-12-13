@@ -779,6 +779,17 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
             node.dirty = true;
             datasetProvider.refresh();
+
+            // Show newly-created data set in tree view
+            if (name) {
+                node.label = `${node.label} `;
+                node.label = node.label.trim();
+                node.tooltip = node.pattern = name.toUpperCase();
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                node.dirty = true;
+                node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
+                datasetProvider.addHistory(name);
+            }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
             vscode.window.showErrorMessage(err.message);
