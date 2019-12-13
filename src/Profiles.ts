@@ -71,7 +71,9 @@ export class Profiles { // Processing stops if there are no profiles detected
         this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
             return profile.type === "zosmf";
         });
-        this.defaultProfile = (await profileManager.load({ loadDefault: true }));
+        if (this.allProfiles.length > 0) {
+            this.defaultProfile = (await profileManager.load({ loadDefault: true }));
+        }
     }
 
     public validateAndParseUrl = (newUrl: string): IUrlValidator => {
