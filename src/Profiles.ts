@@ -43,14 +43,10 @@ export class Profiles { // Processing stops if there are no profiles detected
         return Profiles.loader;
     }
     private static loader: Profiles;
-    private static spawnValue: number = -1;
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
-
-    private initValue: number = 0;
     private profileManager;
     private constructor(public log: Logger) {}
-
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
