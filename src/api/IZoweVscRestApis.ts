@@ -21,6 +21,10 @@ export namespace ZoweVscApi {
      * Common interface shared between all API interfaces offered by this extension.
      */
     export interface ICommon {
+
+        /** The profile associated with a specific instance of an API.  */
+        profile?: imperative.IProfileLoaded;
+
         /**
          * Return the type name of the CLI profile supported by this api.
          */
@@ -28,10 +32,10 @@ export namespace ZoweVscApi {
 
         /**
          * Create a session for the specific profile type
-         * @param profile {imperative.IProfile} profile reference
+         * @param profile {imperative.IProfileLoaded} profile reference
          * @returns {imperative.Session} a Zowe CLI Session reference
          */
-        createSession(profile: imperative.IProfile): imperative.Session;
+        getSession(profile?: imperative.IProfileLoaded): imperative.Session;
     }
 
     /**
@@ -50,7 +54,6 @@ export namespace ZoweVscApi {
          *     minimal properties name, mode.
          */
         fileList(
-            session: imperative.Session,
             path: string
         ): Promise<zowe.IZosFilesResponse>;
 
@@ -62,18 +65,15 @@ export namespace ZoweVscApi {
          * @returns {Promise<boolean>}
          */
         isFileTagBinOrAscii(
-            session: imperative.Session,
             USSFileName: string
         ): Promise<boolean>;
 
         /**
          * Retrieve the contents of a USS file.
-         * @param {imperative.Session} session
          * @param {string} ussFileName
          * @param {zowe.IDownloadOptions} options
          */
         getContents(
-            session: imperative.Session,
             ussFileName: string,
             options: zowe.IDownloadOptions
         ): Promise<zowe.IZosFilesResponse> ;
@@ -81,7 +81,6 @@ export namespace ZoweVscApi {
         /**
          * Uploads the files at the given path. Use for Save.
          *
-         * @param {imperative.Session} session
          * @param {string} inputFile
          * @param {string} ussname
          * @param {boolean} [binary]
@@ -89,7 +88,6 @@ export namespace ZoweVscApi {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         putContents(
-            session: imperative.Session,
             inputFile: string,
             ussname: string,
             binary?: boolean,
@@ -101,14 +99,12 @@ export namespace ZoweVscApi {
         /**
          * Create a new directory or file in the specified path.
          *
-         * @param {imperative.Session} session
          * @param {string} ussPath
          * @param {string} type
          * @param {string} [mode]
          * @returns {Promise<string>}
          */
         create(
-            session: imperative.Session,
             ussPath: string,
             type: string,
             mode?: string
@@ -117,20 +113,17 @@ export namespace ZoweVscApi {
         /**
          * Deletes the USS file at the given path.
          *
-         * @param {imperative.Session} session
          * @param {string} fileName
          * @param {boolean} [recursive]
          * @returns {Promise<zowe.IZosFilesResponse>}
          * @memberof IUss
          */
         delete(
-            session: imperative.Session,
             fileName: string,
             recursive?: boolean
         ): Promise<zowe.IZosFilesResponse>;
 
         rename(
-            session: imperative.Session,
             oldFilePath: string,
             newFilePath: string
         ): Promise<zowe.IZosFilesResponse>;
@@ -139,11 +132,9 @@ export namespace ZoweVscApi {
     // TODO
     export interface IMvs extends ICommon {
         dataSet(
-            session: imperative.Session,
             filter: string
         ): Promise<zowe.IZosFilesResponse>;
         allMembers(
-            session: imperative.Session,
             dataSetName: string
         ): Promise<zowe.IZosFilesResponse>;
     }

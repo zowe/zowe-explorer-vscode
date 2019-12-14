@@ -23,15 +23,14 @@ import { Client as BasicFtpClient } from "basic-ftp";
 
 export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
 
-    public getProfileTypeName(): string {
-        return "zftp";
+    private session: imperative.Session;
+    constructor(public profile?: imperative.IProfileLoaded) {
     }
 
-    public createSession(profile: imperative.IProfile): imperative.Session {
-        // TODO: need to deal with ftpProfile.secureFtp
-        if (profile) {
-            const ftpProfile = profile as IZosFTPProfile;
-            return new imperative.Session({
+    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+        if (!this.session) {
+            const ftpProfile = (profile||this.profile).profile;
+            this.session = new imperative.Session({
                 hostname: ftpProfile.host,
                 port: ftpProfile.port,
                 user: ftpProfile.user,
@@ -39,11 +38,15 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
                 rejectUnauthorized: ftpProfile.rejectUnauthorized,
             });
         }
-        return undefined;
+        return this.session;
     }
 
-    public async fileList(session: imperative.Session, path: string): Promise<zowe.IZosFilesResponse> {
-        const connection = await this.ftpClient(session.ISession);
+    public getProfileTypeName(): string {
+        return "zftp";
+    }
+
+    public async fileList(path: string): Promise<zowe.IZosFilesResponse> {
+        const connection = await this.ftpClient(this.profile);
         const response: any[] = await connection.listDataset(path);
 
         const result: zowe.IZosFilesResponse = {
@@ -66,11 +69,11 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
 
     }
 
-    public async isFileTagBinOrAscii(session: imperative.Session, USSFileName: string): Promise<boolean> {
+    public async isFileTagBinOrAscii(USSFileName: string): Promise<boolean> {
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async getContents(session: imperative.Session, ussFileName: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public async getContents(ussFileName: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
         // const transferType = options.binary ? "binary" : "ascii";
         const transferType = options.binary ? "TYPE I" : "TYPE A";
         const targetFile = options.file;
@@ -87,7 +90,7 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
         const writable = fs.createWriteStream(targetFile);
         // await StreamUtils.streamToStream(1, contentStreamPromise, writable);
         // Alternative ftp client for now
-        const ftpClient = await this.ftpBasicClient(session.ISession);
+        const ftpClient = await this.ftpBasicClient(this.profile);
         if (ftpClient) {
             await ftpClient.send(transferType);
             const sbsendeol = "SBSENDEOL=CRLF";
@@ -100,21 +103,21 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
         return result;
     }
 
-    public async putContents(session: imperative.Session, inputFile: string, ussname: string,
+    public async putContents(inputFile: string, ussname: string,
                              binary?: boolean, localEncoding?: string): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.fileToUSSFile(session, inputFile, ussname, binary, localEncoding);
+        return zowe.Upload.fileToUSSFile(this.getSession(), inputFile, ussname, binary, localEncoding);
     }
 
-    public async create(session: imperative.Session, ussPath: string, type: string, mode?: string): Promise<string> {
+    public async create(ussPath: string, type: string, mode?: string): Promise<string> {
         return undefined;
     }
 
-    public async delete(session: imperative.Session, fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
-        return zowe.Delete.ussFile(session, fileName, recursive);
+    public async delete(fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+        return zowe.Delete.ussFile(this.getSession(), fileName, recursive);
     }
 
-    public async rename(session: imperative.Session, oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {
-        const result = await zowe.Utilities.renameUSSFile(session, oldFilePath, newFilePath);
+    public async rename(oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {
+        const result = await zowe.Utilities.renameUSSFile(this.getSession(), oldFilePath, newFilePath);
         return {
             success: true,
             commandResponse: null,
@@ -122,26 +125,29 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
         };
     }
 
-    private async ftpClient(session: imperative.ISession): Promise<any> {
+    private async ftpClient(profile: imperative.IProfileLoaded): Promise<any> {
+        const ftpProfile = profile.profile as IZosFTPProfile;
         return FTPConfig.connectFromArguments({
-            host: session.hostname,
-            user: session.user,
-            password: session.password,
-            port: session.port,
-            secureFtp: false
+            host: ftpProfile.host,
+            user: ftpProfile.user,
+            password: ftpProfile.password,
+            port: ftpProfile.port,
+            secureFtp: ftpProfile.secureFtp
         });
     }
 
-    private async ftpBasicClient(session: imperative.ISession): Promise<BasicFtpClient> {
+    private async ftpBasicClient(profile: imperative.IProfileLoaded): Promise<BasicFtpClient> {
 
         const client = new BasicFtpClient();
         client.ftp.verbose = true;
+        const ftpProfile = profile.profile as IZosFTPProfile;
         try {
             await client.access({
-                host: session.hostname,
-                user: session.user,
-                password: session.password,
-                secure: false
+                host: profile.profile.host,
+                user: ftpProfile.user,
+                password: ftpProfile.password,
+                port: ftpProfile.port,
+                secure: ftpProfile.secureFtp
             });
         }
         catch(err) {

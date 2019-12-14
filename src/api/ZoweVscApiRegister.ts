@@ -106,13 +106,16 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
     /**
      * Lookup of an API for USS for a given profile.
      * @private
-     * @param {string} profileType
+     * @param {imperative.IProfileLoaded} profile
      * @returns
      * @memberof ZoweVscApiRegister
      */
     public getUssApi(profile: imperative.IProfileLoaded): ZoweVscApi.IUss {
         if (profile && profile.type && this.registeredUssApiTypes().includes(profile.type)) {
-            return this.zoweVscUssApiImplementations.get(profile.type);
+            // create a clone of the API object that remembers the profile with which it was created
+            const api = Object.create(this.zoweVscUssApiImplementations.get(profile.type));
+            api.profile = profile;
+            return api;
         }
         else {
             throw new Error("Internal error: Tried to call a non-existing API: " + profile.type);

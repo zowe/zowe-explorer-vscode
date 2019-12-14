@@ -431,8 +431,8 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
-                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
-                const session = ZoweVscApiRegister.getUssApi(zosmfProfile).createSession(zosmfProfile.profile);
+                const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                const session = ZoweVscApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
                     node = new ZoweUSSNode(nodeName,
@@ -484,7 +484,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                 return;
             }
             // Uses loaded profile to create a zosmf session with brightside
-            const session = ZoweVscApiRegister.getUssApi(profile).createSession(profile.profile);
+            const session = ZoweVscApiRegister.getUssApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profile.name);

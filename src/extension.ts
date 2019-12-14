@@ -1532,7 +1532,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
     }
     try {
         const ussDocumentFilePath = getUSSDocumentFilePath(node);
-        const response = await ZoweVscApiRegister.getUssApi(node.profile).getContents(node.getSession(), node.fullPath, {
+        const response = await ZoweVscApiRegister.getUssApi(node.profile).getContents(node.fullPath, {
             file: ussDocumentFilePath,
             returnEtag: true
         });
@@ -1752,7 +1752,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => { // ZoweVscApiRegister.getUssApi(sesNode.profile).putContents
             return ZoweVscApiRegister.getUssApi(sesNode.profile).putContents(
-                documentSession, doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+                doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
@@ -1847,13 +1847,13 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
             const documentFilePath = getUSSDocumentFilePath(node);
             if (download || !fs.existsSync(documentFilePath)) {
                 const chooseBinary = node.binary ||
-                    await ZoweVscApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.getSession(), node.fullPath);
+                    await ZoweVscApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.fullPath);
                 const response = await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening USS file...",
             }, function downloadUSSFile() {
                 return ZoweVscApiRegister.getUssApi(node.profile).getContents(
-                    node.getSession(), node.fullPath, { // TODO MISSED TESTING
+                    node.fullPath, { // TODO MISSED TESTING
                     file: documentFilePath,
                     binary: chooseBinary,
                     returnEtag: true

@@ -127,7 +127,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
         try {
-            responses.push(await ZoweVscApiRegister.getUssApi(this.profile).fileList(this.getSession(), this.fullPath));
+            responses.push(await ZoweVscApiRegister.getUssApi(this.profile).fileList(this.fullPath));
         } catch (err) {
             vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from API")
                                                     + `\n${err}\n`);

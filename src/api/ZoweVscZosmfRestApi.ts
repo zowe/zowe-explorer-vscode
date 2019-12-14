@@ -14,44 +14,52 @@ import * as imperative from "@brightside/imperative";
 
 import { ZoweVscApi } from "./IZoweVscRestApis";
 
+// tslint:disable-next-line: max-classes-per-file
 export class ZoweVscZosmfUssRestApi implements ZoweVscApi.IUss {
+
+    private session: imperative.Session;
+    constructor(public profile?: imperative.IProfileLoaded) {
+    }
 
     public getProfileTypeName(): string {
         return "zosmf";
     }
 
-    public createSession(profile: imperative.IProfile): imperative.Session {
-        return zowe.ZosmfSession.createBasicZosmfSession(profile);
+    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+        if (!this.session) {
+            this.session = zowe.ZosmfSession.createBasicZosmfSession((profile||this.profile).profile);
+        }
+        return this.session;
     }
 
-    public async fileList(session: imperative.Session, path: string): Promise<zowe.IZosFilesResponse> {
-        return zowe.List.fileList(session, path);
+    public async fileList(path: string): Promise<zowe.IZosFilesResponse> {
+        return zowe.List.fileList(this.getSession(), path);
     }
 
-    public async isFileTagBinOrAscii(session: imperative.Session, USSFileName: string): Promise<boolean> {
-        return zowe.Utilities.isFileTagBinOrAscii(session, USSFileName);
+    public async isFileTagBinOrAscii(USSFileName: string): Promise<boolean> {
+        return zowe.Utilities.isFileTagBinOrAscii(this.getSession(), USSFileName);
     }
 
-    public async getContents(session: imperative.Session, ussFileName: string, options: zowe.IDownloadOptions
+    public async getContents(ussFileName: string, options: zowe.IDownloadOptions
     ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Download.ussFile(session, ussFileName, options);
+        return zowe.Download.ussFile(this.getSession(), ussFileName, options);
     }
 
-    public async putContents(session: imperative.Session, inputFile: string, ussname: string,
+    public async putContents(inputFile: string, ussname: string,
                              binary?: boolean, localEncoding?: string,
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.fileToUSSFile(session, inputFile, ussname, binary, localEncoding, etag, returnEtag);
+        return zowe.Upload.fileToUSSFile(this.getSession(), inputFile, ussname, binary, localEncoding, etag, returnEtag);
     }
-    public async create(session: imperative.Session, ussPath: string, type: string, mode?: string): Promise<string> {
-        return zowe.Create.uss(session, ussPath, type);
-    }
-
-    public async delete(session: imperative.Session, fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
-        return zowe.Delete.ussFile(session, fileName, recursive);
+    public async create(ussPath: string, type: string, mode?: string): Promise<string> {
+        return zowe.Create.uss(this.getSession(), ussPath, type);
     }
 
-    public async rename(session: imperative.Session, oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {
-        const result = await zowe.Utilities.renameUSSFile(session, oldFilePath, newFilePath);
+    public async delete(fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+        return zowe.Delete.ussFile(this.getSession(), fileName, recursive);
+    }
+
+    public async rename(oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {
+        const result = await zowe.Utilities.renameUSSFile(this.getSession(), oldFilePath, newFilePath);
         return {
             success: true,
             commandResponse: null,
