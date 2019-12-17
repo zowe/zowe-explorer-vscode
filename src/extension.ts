@@ -252,7 +252,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.runStopCommand", (job) => {
             stopCommand(job);
         });
-        vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node));
+        vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node, jobsProvider));
         vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
             jobsProvider.mSessionNodes.forEach((jobNode) => {
                 if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
@@ -1352,8 +1352,7 @@ export function getUSSDocumentFilePath(node: ZoweUSSNode) {
  *
  * @param {ZoweNode} node
  */
-export async function openPS(node: ZoweNode, previewMember: boolean) {
-    const datasetProvider = new DatasetTree();
+export async function openPS(node: ZoweNode, previewMember: boolean, datasetProvider?: DatasetTree) {
     let sesNamePrompt: string;
     if (node.contextValue.endsWith(FAV_SUFFIX)) {
         sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
@@ -1787,8 +1786,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  *
  * @param {ZoweUSSNode} node
  */
-export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean) {
-    const ussFileProvider = new USSTree();
+export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean, ussFileProvider?: USSTree) {
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
             const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
@@ -1932,8 +1930,7 @@ export async function setPrefix(job: Job, jobsProvider: ZosJobsProvider) {
     jobsProvider.refreshElement(job);
 }
 
-export async function refreshJobsServer(node: Job) {
-    const jobsProvider = new ZosJobsProvider();
+export async function refreshJobsServer(node: Job, jobsProvider: ZosJobsProvider) {
     let sesNamePrompt: string;
     if (node.contextValue.endsWith(FAV_SUFFIX)) {
         sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
