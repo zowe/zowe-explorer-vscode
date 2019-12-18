@@ -600,18 +600,32 @@ export async function submitMember(node: ZoweNode) {
  * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
  */
 export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
     let chosenProfile: string;
 
+    // Get all profiles
     let profileNamesList = allProfiles.map((profile) => {
         return profile.name;
     });
+    // Filter to list of the APIs available for current tree explorer
+    profileNamesList = profileNamesList.filter((profileName) => {
+        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+        if (zoweFileProvider instanceof USSTree) {
+            const ussProfileTypes = ZoweVscApiRegister.getInstance().registeredUssApiTypes();
+            return ussProfileTypes.includes(profile.type);
+        }
+        if (zoweFileProvider instanceof DatasetTree) {
+            const mvsProfileTypes = ZoweVscApiRegister.getInstance().registeredMvsApiTypes();
+            return mvsProfileTypes.includes(profile.type);
+        }
+    });
     if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((profileNames) =>
+        profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
             !zoweFileProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.getProfileName() === profileNames
+                sessionNode.getProfileName() === profileName
             )
         );
     }

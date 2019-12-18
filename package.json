@@ -1161,7 +1161,7 @@
   },
   "dependencies": {
     "@brightside/core": "^2.36.0",
-    "@zowe/zos-ftp-for-zowe-cli": "../zowe-cli-ftp-plugin/zowe-zos-ftp-for-zowe-cli-0.1.0.tgz",
+    "@zowe/zos-ftp-for-zowe-cli": "../zowe-cli-ftp-plugin/zowe-zos-ftp-for-zowe-cli-0.1.0-2.tgz",
     "basic-ftp": "4.5.1",
     "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",

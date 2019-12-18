@@ -60,7 +60,6 @@ export namespace ZoweVscApi {
         /**
          * Check th USS chtag.
          *
-         * @param {imperative.Session} session
          * @param {string} USSFileName
          * @returns {Promise<boolean>}
          */

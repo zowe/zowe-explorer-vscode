@@ -11,15 +11,15 @@
 
 import * as fs from "fs";
 import * as crypto from "crypto";
-import * as zowe from "@brightside/core";  // import the ftp plugin REST API instead
+import * as zowe from "@brightside/core";
 import * as imperative from "@brightside/imperative";
 
 import { ZoweVscApi } from "./IZoweVscRestApis";
 // tslint:disable: no-submodule-imports
 import { IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/doc/IZosFTPProfile";
 import { FTPConfig } from "@zowe/zos-ftp-for-zowe-cli/lib/api/FTPConfig";
-// import { StreamUtils } from "@zowe/zos-ftp-for-zowe-cli/lib/api/StreamUtils";
-import { Client as BasicFtpClient } from "basic-ftp";
+import { StreamUtils } from "@zowe/zos-ftp-for-zowe-cli/lib/api/StreamUtils";
+import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli/lib/api/CoreUtils";
 
 export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
 
@@ -74,38 +74,50 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
     }
 
     public async getContents(ussFileName: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
-        // const transferType = options.binary ? "binary" : "ascii";
-        const transferType = options.binary ? "TYPE I" : "TYPE A";
+        const transferType = options.binary ? "binary" : "ascii";
         const targetFile = options.file;
-        imperative.IO.createDirsSyncFromFilePath(targetFile);
         const result: zowe.IZosFilesResponse = {
             success: false,
             commandResponse: "",
             apiResponse: {}
         };
 
-        // TODO: one fix bug is fixed: https://github.com/zowe/zowe-cli-ftp-plugin/issues/23
-        // const connection = await this.ftpClient(session.ISession);
-        // const contentStreamPromise = connection.getDataset(ussFileName, transferType, true);
-        const writable = fs.createWriteStream(targetFile);
-        // await StreamUtils.streamToStream(1, contentStreamPromise, writable);
-        // Alternative ftp client for now
-        const ftpClient = await this.ftpBasicClient(this.profile);
-        if (ftpClient) {
-            await ftpClient.send(transferType);
-            const sbsendeol = "SBSENDEOL=CRLF";
-            await ftpClient.send("SITE FILETYPE=SEQ TRAILINGBLANKS " + sbsendeol);
-            await ftpClient.downloadTo(writable, ussFileName);
-            ftpClient.close();
+        // TODO: waiting for merge of bug fix: https://github.com/zowe/zowe-cli-ftp-plugin/issues/23
+        const connection = await this.ftpClient(this.profile);
+        if (connection) {
+            imperative.IO.createDirsSyncFromFilePath(targetFile);
+            const contentStreamPromise = connection.getDataset(ussFileName, transferType, true);
+            const writable = fs.createWriteStream(targetFile);
+            await StreamUtils.streamToStream(1, contentStreamPromise, writable);
             result.success = true;
             result.apiResponse.etag = await this.hashFile(targetFile);
         }
         return result;
     }
 
-    public async putContents(inputFile: string, ussname: string,
-                             binary?: boolean, localEncoding?: string): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.fileToUSSFile(this.getSession(), inputFile, ussname, binary, localEncoding);
+    public async putContents(
+        inputFile: string, ussname: string, binary?: boolean, localEncoding?: string,
+        etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
+
+        const transferType = binary ? "binary" : "ascii";
+        const result: zowe.IZosFilesResponse = {
+            success: false,
+            commandResponse: "",
+            apiResponse: {}
+        };
+
+        let content: Buffer = imperative.IO.readFileSync(inputFile, undefined, binary);
+        if (!binary) {
+            // if we're not in binary mode, we need carriage returns to avoid errors
+            content = Buffer.from(CoreUtils.addCarriageReturns(content.toString()));
+        }
+        const connection = await this.ftpClient(this.profile);
+        if (connection) {
+            // TODO: get file and check etag
+            await connection.uploadDataset(content, ussname, transferType);
+            result.success = true;
+        }
+        return result;
     }
 
     public async create(ussPath: string, type: string, mode?: string): Promise<string> {
@@ -134,26 +146,6 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
             port: ftpProfile.port,
             secureFtp: ftpProfile.secureFtp
         });
-    }
-
-    private async ftpBasicClient(profile: imperative.IProfileLoaded): Promise<BasicFtpClient> {
-
-        const client = new BasicFtpClient();
-        client.ftp.verbose = true;
-        const ftpProfile = profile.profile as IZosFTPProfile;
-        try {
-            await client.access({
-                host: profile.profile.host,
-                user: ftpProfile.user,
-                password: ftpProfile.password,
-                port: ftpProfile.port,
-                secure: ftpProfile.secureFtp
-            });
-        }
-        catch(err) {
-            return undefined;
-        }
-        return client;
     }
 
     private async hashFile(filename: string): Promise<string> {

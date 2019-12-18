@@ -12,7 +12,7 @@
 import * as imperative from "@brightside/imperative";
 
 import { ZoweVscApi } from "./IZoweVscRestApis";
-import { ZoweVscZosmfUssRestApi } from "./ZoweVscZosmfRestApi";
+import { ZoweVscZosmfUssRestApi, ZoweVscZosmfMvsRestApi } from "./ZoweVscZosmfRestApi";
 import { ZoweVscFtpUssRestApi } from "./ZoweVscFtpRestApi";
 
 /**
@@ -61,6 +61,7 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
      */
     private constructor() {
         this.registerUssApi(new ZoweVscZosmfUssRestApi());
+        this.registerMvsApi(new ZoweVscZosmfMvsRestApi());
         this.registerUssApi(new ZoweVscFtpUssRestApi());
     }
 
@@ -72,7 +73,19 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
         if (ussApi && ussApi.getProfileTypeName()) {
             this.zoweVscUssApiImplementations.set(ussApi.getProfileTypeName(), ussApi);
         } else {
-            throw new Error("A Zowe Extension client tried to register an invalid API.");
+            throw new Error("A Zowe Extension client tried to register an invalid USS API.");
+        }
+    }
+
+    /**
+     * Other VS Code extension need to call this to register their MVS APIs.
+     * @param {ZoweVscApi.IUss} mvsApi
+     */
+    public registerMvsApi(mvsApi: ZoweVscApi.IMvs): void {
+        if (mvsApi && mvsApi.getProfileTypeName()) {
+            this.zoweVscMvsApiImplementations.set(mvsApi.getProfileTypeName(), mvsApi);
+        } else {
+            throw new Error("A Zowe Extension client tried to register an invalid MVS API.");
         }
     }
 

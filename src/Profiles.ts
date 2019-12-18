@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile, Session, ISession } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile, ISession } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
 import * as fs from "fs";

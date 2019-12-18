@@ -14,9 +14,9 @@ import * as imperative from "@brightside/imperative";
 
 import { ZoweVscApi } from "./IZoweVscRestApis";
 
-// tslint:disable-next-line: max-classes-per-file
-export class ZoweVscZosmfUssRestApi implements ZoweVscApi.IUss {
+// tslint:disable: max-classes-per-file
 
+class ZoweVscZosmfCommon implements ZoweVscApi.ICommon {
     private session: imperative.Session;
     constructor(public profile?: imperative.IProfileLoaded) {
     }
@@ -31,6 +31,8 @@ export class ZoweVscZosmfUssRestApi implements ZoweVscApi.IUss {
         }
         return this.session;
     }
+}
+export class ZoweVscZosmfUssRestApi extends ZoweVscZosmfCommon implements ZoweVscApi.IUss {
 
     public async fileList(path: string): Promise<zowe.IZosFilesResponse> {
         return zowe.List.fileList(this.getSession(), path);
@@ -65,5 +67,16 @@ export class ZoweVscZosmfUssRestApi implements ZoweVscApi.IUss {
             commandResponse: null,
             apiResponse: result
         };
+    }
+}
+
+export class ZoweVscZosmfMvsRestApi extends ZoweVscZosmfCommon implements ZoweVscApi.IMvs {
+
+    public async dataSet(filter: string): Promise<zowe.IZosFilesResponse>{
+        return undefined;
+    }
+
+    public async allMembers(dataSetName: string): Promise<zowe.IZosFilesResponse> {
+        return undefined;
     }
 }
