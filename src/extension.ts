@@ -141,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
         vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
         vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
-        vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true));
+        vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true, datasetProvider));
         vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
             log.debug(localize("onDidSaveTextDocument1",
                 "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ") +
@@ -165,7 +165,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));
         vscode.commands.registerCommand("zowe.uploadDialog", (node) => mvsActions.uploadDialog(node, datasetProvider));
         vscode.commands.registerCommand("zowe.deleteMember", (node) => deleteDataset(node, datasetProvider));
-        vscode.commands.registerCommand("zowe.editMember", (node) => openPS(node, false));
+        vscode.commands.registerCommand("zowe.editMember", (node) => openPS(node, false, datasetProvider));
         vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
         vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
         vscode.commands.registerCommand("zowe.saveSearch", async (node) => datasetProvider.addFavorite(node));
@@ -210,7 +210,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
         vscode.commands.registerCommand("zowe.uss.fullPath", (node) => ussFileProvider.ussFilterPrompt(node));
-        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node, false, true));
+        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node, false, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
         vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
         vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
@@ -223,7 +223,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node) => ussActions.uploadDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.createNode", async (node) => ussActions.createUSSNodeDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.copyPath", async (node) => ussActions.copyPath(node));
-        vscode.commands.registerCommand("zowe.uss.editFile", (node) => openUSS(node, false, false));
+        vscode.commands.registerCommand("zowe.uss.editFile", (node) => openUSS(node, false, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.saveSearch", async (node) => ussFileProvider.addUSSSearchFavorite(node));
         vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node) => ussFileProvider.removeUSSFavorite(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -473,7 +473,7 @@ export async function downloadJcl(job: Job) {
  */
 export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFileProvider: USSTree) {
     node.setBinary(binary);
-    await openUSS(node, true, true);
+    await openUSS(node, true, true, ussFileProvider);
     ussFileProvider.refresh();
 }
 
@@ -812,7 +812,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
-        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null), true);
+        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null), true, datasetProvider);
         datasetProvider.refresh();
     }
 }
