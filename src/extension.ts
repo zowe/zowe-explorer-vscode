@@ -782,10 +782,10 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
 
             // Store previous filters (before refreshing)
             let currChildren = await node.getChildren();
-            let theFilter = datasetProvider.getHistory()[0];
+            let theFilter = datasetProvider.getHistory()[0] || null;
 
             // Check if filter is currently applied
-            if (currChildren[0].contextValue !== 'information') {
+            if (currChildren[0].label !== 'No datasets found' && theFilter) {
                 let addNewFilter = true;
                 let currentFilters = theFilter.split(', ');
 
@@ -1164,7 +1164,6 @@ export async function cleanTempDir() {
 export async function deactivate() {
     await cleanTempDir();
 }
-
 
 /**
  * Deletes a dataset

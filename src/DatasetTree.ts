@@ -371,8 +371,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
     }
 
     public getHistory() {
-        let a = this.mHistory.getHistory();
-        return a;
+        return this.mHistory.getHistory();
     }
 
     public async datasetFilterPrompt(node: ZoweNode) {
