@@ -115,7 +115,6 @@ export namespace ZoweVscApi {
          * @param {string} fileName
          * @param {boolean} [recursive]
          * @returns {Promise<zowe.IZosFilesResponse>}
-         * @memberof IUss
          */
         delete(
             fileName: string,
@@ -138,23 +137,61 @@ export namespace ZoweVscApi {
         ): Promise<zowe.IZosFilesResponse>;
     }
 
+    /**
+     * This interface can be used by other VS Code Extensions to register themselved
+     * with additonal API implementations. The other extension would implement one or
+     * more interfaces above, for example ZoweVscMyAppUssRestApi, and register it with
+     * the object returned by this extensions activate() method as shown below.
+     *
+     * Sample code:
+     *
+     * // see if Zowe Explorer is installed and retrieve the API Registry\
+     * const baseExt = extensions.getExtension('zowe.vscode-extension-for-zowe');\
+     * if (baseExt && baseExt.exports) {\
+     *   // Cast the returned object to the IApiRegister interface\
+     *   const importedApi: ZoweVscApi.IApiRegister = baseExt.exports;\
+     *   // create an instance of my API and register it with Zowe Explorer\
+     *   importedApi.registerUssApi(new ZoweVscMyAppUssRestApi());\
+     *   window.showInformationMessage(\
+     *     'Zowe Explorer was augmented for MyApp support. Please, refresh your explorer views.');\
+     *   } else {\
+     *   window.showInformationMessage(\
+     *     'Zowe VS Extension was not found: either not installe or older version.');\
+     * }
+     *
+     * @export
+     * @interface IApiRegister
+     */
     export interface IApiRegister {
 
         /**
          * Register a new implementation of the USS Api.
+         * See example in Interface docs.
          *
          * @param {IUss} ussApi
-         * @memberof IZoweVscApiRegister
          */
         registerUssApi(ussApi: IUss): void;
 
         /**
          * Lookup of an API for USS for a given profile.
-         * @private
          * @param {string} profileType
-         * @returns
-         * @memberof ZoweVscApiRegister
+         * @returns the registered API instance
          */
         getUssApi(profile: imperative.IProfileLoaded): IUss;
+
+        /**
+         * Register a new implementation of the MVS Api.
+         * See example in Interface docs.
+         *
+         * @param {IMvs} mvsApi
+         */
+        registerMvsApi(mvsApi: IMvs): void;
+
+        /**
+         * Lookup of an API for MVS for a given profile.
+         * @param {string} profileType
+         * @returns the registered API instance
+         */
+        getMvsApi(profile: imperative.IProfileLoaded): IMvs;
     }
 }

@@ -79,7 +79,7 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
 
     /**
      * Other VS Code extension need to call this to register their MVS APIs.
-     * @param {ZoweVscApi.IUss} mvsApi
+     * @param {ZoweVscApi.IMvs} mvsApi
      */
     public registerMvsApi(mvsApi: ZoweVscApi.IMvs): void {
         if (mvsApi && mvsApi.getProfileTypeName()) {
@@ -116,6 +116,8 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
         return [...this.zoweVscMvsApiImplementations.keys()];
     }
 
+    // TODO: use generics for the following two
+
     /**
      * Lookup of an API for USS for a given profile.
      * @private
@@ -127,6 +129,18 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
         if (profile && profile.type && this.registeredUssApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.zoweVscUssApiImplementations.get(profile.type));
+            api.profile = profile;
+            return api;
+        }
+        else {
+            throw new Error("Internal error: Tried to call a non-existing API: " + profile.type);
+        }
+    }
+
+    public getMvsApi(profile: imperative.IProfileLoaded): ZoweVscApi.IMvs {
+        if (profile && profile.type && this.registeredMvsApiTypes().includes(profile.type)) {
+            // create a clone of the API object that remembers the profile with which it was created
+            const api = Object.create(this.zoweVscMvsApiImplementations.get(profile.type));
             api.profile = profile;
             return api;
         }
