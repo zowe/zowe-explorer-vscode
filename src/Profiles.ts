@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile, Session, ISession } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as os from "os";
 import * as path from "path";
@@ -33,24 +33,27 @@ let IConnection: {
 };
 
 export class Profiles { // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger) {
-        Profiles.loader = new Profiles(log);
-        await Profiles.loader.refresh();
-        return Profiles.loader;
+    public static async createInstance(log: Logger, type: string = "zosmf") {
+        const profile = new Profiles(log, type);
+        profile.type = type;
+        await profile.refresh();
+        Profiles.loader.set(type, profile);
+        return profile;
+    }
 
+    public static getInstance(type: string = "zosmf") {
+        return Profiles.loader.get(type);
     }
-    public static getInstance() {
-        return Profiles.loader;
-    }
-    private static loader: Profiles;
+
+    private static loader: Map<string, Profiles> = new Map();
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
     private profileManager;
-    private constructor(public log: Logger) {}
+    private constructor(public log: Logger, private type: string) {}
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && profile.type === "zosmf") {
+            if (profile.name === name && profile.type === this.type) {
                 return profile;
             }
         }
@@ -63,9 +66,9 @@ export class Profiles { // Processing stops if there are no profiles detected
     }
 
     public async refresh() {
-        const profileManager = await this.getCliProfileManager("zosmf");
+        const profileManager = await this.getCliProfileManager(this.type);
         this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
-            return profile.type === "zosmf";
+            return profile.type === this.type;
         });
         if (this.allProfiles.length > 0) {
             this.defaultProfile = (await profileManager.load({ loadDefault: true }));
@@ -108,7 +111,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         return validationResult;
     }
 
-    public async createNewConnection(profileName: string): Promise<string | undefined> {
+    public async createNewConnection(profileName: string, ProfileType: string ="zosmf"): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
@@ -202,7 +205,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         let newProfile: IProfile;
 
         try {
-            newProfile = await this.saveProfile(IConnection, IConnection.name, "zosmf");
+            newProfile = await this.saveProfile(IConnection, IConnection.name, ProfileType);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -256,7 +259,6 @@ export class Profiles { // Processing stops if there are no profiles detected
                 loadSession.password = passWord.trim();
             }
         }
-
         const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
@@ -264,7 +266,7 @@ export class Profiles { // Processing stops if there are no profiles detected
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
         let zosmfProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager("zosmf")).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            zosmfProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
