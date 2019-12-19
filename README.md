@@ -19,7 +19,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 ## Contents
 
 * [Software Requirements](#software-requirements)
-* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
+* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-zosmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
