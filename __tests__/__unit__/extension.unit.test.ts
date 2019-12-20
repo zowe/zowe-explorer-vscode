@@ -1396,6 +1396,13 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: {
+                items: []
+            }
+        };
         const sessionwocred = new brtimperative.Session({
             user: "",
             password: "",
@@ -1407,20 +1414,27 @@ describe("Extension Unit Tests", () => {
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
         newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        newsessNode.pattern = "sestest";
 
         showQuickPick.mockReset();
         getConfiguration.mockReset();
         showInputBox.mockReset();
         dataSetCreate.mockReset();
         mockGetHistory.mockReset();
+        allMembers.mockReset();
+        dataSetList.mockReset();
 
         getConfiguration.mockReturnValueOnce("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-        mockGetHistory.mockReturnValueOnce(["mockHistory2"]);
+        showInputBox.mockReturnValueOnce("sestest");
+        mockGetHistory.mockReturnValueOnce(["mockHistory"]);
+        allMembers.mockReturnValueOnce(uploadResponse);
+        dataSetList.mockReturnValue(uploadResponse);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
         expect(extension.createFile).toHaveBeenCalled();
+
+        dataSetList.mockReset();
     });
 
     it("Testing that deleteDataset is executed successfully", async () => {

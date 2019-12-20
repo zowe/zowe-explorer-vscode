@@ -785,7 +785,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             let theFilter = datasetProvider.getHistory()[0] || null;
 
             // Check if filter is currently applied
-            if (currChildren[0].label !== 'No datasets found' && theFilter) {
+            if (currChildren[0].contextValue !== 'information' && theFilter) {
                 let addNewFilter = true;
                 let currentFilters = theFilter.split(', ');
 
@@ -816,7 +816,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
                 node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
                 node.dirty = true;
 
-                let newNode = currChildren.find(child => child.label === name);
+                let newNode = await node.getChildren().then(children => {return children.find(child => child.label === name);});
                 const newNodeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
                 newNodeView.reveal(newNode, {select: true});
             }
