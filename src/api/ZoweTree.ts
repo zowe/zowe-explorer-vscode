@@ -174,6 +174,10 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Binary indicator. Default false (text)
      */
     binary?: boolean;
+    /**
+     * Specific profile name in use with this node
+     */
+    mProfileName?: string;
 
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode

@@ -17,7 +17,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 export async function deleteJob(node: Job) {
     try {
-        await DeleteJobs.deleteJob(node.getSession(), node.job.jobname, node.job.jobid); 
+        await DeleteJobs.deleteJob(node.getSession(), node.job.jobname, node.job.jobid);
         vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
         localize("deleteJob.delete", " deleted"));
     } catch (error) {

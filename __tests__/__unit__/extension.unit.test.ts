@@ -101,7 +101,7 @@ describe("Extension Unit Tests", () => {
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
 
-    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, null, "123");
+    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, "aProfile", "123");
     ussNode.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
@@ -2300,7 +2300,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, "aProfileName");
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
@@ -2320,7 +2320,7 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(node, false, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + extension.getUSSProfile(node) + "/", node.fullPath));
         expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
         expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
@@ -2428,7 +2428,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, "aProfileName");
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, ussNode.getProfileName());
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 

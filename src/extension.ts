@@ -1279,8 +1279,7 @@ export function getProfile(node: IZoweTreeNode) {
  * @param {ZoweUSSNode} node
  */
 export function getUSSProfile(node: IZoweUSSTreeNode) {
-    const profile = node.getSessionNode().getProfileName();
-    return profile;
+    return node.getSessionNode().getProfileName();
 }
 
 /**
