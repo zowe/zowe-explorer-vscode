@@ -13,10 +13,11 @@ import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-import { IZoweTreeNode } from "./ZoweTree";
+import { IZoweUSSTreeNode } from "./api/ZoweTree";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../src/extension";
 import * as utils from "./utils";
+import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -25,12 +26,13 @@ import * as utils from "./utils";
  * @class ZoweUSSNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
+export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public fullPath = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-    public children: ZoweUSSNode[] = [];
+    public children: IZoweUSSTreeNode[] = [];
     public binaryFiles = {};
+    public binary = false;
     public profileName = "";
     public shortLabel = "";
 
@@ -39,20 +41,22 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      *
      * @param {string} label - Displayed in the [TreeView]
      * @param {vscode.TreeItemCollapsibleState} collapsibleState - file/directory
-     * @param {ZoweUSSNode} mParent - The parent node
+     * @param {IZoweUSSTreeNode} mParent - The parent node
      * @param {Session} session
      * @param {String} parentPath - The file path of the parent on the server
+     * @param {boolean} binary - Indictaes if this is a text or binary file
      * @param {String} mProfileName - Profile to which the node belongs to
      */
     constructor(label: string,
                 collapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweUSSNode,
-                private session: Session,
+                mParent: IZoweUSSTreeNode,
+                session: Session,
                 private parentPath: string,
-                public binary = false,
+                binary = false,
                 public mProfileName?: string,
-                private etag?: string) {
-        super(label, collapsibleState);
+                private etag: string = "") {
+        super(label, collapsibleState, mParent, session);
+        this.binary = binary;
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
@@ -67,7 +71,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        if (mParent && mParent.contextValue === extension.FAVORITE_CONTEXT) {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
@@ -76,7 +80,6 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
-        this.etag = etag ? etag : "";
         utils.applyIcons(this);
     }
 
@@ -90,12 +93,16 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         return this.mProfileName;
     }
 
+    public getSessionNode(): IZoweUSSTreeNode {
+        return this.session ? this : this.getParent().getSessionNode();
+    }
+
     /**
-     * Retrieves child nodes of this ZoweUSSNode
+     * Retrieves child nodes of this IZoweTreeNode
      *
-     * @returns {Promise<ZoweUSSNode[]>}
+     * @returns {Promise<IZoweUSSTreeNode[]>}
      */
-    public async getChildren(): Promise<ZoweUSSNode[]> {
+    public async getChildren(): Promise<IZoweUSSTreeNode[]> {
         if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
                 (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
                     this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
@@ -184,24 +191,6 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
     }
 
-    /**
-     * Returns the [Session] for this node
-     *
-     * @returns {Session}
-     */
-    public getSession(): Session {
-        return this.session || this.mParent.getSession();
-    }
-
-    /**
-     * Returns the session node for this node
-     *
-     * @returns {ZoweUSSNode}
-     */
-    public getSessionNode(): ZoweUSSNode {
-        return this.session ? this : this.mParent.getSessionNode();
-    }
-
     public setBinary(binary: boolean) {
         this.binary = binary;
         if(this.binary){
@@ -211,7 +200,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        if (this.getParent() && this.getParent().contextValue === extension.FAVORITE_CONTEXT) {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
              this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
@@ -247,10 +236,5 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public setEtag(etagValue): void {
         this.etag = etagValue;
-    /**
-     * helper method to change the node names in one go
-     * @param oldReference string
-     * @param revision string
-     */
     }
 }

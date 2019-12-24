@@ -29,8 +29,8 @@ const mockaddZoweSession = jest.fn();
 const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
-const mockRemoveUSSFavorite = jest.fn();
-const mockAddUSSFavorite = jest.fn();
+const mockRemoveFavorite = jest.fn();
+const mockAddFavorite = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
@@ -46,22 +46,20 @@ const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 
 function getUSSNode() {
-    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null);
     ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode1.fullPath = "/u/myuser";
-    ussNode1.mParent = mParent;
     return ussNode1;
 }
 
 function getFavoriteUSSNode() {
-    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
     const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null);
     mParent.contextValue = extension.FAVORITE_CONTEXT;
     ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";
-    ussNodeF.mParent = mParent;
     return ussNodeF;
 }
 
@@ -77,8 +75,8 @@ function getUSSTree() {
             refreshAll: mockUSSRefresh,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
-            addUSSFavorite: mockAddUSSFavorite,
-            removeUSSFavorite: mockRemoveUSSFavorite,
+            addFavorite: mockAddFavorite,
+            removeFavorite: mockRemoveFavorite,
             initializeUSSFavorites: mockInitializeFavorites
         };
     });
@@ -356,8 +354,8 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
-            expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
-            expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
+            expect(mockRemoveFavorite.mock.calls.length).toBe(1);
+            expect(mockAddFavorite.mock.calls.length).toBe(1);
         });
     });
     describe("uploadFile", () => {

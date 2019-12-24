@@ -35,7 +35,7 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
 }
 
 export function getDatasetLabel(node: ZoweNode) {
-    if (node.mParent && node.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+    if (node.getParent() && node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
         const profileEnd = "]: ";
         const profileIndex = node.label.indexOf(profileEnd);
         return node.label.substr(profileIndex + profileEnd.length, node.label.length);

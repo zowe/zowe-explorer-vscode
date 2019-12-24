@@ -10,11 +10,10 @@
 */
 
 import * as vscode from "vscode";
-import { ZosmfSession, IJob, DeleteJobs, Utilities } from "@brightside/core";
+import { ZosmfSession, IJob, DeleteJobs } from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { Profiles } from "./Profiles";
-import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
 import {
     OwnerFilterDescriptor,
@@ -24,9 +23,11 @@ import {
     FilterDescriptor,
     getAppName,
     resolveQuickPickHelper,
-    sortTreeItems
+    sortTreeItems,
+    labelHack
 } from "./utils";
-import { IZoweTree } from "./ZoweTree";
+import { IZoweTree, IZoweJobTreeNode } from "./api/ZoweTree";
+import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -46,36 +47,36 @@ export async function createJobsTree(log: Logger) {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class ZosJobsProvider implements IZoweTree<Job> {
+export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
+
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
     private static readonly persistenceSchema: string = "Zowe-Jobs-Persistent";
 
-    public mSessionNodes: Job[] = [];
-    public mFavoriteSession: Job;
-    public mFavorites: Job[] = [];
-
-    // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<Job | undefined> = new vscode.EventEmitter<Job | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<Job | undefined> = this.mOnDidChangeTreeData.event;
+    public mSessionNodes: IZoweJobTreeNode[] = [];
+    public mFavorites: IZoweJobTreeNode[] = [];
     public createOwner = new OwnerFilterDescriptor();
     public createId = new JobIdFilterDescriptor();
 
-    private validProfile: number = -1;
-    private mHistory: PersistentFilters;
-    private log: Logger;
-
     constructor() {
-        this.mFavoriteSession = new Job(localize("FavoriteSession", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        super(ZosJobsProvider.persistenceSchema,
+                new Job(localize("Favorites", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
+
+        this.mFavoriteSession = new Job(localize("Favorites", "Favorites"),vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
-        this.mHistory = new PersistentFilters(ZosJobsProvider.persistenceSchema);
     }
 
-    public getChildren(element?: Job | undefined): vscode.ProviderResult<Job[]> {
+    /**
+     * Takes argument of type IZoweJobTreeNode and retrieves all of the first level children
+     *
+     * @param {IZoweJobTreeNode} [element] - Optional parameter; if not passed, returns root session nodes
+     * @returns {IZoweJobTreeNode[] | Promise<IZoweJobTreeNode[]>}
+     */
+    public async getChildren(element?: IZoweJobTreeNode | undefined): Promise<IZoweJobTreeNode[]> {
         if (element) {
             // solution for optional credentials. Owner is having error on initialization.
             if (element.owner === "") {
@@ -87,13 +88,6 @@ export class ZosJobsProvider implements IZoweTree<Job> {
             return element.getChildren();
         }
         return this.mSessionNodes;
-    }
-
-    public getTreeItem(element: Job): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        return element;
-    }
-    public getParent(element: Job): Job {
-        return element.mParent;
     }
 
     /**
@@ -128,102 +122,14 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         this.refresh();
     }
 
-    public deleteSession(node: Job) {
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
-        let revisedLabel =  node.label;
-        if (revisedLabel.includes("[")) {
-            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
-        }
-        this.mHistory.removeSession(revisedLabel);
-        this.refresh();
-    }
-
-    public async deleteJob(node: Job) {
+    public async deleteJob(node: IZoweJobTreeNode) {
         try {
-            await DeleteJobs.deleteJob(node.session, node.job.jobname, node.job.jobid);
+            await DeleteJobs.deleteJob(node.getSession(), node.job.jobname, node.job.jobid);
             vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
             localize("deleteJob.delete", " deleted"));
-            this.removeJobsFavorite(this.createJobsFavorite(node));
+            this.removeFavorite(this.createJobsFavorite(node));
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
-        }
-    }
-    /**
-     * Selects a specific job in the Jobs view
-     *
-     * @param {Job}
-     */
-    public setJob(treeView: vscode.TreeView<Job>, job: Job) {
-        treeView.reveal(job, { select: true, focus: true });
-    }
-
-
-    /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refreshElement(element: Job): void {
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
-    }
-
-    /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refresh(): void {
-        this.mOnDidChangeTreeData.fire();
-    }
-
-    /**
-     * Change the state of an expandable node
-     * @param provider the tree view provider
-     * @param element the node being flipped
-     * @param isOpen the intended state of the the tree view provider, true or false
-     */
-    public async flipState(element: Job, isOpen: boolean = false) {
-        if (element.label !== "Favorites") {
-            let usrNme: string;
-            let passWrd: string;
-            let baseEncd: string;
-            let sesNamePrompt: string;
-            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
-                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
-            } else {
-                sesNamePrompt = element.label;
-            }
-            if ((!element.session.ISession.user) || (!element.session.ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
-                }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    element.session.ISession.user = usrNme;
-                    element.session.ISession.password = passWrd;
-                    element.session.ISession.base64EncodedAuth = baseEncd;
-                    element.owner = usrNme;
-                    this.validProfile = 1;
-                } else {
-                    return;
-                }
-                await this.refreshElement(element);
-                await this.refresh();
-            } else {
-                this.validProfile = 1;
-            }
-        } else {
-            this.validProfile = 1;
-        }
-        if (this.validProfile === 1) {
-            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-            element.dirty = true;
-            this.mOnDidChangeTreeData.fire(element);
         }
     }
 
@@ -277,9 +183,9 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     /**
      * Adds a node to the Jobs favorites list
      *
-     * @param {Job} node
+     * @param {IZoweJobTreeNode} node
      */
-    public async addJobsFavorite(node: Job) {
+    public async addFavorite(node: IZoweJobTreeNode) {
         const favJob = this.createJobsFavorite(node);
         if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
             this.mFavorites.push(favJob);
@@ -292,13 +198,13 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     /**
      * Adds a save search to the Jobs favorites list
      *
-     * @param {Job} node
+     * @param {IZoweJobTreeNode} node
      */
-    public async saveSearch(node: Job) {
+    public async saveSearch(node: IZoweJobTreeNode) {
         const favSessionContext = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-        const favJob = new Job("[" + node.getSessionName() + "]: " +
+        const favJob = new Job("[" + node.getProfileName() + "]: " +
             this.createSearchLabel(node.owner, node.prefix, node.searchId),
-        vscode.TreeItemCollapsibleState.None, node.mParent, node.session, node.job);
+        vscode.TreeItemCollapsibleState.None, node.getParent(), node.getSession(), node.job);
         favJob.owner = node.owner;
         favJob.prefix = node.prefix;
         favJob.searchId = node.searchId;
@@ -315,9 +221,9 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     /**
      * Removes a node from the favorites list
      *
-     * @param {Job} node
+     * @param {IZoweJobTreeNode} node
      */
-    public async removeJobsFavorite(node: Job) {
+    public async removeFavorite(node: IZoweJobTreeNode) {
         const startLength = this.mFavorites.length;
         this.mFavorites = this.mFavorites.filter((temp) =>
            !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))));
@@ -339,12 +245,65 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     }
 
     /**
+     * Change the state of an expandable node
+     * @param provider the tree view provider
+     * @param element the node being flipped
+     * @param isOpen the intended state of the the tree view provider, true or false
+     * N.B. Specific implementation for Jobs as owner field set.
+     */
+    public async flipState(element: IZoweJobTreeNode, isOpen: boolean = false) {
+        if (element.label !== "Favorites") {
+            let usrNme: string;
+            let passWrd: string;
+            let baseEncd: string;
+            let sesNamePrompt: string;
+            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
+            } else {
+                sesNamePrompt = element.label;
+            }
+            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
+                try {
+                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    if (values !== undefined) {
+                        usrNme = values [0];
+                        passWrd = values [1];
+                        baseEncd = values [2];
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                    element.getSession().ISession.user = usrNme;
+                    element.getSession().ISession.password = passWrd;
+                    element.getSession().ISession.base64EncodedAuth = baseEncd;
+                    element.owner = usrNme;
+                    this.validProfile = 1;
+                } else {
+                    return;
+                }
+                await this.refreshElement(element);
+                await this.refresh();
+            } else {
+                this.validProfile = 1;
+            }
+        } else {
+            this.validProfile = 1;
+        }
+        if (this.validProfile === 1) {
+            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
+        }
+    }
+
+    /**
      * Prompts the user for search details to populate the [TreeView]{@link vscode.TreeView}
      *
-     * @param {Job} node - The session node
+     * @param {IZoweJobTreeNode} node - The session node
      * @returns {Promise<void>}
      */
-    public async searchPrompt(node: Job) {
+    public async searchPrompt(node: IZoweJobTreeNode) {
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
         const hasHistory = this.mHistory.getHistory().length > 0;
@@ -357,7 +316,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         } else {
             sesNamePrompt = node.label;
         }
-        if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
+        if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
                 if (values !== undefined) {
@@ -369,9 +328,9 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                 vscode.window.showErrorMessage(error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                node.session.ISession.user = usrNme;
-                node.session.ISession.password = passWrd;
-                node.session.ISession.base64EncodedAuth = baseEncd;
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
                 node.owner = usrNme;
                 this.validProfile = 0;
             } else {
@@ -489,37 +448,23 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                 const faveNode = node;
                 await this.addSession(session);
                 node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
-                if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
-                    node.session.ISession.user = faveNode.session.ISession.user;
-                    node.session.ISession.password = faveNode.session.ISession.password;
-                    node.session.ISession.base64EncodedAuth = faveNode.session.ISession.base64EncodedAuth;
+                if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
+                    node.getSession().ISession.user = faveNode.getSession().ISession.user;
+                    node.getSession().ISession.password = faveNode.getSession().ISession.password;
+                    node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
                 }
                 this.applySearchLabelToNode(node, searchCriteria);
             }
-            this.addHistory(searchCriteria);
-
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            node.iconPath = applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
+            node.label = node.label.trim()+ " ";
+            node.label.trim();
             node.dirty = true;
-            this.refreshElement(node);
+            this.addHistory(searchCriteria);
         }
     }
 
-    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
-        if (e.affectsConfiguration(ZosJobsProvider.persistenceSchema)) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema) };
-            if (!setting.persistence) {
-                setting.favorites = [];
-                setting.history = [];
-                await vscode.workspace.getConfiguration().update(ZosJobsProvider.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
-            }
-        }
-    }
-
-    public async addHistory(criteria: string) {
-        if (criteria) {
-            this.mHistory.addHistory(criteria);
-        }
+    public deleteSession(node: IZoweJobTreeNode) {
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        this.deleteSessionByLabel(node.getLabel());
     }
 
     /**
@@ -581,12 +526,13 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         }
         return this.createSearchLabel(owner, prefix, jobId);
     }
+
     /**
      * Function that takes a search criteria and updates a search node based upon it
-     * @param node - a Job node
+     * @param node - a IZoweJobTreeNode node
      * @param storedSearch - The original search string
      */
-    private applySearchLabelToNode(node: Job, storedSearch: string) {
+    private applySearchLabelToNode(node: IZoweJobTreeNode, storedSearch: string) {
         if (storedSearch) {
             node.searchId = "";
             node.owner = "*";
@@ -612,10 +558,10 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         }
     }
 
-    private createJobsFavorite(node: Job) {
-        const favJob = new Job("[" + node.getSessionName() + "]: " +
+    private createJobsFavorite(node: IZoweJobTreeNode): IZoweJobTreeNode {
+        const favJob = new Job("[" + node.getSessionNode().label + "]: " +
                 node.label.substring(0, node.label.lastIndexOf(")") + 1),
-                    vscode.TreeItemCollapsibleState.Collapsed, node.mParent, node.session, node.job);
+                    vscode.TreeItemCollapsibleState.Collapsed, node.getParent(), node.getSession(), node.job);
         favJob.contextValue = extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX;
         favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         favJob.iconPath = applyIcons(favJob);

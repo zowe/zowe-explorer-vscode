@@ -204,7 +204,6 @@ describe("Extension Unit Tests", () => {
     const findFavoritedNode = jest.fn();
     const findNonFavoritedNode = jest.fn();
     const concatChildNodes = jest.fn();
-    const concatUSSChildNodes = jest.fn();
     let mockClipboardData: string;
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
@@ -293,7 +292,6 @@ describe("Extension Unit Tests", () => {
         })
     });
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
-    Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
@@ -796,7 +794,7 @@ describe("Extension Unit Tests", () => {
 
         await extension.refreshPS(child);
 
-        expect(dataSet.mock.calls[0][1]).toBe(child.mParent.label + "(" + child.label + ")");
+        expect(dataSet.mock.calls[0][1]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
@@ -1365,7 +1363,7 @@ describe("Extension Unit Tests", () => {
         await extension.deleteDataset(child, testTree);
 
         expect(unlinkSync.mock.calls.length).toBe(0);
-        expect(delDataset.mock.calls[0][1]).toBe(child.mParent.label + "(" + child.label + ")");
+        expect(delDataset.mock.calls[0][1]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
 
         delDataset.mockReset();
         delDataset.mockRejectedValueOnce(Error("not found"));
@@ -2302,7 +2300,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, "aProfileName");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
@@ -2322,7 +2320,7 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(node, false, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
         expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
         expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
@@ -2430,7 +2428,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, "aProfileName");
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
@@ -2450,7 +2448,7 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(node, false, true);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
         expect(withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -2609,20 +2607,20 @@ describe("Extension Unit Tests", () => {
         testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
         fileToUSSFile.mockReset();
         showErrorMessage.mockReset();
-        concatUSSChildNodes.mockReset();
+        concatChildNodes.mockReset();
         const mockGetEtag = jest.spyOn(node, "getEtag").mockImplementation(() => "123");
         testResponse.success = true;
         fileToUSSFile.mockResolvedValue(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
-        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
+        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         await extension.saveUSSFile(testDoc, testUSSTree);
 
-        expect(concatUSSChildNodes.mock.calls.length).toBe(1);
+        expect(concatChildNodes.mock.calls.length).toBe(1);
         expect(mockGetEtag).toBeCalledTimes(1);
         expect(mockGetEtag).toReturnWith("123");
 
-        concatUSSChildNodes.mockReset();
-        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         testResponse.success = false;
         testResponse.commandResponse = "Save failed";
         fileToUSSFile.mockResolvedValueOnce(testResponse);
@@ -2633,8 +2631,8 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Save failed");
 
-        concatUSSChildNodes.mockReset();
-        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         showErrorMessage.mockReset();
         withProgress.mockRejectedValueOnce(Error("Test Error"));
 
@@ -2642,8 +2640,8 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
 
-        concatUSSChildNodes.mockReset();
-        concatUSSChildNodes.mockReturnValueOnce([ussNode.children[0]]);
+        concatChildNodes.mockReset();
+        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
         showWarningMessage.mockReset();
         testResponse.success = false;
         testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
@@ -3183,7 +3181,7 @@ describe("Extension Unit Tests", () => {
         await extension.downloadSpool(jobNode);
         expect(showOpenDialog).toBeCalled();
         expect(downloadAllSpoolContentCommon).toBeCalled();
-        expect(downloadAllSpoolContentCommon.mock.calls[0][0]).toEqual(jobNode.session);
+        expect(downloadAllSpoolContentCommon.mock.calls[0][0]).toEqual(jobNode.getSession());
         expect(downloadAllSpoolContentCommon.mock.calls[0][1]).toEqual(
             {
                 jobid: jobNode.job.jobid,

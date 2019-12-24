@@ -21,6 +21,7 @@ import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
+import { IZoweTreeNode, IZoweTree, IZoweUSSTreeNode } from "../api/ZoweTree";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -91,7 +92,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
     }
 }
 
-export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
+export async function deleteUSSNode(node: IZoweTreeNode, ussFileProvider: IZoweTree<IZoweTreeNode>, filePath: string) {
     // handle zosmf api issue with file paths
     const nodePath = node.fullPath.startsWith("/") ?  node.fullPath.substring(1) :  node.fullPath;
     const quickPickOptions: vscode.QuickPickOptions = {
@@ -108,7 +109,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     try {
         const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
         await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
-        node.mParent.dirty = true;
+        node.getParent().dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {
         vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
@@ -116,7 +117,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
 
     // Remove node from the USS Favorites tree
-    ussFileProvider.removeUSSFavorite(node);
+    ussFileProvider.removeFavorite(node);
     ussFileProvider.refresh();
 }
 
@@ -140,11 +141,11 @@ export async function refreshAllUSS(ussFileProvider: USSTree) {
 /**
  * Process for renaming a USS Node. This could be a Favorite Node
  *
- * @param {ZoweUSSNode} originalNode
+ * @param {IZoweTreeNode} originalNode
  * @param {USSTree} ussFileProvider
  * @param {string} filePath
  */
-export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
+export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
     // Could be a favorite or regular entry always deal with the regular entry
     const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
     const oldLabel = isFav ? originalNode.shortLabel : originalNode.label;
@@ -160,9 +161,9 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
             await zowe.Utilities.renameUSSFile(originalNode.getSession(), originalNode.fullPath, newNamePath);
             ussFileProvider.refresh();
             if (oldFavorite) {
-                ussFileProvider.removeUSSFavorite(oldFavorite);
+                ussFileProvider.removeFavorite(oldFavorite);
                 oldFavorite.rename(newNamePath);
-                ussFileProvider.addUSSFavorite(oldFavorite);
+                ussFileProvider.addFavorite(oldFavorite);
             }
         } catch (err) {
             vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
@@ -177,7 +178,7 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
  *
  * @param {ZoweUSSNode} node
  */
-export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
+export async function deleteFromDisk(node: IZoweTreeNode, filePath: string) {
         try {
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);

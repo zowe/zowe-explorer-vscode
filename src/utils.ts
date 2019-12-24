@@ -10,14 +10,10 @@
 */
 
 import * as path from "path";
-import * as os from "os";
-import * as zowe from "@brightside/core";
-import { CliProfileManager } from "@brightside/imperative";
 import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-import { ZoweUSSNode } from "./ZoweUSSNode";
-import { ZoweNode } from "./ZoweNode";
+import { IZoweTreeNode } from "./api/ZoweTree";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /*
@@ -148,22 +144,8 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
-    let allNodes = new Array<ZoweUSSNode>();
-
-    for (const node of nodes) {
-        allNodes = allNodes.concat(concatUSSChildNodes(node.children));
-        allNodes.push(node);
-    }
-
-    return allNodes;
-}
-
-/*************************************************************************************************************
- * Returns array of all subnodes of given node
- *************************************************************************************************************/
-export function concatChildNodes(nodes: ZoweNode[]) {
-    let allNodes = new Array<ZoweNode>();
+export function concatChildNodes(nodes: IZoweTreeNode[]) {
+    let allNodes = new Array<IZoweTreeNode>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(concatChildNodes(node.children));

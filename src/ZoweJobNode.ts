@@ -11,21 +11,22 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
-import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
+import { Session } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";
 import * as extension from "./extension";
-import { IZoweTreeNode } from "./ZoweTree";
+import { IZoweJobTreeNode } from "./api/ZoweTree";
+import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
 
 // tslint:disable-next-line: max-classes-per-file
-export class Job extends vscode.TreeItem implements IZoweTreeNode {
+export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
 
+    public children: IZoweJobTreeNode[] = [];
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-    private children: Job[] = [];
     // tslint:disable-next-line: variable-name
     private _owner: string;
     // tslint:disable-next-line: variable-name
@@ -33,9 +34,12 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
     // tslint:disable-next-line: variable-name
     private _searchId: string;
 
-    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: Job, public session: Session, public job: IJob) {
-        super(label, mCollapsibleState);
+    constructor(label: string,
+                collapsibleState: vscode.TreeItemCollapsibleState,
+                mParent: IZoweJobTreeNode,
+                session: Session,
+                public job: IJob) {
+        super(label, collapsibleState, mParent, session);
         if (session) {
             this._owner = session.ISession.user;
         }
@@ -46,27 +50,19 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
 
     /**
      * Implements access to profile name
-     * for {IZoweTreeNode}.
      *
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.label.trim();
+        return this.getLabel();
     }
 
-    public getSessionName(): string {
-        return this.getSessionNode().label.trim();
-    }
-
-    public getSessionNode(): Job {
-        if(this.mParent == null) {
-            return this;
-        } else {
-            return this.mParent;
-        }
-    }
-
-    public async getChildren(): Promise<Job[]> {
+    /**
+     * Retrieves child nodes of this IZoweJobTreeNode
+     *
+     * @returns {Promise<IZoweJobTreeNode[]>}
+     */
+    public async getChildren(): Promise<IZoweJobTreeNode[]>  {
         if (this.dirty) {
             const elementChildren = [];
             let spools: zowe.IJobFile[] = [];
@@ -83,7 +79,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
                         }
                         const sessionName = this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
                             this.label.substring(1, this.label.lastIndexOf("]")).trim() :
-                            this.getSessionName();
+                            this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         spoolNode.iconPath = utils.applyIcons(spoolNode);
@@ -136,6 +132,14 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
         this.dirty = true;
     }
 
+    // tslint:disable-next-line: no-empty
+    public rename(newNamePath: string) {
+    }
+
+    public getSessionNode(): IZoweJobTreeNode {
+        return this.getParent() ? this.getParent().getSessionNode() : this;
+    }
+
     get tooltip(): string {
         if (this.job !== null) {
             if (this.job.retcode) {
@@ -178,21 +182,21 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
         return this._prefix;
     }
 
-    set searchId(newId: string) {
+    public set searchId(newId: string) {
         if (newId !== undefined) {
             this._searchId = newId;
         }
     }
 
-    get searchId() {
+    public get searchId() {
         return this._searchId;
     }
 }
 
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
-    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
-                public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
+    constructor(label: string, mCollapsibleState: vscode.TreeItemCollapsibleState, mParent: IZoweJobTreeNode,
+                session: Session, spool: IJobFile, job: IJob, parent: IZoweJobTreeNode) {
         super(label, mCollapsibleState, mParent, session, job);
         this.contextValue = extension.JOBS_SPOOL_CONTEXT;
         utils.applyIcons(this);

@@ -15,7 +15,8 @@ import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
-import { IZoweTreeNode } from "./ZoweTree";
+import { IZoweDatasetTreeNode } from "./api/ZoweTree";
+import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -25,7 +26,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * @class ZoweNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
+export class ZoweNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
@@ -41,28 +42,27 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     constructor(label: string,
                 collapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweNode,
-                private session: Session,
+                mParent: IZoweDatasetTreeNode,
+                session: Session,
                 contextOverride?: string,
                 private etag?: string) {
-        super(label, collapsibleState);
+        super(label, collapsibleState, mParent, session);
         if (contextOverride) {
             this.contextValue = contextOverride;
         } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.DS_PDS_CONTEXT;
-        } else if (mParent && mParent.mParent !== null) {
+        } else if (mParent && mParent.getParent()) {
             this.contextValue = extension.DS_MEMBER_CONTEXT;
         } else {
             this.contextValue = extension.DS_DS_CONTEXT;
         }
         this.tooltip = this.label;
-        this.etag = etag ? etag : "";
         utils.applyIcons(this);
     }
 
     /**
      * Implements access to profile name
-     * for {IZoweTreeNode}.
+     * for {IZoweDatasetTreeNode}.
      *
      * @returns {string}
      */
@@ -163,24 +163,9 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
         }
     }
 
-    /**
-     * Returns the [Session] for this node
-     *
-     * @returns {Session}
-     */
-    public getSession(): Session {
-        return this.session || this.mParent.getSession();
+    public getSessionNode(): IZoweDatasetTreeNode {
+        return this.getParent() ? this.getParent().getSessionNode() : this;
     }
-
-    /**
-     * Returns the session node for this node
-     *
-     * @returns {ZoweNode}
-     */
-    public getSessionNode(): ZoweNode {
-        return this.session ? this : this.mParent.getSessionNode();
-    }
-
     /**
      * Returns the [etag] for this node
      *

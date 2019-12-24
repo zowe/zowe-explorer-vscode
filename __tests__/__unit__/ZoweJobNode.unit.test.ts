@@ -21,7 +21,6 @@ import * as profileLoader from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import { Job } from "../../src/ZoweJobNode";
 import { ZosJobsProvider, createJobsTree } from "../../src/ZosJobsProvider";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 
 describe("Zos Jobs Unit Tests", () => {
 
@@ -282,7 +281,10 @@ describe("Zos Jobs Unit Tests", () => {
             expect(job.prefix).toEqual("*");
             job.prefix = "zowe*";
             expect(job.prefix).toEqual("zowe*");
-            job.reset();
+            // reset
+            utils.labelHack(job);
+            job.children = [];
+            job.dirty = true;
         });
 
         it("should set the search jobid to a specific value", async () => {
@@ -293,7 +295,10 @@ describe("Zos Jobs Unit Tests", () => {
             const job = jobs[0];
             job.searchId = "JOB12345";
             expect(job.searchId).toEqual("JOB12345");
-            job.reset();
+            // reset
+            utils.labelHack(job);
+            job.children = [];
+            job.dirty = true;
         });
 
         it("Testing that expand tree is executed successfully", async () => {
@@ -310,7 +315,7 @@ describe("Zos Jobs Unit Tests", () => {
             expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
-                testJobsProvider.mSessionNodes[1].session, iJob);
+                testJobsProvider.mSessionNodes[1].getSession(), iJob);
             job.contextValue = "job";
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
@@ -417,9 +422,9 @@ describe("Zos Jobs Unit Tests", () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            newjobNode.session.ISession.user = "";
-            newjobNode.session.ISession.password = "";
-            newjobNode.session.ISession.base64EncodedAuth = "";
+            newjobNode.getSession().ISession.user = "";
+            newjobNode.getSession().ISession.password = "";
+            newjobNode.getSession().ISession.base64EncodedAuth = "";
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
@@ -702,10 +707,10 @@ describe("Zos Jobs Unit Tests", () => {
             const testTree = await createJobsTree(Logger.getAppLogger());
             testTree.mFavorites = [];
             const job = new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
-            testTree.mSessionNodes[1].session, iJob);
+            testTree.mSessionNodes[1].getSession(), iJob);
 
             // Check adding job
-            await testTree.addJobsFavorite(job);
+            await testTree.addFavorite(job);
             expect(testTree.mFavorites.length).toEqual(1);
 
             testTree.mSessionNodes[1].owner = "myHLQ";
@@ -732,10 +737,10 @@ describe("Zos Jobs Unit Tests", () => {
             // tslint:disable-next-line: no-magic-numbers
             expect(testTree.mFavorites[3].label).toEqual("[firstProfileName]: MYHLQ(JOB1283)");
 
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
             expect(testTree.mFavorites).toEqual([]);
         });
     });

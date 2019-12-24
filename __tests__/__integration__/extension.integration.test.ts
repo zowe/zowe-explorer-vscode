@@ -26,7 +26,7 @@ import { DatasetTree, createDatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import { ZosJobsProvider } from "../../src/ZosJobsProvider";
+import { IZoweTreeNode } from "../../src/api/ZoweTree";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -861,8 +861,8 @@ describe("Extension Integration Tests", () => {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-async function getAllNodes(nodes: ZoweNode[]) {
-    let allNodes = new Array<ZoweNode>();
+async function getAllNodes(nodes: IZoweTreeNode[]) {
+    let allNodes = new Array<IZoweTreeNode>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(await getAllNodes(await node.getChildren()));
@@ -1066,8 +1066,8 @@ describe("TreeView", () => {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-async function getAllUSSNodes(nodes: ZoweUSSNode[]) {
-    let allNodes = new Array<ZoweUSSNode>();
+async function getAllUSSNodes(nodes: IZoweTreeNode[]) {
+    let allNodes = new Array<IZoweTreeNode>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(await getAllUSSNodes(await node.getChildren()));

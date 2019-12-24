@@ -40,14 +40,14 @@ describe("ZoweNode Integration Tests", async () => {
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
-        expect(emptyPONode.mParent).toBeDefined();
+        expect(emptyPONode.getParent()).toBeDefined();
 
         // Tests PS node
         const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
-        expect(PSNode.mParent).toBeDefined();
+        expect(PSNode.getParent()).toBeDefined();
     });
 
     /*************************************************************************************************************
@@ -59,7 +59,7 @@ describe("ZoweNode Integration Tests", async () => {
 
         expect(edgeNode.label).toBeDefined();
         expect(edgeNode.collapsibleState).toBeDefined();
-        expect(edgeNode.mParent).toBeDefined();
+        expect(edgeNode.getParent()).toBeDefined();
     });
 
     /*************************************************************************************************************
