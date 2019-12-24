@@ -11,11 +11,13 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
 import { IZoweTreeNode } from "./ZoweTree";
+import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -44,8 +46,12 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                 public mParent: ZoweNode,
                 private session: Session,
                 contextOverride?: string,
-                private etag?: string) {
+                private etag?: string,
+                public profile?: IProfileLoaded) {
         super(label, collapsibleState);
+        if (!profile && mParent && mParent.profile) {
+            this.profile = mParent.profile;
+        }
         if (contextOverride) {
             this.contextValue = contextOverride;
         } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
@@ -67,7 +73,7 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.label.trim();
+        return this.profile.name;
     }
 
     /**
@@ -109,10 +115,10 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
+                    responses.push(await ZoweVscApiRegister.getMvsApi(this.profile).dataSet(pattern.trim(), {attributes: true}));
                 }
             } else {
-                responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
+                responses.push(await ZoweVscApiRegister.getMvsApi(this.profile).allMembers(label, {attributes: true}));
             }
         } catch (err) {
             vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from zowe.List")

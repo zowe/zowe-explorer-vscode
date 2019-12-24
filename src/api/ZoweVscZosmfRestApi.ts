@@ -78,11 +78,60 @@ export class ZoweVscZosmfUssRestApi extends ZoweVscZosmfCommon implements ZoweVs
 
 export class ZoweVscZosmfMvsRestApi extends ZoweVscZosmfCommon implements ZoweVscApi.IMvs {
 
-    public async dataSet(filter: string): Promise<zowe.IZosFilesResponse>{
-        return undefined;
+    public async dataSet(filter: string, options?: zowe.IListOptions
+        ): Promise<zowe.IZosFilesResponse>{
+        return zowe.List.dataSet(this.getSession(), filter, options);
     }
 
-    public async allMembers(dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        return undefined;
+    public async allMembers(dataSetName: string, options?: zowe.IListOptions
+        ): Promise<zowe.IZosFilesResponse> {
+        return zowe.List.allMembers(this.getSession(), dataSetName, options);
     }
+
+    public async getContents(name: string, options?: zowe.IDownloadOptions
+        ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Download.dataSet(this.getSession(), name, options);
+    }
+
+    public async putContents(inputPath: string, dataSetName: string, options?: zowe.IUploadOptions
+        ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Upload.pathToDataSet(this.getSession(), inputPath, dataSetName, options);
+    }
+
+    public async createDataSet(cmdType: zowe.CreateDataSetTypeEnum, dataSetName: string, options?: Partial<zowe.ICreateDataSetOptions>
+        ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Create.dataSet(this.getSession(), cmdType, dataSetName, options);
+    }
+
+    public async createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions
+        ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, options);
+    }
+
+    public async copyDataSetMember(
+        { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
+        { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+        options?: {replace?: boolean}
+    ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Copy.dataSet(this.getSession(),
+            { dataSetName: fromDataSetName, memberName: fromMemberName },
+            { dataSetName: toDataSetName, memberName: toMemberName },
+            options
+        );
+    }
+
+    public async renameDataSet(beforeDataSetName: string, afterDataSetName: string
+        ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Rename.dataSet(this.getSession(), beforeDataSetName, afterDataSetName);
+    }
+
+    public async renameDataSetMember(dataSetName: string, beforeMemberName: string, afterMemberName: string,
+    ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Rename.dataSetMember(this.getSession(), dataSetName, beforeMemberName, afterMemberName);
+    }
+
+    public async deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions
+        ): Promise<zowe.IZosFilesResponse> {
+            return zowe.Delete.dataSet(this.getSession(), dataSetName);
+        }
 }

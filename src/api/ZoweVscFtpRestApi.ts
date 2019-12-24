@@ -212,7 +212,7 @@ export class ZoweVscFtpUssRestApi implements ZoweVscApi.IUss {
 
     private async hashFile(filename: string): Promise<string> {
         return new Promise((resolve) => {
-            const hash = crypto.createHash("sha256");
+            const hash = crypto.createHash("sha1");
             const input = fs.createReadStream(filename);
             input.on("readable", () => {
                 const data = input.read();

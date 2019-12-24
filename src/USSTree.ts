@@ -483,7 +483,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                 return;
             }
-            // Uses loaded profile to create a zosmf session with brightside
+            // Uses loaded profile to create a session with the USS API
             const session = ZoweVscApiRegister.getUssApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,

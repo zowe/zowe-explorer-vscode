@@ -129,11 +129,74 @@ export namespace ZoweVscApi {
 
     // TODO
     export interface IMvs extends ICommon {
+
+        /**
+         * Get a list of data sets that match the filter pattern.
+         *
+         * @param {string} filter
+         * @param {zowe.IListOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         * @memberof IMvs
+         */
         dataSet(
-            filter: string
+            filter: string,
+            options?: zowe.IListOptions
         ): Promise<zowe.IZosFilesResponse>;
+
         allMembers(
-            dataSetName: string
+            dataSetName: string,
+            options?: zowe.IListOptions
+        ): Promise<zowe.IZosFilesResponse>;
+
+        getContents(
+            name: string,
+            options?: zowe.IDownloadOptions
+        ): Promise<zowe.IZosFilesResponse>;
+
+        putContents(
+            inputPath: string,
+            dataSetName: string,
+            options?: zowe.IUploadOptions
+        ): Promise<zowe.IZosFilesResponse>;
+
+        createDataSet(
+            cmdType: zowe.CreateDataSetTypeEnum,
+            dataSetName: string,
+            options?: Partial<zowe.ICreateDataSetOptions>
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Creates an empty data set member with given name.
+         *
+         * @param {string} dataSetName
+         * @param {zowe.IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         * @memberof IMvs
+         */
+        createDataSetMember(
+            dataSetName: string, options?: zowe.IUploadOptions
+        ): Promise<zowe.IZosFilesResponse>;
+
+        copyDataSetMember(
+            { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
+            { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
+            options?: {replace?: boolean}
+        ): Promise<zowe.IZosFilesResponse>;
+
+        renameDataSet(
+            beforeDataSetName: string,
+            afterDataSetName: string
+        ): Promise<zowe.IZosFilesResponse>;
+
+        renameDataSetMember(
+            dataSetName: string,
+            beforeMemberName: string,
+            afterMemberName: string,
+        ): Promise<zowe.IZosFilesResponse>;
+
+        deleteDataSet(
+            dataSetName: string,
+            options?: zowe.IDeleteDatasetOptions
         ): Promise<zowe.IZosFilesResponse>;
     }
 

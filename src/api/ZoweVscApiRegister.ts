@@ -45,6 +45,17 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
     }
 
     /**
+     * Static lookup of an API for MVS for a given profile.
+     * @private
+     * @param {string} profileType
+     * @returns
+     * @memberof ZoweVscApiRegister
+     */
+    public static getMvsApi(profile: imperative.IProfileLoaded): ZoweVscApi.IMvs {
+        return ZoweVscApiRegister.getInstance().getMvsApi(profile);
+    }
+
+    /**
      * This object represents the API that gets exposed to other VS Code extensions
      * that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
