@@ -93,8 +93,6 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    // handle zosmf api issue with file paths
-    const nodePath = node.fullPath.startsWith("/") ?  node.fullPath.substring(1) :  node.fullPath;
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + node.label,
         ignoreFocusOut: true,
@@ -108,7 +106,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
     try {
         const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-        await ZoweVscApiRegister.getUssApi(node.profile).delete(nodePath, isRecursive);
+        await ZoweVscApiRegister.getUssApi(node.profile).delete(node.fullPath, isRecursive);
         node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {

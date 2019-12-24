@@ -17,12 +17,16 @@ import { ZoweVscApi } from "./IZoweVscRestApis";
 // tslint:disable: max-classes-per-file
 
 class ZoweVscZosmfCommon implements ZoweVscApi.ICommon {
+    public static getProfileTypeName(): string {
+        return "zosmf";
+    }
+
     private session: imperative.Session;
     constructor(public profile?: imperative.IProfileLoaded) {
     }
 
     public getProfileTypeName(): string {
-        return "zosmf";
+        return ZoweVscZosmfUssRestApi.getProfileTypeName();
     }
 
     public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
@@ -57,7 +61,9 @@ export class ZoweVscZosmfUssRestApi extends ZoweVscZosmfCommon implements ZoweVs
     }
 
     public async delete(fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
-        return zowe.Delete.ussFile(this.getSession(), fileName, recursive);
+        // handle zosmf api issue with file paths
+        const fixedName = fileName.startsWith("/") ?  fileName.substring(1) :  fileName;
+        return zowe.Delete.ussFile(this.getSession(), fixedName, recursive);
     }
 
     public async rename(oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {

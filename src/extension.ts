@@ -77,7 +77,7 @@ let log: Logger;
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweVscApiRegister> {
 
-    // Get temp folder location from settings
+   // Get temp folder location from settings
     let preferencesTempPath: string =
         vscode.workspace.getConfiguration()
         /* tslint:disable:no-string-literal */
@@ -1757,7 +1757,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
     let returnEtag: boolean;
     if (node) {
         etagToUpload = node.getEtag();
-        returnEtag = true;
+        if (etagToUpload) {
+            returnEtag = true;
+        }
     }
 
     try {
@@ -1777,21 +1779,25 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
+        // TODO: error handling must not be zosmf specific
         if (err.message.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await zowe.Download.ussFile(documentSession, node.fullPath, {
+            // Store old document text in a separate variable, to be used on merge conflict
+            const oldDocText = doc.getText();
+            const oldDocLineCount = doc.lineCount;
+            const downloadResponse = await ZoweVscApiRegister.getUssApi(node.profile).getContents(
+                node.fullPath, {
                 file: getUSSDocumentFilePath(node),
-                returnEtag: true});
+                binary,
+                returnEtag: true
+            });
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
             if (downloadEtag !== etagToUpload) {
                 node.setEtag(downloadEtag);
             }
             vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-            // Store document in a separate variable, to be used on merge conflict
-            const oldDoc = doc;
-            const oldDocText = oldDoc.getText();
-            const startPosition = new vscode.Position(0,0);
-            const endPosition = new vscode.Position(oldDoc.lineCount,0);
+            const startPosition = new vscode.Position(0, 0);
+            const endPosition = new vscode.Position(oldDocLineCount, 0);
             const deleteRange = new vscode.Range(startPosition, endPosition);
             await vscode.window.activeTextEditor.edit((editBuilder) => {
                 // re-write the old content in the editor view
