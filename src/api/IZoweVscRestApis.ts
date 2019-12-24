@@ -121,6 +121,13 @@ export namespace ZoweVscApi {
             recursive?: boolean
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Rename a file or directory.
+         *
+         * @param {string} oldFilePath
+         * @param {string} newFilePath
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         rename(
             oldFilePath: string,
             newFilePath: string
@@ -136,29 +143,58 @@ export namespace ZoweVscApi {
          * @param {string} filter
          * @param {zowe.IListOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
-         * @memberof IMvs
          */
         dataSet(
             filter: string,
             options?: zowe.IListOptions
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Get a list of members for a partitioned data set.
+         *
+         * @param {string} dataSetName
+         * @param {zowe.IListOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         allMembers(
             dataSetName: string,
             options?: zowe.IListOptions
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Get the contents of a data set or member specified by name.
+         *
+         * @param {string} name
+         * @param {zowe.IDownloadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         getContents(
             name: string,
             options?: zowe.IDownloadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Upload the content of a file to a data set or member.
+         *
+         * @param {string} inputPath
+         * @param {string} dataSetName
+         * @param {zowe.IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         putContents(
             inputPath: string,
             dataSetName: string,
             options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Create a new data set with the sepecified options.
+         *
+         * @param {zowe.CreateDataSetTypeEnum} cmdType
+         * @param {string} dataSetName
+         * @param {Partial<zowe.ICreateDataSetOptions>} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         createDataSet(
             cmdType: zowe.CreateDataSetTypeEnum,
             dataSetName: string,
@@ -177,23 +213,54 @@ export namespace ZoweVscApi {
             dataSetName: string, options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Copies a data set member.
+         *
+         * @param {zowe.IDataSet} { dataSetName: fromDataSetName, memberName: fromMemberName }
+         * @param {zowe.IDataSet} { dataSetName: toDataSetName, memberName: toMemberName }
+         * @param {{replace?: boolean}} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         copyDataSetMember(
             { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
             { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
             options?: {replace?: boolean}
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Renames a data set.
+         *
+         * @param {string} beforeDataSetName
+         * @param {string} afterDataSetName
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         renameDataSet(
             beforeDataSetName: string,
             afterDataSetName: string
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Renamces a data set member.
+         *
+         * @param {string} dataSetName
+         * @param {string} beforeMemberName
+         * @param {string} afterMemberName
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
         renameDataSetMember(
             dataSetName: string,
             beforeMemberName: string,
             afterMemberName: string,
         ): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Deletes a data set or data set member.
+         *
+         * @param {string} dataSetName
+         * @param {zowe.IDeleteDatasetOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         * @memberof IMvs
+         */
         deleteDataSet(
             dataSetName: string,
             options?: zowe.IDeleteDatasetOptions
