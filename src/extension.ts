@@ -636,11 +636,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
             return;
         }
         if (choice instanceof utils.FilterDescriptor) {
-            if (quickpick.value) {
-                chosenProfile = quickpick.value;
-            } else {
-                chosenProfile = "";
-            }
+            chosenProfile = "";
         } else {
             chosenProfile = choice.label;
         }
