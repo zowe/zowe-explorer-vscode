@@ -429,6 +429,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                         options = {
                             prompt: localize("jobsFilterPrompt.option.prompt.owner",
                             "Enter the Job Owner. Default is *."),
+                            validateInput: (value: string) => (value.match(/ /g) ? "Please enter a valid profile name (no spaces allowed)." : ""),
                             value: node.owner
                         };
                         // get user input
