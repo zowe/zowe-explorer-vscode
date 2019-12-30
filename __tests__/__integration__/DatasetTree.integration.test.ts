@@ -64,7 +64,6 @@ describe("DatasetTree Integration Tests", async () => {
         const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         chai.expect(testTree.getTreeItem(sampleElement)).to.be.instanceOf(vscode.TreeItem);
     });
-
     /*************************************************************************************************************
      * Creates sample list of ZoweNodes and checks that datasetTree.getChildren() returns correct array of children
      *************************************************************************************************************/

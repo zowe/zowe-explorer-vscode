@@ -32,7 +32,6 @@ import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
-
 // Globals
 export let BRIGHTTEMPFOLDER;
 export let USS_DIR;
@@ -773,53 +772,12 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         }
 
         // get name of data set
-        let name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
-        name = name.toUpperCase();
+        const name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
 
         try {
             await zowe.Create.dataSet(node.getSession(), typeEnum, name, createOptions);
             node.dirty = true;
-
-            // Store previous filters (before refreshing)
-            const currChildren = await node.getChildren();
-            let theFilter = datasetProvider.getHistory()[0] || null;
-
-            // Check if filter is currently applied
-            if (currChildren[0].contextValue !== "information" && theFilter) {
-                let addNewFilter = true;
-                const currentFilters = theFilter.split(", ");
-
-                // Check if current filter includes the new node
-                currentFilters.forEach((filter) => {
-                    const regex = new RegExp(filter.replace(`*`, `(.+)`) + "$");
-                    addNewFilter = regex.test(name) ? false : addNewFilter;
-                });
-
-                if (addNewFilter) {
-                    theFilter = `${theFilter}, ${name}`;
-                    datasetProvider.addHistory(theFilter);
-                }
-            } else {
-                // No filter is currently applied
-                theFilter = name;
-                datasetProvider.addHistory(theFilter);
-            }
-
             datasetProvider.refresh();
-
-            // Show newly-created data set in expanded tree view
-            if (name) {
-                node.label = `${node.label} `;
-                node.label = node.label.trim();
-                node.tooltip = node.pattern = theFilter.toUpperCase();
-                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
-                node.dirty = true;
-
-                const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-                const newNodeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
-                newNodeView.reveal(newNode, {select: true});
-            }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
             vscode.window.showErrorMessage(err.message);
@@ -1165,6 +1123,7 @@ export async function deactivate() {
     await cleanTempDir();
 }
 
+
 /**
  * Deletes a dataset
  *
@@ -1235,7 +1194,15 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         datasetProvider.removeFavorite(node);
         node.label = temp;
     }
-    datasetProvider.refresh();
+    
+    // refresh member view & favorites
+    if (node.mParent) {
+        const parent = node.mParent;
+        datasetProvider.refreshElement(parent);
+    } else {
+        datasetProvider.refresh();
+    }
+    datasetProvider.refreshElement(datasetProvider.mFavoriteSession);
 
     // remove local copy of file
     const fileName = getDocumentFilePath(label, node);

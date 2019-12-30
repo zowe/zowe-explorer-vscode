@@ -370,10 +370,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         this.refresh();
     }
 
-    public getHistory() {
-        return this.mHistory.getHistory();
-    }
-
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
