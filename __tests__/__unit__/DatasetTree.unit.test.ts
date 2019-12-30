@@ -258,9 +258,9 @@ describe("DatasetTree Unit Tests", () => {
      * Test the getHistory command
      *************************************************************************************************************/
     it("Tests the getHistory command", async () => {
-        testTree.addHistory('testHistory');
+        testTree.addHistory("testHistory");
         const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
-        expect(testTree.getHistory()[0]).toEqual('testHistory');
+        expect(testTree.getHistory()[0]).toEqual("testHistory");
     });
 
     /*************************************************************************************************************

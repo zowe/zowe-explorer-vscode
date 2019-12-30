@@ -1116,7 +1116,7 @@ describe("Extension Unit Tests", () => {
         const childNode = new ZoweNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null);
         sessNode2.children.push(childNode);
 
-        let uploadResponse: brightside.IZosFilesResponse = {
+        const uploadResponse: brightside.IZosFilesResponse = {
             success: true,
             commandResponse: "success",
             apiResponse: {
@@ -1204,6 +1204,7 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE1, NODE");
+        expect(testTree.reveal.mock.calls.length).toBe(1);
 
         testTree.addHistory.mockReset();
 
@@ -1216,7 +1217,6 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
-        expect(testTree.reveal.mock.calls.length).toBe(3);
 
         allMembers.mockReset();
         dataSetList.mockReset();
