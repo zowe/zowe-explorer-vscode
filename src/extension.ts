@@ -1194,7 +1194,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         datasetProvider.removeFavorite(node);
         node.label = temp;
     }
-    
+
     // refresh member view & favorites
     if (node.mParent) {
         const parent = node.mParent;
