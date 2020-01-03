@@ -44,7 +44,7 @@ export async function createDatasetTree(log: Logger) {
 export class DatasetTree implements IZoweTree<ZoweNode> {
 
     private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
-    private static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
     public mSessionNodes: ZoweNode[];
     public mFavoriteSession: ZoweNode;
     public mFavorites: ZoweNode[] = [];

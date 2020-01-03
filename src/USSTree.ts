@@ -42,7 +42,7 @@ export async function createUSSTree(log: Logger) {
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree implements IZoweTree<ZoweUSSNode> {
-    public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
+    public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
 
     public mSessionNodes: ZoweUSSNode[];
