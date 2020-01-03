@@ -24,16 +24,39 @@ describe("Profile class unit tests", () => {
 
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
+    const inputBox: vscode.InputBox = {
+        value: "input",
+        title: null,
+        enabled: true,
+        busy: false,
+        show: jest.fn(),
+        hide: jest.fn(),
+        step: null,
+        dispose: jest.fn(),
+        ignoreFocusOut: false,
+        totalSteps: null,
+        placeholder: undefined,
+        password: false,
+        onDidChangeValue: jest.fn(),
+        onDidAccept: jest.fn(),
+        onDidHide: jest.fn(),
+        buttons: [],
+        onDidTriggerButton: jest.fn(),
+        prompt: undefined,
+        validationMessage: undefined
+    };
 
     const mockJSONParse = jest.spyOn(JSON, "parse");
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
+    const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
 
     beforeEach(() => {
@@ -114,14 +137,15 @@ describe("Profile class unit tests", () => {
 
         afterEach(() => {
             showQuickPick.mockReset();
-            showInputBox.mockReset();
+            createInputBox.mockReset();
             showInformationMessage.mockReset();
             showErrorMessage.mockReset();
         });
 
         it("should indicate missing property: zosmf url", async () => {
             // No valid zosmf value
-            showInputBox.mockResolvedValueOnce(undefined);
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
@@ -129,7 +153,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: username", async () => {
             // Enter z/OS password
-            showInputBox.mockResolvedValueOnce("https://fake:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -138,7 +163,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: password", async () => {
             // Enter z/OS password
-            showInputBox.mockResolvedValueOnce("https://fake:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
@@ -148,7 +174,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: rejectUnauthorized", async () => {
             // Operation cancelled
-            showInputBox.mockResolvedValueOnce("https://fake:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
@@ -158,7 +185,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should validate that profile name already exists", async () => {
-            showInputBox.mockResolvedValueOnce("https://fake:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -169,7 +197,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create new profile", async () => {
-            showInputBox.mockResolvedValueOnce("https://fake:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -180,7 +209,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create profile with optional credentials", async () => {
-            showInputBox.mockResolvedValueOnce("https://fake:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("");
             showInputBox.mockResolvedValueOnce("");
             showQuickPick.mockReset();
@@ -191,8 +221,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create profile https+443", async () => {
-
-            showInputBox.mockResolvedValueOnce("https://fake:443");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -203,7 +233,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create 2 consecutive profiles", async () => {
-            showInputBox.mockResolvedValueOnce("https://fake1:143");
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake1");
             showInputBox.mockResolvedValueOnce("fake1");
             showQuickPick.mockReset();
@@ -214,11 +245,14 @@ describe("Profile class unit tests", () => {
 
             showInputBox.mockReset();
             showInformationMessage.mockReset();
+
             showInputBox.mockResolvedValueOnce("fake2");
-            showInputBox.mockResolvedValueOnce("https://fake2:143");
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake2");
             showInputBox.mockResolvedValueOnce("fake2");
+
             showQuickPick.mockReset();
+
             showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
             await profiles.createNewConnection("fake2");
             expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -272,7 +306,7 @@ describe("Profile class unit tests", () => {
             expect(showErrorMessage.mock.calls[0][0]).toBe("Please enter your z/OS username. Operation Cancelled");
         });
 
-        it("should prompt credentials: username invalid", async () => {
+        it("should prompt credentials: password invalid", async () => {
             const promptProfile = {name: "profile1", profile: {user: "fake", password: "1234"}};
             const session  = (await ZosmfSession.createBasicZosmfSession(promptProfile.profile) as ISession);
             Object.defineProperty(Profiles.getInstance, "promptCredentials", {
