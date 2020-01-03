@@ -372,7 +372,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
 
-
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -1186,7 +1185,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -1247,7 +1246,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -1851,7 +1850,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -1860,7 +1859,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.openPS(dsNode, true);
+        await extension.openPS(dsNode, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
@@ -1886,7 +1885,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -1895,7 +1894,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.openPS(dsNode, true);
+        await extension.openPS(dsNode, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
@@ -1924,12 +1923,47 @@ describe("Extension Unit Tests", () => {
             })
         });
 
-        await extension.openPS(dsNode, true);
+        await extension.openPS(dsNode, true, testTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showInformationMessage.mockReset();
         showErrorMessage.mockReset();
+    });
+
+    it("Testing that that openPS credentials with favorites ends in error", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const dsNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [undefined, undefined, undefined];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+        const spyopenPS = jest.spyOn(extension, "openPS");
+        await extension.openPS(dsNode, true, testTree);
+        expect(extension.openPS).toHaveBeenCalled();
+
     });
 
     it("Testing that refreshUSS correctly executes with and without error", async () => {
@@ -2066,8 +2100,10 @@ describe("Extension Unit Tests", () => {
         });
 
         it("Testing that addZoweSession will cancel if there is no profile name", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
             const entered = undefined;
-
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
                 placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
@@ -2319,7 +2355,7 @@ describe("Extension Unit Tests", () => {
         };
         withProgress.mockReturnValue(response);
 
-        await extension.openUSS(node, false, true);
+        await extension.openUSS(node, false, true, testUSSTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
@@ -2342,7 +2378,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce("test.doc");
         const node2 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
 
-        await extension.openUSS(node2, false, true);
+        await extension.openUSS(node2, false, true, testUSSTree);
 
         ussFile.mockReset();
         openTextDocument.mockReset();
@@ -2353,7 +2389,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
-            await extension.openUSS(child, false, true);
+            await extension.openUSS(child, false, true, testUSSTree);
         } catch (err) {
             // do nothing
         }
@@ -2367,7 +2403,7 @@ describe("Extension Unit Tests", () => {
 
         const child2 = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, node2, null, null);
         try {
-            await extension.openUSS(child2, false, true);
+            await extension.openUSS(child2, false, true, testUSSTree);
         } catch (err) {
             // do nothing
         }
@@ -2382,7 +2418,7 @@ describe("Extension Unit Tests", () => {
         badparent.contextValue = "turnip";
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
         try {
-            await extension.openUSS(brat, false, true);
+            await extension.openUSS(brat, false, true, testUSSTree);
 // tslint:disable-next-line: no-empty
         } catch (err) {
         }
@@ -2413,11 +2449,11 @@ describe("Extension Unit Tests", () => {
         child.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
         // For each node, make sure that code below the log.debug statement is execute
-        await extension.openUSS(favoriteFile, false, true);
+        await extension.openUSS(favoriteFile, false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
 
-        await extension.openUSS(child, false, true);
+        await extension.openUSS(child, false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
     });
@@ -2447,7 +2483,7 @@ describe("Extension Unit Tests", () => {
         };
         withProgress.mockReturnValue(response);
 
-        await extension.openUSS(node, false, true);
+        await extension.openUSS(node, false, true, testUSSTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getSessionNode().mProfileName + "/", node.fullPath));
@@ -2486,7 +2522,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -2495,7 +2531,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.openUSS(dsNode, false, true);
+        await extension.openUSS(dsNode, false, true, testUSSTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
@@ -2521,7 +2557,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -2530,9 +2566,43 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.openUSS(dsNode, false, true);
+        await extension.openUSS(dsNode, false, true, testUSSTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
+    });
+
+    it("Testing that that openUSS credentials prompt with favorites ends in error", async () => {
+        showTextDocument.mockReset();
+        openTextDocument.mockReset();
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new brtimperative.Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [undefined, undefined, undefined];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+        const spyopenUSS = jest.spyOn(extension, "openUSS");
+        await extension.openUSS(dsNode, false, true, testUSSTree);
+        expect(extension.openUSS).toHaveBeenCalled();
     });
 
     it("Testing that that openUSS credentials prompt ends in error", async () => {
@@ -2559,7 +2629,7 @@ describe("Extension Unit Tests", () => {
             })
         });
 
-        await extension.openUSS(dsNode, false, true);
+        await extension.openUSS(dsNode, false, true, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         showQuickPick.mockReset();
         showInputBox.mockReset();
@@ -2706,7 +2776,7 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         promptCredentials: jest.fn(()=> {
-                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                            return ["fake", "fake", "fake"];
                         }),
                     };
                 })
@@ -2722,7 +2792,7 @@ describe("Extension Unit Tests", () => {
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
-            await extension.refreshJobsServer(newjobNode);
+            await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
         });
 
@@ -2736,7 +2806,7 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         promptCredentials: jest.fn(()=> {
-                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                            return ["fake", "fake", "fake"];
                         }),
                     };
                 })
@@ -2751,7 +2821,37 @@ describe("Extension Unit Tests", () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            await extension.refreshJobsServer(newjobNode);
+            await extension.refreshJobsServer(newjobNode, testJobsTree);
+            expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("tests the refresh Jobs Server for prompt credentials with favorites that ends in error", async () => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        promptCredentials: jest.fn(()=> {
+                            return [undefined, undefined, undefined];
+                        }),
+                    };
+                })
+            });
+            const sessionwocred = new brtimperative.Session({
+                user: "",
+                password: "",
+                hostname: "fake",
+                protocol: "https",
+                type: "basic",
+            });
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+            const spyopenPS = jest.spyOn(extension, "refreshJobsServer");
+            await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
         });
 
@@ -2765,7 +2865,7 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         promptCredentials: jest.fn(()=> {
-                            return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                            return ["fake", "fake", "fake"];
                         }),
                     };
                 })
@@ -2775,7 +2875,7 @@ describe("Extension Unit Tests", () => {
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, session, iJob);
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
-            await extension.refreshJobsServer(newjobNode);
+            await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
         });
 
@@ -2803,7 +2903,7 @@ describe("Extension Unit Tests", () => {
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
-            await extension.refreshJobsServer(newjobNode);
+            await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
         });
 
@@ -3070,6 +3170,19 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the spool content is not opened in a new document", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                };
+            })
+        });
+        showErrorMessage.mockReset();
         showTextDocument.mockReset();
         openTextDocument.mockReset();
         await extension.getSpoolContent(undefined, undefined);
@@ -3097,7 +3210,7 @@ describe("Extension Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -3852,7 +3965,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -3886,7 +3999,7 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
