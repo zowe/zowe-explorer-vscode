@@ -14,12 +14,15 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 **Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
-**Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
+**Tips:**
+
+* For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
+* For information about how to develop for Eclipse Theia, see [Theia README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md).
 
 ## Contents
 
 * [Software Requirements](#software-requirements)
-* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
+* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-zosmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
