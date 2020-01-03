@@ -3,7 +3,7 @@
     "ussFilterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
     "searchHistory.options.prompt": "Select a filter",
     "enterPattern.pattern": "No selection made.",
-    "ussFilterPrompt.option.prompt.search": "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)",
+    "ussFilterPrompt.option.prompt.search": "Create a new filter",
     "ussFilterPrompt.enterPath": "You must enter a path.",
     "initializeFavorites.log.debug": "initializing favorites",
     "initializeUSSFavorites.lines.title": "Open",
