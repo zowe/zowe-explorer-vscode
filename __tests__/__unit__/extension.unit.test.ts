@@ -111,6 +111,7 @@ describe("Extension Unit Tests", () => {
     const moveSync = jest.fn();
     const getAllProfileNames = jest.fn();
     const createTreeView = jest.fn();
+    const reveal = jest.fn();
     const createWebviewPanel = jest.fn();
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
@@ -148,6 +149,7 @@ describe("Extension Unit Tests", () => {
     const fileToUSSFile = jest.fn();
     const dataSetList = jest.fn();
     const fileList = jest.fn();
+    const allMembers = jest.fn();
     const openTextDocument = jest.fn();
     const showTextDocument = jest.fn();
     const showInformationMessage = jest.fn();
@@ -155,6 +157,7 @@ describe("Extension Unit Tests", () => {
     const createQuickPick = jest.fn();
     const mockAddZoweSession = jest.fn();
     const mockAddHistory = jest.fn();
+    const mockGetHistory = jest.fn();
     const mockRefresh = jest.fn();
     const mockRefreshElement = jest.fn();
     const mockUSSRefresh = jest.fn();
@@ -225,6 +228,7 @@ describe("Extension Unit Tests", () => {
             mFavorites: [],
             addSession: mockAddZoweSession,
             addHistory: mockAddHistory,
+            getHistory: mockGetHistory,
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
@@ -244,6 +248,7 @@ describe("Extension Unit Tests", () => {
             addSession: mockAddZoweSession,
             refresh: mockUSSRefresh,
             addHistory: mockAddHistory,
+            getHistory: mockGetHistory,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
@@ -273,6 +278,7 @@ describe("Extension Unit Tests", () => {
     testTree.mSessionNodes.push(sessNode);
     Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
     Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
+    Object.defineProperty(testTree, "reveal", {value: jest.fn()});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
 
     const testUSSTree = USSTree();
@@ -304,6 +310,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {value: onDidSaveTextDocument});
     Object.defineProperty(vscode.window, "onDidCollapseElement", {value: onDidCollapseElement});
     Object.defineProperty(vscode.window, "onDidExpandElement", {value: onDidExpandElement});
+    Object.defineProperty(vscode.window, "reveal", {value: reveal});
     Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {value: onDidChangeConfiguration});
     Object.defineProperty(fs, "readdirSync", {value: readdirSync});
@@ -335,6 +342,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brightside, "List", {value: List});
     Object.defineProperty(List, "dataSet", {value: dataSetList});
     Object.defineProperty(List, "fileList", {value: fileList});
+    Object.defineProperty(List, "allMembers", {value: allMembers});
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
@@ -1101,25 +1109,44 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that createFile is executed successfully", async () => {
+        const sessNode2 = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode2.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode2.pattern = "test hlq";
+        const childNode = new ZoweNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null);
+        sessNode2.children.push(childNode);
+
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: {
+                items: [{name: "NODE", dsname: "NODE"}]
+            }
+        };
+
         showQuickPick.mockReset();
         getConfiguration.mockReset();
         showInputBox.mockReset();
         dataSetCreate.mockReset();
+        allMembers.mockReset();
+        dataSetList.mockReset();
+        mockGetHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-
+        showInputBox.mockReturnValue("node");
+        allMembers.mockReturnValue(uploadResponse);
+        dataSetList.mockReturnValue(uploadResponse);
+        mockGetHistory.mockReturnValue([]);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await extension.createFile(sessNode, testTree);
+        await extension.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set C");
-        await extension.createFile(sessNode, testTree);
+        await extension.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await extension.createFile(sessNode, testTree);
+        await extension.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await extension.createFile(sessNode, testTree);
+        await extension.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(sessNode, testTree);
+        await extension.createFile(sessNode2, testTree);
 
         // tslint:disable-next-line: no-magic-numbers
         expect(showQuickPick.mock.calls.length).toBe(5);
@@ -1138,31 +1165,22 @@ describe("Extension Unit Tests", () => {
         expect(dataSetCreate.mock.calls.length).toBe(5);
         expect(dataSetCreate.mock.calls[0][0]).toEqual(session);
 
-        showQuickPick.mockReset();
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        dataSetCreate.mockReset();
         showInformationMessage.mockReset();
         showErrorMessage.mockReset();
 
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        getConfiguration.mockReturnValue("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-        await extension.createFile(sessNode, testTree);
+        await extension.createFile(sessNode2, testTree);
 
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        getConfiguration.mockReturnValue("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
         dataSetCreate.mockRejectedValueOnce(Error("Generic Error"));
         try {
-            await extension.createFile(sessNode, testTree);
+            await extension.createFile(sessNode2, testTree);
         } catch (err) {
             // do nothing
         }
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
-
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -1176,6 +1194,33 @@ describe("Extension Unit Tests", () => {
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(0);
+
+        mockGetHistory.mockReset();
+        testTree.reveal.mockReset();
+
+        // Testing the addition of new node to tree view
+        mockGetHistory.mockReturnValueOnce(["NODE1"]);
+        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
+        await extension.createFile(sessNode2, testTree);
+        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1, NODE");
+        expect(testTree.reveal.mock.calls.length).toBe(1);
+
+        testTree.addHistory.mockReset();
+
+        mockGetHistory.mockReturnValueOnce(["NODE"]);
+        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
+        await extension.createFile(sessNode2, testTree);
+        expect(testTree.addHistory.mock.calls.length).toBe(0);
+
+        mockGetHistory.mockReturnValueOnce([null]);
+        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
+        await extension.createFile(sessNode2, testTree);
+        expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
+
+        allMembers.mockReset();
+        dataSetList.mockReset();
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
     });
 
     it("tests the createFile for prompt credentials", async () => {
@@ -1188,6 +1233,7 @@ describe("Extension Unit Tests", () => {
                         return ["fake", "fake", "fake"];
                     }),
                 };
+
             })
         });
         const sessionwocred = new brtimperative.Session({
@@ -1197,6 +1243,13 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: {
+                items: []
+            }
+        };
 
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
@@ -1206,10 +1259,15 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReset();
         showInputBox.mockReset();
         dataSetCreate.mockReset();
+        dataSetList.mockReset();
+        mockGetHistory.mockReset();
+        allMembers.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-
+        showInputBox.mockReturnValue("FakeName");
+        mockGetHistory.mockReturnValue(["mockHistory"]);
+        dataSetList.mockReturnValue(uploadResponse);
+        allMembers.mockReturnValue(uploadResponse);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
@@ -1237,6 +1295,13 @@ describe("Extension Unit Tests", () => {
         expect(showInputBox.mock.calls.length).toBe(5);
         // tslint:disable-next-line: no-magic-numbers
         expect(dataSetCreate.mock.calls.length).toBe(5);
+
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
+        dataSetCreate.mockReset();
+        dataSetList.mockReset();
+        mockGetHistory.mockReset();
+        allMembers.mockReset();
     });
 
     it("tests the createFile for prompt credentials, favorite route", async () => {
@@ -1258,6 +1323,13 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: {
+                items: []
+            }
+        };
 
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
@@ -1267,10 +1339,17 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReset();
         showInputBox.mockReset();
         dataSetCreate.mockReset();
+        testTree.getChildren.mockReset();
+        allMembers.mockReset();
+        dataSet.mockReset();
+        mockGetHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-
+        showInputBox.mockReturnValue("FakeName");
+        testTree.getChildren.mockReturnValue([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        allMembers.mockReturnValue(uploadResponse);
+        dataSet.mockReturnValue(uploadResponse);
+        mockGetHistory.mockReturnValue(["mockHistory1"]);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
@@ -1298,6 +1377,13 @@ describe("Extension Unit Tests", () => {
         expect(showInputBox.mock.calls.length).toBe(5);
         // tslint:disable-next-line: no-magic-numbers
         expect(dataSetCreate.mock.calls.length).toBe(5);
+
+        getConfiguration.mockReset();
+        showInputBox.mockReset();
+        testTree.getChildren.mockReset();
+        allMembers.mockReset();
+        dataSet.mockReset();
+        mockGetHistory.mockReset();
     });
 
     it("tests the createFile for prompt credentials error", async () => {
@@ -1309,6 +1395,13 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
+        const uploadResponse: brightside.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: {
+                items: []
+            }
+        };
         const sessionwocred = new brtimperative.Session({
             user: "",
             password: "",
@@ -1320,19 +1413,27 @@ describe("Extension Unit Tests", () => {
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
         newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        newsessNode.pattern = "sestest";
 
         showQuickPick.mockReset();
         getConfiguration.mockReset();
         showInputBox.mockReset();
         dataSetCreate.mockReset();
+        mockGetHistory.mockReset();
+        allMembers.mockReset();
+        dataSetList.mockReset();
 
-        getConfiguration.mockReturnValue("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-
+        getConfiguration.mockReturnValueOnce("FakeConfig");
+        showInputBox.mockReturnValueOnce("sestest");
+        mockGetHistory.mockReturnValueOnce(["mockHistory"]);
+        allMembers.mockReturnValueOnce(uploadResponse);
+        dataSetList.mockReturnValue(uploadResponse);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
         expect(extension.createFile).toHaveBeenCalled();
+
+        dataSetList.mockReset();
     });
 
     it("Testing that deleteDataset is executed successfully", async () => {
@@ -1560,6 +1661,7 @@ describe("Extension Unit Tests", () => {
                 items: []
             }
         };
+
         // If session node is not defined, it should take the session from Profile
         const sessionwocred = new brtimperative.Session({
             user: "",
