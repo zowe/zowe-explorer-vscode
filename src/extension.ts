@@ -869,7 +869,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
 export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
 
     let label = parent.label.trim();
-    if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX) {
+    if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_DS_CONTEXT + FAV_SUFFIX) {
         label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
     }
 

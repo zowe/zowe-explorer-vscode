@@ -3598,12 +3598,20 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls[0][1]).toBe(node.label);
         expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
 
-        // mock a favorite
+        // mock a partitioned data set favorite
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
         const node1 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node1.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.showDSAttributes(node1, testTree);
+        expect(dataSetList.mock.calls.length).toBe(1);
+
+        // mock a classic data set favorite
+        dataSetList.mockReset();
+        dataSetList.mockReturnValueOnce(testResponse);
+        const node2 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node2.contextValue = extension.DS_DS_CONTEXT + extension.FAV_SUFFIX;
+        await extension.showDSAttributes(node2, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
 
         // mock a response and no attributes
