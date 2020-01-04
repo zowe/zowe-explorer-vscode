@@ -141,19 +141,20 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                     elementChildren[existing.label] = existing;
                 // Creates a ZoweNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
+                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null, undefined, undefined, this.profile);
                     elementChildren[temp.label] = temp;
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, extension.DS_MIGRATED_FILE_CONTEXT);
+                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, extension.DS_MIGRATED_FILE_CONTEXT,
+                        undefined, this.profile);
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweNode for a PS
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
+                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, undefined, undefined, this.profile);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 } else {
                     // Creates a ZoweNode for a PDS member
-                    const temp = new ZoweNode(item.member, vscode.TreeItemCollapsibleState.None, this, null);
+                    const temp = new ZoweNode(item.member, vscode.TreeItemCollapsibleState.None, this, null, undefined, undefined, this.profile);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 }

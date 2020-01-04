@@ -1904,16 +1904,15 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
                 const chooseBinary = node.binary ||
                     await ZoweVscApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.fullPath);
                 const response = await vscode.window.withProgress({
-                location: vscode.ProgressLocation.Notification,
-                title: "Opening USS file...",
-            }, function downloadUSSFile() {
-                return ZoweVscApiRegister.getUssApi(node.profile).getContents(
-                    node.fullPath, { // TODO MISSED TESTING
-                    file: documentFilePath,
-                    binary: chooseBinary,
-                    returnEtag: true
-                });
-            }
+                    location: vscode.ProgressLocation.Notification,
+                    title: "Opening USS file..."},
+                    function downloadUSSFile() {
+                        return ZoweVscApiRegister.getUssApi(node.profile).getContents(
+                            node.fullPath, { // TODO MISSED TESTING
+                            file: documentFilePath,
+                            binary: chooseBinary,
+                            returnEtag: true});
+                    }
                 );
                 node.setEtag(response.apiResponse.etag);
             }
