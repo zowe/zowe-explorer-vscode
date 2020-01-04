@@ -244,7 +244,7 @@ export class Profiles { // Processing stops if there are no profiles detected
             passWord = loadSession.password;
 
             options = {
-                placeHolder: localize("promptcredentials.option.prompt.passWord.placeholder", "Password"),
+                placeHolder: localize("promptcredentials.option.prompt.password.placeholder", "Password"),
                 prompt: localize("promptcredentials.option.prompt.password", "Enter a password for the connection"),
                 password: true,
                 value: passWord

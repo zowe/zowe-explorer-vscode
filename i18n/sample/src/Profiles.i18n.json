@@ -9,14 +9,14 @@
     "createNewConnection.undefined.username": "Operation Cancelled",
     "createNewConnection.option.prompt.password.placeholder": "Optional: Password",
     "createNewConnection.option.prompt.password": "Enter the password for the connection. Leave blank to not store.",
-    "createNewConnection.undefined.password": "Operation Cancelled",
+    "createNewConnection.undefined.passWord": "Operation Cancelled",
     "createNewConnection.option.prompt.ru.placeholder": "Reject Unauthorized Connections",
     "createNewConnection.rejectUnauthorize": "Operation Cancelled",
     "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
     "promptcredentials.option.prompt.username.placeholder": "User Name",
     "promptcredentials.option.prompt.username": "Enter the user name for the connection",
     "promptcredentials.invalidusername": "Please enter your z/OS username. Operation Cancelled",
-    "promptcredentials.option.prompt.password.placeholder": "Password",
+    "promptcredentials.option.prompt.passWord.placeholder": "Password",
     "promptcredentials.option.prompt.password": "Enter a password for the connection",
     "promptcredentials.invalidpassword": "Please enter your z/OS password. Operation Cancelled"
 }
