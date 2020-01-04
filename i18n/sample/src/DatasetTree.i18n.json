@@ -14,5 +14,5 @@
     "enterPattern.pattern": "You must enter a pattern.",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
     "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
-    "ussFilterPrompt.option.prompt.search": "Create a new filter"
+    "defaultFilterPrompt.option.prompt.search": "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)"
 }
