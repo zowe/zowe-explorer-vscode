@@ -118,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
         if (service) {
-            const keytar = defineSecurity("keytar");
+            const keytar = getSecurityModules("keytar");
             if (keytar) {
                 try {
                     CredentialManagerFactory.initialize(
@@ -402,7 +402,7 @@ export function defineGlobals(tempPath: string | undefined) {
 /**
  * Imports the neccesary security modules
  */
-export function defineSecurity(moduleName) {
+export function getSecurityModules(moduleName): NodeRequire | undefined {
     try {
         return require(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
         // tslint:disable-next-line: no-empty
