@@ -30,7 +30,8 @@ def PUBLISH_TOKEN = "vsce-publish-key"
 def ZOWE_ROBOT_TOKEN = "zowe-robot-github"
 
 def PIPELINE_CONTROL = [
-  ci_skip: false
+  ci_skip: false,
+  create_release: false
 ]
 
 /**
@@ -132,7 +133,7 @@ pipeline {
         } }
       }
     }
-    stage("Publish") {
+    stage('Publish') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
         expression { return BRANCH_NAME == MASTER_BRANCH }
@@ -145,20 +146,50 @@ pipeline {
           def extensionInfo = readJSON text: extensionMetadata
 
           if (extensionInfo.versions[0].version == vscodePackageJson.version) {
+            PIPELINE_CONTROL.create_release = false
             echo "No new version to publish at this time (${vscodePackageJson.version})"
           } else {
+            PIPELINE_CONTROL.create_release = true
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
               sh "npx vsce publish -p $TOKEN"
             }
-
-            sh "git config --global user.name \"zowe-robot\""
-            sh "git config --global user.email \"zowe.robot@gmail.com\""
-            sh "git tag v${vscodePackageJson.version}"
-            withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
-              sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
-            }
           }
+        } }
+      }
+    }
+    stage('Release') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
+        expression { return !params.SKIP_PUBLISH }
+        expression { return PIPELINE_CONTROL.create_release }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "git config --global user.name \"zowe-robot\""
+          sh "git config --global user.email \"zowe.robot@gmail.com\""
+
+          def vscodePackageJson = readJSON file: "package.json"
+          def version = "v${vscodePackageJson.version}"
+          sh "git tag ${version}"
+
+          sh "npx vsce package -o ${version}.vsix"
+
+          withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
+            sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+
+            def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
+            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"draft\":true,\"prerelease\":false}"
+            def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
+
+            def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
+            def releaseParsed = readJSON text: releaseCreated
+
+            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
+
+            sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+          } }
         } }
       }
     }
