@@ -145,7 +145,7 @@ export class Profiles { // Processing stops if there are no profiles detected
                 if (this.validateAndParseUrl(urlInputBox.value).valid) {
                     resolve(urlInputBox.value);
                 } else {
-                    urlInputBox.validationMessage = "Please enter a valid URL in the format https://url:port.";
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL", "Please enter a valid URL in the format https://url:port.");
                 }
             });
         });
