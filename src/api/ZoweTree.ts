@@ -55,6 +55,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Refreshes the tree
      */
     refresh(): void;
+    /**
+     * Refreshes an element of the tree
+     * @param favorite Node to refresh
+     */
+    refreshElement(node: IZoweTreeNode): void;
 }
 /**
  * The base interface for Zowe tree nodes.

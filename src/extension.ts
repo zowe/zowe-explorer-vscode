@@ -1391,7 +1391,7 @@ export function getUSSDocumentFilePath(node: IZoweUSSTreeNode) {
  *
  * @param {IZoweDatasetTreeNode} node
  */
-export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean, datasetProvider?: IZoweDatasetTree) {
+export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean, datasetProvider?: IZoweTree<IZoweDatasetTreeNode>) {
     let sesNamePrompt: string;
     if (node.contextValue.endsWith(FAV_SUFFIX)) {
         sesNamePrompt = node.getLabel().substring(1, node.getLabel().indexOf("]"));
@@ -1826,7 +1826,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
  *
  * @param {IZoweTreeNode} node
  */
-export async function openUSS(node: IZoweUSSTreeNode, download = false, previewFile: boolean, ussFileProvider?: IZoweUSSTree) {
+export async function openUSS(node: IZoweUSSTreeNode, download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
             const values = await Profiles.getInstance().promptCredentials(node.getProfileName());
@@ -1970,7 +1970,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: ZosJobsProv
     jobsProvider.refreshElement(job);
 }
 
-export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweJobTree) {
+export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     let sesNamePrompt: string;
     if (node.contextValue.endsWith(FAV_SUFFIX)) {
         sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
