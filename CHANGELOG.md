@@ -2,7 +2,7 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-### `1.1.0`
+## `1.1.0`
 
 - Updates to Readme to include links to Theia Readme. Thanks @IgorCATech
 - Fix for incorrect profile name in some favorites. Thanks @lauren-li
