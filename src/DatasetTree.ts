@@ -44,7 +44,10 @@ export async function createDatasetTree(log: Logger) {
 export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweDatasetTreeNode> {
 
     private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
-    private static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search", "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
+    public mSessionNodes: ZoweNode[];
+    public mFavoriteSession: ZoweNode;
+    public mFavorites: ZoweNode[] = [];
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
     public mFavorites: IZoweDatasetTreeNode[] = [];
@@ -308,6 +311,26 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             fav.label + "{" + fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}"
         );
         this.mHistory.updateFavorites(settings);
+    }
+
+  public async onDidChangeConfiguration(e) {
+        if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
+            const setting: any = { ...vscode.workspace.getConfiguration().get(DatasetTree.persistenceSchema) };
+            if (!setting.persistence) {
+                setting.favorites = [];
+                setting.history = [];
+                await vscode.workspace.getConfiguration().update(DatasetTree.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+            }
+        }
+    }
+
+    public async addHistory(criteria: string) {
+        this.mHistory.addHistory(criteria);
+        this.refresh();
+    }
+
+    public getHistory() {
+        return this.mHistory.getHistory();
     }
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
