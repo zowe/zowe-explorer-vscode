@@ -31,9 +31,7 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
             await uploadFile(node, doc);
         }
     ));
-
-    // Refresh member view & favorites
-    datasetProvider.refreshElement(node);
+    datasetProvider.refresh();
 }
 
 export function getDatasetLabel(node: ZoweNode) {
