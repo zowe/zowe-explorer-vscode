@@ -5,6 +5,7 @@
     "createNewConnection.invalidzosmfURL": "Please enter a valid URL in the format https://url:port.",
     "createNewConnection.option.prompt.url.placeholder": "https://url:port",
     "createNewConnection.option.prompt.url": "Enter a z/OSMF URL in the format 'https://url:port'.",
+    "createNewConnection.invalidzosmfURL": "Please enter a valid URL in the format https://url:port.",
     "createNewConnection.zosmfURL": "No valid value for z/OSMF URL. Operation Cancelled",
     "createNewConnection.option.prompt.username.placeholder": "Optional: User Name",
     "createNewConnection.option.prompt.username": "Enter the user name for the connection. Leave blank to not store.",
