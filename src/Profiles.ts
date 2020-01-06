@@ -111,6 +111,19 @@ export class Profiles { // Processing stops if there are no profiles detected
         return validationResult;
     }
 
+  public async getUrl(urlInputBox): Promise<string | undefined> {
+        return new Promise<string | undefined> ((resolve) => {
+            urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+            urlInputBox.onDidAccept(() => {
+                if (this.validateAndParseUrl(urlInputBox.value).valid) {
+                    resolve(urlInputBox.value);
+                } else {
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL", "Please enter a valid URL in the format https://url:port.");
+                }
+            });
+        });
+    }
+
     public async createNewConnection(profileName: string, ProfileType: string ="zosmf"): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
@@ -118,14 +131,15 @@ export class Profiles { // Processing stops if there are no profiles detected
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
 
-        zosmfURL = await vscode.window.showInputBox({
-            ignoreFocusOut: true,
-            placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "https://url:port"),
-            prompt: localize("createNewConnection.option.prompt.url",
-                "Enter a z/OSMF URL in the format 'https://url:port'."),
-            validateInput: (text: string) => (this.validateAndParseUrl(text).valid ? "" : "Please enter a valid URL."),
-            value: zosmfURL
-        });
+        const urlInputBox = vscode.window.createInputBox();
+        urlInputBox.ignoreFocusOut = true;
+        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
+        urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
+            "Enter a z/OSMF URL in the format 'https://url:port'.");
+
+        urlInputBox.show();
+        zosmfURL = await this.getUrl(urlInputBox);
+        urlInputBox.dispose();
 
         if (!zosmfURL) {
             vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
