@@ -54,7 +54,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.getLabel();
+        return this.getSessionNode().getLabel();
     }
 
     /**
