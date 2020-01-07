@@ -197,13 +197,31 @@ pipeline {
             def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
 
             sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+                    withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh "rm -f .npmrc"
+                        sh "rm -f ~/.npmrc"
 
-            withCredentials([string(credentialsId: ARTIFACTORY_PUBLISH_TOKEN, variable: 'TOKEN')]) {
-              //sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
-              sh "curl -uadmin:$TOKEN https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/auth"
-              sh "curl -uadmin:$TOKEN https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
-              sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
-            }
+                        // Set the SCOPED registry and token to the npmrc of the user
+                        sh "npm config set ${TARGET_SCOPE}:registry ${DL_URL.artifactory}"
+                        sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
+
+                        script {
+                            if (BRANCH_NAME == DEV_BRANCH.master) {
+                                sh "npm publish --dry-run --tag daily"
+                            }
+                            else {
+                                sh "npm publish --dry-run --tag ${BRANCH_NAME}"
+                            }
+                        }
+                        sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
+                        sh "rm -f ~/.npmrc"
+                    }
+
+            // withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            //   sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
+            //   sh "curl -uadmin:$PASSWORD https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
+            //   sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
+            // }
           } }
         } }
       }
