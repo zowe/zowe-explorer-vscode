@@ -45,9 +45,17 @@ const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 
+const profileOne: brtimperative.IProfileLoaded = {
+    name: "profile1",
+    profile: {},
+    type: "zosmf",
+    message: "",
+    failNotFound: false
+};
+
 function getUSSNode() {
-    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode1.fullPath = "/u/myuser";
     ussNode1.mParent = mParent;
@@ -55,8 +63,8 @@ function getUSSNode() {
 }
 
 function getFavoriteUSSNode() {
-    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     mParent.contextValue = extension.FAVORITE_CONTEXT;
     ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";

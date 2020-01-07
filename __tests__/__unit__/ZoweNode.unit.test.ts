@@ -36,7 +36,7 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
     Object.defineProperty(profileLoader, "loadAllProfiles", {
         value: jest.fn(() => {
-            return [{name: "firstName"}, {name: "secondName"}];
+            return [profileOne, {name: "firstName"}, {name: "secondName"}];
         })
     });
     Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});

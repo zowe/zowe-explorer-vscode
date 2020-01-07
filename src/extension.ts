@@ -1633,6 +1633,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const start = path.join(DS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
+    const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
 
     // get session from session name
     let documentSession: Session;
@@ -1645,7 +1646,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         log.debug(localize("saveFile.log.debug.sessionNode", "couldn't find session node, loading profile with CLI profile manager"));
-        const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
         documentSession = ZoweVscApiRegister.getMvsApi(profile).getSession();
     }
     if (documentSession == null) {
@@ -1659,13 +1659,13 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
-            const response = await ZoweVscApiRegister.getMvsApi(this.profile).dataSet(label);
+            const response = await ZoweVscApiRegister.getMvsApi(profile).dataSet(label);
             if (!response.apiResponse.items.length) {
                 return vscode.window.showErrorMessage(
                     localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe."));
             }
         } catch (err) {
-            vscode.window.showErrorMessage(err.message + "\n" + err.stack);
+            return vscode.window.showErrorMessage(err.message + "\n" + err.stack);
         }
     }
     // Get specific node based on label and parent tree (session / favorites)
@@ -1680,7 +1680,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         nodes = utils.concatChildNodes([sesNode]);
         isFromFavorites = false;
     }
-    node = await nodes.find((zNode) => {
+    node = nodes.find((zNode) => {
         // dataset in Favorites
         if (zNode.contextValue === DS_FAV_CONTEXT) {
             return (zNode.label === `[${sesName}]: ${label}`);
