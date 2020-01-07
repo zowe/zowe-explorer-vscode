@@ -154,7 +154,6 @@ pipeline {
             //   sh "curl -uadmin:$PASSWORD https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
             //   sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
             // }
-          } }
         } }
       }
     }
