@@ -4010,12 +4010,11 @@ describe("Extension Unit Tests", () => {
             const getMvsApiMock = jest.fn();
             getMvsApiMock.mockReturnValue(mvsApi);
             ZoweVscApiRegister.getMvsApi = getMvsApiMock.bind(ZoweVscApiRegister);
-            const getContentsMock = jest.fn().mockImplementation(() => {
+            jest.spyOn(mvsApi, "getContents").mockImplementation(() => {
                 throw Error("Member not found");
             });
-            Object.defineProperty(mvsApi, "getContents", {value: getContentsMock});
-            const copyDataSetMember = jest.fn();
-            Object.defineProperty(mvsApi, "copyDataSetMember", {value: copyDataSetMember});
+            const spy2 = jest.spyOn(mvsApi, "copyDataSetMember");
+
             const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne);
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
@@ -4023,12 +4022,11 @@ describe("Extension Unit Tests", () => {
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
             await extension.pasteDataSet(node, testTree);
 
-            expect(copyDataSetMember.mock.calls.length).toBe(1);
+            expect(spy2.mock.calls.length).toBe(1);
             expect(findFavoritedNode).toHaveBeenLastCalledWith(
                 node,
             );
-            expect(copyDataSetMember).toHaveBeenLastCalledWith(
-                node.getSession(),
+            expect(spy2).toHaveBeenLastCalledWith(
                 { dataSetName: "HLQ.TEST.BEFORE.NODE" },
                 { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
