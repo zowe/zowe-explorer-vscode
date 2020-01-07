@@ -9,6 +9,9 @@
 *
 */
 
+@Library('shared-pipelines') import org.zowe.pipelines.nodejs.NodeJSPipeline
+def lib = library("jenkins-library").org.zowe.jenkins_shared_library
+
 /**
  * List of people who will get all emails for master builds
  */
@@ -23,6 +26,11 @@ def MASTER_BRANCH = "master"
  * TOKEN ID where secret is stored
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
+
+/**
+ * TOKEN ID where Artifactory secret is stored
+ */
+def ARTIFACTORY_PUBLISH_TOKEN = "artifactoryPwordOrAPIKey"
 
 /**
  * TOKEN ID where secret is stored
@@ -189,6 +197,13 @@ pipeline {
             def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
 
             sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+
+            withCredentials([string(credentialsId: ARTIFACTORY_PUBLISH_TOKEN, variable: 'TOKEN')]) {
+              //sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
+              sh "curl -uadmin:$TOKEN https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/auth"
+              sh "curl -uadmin:$TOKEN https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
+              sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
+            }
           } }
         } }
       }
