@@ -23,6 +23,11 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 def MASTER_BRANCH = "master"
 
 /**
+ * Artifactory URL
+ */
+def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/api/npm/libs-snapshot-local/org/zowe/vscode/"
+
+/**
  * TOKEN ID where secret is stored
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
@@ -30,7 +35,7 @@ def PUBLISH_TOKEN = "vsce-publish-key"
 /**
  * TOKEN ID where Artifactory secret is stored
  */
-def ARTIFACTORY_PUBLISH_TOKEN = "artifactoryPwordOrAPIKey"
+def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
 
 /**
  * TOKEN ID where secret is stored
@@ -114,6 +119,42 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
           sh "npm run test"
+        } }
+      }
+    }
+    stage('Artifactory') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+                    withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh "rm -f .npmrc"
+                        sh "rm -f ~/.npmrc"
+
+                        // Set the SCOPED registry and token to the npmrc of the user
+                        sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
+                        sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
+
+                        script {
+                            if (BRANCH_NAME == DEV_BRANCH.master) {
+                                sh "npm publish --dry-run --tag daily"
+                            }
+                            else {
+                                sh "npm publish --dry-run --tag ${BRANCH_NAME}"
+                            }
+                        }
+                        sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
+                        sh "rm -f ~/.npmrc"
+                    }
+
+            // withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            //   sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
+            //   sh "curl -uadmin:$PASSWORD https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
+            //   sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
+            // }
+          } }
         } }
       }
     }
@@ -202,7 +243,7 @@ pipeline {
                         sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
-                        sh "npm config set ${TARGET_SCOPE}:registry ${DL_URL.artifactory}"
+                        sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
                         sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
 
                         script {
