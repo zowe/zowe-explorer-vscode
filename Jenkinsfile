@@ -146,7 +146,7 @@ pipeline {
                         sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
 
                         script {
-                            if (BRANCH_NAME == DEV_BRANCH.master) {
+                            if (BRANCH_NAME == MASTER_BRANCH) {
                                 echo "publishing daily"
                                 sh "npm publish --dry-run --tag daily"
                             }
