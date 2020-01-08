@@ -23,6 +23,11 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 def MASTER_BRANCH = "master"
 
 /**
+ * Target scope
+ */
+def TARGET_SCOPE = "@brightside"
+
+/**
  * Artifactory URL
  */
 def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/api/npm/libs-snapshot-local/org/zowe/vscode/"
@@ -283,7 +288,7 @@ pipeline {
   }
   post { always { script {
     def buildStatus = currentBuild.currentResult
-    def recipients = params.RECIPIENTS_LIST != '' ? params.RECIPIENTS_LIST : "${MASTER_RECIPIENTS_LIST}"
+    //def recipients = params.RECIPIENTS_LIST != '' ? params.RECIPIENTS_LIST : "${MASTER_RECIPIENTS_LIST}"
     def subjectTitle = "VSCode Extension Deployment"
     def details = "${subjectTitle}"
     if (!PIPELINE_CONTROL.ci_skip) {
@@ -302,7 +307,7 @@ pipeline {
             details = "${details} failed.\n\nPlease investigate build ${currentBuild.number}"
           }
           details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
-          emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
+          //emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
         }
       } catch (e) {
         echo "Experienced an error sending an email for a ${buildStatus} build"
