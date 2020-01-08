@@ -17,7 +17,5 @@ send "$p2\r"
 expect "Email"
 send "$p3\r"
 
-expect {
-   timeout      exit 1
-   eof channelId
-}
+timeout      exit 1
+eof
