@@ -238,22 +238,30 @@ pipeline {
 
             sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                      echo "Removing .npmrc"
                         sh "rm -f .npmrc"
+                        echo "Removing ~/.npmrc"
                         sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
+                        echo "Set the SCOPED registry and token to the npmrc of the user (${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL})"
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
+                        echo "username: $USERNAME password: $PASSWORD email: $ARTIFACTORY_EMAIL"
                         sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
 
                         script {
                             if (BRANCH_NAME == DEV_BRANCH.master) {
+                              echo "npm publish --dry-run --tag daily"
                                 sh "npm publish --dry-run --tag daily"
                             }
                             else {
+                              echo "npm publish --dry-run --tag ${BRANCH_NAME}"
                                 sh "npm publish --dry-run --tag ${BRANCH_NAME}"
                             }
                         }
+                        echo "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
                         sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
+                        echo "Removing ~/.npmrc"
                         sh "rm -f ~/.npmrc"
                     }
 
@@ -275,7 +283,7 @@ pipeline {
     if (!PIPELINE_CONTROL.ci_skip) {
       try {
         try {
-          sh("cp -rf /home/jenkins/.npm/_logs deploy-log")
+          //sh("cp -rf /home/jenkins/.npm/_logs deploy-log")
         } catch(e) {}
         archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy-log/*.log'
 
