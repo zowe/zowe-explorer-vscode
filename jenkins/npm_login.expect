@@ -17,5 +17,6 @@ send "$p2\r"
 expect "Email"
 send "$p3\r"
 
-timeout      exit 1
-eof
+expect {
+   timeout      exit 1
+}
