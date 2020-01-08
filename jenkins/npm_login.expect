@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 # set our args into variables
-set i 2; foreach n $argv {set "p[incr i]" $n}
+set i 0; foreach n $argv {set "p[incr i]" $n}
 
 set timeout 60
 #npm login command, add whatever command-line args are necessary
