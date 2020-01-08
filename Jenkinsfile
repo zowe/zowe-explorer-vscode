@@ -130,27 +130,27 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        echo "rm -f .npmrc"
+                        echo "Removing npmrc"
                         sh "rm -f .npmrc"
                         //sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
-                        echo "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
+                        echo "setting config ${TARGET_SCOPE} registry ${DL_ARTIFACTORY_URL}"
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
-                        echo "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
+                        echo "expecting username: $USERNAME password: $PASSWORD email: $ARTIFACTORY_EMAIL dl url: ${DL_URL.artifactory} target scope: ${TARGET_SCOPE}"
                         sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
 
                         script {
                             if (BRANCH_NAME == DEV_BRANCH.master) {
-                                echo "npm publish --dry-run --tag daily"
+                                echo "publishing daily"
                                 sh "npm publish --dry-run --tag daily"
                             }
                             else {
-                                echo "npm publish --dry-run --tag ${BRANCH_NAME}"
+                                echo "publishing ${BRANCH_NAME}"
                                 sh "npm publish --dry-run --tag ${BRANCH_NAME}"
                             }
                         }
-                        echo "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
+                        echo "logging out registry: ${DL_URL.artifactory} scope: ${TARGET_SCOPE}"
                         sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
                         //sh "rm -f ~/.npmrc"
                     }
