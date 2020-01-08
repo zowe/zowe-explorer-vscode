@@ -137,7 +137,6 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        echo "Removing npmrc"
                         sh "rm -f .npmrc"
                         //sh "rm -f ~/.npmrc"
 
@@ -147,15 +146,12 @@ pipeline {
 
                         script {
                             if (BRANCH_NAME == MASTER_BRANCH) {
-                                echo "publishing daily"
                                 sh "npm publish --dry-run --tag daily"
                             }
                             else {
-                                echo "publishing ${BRANCH_NAME}"
                                 sh "npm publish --dry-run --tag ${BRANCH_NAME}"
                             }
                         }
-                        echo "logging out registry: ${DL_ARTIFACTORY_URL} scope: ${TARGET_SCOPE}"
                         sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
                         //sh "rm -f ~/.npmrc"
                     }

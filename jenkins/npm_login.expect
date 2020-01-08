@@ -18,5 +18,5 @@ expect "Email"
 send "$p3\r"
 
 expect {
-   timeout      exit 1
+   timeout { exit 1 }
 }
