@@ -136,31 +136,19 @@ pipeline {
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
-                    withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        //sh "rm -f .npmrc"
-                        //sh "rm -f ~/.npmrc"
+                    def vscodePackageJson = readJSON file: "package.json"
+                    def version = "v${vscodePackageJson.version}"
 
+                    sh "npx vsce package -o ${version}.vsix"
+
+                    withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         // Set the SCOPED registry and token to the npmrc of the user
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
-                        //sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
 
-                        script {
-                            if (BRANCH_NAME == MASTER_BRANCH) {
-                                sh "npm publish --tag daily"
-                            }
-                            else {
-                                sh "npm publish --tag ${BRANCH_NAME}"
-                            }
-                        }
-                        //sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
-                        //sh "rm -f ~/.npmrc"
+                        def uploadUrl = "DL_ARTIFACTORY_URL/${version}.vsix"
+
+                        sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
                     }
-
-            // withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            //   sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
-            //   sh "curl -uadmin:$PASSWORD https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
-            //   sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
-            // }
         } }
       }
     }
@@ -244,33 +232,6 @@ pipeline {
             def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
 
             sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
-                    withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                      echo "Removing .npmrc"
-                        sh "rm -f .npmrc"
-                        echo "Removing ~/.npmrc"
-                        sh "rm -f ~/.npmrc"
-
-                        // Set the SCOPED registry and token to the npmrc of the user
-                        echo "Set the SCOPED registry and token to the npmrc of the user (${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL})"
-                        sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
-                        echo "username: $USERNAME password: $PASSWORD email: $ARTIFACTORY_EMAIL"
-                        sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
-
-                        script {
-                            if (BRANCH_NAME == DEV_BRANCH.master) {
-                              echo "npm publish --dry-run --tag daily"
-                                sh "npm publish --dry-run --tag daily"
-                            }
-                            else {
-                              echo "npm publish --dry-run --tag ${BRANCH_NAME}"
-                                sh "npm publish --dry-run --tag ${BRANCH_NAME}"
-                            }
-                        }
-                        echo "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
-                        sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
-                        echo "Removing ~/.npmrc"
-                        sh "rm -f ~/.npmrc"
-                    }
 
             // withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             //   sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
