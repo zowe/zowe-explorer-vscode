@@ -142,7 +142,6 @@ pipeline {
                         //sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
-                        echo "setting config ${TARGET_SCOPE} registry ${DL_ARTIFACTORY_URL}"
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
                         sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
 
