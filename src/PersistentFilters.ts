@@ -26,9 +26,7 @@ export class PersistentFilters {
     private mHistory: string[] = [];
     private mSessions: string[] = [];
 
-    private maxHistory = 5;
-
-    constructor(schema: string) {
+    constructor(schema: string, private maxHistory = 5) {
         this.schema = schema;
         this.initialize();
     }

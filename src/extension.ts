@@ -24,6 +24,7 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
+import * as tsoActions from "./tso/tsoCommandActions";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile, IUploadOptions } from "@brightside/core";
 import { Profiles } from "./Profiles";
@@ -287,7 +288,8 @@ export async function activate(context: vscode.ExtensionContext) {
             jobsProvider.setJob(jobView, job);
         });
         vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
-        vscode.commands.registerCommand("zowe.issueTsoCmd", async () => issueTsoCommand(outputChannel));
+        vscode.commands.registerCommand("zowe.issueTsoCmd", async () => tsoActions.issueTsoCommand(outputChannel));
+        vscode.commands.registerCommand("zowe.issueCmd", async (node, command) => tsoActions.issueTsoCommand(outputChannel, node.session, command));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             jobsProvider.onDidChangeConfiguration(e);
         });
@@ -305,67 +307,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 jobsProvider.flipState(e.element, true);
             });
         }
-    }
-}
-
-/**
- * Allow the user to submit a TSO command to the selected server. Response is written
- * to the output channel.
- * @param outputChannel The Output Channel to write the command and response to
- */
-export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
-    const profiles = Profiles.getInstance();
-    const allProfiles: IProfileLoaded[] = profiles.allProfiles;
-    let sesName: string;
-    let zosmfProfile: IProfileLoaded;
-
-    const profileNamesList = allProfiles.map((profile) => {
-        return profile.name;
-    });
-    if (profileNamesList.length) {
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("issueTsoCommand.quickPickOption", "Select the Profile to use to submit the command"),
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-        sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
-        zosmfProfile = allProfiles.filter((profile) => profile.name === sesName)[0];
-        const updProfile = zosmfProfile.profile as ISession;
-        if ((!updProfile.user) || (!updProfile.password)) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(zosmfProfile.name);
-                if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
-                }
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
-            }
-            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                updProfile.user = usrNme;
-                updProfile.password = passWrd;
-                updProfile.base64EncodedAuth = baseEncd;
-                zosmfProfile.profile = updProfile as IProfile;
-            }
-        }
-    } else {
-        vscode.window.showInformationMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
-    }
-    let command = await vscode.window.showInputBox({ prompt: localize("issueTsoCommand.command", "Command") });
-    try {
-        if (command !== undefined) {
-            // If the user has started their command with a / then remove it
-            if (command.startsWith("/")) {
-                command = command.substring(1);
-            }
-            outputChannel.appendLine(`> ${command}`);
-            const response = await zowe.IssueCommand.issueSimple(zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile), command);
-            outputChannel.appendLine(response.commandResponse);
-            outputChannel.show(true);
-        }
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
     }
 }
 

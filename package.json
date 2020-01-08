@@ -267,7 +267,7 @@
       {
         "command": "zowe.uss.saveSearch",
         "title": "%saveSearch%"
-      },
+      },     
       {
         "command": "zowe.uss.removeSavedSearch",
         "title": "%removeSavedSearch%"
@@ -372,6 +372,10 @@
         "command": "zowe.issueTsoCmd",
         "title": "%issueTsoCmd%"
       },
+      {
+        "command": "zowe.issueCmd",
+        "title": "%issueCmd%"
+      },      
       {
         "command": "zowe.jobs.search",
         "title": "%jobs.search%",
@@ -790,6 +794,12 @@
           "group": "4_workspace"
         },
         {
+          "when": "view == zowe.explorer && viewItem == session",
+          "command": "zowe.issueCmd",
+          "group": "3_systemSpecific"
+
+        },
+        {
           "when": "view == zowe.explorer && viewItem == session_fav",
           "command": "zowe.removeSavedSearch"
         },
@@ -811,6 +821,11 @@
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
           "command": "zowe.uss.saveSearch",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == uss_session",
+          "command": "zowe.issueCmd",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.jobs && viewItem == server",
@@ -873,6 +888,11 @@
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.jobs.saveSearch",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.issueCmd",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.jobs && viewItem == job",
@@ -980,7 +1000,11 @@
         {
           "command": "zowe.jobs.saveSearch",
           "when": "never"
-        }
+        },
+        {
+          "command": "zowe.issueCmd",
+          "when": "never"          
+        } 
       ]
     },
     "configuration": {
@@ -1093,6 +1117,16 @@
           "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
           "scope": "window"
         },
+        "Zowe-Commands-Persistent": {
+          "default": {
+            "persistence": true,
+            "favorites": [],
+            "history": [],
+            "sessions": []
+          },
+          "description": "%Zowe-Default-Commands-Persistent-Favorites%",
+          "scope": "window"
+        },        
         "Zowe-Environment": {
           "default": {
             "persistence": true,

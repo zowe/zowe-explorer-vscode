@@ -377,6 +377,11 @@ Array [
     "when": "view == zowe.explorer && viewItem == session",
   },
   Object {
+    "command": "zowe.issueCmd",
+    "group": "3_systemSpecific",
+    "when": "view == zowe.explorer && viewItem == session",
+  },
+  Object {
     "command": "zowe.removeSavedSearch",
     "when": "view == zowe.explorer && viewItem == session_fav",
   },
@@ -397,6 +402,11 @@ Array [
   Object {
     "command": "zowe.uss.saveSearch",
     "group": "4_workspace",
+    "when": "view == zowe.uss.explorer && viewItem == uss_session",
+  },
+  Object {
+    "command": "zowe.issueCmd",
+    "group": "3_systemSpecific",
     "when": "view == zowe.uss.explorer && viewItem == uss_session",
   },
   Object {
@@ -459,6 +469,11 @@ Array [
   Object {
     "command": "zowe.jobs.saveSearch",
     "group": "4_workspace",
+    "when": "view == zowe.jobs && viewItem == server",
+  },
+  Object {
+    "command": "zowe.issueCmd",
+    "group": "3_systemSpecific",
     "when": "view == zowe.jobs && viewItem == server",
   },
   Object {

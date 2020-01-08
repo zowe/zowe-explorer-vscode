@@ -22,6 +22,7 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
+import * as tsoActions from "../../src/tso/tsoCommandActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 
@@ -85,16 +86,6 @@ describe("Extension Unit Tests", () => {
         "recfm": "FB",
         "stepname": "",
         "subsystem": ""
-    };
-
-    const outputChannel: vscode.OutputChannel = {
-        append: jest.fn(),
-        name: "fakeChannel",
-        appendLine: jest.fn(),
-        clear: jest.fn(),
-        show: jest.fn(),
-        hide: jest.fn(),
-        dispose: jest.fn()
     };
 
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
@@ -537,7 +528,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(63);
+        expect(registerCommand.mock.calls.length).toBe(64);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -605,6 +596,7 @@ describe("Extension Unit Tests", () => {
             "zowe.setJobSpool",
             "zowe.jobs.search",
             "zowe.issueTsoCmd",
+            "zowe.issueCmd",
             "zowe.jobs.addFavorite",
             "zowe.jobs.removeFavorite",
             "zowe.jobs.saveSearch",
@@ -3738,36 +3730,6 @@ describe("Extension Unit Tests", () => {
             "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
      });
 
-    it("tests the issueTsoCommand function", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
-        showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-
-        await extension.issueTsoCommand(outputChannel);
-
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
-        });
-        expect(showInputBox.mock.calls.length).toBe(1);
-    });
-
     describe("Renaming Data Sets", () => {
         it("Should rename the node", async () => {
             showInputBox.mockReset();
@@ -4017,133 +3979,5 @@ describe("Extension Unit Tests", () => {
                 { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
         });
-    });
-
-    it("tests the issueTsoCommand function", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined,
-                };
-            })
-        });
-        await extension.issueTsoCommand(outputChannel);
-        expect(expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available"));
-    });
-
-    it("tests the issueTsoCommand error function", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-
-        await extension.issueTsoCommand(undefined);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-    });
-
-    it("tests the issueTsoCommand prompt credentials", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                };
-            })
-        });
-
-        showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-
-        await extension.issueTsoCommand(outputChannel);
-
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
-        });
-        expect(showInputBox.mock.calls.length).toBe(1);
-    });
-
-    it("tests the issueTsoCommand prompt credentials for password only", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                };
-            })
-        });
-
-        showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-
-        await extension.issueTsoCommand(outputChannel);
-
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
-        });
-        expect(showInputBox.mock.calls.length).toBe(1);
-    });
-
-    it("tests the issueTsoCommand error in prompt credentials", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                };
-            })
-        });
-
-        showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-
-        await extension.issueTsoCommand(outputChannel);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 });
