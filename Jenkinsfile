@@ -28,19 +28,16 @@ def MASTER_BRANCH = "master"
 def TARGET_SCOPE = "@brightside"
 
 /**
- * Artifactory URL
+ * Artifactory details
  */
 def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/api/npm/libs-snapshot-local/org/zowe/vscode/"
+def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
+def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
 
 /**
  * TOKEN ID where secret is stored
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
-
-/**
- * TOKEN ID where Artifactory secret is stored
- */
-def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
 
 /**
  * TOKEN ID where secret is stored
