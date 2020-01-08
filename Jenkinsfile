@@ -23,6 +23,11 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 def MASTER_BRANCH = "master"
 
 /**
+ * The user's email address for git commits
+ */
+def GIT_USER_EMAIL = 'zowe.robot@gmail.com'
+
+/**
  * Target scope
  */
 def TARGET_SCOPE = "@brightside"
