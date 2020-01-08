@@ -56,6 +56,9 @@ export class Profiles { // Processing stops if there are no profiles detected
     private constructor(public log: Logger) {}
 
     public loadNamedProfile(name: string): IProfileLoaded {
+        if (!this.allProfiles || this.allProfiles.length === 0) {
+            this.refresh();
+        }
         for (const profile of this.allProfiles) {
             if (profile.name === name &&
                 ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type)) {
@@ -79,17 +82,21 @@ export class Profiles { // Processing stops if there are no profiles detected
                     "Unable to locate a default profile. CLI may not be installed. ") + err.message);
             }
         } else {
-            const profileManager = new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-                type: "zosmf"
-            });
-            this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
-                return ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type);
-            });
-            if (this.allProfiles.length > 0) {
-                this.defaultProfile = (await profileManager.load({ loadDefault: true }));
-            } else {
-                ProfileLoader.loadDefaultProfile(this.log);
+            try {
+                const profileManager = new CliProfileManager({
+                    profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+                    type: "zosmf"
+                });
+                this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
+                    return ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type);
+                });
+                if (this.allProfiles.length > 0) {
+                    this.defaultProfile = (await profileManager.load({ loadDefault: true }));
+                } else {
+                    ProfileLoader.loadDefaultProfile(this.log);
+                }
+            } catch (err) {
+                this.log.warn("Cannot load profiles: " + err.message);
             }
         }
     }
