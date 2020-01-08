@@ -130,21 +130,27 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        //sh "rm -f .npmrc"
+                        echo "rm -f .npmrc"
+                        sh "rm -f .npmrc"
                         //sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
+                        echo "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
+                        echo "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
                         sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
 
                         script {
                             if (BRANCH_NAME == DEV_BRANCH.master) {
+                                echo "npm publish --dry-run --tag daily"
                                 sh "npm publish --dry-run --tag daily"
                             }
                             else {
+                                echo "npm publish --dry-run --tag ${BRANCH_NAME}"
                                 sh "npm publish --dry-run --tag ${BRANCH_NAME}"
                             }
                         }
+                        echo "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
                         sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
                         //sh "rm -f ~/.npmrc"
                     }
