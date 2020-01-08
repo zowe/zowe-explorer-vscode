@@ -152,7 +152,7 @@ pipeline {
                                 sh "npm publish --dry-run --tag ${BRANCH_NAME}"
                             }
                         }
-                        sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
+                        //sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
                         //sh "rm -f ~/.npmrc"
                     }
 
