@@ -130,8 +130,8 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "rm -f .npmrc"
-                        sh "rm -f ~/.npmrc"
+                        //sh "rm -f .npmrc"
+                        //sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
@@ -146,7 +146,7 @@ pipeline {
                             }
                         }
                         sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
-                        sh "rm -f ~/.npmrc"
+                        //sh "rm -f ~/.npmrc"
                     }
 
             // withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
