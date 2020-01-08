@@ -1634,6 +1634,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
+    if (!profile) {
+        log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+    }
 
     // get session from session name
     let documentSession: Session;
@@ -1648,10 +1652,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
         log.debug(localize("saveFile.log.debug.sessionNode", "couldn't find session node, loading profile with CLI profile manager"));
         documentSession = ZoweVscApiRegister.getMvsApi(profile).getSession();
     }
-    if (documentSession == null) {
-        log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-    }
+
     // If not a member
     const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
         checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length);
