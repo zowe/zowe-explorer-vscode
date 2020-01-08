@@ -9,6 +9,7 @@
 *                                                                                 *
 */
 
+jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
@@ -104,28 +105,41 @@ const session = new brtimperative.Session({
     type: "basic",
 });
 
-const ussNode = getUSSNode();
-const ussFavNode = getFavoriteUSSNode();
-const testUSSTree = getUSSTree();
-
-Object.defineProperty(zowe, "Create", { value: Create });
-Object.defineProperty(zowe, "Delete", { value: Delete });
-Object.defineProperty(zowe, "Utilities", { value: Utilities });
-Object.defineProperty(Create, "uss", { value: uss });
-Object.defineProperty(Delete, "ussFile", { value: ussFile });
-Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
-Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
-Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
-Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
-Object.defineProperty(fs, "existsSync", {value: existsSync});
-Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
-
 describe("ussNodeActions", () => {
+
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue(profileOne);
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"},
+                type: "zosmf",
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
+    const ussNode = getUSSNode();
+    const ussFavNode = getFavoriteUSSNode();
+    const testUSSTree = getUSSTree();
+
+    Object.defineProperty(zowe, "Create", { value: Create });
+    Object.defineProperty(zowe, "Delete", { value: Delete });
+    Object.defineProperty(zowe, "Utilities", { value: Utilities });
+    Object.defineProperty(Create, "uss", { value: uss });
+    Object.defineProperty(Delete, "ussFile", { value: ussFile });
+    Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
+    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
+    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+    Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
+    Object.defineProperty(fs, "existsSync", {value: existsSync});
+    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+
     beforeEach(() => {
         showErrorMessage.mockReset();
         testUSSTree.refresh.mockReset();
@@ -188,6 +202,8 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
+            mockLoadNamedProfile.mockReturnValue(profileOne);
+
             const sessionwocred = new brtimperative.Session({
                 user: "",
                 password: "",
@@ -196,25 +212,28 @@ describe("ussNodeActions", () => {
                 protocol: "https",
                 type: "basic",
             });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        type: "zosmf",
                         promptCredentials: jest.fn(()=> {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                         }),
                     };
                 })
             });
+            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
+                sessionwocred, null, false, profileOne.name);
+            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
 
             showInputBox.mockReturnValueOnce("fake");
             showInputBox.mockReturnValueOnce("fake");
-
+            showQuickPick.mockReturnValueOnce("directory");
             await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
 
             expect(testUSSTree.refresh).toHaveBeenCalled();
@@ -242,6 +261,8 @@ describe("ussNodeActions", () => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        type: "zosmf",
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
