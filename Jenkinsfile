@@ -260,7 +260,7 @@ pipeline {
                         echo "Set the SCOPED registry and token to the npmrc of the user (${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL})"
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
                         echo "username: $USERNAME password: $PASSWORD email: $ARTIFACTORY_EMAIL"
-                        sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_URL.artifactory} ${TARGET_SCOPE}"
+                        sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
 
                         script {
                             if (BRANCH_NAME == DEV_BRANCH.master) {
@@ -272,8 +272,8 @@ pipeline {
                                 sh "npm publish --dry-run --tag ${BRANCH_NAME}"
                             }
                         }
-                        echo "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
-                        sh "npm logout --registry=${DL_URL.artifactory} --scope=${TARGET_SCOPE}"
+                        echo "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
+                        sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
                         echo "Removing ~/.npmrc"
                         sh "rm -f ~/.npmrc"
                     }
