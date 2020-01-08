@@ -137,12 +137,12 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "rm -f .npmrc"
+                        //sh "rm -f .npmrc"
                         //sh "rm -f ~/.npmrc"
 
                         // Set the SCOPED registry and token to the npmrc of the user
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
-                        sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
+                        //sh "expect -f ./jenkins/npm_login.expect $USERNAME $PASSWORD \"$ARTIFACTORY_EMAIL\" ${DL_ARTIFACTORY_URL} ${TARGET_SCOPE}"
 
                         script {
                             if (BRANCH_NAME == MASTER_BRANCH) {
