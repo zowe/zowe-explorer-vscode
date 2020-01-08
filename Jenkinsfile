@@ -146,10 +146,10 @@ pipeline {
 
                         script {
                             if (BRANCH_NAME == MASTER_BRANCH) {
-                                sh "npm publish --dry-run --tag daily"
+                                sh "npm publish --tag daily"
                             }
                             else {
-                                sh "npm publish --dry-run --tag ${BRANCH_NAME}"
+                                sh "npm publish --tag ${BRANCH_NAME}"
                             }
                         }
                         //sh "npm logout --registry=${DL_ARTIFACTORY_URL} --scope=${TARGET_SCOPE}"
