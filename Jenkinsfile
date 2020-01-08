@@ -30,7 +30,7 @@ def GIT_USER_EMAIL = 'zowe.robot@gmail.com'
 /**
  * Target scope
  */
-def TARGET_SCOPE = "@brightside"
+def TARGET_SCOPE = "@zowe"
 
 /**
  * Artifactory details
