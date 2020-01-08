@@ -35,7 +35,7 @@ def TARGET_SCOPE = "@zowe"
 /**
  * Artifactory details
  */
-def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/api/npm/libs-snapshot-local/org/zowe/vscode/"
+def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/"
 def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
 def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
 
@@ -145,7 +145,7 @@ pipeline {
                         // Set the SCOPED registry and token to the npmrc of the user
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
 
-                        def uploadUrl = "DL_ARTIFACTORY_URL/${version}.vsix"
+                        def uploadUrl = "${DL_ARTIFACTORY_URL}/${version}.vsix"
 
                         sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
                     }
