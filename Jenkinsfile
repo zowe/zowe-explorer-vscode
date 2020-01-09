@@ -132,7 +132,7 @@ pipeline {
     stage('Artifactory') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
-        expression { return !params.SKIP_TEST }
+        expression { return !params.SKIP_PUBLISH }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
