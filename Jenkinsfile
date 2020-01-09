@@ -35,7 +35,7 @@ def TARGET_SCOPE = "@zowe"
 /**
  * Artifactory details
  */
-def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode"
+def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode"
 def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
 def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
 
@@ -181,9 +181,9 @@ pipeline {
     stage('Release') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
-        expression { return BRANCH_NAME == MASTER_BRANCH }
-        expression { return !params.SKIP_PUBLISH }
-        expression { return PIPELINE_CONTROL.create_release }
+        // expression { return BRANCH_NAME == MASTER_BRANCH }
+        // expression { return !params.SKIP_PUBLISH }
+        // expression { return PIPELINE_CONTROL.create_release }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
