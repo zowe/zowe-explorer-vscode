@@ -128,34 +128,34 @@ pipeline {
           sh "npm run test"
         } }
       }
-    }
-    stage('Artifactory') {
-      when { allOf {
-        expression { return !PIPELINE_CONTROL.ci_skip }
-        expression { return !params.SKIP_PUBLISH }
-      } }
-      steps {
-        timeout(time: 10, unit: 'MINUTES') { script {
-                    def vscodePackageJson = readJSON file: "package.json"
-                    def version = "v${vscodePackageJson.version}"
+    // }
+    // stage('Artifactory') {
+    //   when { allOf {
+    //     expression { return !PIPELINE_CONTROL.ci_skip }
+    //     expression { return !params.SKIP_PUBLISH }
+    //   } }
+    //   steps {
+    //     timeout(time: 10, unit: 'MINUTES') { script {
+    //                 def vscodePackageJson = readJSON file: "package.json"
+    //                 def version = "v${vscodePackageJson.version}"
 
-                    sh "npx vsce package -o ${version}.vsix"
+    //                 sh "npx vsce package -o ${version}.vsix"
 
-                    withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        // Set the SCOPED registry and token to the npmrc of the user
-                        echo "we are configuring and setting"
-                        sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
+    //                 withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+    //                     // Set the SCOPED registry and token to the npmrc of the user
+    //                     //echo "we are configuring and setting"
+    //                     //sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
 
                         
-                        def uploadUrl = "${DL_ARTIFACTORY_URL}/${version}.vsix"
-                        echo "upload url is: ${uploadUrl}"
+    //                     def uploadUrl = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+    //                     echo "upload url is: ${uploadUrl}"
 
-                        echo "aaand now posting"
-                        sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrl} -T @${version}.vsix"
-                    }
-        } }
-      }
-    }
+    //                     echo "aaand now posting"
+    //                     sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrl} -T @${version}.vsix"
+    //                 }
+    //     } }
+    //   }
+    // }
     stage('Codecov') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -221,7 +221,8 @@ pipeline {
           def version = "v${vscodePackageJson.version}"
           sh "git tag ${version}"
 
-          sh "npx vsce package -o ${version}.vsix"
+          //sh "npx vsce package -o ${version}.vsix"
+          sh "npx vsce package -o test.vsix"
 
           withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
             sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
@@ -236,13 +237,12 @@ pipeline {
             def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
 
             sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
-
-            // withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            //   sh "npm config set @zowe:registry https://gizaartifactory.jfrog.io:8081/gizaartifactory/api/npm/npm-release"
-            //   sh "curl -uadmin:$PASSWORD https://gizaartifactory.jfrog.io:8081/artifactory/api/npm/npm-repo/auth/@zowe"
-            //   sh "npm publish --dry-run @zowe:registry https://gizaartifactory.jfrog.io/gizaartifactory/api/npm/npm-release/"
-            // }
           } }
+
+          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
+          }
         } }
       }
     }
