@@ -96,7 +96,11 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
                 if (this.searchId.length > 0 ) {
                     jobs.push(await zowe.GetJobs.getJob(this.session, this._searchId));
                 } else {
-                    jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
+                    try {
+                        jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
+                    } catch (error) {
+                        await utils.errorHandling(error, this.label, "Retrieving response from zowe.GetJobs");
+                    }
                 }
                 jobs.forEach((job) => {
                     let nodeTitle: string;

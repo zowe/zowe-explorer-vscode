@@ -13,8 +13,8 @@ import * as path from "path";
 import * as os from "os";
 import * as zowe from "@brightside/core";
 import { CliProfileManager } from "@brightside/imperative";
-import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
+import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweNode } from "./ZoweNode";
@@ -25,7 +25,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * I noticed we have a lot of repetition of some common
  * functionality in many places.
  */
-export function applyIcons(node: TreeItem, state?: string ): any {
+export function applyIcons(node: vscode.TreeItem, state?: string ): any {
     let light: string;
     let dark: string;
 
@@ -85,7 +85,7 @@ export function applyIcons(node: TreeItem, state?: string ): any {
     return { light, dark };
 }
 
-export function sortTreeItems(favorites: TreeItem[], specificContext ) {
+export function sortTreeItems(favorites: vscode.TreeItem[], specificContext ) {
     favorites.sort((a, b) => {
         if (a.contextValue === specificContext) {
             if (b.contextValue === specificContext) {
@@ -105,17 +105,17 @@ export function sortTreeItems(favorites: TreeItem[], specificContext ) {
  * This function does this by adding or removing a blank.
  * @param {TreeItem} node - the node element
  */
-export function labelHack( node: TreeItem ): void {
+export function labelHack( node: vscode.TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
 
-export async function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>): Promise<QuickPickItem | undefined> {
-    return new Promise<QuickPickItem | undefined>(
+export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
+    return new Promise<vscode.QuickPickItem | undefined>(
         (c) => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class FilterItem implements QuickPickItem {
+export class FilterItem implements vscode.QuickPickItem {
     constructor(private text: string) { }
     get label(): string { return this.text; }
     get description(): string { return ""; }
@@ -123,7 +123,7 @@ export class FilterItem implements QuickPickItem {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class FilterDescriptor implements QuickPickItem {
+export class FilterDescriptor implements vscode.QuickPickItem {
     constructor(private text: string) { }
     get label(): string { return this.text; }
     get description(): string { return ""; }
@@ -178,4 +178,29 @@ export function concatChildNodes(nodes: ZoweNode[]) {
  *************************************************************************************************************/
 export function getAppName(isTheia: boolean) {
     return isTheia? "Theia" : "VS Code";
+}
+
+/*************************************************************************************************************
+ * Error Hanndling
+ * @param {errorDetails} error.mDetails
+ * @param {label} - additional information such as profile name, credentials etc
+ * @param {moreInfo} - additional/customized error messages
+ *************************************************************************************************************/
+export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+    const httpErrCode = errorDetails.mDetails.httpStatus;
+
+    switch(httpErrCode) {
+        // tslint:disable-next-line: no-magic-numbers
+        case 401 : {
+            vscode.window.showErrorMessage(localize("errorHandling.invalid.credentials", "Invalid Credentials. " +
+                                                    "Please ensure the username and password for" +
+                                                    `\n${label}\n` + "are valid or this may lead to a lock-out."));
+            break;
+        }
+        default: {
+            vscode.window.showErrorMessage(localize("errorHandling.default.error", `\n${moreInfo}\n` +
+            `\n${errorDetails}\n`));
+            break;
+        }
+    }
 }

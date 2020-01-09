@@ -818,8 +818,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(err.message);
-            throw (err);
+            await utils.errorHandling(err, null, "Error encountered when creating a data set! " +
+                "The problem occured in zowe.CreateDataset.");
         }
     }
 }
