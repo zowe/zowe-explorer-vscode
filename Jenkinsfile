@@ -151,7 +151,7 @@ pipeline {
                         echo "upload url is: ${uploadUrl}"
 
                         echo "aaand now posting"
-                        sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+                        sh "curl -u ${USERNAME}:${PASSWORD} -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
                     }
         } }
       }
