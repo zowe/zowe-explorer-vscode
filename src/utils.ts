@@ -183,7 +183,7 @@ export function getAppName(isTheia: boolean) {
 /*************************************************************************************************************
  * Error Hanndling
  * @param {errorDetails} error.mDetails
- * @param {label} - additional information such as profile name, credentials etc
+ * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {

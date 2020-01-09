@@ -17,7 +17,7 @@ import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
-import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper } from "./utils";
+import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper, errorHandling } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -114,9 +114,12 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 try {
                     zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
-                    vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
-                        "Initialization Error: Could not find profile named: ")
+                    await errorHandling(error, null, (localize("loadNamedProfile.error.profileName", 
+                        "Initialization Error: Could not find profile named: ")) +
                         + sesName + localize("loadNamedProfile.error.period", "."));
+                    // vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
+                    //     "Initialization Error: Could not find profile named: ")
+                    //     + sesName + localize("loadNamedProfile.error.period", "."));
                     continue;
                 }
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
@@ -395,7 +398,8 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await errorHandling(error, null, "Error encountered in datasetFilterPrompt.optionalProfiles! ");
+                // vscode.window.showErrorMessage(error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -511,7 +515,8 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    await errorHandling(error, null, "Error encountered in flipState.optionalProfiles! ");
+                    // vscode.window.showErrorMessage(error.message);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;

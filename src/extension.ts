@@ -97,7 +97,8 @@ export async function activate(context: vscode.ExtensionContext) {
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
-        vscode.window.showErrorMessage(err.message);
+        await utils.errorHandling(err, null, err.message);
+        // vscode.window.showErrorMessage(err.message);
     }
 
     let datasetProvider: DatasetTree;
@@ -125,8 +126,9 @@ export async function activate(context: vscode.ExtensionContext) {
         jobsProvider = await createJobsTree(log);
 
     } catch (err) {
+        await utils.errorHandling(err, null,(localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         log.error(localize("initialize.log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
+        // vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
     }
 
     const spoolProvider = new SpoolProvider();
@@ -340,7 +342,8 @@ export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await utils.errorHandling(error, null, "Error encountered in issueTsoCommand.optionalProfiles! ");
+                // vscode.window.showErrorMessage(error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 updProfile.user = usrNme;
@@ -365,7 +368,8 @@ export async function issueTsoCommand(outputChannel: vscode.OutputChannel) {
             outputChannel.show(true);
         }
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, "Error encountered in issueTsoCommand.displayOutputChannel! ");
+        // vscode.window.showErrorMessage(error.message);
     }
 }
 
@@ -404,7 +408,8 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         fs.mkdirSync(DS_DIR);
     } catch (err) {
         log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
+        utils.errorHandling(err, null, "Error encountered in moveTempFolder.displayOutputChannel! ");
+        // vscode.window.showErrorMessage(err.message);
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {
@@ -818,8 +823,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            await utils.errorHandling(err, null, "Error encountered when creating a data set! " +
-                "The problem occured in zowe.CreateDataset.");
+            await utils.errorHandling(err, null, (localize("createDataSet.error", "Error encountered when creating data set! ")) +
+            (localize("createDataSet.error.location","The problem occured in zowe.CreateDataset.")));
         }
     }
 }
