@@ -35,7 +35,7 @@ def TARGET_SCOPE = "@zowe"
 /**
  * Artifactory details
  */
-def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/"
+def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode"
 def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
 def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
 
