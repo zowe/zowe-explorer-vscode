@@ -1166,9 +1166,7 @@
   },
   "dependencies": {
     "@brightside/core": "^2.36.0",
-    "@zowe/zos-ftp-for-zowe-cli": "../zowe-cli-ftp-plugin/zowe-zos-ftp-for-zowe-cli-0.1.1.tgz",
     "fs-extra": "^8.0.1",
-    "tmp": "0.1.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {
