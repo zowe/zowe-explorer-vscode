@@ -225,8 +225,10 @@ pipeline {
           sh "npx vsce package -o test.vsix"
 
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
-            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
-            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
+            //def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+            //sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/test.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @test.vsix"
           } }
 
           // withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
