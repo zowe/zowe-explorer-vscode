@@ -129,33 +129,6 @@ pipeline {
         } }
       }
     }
-    // stage('Artifactory') {
-    //   when { allOf {
-    //     expression { return !PIPELINE_CONTROL.ci_skip }
-    //     expression { return !params.SKIP_PUBLISH }
-    //   } }
-    //   steps {
-    //     timeout(time: 10, unit: 'MINUTES') { script {
-    //                 def vscodePackageJson = readJSON file: "package.json"
-    //                 def version = "v${vscodePackageJson.version}"
-
-    //                 sh "npx vsce package -o ${version}.vsix"
-
-    //                 withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-    //                     // Set the SCOPED registry and token to the npmrc of the user
-    //                     //echo "we are configuring and setting"
-    //                     //sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
-
-                        
-    //                     def uploadUrl = "${DL_ARTIFACTORY_URL}/${version}.vsix"
-    //                     echo "upload url is: ${uploadUrl}"
-
-    //                     echo "aaand now posting"
-    //                     sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrl} -T @${version}.vsix"
-    //                 }
-    //     } }
-    //   }
-    // }
     stage('Codecov') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -208,9 +181,9 @@ pipeline {
     stage('Release') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
-        //expression { return BRANCH_NAME == MASTER_BRANCH }
-        //expression { return !params.SKIP_PUBLISH }
-        //expression { return PIPELINE_CONTROL.create_release }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
+        expression { return !params.SKIP_PUBLISH }
+        expression { return PIPELINE_CONTROL.create_release }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
@@ -221,43 +194,41 @@ pipeline {
           def version = "v${vscodePackageJson.version}"
           sh "git tag ${version}"
 
-          //sh "npx vsce package -o ${version}.vsix"
-          sh "npx vsce package -o test.vsix"
+          sh "npx vsce package -o ${version}.vsix"
 
+          // Release to Artifactory
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
-            //def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
-            //sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
-            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/test.vsix"
-            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @test.vsix"
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
           } }
 
-          // withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
-          //   sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+          withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
+            sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
 
-          //   def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
-          //   def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"draft\":true,\"prerelease\":false}"
-          //   def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
+            def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
+            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"draft\":true,\"prerelease\":false}"
+            def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 
-          //   def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
-          //   def releaseParsed = readJSON text: releaseCreated
+            def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
+            def releaseParsed = readJSON text: releaseCreated
 
-          //   def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
+            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
 
-          //   sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
-          // } }
+            sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+          } }
         } }
       }
     }
   }
   post { always { script {
     def buildStatus = currentBuild.currentResult
-    //def recipients = params.RECIPIENTS_LIST != '' ? params.RECIPIENTS_LIST : "${MASTER_RECIPIENTS_LIST}"
+    def recipients = params.RECIPIENTS_LIST != '' ? params.RECIPIENTS_LIST : "${MASTER_RECIPIENTS_LIST}"
     def subjectTitle = "VSCode Extension Deployment"
     def details = "${subjectTitle}"
     if (!PIPELINE_CONTROL.ci_skip) {
       try {
         try {
-          //sh("cp -rf /home/jenkins/.npm/_logs deploy-log")
+          sh("cp -rf /home/jenkins/.npm/_logs deploy-log")
         } catch(e) {}
         archiveArtifacts allowEmptyArchive: true, artifacts: 'deploy-log/*.log'
 
@@ -270,7 +241,7 @@ pipeline {
             details = "${details} failed.\n\nPlease investigate build ${currentBuild.number}"
           }
           details = "${details}\n\nBuild result: ${currentBuild.absoluteUrl}"
-          //emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
+          emailext(to: recipients, subject: "[${buildStatus}] ${subjectTitle}", body: details)
         }
       } catch (e) {
         echo "Experienced an error sending an email for a ${buildStatus} build"
