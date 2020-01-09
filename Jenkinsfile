@@ -224,25 +224,25 @@ pipeline {
           //sh "npx vsce package -o ${version}.vsix"
           sh "npx vsce package -o test.vsix"
 
-          withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
-            sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
-
-            def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
-            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"draft\":true,\"prerelease\":false}"
-            def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
-
-            def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
-            def releaseParsed = readJSON text: releaseCreated
-
-            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
-
-            sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
-          } }
-
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
             def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
             sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
           } }
+
+          // withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
+          //   sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+
+          //   def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
+          //   def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"draft\":true,\"prerelease\":false}"
+          //   def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
+
+          //   def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
+          //   def releaseParsed = readJSON text: releaseCreated
+
+          //   def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
+
+          //   sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+          // } }
         } }
       }
     }
