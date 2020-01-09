@@ -37,14 +37,13 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: true
+    failNotFound: false
 };
 
 describe("Extension Integration Tests", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    Profiles.createInstance(Logger.getAppLogger());
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
         session, undefined, undefined, testProfile);
@@ -886,7 +885,7 @@ describe("Extension Integration Tests - USS", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    Profiles.createInstance(Logger.getAppLogger());
+    // Profiles.createInstance(Logger.getAppLogger());
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const ussSessionNode = new ZoweUSSNode(
         testConst.profile.name,

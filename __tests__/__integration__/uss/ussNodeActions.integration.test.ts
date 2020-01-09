@@ -31,14 +31,13 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: true
+    failNotFound: false
 };
 
 describe("ussNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    Profiles.createInstance(Logger.getAppLogger());
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
         null, session, null, false, testProfile.name);

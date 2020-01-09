@@ -113,7 +113,6 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
-    Profiles.createInstance(Logger.getAppLogger());
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne));
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;

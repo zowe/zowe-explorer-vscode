@@ -27,7 +27,7 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: true
+    failNotFound: false
 };
 
 describe("ZoweNode Integration Tests", async () => {
@@ -35,7 +35,6 @@ describe("ZoweNode Integration Tests", async () => {
     chai.use(chaiAsPromised);
 
     // Uses loaded profile to create a zosmf session with brightside
-    Profiles.createInstance(Logger.getAppLogger());
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, testProfile);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
