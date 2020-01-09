@@ -15,6 +15,9 @@ import { ZoweVscApi } from "./IZoweVscRestApis";
 import { ZoweVscZosmfUssRestApi, ZoweVscZosmfMvsRestApi } from "./ZoweVscZosmfRestApi";
 import { ZoweVscFtpUssRestApi } from "./ZoweVscFtpRestApi";
 
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
 /**
  * The API register that gets exposed to other VS Code extensions to contribute their implementations.
  * @export
@@ -84,7 +87,8 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
         if (ussApi && ussApi.getProfileTypeName()) {
             this.zoweVscUssApiImplementations.set(ussApi.getProfileTypeName(), ussApi);
         } else {
-            throw new Error("A Zowe Extension client tried to register an invalid USS API.");
+            throw new Error(
+                localize("registerUssApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid USS API."));
         }
     }
 
@@ -96,7 +100,8 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
         if (mvsApi && mvsApi.getProfileTypeName()) {
             this.zoweVscMvsApiImplementations.set(mvsApi.getProfileTypeName(), mvsApi);
         } else {
-            throw new Error("A Zowe Extension client tried to register an invalid MVS API.");
+            throw new Error(
+                localize("registerMvsApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API."));
         }
     }
 
@@ -144,7 +149,8 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
             return api;
         }
         else {
-            throw new Error("Internal error: Tried to call a non-existing API: " + profile.type);
+            throw new Error(
+                localize("getUssApi.error", "Internal error: Tried to call a non-existing API in API register: ") + profile.type);
         }
     }
 
@@ -156,7 +162,8 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
             return api;
         }
         else {
-            throw new Error("Internal error: Tried to call a non-existing API: " + profile.type);
+            throw new Error(
+                localize("getMvsApi.error", "Internal error: Tried to call a non-existing API in API register: ") + profile.type);
         }
     }
 }
