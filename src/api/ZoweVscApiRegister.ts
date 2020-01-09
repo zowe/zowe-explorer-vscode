@@ -13,7 +13,6 @@ import * as imperative from "@brightside/imperative";
 
 import { ZoweVscApi } from "./IZoweVscRestApis";
 import { ZoweVscZosmfUssRestApi, ZoweVscZosmfMvsRestApi } from "./ZoweVscZosmfRestApi";
-import { ZoweVscFtpUssRestApi } from "./ZoweVscFtpRestApi";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -76,7 +75,6 @@ export class ZoweVscApiRegister implements ZoweVscApi.IApiRegister {
     private constructor() {
         this.registerUssApi(new ZoweVscZosmfUssRestApi());
         this.registerMvsApi(new ZoweVscZosmfMvsRestApi());
-        this.registerUssApi(new ZoweVscFtpUssRestApi());
     }
 
     /**
