@@ -181,9 +181,9 @@ pipeline {
     stage('Release') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
-        // expression { return BRANCH_NAME == MASTER_BRANCH }
-        // expression { return !params.SKIP_PUBLISH }
-        // expression { return PIPELINE_CONTROL.create_release }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
+        expression { return !params.SKIP_PUBLISH }
+        expression { return PIPELINE_CONTROL.create_release }
       } }
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
