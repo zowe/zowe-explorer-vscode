@@ -128,7 +128,7 @@ pipeline {
           sh "npm run test"
         } }
       }
-    // }
+    }
     // stage('Artifactory') {
     //   when { allOf {
     //     expression { return !PIPELINE_CONTROL.ci_skip }
