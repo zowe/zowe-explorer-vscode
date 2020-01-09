@@ -143,10 +143,14 @@ pipeline {
 
                     withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         // Set the SCOPED registry and token to the npmrc of the user
+                        echo "we are configuring and setting"
                         sh "npm config set ${TARGET_SCOPE}:registry ${DL_ARTIFACTORY_URL}"
 
+                        
                         def uploadUrl = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+                        echo "upload url is: ${uploadUrl}"
 
+                        echo "aaand now posting"
                         sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
                     }
         } }
