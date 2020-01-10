@@ -305,6 +305,32 @@ export class Profiles { // Processing stops if there are no profiles detected
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
+    private async rempromptUsername() {
+        let userName: string;
+        let passWord: string;
+        let options: vscode.InputBoxOptions;
+        options = {
+            placeHolder: localize("promptcredentials.option.prompt.username.placeholder", "User Name"),
+            prompt: localize("promptcredentials.option.prompt.username", "Enter the user name for the connection"),
+            value: userName
+        };
+        userName = await vscode.window.showInputBox(options);
+        return userName;
+    }
+
+    private async rempromptPassword() {
+        let passWord: string;
+        let options: vscode.InputBoxOptions;
+        options = {
+            placeHolder: localize("promptcredentials.option.prompt.password.placeholder", "Password"),
+            prompt: localize("promptcredentials.option.prompt.password", "Enter a password for the connection"),
+            password: true,
+            value: passWord
+        };
+        passWord = await vscode.window.showInputBox(options);
+        return passWord;
+    }
+
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
         const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
         // we have to mock a few things to get the Imperative.init to work properly
