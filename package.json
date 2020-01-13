@@ -267,7 +267,7 @@
       {
         "command": "zowe.uss.saveSearch",
         "title": "%saveSearch%"
-      },     
+      },
       {
         "command": "zowe.uss.removeSavedSearch",
         "title": "%removeSavedSearch%"
@@ -375,7 +375,7 @@
       {
         "command": "zowe.issueCmd",
         "title": "%issueCmd%"
-      },      
+      },
       {
         "command": "zowe.jobs.search",
         "title": "%jobs.search%",
@@ -797,7 +797,6 @@
           "when": "view == zowe.explorer && viewItem == session",
           "command": "zowe.issueCmd",
           "group": "3_systemSpecific"
-
         },
         {
           "when": "view == zowe.explorer && viewItem == session_fav",
@@ -1003,8 +1002,8 @@
         },
         {
           "command": "zowe.issueCmd",
-          "when": "never"          
-        } 
+          "when": "never"
+        }
       ]
     },
     "configuration": {
@@ -1118,10 +1117,10 @@
           "scope": "window"
         },
         "Zowe Commands: Always edit": {
-            "type": "boolean",
-            "default": true,
-            "description": "Allow editing of commands before submitting",
-            "scope": "window"
+          "type": "boolean",
+          "default": true,
+          "description": "Allow editing of commands before submitting",
+          "scope": "window"
         },
         "Zowe Commands: History": {
           "default": {
@@ -1130,7 +1129,7 @@
           },
           "description": "%Zowe-Default-Commands-Persistent-Favorites%",
           "scope": "window"
-        },        
+        },
         "Zowe-Environment": {
           "default": {
             "persistence": true,
