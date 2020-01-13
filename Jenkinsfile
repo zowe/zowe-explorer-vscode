@@ -129,6 +129,26 @@ pipeline {
         } }
       }
     }
+    stage('Smoke Test') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          def vscodePackageJson = readJSON file: "package.json"
+          def version = "v${vscodePackageJson.version}"
+          sh "git tag ${version}"
+
+          sh "npx vsce package -o ${version}.vsix"
+
+          // Release to Artifactory
+          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
+            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${version}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
+          } }
+        } }
+      }
+    }
     stage('Codecov') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
