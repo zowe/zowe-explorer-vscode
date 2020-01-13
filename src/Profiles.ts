@@ -111,7 +111,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         return validationResult;
     }
 
-  public async getUrl(urlInputBox): Promise<string | undefined> {
+    public async getUrl(urlInputBox): Promise<string | undefined> {
         return new Promise<string | undefined> ((resolve) => {
             urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
             urlInputBox.onDidAccept(() => {
