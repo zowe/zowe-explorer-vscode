@@ -24,7 +24,7 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
-import * as tsoActions from "./tso/tsoCommandActions";
+import { MvsCommandHandler } from "./command/MvsCommandHandler";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile, IUploadOptions } from "@brightside/core";
 import { Profiles } from "./Profiles";
@@ -104,7 +104,6 @@ export async function activate(context: vscode.ExtensionContext) {
     let datasetProvider: DatasetTree;
     let ussFileProvider: USSTree;
     let jobsProvider: ZosJobsProvider;
-    const outputChannel = vscode.window.createOutputChannel("Zowe TSO Command");
 
     try {
         // Initialize Imperative Logger
@@ -288,8 +287,9 @@ export async function activate(context: vscode.ExtensionContext) {
             jobsProvider.setJob(jobView, job);
         });
         vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
-        vscode.commands.registerCommand("zowe.issueTsoCmd", async () => tsoActions.issueTsoCommand(outputChannel));
-        vscode.commands.registerCommand("zowe.issueCmd", async (node, command) => tsoActions.issueTsoCommand(outputChannel, node.session, command));
+        vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueTsoCommand());
+        vscode.commands.registerCommand("zowe.issueCmd", async (node, command) =>
+                                            MvsCommandHandler.getInstance().issueTsoCommand(node.session, command));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             jobsProvider.onDidChangeConfiguration(e);
         });

@@ -22,7 +22,6 @@ import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
-import * as tsoActions from "../../src/tso/tsoCommandActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 
@@ -175,7 +174,6 @@ describe("Extension Unit Tests", () => {
     const submitJob = jest.fn();
     const IssueCommand = jest.fn();
     const issueSimple = jest.fn();
-    const createOutputChannel = jest.fn();
     const registerTextDocumentContentProvider = jest.fn();
     const from = jest.fn();
     const Uri = jest.fn();
@@ -340,7 +338,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
-    Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
     Object.defineProperty(brightside, "Download", {value: Download});
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
