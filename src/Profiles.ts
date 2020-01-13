@@ -331,6 +331,23 @@ export class Profiles { // Processing stops if there are no profiles detected
             value: passWord
         };
         passWord = await vscode.window.showInputBox(options);
+
+        const profile: IProfile = {
+            type : "zosmf",
+            user: userName,
+            password: passWord,
+            rejectUnauthorized: false,
+            name: ""
+        };
+
+        try{
+            await new CliProfileManager({
+                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+                type: "zosmf"
+            }).update({profile});
+        } catch(error) {
+            vscode.window.showErrorMessage(error.message);
+        }
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
