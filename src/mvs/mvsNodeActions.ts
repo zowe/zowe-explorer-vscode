@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
-import { ZoweVscApiRegister } from "../api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {
@@ -46,7 +46,7 @@ export function getDatasetLabel(node: ZoweNode) {
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await ZoweVscApiRegister.getMvsApi(node.profile).putContents(doc.fileName, datasetName);
+        await ZoweExplorerApiRegister.getMvsApi(node.profile).putContents(doc.fileName, datasetName);
     } catch (e) {
         vscode.window.showErrorMessage(e.message);
     }

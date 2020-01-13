@@ -30,7 +30,7 @@ import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
-import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 // Localization support
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -73,9 +73,9 @@ let log: Logger;
  *
  * @export
  * @param {vscode.ExtensionContext} context - Context of vscode at the time that the function is called
- * @returns {Promise<ZoweVscApiRegister>}
+ * @returns {Promise<ZoweExplorerApiRegister>}
  */
-export async function activate(context: vscode.ExtensionContext): Promise<ZoweVscApiRegister> {
+export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
 
    // Get temp folder location from settings
     let preferencesTempPath: string =
@@ -313,7 +313,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweVs
     }
 
     // return the Extension's API to other extensions that want to register their APIs.
-    return ZoweVscApiRegister.getInstance();
+    return ZoweExplorerApiRegister.getInstance();
 }
 
 /**
@@ -613,11 +613,11 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
     profileNamesList = profileNamesList.filter((profileName) => {
         const profile = Profiles.getInstance().loadNamedProfile(profileName);
         if (zoweFileProvider instanceof USSTree) {
-            const ussProfileTypes = ZoweVscApiRegister.getInstance().registeredUssApiTypes();
+            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
             return ussProfileTypes.includes(profile.type);
         }
         if (zoweFileProvider instanceof DatasetTree) {
-            const mvsProfileTypes = ZoweVscApiRegister.getInstance().registeredMvsApiTypes();
+            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
             return mvsProfileTypes.includes(profile.type);
         }
     });
@@ -795,7 +795,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         name = name.toUpperCase();
 
         try {
-            await ZoweVscApiRegister.getMvsApi(node.profile).createDataSet(typeEnum, name, createOptions);
+            await ZoweExplorerApiRegister.getMvsApi(node.profile).createDataSet(typeEnum, name, createOptions);
             node.dirty = true;
 
             // Store previous filters (before refreshing)
@@ -863,7 +863,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         }
 
         try {
-            await ZoweVscApiRegister.getMvsApi(parent.profile).createDataSetMember(label + "(" + name + ")");
+            await ZoweExplorerApiRegister.getMvsApi(parent.profile).createDataSetMember(label + "(" + name + ")");
         } catch (err) {
             log.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
             vscode.window.showErrorMessage(localize("createMember.error", "Unable to create member: ") + err.message);
@@ -896,7 +896,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
     let attributes: any;
     try {
-        attributes = await ZoweVscApiRegister.getMvsApi(parent.profile).dataSet(label, { attributes: true });
+        attributes = await ZoweExplorerApiRegister.getMvsApi(parent.profile).dataSet(label, { attributes: true });
         attributes = attributes.apiResponse.items;
         attributes = attributes.filter((dataSet) => {
             return dataSet.dsname.toUpperCase() === label.toUpperCase();
@@ -967,7 +967,7 @@ export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
     if (afterDataSetName) {
         try {
-            await ZoweVscApiRegister.getMvsApi(node.profile).renameDataSet(beforeDataSetName, afterDataSetName);
+            await ZoweExplorerApiRegister.getMvsApi(node.profile).renameDataSet(beforeDataSetName, afterDataSetName);
             node.label = `${favPrefix}${afterDataSetName}`;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
@@ -1054,7 +1054,7 @@ export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree)
     if(beforeProfileName === profileName) {
         if(memberName) {
             try {
-                await ZoweVscApiRegister.getMvsApi(node.profile).getContents(`${dataSetName}(${memberName})`);
+                await ZoweExplorerApiRegister.getMvsApi(node.profile).getContents(`${dataSetName}(${memberName})`);
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
             } catch(err) {
                 if (!err.message.includes("Member not found")) {
@@ -1062,7 +1062,7 @@ export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree)
                 }
             }
         }
-        await ZoweVscApiRegister.getMvsApi(node.profile).copyDataSetMember(
+        await ZoweExplorerApiRegister.getMvsApi(node.profile).copyDataSetMember(
             { dataSetName: beforeDataSetName, memberName: beforeMemberName },
             { dataSetName, memberName },
         );
@@ -1107,7 +1107,7 @@ export async function renameDataSetMember(node: ZoweNode, datasetProvider: Datas
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
     if (afterMemberName) {
         try {
-            await ZoweVscApiRegister.getMvsApi(node.profile).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
+            await ZoweExplorerApiRegister.getMvsApi(node.profile).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
             node.label = `${profileLabel}${afterMemberName}`;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
@@ -1226,7 +1226,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
             default:
                 throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
-        await ZoweVscApiRegister.getMvsApi(node.profile).deleteDataSet(label);
+        await ZoweExplorerApiRegister.getMvsApi(node.profile).deleteDataSet(label);
     } catch (err) {
         log.error(localize("deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
         if (err.message.includes(localize("deleteDataSet.error.notFound", "not found"))) {
@@ -1470,7 +1470,7 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
                     location: vscode.ProgressLocation.Notification,
                     title: "Opening data set..."
                 }, function downloadDataset() {
-                    return ZoweVscApiRegister.getMvsApi(node.profile).getContents(label, { // TODO MISSED TESTING
+                    return ZoweExplorerApiRegister.getMvsApi(node.profile).getContents(label, { // TODO MISSED TESTING
                         file: documentFilePath,
                         returnEtag: true
                     });
@@ -1535,7 +1535,7 @@ export async function refreshPS(node: ZoweNode) {
                 throw Error(localize("refreshPS.error.invalidNode", "refreshPS() called from invalid node."));
         }
         const documentFilePath = getDocumentFilePath(label, node);
-        const response = await ZoweVscApiRegister.getMvsApi(node.profile).getContents(label, {
+        const response = await ZoweExplorerApiRegister.getMvsApi(node.profile).getContents(label, {
             file: documentFilePath,
             returnEtag: true
         });
@@ -1582,7 +1582,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
     }
     try {
         const ussDocumentFilePath = getUSSDocumentFilePath(node);
-        const response = await ZoweVscApiRegister.getUssApi(node.profile).getContents(node.fullPath, {
+        const response = await ZoweExplorerApiRegister.getUssApi(node.profile).getContents(node.fullPath, {
             file: ussDocumentFilePath,
             returnEtag: true
         });
@@ -1650,7 +1650,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     } else {
         // if saving from favorites, a session might not exist for this node
         log.debug(localize("saveFile.log.debug.sessionNode", "couldn't find session node, loading profile with CLI profile manager"));
-        documentSession = ZoweVscApiRegister.getMvsApi(profile).getSession();
+        documentSession = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
     }
 
     // If not a member
@@ -1660,7 +1660,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     if (!label.includes("(")) {
         try {
             // Checks if file still exists on server
-            const response = await ZoweVscApiRegister.getMvsApi(profile).dataSet(label);
+            const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label);
             if (!response.apiResponse.items.length) {
                 return vscode.window.showErrorMessage(
                     localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe."));
@@ -1713,14 +1713,14 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             location: vscode.ProgressLocation.Notification,
             title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
-            return ZoweVscApiRegister.getMvsApi(node.profile).putContents(doc.fileName, label, uploadOptions); // TODO MISSED TESTING
+            return ZoweExplorerApiRegister.getMvsApi(node.profile).putContents(doc.fileName, label, uploadOptions); // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);  // TODO MISSED TESTING
             // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse[0].etag);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await ZoweVscApiRegister.getMvsApi(node.profile).getContents(label, {
+            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node.profile).getContents(label, {
                 file: doc.fileName,
                 returnEtag: true});
             // re-assign etag, so that it can be used with subsequent requests
@@ -1804,7 +1804,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => { // ZoweVscApiRegister.getUssApi(sesNode.profile).putContents
-            return ZoweVscApiRegister.getUssApi(sesNode.profile).putContents(
+            return ZoweExplorerApiRegister.getUssApi(sesNode.profile).putContents(
                 doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
@@ -1821,7 +1821,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             // Store old document text in a separate variable, to be used on merge conflict
             const oldDocText = doc.getText();
             const oldDocLineCount = doc.lineCount;
-            const downloadResponse = await ZoweVscApiRegister.getUssApi(node.profile).getContents(
+            const downloadResponse = await ZoweExplorerApiRegister.getUssApi(node.profile).getContents(
                 node.fullPath, {
                 file: getUSSDocumentFilePath(node),
                 binary,
@@ -1903,12 +1903,12 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
             const documentFilePath = getUSSDocumentFilePath(node);
             if (download || !fs.existsSync(documentFilePath)) {
                 const chooseBinary = node.binary ||
-                    await ZoweVscApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.fullPath);
+                    await ZoweExplorerApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.fullPath);
                 const response = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: "Opening USS file..."},
                     function downloadUSSFile() {
-                        return ZoweVscApiRegister.getUssApi(node.profile).getContents(
+                        return ZoweExplorerApiRegister.getUssApi(node.profile).getContents(
                             node.fullPath, { // TODO MISSED TESTING
                             file: documentFilePath,
                             binary: chooseBinary,

@@ -12,11 +12,14 @@
 import * as zowe from "@brightside/core";
 import * as imperative from "@brightside/imperative";
 
-import { ZoweVscApi } from "./IZoweVscRestApis";
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 // tslint:disable: max-classes-per-file
 
-class ZoweVscZosmfCommon implements ZoweVscApi.ICommon {
+/**
+ * An implementation of the Zowe Explorer API Common interface for zOSMF.
+ */
+class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public static getProfileTypeName(): string {
         return "zosmf";
     }
@@ -26,7 +29,7 @@ class ZoweVscZosmfCommon implements ZoweVscApi.ICommon {
     }
 
     public getProfileTypeName(): string {
-        return ZoweVscZosmfUssRestApi.getProfileTypeName();
+        return ZosmfUssRestApi.getProfileTypeName();
     }
 
     public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
@@ -36,7 +39,11 @@ class ZoweVscZosmfCommon implements ZoweVscApi.ICommon {
         return this.session;
     }
 }
-export class ZoweVscZosmfUssRestApi extends ZoweVscZosmfCommon implements ZoweVscApi.IUss {
+
+/**
+ * An implementation of the Zowe Explorer USS API interface for zOSMF.
+ */
+export class ZosmfUssRestApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
 
     public async fileList(path: string): Promise<zowe.IZosFilesResponse> {
         return zowe.List.fileList(this.getSession(), path);
@@ -76,7 +83,10 @@ export class ZoweVscZosmfUssRestApi extends ZoweVscZosmfCommon implements ZoweVs
     }
 }
 
-export class ZoweVscZosmfMvsRestApi extends ZoweVscZosmfCommon implements ZoweVscApi.IMvs {
+/**
+ * An implementation of the Zowe Explorer MVS API interface for zOSMF.
+ */
+export class ZosmfMvsRestApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs {
 
     public async dataSet(filter: string, options?: zowe.IListOptions
         ): Promise<zowe.IZosFilesResponse>{
@@ -133,5 +143,5 @@ export class ZoweVscZosmfMvsRestApi extends ZoweVscZosmfCommon implements ZoweVs
     public async deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions
         ): Promise<zowe.IZosFilesResponse> {
             return zowe.Delete.dataSet(this.getSession(), dataSetName);
-        }
+    }
 }

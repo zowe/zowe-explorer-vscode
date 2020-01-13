@@ -18,7 +18,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../src/extension";
 import * as utils from "./utils";
 import { Profiles } from "./Profiles";
-import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -127,7 +127,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
         try {
-            responses.push(await ZoweVscApiRegister.getUssApi(this.profile).fileList(this.fullPath));
+            responses.push(await ZoweExplorerApiRegister.getUssApi(this.profile).fileList(this.fullPath));
         } catch (err) {
             vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from API")
                                                     + `\n${err}\n`);

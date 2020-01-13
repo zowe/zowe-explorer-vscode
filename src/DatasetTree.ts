@@ -17,7 +17,7 @@ import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
-import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
@@ -85,7 +85,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
                     const profile = Profiles.getInstance().loadNamedProfile(sesName);
-                    const session = ZoweVscApiRegister.getMvsApi(profile).getSession();
+                    const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     let node: ZoweNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.DS_PDS_CONTEXT) {
                         node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
@@ -120,7 +120,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         + sesName + localize("loadNamedProfile.error.period", "."));
                     continue;
                 }
-                const session = ZoweVscApiRegister.getMvsApi(profile).getSession();
+                const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
                     vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session, undefined, undefined, profile);
                 node.command = { command: "zowe.pattern", title: "", arguments: [node] };
@@ -548,7 +548,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
-            const session = ZoweVscApiRegister.getMvsApi(profile).getSession();
+            const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweNode(
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);

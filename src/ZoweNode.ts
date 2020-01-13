@@ -16,7 +16,7 @@ import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
 import { IZoweTreeNode } from "./ZoweTree";
-import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -115,10 +115,10 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(await ZoweVscApiRegister.getMvsApi(this.profile).dataSet(pattern.trim(), {attributes: true}));
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(this.profile).dataSet(pattern.trim(), {attributes: true}));
                 }
             } else {
-                responses.push(await ZoweVscApiRegister.getMvsApi(this.profile).allMembers(label, {attributes: true}));
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(this.profile).allMembers(label, {attributes: true}));
             }
         } catch (err) {
             vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from zowe.List")

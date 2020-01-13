@@ -16,7 +16,7 @@ import { IZoweTree } from "./ZoweTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
-import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 
@@ -432,7 +432,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
                 const profile = Profiles.getInstance().loadNamedProfile(sesName);
-                const session = ZoweVscApiRegister.getUssApi(profile).getSession();
+                const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
                     node = new ZoweUSSNode(nodeName,
@@ -484,7 +484,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                 return;
             }
             // Uses loaded profile to create a session with the USS API
-            const session = ZoweVscApiRegister.getUssApi(profile).getSession();
+            const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profile.name);

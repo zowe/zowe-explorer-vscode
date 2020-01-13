@@ -18,7 +18,7 @@ import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import * as ProfileLoader from "./ProfileLoader";
-import { ZoweVscApiRegister } from "./api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -58,7 +58,7 @@ export class Profiles { // Processing stops if there are no profiles detected
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name &&
-                ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type)) {
+                ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)) {
                 return profile;
             }
         }
@@ -85,7 +85,7 @@ export class Profiles { // Processing stops if there are no profiles detected
                     type: "zosmf"
                 });
                 this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
-                    return ZoweVscApiRegister.getInstance().registeredApiTypes().includes(profile.type);
+                    return ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type);
                 });
                 if (this.allProfiles.length > 0) {
                     this.defaultProfile = (await profileManager.load({ loadDefault: true }));

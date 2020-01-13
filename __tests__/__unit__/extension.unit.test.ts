@@ -24,7 +24,7 @@ import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
-import { ZoweVscApiRegister } from "../../src/api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -126,15 +126,15 @@ describe("Extension Unit Tests", () => {
         })
     });
 
-    const mvsApi = ZoweVscApiRegister.getMvsApi(profileOne);
+    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne);
     const getMvsApiMock = jest.fn();
     getMvsApiMock.mockReturnValue(mvsApi);
-    ZoweVscApiRegister.getMvsApi = getMvsApiMock.bind(ZoweVscApiRegister);
+    ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
 
-    const ussApi = ZoweVscApiRegister.getUssApi(profileOne);
+    const ussApi = ZoweExplorerApiRegister.getUssApi(profileOne);
     const getUssApiMock = jest.fn();
     getUssApiMock.mockReturnValue(ussApi);
-    ZoweVscApiRegister.getUssApi = getUssApiMock.bind(ZoweVscApiRegister);
+    ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;

@@ -21,7 +21,7 @@ import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
-import { ZoweVscApiRegister } from "../api/ZoweVscApiRegister";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -35,7 +35,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await ZoweVscApiRegister.getUssApi(node.profile).create(filePath, nodeType);
+            await ZoweExplorerApiRegister.getUssApi(node.profile).create(filePath, nodeType);
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
@@ -106,7 +106,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
     try {
         const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-        await ZoweVscApiRegister.getUssApi(node.profile).delete(node.fullPath, isRecursive);
+        await ZoweExplorerApiRegister.getUssApi(node.profile).delete(node.fullPath, isRecursive);
         node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {
@@ -156,7 +156,7 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
     if (newName && newName !== oldLabel) {
         try {
             const newNamePath = path.join(parentPath + newName);
-            await ZoweVscApiRegister.getUssApi(
+            await ZoweExplorerApiRegister.getUssApi(
                 originalNode.profile).rename(originalNode.fullPath, newNamePath);
             ussFileProvider.refresh();
             if (oldFavorite) {
@@ -208,7 +208,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweVscApiRegister.getUssApi(node.profile).putContents(doc.fileName, ussName);
+        await ZoweExplorerApiRegister.getUssApi(node.profile).putContents(doc.fileName, ussName);
     } catch (e) {
         vscode.window.showErrorMessage(e.message);
     }
