@@ -38,7 +38,7 @@ describe("tsoCommandActions unit testing", () => {
     };
     createOutputChannel.mockReturnValue(outputChannel);
     const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-    const qpItem2 = new utils.FilterItem("/d iplinfo");
+    const qpItem2 = new utils.FilterItem("/d iplinfo0");
 
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
@@ -93,23 +93,12 @@ describe("tsoCommandActions unit testing", () => {
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
 
-    beforeEach(() => {
-        mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-        getConfiguration.mockReturnValue({
-            get: (setting: string) => undefined,
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
+    mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
+    getConfiguration.mockReturnValue({
+        get: (setting: string) => undefined,
+        update: jest.fn(()=>{
+            return {};
+        })
     });
 
     afterEach(() => {
@@ -130,11 +119,8 @@ describe("tsoCommandActions unit testing", () => {
             })
         });
 
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
         showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
+        showInputBox.mockReturnValueOnce("/d iplinfo1");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
@@ -151,7 +137,40 @@ describe("tsoCommandActions unit testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo");
+        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
+        expect(appendLine.mock.calls[1][0]).toBe(submitResponse.commandResponse);
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+    });
+
+    it("tests the issueTsoCommand function user selects a history item", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem2)
+        );
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await tsoActions.issueTsoCommand();
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(0);
+        expect(appendLine.mock.calls.length).toBe(2);
+        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo0");
         expect(appendLine.mock.calls[1][0]).toBe(submitResponse.commandResponse);
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -167,11 +186,8 @@ describe("tsoCommandActions unit testing", () => {
             })
         });
 
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
         showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
+        showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
         issueSimple.mockRejectedValueOnce(Error("fake testError"));
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
@@ -203,11 +219,7 @@ describe("tsoCommandActions unit testing", () => {
             })
         });
 
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
         showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(undefined)
         );
@@ -215,6 +227,7 @@ describe("tsoCommandActions unit testing", () => {
         await tsoActions.issueTsoCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls.length).toBe(0);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
@@ -235,10 +248,6 @@ describe("tsoCommandActions unit testing", () => {
                 };
             })
         });
-
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce(undefined);
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
@@ -260,9 +269,53 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
     });
 
+    it("tests the issueTsoCommand function user starts typing a value in quick pick", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+            activeItems: [qpItem2],
+            ignoreFocusOut: true,
+            items: [qpItem, qpItem2],
+            value: "/d m=cpu",
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce(undefined);
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+
+        await tsoActions.issueTsoCommand();
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the command"
+        });
+        expect(showInputBox.mock.calls.length).toBe(0);
+    });
+
     it("tests the issueTsoCommand function no profiles error", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -276,9 +329,6 @@ describe("tsoCommandActions unit testing", () => {
     });
 
     it("tests the issueTsoCommand prompt credentials", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -296,7 +346,6 @@ describe("tsoCommandActions unit testing", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("/d iplinfo");
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        showQuickPick.mockReturnValueOnce("\uFF0B" + "Create a new Command");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
@@ -314,9 +363,6 @@ describe("tsoCommandActions unit testing", () => {
     });
 
     it("tests the issueTsoCommand prompt credentials for password only", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -331,9 +377,8 @@ describe("tsoCommandActions unit testing", () => {
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
+        showInputBox.mockReturnValueOnce("/d iplinfo5");
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        showQuickPick.mockReturnValueOnce("\uFF0B" + "Create a new Command");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
@@ -351,8 +396,6 @@ describe("tsoCommandActions unit testing", () => {
     });
 
     it("tests the issueTsoCommand error in prompt credentials", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
 
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {

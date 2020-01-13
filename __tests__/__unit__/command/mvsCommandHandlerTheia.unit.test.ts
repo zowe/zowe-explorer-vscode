@@ -21,7 +21,6 @@ describe("tsoCommandActions unit testing", () => {
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
-    // const issueSimple = jest.fn();
     const IssueCommand = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
@@ -73,24 +72,14 @@ describe("tsoCommandActions unit testing", () => {
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
 
-    beforeEach(() => {
-        mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-        getConfiguration.mockReturnValue({
-            get: (setting: string) => undefined,
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
+
+    getConfiguration.mockReturnValue({
+        get: (setting: string) => undefined,
+        update: jest.fn(()=>{
+            return {};
+        })
     });
+
 
     afterEach(() => {
         jest.clearAllMocks();
@@ -114,11 +103,10 @@ describe("tsoCommandActions unit testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/d iplinfo");
+        showInputBox.mockReturnValueOnce("/d iplinfo1");
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
-        // withProgress.mockReturnValueOnce({commandResponse: "fake response"});
 
         await tsoActions.issueTsoCommand();
 
@@ -131,18 +119,18 @@ describe("tsoCommandActions unit testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo");
+        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
         expect(appendLine.mock.calls[1][0]).toBe(submitResponse.commandResponse);
         expect(showInformationMessage.mock.calls.length).toBe(0);
 
         showQuickPick.mockReset();
         showInputBox.mockReset();
         withProgress.mockReset();
+        appendLine.mockReset();
 
         // Second run selects previously added run
         showQuickPick.mockReturnValueOnce("firstName");
-        showQuickPick.mockReturnValueOnce({label: "d iplinfo"});
-        // withProgress.mockReturnValueOnce({commandResponse: "fake response"});
+        showQuickPick.mockReturnValueOnce({label: "d iplinfo2"});
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
@@ -156,13 +144,13 @@ describe("tsoCommandActions unit testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the command"
         });
-        expect(showQuickPick.mock.calls[1][0][1]).toEqual(new utils.FilterItem("d iplinfo"));
+        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo2");
         expect(withProgress.mock.calls.length).toBe(1);
-        // expect(withProgress.mock.calls[0][1]).toEqual({label: "d iplinfo"});
 
         showQuickPick.mockReset();
         showInputBox.mockReset();
         withProgress.mockReset();
+        appendLine.mockReset();
 
         // Third run selects an alternative value
         showQuickPick.mockReturnValueOnce("firstName");
@@ -170,7 +158,6 @@ describe("tsoCommandActions unit testing", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
-        // withProgress.mockReturnValueOnce({commandResponse: "fake response"});
 
         await tsoActions.issueTsoCommand();
 
@@ -182,12 +169,12 @@ describe("tsoCommandActions unit testing", () => {
             placeHolder: "Select the Profile to use to submit the command"
         });
         expect(withProgress.mock.calls.length).toBe(1);
-        // expect(withProgress.mock.calls[0][1]).toEqual("d m=cpu");
 
         showQuickPick.mockReset();
         showInputBox.mockReset();
         withProgress.mockReset();
         showInformationMessage.mockReset();
+        appendLine.mockReset();
 
         showQuickPick.mockReturnValueOnce("firstName");
         showQuickPick.mockReturnValueOnce(undefined);
