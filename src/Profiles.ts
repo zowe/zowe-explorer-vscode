@@ -18,6 +18,7 @@ import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 import * as ProfileLoader from "./ProfileLoader";
+import { ECONNREFUSED, ECONNABORTED } from "constants";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 interface IUrlValidator {
     valid: boolean;
@@ -249,6 +250,14 @@ export class Profiles { // Processing stops if there are no profiles detected
             newProfile = await this.saveProfile(IConnection, IConnection.name, "zosmf");
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
+            if(error === ECONNREFUSED || error === ECONNABORTED) {
+            const reEnterCredentials = "Re-Enter Credentials";
+            vscode.window.showInformationMessage("Re-Enter", reEnterCredentials)
+            .then((selection) => {
+            if (selection === reEnterCredentials) {
+               this.rempromptProfile();
+            }});
+        }
         }
         await zowe.ZosmfSession.createBasicZosmfSession(newProfile);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");
@@ -305,7 +314,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
-    private async rempromptUsername() {
+    private async rempromptProfile() {
         let userName: string;
         let passWord: string;
         let options: vscode.InputBoxOptions;
@@ -315,12 +324,6 @@ export class Profiles { // Processing stops if there are no profiles detected
             value: userName
         };
         userName = await vscode.window.showInputBox(options);
-        return userName;
-    }
-
-    private async rempromptPassword() {
-        let passWord: string;
-        let options: vscode.InputBoxOptions;
         options = {
             placeHolder: localize("promptcredentials.option.prompt.password.placeholder", "Password"),
             prompt: localize("promptcredentials.option.prompt.password", "Enter a password for the connection"),
@@ -328,7 +331,6 @@ export class Profiles { // Processing stops if there are no profiles detected
             value: passWord
         };
         passWord = await vscode.window.showInputBox(options);
-        return passWord;
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
