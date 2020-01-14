@@ -1803,7 +1803,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
-        }, () => { // ZoweVscApiRegister.getUssApi(sesNode.profile).putContents
+        }, () => {
             return ZoweExplorerApiRegister.getUssApi(sesNode.profile).putContents(
                 doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
         });
