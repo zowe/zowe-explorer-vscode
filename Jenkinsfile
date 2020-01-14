@@ -145,16 +145,16 @@ pipeline {
           def extensionMetadata = sh(returnStdout: true, script: "npx vsce show ${vscodePackageJson.publisher}.${vscodePackageJson.name} --json").trim()
           def extensionInfo = readJSON text: extensionMetadata
 
-          if (extensionInfo.versions[0].version == vscodePackageJson.version) {
-            PIPELINE_CONTROL.create_release = false
-            echo "No new version to publish at this time (${vscodePackageJson.version})"
-          } else {
+          // if (extensionInfo.versions[0].version == vscodePackageJson.version) {
+          //   PIPELINE_CONTROL.create_release = false
+          //   echo "No new version to publish at this time (${vscodePackageJson.version})"
+          // } else {
             PIPELINE_CONTROL.create_release = true
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             //withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
             //  sh "npx vsce publish -p $TOKEN"
             //}
-          }
+          // }
         } }
       }
     }
