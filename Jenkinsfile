@@ -17,7 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 /**
  * Name of the master branch
  */
-def MASTER_BRANCH = "master"
+def MASTER_BRANCH = "descriptive-github-releases"
 
 /**
  * TOKEN ID where secret is stored
@@ -151,9 +151,9 @@ pipeline {
           } else {
             PIPELINE_CONTROL.create_release = true
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
-            withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-              sh "npx vsce publish -p $TOKEN"
-            }
+            //withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
+            //  sh "npx vsce publish -p $TOKEN"
+            //}
           }
         } }
       }
@@ -177,10 +177,16 @@ pipeline {
           sh "npx vsce package -o ${version}.vsix"
 
           withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
-            sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+            //sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+
+            //Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
+            sh "npm install ssp-dos2unix"
+            sh "npm run d2u"
+            releaseChanges = sh(returnStdout: true, script: "awk -v ver=${version} ' /## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md)")
+            releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | sed -z 's/\n/\\n/g')")
 
             def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
-            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"draft\":true,\"prerelease\":false}"
+            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":true,\"prerelease\":false}"
             def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 
             def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()

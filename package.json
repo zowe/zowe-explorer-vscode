@@ -1119,7 +1119,8 @@
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
     "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
     "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\"",
-    "clean": "gulp clean"
+    "clean": "gulp clean",
+    "d2u": "node ./scripts/d2uChangelog.js"
   },
   "engines": {
     "vscode": "^1.34.0"
@@ -1167,6 +1168,7 @@
   "dependencies": {
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
+    "ssp-dos2unix": "^1.0.1",
     "vscode-nls": "^4.1.1"
   },
   "jest": {
