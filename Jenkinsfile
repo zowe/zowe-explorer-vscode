@@ -115,17 +115,6 @@ pipeline {
         } }
       }
     }
-    stage('Test') {
-      when { allOf {
-        expression { return !PIPELINE_CONTROL.ci_skip }
-        expression { return !params.SKIP_TEST }
-      } }
-      steps {
-        timeout(time: 10, unit: 'MINUTES') { script {
-          sh "npm run test"
-        } }
-      }
-    }
     stage('Smoke Test') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -143,6 +132,17 @@ pipeline {
             def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${version}.vsix"
             sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
           } }
+        } }
+      }
+    }
+    stage('Test') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm run test"
         } }
       }
     }
