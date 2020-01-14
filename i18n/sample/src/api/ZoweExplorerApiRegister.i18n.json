@@ -1,0 +1,6 @@
+{
+    "registerUssApi.error": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
+    "registerMvsApi.error": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
+    "getUssApi.error": "Internal error: Tried to call a non-existing API in API register: ",
+    "getMvsApi.error": "Internal error: Tried to call a non-existing API in API register: "
+}
