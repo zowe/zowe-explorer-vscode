@@ -377,7 +377,7 @@ Array [
     "when": "view == zowe.explorer && viewItem == session",
   },
   Object {
-    "command": "zowe.issueCmd",
+    "command": "zowe.issueMvsCmd",
     "group": "3_systemSpecific",
     "when": "view == zowe.explorer && viewItem == session",
   },
@@ -405,7 +405,7 @@ Array [
     "when": "view == zowe.uss.explorer && viewItem == uss_session",
   },
   Object {
-    "command": "zowe.issueCmd",
+    "command": "zowe.issueMvsCmd",
     "group": "3_systemSpecific",
     "when": "view == zowe.uss.explorer && viewItem == uss_session",
   },
@@ -472,7 +472,7 @@ Array [
     "when": "view == zowe.jobs && viewItem == server",
   },
   Object {
-    "command": "zowe.issueCmd",
+    "command": "zowe.issueMvsCmd",
     "group": "3_systemSpecific",
     "when": "view == zowe.jobs && viewItem == server",
   },

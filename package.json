@@ -18,8 +18,7 @@
     "z/OS",
     "USS",
     "JES",
-    "MVS",
-    "TSO"
+    "MVS"
   ],
   "categories": [
     "Other"
@@ -370,10 +369,10 @@
       },
       {
         "command": "zowe.issueTsoCmd",
-        "title": "%issueTsoCmd%"
+        "title": "%issueMvsCmd%"
       },
       {
-        "command": "zowe.issueCmd",
+        "command": "zowe.issueMvsCmd",
         "title": "%issueCmd%"
       },
       {
@@ -795,7 +794,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == session",
-          "command": "zowe.issueCmd",
+          "command": "zowe.issueMvsCmd",
           "group": "3_systemSpecific"
         },
         {
@@ -823,7 +822,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
-          "command": "zowe.issueCmd",
+          "command": "zowe.issueMvsCmd",
           "group": "3_systemSpecific"
         },
         {
@@ -890,7 +889,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem == server",
-          "command": "zowe.issueCmd",
+          "command": "zowe.issueMvsCmd",
           "group": "3_systemSpecific"
         },
         {
@@ -1001,7 +1000,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.issueCmd",
+          "command": "zowe.issueMvsCmd",
           "when": "never"
         }
       ]

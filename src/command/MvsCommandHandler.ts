@@ -50,7 +50,7 @@ export class MvsCommandHandler {
 
 
     constructor() {
-        this.outputChannel = vscode.window.createOutputChannel(localize("issueTsoCommand.outputchannel.title", "Zowe MVS Command"));
+        this.outputChannel = vscode.window.createOutputChannel(localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command"));
         this.history = new PersistentFilters(MvsCommandHandler.persistenceSchema, MvsCommandHandler.totalFilters);
     }
 
@@ -60,7 +60,7 @@ export class MvsCommandHandler {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueTsoCommand(session?: Session, command?: string) {
+    public async issueMvsCommand(session?: Session, command?: string) {
         if (!session) {
             let usrNme: string;
             let passWrd: string;
@@ -72,7 +72,7 @@ export class MvsCommandHandler {
             });
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize("issueTsoCommand.quickPickOption", "Select the Profile to use to submit the command"),
+                    placeHolder: localize("issueMvsCommand.quickPickOption", "Select the Profile to use to submit the command"),
                     ignoreFocusOut: true,
                     canPickMany: false
                 };
@@ -98,7 +98,7 @@ export class MvsCommandHandler {
                 }
                 session = zowe.ZosmfSession.createBasicZosmfSession(updProfile as IProfile);
             } else {
-                vscode.window.showInformationMessage(localize("issueTsoCommand.noProfilesLoaded", "No profiles available"));
+                vscode.window.showInformationMessage(localize("issueMvsCommand.noProfilesLoaded", "No profiles available"));
                 return;
             }
         }
@@ -117,29 +117,29 @@ export class MvsCommandHandler {
             const items: vscode.QuickPickItem[] = this.history.getHistory().map((element) => new FilterItem(element));
             if (extension.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("issueTsoCommand.command.hostname", "Select a command to run against ") + hostname +
-                                            (alwaysEdit ? localize("issueTsoCommand.command.edit", " (An option to edit will follow)"): "")
+                    placeHolder: localize("issueMvsCommand.command.hostname", "Select a command to run against ") + hostname +
+                                            (alwaysEdit ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)"): "")
                 };
                 // get user selection
                 const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
                 if (!choice) {
-                    vscode.window.showInformationMessage(localize("issueTsoCommand.options.noselection", "No selection made."));
+                    vscode.window.showInformationMessage(localize("issueMvsCommand.options.noselection", "No selection made."));
                     return;
                 }
                 response = choice === createPick ? "" : choice.label;
             } else {
                 const quickpick = vscode.window.createQuickPick();
-                quickpick.placeholder = localize("issueTsoCommand.command.hostname", "Select a command to run against ") + hostname +
-                                                (alwaysEdit ? localize("issueTsoCommand.command.edit", " (An option to edit will follow)") :
-                                                        localize("issueTsoCommand.command.immediately", " immediately"));
-                // quickpick.placeholder = localize("issueTsoCommand.options.prompt", "Select and edit a previous command");
+                quickpick.placeholder = localize("issueMvsCommand.command.hostname", "Select a command to run against ") + hostname +
+                                                (alwaysEdit ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)") :
+                                                        localize("issueMvsCommand.command.immediately", " immediately"));
+                // quickpick.placeholder = localize("issueMvsCommand.options.prompt", "Select and edit a previous command");
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
                 quickpick.show();
                 const choice = await resolveQuickPickHelper(quickpick);
                 quickpick.hide();
                 if (!choice) {
-                    vscode.window.showInformationMessage(localize("issueTsoCommand.options.noselection", "No selection made."));
+                    vscode.window.showInformationMessage(localize("issueMvsCommand.options.noselection", "No selection made."));
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {
@@ -154,14 +154,14 @@ export class MvsCommandHandler {
         if (!response || alwaysEdit) {
             // manually entering a search
             const options2: vscode.InputBoxOptions = {
-                prompt: localize("issueTsoCommand.command", "Enter or update the command"),
+                prompt: localize("issueMvsCommand.command", "Enter or update the command"),
                 value: response,
                 valueSelection: response ? [response.length, response.length] : undefined
             };
             // get user input
             response = await vscode.window.showInputBox(options2);
             if (!response) {
-                vscode.window.showInformationMessage(localize("issueTsoCommand.enter.command", "No command entered."));
+                vscode.window.showInformationMessage(localize("issueMvsCommand.enter.command", "No command entered."));
                 return;
             }
         }
@@ -184,7 +184,7 @@ export class MvsCommandHandler {
                 this.outputChannel.appendLine(`> ${command}`);
                 const submitResponse = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
-                    title: localize("issueTsoCommand.command.submitted", "MVS command submitted.")
+                    title: localize("issueMvsCommand.command.submitted", "MVS command submitted.")
                 }, () => {
                     return zowe.IssueCommand.issueSimple(session, command);
                 });

@@ -16,7 +16,7 @@ import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as extension from "../../../src/extension";
 import * as utils from "../../../src/utils";
 
-describe("tsoCommandActions unit testing", () => {
+describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
@@ -86,9 +86,9 @@ describe("tsoCommandActions unit testing", () => {
     });
 
 
-    const tsoActions = MvsCommandHandler.getInstance();
+    const mvsActions = MvsCommandHandler.getInstance();
 
-    it("tests the issueTsoCommand function - theia route", async () => {
+    it("tests the issueMvsCommand function - theia route", async () => {
         const originalTheia = extension.ISTHEIA;
         Object.defineProperty(extension, "ISTHEIA", { get: () => true });
         // First run enters a command directly
@@ -108,7 +108,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -135,7 +135,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(2);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -159,7 +159,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(2);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -182,7 +182,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");

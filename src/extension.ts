@@ -287,9 +287,9 @@ export async function activate(context: vscode.ExtensionContext) {
             jobsProvider.setJob(jobView, job);
         });
         vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
-        vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueTsoCommand());
-        vscode.commands.registerCommand("zowe.issueCmd", async (node, command) =>
-                                            MvsCommandHandler.getInstance().issueTsoCommand(node.session, command));
+        vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueMvsCommand());
+        vscode.commands.registerCommand("zowe.issueMvsCmd", async (node, command) =>
+                                            MvsCommandHandler.getInstance().issueMvsCommand(node.session, command));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             jobsProvider.onDidChangeConfiguration(e);
         });

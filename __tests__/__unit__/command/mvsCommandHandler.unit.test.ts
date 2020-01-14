@@ -15,7 +15,7 @@ import * as profileLoader from "../../../src/Profiles";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as utils from "../../../src/utils";
 
-describe("tsoCommandActions unit testing", () => {
+describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
@@ -106,9 +106,9 @@ describe("tsoCommandActions unit testing", () => {
     });
 
 
-    const tsoActions = MvsCommandHandler.getInstance();
+    const mvsActions = MvsCommandHandler.getInstance();
 
-    it("tests the issueTsoCommand function", async () => {
+    it("tests the issueMvsCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -126,7 +126,7 @@ describe("tsoCommandActions unit testing", () => {
         );
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -142,7 +142,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueTsoCommand function user selects a history item", async () => {
+    it("tests the issueMvsCommand function user selects a history item", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -159,7 +159,7 @@ describe("tsoCommandActions unit testing", () => {
         );
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -175,7 +175,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueTsoCommand function - issueSimple throws an error", async () => {
+    it("tests the issueMvsCommand function - issueSimple throws an error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -194,7 +194,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -208,7 +208,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
-    it("tests the issueTsoCommand function user escapes the quick pick box", async () => {
+    it("tests the issueMvsCommand function user escapes the quick pick box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -224,7 +224,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(undefined)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls.length).toBe(0);
@@ -238,7 +238,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
     });
 
-    it("tests the issueTsoCommand function user escapes the command box", async () => {
+    it("tests the issueMvsCommand function user escapes the command box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -255,7 +255,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -269,7 +269,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
     });
 
-    it("tests the issueTsoCommand function user starts typing a value in quick pick", async () => {
+    it("tests the issueMvsCommand function user starts typing a value in quick pick", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -303,7 +303,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -315,7 +315,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueTsoCommand function no profiles error", async () => {
+    it("tests the issueMvsCommand function no profiles error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -324,11 +324,11 @@ describe("tsoCommandActions unit testing", () => {
                 };
             })
         });
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 
-    it("tests the issueTsoCommand prompt credentials", async () => {
+    it("tests the issueMvsCommand prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -350,7 +350,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -362,7 +362,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueTsoCommand prompt credentials for password only", async () => {
+    it("tests the issueMvsCommand prompt credentials for password only", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -383,7 +383,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -395,7 +395,7 @@ describe("tsoCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueTsoCommand error in prompt credentials", async () => {
+    it("tests the issueMvsCommand error in prompt credentials", async () => {
 
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -414,7 +414,7 @@ describe("tsoCommandActions unit testing", () => {
             () => Promise.resolve(qpItem)
         );
 
-        await tsoActions.issueTsoCommand();
+        await mvsActions.issueMvsCommand();
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });

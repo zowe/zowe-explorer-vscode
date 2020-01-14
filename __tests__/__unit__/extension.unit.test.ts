@@ -593,7 +593,7 @@ describe("Extension Unit Tests", () => {
             "zowe.setJobSpool",
             "zowe.jobs.search",
             "zowe.issueTsoCmd",
-            "zowe.issueCmd",
+            "zowe.issueMvsCmd",
             "zowe.jobs.addFavorite",
             "zowe.jobs.removeFavorite",
             "zowe.jobs.saveSearch",
