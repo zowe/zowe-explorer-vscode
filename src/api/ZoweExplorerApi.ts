@@ -43,7 +43,7 @@ export namespace ZoweExplorerApi {
     }
 
     /**
-     * API for providing a USS Rest handler to the extension.
+     * API for providing a USS API handler to the extension.
      * @export
      */
     export interface IUss extends ICommon {
@@ -138,7 +138,7 @@ export namespace ZoweExplorerApi {
     }
 
     /**
-     * API for providing am MVS Rest handler to the extension.
+     * API for providing am MVS API handler to the extension.
      * @export
      */
     export interface IMvs extends ICommon {
@@ -316,7 +316,7 @@ export namespace ZoweExplorerApi {
     /**
      * This interface can be used by other VS Code Extensions to register themselves
      * with additional API implementations. The other extension would implement one or
-     * more interfaces above, for example MyZoweExplorerAppUssRestApi, and register it with
+     * more interfaces above, for example MyZoweExplorerAppUssApi, and register it with
      * the object returned by this extensions activate() method as shown below.
      *
      * Sample code:
@@ -327,7 +327,7 @@ export namespace ZoweExplorerApi {
      *   // Cast the returned object to the IApiRegisterClient interface\
      *   const importedApi: ZoweExplorerApi.IApiRegisterClient = explorerApi.exports;\
      *   // create an instance of my API and register it with Zowe Explorer\
-     *   importedApi.registerUssApi(new MyZoweExplorerAppUssRestApi());\
+     *   importedApi.registerUssApi(new MyZoweExplorerAppUssApi());\
      *   window.showInformationMessage(\
      *     'Zowe Explorer was augmented for MyApp support. Please, refresh your explorer views.');\
      *   } else {\

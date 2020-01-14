@@ -53,7 +53,7 @@ parsedZoweNode.keys.forEach((key, i) => keysPairsZoweNode[key] = parsedZoweNode.
 parsedZoweUSSNode.keys.forEach((key, i) => keysPairsZoweUSSNode[key] = parsedZoweUSSNode.messages[i]);
 
  // Write to i18n sample folder to create template for new languages
-fs.writeFileSync('./i18n/sample/src/api/ZoweExplorerApiRegister.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
+fs.writeFileSync('./i18n/sample/src/api/ZoweExplorerApiRegister.i18n.json', JSON.stringify(keysPairsZoweVscApiRegister, null, 4));
 fs.writeFileSync('./i18n/sample/src/uss/ussNodeActions.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
 fs.writeFileSync('./i18n/sample/src/DatasetTree.i18n.json', JSON.stringify(keysPairsDatasetTree, null, 4));
 fs.writeFileSync('./i18n/sample/src/extension.i18n.json', JSON.stringify(keysPairsExtension, null, 4));

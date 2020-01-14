@@ -29,7 +29,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     public getProfileTypeName(): string {
-        return ZosmfUssRestApi.getProfileTypeName();
+        return ZosmfUssApi.getProfileTypeName();
     }
 
     public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
@@ -43,7 +43,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 /**
  * An implementation of the Zowe Explorer USS API interface for zOSMF.
  */
-export class ZosmfUssRestApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
+export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
 
     public async fileList(path: string): Promise<zowe.IZosFilesResponse> {
         return zowe.List.fileList(this.getSession(), path);
@@ -86,7 +86,7 @@ export class ZosmfUssRestApi extends ZosmfApiCommon implements ZoweExplorerApi.I
 /**
  * An implementation of the Zowe Explorer MVS API interface for zOSMF.
  */
-export class ZosmfMvsRestApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs {
+export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs {
 
     public async dataSet(filter: string, options?: zowe.IListOptions
         ): Promise<zowe.IZosFilesResponse>{
@@ -149,7 +149,7 @@ export class ZosmfMvsRestApi extends ZosmfApiCommon implements ZoweExplorerApi.I
 /**
  * An implementation of the Zowe Explorer JES API interface for zOSMF.
  */
-export class ZosmfJesRestApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
+export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
 
     public getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
         return zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix);

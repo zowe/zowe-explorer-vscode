@@ -620,6 +620,10 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
             const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
             return mvsProfileTypes.includes(profile.type);
         }
+        if (zoweFileProvider instanceof ZosJobsProvider) {
+            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+            return jesProfileTypes.includes(profile.type);
+        }
     });
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>

@@ -12,7 +12,7 @@
 import * as imperative from "@brightside/imperative";
 
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { ZosmfUssRestApi, ZosmfMvsRestApi } from "./ZoweExplorerZosmfRestApi";
+import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -80,8 +80,9 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
      */
     private constructor() {
-        this.registerUssApi(new ZosmfUssRestApi());
-        this.registerMvsApi(new ZosmfMvsRestApi());
+        this.registerUssApi(new ZosmfUssApi());
+        this.registerMvsApi(new ZosmfMvsApi());
+        this.registerJesApi(new ZosmfJesApi());
     }
 
     /**
@@ -107,6 +108,19 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         } else {
             throw new Error(
                 localize("registerMvsApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API."));
+        }
+    }
+
+    /**
+     * Other VS Code extension need to call this to register their MVS API implementation.
+     * @param {ZoweExplorerApi.IMvs} api
+     */
+    public registerJesApi(jesApi: ZoweExplorerApi.IJes): void {
+        if (jesApi && jesApi.getProfileTypeName()) {
+            this.jesApiImplementations.set(jesApi.getProfileTypeName(), jesApi);
+        } else {
+            throw new Error(
+                localize("registerJesApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid JES API."));
         }
     }
 
@@ -160,7 +174,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         }
         else {
             throw new Error(
-                localize("getUssApi.error", "Internal error: Tried to call a non-existing API in API register: ") + profile.type);
+                localize("getUssApi.error", "Internal error: Tried to call a non-existing USS API in API register: ") + profile.type);
         }
     }
 
@@ -178,7 +192,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         }
         else {
             throw new Error(
-                localize("getMvsApi.error", "Internal error: Tried to call a non-existing API in API register: ") + profile.type);
+                localize("getMvsApi.error", "Internal error: Tried to call a non-existing MVS API in API register: ") + profile.type);
         }
     }
 
@@ -196,7 +210,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         }
         else {
             throw new Error(
-                localize("getMvsApi.error", "Internal error: Tried to call a non-existing API in API register: ") + profile.type);
+                localize("getJesApi.error", "Internal error: Tried to call a non-existing JES API in API register: ") + profile.type);
         }
     }
 }
