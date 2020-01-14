@@ -182,8 +182,8 @@ pipeline {
             //Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
             sh "npm install ssp-dos2unix"
             sh "npm run d2u"
-            releaseChanges = sh(returnStdout: true, script: "awk -v ver=${version} ' /## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md)")
-            releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | sed -z 's/\n/\\n/g')")
+            releaseChanges = sh(returnStdout: true, script: "awk -v ver=${version} ' /## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md")
+            releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | sed -z 's/\n/\\n/g'")
 
             def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
             def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":true,\"prerelease\":false}"
