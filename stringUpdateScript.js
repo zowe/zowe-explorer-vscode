@@ -15,6 +15,8 @@ fs = require('fs');
 // Read localization metadata files
 // Consider adding support for creating directories in the filepath if they don't exist yet
 
+var parsedZoweVscApiRegister = JSON.parse(fs.readFileSync('./out/src/api/ZoweExplorerApiRegister.nls.metadata.json').toString());
+var keysPairsZoweVscApiRegister = {};
 var parsedUssNodeActions = JSON.parse(fs.readFileSync('./out/src/uss/ussNodeActions.nls.metadata.json').toString());
 var keysPairsUssNodeActions = {};
 var parsedDatasetTree = JSON.parse(fs.readFileSync('./out/src/DatasetTree.nls.metadata.json').toString());
@@ -38,6 +40,7 @@ var keysPairsZoweUSSNode = {};
 var keysPairsPackage = JSON.parse(fs.readFileSync('./package.nls.json').toString());
 
 // Extract localization key/value pairs from metadata files
+parsedZoweVscApiRegister.keys.forEach((key, i) => keysPairsZoweVscApiRegister[key] = parsedZoweVscApiRegister.messages[i]);
 parsedUssNodeActions.keys.forEach((key, i) => keysPairsUssNodeActions[key] = parsedUssNodeActions.messages[i]);
 parsedDatasetTree.keys.forEach((key, i) => keysPairsDatasetTree[key] = parsedDatasetTree.messages[i]);
 parsedExtension.keys.forEach((key, i) => keysPairsExtension[key] = parsedExtension.messages[i]);
@@ -50,6 +53,7 @@ parsedZoweNode.keys.forEach((key, i) => keysPairsZoweNode[key] = parsedZoweNode.
 parsedZoweUSSNode.keys.forEach((key, i) => keysPairsZoweUSSNode[key] = parsedZoweUSSNode.messages[i]);
 
  // Write to i18n sample folder to create template for new languages
+fs.writeFileSync('./i18n/sample/src/api/ZoweExplorerApiRegister.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
 fs.writeFileSync('./i18n/sample/src/uss/ussNodeActions.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
 fs.writeFileSync('./i18n/sample/src/DatasetTree.i18n.json', JSON.stringify(keysPairsDatasetTree, null, 4));
 fs.writeFileSync('./i18n/sample/src/extension.i18n.json', JSON.stringify(keysPairsExtension, null, 4));
