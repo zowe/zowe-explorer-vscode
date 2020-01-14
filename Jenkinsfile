@@ -9,9 +9,6 @@
 *
 */
 
-@Library('shared-pipelines') import org.zowe.pipelines.nodejs.NodeJSPipeline
-def lib = library("jenkins-library").org.zowe.jenkins_shared_library
-
 /**
  * List of people who will get all emails for master builds
  */
