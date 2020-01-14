@@ -145,3 +145,41 @@ export class ZosmfMvsRestApi extends ZosmfApiCommon implements ZoweExplorerApi.I
             return zowe.Delete.dataSet(this.getSession(), dataSetName);
     }
 }
+
+/**
+ * An implementation of the Zowe Explorer JES API interface for zOSMF.
+ */
+export class ZosmfJesRestApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
+
+    public getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
+        return zowe.GetJobs.getJobsByOwnerAndPrefix(this.getSession(), owner, prefix);
+    }
+
+    public getJob(jobid: string): Promise<zowe.IJob> {
+        return zowe.GetJobs.getJob(this.getSession(), jobid);
+    }
+
+    public getSpoolFiles(jobname: string, jobid: string): Promise<zowe.IJobFile[]> {
+        return zowe.GetJobs.getSpoolFiles(this.getSession(), jobname, jobid);
+    }
+
+    public downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void> {
+        return zowe.DownloadJobs.downloadAllSpoolContentCommon(this.getSession(), parms);
+    }
+
+    public getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
+        return zowe.GetJobs.getSpoolContentById(this.getSession(), jobname, jobid, spoolId);
+    }
+
+    public getJclForJob(job: zowe.IJob): Promise<string> {
+        return zowe.GetJobs.getJclForJob(this.getSession(), job);
+    }
+
+    public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
+        return zowe.SubmitJobs.submitJcl(this.getSession(), internalReaderRecfm, internalReaderLrecl);
+    }
+
+    public submitJob(jobDataSet: string): Promise<zowe.IJob> {
+        return zowe.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+    }
+}

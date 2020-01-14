@@ -273,6 +273,46 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
     }
 
+    export interface IJes extends ICommon {
+        getJobsByOwnerAndPrefix(
+            owner: string,
+            prefix: string
+        ): Promise<zowe.IJob[]>;
+
+        getJob(
+            jobid: string
+        ): Promise<zowe.IJob>;
+
+        getSpoolFiles(
+            jobname: string,
+            jobid: string
+        ): Promise<zowe.IJobFile[]>;
+
+        downloadSpoolContent(
+            parms: zowe.IDownloadAllSpoolContentParms
+        ): Promise<void>;
+
+        getSpoolContentById(
+            jobname: string,
+            jobid: string,
+            spoolId: number
+        ): Promise<string>;
+
+        getJclForJob(
+            job: zowe.IJob
+        ): Promise<string>;
+
+        submitJcl(
+            jcl: string,
+            internalReaderRecfm?: string,
+            internalReaderLrecl?: string
+        ): Promise<zowe.IJob>;
+
+        submitJob(
+            jobDataSet: string
+        ): Promise<zowe.IJob>;
+    }
+
     /**
      * This interface can be used by other VS Code Extensions to register themselves
      * with additional API implementations. The other extension would implement one or

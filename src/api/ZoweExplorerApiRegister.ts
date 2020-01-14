@@ -54,6 +54,16 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
+     * Static lookup of an API for JES for a given profile.
+     * @private
+     * @param {imperative.IProfileLoaded} a profile to be used with this instance of the API returned
+     * @returns an instance of the API that uses the profile provided
+     */
+    public static getJesApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IJes {
+        return ZoweExplorerApiRegister.getInstance().getJesApi(profile);
+    }
+
+    /**
      * This object represents a collection of the APIs that get exposed to other VS Code
      * extensions that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
@@ -63,6 +73,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     // These are the different API registries currently available to extenders
     private ussApiImplementations = new Map<string, ZoweExplorerApi.IUss>();
     private mvsApiImplementations = new Map<string, ZoweExplorerApi.IMvs>();
+    private jesApiImplementations = new Map<string, ZoweExplorerApi.IJes>();
 
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
@@ -105,7 +116,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns {string[]}
      */
     public registeredApiTypes(): string[] {
-        return [...new Set([...this.registeredUssApiTypes(), ...this.registeredMvsApiTypes()])];
+        return [...new Set([...this.registeredUssApiTypes(), ...this.registeredMvsApiTypes(), ...this.registeredJesApiTypes()])];
     }
 
     /**
@@ -124,6 +135,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     public registeredMvsApiTypes(): string[] {
         return [...this.mvsApiImplementations.keys()];
+    }
+
+    /**
+     * Get an array of all the registered JES APIs identified by the CLI profile types,
+     * such as ["zosmf", "zftp"].
+     * @returns {string[]}
+     */
+    public registeredJesApiTypes(): string[] {
+        return [...this.jesApiImplementations.keys()];
     }
 
     /**
@@ -153,6 +173,24 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         if (profile && profile.type && this.registeredMvsApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.mvsApiImplementations.get(profile.type));
+            api.profile = profile;
+            return api;
+        }
+        else {
+            throw new Error(
+                localize("getMvsApi.error", "Internal error: Tried to call a non-existing API in API register: ") + profile.type);
+        }
+    }
+
+    /**
+     * Lookup of an API implementation for JES for a given profile.
+     * @param {imperative.IProfileLoaded} profile
+     * @returns an instance of the API for the profile provided
+     */
+    public getJesApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IJes {
+        if (profile && profile.type && this.registeredJesApiTypes().includes(profile.type)) {
+            // create a clone of the API object that remembers the profile with which it was created
+            const api = Object.create(this.jesApiImplementations.get(profile.type));
             api.profile = profile;
             return api;
         }
