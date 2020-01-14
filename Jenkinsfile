@@ -180,11 +180,11 @@ pipeline {
             //sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
 
             //Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
-            def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-")
+            def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
             sh "npm install ssp-dos2unix"
             sh "npm run d2u"
-            releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} ' /## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md")
-            releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | sed -z 's/\\n/\\\\n/g'")
+            releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md").trim()
+            releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | sed -z 's/\\n/\\\\n/g'").trim()
 
             def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
             def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":true,\"prerelease\":false}"
