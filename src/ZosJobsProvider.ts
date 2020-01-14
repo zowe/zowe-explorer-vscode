@@ -24,7 +24,8 @@ import {
     FilterDescriptor,
     getAppName,
     resolveQuickPickHelper,
-    sortTreeItems
+    sortTreeItems,
+    labelHack
 } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import * as extension from "../src/extension";
@@ -497,12 +498,12 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                 }
                 this.applySearchLabelToNode(node, searchCriteria);
             }
-            this.addHistory(searchCriteria);
-
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.iconPath = applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
+            labelHack(node);
             node.dirty = true;
             this.refreshElement(node);
+            this.addHistory(searchCriteria);
         }
     }
 
