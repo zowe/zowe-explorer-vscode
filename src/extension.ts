@@ -11,6 +11,7 @@
 
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
+import * as os from "os";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -116,10 +117,10 @@ export async function activate(context: vscode.ExtensionContext) {
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
-        if (service) {
-            const keytar = getSecurityModules("keytar");
-            if (keytar) {
+        const keytar = getSecurityModules("keytar");
+        if (keytar) {
+            const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
+            if (service) {
                 try {
                     CredentialManagerFactory.initialize(
                         {
@@ -133,7 +134,6 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         await Profiles.createInstance(log);
-
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
         // Initialize uss provider
@@ -400,17 +400,35 @@ export function defineGlobals(tempPath: string | undefined) {
 }
 
 /**
+ * function to check if imperative.json contains
+ * information about security or not and then
  * Imports the neccesary security modules
  */
 export function getSecurityModules(moduleName): NodeRequire | undefined {
+    let imperativeIsSsecure: boolean = false;
     try {
-        return require(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
+        const homedir = os.homedir();
+        const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
+        const settings = JSON.parse(fs.readFileSync(fileName).toString());
+        const value1 = settings.overrides.CredentialManager;
+        const value2 = settings.overrides["credential-manager"];
+        imperativeIsSsecure = ((typeof value1 === "string") && (value1.length > 0)) ||
+                            ((typeof value2 === "string") && (value2.length > 0));
+    } catch (error) {
+        log.warn(localize("profile.init.read.imperative","Unable to read imperative file. ")+ error.message);
+        vscode.window.showInformationMessage(error.message);
+        return undefined;
+    }
+    if (imperativeIsSsecure) {
+        try {
+            return require(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
+            // tslint:disable-next-line: no-empty
+        } catch (err) {}
+        try {
+            return require(`${vscode.env.appRoot}/node_modules/${moduleName}`);
         // tslint:disable-next-line: no-empty
-      } catch (err) {}
-    try {
-        return require(`${vscode.env.appRoot}/node_modules/${moduleName}`);
-      // tslint:disable-next-line: no-empty
-      } catch (err) {}
+        } catch (err) {}
+    }
     return undefined;
 }
 

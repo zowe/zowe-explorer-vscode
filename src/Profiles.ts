@@ -17,6 +17,7 @@ import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
 interface IUrlValidator {
     valid: boolean;
     host: string;
@@ -32,7 +33,8 @@ let IConnection: {
     rejectUnauthorized: boolean;
 };
 
-export class Profiles { // Processing stops if there are no profiles detected
+export class Profiles {
+    // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger, type: string = "zosmf") {
         const profile = new Profiles(log, type);
         profile.type = type;
@@ -46,10 +48,13 @@ export class Profiles { // Processing stops if there are no profiles detected
     }
 
     private static loader: Map<string, Profiles> = new Map();
+
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
     private profileManager;
-    private constructor(public log: Logger, private type: string) {}
+
+    private constructor(private log: Logger, private type: string) {
+    }
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {

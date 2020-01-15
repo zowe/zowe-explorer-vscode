@@ -11,6 +11,7 @@
     "issueTsoCommand.quickPickOption": "Select the Profile to use to submit the command",
     "issueTsoCommand.noProfilesLoaded": "No profiles available",
     "issueTsoCommand.command": "Command",
+    "profile.init.read.imperative": "Unable to read imperative file. ",
     "downloadSpool.select": "Select",
     "submitJcl.log.debug": "Submitting JCL in document ",
     "submitJcl.quickPickOption": "Select the Profile to use to submit the job",

@@ -294,7 +294,8 @@ describe("Extension Unit Tests", () => {
         value: jest.fn(() => {
             return {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"}
+                defaultProfile: {name: "firstName"},
+                usesSecurity: jest.fn().mockReturnValue(true)
             };
         })
     });
@@ -387,7 +388,9 @@ describe("Extension Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true
+
                 };
             })
         });
