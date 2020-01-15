@@ -61,7 +61,7 @@
     "Zowe-Default-Datasets-PS": "Default values of Sequential data set creation",
     "Zowe-Default-Datasets-Favorites": "Toggle if favorite files persist locally",
     "Zowe-Temp-Folder-Loacation": "Path to temporary folder location",
-    "Zowe-Builtin-Security": "Built-in Security. Specify a service of either @zowe/cli or @brightside/core to describe keytar based solution. Default blank is no security",
+    "Zowe-Builtin-Security": "Built-in Security. Specify a service of either @zowe/cli or @brightside/core to describe a keytar based solution. (Default) blank represents no security, user names and passwords are stored in the clear.",
     "Zowe-Default-USS-Persistent-Favorites": "Toggle if USS favorite files persist locally",
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",

@@ -119,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const keytar = getSecurityModules("keytar");
         if (keytar) {
-            const service: string = vscode.workspace.getConfiguration().get("Zowe-Builtin-Security")["service"];
+            const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
             if (service) {
                 try {
                     CredentialManagerFactory.initialize(

@@ -1073,13 +1073,12 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
-        "Zowe-Builtin-Security": {
-          "default": {
-            "service": ""
-          },
-          "description": "%Zowe-Builtin-Security",
+        "Zowe Security: Credential Key": {
+          "type": "string",
+          "default": "",
+          "description": "%Zowe-Builtin-Security%",
           "scope": "window"
-        },
+        }, 
         "Zowe-USS-Persistent": {
           "default": {
             "persistence": true,
