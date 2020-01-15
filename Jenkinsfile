@@ -184,20 +184,17 @@ pipeline {
             sh "npm install ssp-dos2unix"
             sh "npm run d2u"
             def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
-            //releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
 
             def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
-            echo "${releaseChanges}"
             def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":true,\"prerelease\":false}"
-            echo "${releaseDetails}"
             def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 
-            //def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
-            //def releaseParsed = readJSON text: releaseCreated
+            def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
+            def releaseParsed = readJSON text: releaseCreated
 
-            //def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
+            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
 
-            //sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+            sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
           } }
         } }
       }
