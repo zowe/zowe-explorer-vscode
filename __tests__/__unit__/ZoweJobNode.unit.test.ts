@@ -15,13 +15,12 @@ jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as brightside from "@brightside/core";
-import { Session, Logger } from "@brightside/imperative";
+import { Session, Logger, IProfileLoaded } from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import { Job } from "../../src/ZoweJobNode";
 import { ZosJobsProvider, createJobsTree } from "../../src/ZosJobsProvider";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 
 describe("Zos Jobs Unit Tests", () => {
 
@@ -88,19 +87,20 @@ describe("Zos Jobs Unit Tests", () => {
             type: "basic",
         });
 
+        const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
         Object.defineProperty(profileLoader, "loadNamedProfile", {
             value: jest.fn((name: string) => {
-                return { name };
+                return profileOne;
             })
         });
         Object.defineProperty(profileLoader, "loadAllProfiles", {
             value: jest.fn(() => {
-                return [{ name: "profile1" }, { name: "profile2" }];
+                return [profileOne, { name: "profile2" }];
             })
         });
         Object.defineProperty(profileLoader, "loadDefaultProfile", {
             value: jest.fn(() => {
-                return { name: "defaultprofile" };
+                return profileOne;
             })
         });
 
@@ -174,7 +174,7 @@ describe("Zos Jobs Unit Tests", () => {
         Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
         Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
 
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
         const mockLoadNamedProfile = jest.fn();
 
         beforeEach(() => {
@@ -310,7 +310,7 @@ describe("Zos Jobs Unit Tests", () => {
             expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
-                testJobsProvider.mSessionNodes[1].session, iJob);
+                testJobsProvider.mSessionNodes[1].session, iJob, profileOne);
             job.contextValue = "job";
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
@@ -327,7 +327,8 @@ describe("Zos Jobs Unit Tests", () => {
         it("Testing that prompt credentials work", async () => {
             const refresh = jest.fn();
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
+                jobNode, sessionwocred, iJob, jobNode.profile);
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
@@ -337,7 +338,7 @@ describe("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.flipState).toHaveBeenCalled();
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
-                sessionwocred, iJob);
+                sessionwocred, iJob, profileOne);
             job.contextValue = "job";
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
@@ -359,7 +360,8 @@ describe("Zos Jobs Unit Tests", () => {
             });
             const refresh = jest.fn();
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
+                jobNode, sessionwocred, iJob, jobNode.profile);
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
@@ -378,7 +380,7 @@ describe("Zos Jobs Unit Tests", () => {
          *************************************************************************************************************/
         it("Testing that prompt credentials is called when searchPrompt is triggered", async () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
@@ -415,7 +417,8 @@ describe("Zos Jobs Unit Tests", () => {
 
         it("Testing that prompt credentials is called when searchPrompt is triggered for fav", async () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
+                jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             newjobNode.session.ISession.user = "";
             newjobNode.session.ISession.password = "";
@@ -472,7 +475,8 @@ describe("Zos Jobs Unit Tests", () => {
             });
 
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
+                jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
@@ -567,7 +571,7 @@ describe("Zos Jobs Unit Tests", () => {
             // Executing from favorites
             const favoriteSearch = new Job("[fake]: Owner:stonecc Prefix:*",
             vscode.TreeItemCollapsibleState.None, testJobsProvider.mFavoriteSession, session,
-            null);
+                null, profileOne);
             favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             const checkSession = jest.spyOn(testJobsProvider, "addSession");
             expect(checkSession).not.toHaveBeenCalled();
@@ -702,7 +706,7 @@ describe("Zos Jobs Unit Tests", () => {
             const testTree = await createJobsTree(Logger.getAppLogger());
             testTree.mFavorites = [];
             const job = new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
-            testTree.mSessionNodes[1].session, iJob);
+                testTree.mSessionNodes[1].session, iJob, profileOne);
 
             // Check adding job
             await testTree.addJobsFavorite(job);
@@ -753,6 +757,7 @@ describe("Zos Jobs Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
+        const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
 
         const iJob: brightside.IJob = {
             "jobid": "JOB1234",
@@ -797,7 +802,7 @@ describe("Zos Jobs Unit Tests", () => {
             "subsystem": ""
         };
 
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
+        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
         jobNode.contextValue = "job";
 
         it("Tests the children are the spool files", async () => {

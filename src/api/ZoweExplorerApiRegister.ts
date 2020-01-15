@@ -85,6 +85,10 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         this.registerJesApi(new ZosmfJesApi());
     }
 
+    // TODO: the redundant functions that follow could be done with generics, but as we are using
+    // interfaces here that do not have type meta data it would require that they have type info
+    // added. On the other these functions make the client code easier to read and understand.
+
     /**
      * Other VS Code extension need to call this to register their USS API implementation.
      * @param {ZoweExplorerApi.IUss} ussApi

@@ -144,7 +144,7 @@ describe("Extension Unit Tests", () => {
     ussNode.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
-    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob);
+    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
 
     const mkdirSync = jest.fn();
     const moveSync = jest.fn();
@@ -2955,7 +2955,7 @@ describe("Extension Unit Tests", () => {
                 type: "basic",
             });
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
             await extension.refreshJobsServer(newjobNode, testJobsTree);
@@ -2985,7 +2985,7 @@ describe("Extension Unit Tests", () => {
                 type: "basic",
             });
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
@@ -3014,7 +3014,7 @@ describe("Extension Unit Tests", () => {
                 type: "basic",
             });
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             const spyopenPS = jest.spyOn(extension, "refreshJobsServer");
             await extension.refreshJobsServer(newjobNode, testJobsTree);
@@ -3038,7 +3038,7 @@ describe("Extension Unit Tests", () => {
             });
 
             createBasicZosmfSession.mockReturnValue(session);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, session, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, session, iJob, jobNode.profile);
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
             await extension.refreshJobsServer(newjobNode, testJobsTree);
@@ -3066,7 +3066,7 @@ describe("Extension Unit Tests", () => {
                 type: "basic",
             });
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
             await extension.refreshJobsServer(newjobNode, testJobsTree);
@@ -3302,7 +3302,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
 
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, null);
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, null, null);
 
         showInputBox.mockReturnValueOnce("*");
         await extension.setPrefix(node, testJobsTree);
@@ -3318,7 +3318,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
 
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, iJob);
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, iJob, profileOne);
 
         showInputBox.mockReturnValueOnce("OWNER");
         await extension.setOwner(node, testJobsTree);
@@ -3369,7 +3369,7 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
         newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -3403,7 +3403,7 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
         newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {

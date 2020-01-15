@@ -33,8 +33,13 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
     // tslint:disable-next-line: variable-name
     private _searchId: string;
 
-    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: Job, public session: Session, public job: IJob) {
+    constructor(
+        public label: string,
+        public mCollapsibleState: vscode.TreeItemCollapsibleState,
+        public mParent: Job,
+        public session: Session,
+        public job: IJob,
+        public profile: IProfileLoaded) {
         super(label, mCollapsibleState);
         if (session) {
             this._owner = session.ISession.user;
@@ -109,7 +114,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
                     if (existing) {
                         elementChildren.push(existing);
                     } else {
-                        const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
+                        const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.profile);
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
                         if (!jobNode.iconPath) {
@@ -193,7 +198,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
 class Spool extends Job {
     constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
                 public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
-        super(label, mCollapsibleState, mParent, session, job);
+        super(label, mCollapsibleState, mParent, session, job, parent.profile);
         this.contextValue = extension.JOBS_SPOOL_CONTEXT;
         utils.applyIcons(this);
     }
