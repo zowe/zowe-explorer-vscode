@@ -456,10 +456,23 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
                 this.applySearchLabelToNode(node, searchCriteria);
             }
-            node.label = node.label.trim()+ " ";
-            node.label.trim();
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            node.iconPath = applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
+            labelHack(node);
             node.dirty = true;
+            this.refreshElement(node);
             this.addHistory(searchCriteria);
+        }
+    }
+
+    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
+        if (e.affectsConfiguration(ZosJobsProvider.persistenceSchema)) {
+            const setting: any = { ...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema) };
+            if (!setting.persistence) {
+                setting.favorites = [];
+                setting.history = [];
+                await vscode.workspace.getConfiguration().update(ZosJobsProvider.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+            }
         }
     }
 
