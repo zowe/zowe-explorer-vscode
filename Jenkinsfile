@@ -183,8 +183,8 @@ pipeline {
             def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
             sh "npm install ssp-dos2unix"
             sh "npm run d2u"
-            releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md").trim()
-            releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
+            def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
+            //releaseChanges = sh(returnStdout: true, script: "echo \"${releaseChanges}\" | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
 
             def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
             echo "${releaseChanges}"
