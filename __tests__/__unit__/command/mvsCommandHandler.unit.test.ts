@@ -72,14 +72,18 @@ describe("mvsCommandActions unit testing", () => {
             Notification: 15
         };
     });
+
     const submitResponse = {
             success: true,
             commandResponse: "d iplinfo.."
     };
 
-    const withProgress = jest.fn().mockImplementation(() => {
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        callback();
         return submitResponse;
     });
+
+    issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
