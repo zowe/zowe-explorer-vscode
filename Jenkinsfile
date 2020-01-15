@@ -152,7 +152,7 @@ pipeline {
             PIPELINE_CONTROL.create_release = true
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-             sh "npx vsce publish -p $TOKEN"
+              sh "npx vsce publish -p $TOKEN"
             }
           }
         } }
@@ -186,7 +186,7 @@ pipeline {
             def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
 
             def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
-            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":true,\"prerelease\":false}"
+            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
             def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 
             def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
