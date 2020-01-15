@@ -17,6 +17,7 @@ import { IJob, IJobFile } from "@brightside/core";
 import * as extension from "./extension";
 import { IZoweTreeNode } from "./ZoweTree";
 import * as utils from "./utils";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends vscode.TreeItem implements IZoweTreeNode {
@@ -76,7 +77,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
             const elementChildren = [];
             let spools: zowe.IJobFile[] = [];
             if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
-                spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+                spools = await ZoweExplorerApiRegister.getJesApi(this.profile).getSpoolFiles(this.job.jobname, this.job.jobid);
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
                     if (existing) {
@@ -99,9 +100,9 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
             } else {
                 let jobs: zowe.IJob[] = [];
                 if (this.searchId.length > 0 ) {
-                    jobs.push(await zowe.GetJobs.getJob(this.session, this._searchId));
+                    jobs.push(await ZoweExplorerApiRegister.getJesApi(this.profile).getJob(this._searchId));
                 } else {
-                    jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
+                    jobs = await ZoweExplorerApiRegister.getJesApi(this.profile).getJobsByOwnerAndPrefix(this._owner, this._prefix);
                 }
                 jobs.forEach((job) => {
                     let nodeTitle: string;

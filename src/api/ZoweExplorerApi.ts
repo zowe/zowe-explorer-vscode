@@ -311,6 +311,11 @@ export namespace ZoweExplorerApi {
         submitJob(
             jobDataSet: string
         ): Promise<zowe.IJob>;
+
+        deleteJob(
+            jobname: string,
+            jobid: string
+        ): Promise<void>;
     }
 
     /**

@@ -450,7 +450,7 @@ export async function downloadSpool(job: Job){
             canSelectMany: false
         });
         if (dirUri !== undefined) {
-            zowe.DownloadJobs.downloadAllSpoolContentCommon(job.session, {
+            ZoweExplorerApiRegister.getJesApi(job.profile).downloadSpoolContent({
                 jobid: job.job.jobid,
                 jobname: job.job.jobname,
                 outDir: dirUri[0].fsPath
@@ -464,7 +464,7 @@ export async function downloadSpool(job: Job){
 
 export async function downloadJcl(job: Job) {
     try {
-        const jobJcl = await zowe.GetJobs.getJclForJob(job.session, job.job);
+        const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.profile).getJclForJob(job.job);
         const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
@@ -492,13 +492,18 @@ export async function changeFileType(node: ZoweUSSNode, binary: boolean, ussFile
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
 export async function submitJcl(datasetProvider: DatasetTree) {
+    if (!vscode.window.activeTextEditor) {
+        vscode.window.showErrorMessage(
+            localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open."));
+        return;
+    }
     const doc = vscode.window.activeTextEditor.document;
     log.debug(localize("submitJcl.log.debug", "Submitting JCL in document ") + doc.fileName);
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
     const profiles = await Profiles.getInstance();
-    let sesName;
+    let sessProfileName;
     if(regExp === null){
         const allProfiles: IProfileLoaded[] = profiles.allProfiles;
         const profileNamesList = allProfiles.map((profile) => {
@@ -510,34 +515,34 @@ export async function submitJcl(datasetProvider: DatasetTree) {
                 ignoreFocusOut: true,
                 canPickMany: false
             };
-            sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
+            sessProfileName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
         } else {
             vscode.window.showInformationMessage(localize("submitJcl.noProfile", "No profiles available"));
         }
     } else {
-        sesName = regExp[1];
-        if (sesName.includes("[")) {
+        sessProfileName = regExp[1];
+        if (sessProfileName.includes("[")) {
             // if submitting from favorites, sesName might be the favorite node, so extract further
-            sesName = sessionregex.exec(sesName)[1];
+            sessProfileName = sessionregex.exec(sessProfileName)[1];
         }
     }
 
-    // get session from session name
-    let documentSession;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim()=== sesName);
+    // get profile from session name
+    let sessProfile: IProfileLoaded;
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim()=== sessProfileName);
     if (sesNode) {
-        documentSession = sesNode.getSession();
+        sessProfile = sesNode.profile;
     } else {
         // if submitting from favorites, a session might not exist for this node
-        const zosmfProfile = profiles.loadNamedProfile(sesName);
-        documentSession = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+        sessProfile = profiles.loadNamedProfile(sessProfileName);
     }
-    if (documentSession == null) {
+    if (sessProfile == null) {
         log.error(localize("submitJcl.log.error.nullSession", "Session for submitting JCL was null or undefined!"));
+        return;
     }
     try {
-        const job = await zowe.SubmitJobs.submitJcl(documentSession, doc.getText());
-        const args = [sesName, job.jobid];
+        const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
+        const args = [sessProfileName, job.jobid];
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
@@ -555,33 +560,39 @@ export async function submitMember(node: ZoweNode) {
     const labelregex = /\[(.+)\]\: (.+)/g;
     let label;
     let sesName;
+    let sessProfile;
+    const profiles = await Profiles.getInstance();
     switch (node.mParent.contextValue) {
         case (FAVORITE_CONTEXT): {
             const regex = labelregex.exec(node.label);
             sesName = regex[1];
             label = regex[2];
+            sessProfile = profiles.loadNamedProfile(sesName);
             break;
         }
         case (DS_PDS_CONTEXT + FAV_SUFFIX): {
             const regex = labelregex.exec(node.mParent.label);
             sesName = regex[1];
             label = regex[2] + "(" + node.label.trim()+ ")";
+            sessProfile = node.mParent.profile;
             break;
         }
         case (DS_SESSION_CONTEXT):
             sesName = node.mParent.label;
             label = node.label;
+            sessProfile = node.mParent.profile;
             break;
         case (DS_PDS_CONTEXT):
             sesName = node.mParent.mParent.label;
             label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
+            sessProfile = node.mParent.mParent.profile;
             break;
         default:
             vscode.window.showErrorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
             throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
     }
     try {
-        const job = await zowe.SubmitJobs.submitJob(node.getSession(), label);
+        const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
         const args = [sesName, job.jobid];
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitMember.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);

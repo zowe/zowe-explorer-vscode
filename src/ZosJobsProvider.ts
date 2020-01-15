@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { ZosmfSession, IJob, DeleteJobs, Utilities } from "@brightside/core";
+import { ZosmfSession, IJob } from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { Profiles } from "./Profiles";
@@ -30,6 +30,8 @@ import {
 import { IZoweTree } from "./ZoweTree";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -141,7 +143,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
 
     public async deleteJob(node: Job) {
         try {
-            await DeleteJobs.deleteJob(node.session, node.job.jobname, node.job.jobid);
+            await ZoweExplorerApiRegister.getJesApi(node.profile).deleteJob(node.job.jobname, node.job.jobid);
             vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
             localize("deleteJob.delete", " deleted"));
             this.removeJobsFavorite(this.createJobsFavorite(node));

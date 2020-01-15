@@ -182,4 +182,8 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
     public submitJob(jobDataSet: string): Promise<zowe.IJob> {
         return zowe.SubmitJobs.submitJob(this.getSession(), jobDataSet);
     }
+
+    public deleteJob(jobname: string, jobid: string): Promise<void> {
+        return zowe.DeleteJobs.deleteJob(this.getSession(), jobname, jobid);
+    }
 }
