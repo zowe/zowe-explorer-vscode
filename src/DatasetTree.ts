@@ -365,9 +365,13 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         }
     }
 
-    public async addHistory(criteria: string) {
-        this.mHistory.addHistory(criteria);
+    public async addHistory(criteria: string, isMember?: boolean) {
+        this.mHistory.addHistory(criteria, isMember);
         this.refresh();
+    }
+
+    public getMemberHistory() {
+        return this.mHistory.getMemberHistory();
     }
 
     public async datasetFilterPrompt(node: ZoweNode) {
