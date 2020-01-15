@@ -4,7 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `1.1.0`
 
-- "Try displaying this"
 - Updates to Readme to include links to Theia Readme. Thanks @IgorCATech
 - Fix for incorrect profile name in some favorites. Thanks @lauren-li
 - Update dataset filters on dataset creation. Thanks @katelynienaber

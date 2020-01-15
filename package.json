@@ -1168,7 +1168,6 @@
   "dependencies": {
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
-    "ssp-dos2unix": "^1.0.1",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

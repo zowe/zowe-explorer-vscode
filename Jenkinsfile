@@ -17,7 +17,7 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 /**
  * Name of the master branch
  */
-def MASTER_BRANCH = "descriptive-github-releases"
+def MASTER_BRANCH = "master"
 
 /**
  * TOKEN ID where secret is stored
@@ -98,41 +98,41 @@ pipeline {
         } }
       }
     }
-    // stage('Test') {
-    //   when { allOf {
-    //     expression { return !PIPELINE_CONTROL.ci_skip }
-    //     expression { return !params.SKIP_TEST }
-    //   } }
-    //   steps {
-    //     timeout(time: 10, unit: 'MINUTES') { script {
-    //       sh "npm run test"
-    //     } }
-    //   }
-    // }
-    // stage('Codecov') {
-    //   when { allOf {
-    //     expression { return !PIPELINE_CONTROL.ci_skip }
-    //     expression { return !params.SKIP_TEST }
-    //   } }
-    //   steps {
-    //     timeout(time: 10, unit: 'MINUTES') { script {
-    //       withCredentials([usernamePassword(credentialsId: 'CODECOV_ZOWE_VSCODE', usernameVariable: 'CODECOV_USERNAME', passwordVariable: 'CODECOV_TOKEN')]) {
-    //           sh "curl -s https://codecov.io/bash | bash -s"
-    //       }
-    //     } }
-    //   }
-    // }
-    // stage('Audit') {
-    //   when { allOf {
-    //     expression { return !PIPELINE_CONTROL.ci_skip }
-    //     expression { return !params.SKIP_AUDIT }
-    //   } }
-    //   steps {
-    //     timeout(time: 10, unit: 'MINUTES') { script {
-    //       sh "npm audit"
-    //     } }
-    //   }
-    // }
+    stage('Test') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm run test"
+        } }
+      }
+    }
+    stage('Codecov') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_TEST }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          withCredentials([usernamePassword(credentialsId: 'CODECOV_ZOWE_VSCODE', usernameVariable: 'CODECOV_USERNAME', passwordVariable: 'CODECOV_TOKEN')]) {
+              sh "curl -s https://codecov.io/bash | bash -s"
+          }
+        } }
+      }
+    }
+    stage('Audit') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return !params.SKIP_AUDIT }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "npm audit"
+        } }
+      }
+    }
     stage('Publish') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -145,16 +145,16 @@ pipeline {
           def extensionMetadata = sh(returnStdout: true, script: "npx vsce show ${vscodePackageJson.publisher}.${vscodePackageJson.name} --json").trim()
           def extensionInfo = readJSON text: extensionMetadata
 
-          // if (extensionInfo.versions[0].version == vscodePackageJson.version) {
-          //   PIPELINE_CONTROL.create_release = false
-          //   echo "No new version to publish at this time (${vscodePackageJson.version})"
-          // } else {
+          if (extensionInfo.versions[0].version == vscodePackageJson.version) {
+            PIPELINE_CONTROL.create_release = false
+            echo "No new version to publish at this time (${vscodePackageJson.version})"
+          } else {
             PIPELINE_CONTROL.create_release = true
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
-            //withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
-            //  sh "npx vsce publish -p $TOKEN"
-            //}
-          // }
+            withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
+             sh "npx vsce publish -p $TOKEN"
+            }
+          }
         } }
       }
     }
@@ -177,7 +177,7 @@ pipeline {
           sh "npx vsce package -o ${version}.vsix"
 
           withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
-            //sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+            sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
 
             //Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
             def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
