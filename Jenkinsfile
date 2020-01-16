@@ -125,7 +125,7 @@ pipeline {
           def version = "v${vscodePackageJson.version}"
 
           def date = new Date()
-          String buildDate = date.format("ddMMyyyyHHmmss")
+          String buildDate = date.format("yyyyMMddHHmmss")
 
           // Release to Artifactory
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
