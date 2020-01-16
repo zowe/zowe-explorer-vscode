@@ -124,11 +124,12 @@ pipeline {
           def vscodePackageJson = readJSON file: "package.json"
           def version = "v${vscodePackageJson.version}"
 
-          sh "npx vsce package -o ${version}.vsix"
+          def date = new Date()
+          String buildDate = date.format("ddMMyyyyHHmmss")
 
           // Release to Artifactory
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
-            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/vscode-extension-for-zowe-${env.BRANCH_NAME}-${version}.vsix"
+            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/vscode-extension-for-zowe-${env.BRANCH_NAME}-${version}-${buildDate}.vsix"
             sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
           } }
         } }
