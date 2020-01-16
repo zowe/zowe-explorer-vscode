@@ -13,6 +13,7 @@ import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
+import { IZoweTreeNode } from "./ZoweTree";
 import * as extension from "../src/extension";
 import * as utils from "./utils";
 
@@ -27,7 +28,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class ZoweUSSNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweUSSNode extends vscode.TreeItem {
+export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
     public command: vscode.Command;
     public fullPath = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
@@ -80,6 +81,16 @@ export class ZoweUSSNode extends vscode.TreeItem {
         }
         this.etag = etag ? etag : "";
         utils.applyIcons(this);
+    }
+
+    /**
+     * Implements access to profile name
+     * for {IZoweTreeNode}.
+     *
+     * @returns {string}
+     */
+    public getProfileName(): string {
+        return this.mProfileName;
     }
 
     /**

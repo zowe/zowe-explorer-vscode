@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -18,8 +18,7 @@
     "z/OS",
     "USS",
     "JES",
-    "MVS",
-    "TSO"
+    "MVS"
   ],
   "categories": [
     "Other"
@@ -370,7 +369,11 @@
       },
       {
         "command": "zowe.issueTsoCmd",
-        "title": "%issueTsoCmd%"
+        "title": "%issueMvsCmd%"
+      },
+      {
+        "command": "zowe.issueMvsCmd",
+        "title": "%issueCmd%"
       },
       {
         "command": "zowe.jobs.search",
@@ -790,6 +793,11 @@
           "group": "4_workspace"
         },
         {
+          "when": "view == zowe.explorer && viewItem == session",
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == session_fav",
           "command": "zowe.removeSavedSearch"
         },
@@ -811,6 +819,11 @@
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
           "command": "zowe.uss.saveSearch",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == uss_session",
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.jobs && viewItem == server",
@@ -873,6 +886,11 @@
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.jobs.saveSearch",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.jobs && viewItem == job",
@@ -979,6 +997,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.issueMvsCmd",
           "when": "never"
         }
       ]
@@ -1093,6 +1115,20 @@
           "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
           "scope": "window"
         },
+        "Zowe Commands: Always edit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow editing of commands before submitting",
+          "scope": "window"
+        },
+        "Zowe Commands: History": {
+          "default": {
+            "persistence": true,
+            "history": []
+          },
+          "description": "%Zowe-Default-Commands-Persistent-Favorites%",
+          "scope": "window"
+        },
         "Zowe-Environment": {
           "default": {
             "persistence": true,
@@ -1129,6 +1165,7 @@
     "@types/chai": "^4.1.4",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
+    "@types/fs-extra": "^7.0.0",
     "@types/jest": "^23.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
@@ -1143,11 +1180,14 @@
     "expect": "^24.8.0",
     "glob": "^7.1.2",
     "gulp": "^4.0.2",
+    "gulp-cli": "^2.2.0",
     "gulp-filter": "^5.1.0",
+    "gulp-fs": "0.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
     "jest": "^24.8.0",
     "jest-html-reporter": "^2.4.0",
+    "jsdoc": "^3.6.3",
     "jsdom": "11.11.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
@@ -1156,21 +1196,17 @@
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
     "ts-loader": "^6.0.0",
+    "tslint": "^5.17.0",
     "typescript": "^3.5.1",
     "vsce": "^1.60.0",
-    "vscode": "^1.1.30",
+    "vscode": "^1.1.36",
     "vscode-nls-dev": "^3.2.6",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
     "@brightside/core": "^2.36.0",
-    "@types/fs-extra": "^7.0.0",
     "fs-extra": "^8.0.1",
-    "gulp-cli": "^2.2.0",
-    "gulp-fs": "0.0.2",
-    "jsdoc": "^3.6.3",
-    "tslint": "^5.17.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

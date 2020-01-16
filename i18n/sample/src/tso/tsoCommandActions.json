@@ -1,0 +1,5 @@
+{
+    "issueMvsCommand.quickPickOption": "Select the Profile to use to submit the command",
+    "issueMvsCommand.noProfilesLoaded": "No profiles available",
+    "issueMvsCommand.command": "Command"
+}

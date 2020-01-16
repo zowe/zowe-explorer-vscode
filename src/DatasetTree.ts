@@ -17,7 +17,8 @@ import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
-import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
+import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper } from "./utils";
+import { IZoweTree } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
 
 // Set up localization
@@ -43,10 +44,10 @@ export async function createDatasetTree(log: Logger) {
  * @class DatasetTree
  * @implements {vscode.TreeDataProvider}
  */
-export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
+export class DatasetTree implements IZoweTree<ZoweNode> {
 
     private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
-    private static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search", "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
     public mSessionNodes: ZoweNode[];
     public mFavoriteSession: ZoweNode;
     public mFavorites: ZoweNode[] = [];
@@ -106,8 +107,8 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
                         localize("intializeFavorites.error.profile2",
                         ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, ") +
-                        localize("initializeFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings."));
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
@@ -370,6 +371,10 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     public async addHistory(criteria: string) {
         this.mHistory.addHistory(criteria);
         this.refresh();
+    }
+
+    public getHistory() {
+        return this.mHistory.getHistory();
     }
 
     public async datasetFilterPrompt(node: ZoweNode) {

@@ -16,7 +16,18 @@ import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
 import { Job } from "./ZoweJobNode";
-import { OwnerFilterDescriptor, JobIdFilterDescriptor, applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
+import {
+    OwnerFilterDescriptor,
+    JobIdFilterDescriptor,
+    applyIcons,
+    FilterItem,
+    FilterDescriptor,
+    getAppName,
+    resolveQuickPickHelper,
+    sortTreeItems,
+    labelHack
+} from "./utils";
+import { IZoweTree } from "./ZoweTree";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 
@@ -39,7 +50,7 @@ export async function createJobsTree(log: Logger) {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
+export class ZosJobsProvider implements IZoweTree<Job> {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
@@ -260,8 +271,8 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 localize("initializeJobsFavorites.error.profile2",
                 ". To resolve this, you can create a profile with this name, ") +
                 localize("initializeJobsFavorites.error.profile3",
-                "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, ") +
-                localize("initializeJobsFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your ") +
+                getAppName(extension.ISTHEIA) + localize("initializeJobsFavorites.error.profile4", " user settings."));
             return;
         }
         });
@@ -422,6 +433,7 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                         options = {
                             prompt: localize("jobsFilterPrompt.option.prompt.owner",
                             "Enter the Job Owner. Default is *."),
+                            validateInput: (value: string) => (value.match(/ /g) ? localize("jobs.enter.valid.owner", "Please enter a valid owner name (no spaces allowed).") : ""),
                             value: node.owner
                         };
                         // get user input
@@ -489,12 +501,12 @@ export class ZosJobsProvider implements vscode.TreeDataProvider<Job> {
                 }
                 this.applySearchLabelToNode(node, searchCriteria);
             }
-            this.addHistory(searchCriteria);
-
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.iconPath = applyIcons(node.getSessionNode(), extension.ICON_STATE_OPEN);
+            labelHack(node);
             node.dirty = true;
             this.refreshElement(node);
+            this.addHistory(searchCriteria);
         }
     }
 

@@ -23,6 +23,17 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @class PersistentFilters
  */
 export class PersistentFilters {
+    /**
+     * Retrieves a generic setting either in user or workspace.
+     * <pre>{@code
+     *  PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
+     * }</pre>
+     * @param key - string. The attribute value that needs retrieving
+     */
+    public static getDirectValue(key: string): string | boolean | undefined {
+        const settings: any = { ...vscode.workspace.getConfiguration() };
+        return settings.get(key);
+    }
     private static readonly favorites: string = "favorites";
     private static readonly history: string = "history";
     private static readonly sessions: string = "sessions";
@@ -31,9 +42,7 @@ export class PersistentFilters {
     private mHistory: string[] = [];
     private mSessions: string[] = [];
 
-    private maxHistory = 5;
-
-    constructor(schema: string) {
+    constructor(schema: string, private maxHistory = 5) {
         this.schema = schema;
         this.initialize();
     }
