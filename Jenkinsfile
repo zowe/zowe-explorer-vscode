@@ -123,7 +123,6 @@ pipeline {
         timeout(time: 10, unit: 'MINUTES') { script {
           def vscodePackageJson = readJSON file: "package.json"
           def version = "v${vscodePackageJson.version}"
-          sh "git tag ${version}"
 
           sh "npx vsce package -o ${version}.vsix"
 
@@ -209,7 +208,6 @@ pipeline {
 
           def vscodePackageJson = readJSON file: "package.json"
           def version = "v${vscodePackageJson.version}"
-          sh "git tag ${version}"
 
           sh "npx vsce package -o ${version}.vsix"
 
