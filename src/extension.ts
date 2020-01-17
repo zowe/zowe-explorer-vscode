@@ -454,7 +454,7 @@ export async function downloadSpool(job: Job){
             });
         }
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, error.message);
     }
 
 }
@@ -465,7 +465,7 @@ export async function downloadJcl(job: Job) {
         const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, error.message);
     }
 }
 
@@ -538,7 +538,9 @@ export async function submitJcl(datasetProvider: DatasetTree) {
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        const errMsg = localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message;
+        await utils.errorHandling(error, null, errMsg)
+        // vscode.window.showErrorMessage(localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 

@@ -15,6 +15,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
+import * as utils from "./utils";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
 import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper, errorHandling } from "./utils";
@@ -98,14 +99,23 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
-                    vscode.window.showErrorMessage(
+                    const errMsg = 
+                    localize("initializeFavorites.error.profile1",
+                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                    localize("intializeFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                    getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
+                    await utils.errorHandling(e, null, errMsg);
+                    /* vscode.window.showErrorMessage(
                         localize("initializeFavorites.error.profile1",
                         "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
                         localize("intializeFavorites.error.profile2",
                         ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
                         "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
-                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings."));
+                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.")); */
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {

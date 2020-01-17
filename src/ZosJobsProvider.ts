@@ -24,7 +24,8 @@ import {
     FilterDescriptor,
     getAppName,
     resolveQuickPickHelper,
-    sortTreeItems
+    sortTreeItems,
+    errorHandling
 } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import * as extension from "../src/extension";
@@ -145,7 +146,8 @@ export class ZosJobsProvider implements IZoweTree<Job> {
             localize("deleteJob.delete", " deleted"));
             this.removeJobsFavorite(this.createJobsFavorite(node));
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await errorHandling(error, null, error.message);
+            // vscode.window.showErrorMessage(error.message);
         }
     }
     /**
@@ -201,7 +203,8 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    await errorHandling(error, null, error.message);
+                    // vscode.window.showErrorMessage(error.message);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.session.ISession.user = usrNme;
@@ -366,7 +369,8 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await errorHandling(error, null, error.message);
+                // vscode.window.showErrorMessage(error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.session.ISession.user = usrNme;
