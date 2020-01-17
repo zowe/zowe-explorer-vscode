@@ -20,6 +20,23 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 def MASTER_BRANCH = "master"
 
 /**
+ * The user's email address for git commits
+ */
+def GIT_USER_EMAIL = 'zowe.robot@gmail.com'
+
+/**
+ * Target scope
+ */
+def TARGET_SCOPE = "@zowe"
+
+/**
+ * Artifactory details
+ */
+def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode"
+def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
+def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
+
+/**
  * TOKEN ID where secret is stored
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
@@ -98,6 +115,27 @@ pipeline {
         } }
       }
     }
+    stage('Smoke Test') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          def vscodePackageJson = readJSON file: "package.json"
+          def date = new Date()
+          String buildDate = date.format("yyyyMMddHHmmss")
+          def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${env.BRANCH_NAME}-${buildDate}"
+
+          sh "npx vsce package -o ${fileName}.vsix"
+
+          // Release to Artifactory
+          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
+            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+          } }
+        } }
+      }
+    }
     stage('Test') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -171,10 +209,15 @@ pipeline {
           sh "git config --global user.email \"zowe.robot@gmail.com\""
 
           def vscodePackageJson = readJSON file: "package.json"
-          def version = "v${vscodePackageJson.version}"
-          sh "git tag ${version}"
+          def version = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
 
           sh "npx vsce package -o ${version}.vsix"
+
+          // Release to Artifactory
+          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${version}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+          } }
 
           withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
             sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
