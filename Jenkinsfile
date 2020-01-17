@@ -122,17 +122,16 @@ pipeline {
       steps {
         timeout(time: 10, unit: 'MINUTES') { script {
           def vscodePackageJson = readJSON file: "package.json"
-          def version = "v${vscodePackageJson.version}"
-
-          sh "npx vsce package -o ${version}.vsix"
-
           def date = new Date()
           String buildDate = date.format("yyyyMMddHHmmss")
+          def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${env.BRANCH_NAME}-${buildDate}"
+
+          sh "npx vsce package -o ${fileName}.vsix"
 
           // Release to Artifactory
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
-            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/vscode-extension-for-zowe-${env.BRANCH_NAME}-${version}-${buildDate}.vsix"
-            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
+            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${fileName}.vsix"
           } }
         } }
       }
@@ -210,13 +209,13 @@ pipeline {
           sh "git config --global user.email \"zowe.robot@gmail.com\""
 
           def vscodePackageJson = readJSON file: "package.json"
-          def version = "v${vscodePackageJson.version}"
+          def version = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
 
           sh "npx vsce package -o ${version}.vsix"
 
           // Release to Artifactory
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
-            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/vscode-extension-for-zowe-${version}.vsix"
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
             sh "curl -u ${USERNAME}:${PASSWORD} --data-binary -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory} -T @${version}.vsix"
           } }
 
