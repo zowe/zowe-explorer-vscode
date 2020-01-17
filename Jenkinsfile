@@ -124,6 +124,8 @@ pipeline {
           def vscodePackageJson = readJSON file: "package.json"
           def version = "v${vscodePackageJson.version}"
 
+          sh "npx vsce package -o ${version}.vsix"
+
           def date = new Date()
           String buildDate = date.format("yyyyMMddHHmmss")
 
