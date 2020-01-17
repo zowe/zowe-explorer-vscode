@@ -15,7 +15,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
-import * as utils from "./utils";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
 import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper, errorHandling } from "./utils";
@@ -99,7 +98,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
-                    const errMsg = 
+                    const errMsg =
                     localize("initializeFavorites.error.profile1",
                     "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
                     localize("intializeFavorites.error.profile2",
@@ -107,7 +106,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     localize("initializeFavorites.error.profile3",
                     "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
                     getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
-                    await utils.errorHandling(e, null, errMsg);
+                    await errorHandling(e, null, errMsg);
                     /* vscode.window.showErrorMessage(
                         localize("initializeFavorites.error.profile1",
                         "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
@@ -124,7 +123,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 try {
                     zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
-                    await errorHandling(error, null, (localize("loadNamedProfile.error.profileName", 
+                    await errorHandling(error, null, (localize("loadNamedProfile.error.profileName",
                         "Initialization Error: Could not find profile named: ")) +
                         + sesName + localize("loadNamedProfile.error.period", "."));
                     // vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",

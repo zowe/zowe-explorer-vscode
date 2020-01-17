@@ -187,19 +187,20 @@ export function getAppName(isTheia: boolean) {
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
-    const httpErrCode = errorDetails.mDetails.httpStatus;
+    const httpErrCode = errorDetails.mDetails.errorCode;
 
     switch(httpErrCode) {
         // tslint:disable-next-line: no-magic-numbers
         case 401 : {
-            vscode.window.showErrorMessage(localize("errorHandling.invalid.credentials", "Invalid Credentials. " +
-                                                    "Please ensure the username and password for" +
-                                                    `\n${label}\n` + "are valid or this may lead to a lock-out."));
+            vscode.window.showErrorMessage(localize("errorHandling.invalid.credentials", "Invalid Credentials. ") +
+                localize("errorHandling.invalid.credentials2","Please ensure the username and password for ") +
+                `\n${label}\n` +
+                localize("errorHandling.invalid.credentials3", "are valid or this may lead to a lock-out."));
             break;
         }
         default: {
-            vscode.window.showErrorMessage(localize("errorHandling.default.error", `\n${moreInfo}\n` +
-            `\n${errorDetails}\n`));
+            vscode.window.showErrorMessage(`\n${moreInfo}\n` +
+            `\n${errorDetails}\n`);
             break;
         }
     }

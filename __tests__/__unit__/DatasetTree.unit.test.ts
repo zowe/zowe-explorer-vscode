@@ -48,6 +48,8 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     // Filter prompt
+    // tslint:disable-next-line: no-shadowed-variable
+    const ImperativeError  = jest.fn();
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
@@ -61,6 +63,14 @@ describe("DatasetTree Unit Tests", () => {
         value: jest.fn(() => {
             return {
                 ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"}
+            };
+        })
+    });
+
+    Object.defineProperty(utils, "errorHandling", {
+        value: jest.fn(() => {
+            return {
+                errorDetails: {mDetails: {errorCode: undefined}}
             };
         })
     });

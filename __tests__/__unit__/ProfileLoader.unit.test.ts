@@ -15,6 +15,7 @@ jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
 import { Logger } from "@brightside/imperative";
+import * as utils from "../../src/utils";
 
 import { loadAllProfiles, loadDefaultProfile } from "../../src/ProfileLoader";
 
@@ -28,6 +29,16 @@ describe("ProfileLoader success", () => {
         value: jest.fn()
     });
     const mockDebug = jest.spyOn(log, "debug");
+
+    // tslint:disable-next-line: no-shadowed-variable
+    const ImperativeError  = jest.fn();
+    Object.defineProperty(utils, "errorHandling", {
+        value: jest.fn(() => {
+            return {
+                errorDetails: {mDetails: {errorCode: undefined}}
+            };
+        })
+    });
 
     // Happy path profiles
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };

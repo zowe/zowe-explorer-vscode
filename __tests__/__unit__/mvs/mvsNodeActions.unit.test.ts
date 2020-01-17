@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../../src/ZoweNode";
 import * as extension from "../../../src/extension";
+import * as utils from "../../../src/utils";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -28,6 +29,15 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     };
 });
 
+// tslint:disable-next-line: no-shadowed-variable
+const ImperativeError  = jest.fn();
+Object.defineProperty(utils, "errorHandling", {
+    value: jest.fn(() => {
+        return {
+            errorDetails: {mDetails: {errorCode: undefined}}
+        };
+    })
+});
 const testTree = DatasetTree();
 
 describe("mvsNodeActions", () => {

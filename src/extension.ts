@@ -539,7 +539,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
         vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
         const errMsg = localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message;
-        await utils.errorHandling(error, null, errMsg)
+        await utils.errorHandling(error, null, errMsg);
         // vscode.window.showErrorMessage(localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }

@@ -13,6 +13,7 @@ import * as spoolprovider from "../../src/SpoolProvider";
 import * as brightside from "@brightside/core";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
+import * as utils from "../../src/utils";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: brightside.IJobFile = {
@@ -47,6 +48,16 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
+
+    // tslint:disable-next-line: no-shadowed-variable
+    const ImperativeError  = jest.fn();
+    Object.defineProperty(utils, "errorHandling", {
+        value: jest.fn(() => {
+            return {
+                errorDetails: {mDetails: {errorCode: undefined}}
+            };
+        })
+    });
 
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {

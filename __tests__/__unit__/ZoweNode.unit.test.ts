@@ -20,6 +20,7 @@ import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";
+import * as utils from "../../src/utils";
 import { List } from "@brightside/core";
 
 describe("Unit Tests (Jest)", () => {
@@ -30,6 +31,16 @@ describe("Unit Tests (Jest)", () => {
         hostname: "fake",
         protocol: "https",
         type: "basic",
+    });
+
+    // tslint:disable-next-line: no-shadowed-variable
+    const ImperativeError  = jest.fn();
+    Object.defineProperty(utils, "errorHandling", {
+        value: jest.fn(() => {
+            return {
+                errorDetails: {mDetails: {errorCode: undefined}}
+            };
+        })
     });
 
     Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});

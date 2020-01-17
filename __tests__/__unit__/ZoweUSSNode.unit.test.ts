@@ -30,6 +30,16 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
+    // tslint:disable-next-line: no-shadowed-variable
+    const ImperativeError  = jest.fn();
+    Object.defineProperty(utils, "errorHandling", {
+        value: jest.fn(() => {
+            return {
+                errorDetails: {mDetails: {errorCode: undefined}}
+            };
+        })
+    });
+
     afterEach(() => {
         jest.resetAllMocks();
     });

@@ -165,6 +165,15 @@ describe("Zos Jobs Unit Tests", () => {
         const getFilters = jest.fn();
         const DeleteJobs = jest.fn();
         const deleteJob = jest.fn();
+        // tslint:disable-next-line: no-shadowed-variable
+        const ImperativeError  = jest.fn();
+        Object.defineProperty(utils, "errorHandling", {
+            value: jest.fn(() => {
+                return {
+                    errorDetails: {mDetails: {errorCode: undefined}}
+                };
+            })
+        });
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});

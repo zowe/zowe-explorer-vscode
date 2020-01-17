@@ -11,7 +11,7 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import * as utils from "./utils";
+import * as utils from "../utils";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";

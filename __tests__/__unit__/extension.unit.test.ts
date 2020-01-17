@@ -96,7 +96,6 @@ describe("Extension Unit Tests", () => {
         hide: jest.fn(),
         dispose: jest.fn()
     };
-
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
@@ -207,7 +206,9 @@ describe("Extension Unit Tests", () => {
     const findFavoritedNode = jest.fn();
     const findNonFavoritedNode = jest.fn();
     const concatChildNodes = jest.fn();
+    const errorHandling = jest.fn();
     const concatUSSChildNodes = jest.fn();
+    const ImperativeError  = jest.fn();
     let mockClipboardData: string;
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
@@ -288,7 +289,6 @@ describe("Extension Unit Tests", () => {
     const testJobsTree = JobsTree();
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
@@ -298,9 +298,18 @@ describe("Extension Unit Tests", () => {
             };
         })
     });
+    Object.defineProperty(utils, "errorHandling", {
+        value: jest.fn(() => {
+            return {
+                errorDetails: {mDetails: {errorCode: undefined}}
+            };
+        })
+    });
+    Object.defineProperty(utils, "errorHandling", {value: errorHandling});
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
+    Object.defineProperty(brtimperative, "ImperativeError", {value: ImperativeError});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
