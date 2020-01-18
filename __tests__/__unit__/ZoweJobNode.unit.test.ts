@@ -178,12 +178,13 @@ describe("Zos Jobs Unit Tests", () => {
         const mockLoadNamedProfile = jest.fn();
 
         beforeEach(() => {
-            mockLoadNamedProfile.mockReturnValue({name:"fake", profile: {name:"fake", type:"zosmf", profile:{name:"fake", type:"zosmf"}}});
+            mockLoadNamedProfile.mockReturnValue(
+                {name:"fake", type:"zosmf", profile: {name:"fake", type:"zosmf", profile:{name:"fake", type:"zosmf"}}});
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstProfileName"}, {name: "fake"}],
-                        defaultProfile: {name: "firstProfileName"},
+                        allProfiles: [{name: "firstProfileName", type:"zosmf"}, {name: "fake", type:"zosmf"}],
+                        defaultProfile: {name: "firstProfileName", type:"zosmf"},
                         loadNamedProfile: mockLoadNamedProfile,
                         promptCredentials: jest.fn(()=> {
                             return ["fakeUser","","fakeEncoding"];

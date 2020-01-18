@@ -213,7 +213,6 @@ export namespace ZoweExplorerApi {
          * @param {string} dataSetName
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
-         * @memberof IMvs
          */
         createDataSetMember(
             dataSetName: string, options?: zowe.IUploadOptions
@@ -265,7 +264,6 @@ export namespace ZoweExplorerApi {
          * @param {string} dataSetName
          * @param {zowe.IDeleteDatasetOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
-         * @memberof IMvs
          */
         deleteDataSet(
             dataSetName: string,
@@ -273,45 +271,113 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
     }
 
+    /**
+     * API for providing am JES API handler to the extension.
+     * @export
+     */
     export interface IJes extends ICommon {
+        /**
+         * Returns a list of jobs for a specific user and prefix.
+         *
+         * @param {string} owner
+         * @param {string} prefix
+         * @returns {Promise<zowe.IJob[]>} an array if IJob
+         */
         getJobsByOwnerAndPrefix(
             owner: string,
             prefix: string
         ): Promise<zowe.IJob[]>;
 
+        /**
+         * Returns meta-data for one specific job identified by id.
+         *
+         * @param {string} jobid
+         * @returns {Promise<zowe.IJob>}
+         */
         getJob(
             jobid: string
         ): Promise<zowe.IJob>;
 
+        /**
+         * Returns spool file meta-data for a job.
+         *
+         * @param {string} jobname
+         * @param {string} jobid
+         * @returns {Promise<zowe.IJobFile[]>}
+         */
         getSpoolFiles(
             jobname: string,
             jobid: string
         ): Promise<zowe.IJobFile[]>;
 
+        /**
+         * Retrieves spool file content as specified in the parms
+         * to be store in a file.
+         *
+         * @param {zowe.IDownloadAllSpoolContentParms} parms
+         * @returns {Promise<void>}
+         */
         downloadSpoolContent(
             parms: zowe.IDownloadAllSpoolContentParms
         ): Promise<void>;
 
+        /**
+         * Returns spool file content as a string.
+         *
+         * @param {string} jobname
+         * @param {string} jobid
+         * @param {number} spoolId
+         * @returns {Promise<string>}
+         */
         getSpoolContentById(
             jobname: string,
             jobid: string,
             spoolId: number
         ): Promise<string>;
 
+        /**
+         * Returns the JCL of a job as a string.
+         *
+         * @param {zowe.IJob} job
+         * @returns {Promise<string>}
+         */
         getJclForJob(
             job: zowe.IJob
         ): Promise<string>;
 
+        /**
+         * Submits a job with the JCL provided returning job meta-data.
+         *
+         * @param {string} jcl string of JCL that you want to be submit
+         * @param {string} [internalReaderRecfm] record format of the jcl you want to submit. "F" (fixed) or "V" (variable)
+         * @param {string} [internalReaderLrecl] logical record length of the jcl you want to submit
+         * @returns {Promise<zowe.IJob>} IJob document with details about the submitted job
+         */
         submitJcl(
             jcl: string,
             internalReaderRecfm?: string,
             internalReaderLrecl?: string
         ): Promise<zowe.IJob>;
 
+        /**
+         * Submits a job that is stored in the data set name provided returning job meta-data.
+         *
+         * @param {string} jobDataSet
+         * @returns {Promise<zowe.IJob>}
+         * @memberof IJes
+         */
         submitJob(
             jobDataSet: string
         ): Promise<zowe.IJob>;
 
+        /**
+         * Cancels and purges a job identified by name and id.
+         *
+         * @param {string} jobname
+         * @param {string} jobid
+         * @returns {Promise<void>}
+         * @memberof IJes
+         */
         deleteJob(
             jobname: string,
             jobid: string
@@ -369,9 +435,24 @@ export namespace ZoweExplorerApi {
 
         /**
          * Lookup of an API for MVS for a given profile.
-         * @param {string} profileType
+         * @param {string} profile
          * @returns the registered API instance
          */
         getMvsApi(profile: imperative.IProfileLoaded): IMvs;
+
+        /**
+         * Register a new implementation of the JES Api.
+         * See example in Interface docs.
+         *
+         * @param {IJes} jesApi
+         */
+        registerJesApi(jesApi: IJes): void;
+
+        /**
+         * Lookup of an API for JES for a given profile.
+         * @param {string} profile
+         * @returns the registered API instance
+         */
+        getJesApi(profile: imperative.IProfileLoaded): IJes;
     }
 }

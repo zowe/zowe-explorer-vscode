@@ -136,6 +136,11 @@ describe("Extension Unit Tests", () => {
     getUssApiMock.mockReturnValue(ussApi);
     ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 
+    const jesApi = ZoweExplorerApiRegister.getJesApi(profileOne);
+    const getJesApiMock = jest.fn();
+    getJesApiMock.mockReturnValue(jesApi);
+    ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
+
     const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
@@ -3460,11 +3465,11 @@ describe("Extension Unit Tests", () => {
     it("tests that the spool is downloaded", async () => {
         const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
+        const downloadFileSpy = jest.spyOn(jesApi, "downloadSpoolContent");
         await extension.downloadSpool(jobNode);
         expect(showOpenDialog).toBeCalled();
-        expect(downloadAllSpoolContentCommon).toBeCalled();
-        expect(downloadAllSpoolContentCommon.mock.calls[0][0]).toEqual(jobNode.session);
-        expect(downloadAllSpoolContentCommon.mock.calls[0][1]).toEqual(
+        expect(downloadFileSpy).toBeCalled();
+        expect(downloadFileSpy.mock.calls[0][0]).toEqual(
             {
                 jobid: jobNode.job.jobid,
                 jobname: jobNode.job.jobname,

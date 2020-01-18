@@ -9,6 +9,7 @@
     "activate.didSaveText.file": "File ",
     "activate.didSaveText.notDataSet": " is not a data set or USS file ",
     "downloadSpool.select": "Select",
+    "submitJcl.noDocumentOpen": "No editor with a document that could be submitted as JCL is currently open.",
     "submitJcl.log.debug": "Submitting JCL in document ",
     "submitJcl.quickPickOption": "Select the Profile to use to submit the job",
     "submitJcl.noProfile": "No profiles available",
