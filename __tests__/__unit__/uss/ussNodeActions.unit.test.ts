@@ -17,7 +17,7 @@ import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
-import * as isbinaryfile from 'isbinaryfile';
+import * as isbinaryfile from "isbinaryfile";
 import {Profiles} from "../../../src/Profiles";
 
 const Create = jest.fn();
@@ -374,7 +374,7 @@ describe("ussNodeActions", () => {
     describe("uploadFile", () => {
         Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
-        Object.defineProperty(isbinaryfile, 'isBinaryFileSync', {value: isBinaryFileSync});
+        Object.defineProperty(isbinaryfile, "isBinaryFileSync", {value: isBinaryFileSync});
 
         it("should call upload dialog and upload not binary file", async () => {
             fileToUSSFile.mockReset();

@@ -15,7 +15,7 @@ jest.mock("util");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
-jest.mock('isbinaryfile');
+jest.mock("isbinaryfile");
 jest.mock("../../src/Profiles");
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
