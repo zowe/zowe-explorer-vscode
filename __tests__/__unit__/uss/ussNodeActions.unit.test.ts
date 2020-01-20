@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
+import {ZoweUSSNode} from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
@@ -18,7 +18,7 @@ import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from 'isbinaryfile';
-import { Profiles } from "../../../src/Profiles";
+import {Profiles} from "../../../src/Profiles";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -68,8 +68,8 @@ function getFavoriteUSSNode() {
 }
 
 function getUSSTree() {
-    const ussNode1= getUSSNode();
-    const ussNodeFav= getFavoriteUSSNode();
+    const ussNode1 = getUSSNode();
+    const ussNodeFav = getFavoriteUSSNode();
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
@@ -102,22 +102,22 @@ const ussNode = getUSSNode();
 const ussFavNode = getFavoriteUSSNode();
 const testUSSTree = getUSSTree();
 
-Object.defineProperty(zowe, "Create", { value: Create });
-Object.defineProperty(zowe, "Delete", { value: Delete });
-Object.defineProperty(zowe, "Utilities", { value: Utilities });
-Object.defineProperty(Create, "uss", { value: uss });
-Object.defineProperty(Delete, "ussFile", { value: ussFile });
-Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
-Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+Object.defineProperty(zowe, "Create", {value: Create});
+Object.defineProperty(zowe, "Delete", {value: Delete});
+Object.defineProperty(zowe, "Utilities", {value: Utilities});
+Object.defineProperty(Create, "uss", {value: uss});
+Object.defineProperty(Delete, "ussFile", {value: ussFile});
+Object.defineProperty(Utilities, "renameUSSFile", {value: renameUSSFile});
+Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
 Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
 Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
 Object.defineProperty(fs, "existsSync", {value: existsSync});
-Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -172,7 +172,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
@@ -197,9 +197,12 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                         }),
                     };
@@ -234,9 +237,12 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return [undefined, undefined, undefined];
                         }),
                     };
@@ -268,7 +274,10 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"}
                     };
                 })
@@ -303,7 +312,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -347,7 +356,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -398,6 +407,18 @@ describe("ussNodeActions", () => {
             expect(openTextDocument).toBeCalled();
             expect(testUSSTree.refresh).toBeCalled();
         });
+        it("should call upload dialog and upload binary file", async () => {
+            showErrorMessage.mockReset();
+            fileToUSSFile.mockReset();
+
+            const fileUri = {fsPath: "/tmp/foo.zip"};
+            showOpenDialog.mockReturnValue([fileUri]);
+            isBinaryFileSync.mockReturnValueOnce(true);
+            await ussNodeActions.uploadDialog(ussNode, testUSSTree);
+
+            expect(showOpenDialog).toBeCalled();
+            expect(testUSSTree.refresh).toBeCalled();
+        });
         it("should attempt to upload USS file but throw an error", async () => {
             showInputBox.mockReturnValueOnce("new name");
             showErrorMessage.mockReset();
@@ -431,7 +452,7 @@ describe("ussNodeActions", () => {
 
             try {
                 await ussNodeActions.uploadDialog(ussNode, testUSSTree);
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -444,7 +465,7 @@ describe("ussNodeActions", () => {
         });
         it("should not copy the node's full path to the system clipboard if theia", async () => {
             let theia = true;
-            Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
+            Object.defineProperty(extension, "ISTHEIA", {get: () => theia});
             await ussNodeActions.copyPath(ussNode);
             expect(writeText).not.toBeCalled();
             theia = false;
