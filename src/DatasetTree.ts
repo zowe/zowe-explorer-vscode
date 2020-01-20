@@ -252,14 +252,14 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             return;
         } else if (node.contextValue === extension.DS_SESSION_CONTEXT) {
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
-                this.mFavoriteSession, node.getSession());
+                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.profile);
             temp.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             temp.iconPath =  applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
-                this.mFavoriteSession, node.getSession());
+                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.profile);
             temp.contextValue += extension.FAV_SUFFIX;
             if (temp.contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
