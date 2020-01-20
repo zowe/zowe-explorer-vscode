@@ -18,6 +18,7 @@ import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
 import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -44,6 +45,7 @@ const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
+const errorHandling = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -116,6 +118,7 @@ Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocu
 Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
 Object.defineProperty(fs, "existsSync", {value: existsSync});
 Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+Object.defineProperty(utils, "errorHandling", {value: errorHandling});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -174,7 +177,8 @@ describe("ussNodeActions", () => {
             } catch (err) {
             }
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
-            expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // expect(showErrorMessage.mock.calls.length).toBe(1);
         });
         it("tests the uss create node credentials", async () => {
             showQuickPick.mockReset();
@@ -304,7 +308,8 @@ describe("ussNodeActions", () => {
             // tslint:disable-next-line:no-empty
             } catch (err) {
             }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
+            // expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(utils.errorHandling).toHaveBeenCalled();
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
@@ -348,7 +353,8 @@ describe("ussNodeActions", () => {
             // tslint:disable-next-line:no-empty
             } catch (err) {
             }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // expect(showErrorMessage.mock.calls.length).toBe(1);
         });
         it("should execute rename favorite USS file", async () => {
             showInputBox.mockReturnValueOnce("new name");
@@ -429,7 +435,8 @@ describe("ussNodeActions", () => {
             // tslint:disable-next-line:no-empty
             } catch (err) {
             }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // expect(showErrorMessage.mock.calls.length).toBe(1);
         });
     });
     describe("copyPath", () => {

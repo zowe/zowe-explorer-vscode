@@ -143,8 +143,10 @@ describe("Unit Tests (Jest)", () => {
             rootNode.contextValue = extension.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
-            await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-                "Error: Throwing an error to check error handling for unit tests!\n"));
+            rootNode.getChildren();
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
+            //     "Error: Throwing an error to check error handling for unit tests!\n"));
         });
 
     /*************************************************************************************************************

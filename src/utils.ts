@@ -199,9 +199,9 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             break;
         }
         default: {
-            vscode.window.showErrorMessage(`\n${moreInfo}\n` +
-            `\n${errorDetails}\n`);
+            vscode.window.showErrorMessage(moreInfo);
             break;
         }
     }
+    return;
 }

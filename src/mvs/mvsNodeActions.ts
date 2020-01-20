@@ -49,7 +49,6 @@ export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
         const datasetName = getDatasetLabel(node);
         await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
     } catch (e) {
-        await utils.errorHandling(e, null, e.message);
-        // vscode.window.showErrorMessage(e.message);
+        await utils.errorHandling(e, node.getProfileName(), e.message);
     }
 }

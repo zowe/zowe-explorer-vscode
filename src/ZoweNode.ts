@@ -115,7 +115,8 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                 responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
             }
         } catch (err) {
-            await utils.errorHandling(err, this.label, (localize("getChildren.error.response", "Retrieving response from zowe.List")));
+            const errMessage: string = localize("getChildren.error.response", "Retrieving response from zowe.List");
+            await utils.errorHandling(err, this.label, errMessage);
         }
 
         // push nodes to an object with property names to avoid duplicates

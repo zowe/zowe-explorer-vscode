@@ -125,8 +125,10 @@ describe("Unit Tests (Jest)", () => {
             rootNode.contextValue = extension.USS_SESSION_CONTEXT;
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
-            await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-                "Error: Throwing an error to check error handling for unit tests!\n"));
+            rootNode.getChildren();
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
+            //     "Error: Throwing an error to check error handling for unit tests!\n"));
         });
 
     /*************************************************************************************************************
@@ -141,8 +143,10 @@ describe("Unit Tests (Jest)", () => {
             const subNode = new ZoweUSSNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
             subNode.fullPath = "THROW ERROR";
             subNode.dirty = true;
-            await expect(subNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-                "Error: Throwing an error to check error handling for unit tests!\n"));
+            subNode.getChildren();
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // await expect(subNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
+            //     "Error: Throwing an error to check error handling for unit tests!\n"));
         });
 
     /*************************************************************************************************************

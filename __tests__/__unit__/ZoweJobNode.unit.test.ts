@@ -486,7 +486,8 @@ describe("Zos Jobs Unit Tests", () => {
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(utils.errorHandling).toHaveBeenCalled();
+            // expect(showErrorMessage.mock.calls.length).toBe(1);
         });
 
         it("Testing that user filter prompts are executed successfully theia specific route", async () => {

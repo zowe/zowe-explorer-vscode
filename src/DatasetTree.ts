@@ -98,7 +98,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
-                    const errMsg =
+                    const errMsg: string =
                     localize("initializeFavorites.error.profile1",
                     "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
                     localize("intializeFavorites.error.profile2",
@@ -123,12 +123,12 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 try {
                     zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
-                    await errorHandling(error, null, (localize("loadNamedProfile.error.profileName",
-                        "Initialization Error: Could not find profile named: ")) +
-                        + sesName + localize("loadNamedProfile.error.period", "."));
-                    // vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
-                    //     "Initialization Error: Could not find profile named: ")
-                    //     + sesName + localize("loadNamedProfile.error.period", "."));
+                    const errMessage: string =
+                    localize("loadNamedProfile.error.profileName",
+                    "Initialization Error: Could not find profile named: ") +
+                    + sesName +
+                    localize("loadNamedProfile.error.period", ".");
+                    await errorHandling(error, null, errMessage);
                     continue;
                 }
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
@@ -407,7 +407,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                await errorHandling(error, null, "Error encountered in datasetFilterPrompt.optionalProfiles! ");
+                await errorHandling(error, node.getProfileName(), "Error encountered in datasetFilterPrompt.optionalProfiles! ");
                 // vscode.window.showErrorMessage(error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
@@ -524,7 +524,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    await errorHandling(error, null, "Error encountered in flipState.optionalProfiles! ");
+                    await errorHandling(error, element.getProfileName(), "Error encountered in flipState.optionalProfiles! ");
                     // vscode.window.showErrorMessage(error.message);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {

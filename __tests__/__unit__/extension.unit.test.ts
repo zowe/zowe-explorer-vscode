@@ -1187,9 +1187,9 @@ describe("Extension Unit Tests", () => {
         } catch (err) {
             // do nothing
         }
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
+        expect(utils.errorHandling).toHaveBeenCalled();
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
+        // expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -3421,7 +3421,8 @@ describe("Extension Unit Tests", () => {
         const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
         await extension.downloadSpool(undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(utils.errorHandling).toHaveBeenCalled();
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests that the jcl is downloaded", async () => {
@@ -3439,7 +3440,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
         await extension.downloadJcl(undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(utils.errorHandling).toHaveBeenCalled();
     });
 
     it("tests that the jcl is submitted", async () => {
@@ -4062,8 +4063,8 @@ describe("Extension Unit Tests", () => {
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
         await extension.issueTsoCommand(undefined);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(utils.errorHandling).toHaveBeenCalled();
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests the issueTsoCommand prompt credentials", async () => {
@@ -4152,7 +4153,7 @@ describe("Extension Unit Tests", () => {
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
         await extension.issueTsoCommand(outputChannel);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(utils.errorHandling).toHaveBeenCalled();
+        // expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 });

@@ -40,6 +40,7 @@
     "createFile.log.debug.creatingNewDataSet": "Creating new data set",
     "dataset.name": "Name of Data Set",
     "createDataSet.error": "Error encountered when creating data set! ",
+    "createDataSet.error.location": "The problem occured in zowe.CreateDataset.",
     "createMember.inputBox": "Name of Member",
     "createMember.log.debug.createNewDataSet": "creating new data set member of name ",
     "createMember.log.error": "Error encountered when creating member! ",
