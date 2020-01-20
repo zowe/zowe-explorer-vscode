@@ -14,7 +14,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Update incorrect profile message. Thanks @lauren-li
 - Fix Copy and paste dateset menu duplication. Thanks @lauren-li
 
-### `1.0.1`
+## `1.0.1`
 
 - Remove duplicate commands #376. Thanks @lauren-li
 - Update localization for v1.0.0 #374. Thanks @lauren-li
