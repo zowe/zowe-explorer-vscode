@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import {ZoweUSSNode} from "../../../src/ZoweUSSNode";
+import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
@@ -18,7 +18,7 @@ import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
-import {Profiles} from "../../../src/Profiles";
+import { Profiles } from "../../../src/Profiles";
 
 const Create = jest.fn();
 const Delete = jest.fn();
