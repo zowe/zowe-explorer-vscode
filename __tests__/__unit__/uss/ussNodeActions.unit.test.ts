@@ -17,6 +17,7 @@ import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
+import * as isbinaryfile from 'isbinaryfile';
 import { Profiles } from "../../../src/Profiles";
 
 const Create = jest.fn();
@@ -44,6 +45,7 @@ const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
+const isBinaryFileSync = jest.fn();
 
 function getUSSNode() {
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
@@ -363,8 +365,9 @@ describe("ussNodeActions", () => {
     describe("uploadFile", () => {
         Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
+        Object.defineProperty(isbinaryfile, 'isBinaryFileSync', {value: isBinaryFileSync});
 
-        it("should call upload dialog and upload file", async () => {
+        it("should call upload dialog and upload not binary file", async () => {
             fileToUSSFile.mockReset();
             const testDoc2: vscode.TextDocument = {
                 fileName: path.normalize("/sestest/tmp/foo.txt"),
@@ -389,6 +392,7 @@ describe("ussNodeActions", () => {
             const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
+            isBinaryFileSync.mockReturnValueOnce(false);
             await ussNodeActions.uploadDialog(ussNode, testUSSTree);
             expect(showOpenDialog).toBeCalled();
             expect(openTextDocument).toBeCalled();
@@ -423,6 +427,7 @@ describe("ussNodeActions", () => {
             const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
+            isBinaryFileSync.mockReturnValueOnce(false);
 
             try {
                 await ussNodeActions.uploadDialog(ussNode, testUSSTree);

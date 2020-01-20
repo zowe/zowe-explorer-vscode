@@ -21,7 +21,7 @@ import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
-import { isBinaryFile } from "isbinaryfile";
+import { isBinaryFileSync } from "isbinaryfile";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -200,7 +200,7 @@ export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) 
 
     await Promise.all(
         value.map(async (item) => {
-            const isBinary = await isBinaryFile(item.fsPath);
+            const isBinary = isBinaryFileSync(item.fsPath);
 
             if (isBinary) {
                 await uploadBinaryFile(node, item.fsPath);
