@@ -370,6 +370,10 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         this.refresh();
     }
 
+    public getHistory() {
+        return this.mHistory.getHistory();
+    }
+
     public getMemberHistory() {
         return this.mHistory.getMemberHistory();
     }
