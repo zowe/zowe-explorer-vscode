@@ -18,6 +18,7 @@ import * as brtimperative from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as path from "path";
 import * as brightside from "@brightside/core";
+import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
@@ -198,6 +199,9 @@ describe("Extension Unit Tests", () => {
     const concatChildNodes = jest.fn();
     const concatUSSChildNodes = jest.fn();
     let mockClipboardData: string;
+    const cliHome = jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe"));
+    const icInstance = jest.fn();
+    const ImperativeConfig =jest.fn();
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
@@ -368,6 +372,9 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
+    Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
+    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
+    Object.defineProperty(icInstance, "cliHome", { value: cliHome });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});

@@ -17,7 +17,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session, CredentialManagerFactory, ImperativeError } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -348,8 +348,7 @@ export function defineGlobals(tempPath: string | undefined) {
 export function getSecurityModules(moduleName): NodeRequire | undefined {
     let imperativeIsSsecure: boolean = false;
     try {
-        const homedir = os.homedir();
-        const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
+        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
         const settings = JSON.parse(fs.readFileSync(fileName).toString());
         const value1 = settings.overrides.CredentialManager;
         const value2 = settings.overrides["credential-manager"];
@@ -371,6 +370,19 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         } catch (err) {}
     }
     return undefined;
+}
+
+/**
+ * Function to retrieve the home directory. In the situation Imperative has
+ * not initialized it we mock a default value.
+ */
+export function getZoweDir(): string {
+    ImperativeConfig.instance.loadedConfig = {
+        defaultHome: path.join(os.homedir(), ".zowe"),
+        envVariablePrefix: "ZOWE"
+    };
+    const ti = ImperativeConfig.instance;
+    return ImperativeConfig.instance.cliHome;
 }
 
 /**

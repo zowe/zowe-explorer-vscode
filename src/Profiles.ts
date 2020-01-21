@@ -9,13 +9,13 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, ImperativeConfig } from "@brightside/imperative";
 import * as nls from "vscode-nls";
-import * as os from "os";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
+import { getZoweDir } from "./extension";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
@@ -295,7 +295,7 @@ export class Profiles {
     private async getCliProfileManager( type: string ) {
         if (!this.profileManager) {
             this.profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
                 type
             });
         }
