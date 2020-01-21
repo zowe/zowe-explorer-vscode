@@ -18,6 +18,7 @@ import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
+import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
 
 const Create = jest.fn();
@@ -45,6 +46,7 @@ const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
+const isBinaryFileSync = jest.fn();
 
 const profileOne: brtimperative.IProfileLoaded = {
     name: "profile1",
@@ -75,8 +77,8 @@ function getFavoriteUSSNode() {
 }
 
 function getUSSTree() {
-    const ussNode1= getUSSNode();
-    const ussNodeFav= getFavoriteUSSNode();
+    const ussNode1 = getUSSNode();
+    const ussNodeFav = getFavoriteUSSNode();
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
@@ -192,7 +194,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
@@ -215,7 +217,10 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
@@ -259,7 +264,10 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
@@ -295,7 +303,10 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"}
                     };
                 })
@@ -330,7 +341,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -374,7 +385,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -392,8 +403,9 @@ describe("ussNodeActions", () => {
     describe("uploadFile", () => {
         Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
+        Object.defineProperty(isbinaryfile, "isBinaryFileSync", {value: isBinaryFileSync});
 
-        it("should call upload dialog and upload file", async () => {
+        it("should call upload dialog and upload not binary file", async () => {
             fileToUSSFile.mockReset();
             const testDoc2: vscode.TextDocument = {
                 fileName: path.normalize("/sestest/tmp/foo.txt"),
@@ -418,9 +430,22 @@ describe("ussNodeActions", () => {
             const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
+            isBinaryFileSync.mockReturnValueOnce(false);
             await ussNodeActions.uploadDialog(ussNode, testUSSTree);
             expect(showOpenDialog).toBeCalled();
             expect(openTextDocument).toBeCalled();
+            expect(testUSSTree.refresh).toBeCalled();
+        });
+        it("should call upload dialog and upload binary file", async () => {
+            showErrorMessage.mockReset();
+            fileToUSSFile.mockReset();
+
+            const fileUri = {fsPath: "/tmp/foo.zip"};
+            showOpenDialog.mockReturnValue([fileUri]);
+            isBinaryFileSync.mockReturnValueOnce(true);
+            await ussNodeActions.uploadDialog(ussNode, testUSSTree);
+
+            expect(showOpenDialog).toBeCalled();
             expect(testUSSTree.refresh).toBeCalled();
         });
         it("should attempt to upload USS file but throw an error", async () => {
@@ -452,10 +477,11 @@ describe("ussNodeActions", () => {
             const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
+            isBinaryFileSync.mockReturnValueOnce(false);
 
             try {
                 await ussNodeActions.uploadDialog(ussNode, testUSSTree);
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -468,7 +494,7 @@ describe("ussNodeActions", () => {
         });
         it("should not copy the node's full path to the system clipboard if theia", async () => {
             let theia = true;
-            Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
+            Object.defineProperty(extension, "ISTHEIA", {get: () => theia});
             await ussNodeActions.copyPath(ussNode);
             expect(writeText).not.toBeCalled();
             theia = false;
