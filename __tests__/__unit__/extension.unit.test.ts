@@ -32,6 +32,8 @@ jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
 jest.mock("fs");
 jest.mock("fs-extra");
+jest.mock("util");
+jest.mock("isbinaryfile");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
 
