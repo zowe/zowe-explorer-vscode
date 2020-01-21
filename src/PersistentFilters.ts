@@ -35,6 +35,7 @@ export class PersistentFilters {
 
     public schema: string;
     private mHistory: string[] = [];
+    private mMemberHistory: string[] = [];
     private mSessions: string[] = [];
 
     constructor(schema: string, private maxHistory = 5) {
@@ -69,20 +70,24 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addHistory(criteria: string) {
+    public async addHistory(criteria: string, isMember?: boolean) {
         if (criteria) {
-            // Remove any entries that match
-            this.mHistory = this.mHistory.filter( (element) => {
+            const filterFunction = (element) => {
                 return element.trim() !== criteria.trim();
-            });
+            };
+            const historyArray = isMember ? "mMemberHistory" : "mHistory";
+
+            // Remove any entries that match
+            this[historyArray] = this[historyArray].filter(filterFunction);
 
             // Add value to front of stack
-            this.mHistory.unshift(criteria);
+            this[historyArray].unshift(criteria);
 
             // If list getting too large remove last entry
-            if (this.mHistory.length > this.maxHistory) {
-                this.mHistory.pop();
+            if (this[historyArray].length > this.maxHistory) {
+                this[historyArray].pop();
             }
+
             this.updateHistory();
         }
     }
@@ -91,8 +96,13 @@ export class PersistentFilters {
         return this.mHistory;
     }
 
+    public getMemberHistory() {
+        return this.mMemberHistory;
+    }
+
     public async resetHistory() {
         this.mHistory = [];
+        this.mMemberHistory = [];
         this.updateHistory();
     }
     /**

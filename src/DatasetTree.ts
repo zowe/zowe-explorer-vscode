@@ -365,13 +365,87 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         }
     }
 
-    public async addHistory(criteria: string) {
-        this.mHistory.addHistory(criteria);
+    public async addHistory(criteria: string, isMember?: boolean) {
+        this.mHistory.addHistory(criteria, isMember);
         this.refresh();
     }
 
     public getHistory() {
         return this.mHistory.getHistory();
+    }
+
+    public getMemberHistory() {
+        return this.mHistory.getMemberHistory();
+    }
+
+    public async recentMemberPrompt(datasetProvider: DatasetTree) {
+        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
+        let pattern: string;
+        let parentNode: ZoweNode;
+        let sessNode: ZoweNode;
+
+        // Get user selection
+        if (datasetProvider.getMemberHistory().length > 0) {
+            const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
+            const items: vscode.QuickPickItem[] = datasetProvider.getMemberHistory().map((element) => new FilterItem(element));
+            if (extension.ISTHEIA) {
+                const options1: vscode.QuickPickOptions = {
+                    placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open")
+                };
+
+                const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                if (!choice) {
+                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                    return;
+                }
+                pattern = choice === createPick ? "" : choice.label;
+            } else {
+                const quickpick = vscode.window.createQuickPick();
+                quickpick.items = [createPick, ...items];
+                quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member");
+                quickpick.ignoreFocusOut = true;
+                quickpick.show();
+                const choice = await resolveQuickPickHelper(quickpick);
+                quickpick.hide();
+                if (!choice) {
+                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                    return;
+                }
+                if (choice instanceof FilterDescriptor) {
+                    if (quickpick.value) {
+                        pattern = quickpick.value;
+                    }
+                } else {
+                    pattern = choice.label;
+                }
+            }
+        } else {
+            vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
+            return;
+        }
+        if (!pattern) {
+            vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
+            return;
+        }
+
+        // Find the selected member's session & parent nodes
+        datasetProvider.mSessionNodes.forEach((thisNode) => {
+            const i = thisNode.children.find((child) => child.label === pattern.substring(0, pattern.indexOf("(")));
+            parentNode = (i) ? i : parentNode;
+            sessNode = (i) ? thisNode : sessNode;
+        });
+
+        // Update the treeview with the new pattern
+        const memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
+        const node = new ZoweNode(memberName, vscode.TreeItemCollapsibleState.Expanded, parentNode, null);
+        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node.dirty = true;
+        node.contextValue = extension.DS_MEMBER_CONTEXT;
+        node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
+        datasetProvider.addHistory(node.label);
+
+        // Open the member
+        extension.openPS(node, true, datasetProvider);
     }
 
     public async datasetFilterPrompt(node: ZoweNode) {

@@ -159,6 +159,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 localize("activate.didSaveText.notDataSet", " is not a data set or USS file "));
             }
         });
+        vscode.commands.registerCommand("zowe.openRecent", () => datasetProvider.recentMemberPrompt(datasetProvider));
         vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
         vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
         vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
@@ -1396,6 +1397,7 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
                 node.setEtag(response.apiResponse.etag);
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
+            datasetProvider.addHistory(label, true);
             if (previewMember === true) {
                 await vscode.window.showTextDocument(document);
                 }

@@ -525,7 +525,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(64);
+        expect(registerCommand.mock.calls.length).toBe(65);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -540,6 +540,7 @@ describe("Extension Unit Tests", () => {
             "zowe.refreshNode",
             "zowe.pattern",
             "zowe.ZoweNode.openPS",
+            "zowe.openRecent",
             "zowe.createDataset",
             "zowe.createMember",
             "zowe.deleteDataset",
@@ -1847,7 +1848,7 @@ describe("Extension Unit Tests", () => {
         withProgress.mockReturnValue(response);
         openTextDocument.mockResolvedValueOnce("test doc");
 
-        await extension.openPS(node, true);
+        await extension.openPS(node, true, testTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
@@ -1872,7 +1873,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce("test doc");
         const node2 = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
-        await extension.openPS(node2, true);
+        await extension.openPS(node2, true, testTree);
 
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -1883,7 +1884,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
-            await extension.openPS(child, true);
+            await extension.openPS(child, true, testTree);
         } catch (err) {
             // do nothing
         }
@@ -1897,7 +1898,7 @@ describe("Extension Unit Tests", () => {
 
         const child2 = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
-            await extension.openPS(child2, true);
+            await extension.openPS(child2, true, testTree);
         } catch (err) {
             // do nothing
         }
@@ -1905,7 +1906,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.openPS(child, true);
+        await extension.openPS(child, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
@@ -1913,7 +1914,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
-        await extension.openPS(child, true);
+        await extension.openPS(child, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
