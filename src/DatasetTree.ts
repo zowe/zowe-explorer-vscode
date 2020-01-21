@@ -419,6 +419,25 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     pattern = choice.label;
                 }
             }
+
+            // Find the selected member's session & parent nodes
+            datasetProvider.mSessionNodes.forEach((thisNode) => {
+                const i = thisNode.children.find((child) => child.label === pattern.substring(0, pattern.indexOf("(")));
+                parentNode = (i) ? i : parentNode;
+                sessNode = (i) ? thisNode : sessNode;
+            });
+
+            // Update the treeview with the new pattern
+            const memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
+            const node = new ZoweNode(memberName, vscode.TreeItemCollapsibleState.Expanded, parentNode, null);
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            node.dirty = true;
+            node.contextValue = extension.DS_MEMBER_CONTEXT;
+            node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
+            datasetProvider.addHistory(node.label);
+
+            // Open the member
+            extension.openPS(node, true, datasetProvider);
         } else {
             vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
             return;
@@ -427,25 +446,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
             return;
         }
-
-        // Find the selected member's session & parent nodes
-        datasetProvider.mSessionNodes.forEach((thisNode) => {
-            const i = thisNode.children.find((child) => child.label === pattern.substring(0, pattern.indexOf("(")));
-            parentNode = (i) ? i : parentNode;
-            sessNode = (i) ? thisNode : sessNode;
-        });
-
-        // Update the treeview with the new pattern
-        const memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
-        const node = new ZoweNode(memberName, vscode.TreeItemCollapsibleState.Expanded, parentNode, null);
-        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        node.dirty = true;
-        node.contextValue = extension.DS_MEMBER_CONTEXT;
-        node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
-        datasetProvider.addHistory(node.label);
-
-        // Open the member
-        extension.openPS(node, true, datasetProvider);
     }
 
     public async datasetFilterPrompt(node: ZoweNode) {

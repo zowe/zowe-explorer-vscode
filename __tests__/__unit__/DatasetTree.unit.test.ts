@@ -306,8 +306,15 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Tests the getHistory command", async () => {
         testTree.addHistory("testHistory");
-        const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         expect(testTree.getHistory()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the getMemberHistory command
+     *************************************************************************************************************/
+    it("Tests the getMemberHistory command", async () => {
+        testTree.addHistory("testHistory", true);
+        expect(testTree.getMemberHistory()[0]).toEqual("testHistory");
     });
 
     /*************************************************************************************************************
@@ -585,6 +592,20 @@ describe("DatasetTree Unit Tests", () => {
 
         showQuickPick.mockReset();
         showInputBox.mockReset();
+    });
+
+    it("Testing that recentMemberPrompt fails if no members were opened recently", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        testTree2.getMemberHistory.mockReturnValue([]);
+        const openPS = jest.spyOn(extension, "openPS");
+
+        testTree2.addHistory.mockReset();
+        openPS.mockReset();
+
+        await testTree.recentMemberPrompt(testTree2);
+
+        expect(testTree2.getMemberHistory).toHaveReturnedWith([]);
+        expect(openPS).toBeCalledTimes(0);
     });
 
     /*************************************************************************************************************
