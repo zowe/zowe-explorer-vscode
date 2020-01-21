@@ -13,3 +13,4 @@ vscode-extension-for-zowe*.vsix
 .npmrc
 *nls.*.json
 .DS_Store
+.idea
