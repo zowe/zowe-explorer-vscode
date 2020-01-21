@@ -10,8 +10,11 @@
     "initializeFavorites.fileCorrupted": "Favorites file corrupted: ",
     "addFavorite": "PDS already in favorites",
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
-    "searchHistory.options.prompt": "Select a filter",
+    "memberHistory.option.prompt.open": "Select a recent member to open",
+    "memberHistory.options.prompt": "Select a recent member",
     "enterPattern.pattern": "No selection made.",
+    "getRecentMembers.empty": "No recent members found.",
+    "searchHistory.options.prompt": "Select a filter",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
     "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
     "ussFilterPrompt.option.prompt.search": "Create a new filter"

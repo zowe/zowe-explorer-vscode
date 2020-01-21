@@ -137,7 +137,6 @@ describe("Extension Unit Tests", () => {
     const delDataset = jest.fn();
     const Create = jest.fn();
     const dataSetCreate = jest.fn();
-    const recentMemberPrompt = jest.fn();
     const Download = jest.fn();
     const Utilities = jest.fn();
     const isFileTagBinOrAscii = jest.fn();
@@ -274,7 +273,6 @@ describe("Extension Unit Tests", () => {
     testTree.mSessionNodes.push(sessNode);
     Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
     Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
-    Object.defineProperty(testTree, "getMemberHistory", {value: jest.fn()});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
 
     const testUSSTree = USSTree();
@@ -344,7 +342,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
-    Object.defineProperty(vscode.window, "openRecent", {value: recentMemberPrompt});
     Object.defineProperty(brightside, "Download", {value: Download});
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
@@ -1735,47 +1732,6 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that refreshAll is executed successfully", async () => {
         extension.refreshAll(testTree);
-    });
-
-    it("Testing that recentMemberPrompt (opening a recent member) is executed successfully", async () => {
-        const parent = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
-        );
-        testTree.getMemberHistory.mockReturnValue([child]);
-        createQuickPick.mockReturnValue({
-            activeItems: [child.label],
-            ignoreFocusOut: true,
-            items: [child.label],
-            value: "node(child)",
-            show: jest.fn(()=>{
-                return {};
-            }),
-            hide: jest.fn(()=>{
-                return {};
-            }),
-            onDidAccept: jest.fn(()=>{
-                return {};
-            })
-        });
-
-        sessNode.children.push(parent);
-
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-
-        await extension.recentMemberPrompt(testTree);
-
-        expect(testTree.addHistory).toBeCalledWith("child");
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-
-        sessNode.children.pop();
-
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
     });
 
     it("Testing that openPS is executed successfully", async () => {
