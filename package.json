@@ -1100,7 +1100,7 @@
           "default": "",
           "description": "%Zowe-Builtin-Security%",
           "scope": "window"
-        }, 
+        },
         "Zowe-USS-Persistent": {
           "default": {
             "persistence": true,
@@ -1194,6 +1194,7 @@
     "jest-html-reporter": "^2.4.0",
     "jsdoc": "^3.6.3",
     "jsdom": "11.11.0",
+    "keytar": "^5.0.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
     "mem": ">=4.0.0",
@@ -1209,7 +1210,7 @@
   "dependencies": {
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
-    "keytar": "^5.0.0",
+    "isbinaryfile": "^4.0.4",
     "vscode-nls": "^4.1.1"
   },
   "jest": {
