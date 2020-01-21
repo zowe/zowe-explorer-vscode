@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -18,8 +18,7 @@
     "z/OS",
     "USS",
     "JES",
-    "MVS",
-    "TSO"
+    "MVS"
   ],
   "categories": [
     "Other"
@@ -381,7 +380,11 @@
       },
       {
         "command": "zowe.issueTsoCmd",
-        "title": "%issueTsoCmd%"
+        "title": "%issueMvsCmd%"
+      },
+      {
+        "command": "zowe.issueMvsCmd",
+        "title": "%issueCmd%"
       },
       {
         "command": "zowe.jobs.search",
@@ -801,6 +804,11 @@
           "group": "4_workspace"
         },
         {
+          "when": "view == zowe.explorer && viewItem == session",
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == session_fav",
           "command": "zowe.removeSavedSearch"
         },
@@ -822,6 +830,11 @@
           "when": "view == zowe.uss.explorer && viewItem == uss_session",
           "command": "zowe.uss.saveSearch",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem == uss_session",
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.jobs && viewItem == server",
@@ -884,6 +897,11 @@
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.jobs.saveSearch",
           "group": "4_workspace"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.issueMvsCmd",
+          "group": "3_systemSpecific"
         },
         {
           "when": "view == zowe.jobs && viewItem == job",
@@ -990,6 +1008,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.issueMvsCmd",
           "when": "never"
         }
       ]
@@ -1102,6 +1124,20 @@
             "sessions": []
           },
           "description": "%Zowe-Default-Jobs-Persistent-Favorites%",
+          "scope": "window"
+        },
+        "Zowe Commands: Always edit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow editing of commands before submitting",
+          "scope": "window"
+        },
+        "Zowe Commands: History": {
+          "default": {
+            "persistence": true,
+            "history": []
+          },
+          "description": "%Zowe-Default-Commands-Persistent-Favorites%",
           "scope": "window"
         },
         "Zowe-Environment": {
