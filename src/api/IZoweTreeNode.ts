@@ -14,55 +14,7 @@ import { Session } from "@brightside/imperative";
 import { IJob } from "@brightside/core";
 
 /**
- * The base interface for Zowe tree browsers that implement the
- * vscode.TreeDataProvider.
- *
- * @export
- * @interface IZoweTree
- * @extends {vscode.TreeDataProvider<T>}
- * @template T provide a subtype of vscode.TreeItem
- */
-export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
-    /**
-     * Root session nodes
-     */
-    mSessionNodes: T[];
-    /**
-     * Root favorites node
-     */
-    mFavoriteSession: T;
-    /**
-     * Array of favorite nodes
-     */
-    mFavorites: T[];
-    /**
-     * Adds a session to the container
-     * @param sessionName
-     * @param type e.g. zosmf
-     */
-    addSession(sessionName?: string, type?: string): Promise<void>;
-    /**
-     * Adds a favorite node
-     * @param favorite Adds a favorite node
-     */
-    addFavorite(favorite: IZoweTreeNode);
-    /**
-     * Removes a favorite node
-     * @param favorite Adds a favorite node
-     */
-    removeFavorite(node: IZoweTreeNode);
-    /**
-     * Refreshes the tree
-     */
-    refresh(): void;
-    /**
-     * Refreshes an element of the tree
-     * @param favorite Node to refresh
-     */
-    refreshElement(node: IZoweTreeNode): void;
-}
-/**
- * The base interface for Zowe tree nodes.
+ * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
  * @export
  * @interface IZoweTreeNode

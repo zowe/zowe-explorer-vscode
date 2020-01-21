@@ -15,7 +15,7 @@ import { Session } from "@brightside/imperative";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJob, IJobFile } from "@brightside/core";
 import * as extension from "./extension";
-import { IZoweJobTreeNode } from "./api/ZoweTree";
+import { IZoweJobTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
 

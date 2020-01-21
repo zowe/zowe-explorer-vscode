@@ -26,7 +26,8 @@ import {
     sortTreeItems,
     labelHack
 } from "./utils";
-import { IZoweTree, IZoweJobTreeNode } from "./api/ZoweTree";
+import { IZoweTree } from "./api/IZoweTree";
+import { IZoweJobTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
@@ -241,59 +242,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         extension.JOBS_JOB_CONTEXT :
                         extension.JOBS_SESSION_CONTEXT ) + "}");
             await vscode.workspace.getConfiguration().update(ZosJobsProvider.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
-        }
-    }
-
-    /**
-     * Change the state of an expandable node
-     * @param provider the tree view provider
-     * @param element the node being flipped
-     * @param isOpen the intended state of the the tree view provider, true or false
-     * N.B. Specific implementation for Jobs as owner field set.
-     */
-    public async flipState(element: IZoweJobTreeNode, isOpen: boolean = false) {
-        if (element.label !== "Favorites") {
-            let usrNme: string;
-            let passWrd: string;
-            let baseEncd: string;
-            let sesNamePrompt: string;
-            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
-                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
-            } else {
-                sesNamePrompt = element.label;
-            }
-            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
-                }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    element.getSession().ISession.user = usrNme;
-                    element.getSession().ISession.password = passWrd;
-                    element.getSession().ISession.base64EncodedAuth = baseEncd;
-                    element.owner = usrNme;
-                    this.validProfile = 1;
-                } else {
-                    return;
-                }
-                await this.refreshElement(element);
-                await this.refresh();
-            } else {
-                this.validProfile = 1;
-            }
-        } else {
-            this.validProfile = 1;
-        }
-        if (this.validProfile === 1) {
-            element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-            element.dirty = true;
-            this.mOnDidChangeTreeData.fire(element);
         }
     }
 
@@ -594,7 +542,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             // Uses loaded profile to create a zosmf session with brightside
             const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null);
             node.contextValue = extension.JOBS_SESSION_CONTEXT;
             node.iconPath = applyIcons(node);

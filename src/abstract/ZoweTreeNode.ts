@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { Session } from "@brightside/imperative";
-import { IZoweTreeNode } from "../api/ZoweTree";
+import { IZoweTreeNode } from "../api/IZoweTreeNode";
 // import * as extension from "../extension";
 
 /**
@@ -19,7 +19,7 @@ import { IZoweTreeNode } from "../api/ZoweTree";
  * IZoweTreeNode
  *
  * @export
- * @class ZoweNode
+ * @class ZoweDatasetNode
  * @extends {vscode.TreeItem}
  */
 export class ZoweTreeNode extends vscode.TreeItem {
@@ -32,7 +32,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
     public shortLabel = "";
 
     /**
-     * Creates an instance of ZoweNode
+     * Creates an instance of ZoweDatasetNode
      *
      * @param {string} label - Displayed in the [TreeView]
      * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/folder

@@ -13,7 +13,7 @@ import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-import { IZoweUSSTreeNode } from "./api/ZoweTree";
+import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../src/extension";
 import * as utils from "./utils";

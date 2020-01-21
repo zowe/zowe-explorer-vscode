@@ -14,8 +14,8 @@ import * as vscode from "vscode";
 import { Session } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
-import * as extension from "../src/extension";
-import { IZoweDatasetTreeNode } from "./api/ZoweTree";
+import * as extension from "./extension";
+import { IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -23,21 +23,21 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * A type of TreeItem used to represent sessions and data sets
  *
  * @export
- * @class ZoweNode
+ * @class ZoweDatasetNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
+export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-    public children: ZoweNode[] = [];
+    public children: ZoweDatasetNode[] = [];
 
     /**
-     * Creates an instance of ZoweNode
+     * Creates an instance of ZoweDatasetNode
      *
      * @param {string} label - Displayed in the [TreeView]
      * @param {vscode.TreeItemCollapsibleState} mCollapsibleState - file/folder
-     * @param {ZoweNode} mParent
+     * @param {ZoweDatasetNode} mParent
      * @param {Session} session
      */
     constructor(label: string,
@@ -71,13 +71,13 @@ export class ZoweNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     }
 
     /**
-     * Retrieves child nodes of this ZoweNode
+     * Retrieves child nodes of this ZoweDatasetNode
      *
-     * @returns {Promise<ZoweNode[]>}
+     * @returns {Promise<ZoweDatasetNode[]>}
      */
-    public async getChildren(): Promise<ZoweNode[]> {
+    public async getChildren(): Promise<ZoweDatasetNode[]> {
         if ((!this.pattern && this.contextValue === extension.DS_SESSION_CONTEXT)){
-            return [new ZoweNode(localize("getChildren.search", "Use the search button to display datasets"),
+            return [new ZoweDatasetNode(localize("getChildren.search", "Use the search button to display datasets"),
                                  vscode.TreeItemCollapsibleState.None, this, null, extension.INFORMATION_CONTEXT)];
         }
 
@@ -133,22 +133,23 @@ export class ZoweNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
                 const existing = this.children.find((element) => element.label.trim() === item.dsname );
                 if (existing) {
                     elementChildren[existing.label] = existing;
-                // Creates a ZoweNode for a PDS
+                // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
                     elementChildren[temp.label] = temp;
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, extension.DS_MIGRATED_FILE_CONTEXT);
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
+                                    this, null, extension.DS_MIGRATED_FILE_CONTEXT);
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
-                    // Creates a ZoweNode for a PS
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
-                    temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
+                    // Creates a ZoweDatasetNode for a PS
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
+                    temp.command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 } else {
-                    // Creates a ZoweNode for a PDS member
-                    const temp = new ZoweNode(item.member, vscode.TreeItemCollapsibleState.None, this, null);
-                    temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
+                    // Creates a ZoweDatasetNode for a PDS member
+                    const temp = new ZoweDatasetNode(item.member, vscode.TreeItemCollapsibleState.None, this, null);
+                    temp.command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 }
             }
@@ -156,7 +157,7 @@ export class ZoweNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
 
         this.dirty = false;
         if (Object.keys(elementChildren).length === 0) {
-            return this.children = [new ZoweNode(localize("getChildren.noDataset", "No datasets found"),
+            return this.children = [new ZoweDatasetNode(localize("getChildren.noDataset", "No datasets found"),
             vscode.TreeItemCollapsibleState.None, this, null, extension.INFORMATION_CONTEXT)];
         } else {
             return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);

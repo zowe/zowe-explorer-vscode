@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
-import { ZoweNode } from "../../../src/ZoweNode";
+import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
 import * as extension from "../../../src/extension";
 
 const mockRefresh = jest.fn();
@@ -35,7 +35,7 @@ describe("mvsNodeActions", () => {
         jest.resetAllMocks();
     });
     it("should call upload dialog and upload file", async () => {
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
         const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
         openTextDocument.mockReturnValue({});
@@ -50,16 +50,16 @@ describe("mvsNodeActions", () => {
         });
         it("should return default label for dataset", () => {
             const labelName = "dataset.test";
-            const node = new ZoweNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
+            const node = new ZoweDatasetNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
             const label = mvsNodeActions.getDatasetLabel(node);
             expect(label).toEqual(labelName);
         });
         it("should return default label for dataset", () => {
             const labelNameWithProfile = "[myProfile123]: dataset.test";
             const labelName = "dataset.test";
-            const parentNode = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+            const parentNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
             parentNode.contextValue = extension.FAVORITE_CONTEXT;
-            const node = new ZoweNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
+            const node = new ZoweDatasetNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
             const label = mvsNodeActions.getDatasetLabel(node);
             expect(label).toEqual(labelName);
         });

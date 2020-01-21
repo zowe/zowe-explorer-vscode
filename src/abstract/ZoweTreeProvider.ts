@@ -15,7 +15,7 @@ import { Logger } from "@brightside/imperative";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor, applyIcons } from "../utils";
-import { IZoweTreeNode } from "../api/ZoweTree";
+import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as extension from "../extension";
 
 // tslint:disable-next-line: max-classes-per-file

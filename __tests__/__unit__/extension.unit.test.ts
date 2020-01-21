@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as treeMock from "../../src/DatasetTree";
 import * as treeUSSMock from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import { ZoweNode } from "../../src/ZoweNode";
+import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
 import * as brtimperative from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as path from "path";
@@ -87,7 +87,7 @@ describe("Extension Unit Tests", () => {
         "subsystem": ""
     };
 
-    const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+    const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
 
@@ -496,15 +496,15 @@ describe("Extension Unit Tests", () => {
         await extension.activate(mock);
 
         const sampleFavorites = [
-            new ZoweNode("[test]: brtvs99.public.test", vscode.TreeItemCollapsibleState.Collapsed, undefined, undefined),
-            new ZoweNode("[test]: brtvs99.test", vscode.TreeItemCollapsibleState.None, undefined, undefined),
-            new ZoweNode("[test]: brtvs99.test.search", vscode.TreeItemCollapsibleState.None, undefined, null)
+            new ZoweDatasetNode("[test]: brtvs99.public.test", vscode.TreeItemCollapsibleState.Collapsed, undefined, undefined),
+            new ZoweDatasetNode("[test]: brtvs99.test", vscode.TreeItemCollapsibleState.None, undefined, undefined),
+            new ZoweDatasetNode("[test]: brtvs99.test.search", vscode.TreeItemCollapsibleState.None, undefined, null)
         ];
         sampleFavorites[0].contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         sampleFavorites[1].contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         sampleFavorites[2].contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         sampleFavorites[1].command = {
-            command: "zowe.ZoweNode.openPS",
+            command: "zowe.ZoweDatasetNode.openPS",
             title: "",
             arguments: [sampleFavorites[1]]
         };
@@ -537,7 +537,7 @@ describe("Extension Unit Tests", () => {
             "zowe.refreshAll",
             "zowe.refreshNode",
             "zowe.pattern",
-            "zowe.ZoweNode.openPS",
+            "zowe.ZoweDatasetNode.openPS",
             "zowe.createDataset",
             "zowe.createMember",
             "zowe.deleteDataset",
@@ -696,7 +696,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that createMember correctly executes", async () => {
-        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
 
         showInputBox.mockResolvedValue("testMember");
 
@@ -734,9 +734,9 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that refreshPS correctly executes with and without error", async () => {
-        const node = new ZoweNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
@@ -838,7 +838,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Test Get Profile", async () => {
-        const ProfNode = new ZoweNode("[sestest1,sestest2]", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        const ProfNode = new ZoweDatasetNode("[sestest1,sestest2]", vscode.TreeItemCollapsibleState.Expanded, null, session);
         await extension.getProfile(ProfNode);
         expect(ProfNode).not.toBeUndefined();
     });
@@ -1096,10 +1096,10 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that createFile is executed successfully", async () => {
-        const sessNode2 = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        const sessNode2 = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
         sessNode2.contextValue = extension.DS_SESSION_CONTEXT;
         sessNode2.pattern = "test hlq";
-        const childNode = new ZoweNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null);
+        const childNode = new ZoweDatasetNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null);
         sessNode2.children.push(childNode);
 
         const uploadResponse: brightside.IZosFilesResponse = {
@@ -1239,7 +1239,7 @@ describe("Extension Unit Tests", () => {
         };
 
         createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
         newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
 
         showQuickPick.mockReset();
@@ -1319,7 +1319,7 @@ describe("Extension Unit Tests", () => {
         };
 
         createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
         newsessNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
 
         showQuickPick.mockReset();
@@ -1333,7 +1333,7 @@ describe("Extension Unit Tests", () => {
 
         getConfiguration.mockReturnValue("FakeConfig");
         showInputBox.mockReturnValue("FakeName");
-        testTree.getChildren.mockReturnValue([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        testTree.getChildren.mockReturnValue([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         allMembers.mockReturnValue(uploadResponse);
         dataSet.mockReturnValue(uploadResponse);
         mockGetHistory.mockReturnValue(["mockHistory1"]);
@@ -1398,7 +1398,7 @@ describe("Extension Unit Tests", () => {
         });
         const createFile = jest.spyOn(extension, "createFile");
         createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newsessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
+        const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred);
         newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
         newsessNode.pattern = "sestest";
 
@@ -1428,9 +1428,9 @@ describe("Extension Unit Tests", () => {
         unlinkSync.mockReset();
         showQuickPick.mockReset();
 
-        let node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        let child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        let node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        let child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
@@ -1478,13 +1478,13 @@ describe("Extension Unit Tests", () => {
         await extension.deleteDataset(child, testTree);
 
         existsSync.mockReturnValueOnce(true);
-        node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.deleteDataset(node, testTree);
 
         existsSync.mockReturnValueOnce(true);
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, node, null);
+        child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node, null);
         await extension.deleteDataset(child, testTree);
     });
 
@@ -1495,8 +1495,8 @@ describe("Extension Unit Tests", () => {
         delDataset.mockReset();
         mockRemoveFavorite.mockReset();
 
-        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
+        const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
         node.contextValue = extension.FAVORITE_CONTEXT;
 
         existsSync.mockReturnValueOnce(true);
@@ -1523,8 +1523,8 @@ describe("Extension Unit Tests", () => {
         delDataset.mockReset();
         mockRemoveFavorite.mockReset();
 
-        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)", vscode.TreeItemCollapsibleState.None, node, null);
+        const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)", vscode.TreeItemCollapsibleState.None, node, null);
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
 
         existsSync.mockReturnValueOnce(true);
@@ -1552,9 +1552,9 @@ describe("Extension Unit Tests", () => {
         mockRemoveFavorite.mockReset();
         showErrorMessage.mockReset();
 
-        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
+        const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const parent = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
         node.contextValue = "junk";
 
         existsSync.mockReturnValueOnce(true);
@@ -1568,7 +1568,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
 
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node.pattern = "TEST";
         node.contextValue = extension.DS_SESSION_CONTEXT;
 
@@ -1593,7 +1593,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that enterPattern is executed successfully for search favorite", async () => {
         mockAddZoweSession.mockReset();
-        const favoriteSample = new ZoweNode("[sestest]: HLQ.TEST", vscode.TreeItemCollapsibleState.None, undefined, null);
+        const favoriteSample = new ZoweDatasetNode("[sestest]: HLQ.TEST", vscode.TreeItemCollapsibleState.None, undefined, null);
 
         await extension.enterPattern(favoriteSample, testTree);
 
@@ -1658,7 +1658,7 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         // testing if no session is defined (can happen while saving from favorites)
-        const nodeWitoutSession = new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, null, null);
+        const nodeWitoutSession = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, null, null);
         testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
         concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
         createBasicZosmfSession.mockReturnValueOnce(sessionwocred);
@@ -1679,7 +1679,7 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReset();
         createBasicZosmfSession.mockReset();
 
-        testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
         dataSetList.mockResolvedValueOnce(testResponse);
@@ -1691,7 +1691,7 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Data set failed to save. Data set may have been deleted on mainframe.");
 
-        const node = new ZoweNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null);
         sessNode.children.push(node);
         testResponse.apiResponse.items = [{dsname: "HLQ.TEST.AFILE"}, {dsname: "HLQ.TEST.AFILE(mem)"}];
         dataSetList.mockReset();
@@ -1782,7 +1782,7 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
         showErrorMessage.mockReset();
 
-        sessNode.children.push(new ZoweNode("HLQ.TEST.AFILE(mem)", vscode.TreeItemCollapsibleState.None, sessNode, null));
+        sessNode.children.push(new ZoweDatasetNode("HLQ.TEST.AFILE(mem)", vscode.TreeItemCollapsibleState.None, sessNode, null));
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
         testResponse.success = true;
@@ -1792,7 +1792,7 @@ describe("Extension Unit Tests", () => {
         await extension.saveFile(testDoc3, testTree);
         expect(concatChildNodes.mock.calls.length).toBe(1);
 
-        testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         dataSetList.mockReset();
         showErrorMessage.mockReset();
 
@@ -1830,9 +1830,9 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValue(null);
         const response: brightside.IZosFilesResponse = {
@@ -1868,7 +1868,7 @@ describe("Extension Unit Tests", () => {
         expect(showTextDocument.mock.calls[0][0]).toBe("test doc");
 
         openTextDocument.mockResolvedValueOnce("test doc");
-        const node2 = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node2 = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         await extension.openPS(node2, true);
 
@@ -1893,7 +1893,7 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("testError");
 
-        const child2 = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
+        const child2 = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
             await extension.openPS(child2, true);
         } catch (err) {
@@ -1931,7 +1931,7 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const dsNode = new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = extension.DS_SESSION_CONTEXT;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -1966,7 +1966,7 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const dsNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -2001,7 +2001,7 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const dsNode = new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = extension.DS_SESSION_CONTEXT;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -2033,7 +2033,7 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const dsNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -3424,7 +3424,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         createBasicZosmfSession.mockReturnValue(session);
         submitJcl.mockReturnValue(iJob);
-        testTree.getChildren.mockReturnValueOnce([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
         await extension.submitJcl(testTree);
         expect(submitJcl).toBeCalled();
         expect(showInformationMessage).toBeCalled();
@@ -3434,21 +3434,21 @@ describe("Extension Unit Tests", () => {
 
     it("tests that a pds member is submitted", async () => {
         showErrorMessage.mockReset();
-        const rootNode = new ZoweNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        const rootNode = new ZoweDatasetNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
         rootNode.contextValue = extension.DS_SESSION_CONTEXT;
-        const file = new ZoweNode("file", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const file = new ZoweDatasetNode("file", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         file.contextValue = "file";
-        const subNode = new ZoweNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        const member = new ZoweNode(extension.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
-        const favorite = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const subNode = new ZoweDatasetNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const member = new ZoweDatasetNode(extension.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
+        const favorite = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         favorite.contextValue = extension.FAVORITE_CONTEXT;
-        const favoriteSubNode = new ZoweNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favorite, null);
+        const favoriteSubNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favorite, null);
         favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        const favoritemember = new ZoweNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        const favoritemember = new ZoweDatasetNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
         favoritemember.contextValue = extension.DS_MEMBER_CONTEXT;
-        const gibberish = new ZoweNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const gibberish = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         gibberish.contextValue = "gibberish";
-        const gibberishSubNode = new ZoweNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
+        const gibberishSubNode = new ZoweDatasetNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
         submitJob.mockReturnValue(iJob);
 
         // pds member
@@ -3586,72 +3586,72 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that the add Suffix for datasets works", async () => {
         extension.defineGlobals("/test/path/");
-        let node = new ZoweNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        let node = new ZoweDatasetNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl"));
-        node = new ZoweNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm"));
-        node = new ZoweNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl"));
-        node = new ZoweNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli"));
-        node = new ZoweNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli"));
-        node = new ZoweNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh"));
-        node = new ZoweNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx"));
-        node = new ZoweNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml"));
 
-        node = new ZoweNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml"));
-        node = new ZoweNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.TXML"));
-        node = new ZoweNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml"));
-        node = new ZoweNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm"));
-        node = new ZoweNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER"));
-        node = new ZoweNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml"));
-        node = new ZoweNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "XML.AUSER.TEST(member)"));
-        node = new ZoweNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml"));
-        node = new ZoweNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm"));
-        node = new ZoweNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy"));
-        node = new ZoweNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc"));
-        node = new ZoweNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        node = new ZoweDatasetNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         expect(extension.getDocumentFilePath(node.label, node)).toEqual(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log"));
     });
 
     it("Tests the showDSAttributes function", async () => {
         dataSetList.mockReset();
-        const node = new ZoweNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node = new ZoweDatasetNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const testResponse = {
             success: true,
             commandResponse: "",
@@ -3701,7 +3701,7 @@ describe("Extension Unit Tests", () => {
         // mock a partitioned data set favorite
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
-        const node1 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node1 = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node1.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.showDSAttributes(node1, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
@@ -3709,7 +3709,7 @@ describe("Extension Unit Tests", () => {
         // mock a classic data set favorite
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
-        const node2 = new ZoweNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const node2 = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node2.contextValue = extension.DS_DS_CONTEXT + extension.FAV_SUFFIX;
         await extension.showDSAttributes(node2, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
@@ -3730,7 +3730,7 @@ describe("Extension Unit Tests", () => {
             showInputBox.mockReset();
             renameDataSet.mockReset();
 
-            const child = new ZoweNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
             showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
             await extension.renameDataSet(child, testTree);
@@ -3742,7 +3742,7 @@ describe("Extension Unit Tests", () => {
             showInputBox.mockReset();
             renameDataSet.mockReset();
 
-            const child = new ZoweNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             child.contextValue = "ds_fav";
             showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
             await extension.renameDataSet(child, testTree);
@@ -3758,7 +3758,7 @@ describe("Extension Unit Tests", () => {
             renameDataSet.mockReset();
             renameDataSet.mockImplementation(() => { throw defaultError; });
 
-            const child = new ZoweNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             child.contextValue = "ds_fav";
             showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
             try {
@@ -3775,8 +3775,8 @@ describe("Extension Unit Tests", () => {
             showInputBox.mockReset();
             renameDataSet.mockReset();
 
-            const parent = new ZoweNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
 
             showInputBox.mockResolvedValueOnce("mem2");
             await extension.renameDataSetMember(child, testTree);
@@ -3788,8 +3788,8 @@ describe("Extension Unit Tests", () => {
             showInputBox.mockReset();
             renameDataSet.mockReset();
 
-            const parent = new ZoweNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
+            const parent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
 
             parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
             child.contextValue = extension.DS_MEMBER_CONTEXT;
@@ -3808,8 +3808,8 @@ describe("Extension Unit Tests", () => {
             renameDataSetMember.mockReset();
             renameDataSetMember.mockImplementation(() => { throw defaultError; });
 
-            const parent = new ZoweNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
 
             child.contextValue = extension.DS_MEMBER_CONTEXT;
 
@@ -3829,7 +3829,7 @@ describe("Extension Unit Tests", () => {
         it("Should copy the label of a node to the clipboard", async () => {
             renameDataSet.mockReset();
 
-            const node = new ZoweNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_SESSION_CONTEXT;
 
             await extension.copyDataSet(node);
@@ -3838,7 +3838,7 @@ describe("Extension Unit Tests", () => {
         it("Should copy the label of a favourited node to the clipboard", async () => {
             renameDataSet.mockReset();
 
-            const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = "ds_fav";
 
             await extension.copyDataSet(node);
@@ -3847,8 +3847,8 @@ describe("Extension Unit Tests", () => {
         it("Should copy the label of a member to the clipboard", async () => {
             renameDataSet.mockReset();
 
-            const parent = new ZoweNode("HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+            const parent = new ZoweDatasetNode("HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
             parent.contextValue = extension.DS_PDS_CONTEXT;
             child.contextValue = extension.DS_MEMBER_CONTEXT;
             await extension.copyDataSet(child);
@@ -3857,8 +3857,8 @@ describe("Extension Unit Tests", () => {
         it("Should copy the label of a favourited member to the clipboard", async () => {
             renameDataSet.mockReset();
 
-            const parent = new ZoweNode("[sestest]: HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+            const parent = new ZoweDatasetNode("[sestest]: HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
             parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
             child.contextValue = extension.DS_MEMBER_CONTEXT;
             await extension.copyDataSet(child);
@@ -3867,7 +3867,7 @@ describe("Extension Unit Tests", () => {
     });
     describe("Pasting Data Sets", () => {
         it("Should call zowe.Copy.dataSet when pasting to sequential data set", async () => {
-            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_SESSION_CONTEXT;
 
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
@@ -3882,7 +3882,7 @@ describe("Extension Unit Tests", () => {
         });
         it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
             let error;
-            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_SESSION_CONTEXT;
             clipboard.writeText("INVALID");
             try {
@@ -3899,7 +3899,7 @@ describe("Extension Unit Tests", () => {
             dataSetGet.mockImplementation(() => {
                 throw Error("Member not found");
             });
-            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
 
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
@@ -3911,7 +3911,7 @@ describe("Extension Unit Tests", () => {
             dataSetGet.mockImplementation(() => {
                 throw Error("Member not found");
             });
-            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
 
@@ -3931,7 +3931,7 @@ describe("Extension Unit Tests", () => {
         it("Should throw an error when pasting to a member that already exists", async () => {
             let error;
             dataSetGet.mockImplementation(() => "DATA");
-            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
 
@@ -3952,9 +3952,9 @@ describe("Extension Unit Tests", () => {
             dataSetGet.mockImplementation(() => {
                 throw Error("Member not found");
             });
-            const favoritedNode = new ZoweNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const favoritedNode = new ZoweDatasetNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-            const nonFavoritedNode = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const nonFavoritedNode = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             findNonFavoritedNode.mockImplementation(() => nonFavoritedNode);
 
             showInputBox.mockResolvedValueOnce("mem1");

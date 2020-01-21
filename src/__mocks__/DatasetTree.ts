@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { ZoweNode } from "../ZoweNode";
+import { ZoweDatasetNode } from "../ZoweDatasetNode";
 import { MockMethod } from "../decorators/MockMethod";
 
 /**
@@ -20,35 +20,35 @@ import { MockMethod } from "../decorators/MockMethod";
  * @class DatasetTree
  * @implements {vscode.TreeDataProvider}
  */
-export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
-    public mSessionNodes: ZoweNode[] = [];
+export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
+    public mSessionNodes: ZoweDatasetNode[] = [];
 
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweNode | undefined> = new vscode.EventEmitter<ZoweNode | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<ZoweNode | undefined> = this.mOnDidChangeTreeData.event;
+    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweDatasetNode | undefined> = new vscode.EventEmitter<ZoweDatasetNode | undefined>();
+    public readonly onDidChangeTreeData: vscode.Event<ZoweDatasetNode | undefined> = this.mOnDidChangeTreeData.event;
 
     /**
-     * Takes argument of type ZoweNode and returns it converted to a general [TreeItem]
+     * Takes argument of type ZoweDatasetNode and returns it converted to a general [TreeItem]
      *
-     * @param {ZoweNode} element - The ZoweNode that is to be converted
+     * @param {ZoweDatasetNode} element - The ZoweDatasetNode that is to be converted
      * @returns {vscode.TreeItem}
      * @memberof DatasetTree
      */
     @MockMethod()
-    public getTreeItem(element: ZoweNode): vscode.TreeItem {
+    public getTreeItem(element: ZoweDatasetNode): vscode.TreeItem {
         return null;
     }
 
     /**
-     * Takes argument of type ZoweNode and retrieves all of the first level children
+     * Takes argument of type ZoweDatasetNode and retrieves all of the first level children
      *
-     * @param {ZoweNode} [element] - The ZoweNode that is to be converted
-     * @returns {Thenable<ZoweNode[]>}
+     * @param {ZoweDatasetNode} [element] - The ZoweDatasetNode that is to be converted
+     * @returns {Thenable<ZoweDatasetNode[]>}
      * @memberof DatasetTree
      */
     @MockMethod()
-    public getChildren(element?: ZoweNode): Promise<ZoweNode[]> {
-        return new Promise<ZoweNode[]>((resolve) => {
+    public getChildren(element?: ZoweDatasetNode): Promise<ZoweDatasetNode[]> {
+        return new Promise<ZoweDatasetNode[]>((resolve) => {
             return resolve(null);
         });
     }
@@ -66,12 +66,12 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     /**
      * Check if the parent exists, and return null if it has no parent
      *
-     * @param {ZoweNode} element - The ZoweNode of which to retrieve the parent
-     * @returns {vscode.ProviderResult<ZoweNode>}
+     * @param {ZoweDatasetNode} element - The ZoweDatasetNode of which to retrieve the parent
+     * @returns {vscode.ProviderResult<ZoweDatasetNode>}
      * @memberof DatasetTree
      */
     @MockMethod()
-    public getParent(element: ZoweNode): vscode.ProviderResult<ZoweNode> {
+    public getParent(element: ZoweDatasetNode): vscode.ProviderResult<ZoweDatasetNode> {
         return null;
     }
 
@@ -83,14 +83,14 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweNode> {
     }
 
     @MockMethod()
-    public async deleteSession(node?: ZoweNode): Promise<void> {
+    public async deleteSession(node?: ZoweDatasetNode): Promise<void> {
         return new Promise<void>((resolve) => {
             return resolve();
         });
     }
 
     @MockMethod()
-    public async removeFavorite(node: ZoweNode) {
+    public async removeFavorite(node: ZoweDatasetNode) {
         return new Promise<void>((resolve) => {
             return resolve();
         });

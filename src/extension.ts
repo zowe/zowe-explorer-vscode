@@ -14,8 +14,9 @@ import * as fs from "fs";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import { IZoweTree, IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/ZoweTree";
-import { ZoweNode } from "./ZoweNode";
+import { IZoweTree } from "./api/IZoweTree";
+import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
+import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
@@ -141,7 +142,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
         vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
         vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
-        vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true, datasetProvider));
+        vscode.commands.registerCommand("zowe.ZoweDatasetNode.openPS", (node) => openPS(node, true, datasetProvider));
         vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
             log.debug(localize("onDidSaveTextDocument1",
                 "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ") +
@@ -214,8 +215,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
         vscode.commands.registerCommand("zowe.uss.createFile", async (node) => ussActions.createUSSNode(node, ussFileProvider, "file"));
         vscode.commands.registerCommand("zowe.uss.createFolder", async (node) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
-        vscode.commands.registerCommand("zowe.uss.deleteNode",
-            async (node) => ussActions.deleteUSSNode(node, ussFileProvider, getUSSDocumentFilePath(node)));
+        vscode.commands.registerCommand("zowe.uss.deleteNode", async (node) => node.deleteUSSNode(ussFileProvider, getUSSDocumentFilePath(node)));
         vscode.commands.registerCommand("zowe.uss.binary", async (node) => changeFileType(node, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.text", async (node) => changeFileType(node, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.renameNode",
@@ -630,10 +630,10 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
  * TODO: Consider changing configuration to allow "custom" data set specifications
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * @export
- * @param {ZoweNode} node - Desired Brightside session
+ * @param {ZoweDatasetNode} node - Desired Brightside session
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
+export async function createFile(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
@@ -772,10 +772,10 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
  * Creates a PDS member
  *
  * @export
- * @param {ZoweNode} parent - The parent Node
+ * @param {ZoweDatasetNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createMember(parent: ZoweNode, datasetProvider: DatasetTree) {
+export async function createMember(parent: ZoweDatasetNode, datasetProvider: DatasetTree) {
     const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
@@ -793,7 +793,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
         }
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
-        openPS(new ZoweNode(name, vscode.TreeItemCollapsibleState.None, parent, null), true, datasetProvider);
+        openPS(new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null), true, datasetProvider);
         datasetProvider.refresh();
     }
 }
@@ -803,10 +803,10 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
  * Shows data set attributes in a new text editor
  *
  * @export
- * @param {ZoweNode} parent - The parent Node
+ * @param {ZoweDatasetNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function showDSAttributes(parent: ZoweNode, datasetProvider: DatasetTree) {
+export async function showDSAttributes(parent: ZoweDatasetNode, datasetProvider: DatasetTree) {
 
     let label = parent.label.trim();
     if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_DS_CONTEXT + FAV_SUFFIX) {
@@ -869,10 +869,10 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
  * Rename data sets
  *
  * @export
- * @param {ZoweNode} node - The node
+ * @param {ZoweDatasetNode} node - The node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
+export async function renameDataSet(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
     let beforeDataSetName = node.label.trim();
     let favPrefix;
     let isFavourite;
@@ -934,9 +934,9 @@ function getNodeLabels(node: IZoweTreeNode) {
  * Copy data sets
  *
  * @export
- * @param {ZoweNode} node - The node to copy
+ * @param {ZoweDatasetNode} node - The node to copy
  */
-export async function copyDataSet(node: ZoweNode) {
+export async function copyDataSet(node: ZoweDatasetNode) {
     return vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(node)));
 }
 
@@ -944,10 +944,10 @@ export async function copyDataSet(node: ZoweNode) {
  * Paste data sets
  *
  * @export
- * @param {ZoweNode} node - The node to paste to
+ * @param {ZoweDatasetNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree) {
+export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
     const { profileName, dataSetName } = getNodeLabels(node);
     let memberName;
     let beforeDataSetName;
@@ -1311,7 +1311,7 @@ function appendSuffix(label: string): string {
  *
  * @export
  * @param {string} label - If node is a member, label includes the name of the PDS
- * @param {ZoweNode} node
+ * @param {ZoweDatasetNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
     return path.join(DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
@@ -1434,9 +1434,9 @@ export async function refreshAll(datasetProvider: DatasetTree) {
 /**
  * Refreshes the passed node with current mainframe data
  *
- * @param {ZoweNode} node - The node which represents the dataset
+ * @param {ZoweDatasetNode} node - The node which represents the dataset
  */
-export async function refreshPS(node: ZoweNode) {
+export async function refreshPS(node: ZoweDatasetNode) {
     let label;
     try {
         switch (node.getParent().contextValue) {

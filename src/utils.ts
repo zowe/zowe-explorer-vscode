@@ -13,7 +13,7 @@ import * as path from "path";
 import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-import { IZoweTreeNode } from "./api/ZoweTree";
+import { IZoweTreeNode } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /*

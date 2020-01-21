@@ -14,7 +14,8 @@ import * as zowe from "@brightside/core";
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as vscode from "vscode";
-import { IZoweTree, IZoweUSSTreeNode } from "./api/ZoweTree";
+import { IZoweTree } from "./api/IZoweTree";
+import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
 import * as extension from "../src/extension";
@@ -376,7 +377,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             // Uses loaded profile to create a zosmf session with brightside
             const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              zosmfProfile.name);
             node.contextValue = extension.USS_SESSION_CONTEXT;

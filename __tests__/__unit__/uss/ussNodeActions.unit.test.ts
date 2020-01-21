@@ -275,37 +275,6 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
-    describe("deleteUSSNode", () => {
-        it("should delete node if user verified", async () => {
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
-        });
-        it("should not delete node if user did not verify", async () => {
-            showQuickPick.mockResolvedValueOnce("No");
-            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-        it("should not delete node if user cancelled", async () => {
-            showQuickPick.mockResolvedValueOnce(undefined);
-            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-        it("should not delete node if an error thrown", async () => {
-            showErrorMessage.mockReset();
-            showQuickPick.mockResolvedValueOnce("Yes");
-            ussFile.mockImplementationOnce(() => {
-                throw (Error("testError"));
-            });
-            try {
-                await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            // tslint:disable-next-line:no-empty
-            } catch (err) {
-            }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-    });
 
     describe("renameUSSNode", () => {
         it("should exit if blank input is provided", () => {

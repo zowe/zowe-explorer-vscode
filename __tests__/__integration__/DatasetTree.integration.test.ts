@@ -15,7 +15,7 @@ import * as zowe from "@brightside/core";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
-import { ZoweNode } from "../../src/ZoweNode";
+import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
@@ -29,7 +29,7 @@ describe("DatasetTree Integration Tests", async () => {
     chai.use(chaiAsPromised);
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
+    const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
@@ -61,7 +61,7 @@ describe("DatasetTree Integration Tests", async () => {
      * Calls getTreeItem with sample element and checks the return is vscode.TreeItem
      *************************************************************************************************************/
     it("Tests the getTreeItem method", async () => {
-        const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
+        const sampleElement = new ZoweDatasetNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         chai.expect(testTree.getTreeItem(sampleElement)).to.be.instanceOf(vscode.TreeItem);
     });
 
@@ -76,23 +76,23 @@ describe("DatasetTree Integration Tests", async () => {
         sessChildren[2].dirty = true;
         const PDSChildren = await testTree.getChildren(sessChildren[2]);
 
-        const sampleRChildren: ZoweNode[] = [
-            new ZoweNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
-            new ZoweNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
+        const sampleRChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
         ];
 
-        sampleRChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]]};
-        sampleRChildren[3].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]]};
+        sampleRChildren[0].command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [sampleRChildren[0]]};
+        sampleRChildren[3].command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [sampleRChildren[3]]};
 
-        const samplePChildren: ZoweNode[] = [
-            new ZoweNode("TCHILD1", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
-            new ZoweNode("TCHILD2", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
+        const samplePChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode("TCHILD1", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
+            new ZoweDatasetNode("TCHILD2", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
         ];
 
-        samplePChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[0]]};
-        samplePChildren[1].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [samplePChildren[1]]};
+        samplePChildren[0].command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [samplePChildren[0]]};
+        samplePChildren[1].command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [samplePChildren[1]]};
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be
@@ -136,18 +136,18 @@ describe("DatasetTree Integration Tests", async () => {
 
     /*************************************************************************************************************
      * Creates a child with a rootNode as parent and checks that a getParent() call returns null.
-     * Also creates a child with a non-rootNode parent and checks that getParent() returns the correct ZoweNode
+     * Also creates a child with a non-rootNode parent and checks that getParent() returns the correct ZoweDatasetNode
      *************************************************************************************************************/
-    it("Tests that getParent returns the correct ZoweNode when called on a non-rootNode ZoweNode", async () => {
+    it("Tests that getParent returns the correct ZoweDatasetNode when called on a non-rootNode ZoweDatasetNode", async () => {
         // Creating structure of files and folders under BRTVS99 profile
-        const sampleChild1: ZoweNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const sampleChild1: ZoweDatasetNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent1 = testTree.getParent(sampleChild1);
 
         // It's expected that parent is null because when getParent() is called on a child
         // of the rootNode, it should return null
         expect(parent1).toBe(sessNode);
 
-        const sampleChild2: ZoweNode = new ZoweNode(pattern + ".TPDS(TCHILD1)",
+        const sampleChild2: ZoweDatasetNode = new ZoweDatasetNode(pattern + ".TPDS(TCHILD1)",
             vscode.TreeItemCollapsibleState.None, sampleChild1, null);
         const parent2 = testTree.getParent(sampleChild2);
 
@@ -186,7 +186,7 @@ describe("DatasetTree Integration Tests", async () => {
 
     describe("addFavorite()", () => {
         it("should add the selected data set to the treeView", async () => {
-            const favoriteNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+            const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
             const len = testTree.mFavorites.length;
             await testTree.addFavorite(favoriteNode);
             const filtered = testTree.mFavorites.filter((temp) => temp.label ===
@@ -208,7 +208,7 @@ describe("DatasetTree Integration Tests", async () => {
 
     describe("removeFavorite()", () => {
         it("should remove the selected favorite data set from the treeView", () => {
-            const favoriteNode = new ZoweNode(pattern + ".TPDS",
+            const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS",
                 vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
             testTree.addFavorite(favoriteNode);
             const len = testTree.mFavorites.length;
