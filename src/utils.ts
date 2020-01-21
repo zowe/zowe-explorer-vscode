@@ -187,7 +187,11 @@ export function getAppName(isTheia: boolean) {
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
-    const httpErrCode = errorDetails.mDetails.errorCode;
+    let httpErrCode = null;
+
+    if (errorDetails.mDetails !== undefined) {
+        httpErrCode = errorDetails.mDetails.errorCode;
+    }
 
     switch(httpErrCode) {
         // tslint:disable-next-line: no-magic-numbers

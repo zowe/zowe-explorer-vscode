@@ -107,14 +107,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
                     getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
                     await errorHandling(e, null, errMsg);
-                    /* vscode.window.showErrorMessage(
-                        localize("initializeFavorites.error.profile1",
-                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
-                        localize("intializeFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, ") +
-                        localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
-                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.")); */
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
@@ -408,7 +400,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 }
             } catch (error) {
                 await errorHandling(error, node.getProfileName(), "Error encountered in datasetFilterPrompt.optionalProfiles! ");
-                // vscode.window.showErrorMessage(error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -525,7 +516,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     }
                 } catch (error) {
                     await errorHandling(error, element.getProfileName(), "Error encountered in flipState.optionalProfiles! ");
-                    // vscode.window.showErrorMessage(error.message);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;

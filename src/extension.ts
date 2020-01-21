@@ -99,7 +99,6 @@ export async function activate(context: vscode.ExtensionContext) {
         fs.mkdirSync(DS_DIR);
     } catch (err) {
         await utils.errorHandling(err, null, err.message);
-        // vscode.window.showErrorMessage(err.message);
     }
 
     let datasetProvider: DatasetTree;
@@ -128,7 +127,6 @@ export async function activate(context: vscode.ExtensionContext) {
     } catch (err) {
         await utils.errorHandling(err, null,(localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         log.error(localize("initialize.log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
-        // vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
     }
 
     const spoolProvider = new SpoolProvider();
@@ -348,7 +346,6 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
     } catch (err) {
         log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
         utils.errorHandling(err, null, "Error encountered in moveTempFolder.displayOutputChannel! ");
-        // vscode.window.showErrorMessage(err.message);
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {
@@ -479,7 +476,6 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     } catch (error) {
         const errMsg = localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message;
         await utils.errorHandling(error, null, errMsg);
-        // vscode.window.showErrorMessage(localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -766,6 +762,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, null, (localize("createDataSet.error", "Error encountered when creating data set! ")) +
             (localize("createDataSet.error.location","The problem occured in zowe.CreateDataset.")));
+            throw (err);
         }
     }
 }

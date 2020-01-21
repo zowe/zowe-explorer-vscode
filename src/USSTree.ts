@@ -469,14 +469,6 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                     "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ") +
                     getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings.");
                 errorHandling(e, null, errMessage);
-/*                 vscode.window.showErrorMessage(
-                    localize("initializeUSSFavorites.error.profile1",
-                    "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
-                    localize("intializeUSSFavorites.error.profile2",
-                    ". To resolve this, you can create a profile with this name, ") +
-                    localize("initializeUSSFavorites.error.profile3",
-                    "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ") +
-                    getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings.")); */
                 return;
             }
         });
