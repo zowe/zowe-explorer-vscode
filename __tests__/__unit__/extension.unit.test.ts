@@ -1411,10 +1411,14 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         dataSetCreate.mockReset();
         mockGetHistory.mockReset();
+        allMembers.mockReset();
+        dataSetList.mockReset();
 
         getConfiguration.mockReturnValueOnce("FakeConfig");
-        showInputBox.mockReturnValueOnce("FakeName");
-        mockGetHistory.mockReturnValueOnce(["mockHistory2"]);
+        showInputBox.mockReturnValueOnce("sestest");
+        mockGetHistory.mockReturnValueOnce(["mockHistory"]);
+        allMembers.mockReturnValueOnce(uploadResponse);
+        dataSetList.mockReturnValue(uploadResponse);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
