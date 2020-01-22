@@ -97,34 +97,6 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
     }
 }
 
-export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    // handle zosmf api issue with file paths
-    const nodePath = node.fullPath.startsWith("/") ? node.fullPath.substring(1) : node.fullPath;
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + node.label,
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
-    localize("deleteUSSNode.showQuickPick.no", "No")],
-        quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
-        return;
-    }
-    try {
-        const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-        await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
-        node.mParent.dirty = true;
-        deleteFromDisk(node, filePath);
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
-        throw (err);
-    }
-
-    // Remove node from the USS Favorites tree
-    ussFileProvider.removeUSSFavorite(node);
-    ussFileProvider.refresh();
-}
-
 /**
  * Refreshes treeView
  *
@@ -175,20 +147,6 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
         }
     }
 
-}
-
-/**
- * Marks file as deleted from disk
- *
- * @param {ZoweUSSNode} node
- */
-export async function deleteFromDisk(node: IZoweTreeNode, filePath: string) {
-    try {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-    // tslint:disable-next-line: no-empty
-    } catch (err) { }
 }
 
 export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {

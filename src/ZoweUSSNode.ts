@@ -17,7 +17,9 @@ import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../src/extension";
 import * as utils from "./utils";
+import * as fs from "fs";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
+import { IZoweTree } from "./api/IZoweTree";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -219,7 +221,38 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.label = this.label.replace(oldReference, this.shortLabel);
         this.tooltip = this.tooltip.replace(oldReference, this.shortLabel);
     }
+    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
+        // handle zosmf api issue with file paths
+        const nodePath = this.fullPath.startsWith("/") ? this.fullPath.substring(1) : this.fullPath;
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
+        localize("deleteUSSNode.showQuickPick.no", "No")],
+            quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
+            return;
+        }
+        try {
+            const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
+            await zowe.Delete.ussFile(this.getSession(), nodePath, isRecursive);
+            this.getParent().dirty = true;
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            // tslint:disable-next-line: no-empty
+            } catch (err) { }
+        } catch (err) {
+            vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
+            throw (err);
+        }
 
+        // Remove node from the USS Favorites tree
+        ussFileProvider.removeFavorite(this);
+        ussFileProvider.refresh();
+    }
     /**
      * Returns the [etag] for this node
      *
