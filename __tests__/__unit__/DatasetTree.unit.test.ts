@@ -257,15 +257,6 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
-     * Test the getHistory command
-     *************************************************************************************************************/
-    it("Tests the getHistory command", async () => {
-        testTree.addHistory("testHistory");
-        const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
-        expect(testTree.getHistory()[0]).toEqual("testHistory");
-    });
-
-    /*************************************************************************************************************
      * Tests that the DatasetTree refresh function exists and doesn't error
      *************************************************************************************************************/
     it("Calling the refresh button ", async () => {

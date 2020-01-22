@@ -14,7 +14,7 @@ import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../../src/ZoweNode";
 import * as extension from "../../../src/extension";
 
-const mockRefresh = jest.fn();
+const mockRefreshElement = jest.fn();
 const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
 
@@ -24,7 +24,7 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     return {
         mSessionNodes: [],
         mFavorites: [],
-        refresh: mockRefresh
+        refreshElement: mockRefreshElement
     };
 });
 
@@ -42,7 +42,7 @@ describe("mvsNodeActions", () => {
         await mvsNodeActions.uploadDialog(node, testTree);
         expect(showOpenDialog).toBeCalled();
         expect(openTextDocument).toBeCalled();
-        expect(testTree.refresh).toBeCalled();
+        expect(mockRefreshElement).toHaveBeenLastCalledWith(node);
     });
     describe("getDatasetLabel", () => {
         afterEach(() => {
