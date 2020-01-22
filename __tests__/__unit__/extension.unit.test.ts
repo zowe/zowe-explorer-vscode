@@ -1130,7 +1130,6 @@ describe("Extension Unit Tests", () => {
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toBeCalledWith("FakeName");
         showQuickPick.mockResolvedValueOnce("Data Set C");
         await extension.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Classic");
@@ -1195,7 +1194,6 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE1, NODE");
-        expect(testTree.reveal.mock.calls.length).toBe(1);
 
         testTree.addHistory.mockReset();
 
@@ -1208,6 +1206,7 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
+        expect(testTree.reveal.mock.calls.length).toBe(3);
 
         allMembers.mockReset();
         dataSetList.mockReset();
@@ -1412,14 +1411,10 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         dataSetCreate.mockReset();
         mockGetHistory.mockReset();
-        allMembers.mockReset();
-        dataSetList.mockReset();
 
         getConfiguration.mockReturnValueOnce("FakeConfig");
-        showInputBox.mockReturnValueOnce("sestest");
-        mockGetHistory.mockReturnValueOnce(["mockHistory"]);
-        allMembers.mockReturnValueOnce(uploadResponse);
-        dataSetList.mockReturnValue(uploadResponse);
+        showInputBox.mockReturnValueOnce("FakeName");
+        mockGetHistory.mockReturnValueOnce(["mockHistory2"]);
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
