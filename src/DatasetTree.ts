@@ -98,7 +98,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
-                    const errMsg: string =
+                    const errMessage: string =
                     localize("initializeFavorites.error.profile1",
                     "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
                     localize("intializeFavorites.error.profile2",
@@ -106,7 +106,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     localize("initializeFavorites.error.profile3",
                     "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
                     getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
-                    await errorHandling(e, null, errMsg);
+                    await errorHandling(e, null, errMessage);
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {

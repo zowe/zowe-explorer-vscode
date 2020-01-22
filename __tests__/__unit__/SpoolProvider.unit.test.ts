@@ -49,16 +49,6 @@ describe("SpoolProvider Unit Tests", () => {
         toJSON: jest.fn(),
     };
 
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
-
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {

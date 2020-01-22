@@ -46,7 +46,6 @@ const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
-const errorHandling = jest.fn();
 const isBinaryFileSync = jest.fn();
 
 function getUSSNode() {
@@ -120,7 +119,6 @@ Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocu
 Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
 Object.defineProperty(fs, "existsSync", {value: existsSync});
 Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
-Object.defineProperty(utils, "errorHandling", {value: errorHandling});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {
@@ -179,8 +177,7 @@ describe("ussNodeActions", () => {
             } catch (err) {
             }
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(showErrorMessage.mock.calls.length).toBe(1);
         });
         it("tests the uss create node credentials", async () => {
             showQuickPick.mockReset();
@@ -319,8 +316,7 @@ describe("ussNodeActions", () => {
                 // tslint:disable-next-line:no-empty
             } catch (err) {
             }
-            // expect(showErrorMessage.mock.calls.length).toBe(1);
-            expect(utils.errorHandling).toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(1);
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
@@ -364,8 +360,7 @@ describe("ussNodeActions", () => {
                 // tslint:disable-next-line:no-empty
             } catch (err) {
             }
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(showErrorMessage.mock.calls.length).toBe(1);
         });
         it("should execute rename favorite USS file", async () => {
             showInputBox.mockReturnValueOnce("new name");
@@ -461,8 +456,7 @@ describe("ussNodeActions", () => {
                 // tslint:disable-next-line:no-empty
             } catch (err) {
             }
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(showErrorMessage.mock.calls.length).toBe(1);
         });
     });
     describe("copyPath", () => {

@@ -72,15 +72,6 @@ describe("Unit Tests (Jest)", () => {
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});

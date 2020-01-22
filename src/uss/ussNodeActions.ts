@@ -221,7 +221,7 @@ export async function uploadBinaryFile(node: ZoweUSSNode, filePath: string) {
         const ussName = `${node.fullPath}/${localFileName}`;
         await zowe.Upload.fileToUSSFile(node.getSession(), filePath, ussName, true);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        utils.errorHandling(e, node.mProfileName, e.message);
     }
 }
 

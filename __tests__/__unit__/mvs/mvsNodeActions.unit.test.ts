@@ -29,15 +29,6 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     };
 });
 
-// tslint:disable-next-line: no-shadowed-variable
-const ImperativeError  = jest.fn();
-Object.defineProperty(utils, "errorHandling", {
-    value: jest.fn(() => {
-        return {
-            errorDetails: {mDetails: {errorCode: undefined}}
-        };
-    })
-});
 const testTree = DatasetTree();
 
 describe("mvsNodeActions", () => {

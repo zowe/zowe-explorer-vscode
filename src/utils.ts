@@ -199,7 +199,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             vscode.window.showErrorMessage(localize("errorHandling.invalid.credentials", "Invalid Credentials. ") +
                 localize("errorHandling.invalid.credentials2","Please ensure the username and password for ") +
                 `\n${label}\n` +
-                localize("errorHandling.invalid.credentials3", "are valid or this may lead to a lock-out."));
+                localize("errorHandling.invalid.credentials3", " are valid or this may lead to a lock-out."));
             break;
         }
         default: {

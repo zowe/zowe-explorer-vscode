@@ -165,15 +165,6 @@ describe("Zos Jobs Unit Tests", () => {
         const getFilters = jest.fn();
         const DeleteJobs = jest.fn();
         const deleteJob = jest.fn();
-        // tslint:disable-next-line: no-shadowed-variable
-        const ImperativeError  = jest.fn();
-        Object.defineProperty(utils, "errorHandling", {
-            value: jest.fn(() => {
-                return {
-                    errorDetails: {mDetails: {errorCode: undefined}}
-                };
-            })
-        });
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
         Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
@@ -486,8 +477,7 @@ describe("Zos Jobs Unit Tests", () => {
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(showErrorMessage.mock.calls.length).toBe(1);
         });
 
         it("Testing that user filter prompts are executed successfully theia specific route", async () => {

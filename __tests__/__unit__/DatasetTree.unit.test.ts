@@ -50,9 +50,8 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     // Filter prompt
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
     const showInformationMessage = jest.fn();
+    const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
@@ -69,15 +68,8 @@ describe("DatasetTree Unit Tests", () => {
         })
     });
 
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
@@ -906,5 +898,21 @@ describe("DatasetTree Unit Tests", () => {
 
         expect(foundNode).toBe(nonFavoritedNode);
         sessionNode.children.pop();
+    });
+
+    it("tests utils error handling", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showErrorMessage.mockReset();
+
+        const label = "invalidCred";
+        // tslint:disable-next-line: object-literal-key-quotes
+        const error = {"mDetails": {"errorCode": 401}};
+        await utils.errorHandling(error, label);
+
+        expect(showErrorMessage.mock.calls.length).toEqual(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        `\n${label}\n` +
+        " are valid or this may lead to a lock-out.");
     });
 });

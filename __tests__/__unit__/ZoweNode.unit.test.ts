@@ -33,16 +33,8 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
-
+    const showErrorMessage = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
     Object.defineProperty(profileLoader, "loadAllProfiles", {
         value: jest.fn(() => {
@@ -138,15 +130,16 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that when bright.List.dataSet/allMembers() causes an error on the brightside call, " +
         "it throws an error and the catch block is reached", async () => {
+
+            showErrorMessage.mockReset();
             // Creating a rootNode
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
             rootNode.contextValue = extension.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
             rootNode.getChildren();
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-            //     "Error: Throwing an error to check error handling for unit tests!\n"));
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************

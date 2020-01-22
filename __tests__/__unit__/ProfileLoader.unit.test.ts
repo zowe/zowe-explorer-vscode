@@ -30,16 +30,6 @@ describe("ProfileLoader success", () => {
     });
     const mockDebug = jest.spyOn(log, "debug");
 
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
-
     // Happy path profiles
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };

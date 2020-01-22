@@ -54,15 +54,6 @@ describe("Profile class unit tests", () => {
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
 
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });

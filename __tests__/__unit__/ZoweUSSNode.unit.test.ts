@@ -29,16 +29,8 @@ describe("Unit Tests (Jest)", () => {
         protocol: "https",
         type: "basic",
     });
-
-    // tslint:disable-next-line: no-shadowed-variable
-    const ImperativeError  = jest.fn();
-    Object.defineProperty(utils, "errorHandling", {
-        value: jest.fn(() => {
-            return {
-                errorDetails: {mDetails: {errorCode: undefined}}
-            };
-        })
-    });
+    const showErrorMessage = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
 
     afterEach(() => {
         jest.resetAllMocks();
@@ -126,9 +118,8 @@ describe("Unit Tests (Jest)", () => {
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
             rootNode.getChildren();
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-            //     "Error: Throwing an error to check error handling for unit tests!\n"));
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
@@ -144,9 +135,8 @@ describe("Unit Tests (Jest)", () => {
             subNode.fullPath = "THROW ERROR";
             subNode.dirty = true;
             subNode.getChildren();
-            expect(utils.errorHandling).toHaveBeenCalled();
-            // await expect(subNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-            //     "Error: Throwing an error to check error handling for unit tests!\n"));
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
