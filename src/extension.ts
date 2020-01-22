@@ -750,8 +750,9 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
                 node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
                 node.dirty = true;
+                node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
+                datasetProvider.addHistory(name);
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
                 const newNodeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
