@@ -14,9 +14,12 @@ import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./ZoweTree";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../src/extension";
 import * as utils from "./utils";
+// tslint:disable-next-line: no-duplicate-imports
+import { getUSSDocumentFilePath } from "../src/extension";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -97,8 +100,8 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public async getChildren(): Promise<ZoweUSSNode[]> {
         if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
-                (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
-                    this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
+            (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
+                this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
             return [];
         }
 
@@ -120,7 +123,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
             vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from ")
-                                                    + `zowe.List\n${err}\n`);
+                + `zowe.List\n${err}\n`);
             throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
         // push nodes to an object with property names to avoid duplicates
@@ -134,7 +137,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                const existing = this.children.find((element) => element.label.trim() === item.name );
+                const existing = this.children.find((element) => element.label.trim() === item.name);
                 if (existing) {
                     elementChildren[existing.label] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
@@ -152,7 +155,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
-                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
+                        if (this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
                             temp = new ZoweUSSNode(
                                 item.name,
                                 vscode.TreeItemCollapsibleState.None,
@@ -171,8 +174,10 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                                 false,
                                 item.mProfileName);
                         }
-                        temp.command = {command: "zowe.uss.ZoweUSSNode.open",
-                                        title: localize("getChildren.responses.open", "Open"), arguments: [temp]};
+                        temp.command = {
+                            command: "zowe.uss.ZoweUSSNode.open",
+                            title: localize("getChildren.responses.open", "Open"), arguments: [temp]
+                        };
                         elementChildren[temp.label] = temp;
                     }
                 }
@@ -204,7 +209,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
     public setBinary(binary: boolean) {
         this.binary = binary;
-        if(this.binary){
+        if (this.binary) {
             this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
@@ -213,11 +218,43 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         }
         if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
-             this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+                this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
         utils.applyIcons(this);
         this.dirty = true;
     }
+
+    /**
+     * Helper getter to check dirtiness of node inside opened editor tabs, can be more accurate than saved value
+     *
+     * @returns {boolean}
+     */
+    public get isDirtyInEditor(): boolean {
+        const openedTextDocuments = vscode.workspace.textDocuments;
+        const currentFilePath = getUSSDocumentFilePath(this);
+
+        for (const document of openedTextDocuments) {
+            if (document.fileName === currentFilePath) {
+                return document.isDirty;
+            }
+        }
+
+        return false;
+    }
+
+    public get openedDocumentInstance(): vscode.TextDocument {
+        const openedTextDocuments = vscode.workspace.textDocuments;
+        const currentFilePath = getUSSDocumentFilePath(this);
+
+        for (const document of openedTextDocuments) {
+            if (document.fileName === currentFilePath) {
+                return document;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * helper method to change the node names in one go
      * @param oldReference string
@@ -247,10 +284,10 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public setEtag(etagValue): void {
         this.etag = etagValue;
-    /**
-     * helper method to change the node names in one go
-     * @param oldReference string
-     * @param revision string
-     */
+        /**
+         * helper method to change the node names in one go
+         * @param oldReference string
+         * @param revision string
+         */
     }
 }

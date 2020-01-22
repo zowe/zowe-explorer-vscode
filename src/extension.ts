@@ -490,19 +490,18 @@ export async function submitMember(node: ZoweNode) {
     const labelregex = /\[(.+)\]\: (.+)/g;
     let label;
     let sesName;
+    let regex;
     switch (node.mParent.contextValue) {
-        case (FAVORITE_CONTEXT): {
-            const regex = labelregex.exec(node.label);
+        case (FAVORITE_CONTEXT):
+            regex = labelregex.exec(node.label);
             sesName = regex[1];
             label = regex[2];
             break;
-        }
-        case (DS_PDS_CONTEXT + FAV_SUFFIX): {
-            const regex = labelregex.exec(node.mParent.label);
+        case (DS_PDS_CONTEXT + FAV_SUFFIX):
+            regex = labelregex.exec(node.mParent.label);
             sesName = regex[1];
             label = regex[2] + "(" + node.label.trim() + ")";
             break;
-        }
         case (DS_SESSION_CONTEXT):
             sesName = node.mParent.label;
             label = node.label;
@@ -1499,18 +1498,23 @@ export async function refreshUSS(node: ZoweUSSNode) {
     }
     try {
         const ussDocumentFilePath = getUSSDocumentFilePath(node);
-        const response = await zowe.Download.ussFile(node.getSession(), node.fullPath, {
-            file: ussDocumentFilePath,
-            returnEtag: true
-        });
-        node.setEtag(response.apiResponse.etag);
+        const isDirty = node.isDirtyInEditor;
 
-        const document = await vscode.workspace.openTextDocument(ussDocumentFilePath);
-        vscode.window.showTextDocument(document);
-        // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
-        if (document.isDirty) {
+        if (isDirty) {
+            vscode.window.showTextDocument(node.openedDocumentInstance);
             await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            vscode.window.showTextDocument(document);
+        }
+
+        if ((isDirty && !node.isDirtyInEditor) || !isDirty) {
+            const response = await zowe.Download.ussFile(node.getSession(), node.fullPath, {
+                file: ussDocumentFilePath,
+                returnEtag: true
+            });
+            node.setEtag(response.apiResponse.etag);
+
+            if (isDirty) {
+                await initializeFileOpening(node, ussDocumentFilePath, true);
+            }
         }
     } catch (err) {
         if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
