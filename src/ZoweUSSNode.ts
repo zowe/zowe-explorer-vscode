@@ -12,14 +12,16 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
+import { TreeItemCollapsibleState } from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./ZoweTree";
+// tslint:disable-next-line: no-duplicate-imports
+import * as extension from "../src/extension";
+import { getUSSDocumentFilePath } from "../src/extension";
+import * as utils from "./utils";
+import { getIconByNode } from "./generators/icons/index";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
-import * as extension from "../src/extension";
-import * as utils from "./utils";
-// tslint:disable-next-line: no-duplicate-imports
-import { getUSSDocumentFilePath } from "../src/extension";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -36,6 +38,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
     public binaryFiles = {};
     public profileName = "";
     public shortLabel = "";
+    private downloadedInternal = false;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -269,6 +272,15 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
     }
 
     /**
+     * Helper method which sets an icon of node and initiates reloading of tree
+     * @param iconPath
+     */
+    public setIcon(iconPath: {light: string; dark: string}) {
+        this.iconPath = iconPath;
+        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+    }
+
+    /**
      * Returns the [etag] for this node
      *
      * @returns {string}
@@ -289,5 +301,27 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
          * @param oldReference string
          * @param revision string
          */
+    }
+
+    /**
+     * Getter for downloaded property
+     *
+     * @returns boolean
+     */
+    public get downloaded(): boolean {
+        return this.downloadedInternal;
+    }
+
+    /**
+     * Setter for downloaded property
+     * @param value boolean
+     */
+    public set downloaded(value: boolean) {
+        this.downloadedInternal = value;
+
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.setIcon(icon.path);
+        }
     }
 }

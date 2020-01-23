@@ -211,6 +211,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("zowe.uss.addSession", async () => addZoweSession(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.refreshUSS", (node) => refreshUSS(node));
+        vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node) => refreshUSSInTree(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.fullPath", (node) => ussFileProvider.ussFilterPrompt(node));
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node) => openUSS(node, false, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node) => ussFileProvider.deleteSession(node));
@@ -1511,6 +1512,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
                 returnEtag: true
             });
             node.setEtag(response.apiResponse.etag);
+            node.downloaded = true;
 
             if (isDirty) {
                 await initializeFileOpening(node, ussDocumentFilePath, true);
@@ -1524,6 +1526,10 @@ export async function refreshUSS(node: ZoweUSSNode) {
             vscode.window.showErrorMessage(err);
         }
     }
+}
+
+export async function refreshUSSInTree(node: ZoweUSSNode, ussFileProvider: USSTree) {
+    await ussFileProvider.refreshElement(node);
 }
 
 function checkForAddedSuffix(filename: string): boolean {
@@ -1744,6 +1750,8 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             if (downloadEtag !== etagToUpload) {
                 node.setEtag(downloadEtag);
             }
+            node.downloaded = true;
+
             vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
             // Store document in a separate variable, to be used on merge conflict
             const oldDoc = doc;
@@ -1829,6 +1837,8 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
                         });
                     }
                 );
+
+                node.downloaded = true;
                 node.setEtag(response.apiResponse.etag);
             }
 
