@@ -15,7 +15,9 @@ import { ZoweNode } from "../../ZoweNode";
 
 export enum IconId {
     "document" = "document",
-    "downloadedDocument" = "downloadedDocument"
+    "documentBinary" = "documentBinary",
+    "downloadedDocument" = "downloadedDocument",
+    "documentBinaryDownloaded" = "documentBinaryDownloaded"
 }
 export enum IconHierarchyType {
     "base" = "base",
@@ -32,7 +34,9 @@ export interface IIconItem {
 
 const items = [
     require("./items/document"),
-    require("./items/downloadedDocument")
+    require("./items/documentBinary"),
+    require("./items/downloadedDocument"),
+    require("./items/documentBinaryDownloaded")
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {

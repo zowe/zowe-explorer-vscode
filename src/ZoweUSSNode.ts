@@ -223,7 +223,12 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
                 this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
-        utils.applyIcons(this);
+
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.setIcon(icon.path);
+        }
+
         this.dirty = true;
     }
 
