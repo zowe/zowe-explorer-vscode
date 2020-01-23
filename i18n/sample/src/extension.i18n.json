@@ -9,6 +9,7 @@
     "activate.didSaveText.file": "File ",
     "activate.didSaveText.notDataSet": " is not a data set or USS file ",
     "profile.init.read.imperative": "Unable to read imperative file. ",
+    "initialize.module.load": "Credentials not managed, unable to load security file: ",
     "downloadSpool.select": "Select",
     "submitJcl.log.debug": "Submitting JCL in document ",
     "submitJcl.quickPickOption": "Select the Profile to use to submit the job",
