@@ -20,7 +20,6 @@ import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/ProfileLoader";
-import * as utils from "../../src/utils";
 import { List } from "@brightside/core";
 
 describe("Unit Tests (Jest)", () => {

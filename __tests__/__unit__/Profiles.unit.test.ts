@@ -17,7 +17,6 @@ import * as vscode from "vscode";
 import * as loader from "../../src/ProfileLoader";
 import { Profiles } from "../../src/Profiles";
 import { ZosmfSession } from "@brightside/core";
-import * as utils from "../../src/utils";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -53,7 +52,6 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
-
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });

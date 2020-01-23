@@ -13,7 +13,6 @@ import * as spoolprovider from "../../src/SpoolProvider";
 import * as brightside from "@brightside/core";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
-import * as utils from "../../src/utils";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: brightside.IJobFile = {

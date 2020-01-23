@@ -19,7 +19,6 @@ import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
-import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -118,7 +117,7 @@ Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
 Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
 Object.defineProperty(fs, "existsSync", {value: existsSync});
-Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
 
 describe("ussNodeActions", () => {
     beforeEach(() => {

@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../../src/ZoweNode";
 import * as extension from "../../../src/extension";
-import * as utils from "../../../src/utils";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();

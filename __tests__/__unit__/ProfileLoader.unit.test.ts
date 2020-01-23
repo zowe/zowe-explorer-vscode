@@ -15,7 +15,6 @@ jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
 import { Logger } from "@brightside/imperative";
-import * as utils from "../../src/utils";
 
 import { loadAllProfiles, loadDefaultProfile } from "../../src/ProfileLoader";
 
