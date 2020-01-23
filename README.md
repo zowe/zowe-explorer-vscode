@@ -369,13 +369,13 @@ You can use the following functionalities when interacting with Jobs:
 
 ### Extras
 
-#### Issue TSO commands
+#### Issue MVS commands
 
-Zowe Explorer also enables you to issue TSO command. You can issue such commands as Allocate or Exec against a profile.
+Zowe Explorer also enables you to issue MVS command. You can issue such commands as Allocate or Exec against a profile.
 
 1. Press the **F1** key on your keyboard.
-2. Select the **Zowe:Issue TSO Command** option.
+2. Select the **Zowe:Issue MVS Command** option.
 3. Select your profile.
-4. Issue a TSO command.
+4. Issue a MVS command.
 
-![Issue a TSO command](docs/images/ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a TSO command")
+![Issue a MVS command](docs/images/ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a MVS command")
