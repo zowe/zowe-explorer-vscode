@@ -360,14 +360,16 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         return undefined;
     }
     if (imperativeIsSsecure) {
+        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+        const appRoot = ISTHEIA ? process.cwd() : vscode.env.appRoot;
         try {
-            return require(`${vscode.env.appRoot}/node_modules/${moduleName}`);
+            return require(`${appRoot}/node_modules/${moduleName}`);
         } catch (err) {
             vscode.window.showWarningMessage(localize("initialize.module.load",
                     "Credentials not managed, unable to load security file: ") + moduleName);
         }
         try {
-            return require(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
+            return require(`${appRoot}/node_modules.asar/${moduleName}`);
         } catch (err) {
             vscode.window.showWarningMessage(localize("initialize.module.load",
                     "Credentials not managed, unable to load security file: ") + moduleName);
