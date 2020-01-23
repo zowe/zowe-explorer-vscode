@@ -362,15 +362,16 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
     if (imperativeIsSsecure) {
         try {
             return require(`${vscode.env.appRoot}/node_modules/${moduleName}`);
-        // tslint:disable-next-line: no-empty
         } catch (err) {
             vscode.window.showWarningMessage(localize("initialize.module.load",
                     "Credentials not managed, unable to load security file: ") + moduleName);
         }
         try {
             return require(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
-            // tslint:disable-next-line: no-empty
-        } catch (err) {}
+        } catch (err) {
+            vscode.window.showWarningMessage(localize("initialize.module.load",
+                    "Credentials not managed, unable to load security file: ") + moduleName);
+        }
     }
     return undefined;
 }
