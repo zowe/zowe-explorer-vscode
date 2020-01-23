@@ -117,7 +117,12 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
         try {
-            responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
+            responses.push(await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
+            }, () => {
+               return zowe.List.fileList(this.getSession(), this.fullPath);
+            }));
         } catch (err) {
             vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from ")
                                                     + `zowe.List\n${err}\n`);
