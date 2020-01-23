@@ -1204,6 +1204,7 @@
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
     "isbinaryfile": "^4.0.4",
+    "momentjs": "^2.0.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

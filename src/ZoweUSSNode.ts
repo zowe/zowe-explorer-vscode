@@ -12,14 +12,19 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
+// tslint:disable-next-line: no-duplicate-imports
 import { TreeItemCollapsibleState } from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./ZoweTree";
 // tslint:disable-next-line: no-duplicate-imports
 import * as extension from "../src/extension";
+// tslint:disable-next-line: no-duplicate-imports
 import { getUSSDocumentFilePath } from "../src/extension";
 import * as utils from "./utils";
 import { getIconByNode } from "./generators/icons/index";
+// tslint:disable-next-line: no-implicit-dependencies
+import * as moment from "moment";
+import { injectAdditionalDataToTooltip } from "./utils/uss";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -38,6 +43,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
     public binaryFiles = {};
     public profileName = "";
     public shortLabel = "";
+    public downloadedTime = null as string;
     private downloadedInternal = false;
 
     /**
@@ -269,11 +275,12 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      * @param revision string
      */
     public rename(newFullPath: string) {
-        const oldReference = this.shortLabel;
         this.fullPath = newFullPath;
-        this.shortLabel = newFullPath.substring(newFullPath.lastIndexOf("/"));
-        this.label = this.label.replace(oldReference, this.shortLabel);
-        this.tooltip = this.tooltip.replace(oldReference, this.shortLabel);
+        this.shortLabel = newFullPath.split("/").pop();
+        this.label = this.shortLabel;
+        this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
+
+        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
     /**
@@ -323,6 +330,11 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public set downloaded(value: boolean) {
         this.downloadedInternal = value;
+
+        if (value) {
+            this.downloadedTime = moment().toISOString();
+            this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
+        }
 
         const icon = getIconByNode(this);
         if (icon) {
