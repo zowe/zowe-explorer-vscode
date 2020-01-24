@@ -31,7 +31,14 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
             await uploadFile(node, doc);
         }
     ));
-    datasetProvider.refresh();
+
+    // refresh Tree View & favorites
+    datasetProvider.refreshElement(node);
+    if (node.contextValue === extension.PDS_FAV_CONTEXT) {
+        datasetProvider.refreshElement(datasetProvider.findNonFavoritedNode(node));
+    } else {
+        datasetProvider.refreshElement(datasetProvider.findFavoritedNode(node));
+    }
 }
 
 export function getDatasetLabel(node: ZoweNode) {

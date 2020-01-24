@@ -1172,7 +1172,18 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         datasetProvider.removeFavorite(node);
         node.label = temp;
     }
-    datasetProvider.refresh();
+
+    // refresh Tree View & favorites
+    if (node.mParent && node.mParent.contextValue !== DS_SESSION_CONTEXT) {
+        datasetProvider.refreshElement(node.mParent);
+        if (node.mParent.contextValue === PDS_FAV_CONTEXT || node.mParent.contextValue === FAVORITE_CONTEXT) {
+            datasetProvider.refreshElement(datasetProvider.findNonFavoritedNode(node.mParent));
+        } else {
+            datasetProvider.refreshElement(datasetProvider.findFavoritedNode(node.mParent));
+        }
+    } else {
+        datasetProvider.refresh();
+    }
 
     // remove local copy of file
     const fileName = getDocumentFilePath(label, node);
