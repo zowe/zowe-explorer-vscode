@@ -15,7 +15,7 @@
                 "--verbose"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/dist/**/*.js"
             ],
             "preLaunchTask": "npm: build",
             "smartStep": true
