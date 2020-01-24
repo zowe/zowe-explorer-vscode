@@ -14,12 +14,15 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 **Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
-**Tip:** For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
+**Tips:**
+
+* For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
+* For information about how to develop for Eclipse Theia, see [Theia README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md).
 
 ## Contents
 
 * [Software Requirements](#software-requirements)
-* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-z/osmf-profile)
+* [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-zosmf-profile)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
@@ -366,13 +369,13 @@ You can use the following functionalities when interacting with Jobs:
 
 ### Extras
 
-#### Issue TSO commands
+#### Issue MVS commands
 
-Zowe Explorer also enables you to issue TSO command. You can issue such commands as Allocate or Exec against a profile.
+Zowe Explorer also enables you to issue MVS command. You can issue such commands as Allocate or Exec against a profile.
 
 1. Press the **F1** key on your keyboard.
-2. Select the **Zowe:Issue TSO Command** option.
+2. Select the **Zowe:Issue MVS Command** option.
 3. Select your profile.
-4. Issue a TSO command.
+4. Issue a MVS command.
 
-![Issue a TSO command](docs/images/ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a TSO command")
+![Issue a MVS command](docs/images/ZE-Jobs-Issue-TSO-Command.gif?raw=true "Issue a MVS command")

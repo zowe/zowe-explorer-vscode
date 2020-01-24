@@ -11,8 +11,9 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Logger } from "@zowe/imperative";
-import { applyIcons, FilterItem, FilterDescriptor, resolveQuickPickHelper, sortTreeItems } from "./utils";
+import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems } from "./utils";
 import * as vscode from "vscode";
+import { IZoweTree } from "./ZoweTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
@@ -39,7 +40,7 @@ export async function createUSSTree(log: Logger) {
  * @class USSTree
  * @implements {vscode.TreeDataProvider}
  */
-export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
+export class USSTree implements IZoweTree<ZoweUSSNode> {
     public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
 
@@ -464,8 +465,8 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                     localize("intializeUSSFavorites.error.profile2",
                     ". To resolve this, you can create a profile with this name, ") +
                     localize("initializeUSSFavorites.error.profile3",
-                    "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, ") +
-                    localize("initializeUSSFavorites.error.profile4", "which can be found in your VS Code user settings."));
+                    "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ") +
+                    getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings."));
                 return;
             }
         });

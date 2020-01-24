@@ -20,6 +20,23 @@ def MASTER_RECIPIENTS_LIST = "fernando.rijocedeno@broadcom.com"
 def MASTER_BRANCH = "master"
 
 /**
+ * The user's email address for git commits
+ */
+def GIT_USER_EMAIL = 'zowe.robot@gmail.com'
+
+/**
+ * Target scope
+ */
+def TARGET_SCOPE = "@zowe"
+
+/**
+ * Artifactory details
+ */
+def DL_ARTIFACTORY_URL = "https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode"
+def ARTIFACTORY_EMAIL = GIT_USER_EMAIL
+def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
+
+/**
  * TOKEN ID where secret is stored
  */
 def PUBLISH_TOKEN = "vsce-publish-key"
@@ -30,7 +47,8 @@ def PUBLISH_TOKEN = "vsce-publish-key"
 def ZOWE_ROBOT_TOKEN = "zowe-robot-github"
 
 def PIPELINE_CONTROL = [
-  ci_skip: false
+  ci_skip: false,
+  create_release: false
 ]
 
 /**
@@ -97,6 +115,27 @@ pipeline {
         } }
       }
     }
+    stage('Smoke Test') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          def vscodePackageJson = readJSON file: "package.json"
+          def date = new Date()
+          String buildDate = date.format("yyyyMMddHHmmss")
+          def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${env.BRANCH_NAME}-${buildDate}"
+
+          sh "npx vsce package -o ${fileName}.vsix"
+
+          // Release to Artifactory
+          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
+            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+          } }
+        } }
+      }
+    }
     stage('Test') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
@@ -132,7 +171,7 @@ pipeline {
         } }
       }
     }
-    stage("Publish") {
+    stage('Publish') {
       when { allOf {
         expression { return !PIPELINE_CONTROL.ci_skip }
         expression { return BRANCH_NAME == MASTER_BRANCH }
@@ -145,20 +184,61 @@ pipeline {
           def extensionInfo = readJSON text: extensionMetadata
 
           if (extensionInfo.versions[0].version == vscodePackageJson.version) {
+            PIPELINE_CONTROL.create_release = false
             echo "No new version to publish at this time (${vscodePackageJson.version})"
           } else {
+            PIPELINE_CONTROL.create_release = true
             echo "Publishing version ${vscodePackageJson.version} since it's different from ${extensionInfo.versions[0].version}"
             withCredentials([string(credentialsId: PUBLISH_TOKEN, variable: 'TOKEN')]) {
               sh "npx vsce publish -p $TOKEN"
             }
-
-            sh "git config --global user.name \"zowe-robot\""
-            sh "git config --global user.email \"zowe.robot@gmail.com\""
-            sh "git tag v${vscodePackageJson.version}"
-            withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
-              sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
-            }
           }
+        } }
+      }
+    }
+    stage('Release') {
+      when { allOf {
+        expression { return !PIPELINE_CONTROL.ci_skip }
+        expression { return BRANCH_NAME == MASTER_BRANCH }
+        expression { return !params.SKIP_PUBLISH }
+        expression { return PIPELINE_CONTROL.create_release }
+      } }
+      steps {
+        timeout(time: 10, unit: 'MINUTES') { script {
+          sh "git config --global user.name \"zowe-robot\""
+          sh "git config --global user.email \"zowe.robot@gmail.com\""
+
+          def vscodePackageJson = readJSON file: "package.json"
+          def version = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
+
+          sh "npx vsce package -o ${version}.vsix"
+
+          // Release to Artifactory
+          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${version}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+          } }
+
+          withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
+            sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+
+            //Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
+            def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
+            sh "npm install ssp-dos2unix"
+            sh "node ./scripts/d2uChangelog.js"
+            def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
+
+            def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
+            def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
+            def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
+
+            def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
+            def releaseParsed = readJSON text: releaseCreated
+
+            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
+
+            sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+          } }
         } }
       }
     }

@@ -13,6 +13,8 @@ import * as path from "path";
 import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
+import { ZoweUSSNode } from "./ZoweUSSNode";
+import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /*
@@ -104,7 +106,7 @@ export function labelHack( node: TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
 
-export function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>) {
+export async function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>): Promise<QuickPickItem | undefined> {
     return new Promise<QuickPickItem | undefined>(
         (c) => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
 }
@@ -138,4 +140,39 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
         super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId",
         "Job Id search"));
     }
+}
+
+/*************************************************************************************************************
+ * Returns array of all subnodes of given node
+ *************************************************************************************************************/
+export function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
+    let allNodes = new Array<ZoweUSSNode>();
+
+    for (const node of nodes) {
+        allNodes = allNodes.concat(concatUSSChildNodes(node.children));
+        allNodes.push(node);
+    }
+
+    return allNodes;
+}
+
+/*************************************************************************************************************
+ * Returns array of all subnodes of given node
+ *************************************************************************************************************/
+export function concatChildNodes(nodes: ZoweNode[]) {
+    let allNodes = new Array<ZoweNode>();
+
+    for (const node of nodes) {
+        allNodes = allNodes.concat(concatChildNodes(node.children));
+        allNodes.push(node);
+    }
+
+    return allNodes;
+}
+
+/*************************************************************************************************************
+ * Determine IDE name to display based on app environment
+ *************************************************************************************************************/
+export function getAppName(isTheia: boolean) {
+    return isTheia? "Theia" : "VS Code";
 }

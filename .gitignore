@@ -11,3 +11,5 @@ vscode-extension-for-zowe*.vsix
 .vscode/settings.json
 .history
 .npmrc
+.DS_Store
+.idea

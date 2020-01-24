@@ -13,10 +13,11 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Session } from "@zowe/imperative";
 import * as extension from "./extension";
+import { IZoweTreeNode } from "./ZoweTree";
 import * as utils from "./utils";
 
 // tslint:disable-next-line: max-classes-per-file
-export class Job extends vscode.TreeItem {
+export class Job extends vscode.TreeItem implements IZoweTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
@@ -39,6 +40,16 @@ export class Job extends vscode.TreeItem {
         this._prefix = "*";
         this._searchId = "";
         utils.applyIcons(this);
+    }
+
+    /**
+     * Implements access to profile name
+     * for {IZoweTreeNode}.
+     *
+     * @returns {string}
+     */
+    public getProfileName(): string {
+        return this.label.trim();
     }
 
     public getSessionName(): string {

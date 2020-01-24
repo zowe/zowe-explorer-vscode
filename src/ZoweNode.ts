@@ -15,6 +15,7 @@ import { Session } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
+import { IZoweTreeNode } from "./ZoweTree";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -24,7 +25,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  * @class ZoweNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweNode extends vscode.TreeItem {
+export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
     public command: vscode.Command;
     public pattern = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
@@ -38,8 +39,12 @@ export class ZoweNode extends vscode.TreeItem {
      * @param {ZoweNode} mParent
      * @param {Session} session
      */
-    constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweNode, private session: Session, contextOverride?: string) {
+    constructor(label: string,
+                collapsibleState: vscode.TreeItemCollapsibleState,
+                public mParent: ZoweNode,
+                private session: Session,
+                contextOverride?: string,
+                private etag?: string) {
         super(label, collapsibleState);
         if (contextOverride) {
             this.contextValue = contextOverride;
@@ -51,7 +56,18 @@ export class ZoweNode extends vscode.TreeItem {
             this.contextValue = extension.DS_DS_CONTEXT;
         }
         this.tooltip = this.label;
+        this.etag = etag ? etag : "";
         utils.applyIcons(this);
+    }
+
+    /**
+     * Implements access to profile name
+     * for {IZoweTreeNode}.
+     *
+     * @returns {string}
+     */
+    public getProfileName(): string {
+        return this.label.trim();
     }
 
     /**
@@ -163,5 +179,23 @@ export class ZoweNode extends vscode.TreeItem {
      */
     public getSessionNode(): ZoweNode {
         return this.session ? this : this.mParent.getSessionNode();
+    }
+
+    /**
+     * Returns the [etag] for this node
+     *
+     * @returns {string}
+     */
+    public getEtag(): string {
+        return this.etag;
+    }
+
+    /**
+     * Set the [etag] for this node
+     *
+     * @returns {void}
+     */
+    public setEtag(etagValue): void {
+        this.etag = etagValue;
     }
 }

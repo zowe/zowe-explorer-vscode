@@ -11,8 +11,10 @@
 
 jest.mock("vscode");
 jest.mock("fs");
+jest.mock("util");
 jest.mock("Session");
 jest.mock("@zowe/imperative");
+jest.mock("isbinaryfile");
 jest.mock("../../src/Profiles");
 
 import * as vscode from "vscode";
@@ -252,6 +254,15 @@ describe("DatasetTree Unit Tests", () => {
 
         // Checking that the rootChildren are what they are expected to be
         expect(pdsChildren).toEqual(sampleChildren);
+    });
+
+    /*************************************************************************************************************
+     * Test the getHistory command
+     *************************************************************************************************************/
+    it("Tests the getHistory command", async () => {
+        testTree.addHistory("testHistory");
+        const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
+        expect(testTree.getHistory()[0]).toEqual("testHistory");
     });
 
     /*************************************************************************************************************
@@ -760,6 +771,70 @@ describe("DatasetTree Unit Tests", () => {
             })
         });
 
+        await testTree.datasetFilterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+
+    });
+
+    it("tests the dataset filter prompt credentials, favorite route", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        const dsNode = new ZoweNode("[testSess2]: node", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode);
+        const dsNode2 = new ZoweNode("testSess2", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
+        dsNode2.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode2);
+        getConfiguration.mockReturnValue({
+            persistence: true,
+            get: (setting: string) => [
+                "[test]: brtvs99.public1.test{pds}",
+                "[test]: brtvs99.test{ds}",
+                "[test]: brtvs99.fail{fail}",
+                "[test]: brtvs99.test.search{session}",
+                "[test]: brtvs99.test.*{session}",
+            ],
+            update: jest.fn(()=>{
+                return {};
+            })
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: jest.fn(()=> {
+                        return null;
+                    }),
+                    promptCredentials: jest.fn(()=> {
+                        return ["", "", ""];
+                    }),
+                };
+            })
+        });
+
+        const spyMe = new DatasetTree();
+        Object.defineProperty(spyMe, "datasetFilterPrompt", {
+            value: jest.fn(() => {
+                return {
+                    tempNode: dsNode2,
+                    mSessionNodes: {Session: {ISession: {user: "", password: "", base64EncodedAuth: ""}}}
+                };
+            })
+        });
+
+        testTree.initialize(Logger.getAppLogger());
         await testTree.datasetFilterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");

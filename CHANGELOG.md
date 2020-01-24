@@ -2,6 +2,42 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.1.0`
+
+- Updates to Readme to include links to Theia Readme. Thanks @IgorCATech
+- Fix for incorrect profile name in some favorites. Thanks @lauren-li
+- Update dataset filters on dataset creation. Thanks @katelynienaber
+- Include VSIX in Github release. Thanks @zFernand0
+- Fix to handle "Show Dataset Attributes" in Favorites. Thanks @katelynienaber
+- Enhancements to profile creation. Thanks @jellypuno
+- Theia specific QuickPick modifications. Thanks @phaumer
+- Update incorrect profile message. Thanks @lauren-li
+- Fix Copy and paste dateset menu duplication. Thanks @lauren-li
+
+## `1.0.1`
+
+- Remove duplicate commands #376. Thanks @lauren-li
+- Update localization for v1.0.0 #374. Thanks @lauren-li
+- Update keywords #383. @zFernand0
+- Update package json files #391. @zFernand0
+- Fixed adding sessions in Theia #382. Thanks @phaumer
+- Add validation for undefined username and password + more cosmetic fix #378. Thanks @jellypuno
+- Update incorrect profile message #387. Thanks @lauren-li
+
+## `1.0.0`
+
+- VSCode centric Connection settings. Thanks @crawr, @jellypuno
+  - Credential prompting in profiles and favorite . Thanks @crawr, @jellypuno
+- Dataset and Dataset member copy and renaming function. Thanks @CForrest97
+- Theia support including documentation.
+- Save improvements implementing improved Safe Save functionality as the default behavior. Thanks Alexandru-Dumitru
+- Reliability and Resilience updates:
+  - for default profiles
+  - for deleting a dataset in use
+  - testing improvements and coverage
+  - rationalizing deliverables
+  - performance improvements
+
 ## 0.29.0
 
 - Provide ability to rename datasets. Thanks @CForrest97
