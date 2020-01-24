@@ -10,9 +10,6 @@
 */
 
 import * as path from "path";
-import * as os from "os";
-import * as zowe from "@brightside/core";
-import { CliProfileManager } from "@brightside/imperative";
 import { TreeItem, QuickPickItem, QuickPick } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";

@@ -11,12 +11,13 @@
 
 import * as zowe from "@brightside/core";
 import * as fs from "fs";
+import * as os from "os";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded, ISession, IProfile, Session } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -118,8 +119,28 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log = Logger.getAppLogger();
         log.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
-        await Profiles.createInstance(log);
 
+        const keytar = getSecurityModules("keytar");
+        if (keytar) {
+            const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
+            if (service) {
+                try {
+                    // Override Imperative credential manager to use VSCode keytar
+                    DefaultCredentialManager.prototype.initialize = async () => {
+                        (DefaultCredentialManager.prototype as any).keytar = keytar;
+                    };
+                    CredentialManagerFactory.initialize(
+                        {
+                            service
+                        }
+                    );
+                } catch (err) {
+                    throw new ImperativeError({msg: err.toString()});
+                }
+            }
+        }
+
+        await Profiles.createInstance(log);
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
         // Initialize uss provider
@@ -325,6 +346,57 @@ export function defineGlobals(tempPath: string | undefined) {
 
     USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
     DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+}
+
+/**
+ * function to check if imperative.json contains
+ * information about security or not and then
+ * Imports the neccesary security modules
+ */
+export function getSecurityModules(moduleName): NodeRequire | undefined {
+    let imperativeIsSsecure: boolean = false;
+    try {
+        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+        const settings = JSON.parse(fs.readFileSync(fileName).toString());
+        const value1 = settings.overrides.CredentialManager;
+        const value2 = settings.overrides["credential-manager"];
+        imperativeIsSsecure = ((typeof value1 === "string") && (value1.length > 0)) ||
+                            ((typeof value2 === "string") && (value2.length > 0));
+    } catch (error) {
+        log.warn(localize("profile.init.read.imperative","Unable to read imperative file. ")+ error.message);
+        vscode.window.showInformationMessage(error.message);
+        return undefined;
+    }
+    if (imperativeIsSsecure) {
+        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+        const appRoot = ISTHEIA ? process.cwd() : vscode.env.appRoot;
+        try {
+            return require(`${appRoot}/node_modules/${moduleName}`);
+        } catch (err) {
+            vscode.window.showWarningMessage(localize("initialize.module.load",
+                    "Credentials not managed, unable to load security file: ") + moduleName);
+        }
+        try {
+            return require(`${appRoot}/node_modules.asar/${moduleName}`);
+        } catch (err) {
+            vscode.window.showWarningMessage(localize("initialize.module.load",
+                    "Credentials not managed, unable to load security file: ") + moduleName);
+        }
+    }
+    return undefined;
+}
+
+/**
+ * Function to retrieve the home directory. In the situation Imperative has
+ * not initialized it we mock a default value.
+ */
+export function getZoweDir(): string {
+    ImperativeConfig.instance.loadedConfig = {
+        defaultHome: path.join(os.homedir(), ".zowe"),
+        envVariablePrefix: "ZOWE"
+    };
+    const ti = ImperativeConfig.instance;
+    return ImperativeConfig.instance.cliHome;
 }
 
 /**
@@ -609,7 +681,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         }
         if (newprofile) {
             try {
-                await Profiles.getInstance().listProfile();
+                await Profiles.getInstance().refresh();
             } catch (error) {
                 vscode.window.showErrorMessage(error.message);
             }
