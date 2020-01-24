@@ -31,6 +31,7 @@ import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
+import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -1500,13 +1501,19 @@ export async function refreshUSS(node: ZoweUSSNode) {
     try {
         const ussDocumentFilePath = getUSSDocumentFilePath(node);
         const isDirty = node.isDirtyInEditor;
+        let wasSaved = false;
 
         if (isDirty) {
+            attachRecentSaveListener();
+
             vscode.window.showTextDocument(node.openedDocumentInstance);
             await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+            wasSaved = getRecentSaveStatus();
+
+            disposeRecentSaveListener();
         }
 
-        if ((isDirty && !node.isDirtyInEditor) || !isDirty) {
+        if ((isDirty && !node.isDirtyInEditor && !wasSaved) || !isDirty) {
             const response = await zowe.Download.ussFile(node.getSession(), node.fullPath, {
                 file: ussDocumentFilePath,
                 returnEtag: true
@@ -1517,6 +1524,8 @@ export async function refreshUSS(node: ZoweUSSNode) {
             if (isDirty) {
                 await initializeFileOpening(node, ussDocumentFilePath, true);
             }
+        } else if (wasSaved) {
+            await initializeFileOpening(node, ussDocumentFilePath, true);
         }
     } catch (err) {
         if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
