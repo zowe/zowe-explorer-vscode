@@ -17,7 +17,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -122,6 +122,10 @@ export async function activate(context: vscode.ExtensionContext) {
             const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
             if (service) {
                 try {
+                    // Override Imperative credential manager to use VSCode keytar
+                    DefaultCredentialManager.prototype.initialize = async () => {
+                        (DefaultCredentialManager.prototype as any).keytar = keytar;
+                    };
                     CredentialManagerFactory.initialize(
                         {
                             service
