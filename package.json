@@ -1095,6 +1095,12 @@
           "description": "Zowe-Temp-Folder-Loacation",
           "scope": "window"
         },
+        "Zowe Security: Credential Key": {
+          "type": "string",
+          "default": "",
+          "description": "%Zowe-Builtin-Security%",
+          "scope": "window"
+        },
         "Zowe-USS-Persistent": {
           "default": {
             "persistence": true,
@@ -1189,6 +1195,7 @@
     "jest-html-reporter": "^2.4.0",
     "jsdoc": "^3.6.3",
     "jsdom": "11.11.0",
+    "keytar": "^5.0.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
     "mem": ">=4.0.0",

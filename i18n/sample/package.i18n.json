@@ -62,6 +62,7 @@
     "Zowe-Default-Datasets-PS": "Default values of Sequential data set creation",
     "Zowe-Default-Datasets-Favorites": "Toggle if favorite files persist locally",
     "Zowe-Temp-Folder-Loacation": "Path to temporary folder location",
+    "Zowe-Builtin-Security": "Built-in Security. Specify a service of either 'Zowe-Plugin' when using the Secure Credentials Store plugin or @zowe/cli to describe a keytar based solution. The Default 'blank' represents no security. User names and passwords are stored in the clear.",
     "Zowe-Default-USS-Persistent-Favorites": "Toggle if USS favorite files persist locally",
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",

@@ -22,8 +22,6 @@ var parsedDatasetTree = JSON.parse(fs.readFileSync('./out/src/DatasetTree.nls.me
 var keysPairsDatasetTree = {};
 var parsedExtension = JSON.parse(fs.readFileSync('./out/src/extension.nls.metadata.json').toString());
 var keysPairsExtension = {};
-var parsedProfileLoader = JSON.parse(fs.readFileSync('./out/src/ProfileLoader.nls.metadata.json').toString());
-var keysPairsProfileLoader = {};
 var parsedProfiles = JSON.parse(fs.readFileSync('./out/src/Profiles.nls.metadata.json').toString());
 var keysPairsProfiles = {};
 var parsedUSSTree = JSON.parse(fs.readFileSync('./out/src/USSTree.nls.metadata.json').toString());
@@ -42,7 +40,6 @@ var keysPairsPackage = JSON.parse(fs.readFileSync('./package.nls.json').toString
 parsedUssNodeActions.keys.forEach((key, i) => keysPairsUssNodeActions[key] = parsedUssNodeActions.messages[i]); 
 parsedDatasetTree.keys.forEach((key, i) => keysPairsDatasetTree[key] = parsedDatasetTree.messages[i]); 
 parsedExtension.keys.forEach((key, i) => keysPairsExtension[key] = parsedExtension.messages[i]); 
-parsedProfileLoader.keys.forEach((key, i) => keysPairsProfileLoader[key] = parsedProfileLoader.messages[i]); 
 parsedProfiles.keys.forEach((key, i) => keysPairsProfiles[key] = parsedProfiles.messages[i]);
 parsedUSSTree.keys.forEach((key, i) => keysPairsUSSTree[key] = parsedUSSTree.messages[i]); 
 parsedUtils.keys.forEach((key, i) => keysPairsUtils[key] = parsedUtils.messages[i]);
@@ -54,7 +51,6 @@ parsedZoweUSSNode.keys.forEach((key, i) => keysPairsZoweUSSNode[key] = parsedZow
 fs.writeFileSync('./i18n/sample/src/uss/ussNodeActions.i18n.json', JSON.stringify(keysPairsUssNodeActions, null, 4));
 fs.writeFileSync('./i18n/sample/src/DatasetTree.i18n.json', JSON.stringify(keysPairsDatasetTree, null, 4));
 fs.writeFileSync('./i18n/sample/src/extension.i18n.json', JSON.stringify(keysPairsExtension, null, 4));
-fs.writeFileSync('./i18n/sample/src/ProfileLoader.i18n.json', JSON.stringify(keysPairsProfileLoader, null, 4));
 fs.writeFileSync('./i18n/sample/src/Profiles.i18n.json', JSON.stringify(keysPairsProfiles, null, 4));
 fs.writeFileSync('./i18n/sample/src/USSTree.i18n.json', JSON.stringify(keysPairsUSSTree, null, 4));
 fs.writeFileSync('./i18n/sample/src/utils.i18n.json', JSON.stringify(keysPairsUtils, null, 4));
