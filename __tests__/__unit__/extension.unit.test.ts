@@ -372,9 +372,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
-    Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
-    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
-    Object.defineProperty(icInstance, "cliHome", { value: cliHome });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
@@ -504,6 +501,7 @@ describe("Extension Unit Tests", () => {
             extensionPath: path.join(__dirname, "..")
         } as vscode.ExtensionContext));
         const mock = new extensionMock();
+        readFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
 
         await extension.activate(mock);
 
