@@ -14,12 +14,10 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
 import { List } from "@brightside/core";
 
 describe("Unit Tests (Jest)", () => {
@@ -57,7 +55,7 @@ describe("Unit Tests (Jest)", () => {
         });
     });
 
-    afterEach(() => {
+  afterEach(() => {
         jest.resetAllMocks();
     });
     /*************************************************************************************************************
