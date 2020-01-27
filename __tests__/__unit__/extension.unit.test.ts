@@ -210,7 +210,7 @@ describe("Extension Unit Tests", () => {
     };
     const cliHome = jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe"));
     const icInstance = jest.fn();
-    const ImperativeConfig =jest.fn(
+    const ImperativeConfig =jest.fn();
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
