@@ -1,7 +1,6 @@
 {
     "loadNamedProfile.error.profileName": "Could not find profile named: ",
     "loadNamedProfile.error.period": ".",
-    "loadNamedProfile.warn.noDefaultProfile": "Unable to locate a default profile. CLI may not be installed. ",
     "createNewConnection.invalidzosmfURL": "Please enter a valid URL in the format https://url:port.",
     "createNewConnection.option.prompt.url.placeholder": "https://url:port",
     "createNewConnection.option.prompt.url": "Enter a z/OSMF URL in the format 'https://url:port'.",

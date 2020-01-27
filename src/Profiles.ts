@@ -9,16 +9,15 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, Imperative, ImperativeConfig, IProfile, Session, ISession } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, ImperativeConfig } from "@brightside/imperative";
 import * as nls from "vscode-nls";
-import * as os from "os";
-import * as fs from "fs";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@brightside/core";
-import * as ProfileLoader from "./ProfileLoader";
+import { getZoweDir } from "./extension";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
 interface IUrlValidator {
     valid: boolean;
     host: string;
@@ -34,72 +33,51 @@ let IConnection: {
     rejectUnauthorized: boolean;
 };
 
-export class Profiles { // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger) {
-        Profiles.loader = new Profiles(log);
-        await Profiles.loader.refresh();
-        return Profiles.loader;
+export class Profiles {
+    // Processing stops if there are no profiles detected
+    public static async createInstance(log: Logger, type: string = "zosmf") {
+        const profile = new Profiles(log, type);
+        profile.type = type;
+        await profile.refresh();
+        Profiles.loader.set(type, profile);
+        return profile;
+    }
 
+    public static getInstance(type: string = "zosmf") {
+        return Profiles.loader.get(type);
     }
-    public static getInstance() {
-        return Profiles.loader;
-    }
-    private static loader: Profiles;
+
+    private static loader: Map<string, Profiles> = new Map();
+
     public allProfiles: IProfileLoaded[] = [];
     public defaultProfile: IProfileLoaded;
+    private profileManager;
 
-    private spawnValue: number = -1;
-    private initValue: number = -1;
-    private constructor(public log: Logger) {}
+    private constructor(private log: Logger, private type: string) {
+    }
 
     public loadNamedProfile(name: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && profile.type === "zosmf") {
+            if (profile.name === name && profile.type === this.type) {
                 return profile;
             }
         }
         throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
             + name + localize("loadNamedProfile.error.period", "."));
     }
+
     public getDefaultProfile(): IProfileLoaded {
         return this.defaultProfile;
     }
-    public async refresh() {
-        if (this.isSpawnReqd() === 0) {
-            this.allProfiles = ProfileLoader.loadAllProfiles();
-            try {
-                this.defaultProfile = ProfileLoader.loadDefaultProfile(this.log);
-            } catch (err) {
-                // Unable to load a default profile
-                this.log.warn(localize("loadNamedProfile.warn.noDefaultProfile",
-                    "Unable to locate a default profile. CLI may not be installed. ") + err.message);
-            }
-        } else {
-            const profileManager = new CliProfileManager({
-                profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
-                type: "zosmf"
-            });
-            this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
-                return profile.type === "zosmf";
-            });
-            if (this.allProfiles.length > 0) {
-                this.defaultProfile = (await profileManager.load({ loadDefault: true }));
-            } else {
-                ProfileLoader.loadDefaultProfile(this.log);
-            }
-        }
-    }
 
-    public listProfile() {
-        try {
-            this.allProfiles = ProfileLoader.loadAllProfiles();
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        this.allProfiles.map((profile) => {
-            return profile.name;
+    public async refresh() {
+        const profileManager = await this.getCliProfileManager(this.type);
+        this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
+            return profile.type === this.type;
         });
-        return this.allProfiles;
+        if (this.allProfiles.length > 0) {
+            this.defaultProfile = (await profileManager.load({ loadDefault: true }));
+        }
     }
 
     public validateAndParseUrl = (newUrl: string): IUrlValidator => {
@@ -151,7 +129,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         });
     }
 
-    public async createNewConnection(profileName: string): Promise<string | undefined> {
+    public async createNewConnection(profileName: string, ProfileType: string ="zosmf"): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
@@ -246,7 +224,7 @@ export class Profiles { // Processing stops if there are no profiles detected
         let newProfile: IProfile;
 
         try {
-            newProfile = await this.saveProfile(IConnection, IConnection.name, "zosmf");
+            newProfile = await this.saveProfile(IConnection, IConnection.name, ProfileType);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -300,59 +278,27 @@ export class Profiles { // Processing stops if there are no profiles detected
                 loadSession.password = passWord.trim();
             }
         }
-
         const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        const mainZoweDir = path.join(require.resolve("@brightside/core"), "..", "..", "..", "..");
-        // we have to mock a few things to get the Imperative.init to work properly
-        try {
-            (process.mainModule as any).filename = require.resolve("@brightside/core");
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        try {
-            ((process.mainModule as any).paths as any).unshift(mainZoweDir);
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        if (this.initValue === -1) {
-            try {
-            // we need to call Imperative.init so that any installed credential manager plugins are loaded
-                await Imperative.init({ configurationModule: require.resolve("@brightside/core/lib/imperative.js") });
-            } catch (error) {
-                vscode.window.showErrorMessage(error.message);
-            }
-            this.initValue = 0;
-        }
         let zosmfProfile: IProfile;
         try {
-            zosmfProfile = await new CliProfileManager({
-                profileRootDirectory: path.join(ImperativeConfig.instance.cliHome, "profiles"),
-                type: "zosmf"
-            }).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            zosmfProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
         return zosmfProfile.profile;
     }
 
-    private isSpawnReqd() {
-        if (this.spawnValue === -1) {
-            const homedir = os.homedir();
-            this.spawnValue = 0;
-            try {
-                const fileName = path.join(homedir, ".zowe", "settings", "imperative.json");
-                const settings = JSON.parse(fs.readFileSync(fileName).toString());
-                const value = settings.overrides.CredentialManager;
-                this.spawnValue = value !== false ? 0 : 1;
-            } catch (error) {
-                // default to spawn
-                this.spawnValue = 0;
-            }
+    private async getCliProfileManager( type: string ) {
+        if (!this.profileManager) {
+            this.profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                type
+            });
         }
-        return this.spawnValue;
+        return this.profileManager;
     }
 }
