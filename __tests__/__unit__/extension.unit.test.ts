@@ -3559,6 +3559,42 @@ describe("Extension Unit Tests", () => {
         expect(moveSync.mock.calls[0][1]).toBe(path.join(path.sep, "new", "test", "path", "temp"));
     });
 
+    it("Tests that temp folder error thrown 1", () => {
+        mkdirSync.mockReset();
+        moveSync.mockReset();
+        existsSync.mockReset();
+        showErrorMessage.mockReset();
+        existsSync.mockReturnValueOnce(false);
+
+        const originalPreferencePath = "/err/path";
+        const updatedPreferencePath = "/err/test/path";
+        mkdirSync.mockImplementationOnce(() => {
+            throw (Error("testAsError 1"));
+        });
+        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("testAsError 1");
+    });
+
+    it("Tests that temp folder error thrown 2", () => {
+        mkdirSync.mockReset();
+        moveSync.mockReset();
+        existsSync.mockReset();
+        showErrorMessage.mockReset();
+        existsSync.mockReturnValueOnce(true);
+        existsSync.mockReturnValueOnce(false);
+        existsSync.mockReturnValueOnce(true);
+
+        const originalPreferencePath = "/err2/path";
+        const updatedPreferencePath = "/err2/test/path";
+        moveSync.mockImplementationOnce(() => {
+            throw (Error("testAsError 2"));
+        });
+        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("testAsError 2");
+    });
+
     it("Tests that temp folder does not update on duplicate preference", () => {
         mkdirSync.mockReset();
         moveSync.mockReset();
