@@ -16,23 +16,23 @@ fs = require('fs');
 
 // Read localization metadata files
 // Consider adding support for creating directories in the filepath if they don't exist yet
-var parsedUssNodeActions = JSON.parse(fs.readFileSync('./out/src/uss/ussNodeActions.nls.metadata.json').toString());
+var parsedUssNodeActions = JSON.parse(fs.readFileSync('./dist/src/uss/ussNodeActions.nls.metadata.json').toString());
 var keysPairsUssNodeActions = {};
-var parsedDatasetTree = JSON.parse(fs.readFileSync('./out/src/DatasetTree.nls.metadata.json').toString());
+var parsedDatasetTree = JSON.parse(fs.readFileSync('./dist/src/DatasetTree.nls.metadata.json').toString());
 var keysPairsDatasetTree = {};
-var parsedExtension = JSON.parse(fs.readFileSync('./out/src/extension.nls.metadata.json').toString());
+var parsedExtension = JSON.parse(fs.readFileSync('./dist/src/extension.nls.metadata.json').toString());
 var keysPairsExtension = {};
-var parsedProfiles = JSON.parse(fs.readFileSync('./out/src/Profiles.nls.metadata.json').toString());
+var parsedProfiles = JSON.parse(fs.readFileSync('./dist/src/Profiles.nls.metadata.json').toString());
 var keysPairsProfiles = {};
-var parsedUSSTree = JSON.parse(fs.readFileSync('./out/src/USSTree.nls.metadata.json').toString());
+var parsedUSSTree = JSON.parse(fs.readFileSync('./dist/src/USSTree.nls.metadata.json').toString());
 var keysPairsUSSTree = {};
-var parsedUtils = JSON.parse(fs.readFileSync('./out/src/utils.nls.metadata.json').toString());
+var parsedUtils = JSON.parse(fs.readFileSync('./dist/src/utils.nls.metadata.json').toString());
 var keysPairsUtils = {};
-var parsedZosJobsProvider = JSON.parse(fs.readFileSync('./out/src/ZosJobsProvider.nls.metadata.json').toString());
+var parsedZosJobsProvider = JSON.parse(fs.readFileSync('./dist/src/ZosJobsProvider.nls.metadata.json').toString());
 var keysPairsZosJobsProvider = {};
-var parsedZoweNode = JSON.parse(fs.readFileSync('./out/src/ZoweNode.nls.metadata.json').toString());
+var parsedZoweNode = JSON.parse(fs.readFileSync('./dist/src/ZoweNode.nls.metadata.json').toString());
 var keysPairsZoweNode = {};
-var parsedZoweUSSNode = JSON.parse(fs.readFileSync('./out/src/ZoweUSSNode.nls.metadata.json').toString());
+var parsedZoweUSSNode = JSON.parse(fs.readFileSync('./dist/src/ZoweUSSNode.nls.metadata.json').toString());
 var keysPairsZoweUSSNode = {};
 var keysPairsPackage = JSON.parse(fs.readFileSync('./package.nls.json').toString());
 
