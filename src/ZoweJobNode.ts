@@ -126,16 +126,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.children;
     }
 
-    public reset() {
-        utils.labelHack(this);
-        this.children = [];
-        this.dirty = true;
-    }
-
-    // tslint:disable-next-line: no-empty
-    public rename(newNamePath: string) {
-    }
-
     public getSessionNode(): IZoweJobTreeNode {
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }

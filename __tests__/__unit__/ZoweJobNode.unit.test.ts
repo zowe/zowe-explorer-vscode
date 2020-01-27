@@ -418,6 +418,44 @@ describe("Zos Jobs Unit Tests", () => {
             expect(newjobNode.searchId).toEqual("");
         });
 
+        /*************************************************************************************************************
+         * Jobs Filter prompts
+         *************************************************************************************************************/
+        it("Testing that prompt credentials is called when searchPrompt is triggered but undefined returned", async () => {
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
+            newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
+            testJobsProvider.initializeJobsTree(Logger.getAppLogger());
+            createQuickPick.mockReturnValue({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [testJobsProvider.createOwner, testJobsProvider.createId],
+                value: "",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+            showInformationMessage.mockReset();
+            showInputBox.mockReturnValueOnce("MYHLQ");
+            showInputBox.mockReturnValueOnce("");
+            showInputBox.mockReturnValueOnce(undefined);
+            await testJobsProvider.searchPrompt(newjobNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
+        });
+
         it("Testing that prompt credentials is called when searchPrompt is triggered for fav", async () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob);
