@@ -147,7 +147,9 @@ describe("Extension Unit Tests", () => {
     const createQuickPick = jest.fn();
     const mockAddZoweSession = jest.fn();
     const mockAddHistory = jest.fn();
+    const mockAddRecall = jest.fn();
     const mockGetHistory = jest.fn();
+    const mockGetRecall = jest.fn();
     const mockRefresh = jest.fn();
     const mockRefreshElement = jest.fn();
     const mockUSSRefresh = jest.fn();
@@ -155,6 +157,7 @@ describe("Extension Unit Tests", () => {
     const mockGetChildren = jest.fn();
     const mockGetUSSChildren = jest.fn();
     const mockRemoveFavorite = jest.fn();
+    const mockRemoveRecall = jest.fn();
     const getConfiguration = jest.fn();
     const onDidChangeConfiguration = jest.fn();
     const executeCommand = jest.fn();
@@ -217,11 +220,14 @@ describe("Extension Unit Tests", () => {
             mFavorites: [],
             addSession: mockAddZoweSession,
             addHistory: mockAddHistory,
+            addRecall: mockAddHistory,
             getHistory: mockGetHistory,
+            getRecall: mockGetHistory,
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
             removeFavorite: mockRemoveFavorite,
+            removeRecall: mockRemoveRecall,
             enterPattern: mockPattern,
             initializeFavorites: mockInitialize,
             renameFavorite: mockRenameFavorite,
@@ -1847,6 +1853,7 @@ describe("Extension Unit Tests", () => {
         };
         withProgress.mockReturnValue(response);
         openTextDocument.mockResolvedValueOnce("test doc");
+        testTree.getRecall.mockReturnValue([child.label]);
 
         await extension.openPS(node, true, testTree);
 
@@ -1869,6 +1876,7 @@ describe("Extension Unit Tests", () => {
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getDocumentFilePath(node.label, node));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test doc");
+        expect(testTree.addRecall).toBeCalledWith("node");
 
         openTextDocument.mockResolvedValueOnce("test doc");
         const node2 = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);

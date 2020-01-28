@@ -66,6 +66,7 @@ let passWrd: string;
 let baseEncd: string;
 let validProfile: number = -1;
 let log: Logger;
+let databaseView: vscode.TreeView<ZoweNode>;
 /**
  * The function that runs when the extension is loaded
  *
@@ -193,7 +194,7 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         });
         // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
-        const databaseView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
+        databaseView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: datasetProvider });
         context.subscriptions.push(databaseView);
         if (!ISTHEIA) {
             databaseView.onDidCollapseElement( async (e) => {
@@ -1156,6 +1157,8 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
         }
         throw err;
     }
+    // remove node from recent files
+    datasetProvider.removeRecall(label);
 
     // remove node from tree
     if (fav) {
@@ -1397,13 +1400,17 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
                 node.setEtag(response.apiResponse.etag);
             }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            datasetProvider.addHistory(label, true);
+            node.mParent.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             if (previewMember === true) {
                 await vscode.window.showTextDocument(document);
-                }
-                else {
-                    await vscode.window.showTextDocument(document, {preview: false});
-                }
+            }
+            else {
+                await vscode.window.showTextDocument(document, { preview: false });
+            }
+            // Add document name to recently-opened files
+            datasetProvider.addRecall(label);
+            // Reveal node in tree
+            databaseView.reveal(node, {select: true, focus: true, expand: true});
         } catch (err) {
             log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             vscode.window.showErrorMessage(err.message);

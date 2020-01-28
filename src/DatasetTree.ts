@@ -365,8 +365,8 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         }
     }
 
-    public async addHistory(criteria: string, isMember?: boolean) {
-        this.mHistory.addHistory(criteria, isMember);
+    public async addHistory(criteria: string) {
+        this.mHistory.addHistory(criteria);
         this.refresh();
     }
 
@@ -374,20 +374,28 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         return this.mHistory.getHistory();
     }
 
-    public getMemberHistory() {
-        return this.mHistory.getMemberHistory();
+    public async addRecall(criteria: string) {
+        this.mHistory.addRecall(criteria);
+        this.refresh();
+    }
+
+    public getRecall() {
+        return this.mHistory.getRecall();
+    }
+
+    public removeRecall(name) {
+        this.mHistory.removeRecall(name);
     }
 
     public async recentMemberPrompt(datasetProvider: DatasetTree) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
         let pattern: string;
         let parentNode: ZoweNode;
-        let sessNode: ZoweNode;
 
         // Get user selection
-        if (datasetProvider.getMemberHistory().length > 0) {
+        if (datasetProvider.getRecall().length > 0) {
             const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
-            const items: vscode.QuickPickItem[] = datasetProvider.getMemberHistory().map((element) => new FilterItem(element));
+            const items: vscode.QuickPickItem[] = datasetProvider.getRecall().map((element) => new FilterItem(element));
             if (extension.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open")
@@ -402,16 +410,15 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             } else {
                 const quickpick = vscode.window.createQuickPick();
                 quickpick.items = [createPick, ...items];
-                quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member");
+                quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member to open");
                 quickpick.ignoreFocusOut = true;
                 quickpick.show();
                 const choice = await resolveQuickPickHelper(quickpick);
                 quickpick.hide();
-                if (!choice) {
+                if (!choice || choice === createPick) {
                     vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
                     return;
-                }
-                if (choice instanceof FilterDescriptor) {
+                } else if (choice instanceof FilterDescriptor) {
                     if (quickpick.value) {
                         pattern = quickpick.value;
                     }
@@ -420,11 +427,18 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 }
             }
 
-            // Find the selected member's session & parent nodes
-            datasetProvider.mSessionNodes.forEach((thisNode) => {
-                const i = thisNode.children.find((child) => child.label === pattern.substring(0, pattern.indexOf("(")));
+            // Find the selected member's parent node
+            const favoritesAndSessions = [...datasetProvider.mFavorites, ...datasetProvider.mSessionNodes];
+            let i: ZoweNode;
+            const nodeName = pattern.substring(0, pattern.indexOf("("));
+            favoritesAndSessions.forEach((thisNode) => {
+                if (thisNode.contextValue === extension.FAVORITE_CONTEXT || thisNode.contextValue === extension.PDS_FAV_CONTEXT) {
+                    const faveName = thisNode.label.substring(thisNode.label.indexOf(":") + 2);
+                    i = (faveName === nodeName) ? thisNode : null;
+                } else {
+                    i = thisNode.children.find((child) => child.label === nodeName);
+                }
                 parentNode = (i) ? i : parentNode;
-                sessNode = (i) ? thisNode : sessNode;
             });
 
             // Update the treeview with the new pattern
@@ -434,7 +448,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             node.dirty = true;
             node.contextValue = extension.DS_MEMBER_CONTEXT;
             node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
-            datasetProvider.addHistory(node.label);
 
             // Open the member
             extension.openPS(node, true, datasetProvider);
@@ -443,7 +456,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             return;
         }
         if (!pattern) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "You must enter a pattern."));
+            vscode.window.showInformationMessage(localize("enterPattern.noPattern", "No pattern entered."));
             return;
         }
     }

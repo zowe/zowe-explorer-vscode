@@ -31,14 +31,15 @@ export class PersistentFilters {
     }
     private static readonly favorites: string = "favorites";
     private static readonly history: string = "history";
+    private static readonly recall: string = "recall";
     private static readonly sessions: string = "sessions";
 
     public schema: string;
     private mHistory: string[] = [];
-    private mMemberHistory: string[] = [];
+    private mRecall: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(schema: string, private maxHistory = 5) {
+    constructor(schema: string, private maxHistory = 5, private maxRecall = 15) {
         this.schema = schema;
         this.initialize();
     }
@@ -70,25 +71,50 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addHistory(criteria: string, isMember?: boolean) {
+    public async addHistory(criteria: string) {
         if (criteria) {
-            const filterFunction = (element) => {
-                return element.trim() !== criteria.trim();
-            };
-            const historyArray = isMember ? "mMemberHistory" : "mHistory";
-
             // Remove any entries that match
-            this[historyArray] = this[historyArray].filter(filterFunction);
+            this.mHistory = this.mHistory.filter( (element) => {
+                return element.trim() !== criteria.trim();
+            });
 
             // Add value to front of stack
-            this[historyArray].unshift(criteria);
+            this.mHistory.unshift(criteria);
 
             // If list getting too large remove last entry
-            if (this[historyArray].length > this.maxHistory) {
-                this[historyArray].pop();
+            if (this.mHistory.length > this.maxHistory) {
+                this.mHistory.pop();
             }
-
             this.updateHistory();
+        }
+    }
+    /**
+     * Adds the name of one recently-edited file to the local store and
+     * updates persistent store. The store contains a
+     * maximum number of entries as described by `maxRecall`
+     *
+     * If the entry matches a previous entry it is removed from the list
+     * at that position in the stack.
+     *
+     * Once the maximum capacity has been reached the last entry is popped off
+     *
+     * @param {string} criteria - a line of search criteria
+     */
+    public async addRecall(criteria: string) {
+        if (criteria) {
+            // Remove any entries that match
+            this.mRecall = this.mRecall.filter( (element) => {
+                return element.trim() !== criteria.trim();
+            });
+
+            // Add value to front of stack
+            this.mRecall.unshift(criteria);
+
+            // If list getting too large remove last entry
+            if (this.mRecall.length > this.maxRecall) {
+                this.mRecall.pop();
+            }
+            this.updateRecall();
         }
     }
 
@@ -96,13 +122,19 @@ export class PersistentFilters {
         return this.mHistory;
     }
 
-    public getMemberHistory() {
-        return this.mMemberHistory;
+    public getRecall() {
+        return this.mRecall;
+    }
+
+    public removeRecall(name) {
+        const index = this.mRecall.findIndex((recallItem) => {
+            return recallItem.includes(name);
+        });
+        if (index >= 0) { this.mRecall.splice(index, 1); }
     }
 
     public async resetHistory() {
         this.mHistory = [];
-        this.mMemberHistory = [];
         this.updateHistory();
     }
     /**
@@ -146,8 +178,13 @@ export class PersistentFilters {
      */
     private async initialize() {
         let lines: string[];
+        let recallLines: string[];
         if (vscode.workspace.getConfiguration(this.schema)) {
             lines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.history);
+            recallLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.recall);
+        }
+        if (recallLines) {
+            this.mRecall = recallLines;
         }
         if (lines) {
             this.mHistory = lines;
@@ -169,6 +206,15 @@ export class PersistentFilters {
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.history = this.mHistory;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    private async updateRecall() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.recall = this.mRecall;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
         }
     }

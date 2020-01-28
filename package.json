@@ -1090,6 +1090,7 @@
             "persistence": true,
             "favorites": [],
             "history": [],
+            "recall": [],
             "sessions": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",

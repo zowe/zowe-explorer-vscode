@@ -41,15 +41,18 @@ describe("DatasetTree Unit Tests", () => {
             mFavorites: [],
             addSession: mockAddZoweSession,
             addHistory: mockAddHistory,
+            addRecall: mockAddRecall,
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
+            getRecall: mockGetRecall,
             removeFavorite: mockRemoveFavorite,
             enterPattern: mockPattern,
             initializeFavorites: mockInitialize,
             renameFavorite: mockRenameFavorite,
             updateFavorites: mockUpdateFavorites,
             renameNode: mockRenameNode,
+            removeRecall: mockRemoveRecall,
             findFavoritedNode,
             findNonFavoritedNode,
         };
@@ -84,12 +87,15 @@ describe("DatasetTree Unit Tests", () => {
     const mockRenameFavorite = jest.fn();
     const mockUpdateFavorites = jest.fn();
     const mockRenameNode = jest.fn();
+    const mockRemoveRecall = jest.fn();
     const mockInitialize = jest.fn();
     const mockPattern = jest.fn();
     const mockRemoveFavorite = jest.fn();
     const mockGetChildren = jest.fn();
+    const mockGetRecall = jest.fn();
     const mockAddZoweSession = jest.fn();
     const mockAddHistory = jest.fn();
+    const mockAddRecall = jest.fn();
     const mockRefresh = jest.fn();
     const mockRefreshElement = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
@@ -156,7 +162,7 @@ describe("DatasetTree Unit Tests", () => {
     testTree2.mSessionNodes = [];
     Object.defineProperty(testTree2, "onDidExpandElement", {value: jest.fn()});
     Object.defineProperty(testTree2, "onDidCollapseElement", {value: jest.fn()});
-    Object.defineProperty(testTree2, "getMemberHistory", {value: jest.fn()});
+    Object.defineProperty(testTree2, "getRecall", {value: jest.fn()});
     Object.defineProperty(testTree2, "reveal", {value: jest.fn()});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
 
@@ -310,11 +316,11 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
-     * Test the getMemberHistory command
+     * Test the getRecall command
      *************************************************************************************************************/
-    it("Tests the getMemberHistory command", async () => {
-        testTree.addHistory("testHistory", true);
-        expect(testTree.getMemberHistory()[0]).toEqual("testHistory");
+    it("Tests the getRecall command", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
     });
 
     /*************************************************************************************************************
@@ -561,7 +567,7 @@ describe("DatasetTree Unit Tests", () => {
         const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
-        testTree2.getMemberHistory.mockReturnValue([child]);
+        testTree2.getRecall.mockReturnValue([child.label]);
         createQuickPick.mockReturnValue({
             activeItems: [child.label],
             ignoreFocusOut: true,
@@ -585,7 +591,6 @@ describe("DatasetTree Unit Tests", () => {
         const openPS = jest.spyOn(extension, "openPS");
         await testTree.recentMemberPrompt(testTree2);
 
-        expect(testTree2.addHistory).toBeCalledWith("child");
         expect(openPS).toBeCalledWith(child, true, testTree2);
 
         sessNode.children.pop();
@@ -596,15 +601,15 @@ describe("DatasetTree Unit Tests", () => {
 
     it("Testing that recentMemberPrompt fails if no members were opened recently", async () => {
         testTree.initialize(Logger.getAppLogger());
-        testTree2.getMemberHistory.mockReturnValue([]);
+        testTree2.getRecall.mockReturnValue([]);
         const openPS = jest.spyOn(extension, "openPS");
 
-        testTree2.addHistory.mockReset();
+        testTree2.addRecall.mockReset();
         openPS.mockReset();
 
         await testTree.recentMemberPrompt(testTree2);
 
-        expect(testTree2.getMemberHistory).toHaveReturnedWith([]);
+        expect(testTree2.getRecall).toHaveReturnedWith([]);
         expect(openPS).toBeCalledTimes(0);
     });
 
