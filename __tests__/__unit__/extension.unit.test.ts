@@ -1185,7 +1185,7 @@ describe("Extension Unit Tests", () => {
             // do nothing
         }
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! The problem occured in zowe.CreateDataset.");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();

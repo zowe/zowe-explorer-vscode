@@ -399,7 +399,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                await errorHandling(error, node.getProfileName(), "Error encountered in datasetFilterPrompt.optionalProfiles! ");
+                await errorHandling(error, node.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `datasetFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -515,7 +515,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    await errorHandling(error, element.getProfileName(), "Error encountered in flipState.optionalProfiles! ");
+                    await errorHandling(error, element.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `flipState.optionalProfiles!`);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;

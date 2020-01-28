@@ -546,8 +546,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
-        const errMessage = localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message;
-        await utils.errorHandling(error, sesName, errMessage);
+        await utils.errorHandling(error, sesName, localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -592,8 +591,7 @@ export async function submitMember(node: ZoweNode) {
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitMember.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
-        const errMessage: string = localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message;
-        await utils.errorHandling(error, sesName, errMessage);
+        await utils.errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -833,8 +831,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            await utils.errorHandling(err, node.getProfileName(), (localize("createDataSet.error", "Error encountered when creating data set! ")) +
-            (localize("createDataSet.error.location","The problem occured in zowe.CreateDataset.")));
+            await utils.errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
+            err.message);
             throw (err);
         }
     }
@@ -860,8 +858,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
             await zowe.Upload.bufferToDataSet(parent.getSession(), Buffer.from(""), label + "(" + name + ")");
         } catch (err) {
             log.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
-            const errMessage: string = localize("createMember.error", "Unable to create member: ") + err.message;
-            await utils.errorHandling(err, label, errMessage);
+            await utils.errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
             throw (err);
         }
         parent.dirty = true;
@@ -899,8 +896,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         }
     } catch (err) {
         log.error(localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
-        const errMessage: string = localize("showDSAttributes.error", "Unable to list attributes: ") + err.message;
-        await utils.errorHandling(err, parent.getProfileName(), errMessage);
+        await utils.errorHandling(err, parent.getProfileName(), localize("showDSAttributes.error", "Unable to list attributes: ") + err.message);
         throw (err);
     }
 
@@ -965,8 +961,7 @@ export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree
             node.label = `${favPrefix}${afterDataSetName}`;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            const errMessage: string = localize("renameDataSet.error", "Unable to rename data set: ") + err.message;
-            await utils.errorHandling(err, favPrefix, errMessage);
+            await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
         if (isFavourite) {
@@ -1107,8 +1102,7 @@ export async function renameDataSetMember(node: ZoweNode, datasetProvider: Datas
             node.label = `${profileLabel}${afterMemberName}`;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            const errMessage: string = localize("renameDataSet.error", "Unable to rename data set: ") + err.message;
-            await utils.errorHandling(err, profileLabel, errMessage);
+            await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
         if (node.mParent.contextValue.includes(FAV_SUFFIX)) {

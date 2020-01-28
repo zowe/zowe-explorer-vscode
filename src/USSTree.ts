@@ -260,7 +260,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    await errorHandling(error, element.getProfileName(), "Error encountered in flipState.optionalProfiles! ");
+                    await errorHandling(error, element.getProfileName(), localize("ussTree.error", "Error encountered in ") + `flipState.optionalProfiles!`);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;
@@ -326,7 +326,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                await errorHandling(error, node.getProfileName(), "Error encountered in ussFilterPrompt.optionalProfiles! ");
+                await errorHandling(error, node.getProfileName(), localize("ussTree.error", "Error encountered in ") + `ussFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;

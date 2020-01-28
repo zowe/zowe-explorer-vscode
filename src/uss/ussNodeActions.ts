@@ -44,8 +44,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
-            const errMessage = localize("createUSSNode.error.create", "Unable to create node: ") + err.message;
-            utils.errorHandling(err, node.mProfileName, errMessage);
+            utils.errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
         ussFileProvider.refresh();
@@ -66,7 +65,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
                 baseEncd = values[2];
             }
         } catch (error) {
-            utils.errorHandling(error, node.mProfileName, "Error encountered in createUSSNodeDialog.optionalProfiles! ");
+            utils.errorHandling(error, node.mProfileName, localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
             return;
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
@@ -168,8 +167,7 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
                 ussFileProvider.addUSSFavorite(oldFavorite);
             }
         } catch (err) {
-            const errMessage: string = localize("renameUSSNode.error", "Unable to rename node: ") + err.message;
-            utils.errorHandling(err, originalNode.mProfileName, errMessage);
+            utils.errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
             throw (err);
         }
     }

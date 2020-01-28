@@ -17,6 +17,8 @@ import { IJob, IJobFile } from "@brightside/core";
 import * as extension from "./extension";
 import { IZoweTreeNode } from "./ZoweTree";
 import * as utils from "./utils";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends vscode.TreeItem implements IZoweTreeNode {
@@ -99,7 +101,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
                     try {
                         jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
                     } catch (error) {
-                        await utils.errorHandling(error, this.label, "Retrieving response from zowe.GetJobs");
+                        await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
                     }
                 }
                 jobs.forEach((job) => {
