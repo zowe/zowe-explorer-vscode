@@ -65,7 +65,8 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
                 baseEncd = values[2];
             }
         } catch (error) {
-            utils.errorHandling(error, node.mProfileName, localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
+            utils.errorHandling(error, node.mProfileName,
+                localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
             return;
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {

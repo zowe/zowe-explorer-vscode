@@ -193,7 +193,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(session, owner, prefix, searchId): Promise<IJob[]> {
+    private async getJobs(session, owner, prefix, searchId): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
         if (this.searchId.length > 0 ) {
             jobsInternal.push(await zowe.GetJobs.getJob(session, searchId));
