@@ -70,10 +70,15 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
 
     public async getChildren(): Promise<Job[]> {
         if (this.dirty) {
-            const elementChildren = [];
             let spools: zowe.IJobFile[] = [];
+            const elementChildren = [];
             if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
-                spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+                spools = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted.")
+                }, () => {
+                   return zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+                });
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
                     if (existing) {
@@ -94,16 +99,12 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
                     }
                 });
             } else {
-                let jobs: zowe.IJob[] = [];
-                if (this.searchId.length > 0 ) {
-                    jobs.push(await zowe.GetJobs.getJob(this.session, this._searchId));
-                } else {
-                    try {
-                        jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
-                    } catch (error) {
-                        await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
-                    }
-                }
+                const jobs = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted.")
+                }, () => {
+                   return this.getJobs(this.session, this._owner, this._prefix, this._searchId);
+                });
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -192,6 +193,20 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
 
     get searchId() {
         return this._searchId;
+    }
+
+    private async getJobs(session, owner, prefix, searchId): Promise<IJob[]> {
+        let jobsInternal: zowe.IJob[] = [];
+        if (this.searchId.length > 0 ) {
+            jobsInternal.push(await zowe.GetJobs.getJob(session, searchId));
+        } else {
+            try {
+                jobsInternal = await zowe.GetJobs.getJobsByOwnerAndPrefix(session, owner, prefix);
+            } catch (error) {
+                await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+            }
+        }
+        return jobsInternal;
     }
 }
 

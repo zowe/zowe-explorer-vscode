@@ -1,5 +1,6 @@
 {
     "getChildren.error.invalidNode": "Invalid node",
+    "ZoweUssNode.getList.progress": "Get USS file list command submitted.",
     "getChildren.error.response": "Retrieving response from ",
     "getChildren.responses.error.response": "The response from Zowe CLI was not successful",
     "getChildren.responses.open": "Open"
