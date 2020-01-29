@@ -39,13 +39,13 @@ let IConnection: {
 
 export class Profiles {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger) {
+    public static async createInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
         await Profiles.loader.refresh();
         return Profiles.loader;
     }
 
-    public static getInstance(type: string = "zosmf") {
+    public static getInstance(): Profiles {
         return Profiles.loader;
     }
 
@@ -73,12 +73,11 @@ export class Profiles {
         return this.defaultProfileByType.get(type);
     }
 
-
     public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
         return this.profilesByType.get(type);
     }
 
-    public async refresh() {
+    public async refresh(): Promise<void> {
         this.allProfiles = [];
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
@@ -93,8 +92,7 @@ export class Profiles {
         }
     }
 
-    public validateAndParseUrl = (newUrl: string): IUrlValidator => {
-
+    public validateAndParseUrl(newUrl: string): IUrlValidator {
         let url: URL;
         const validProtocols: string[] = ["https"];
         const DEFAULT_HTTPS_PORT: number = 443;
