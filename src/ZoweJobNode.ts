@@ -20,6 +20,7 @@ import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
@@ -193,7 +194,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (this.searchId.length > 0 ) {
             jobsInternal.push(await zowe.GetJobs.getJob(session, searchId));
         } else {
-            jobsInternal = await zowe.GetJobs.getJobsByOwnerAndPrefix(session, owner, prefix);
+            try {
+                jobsInternal = await zowe.GetJobs.getJobsByOwnerAndPrefix(session, owner, prefix);
+            } catch (error) {
+                await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+            }
         }
         return jobsInternal;
     }

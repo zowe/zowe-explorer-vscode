@@ -241,6 +241,7 @@ describe("Extension Unit Tests", () => {
             renameNode: mockRenameNode,
             findFavoritedNode,
             findNonFavoritedNode,
+            getProfileName: jest.fn()
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -262,7 +263,8 @@ describe("Extension Unit Tests", () => {
             getChildren: jest.fn(),
             addSession: jest.fn(),
             refresh: jest.fn(),
-            refreshElement: jest.fn()
+            refreshElement: jest.fn(),
+            getProfileName: jest.fn()
         };
     });
 
@@ -289,7 +291,6 @@ describe("Extension Unit Tests", () => {
     const testJobsTree = JobsTree();
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
@@ -1178,9 +1179,8 @@ describe("Extension Unit Tests", () => {
         } catch (err) {
             // do nothing
         }
-
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -1484,7 +1484,7 @@ describe("Extension Unit Tests", () => {
         await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         showQuickPick.mockResolvedValueOnce("No");
 
@@ -1573,8 +1573,6 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
         await expect(extension.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0].message).toEqual("deleteDataSet() called from invalid node.");
     });
 
     it("Testing that enterPattern is executed successfully", async () => {
@@ -2117,7 +2115,7 @@ describe("Extension Unit Tests", () => {
 
         expect(ussFile.mock.calls[0][1]).toBe(child.fullPath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
@@ -3557,7 +3555,7 @@ describe("Extension Unit Tests", () => {
         });
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("testAsError 1");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error encountered when creating temporary folder! testAsError 1");
     });
 
     it("Tests that temp folder error thrown 2", () => {

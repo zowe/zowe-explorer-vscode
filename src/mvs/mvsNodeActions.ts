@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../ZoweDatasetNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
+import * as utils from "../utils";
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {
@@ -48,6 +49,6 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
         const datasetName = getDatasetLabel(node);
         await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        await utils.errorHandling(e, node.getProfileName(), e.message);
     }
 }

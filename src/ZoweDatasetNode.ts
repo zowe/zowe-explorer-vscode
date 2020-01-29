@@ -98,18 +98,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         let responses: zowe.IZosFilesResponse[] = [];
-        try {
-            responses = await vscode.window.withProgress({
+        responses = await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: localize("ZoweJobNode.getJobs.progress", "Get Dataset list command submitted.")
-            }, () => {
-               return this.getDatasets();
-            });
-        } catch (err) {
-            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from zowe.List")
-                                                     + `\n${err}\n`);
-            throw Error(localize("getChildren.error.response", "Retrieving response from zowe.List") + `\n${err}\n`);
-        }
+        }, () => {
+            return this.getDatasets();
+        });
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -178,19 +172,23 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
         const responses: zowe.IZosFilesResponse[] = [];
-        if (this.contextValue === extension.DS_SESSION_CONTEXT) {
-            this.pattern = this.pattern.toUpperCase();
-            // loop through each pattern
-            for (const pattern of this.pattern.split(",")) {
-                responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
+        try {
+            if (this.contextValue === extension.DS_SESSION_CONTEXT) {
+                this.pattern = this.pattern.toUpperCase();
+                // loop through each pattern
+                for (const pattern of this.pattern.split(",")) {
+                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
+                }
+            } else {
+                // Check if node is a favorite
+                let label = this.label.trim();
+                if (this.label.startsWith("[")) {
+                    label = this.label.substring(this.label.indexOf(":") + 1).trim();
+                }
+                responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
             }
-        } else {
-            // Check if node is a favorite
-            let label = this.label.trim();
-            if (this.label.startsWith("[")) {
-                label = this.label.substring(this.label.indexOf(":") + 1).trim();
-            }
-            responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
+        } catch (err) {
+            await utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
         }
         return responses;
     }
