@@ -200,6 +200,8 @@ describe("Extension Unit Tests", () => {
     const findNonFavoritedNode = jest.fn();
     const concatChildNodes = jest.fn();
     const concatUSSChildNodes = jest.fn();
+    const ImperativeError  = jest.fn();
+    const getProfileName = jest.fn();
     let mockClipboardData: string;
     const fileResponse: brightside.IZosFilesResponse = {
         success: true,
@@ -242,6 +244,7 @@ describe("Extension Unit Tests", () => {
             renameNode: mockRenameNode,
             findFavoritedNode,
             findNonFavoritedNode,
+            getProfileName: jest.fn()
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -263,7 +266,8 @@ describe("Extension Unit Tests", () => {
             getChildren: jest.fn(),
             addSession: jest.fn(),
             refresh: jest.fn(),
-            refreshElement: jest.fn()
+            refreshElement: jest.fn(),
+            getProfileName: jest.fn()
         };
     });
 
@@ -290,7 +294,6 @@ describe("Extension Unit Tests", () => {
     const testJobsTree = JobsTree();
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
@@ -304,6 +307,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
+    Object.defineProperty(brtimperative, "ImperativeError", {value: ImperativeError});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
@@ -381,6 +385,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
+    Object.defineProperty(ZoweNode, "getProfileName", { value: getProfileName });
     Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { value: cliHome });
@@ -1182,9 +1187,8 @@ describe("Extension Unit Tests", () => {
         } catch (err) {
             // do nothing
         }
-
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -1488,7 +1492,7 @@ describe("Extension Unit Tests", () => {
         await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         showQuickPick.mockResolvedValueOnce("No");
 
@@ -1572,13 +1576,11 @@ describe("Extension Unit Tests", () => {
         const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = "junk";
+        child.contextValue = "junk";
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
         await expect(extension.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0].message).toEqual("deleteDataSet() called from invalid node.");
     });
 
     it("Testing that enterPattern is executed successfully", async () => {
@@ -2121,7 +2123,7 @@ describe("Extension Unit Tests", () => {
 
         expect(ussFile.mock.calls[0][1]).toBe(child.fullPath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();

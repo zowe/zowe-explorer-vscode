@@ -48,6 +48,9 @@ describe("Unit Tests (Jest)", () => {
         });
     });
 
+    const showErrorMessage = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+
     afterEach(() => {
         jest.resetAllMocks();
     });
@@ -135,13 +138,16 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that when bright.List.dataSet/allMembers() causes an error on the brightside call, " +
         "it throws an error and the catch block is reached", async () => {
+
+            showErrorMessage.mockReset();
             // Creating a rootNode
             const rootNode = new ZoweNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session);
             rootNode.contextValue = extension.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
-            await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-                "Error: Throwing an error to check error handling for unit tests!\n"));
+            rootNode.getChildren();
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
