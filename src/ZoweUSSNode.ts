@@ -138,8 +138,6 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
         } catch (err) {
             utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
-            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from ")
-                + `zowe.List\n${err}\n`);
             throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
         }
         // push nodes to an object with property names to avoid duplicates
