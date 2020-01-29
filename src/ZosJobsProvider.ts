@@ -25,6 +25,7 @@ import {
     getAppName,
     resolveQuickPickHelper,
     sortTreeItems,
+    errorHandling,
     labelHack
 } from "./utils";
 import { IZoweTree } from "./ZoweTree";
@@ -146,7 +147,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
             localize("deleteJob.delete", " deleted"));
             this.removeJobsFavorite(this.createJobsFavorite(node));
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await errorHandling(error, node.getProfileName(), error.message);
         }
     }
     /**
@@ -202,7 +203,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    await errorHandling(error, element.getProfileName(), error.message);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.session.ISession.user = usrNme;
@@ -262,14 +263,15 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                 favJob.iconPath = applyIcons(favJob);
                 this.mFavorites.push(favJob);
         } catch(e) {
-            vscode.window.showErrorMessage(
-                localize("initializeJobsFavorites.error.profile1",
+            const errMessage: string =
+            localize("initializeJobsFavorites.error.profile1",
                 "Error: You have Jobs favorites that refer to a non-existent CLI profile named: ") + profileName +
                 localize("initializeJobsFavorites.error.profile2",
                 ". To resolve this, you can create a profile with this name, ") +
                 localize("initializeJobsFavorites.error.profile3",
                 "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your ") +
-                getAppName(extension.ISTHEIA) + localize("initializeJobsFavorites.error.profile4", " user settings."));
+                getAppName(extension.ISTHEIA) + localize("initializeJobsFavorites.error.profile4", " user settings.");
+            errorHandling(e, null, errMessage);
             return;
         }
         });
@@ -367,7 +369,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await errorHandling(error, node.getProfileName(), error.message);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.session.ISession.user = usrNme;
