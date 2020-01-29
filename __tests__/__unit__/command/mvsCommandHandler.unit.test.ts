@@ -73,17 +73,12 @@ describe("mvsCommandActions unit testing", () => {
         };
     });
 
-    const submitResponse = {
-            success: true,
-            commandResponse: "d iplinfo.."
-    };
-
     const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
-        callback();
-        return submitResponse;
+        return {
+            success: true,
+            commandResponse: callback()
+        };
     });
-
-    issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
 
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
@@ -128,7 +123,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce("iplinfo1");
 
         await mvsActions.issueMvsCommand();
 
@@ -142,7 +137,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
-        expect(appendLine.mock.calls[1][0]).toBe(submitResponse.commandResponse);
+        expect(appendLine.mock.calls[1][0]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
@@ -161,7 +156,7 @@ describe("mvsCommandActions unit testing", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem2)
         );
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce("iplinfo0");
 
         await mvsActions.issueMvsCommand();
 
@@ -175,7 +170,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo0");
-        expect(appendLine.mock.calls[1][0]).toBe(submitResponse.commandResponse);
+        expect(appendLine.mock.calls[1][0]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 

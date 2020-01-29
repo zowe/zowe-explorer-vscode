@@ -28,7 +28,26 @@ describe("Unit Tests (Jest)", () => {
         protocol: "https",
         type: "basic",
     });
+    const showErrorMessage = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
 
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
     afterEach(() => {
         jest.resetAllMocks();
     });
@@ -114,8 +133,9 @@ describe("Unit Tests (Jest)", () => {
             rootNode.contextValue = extension.USS_SESSION_CONTEXT;
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
-            await expect(rootNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-                "Error: Throwing an error to check error handling for unit tests!\n"));
+            rootNode.getChildren();
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
@@ -130,8 +150,9 @@ describe("Unit Tests (Jest)", () => {
             const subNode = new ZoweUSSNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null);
             subNode.fullPath = "THROW ERROR";
             subNode.dirty = true;
-            await expect(subNode.getChildren()).rejects.toEqual(Error("Retrieving response from zowe.List\n" +
-                "Error: Throwing an error to check error handling for unit tests!\n"));
+            subNode.getChildren();
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
