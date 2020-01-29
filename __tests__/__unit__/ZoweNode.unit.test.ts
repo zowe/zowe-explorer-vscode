@@ -29,6 +29,24 @@ describe("Unit Tests (Jest)", () => {
         protocol: "https",
         type: "basic",
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
 
     afterEach(() => {
         jest.resetAllMocks();

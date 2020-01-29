@@ -201,6 +201,13 @@ describe("Extension Unit Tests", () => {
     const concatChildNodes = jest.fn();
     const concatUSSChildNodes = jest.fn();
     let mockClipboardData: string;
+    const fileResponse: brightside.IZosFilesResponse = {
+        success: true,
+        commandResponse: null,
+        apiResponse: {
+            etag: "123"
+        }
+    };
     const cliHome = jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe"));
     const icInstance = jest.fn();
     const ImperativeConfig =jest.fn();
@@ -390,6 +397,9 @@ describe("Extension Unit Tests", () => {
 
                 };
             })
+        });
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
         });
     });
 
@@ -758,14 +768,7 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         showTextDocument.mockReset();
 
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
         await extension.refreshPS(node);
 
         expect(dataSet.mock.calls.length).toBe(1);
@@ -814,7 +817,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: true});
         dataSet.mockReset();
         showTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
 
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(node);
@@ -823,7 +826,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
 
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(child);
@@ -832,7 +835,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.refreshPS(child);
@@ -1849,14 +1852,8 @@ describe("Extension Unit Tests", () => {
         const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValue(null);
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        withProgress.mockReturnValue(response);
+
+        withProgress.mockReturnValue(fileResponse);
         openTextDocument.mockResolvedValueOnce("test doc");
 
         await extension.openPS(node, true);
@@ -2083,14 +2080,8 @@ describe("Extension Unit Tests", () => {
         ussFile.mockReset();
         showTextDocument.mockReset();
         executeCommand.mockReset();
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "132"
-            }
-        };
-        ussFile.mockReturnValueOnce(response);
+
+        ussFile.mockReturnValueOnce(fileResponse);
         await extension.refreshUSS(node);
 
         expect(ussFile.mock.calls.length).toBe(1);
@@ -2449,14 +2440,8 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        withProgress.mockReturnValue(response);
+        ussFile.mockReturnValueOnce(fileResponse);
+        withProgress.mockReturnValue(fileResponse);
 
         await extension.openUSS(node, false, true, testUSSTree);
 
@@ -2536,6 +2521,8 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
 
+        ussFile.mockReturnValueOnce(fileResponse);
+
         openTextDocument.mockResolvedValueOnce("test.doc");
 
         // Set up mock favorite session
@@ -2555,7 +2542,7 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(favoriteFile, false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
-
+        ussFile.mockReturnValueOnce(fileResponse);
         await extension.openUSS(child, false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
@@ -2577,14 +2564,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        withProgress.mockReturnValue(response);
+        withProgress.mockReturnValue(fileResponse);
 
         await extension.openUSS(node, false, true, testUSSTree);
 
@@ -2617,6 +2597,8 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
+
+        ussFile.mockReturnValueOnce(fileResponse);
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
         dsNode.contextValue = extension.USS_SESSION_CONTEXT;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -2668,6 +2650,8 @@ describe("Extension Unit Tests", () => {
 
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
+
+        ussFile.mockReturnValueOnce(fileResponse);
 
         await extension.openUSS(dsNode, false, true, testUSSTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
