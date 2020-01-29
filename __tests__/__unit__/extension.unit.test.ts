@@ -200,7 +200,16 @@ describe("Extension Unit Tests", () => {
     const findNonFavoritedNode = jest.fn();
     const concatChildNodes = jest.fn();
     const concatUSSChildNodes = jest.fn();
+    const ImperativeError  = jest.fn();
+    const getProfileName = jest.fn();
     let mockClipboardData: string;
+    const fileResponse: brightside.IZosFilesResponse = {
+        success: true,
+        commandResponse: null,
+        apiResponse: {
+            etag: "123"
+        }
+    };
     const cliHome = jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe"));
     const icInstance = jest.fn();
     const ImperativeConfig =jest.fn();
@@ -235,6 +244,7 @@ describe("Extension Unit Tests", () => {
             renameNode: mockRenameNode,
             findFavoritedNode,
             findNonFavoritedNode,
+            getProfileName: jest.fn()
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -256,7 +266,8 @@ describe("Extension Unit Tests", () => {
             getChildren: jest.fn(),
             addSession: jest.fn(),
             refresh: jest.fn(),
-            refreshElement: jest.fn()
+            refreshElement: jest.fn(),
+            getProfileName: jest.fn()
         };
     });
 
@@ -283,7 +294,6 @@ describe("Extension Unit Tests", () => {
     const testJobsTree = JobsTree();
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
@@ -297,6 +307,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(utils, "concatUSSChildNodes", {value: concatUSSChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
+    Object.defineProperty(brtimperative, "ImperativeError", {value: ImperativeError});
     Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
@@ -365,21 +376,22 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(SubmitJobs, "submitJob", {value: submitJob});
     Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
-    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", {value: registerTextDocumentContentProvider});
+    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider});
     Object.defineProperty(vscode.Disposable, "from", {value: from});
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
     Object.defineProperty(brightside, "Rename", {value: Rename});
-    Object.defineProperty(Rename, "dataSet", {value: renameDataSet});
+    Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
     Object.defineProperty(brightside, "Copy", {value: Copy});
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
+    Object.defineProperty(ZoweNode, "getProfileName", { value: getProfileName });
     Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { value: cliHome });
 
     beforeEach(() => {
-        mockLoadNamedProfile.mockReturnValue({profile: {name: "aProfile", type: "zosmf"}});
+        mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -390,6 +402,9 @@ describe("Extension Unit Tests", () => {
 
                 };
             })
+        });
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
         });
     });
 
@@ -412,14 +427,14 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReturnValueOnce({
             persistence: true,
             get: () => "folderpath",
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
         getConfiguration.mockReturnValueOnce({
             persistence: true,
             get: (setting: string) => "vscode",
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -427,7 +442,7 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReturnValueOnce({
             persistence: true,
             get: () => "",
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -440,7 +455,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -452,7 +467,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -464,7 +479,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -476,7 +491,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -488,7 +503,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -537,8 +552,8 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(65);
-        registerCommand.mock.calls.forEach((call, i) => {
+        expect(registerCommand.mock.calls.length).toBe(64);
+        registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
         const actualCommands = [];
@@ -575,7 +590,6 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refreshUSS",
-            "zowe.uss.refreshUSSInTree",
             "zowe.uss.fullPath",
             "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
@@ -635,14 +649,14 @@ describe("Extension Unit Tests", () => {
         // .get("Zowe-Temp-Folder-Location")["folderPath"];
         getConfiguration.mockReturnValueOnce({
             get: () => "",
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
         // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => undefined,
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -653,7 +667,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -662,7 +676,7 @@ describe("Extension Unit Tests", () => {
             get: (setting: string) => [
                 "",
             ],
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -682,7 +696,7 @@ describe("Extension Unit Tests", () => {
             get: () => {
                 return [""];
             },
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -698,7 +712,7 @@ describe("Extension Unit Tests", () => {
         // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
-            update: jest.fn(() => {
+            update: jest.fn(()=>{
                 return {};
             })
         });
@@ -759,14 +773,7 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         showTextDocument.mockReset();
 
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
         await extension.refreshPS(node);
 
         expect(dataSet.mock.calls.length).toBe(1);
@@ -778,7 +785,7 @@ describe("Extension Unit Tests", () => {
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, node.label));
+            node.getSessionNode().label, node.label ));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
 
@@ -815,7 +822,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: true});
         dataSet.mockReset();
         showTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
 
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(node);
@@ -824,7 +831,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
 
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         await extension.refreshPS(child);
@@ -833,7 +840,7 @@ describe("Extension Unit Tests", () => {
 
         dataSet.mockReset();
         openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(response);
+        dataSet.mockReturnValueOnce(fileResponse);
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
         await extension.refreshPS(child);
@@ -867,10 +874,10 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(() => {
+                        createNewConnection: jest.fn(()=>{
                             return {newprofile: "fake"};
                         }),
-                        listProfile: jest.fn(() => {
+                        listProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -897,13 +904,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -923,13 +930,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -952,13 +959,13 @@ describe("Extension Unit Tests", () => {
                 items: [qpItem],
                 value: entered,
                 label: "firstName",
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -982,13 +989,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -1010,13 +1017,13 @@ describe("Extension Unit Tests", () => {
                 items: [qpItem],
                 value: entered,
                 label: undefined,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -1040,7 +1047,7 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        listProfile: jest.fn(() => {
+                        listProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -1054,13 +1061,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -1079,7 +1086,7 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(() => {
+                        createNewConnection: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -1093,13 +1100,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -1180,9 +1187,8 @@ describe("Extension Unit Tests", () => {
         } catch (err) {
             // do nothing
         }
-
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Generic Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -1229,9 +1235,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -1310,9 +1316,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -1392,7 +1398,7 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                 };
             })
@@ -1455,10 +1461,10 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][1]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, node.label));
+            node.getSessionNode().label, node.label ));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, node.label));
+            node.getSessionNode().label, node.label ));
 
         unlinkSync.mockReset();
         delDataset.mockReset();
@@ -1486,7 +1492,7 @@ describe("Extension Unit Tests", () => {
         await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(Error(""));
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
 
         showQuickPick.mockResolvedValueOnce("No");
 
@@ -1522,13 +1528,13 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][0]).toBe(session);
         expect(delDataset.mock.calls[0][1]).toBe("HLQ.TEST.DELETE.NODE");
         expect(mockRemoveFavorite.mock.calls.length).toBe(1);
-        expect(mockRemoveFavorite.mock.calls[0][0].label).toBe("[sestest]: HLQ.TEST.DELETE.NODE");
+        expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.NODE" );
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.NODE"));
+            node.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.NODE"));
+            node.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
     });
 
     it("Testing that deleteDataset is executed successfully for pdsf", async () => {
@@ -1550,13 +1556,13 @@ describe("Extension Unit Tests", () => {
         expect(delDataset.mock.calls[0][0]).toBe(session);
         expect(delDataset.mock.calls[0][1]).toBe("HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))");
         expect(mockRemoveFavorite.mock.calls.length).toBe(1);
-        expect(mockRemoveFavorite.mock.calls[0][0].label).toBe("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)");
+        expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)" );
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))"));
+            node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))" ));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))"));
+            node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))" ));
     });
 
     it("Testing that deleteDataset fails if junk passed", async () => {
@@ -1570,13 +1576,11 @@ describe("Extension Unit Tests", () => {
         const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const parent = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = "junk";
+        child.contextValue = "junk";
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
         await expect(extension.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0].message).toEqual("deleteDataSet() called from invalid node.");
     });
 
     it("Testing that enterPattern is executed successfully", async () => {
@@ -1850,14 +1854,8 @@ describe("Extension Unit Tests", () => {
         const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         existsSync.mockReturnValue(null);
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        withProgress.mockReturnValue(response);
+
+        withProgress.mockReturnValue(fileResponse);
         openTextDocument.mockResolvedValueOnce("test doc");
 
         await extension.openPS(node, true);
@@ -1951,9 +1949,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -1986,9 +1984,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -2021,7 +2019,7 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"}
                 };
             })
@@ -2053,9 +2051,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
                     }),
                 };
@@ -2070,115 +2068,102 @@ describe("Extension Unit Tests", () => {
 
     });
 
-    describe("refresh USS checking", () => {
-        const isDirtyInEditor = jest.fn();
-        const openedDocumentInstance = jest.fn();
+    it("Testing that refreshUSS correctly executes with and without error", async () => {
+        const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, node, null, "/");
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/");
 
-        const setMocksForNode = (node: ZoweUSSNode) => {
-            Object.defineProperty(node, "isDirtyInEditor", {
-                get: isDirtyInEditor
-            });
-            Object.defineProperty(node, "openedDocumentInstance", {
-                get: openedDocumentInstance
-            });
+        node.contextValue = extension.USS_SESSION_CONTEXT;
+        node.fullPath = "/u/myuser";
 
-            node.contextValue = extension.USS_SESSION_CONTEXT;
-            node.fullPath = "/u/myuser";
-        };
-        const resetMocks = () => {
-            showErrorMessage.mockReset();
-            showTextDocument.mockReset();
-            ussFile.mockReset();
-            executeCommand.mockReset();
-            isDirtyInEditor.mockReset();
-            openedDocumentInstance.mockReset();
-        };
+        showErrorMessage.mockReset();
+        openTextDocument.mockReset();
+        openTextDocument.mockResolvedValueOnce({isDirty: true});
+        ussFile.mockReset();
+        showTextDocument.mockReset();
+        executeCommand.mockReset();
 
-        it("refreshUSS works correctly for dirty file state, when user didn't cancel file save", async () => {
-            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        ussFile.mockReturnValueOnce(fileResponse);
+        await extension.refreshUSS(node);
 
-            resetMocks();
-            setMocksForNode(node);
-
-            const response: brightside.IZosFilesResponse = {
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    etag: "132"
-                }
-            };
-            ussFile.mockResolvedValueOnce(response);
-            isDirtyInEditor.mockReturnValueOnce(true);
-            isDirtyInEditor.mockReturnValueOnce(false);
-            await extension.refreshUSS(node);
-
-            expect(ussFile.mock.calls.length).toBe(1);
-            expect(showTextDocument.mock.calls.length).toBe(2);
-            expect(executeCommand.mock.calls.length).toBe(1);
-            expect(node.downloaded).toBe(true);
+        expect(ussFile.mock.calls.length).toBe(1);
+        expect(ussFile.mock.calls[0][0]).toBe(node.getSession());
+        expect(ussFile.mock.calls[0][1]).toBe(node.fullPath);
+        expect(ussFile.mock.calls[0][2]).toEqual({
+            file: extension.getUSSDocumentFilePath(node),
+            returnEtag: true,
         });
-        it("refreshUSS works correctly for dirty file state, when user cancelled file save", async () => {
-            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        expect(openTextDocument.mock.calls.length).toBe(1);
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.getUSSDocumentFilePath(node)));
+        expect(showTextDocument.mock.calls.length).toBe(2);
+        expect(executeCommand.mock.calls.length).toBe(1);
 
-            resetMocks();
-            setMocksForNode(node);
 
-            const response: brightside.IZosFilesResponse = {
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    etag: "132"
-                }
-            };
-            ussFile.mockResolvedValueOnce(response);
-            isDirtyInEditor.mockReturnValueOnce(true);
-            isDirtyInEditor.mockReturnValueOnce(true);
-            await extension.refreshUSS(node);
+        showInformationMessage.mockReset();
+        openTextDocument.mockResolvedValueOnce({isDirty: false});
+        executeCommand.mockReset();
 
-            expect(ussFile.mock.calls.length).toBe(0);
-            expect(showTextDocument.mock.calls.length).toBe(1);
-            expect(executeCommand.mock.calls.length).toBe(1);
-            expect(node.downloaded).toBe(false);
-        });
-        it("refreshUSS works correctly for not dirty file state", async () => {
-            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        await extension.refreshUSS(node);
 
-            resetMocks();
-            setMocksForNode(node);
+        expect(executeCommand.mock.calls.length).toBe(0);
 
-            const response: brightside.IZosFilesResponse = {
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    etag: "132"
-                }
-            };
-            ussFile.mockResolvedValueOnce(response);
-            isDirtyInEditor.mockReturnValueOnce(false);
-            isDirtyInEditor.mockReturnValueOnce(false);
-            await extension.refreshUSS(node);
+        ussFile.mockRejectedValueOnce(Error("not found"));
+        showInformationMessage.mockReset();
 
-            expect(ussFile.mock.calls.length).toBe(1);
-            expect(showTextDocument.mock.calls.length).toBe(0);
-            expect(executeCommand.mock.calls.length).toBe(0);
-            expect(node.downloaded).toBe(true);
-        });
-        it("refreshUSS works correctly with exception thrown in process", async () => {
-            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        await extension.refreshUSS(node);
 
-            resetMocks();
-            setMocksForNode(node);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably deleted.");
 
-            ussFile.mockRejectedValueOnce(Error(""));
-            isDirtyInEditor.mockReturnValueOnce(true);
-            isDirtyInEditor.mockReturnValueOnce(false);
-            await extension.refreshUSS(node);
+        showErrorMessage.mockReset();
+        ussFile.mockReset();
+        ussFile.mockRejectedValueOnce(Error(""));
 
-            expect(ussFile.mock.calls.length).toBe(1);
-            expect(showTextDocument.mock.calls.length).toBe(1);
-            expect(executeCommand.mock.calls.length).toBe(1);
-            expect(node.downloaded).toBe(false);
-        });
+        await extension.refreshUSS(child);
+
+        expect(ussFile.mock.calls[0][1]).toBe(child.fullPath);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
+
+        showErrorMessage.mockReset();
+        openTextDocument.mockReset();
+        openTextDocument.mockResolvedValueOnce({isDirty: true});
+        openTextDocument.mockResolvedValueOnce({isDirty: true});
+        ussFile.mockReset();
+        showTextDocument.mockReset();
+
+        ussFile.mockReset();
+        node.contextValue = "file";
+        await extension.refreshUSS(node);
+        expect(ussFile.mock.calls[0][1]).toEqual("/u/myuser");
+
+        ussFile.mockReset();
+        node.contextValue = extension.USS_DIR_CONTEXT;
+        await extension.refreshUSS(child);
+        expect(ussFile.mock.calls[0][1]).toBe("/child");
+
+        ussFile.mockReset();
+        parent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
+        await extension.refreshUSS(child);
+        expect(ussFile.mock.calls[0][1]).toBe("/child");
+
+        ussFile.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        existsSync.mockReset();
+        showErrorMessage.mockReset();
+
+        const badparent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, null);
+        badparent.contextValue = "turnip";
+        const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badparent, null, null);
+        try {
+            await extension.refreshUSS(brat);
+        } catch (err) {
+            expect(err.message).toEqual("refreshPS() called from invalid node.");
+        }
+        expect(ussFile.mock.calls.length).toBe(0);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("refreshUSS() called from invalid node.");
     });
 
     describe("Add USS Session Unit Test", () => {
@@ -2190,10 +2175,10 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(() => {
+                        createNewConnection: jest.fn(()=>{
                             return {newprofile: "fake"};
                         }),
-                        listProfile: jest.fn(() => {
+                        listProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -2222,13 +2207,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2248,13 +2233,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2277,13 +2262,13 @@ describe("Extension Unit Tests", () => {
                 items: [qpItem],
                 value: entered,
                 label: "firstName",
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2307,13 +2292,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2335,13 +2320,13 @@ describe("Extension Unit Tests", () => {
                 items: [qpItem],
                 value: entered,
                 label: undefined,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2365,7 +2350,7 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        listProfile: jest.fn(() => {
+                        listProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -2379,13 +2364,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2404,7 +2389,7 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(() => {
+                        createNewConnection: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -2418,13 +2403,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -2457,14 +2442,8 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        withProgress.mockReturnValue(response);
+        ussFile.mockReturnValueOnce(fileResponse);
+        withProgress.mockReturnValue(fileResponse);
 
         await extension.openUSS(node, false, true, testUSSTree);
 
@@ -2544,6 +2523,8 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
 
+        ussFile.mockReturnValueOnce(fileResponse);
+
         openTextDocument.mockResolvedValueOnce("test.doc");
 
         // Set up mock favorite session
@@ -2563,7 +2544,7 @@ describe("Extension Unit Tests", () => {
         await extension.openUSS(favoriteFile, false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
-
+        ussFile.mockReturnValueOnce(fileResponse);
         await extension.openUSS(child, false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
         showTextDocument.mockReset();
@@ -2585,14 +2566,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        const response: brightside.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123"
-            }
-        };
-        withProgress.mockReturnValue(response);
+        withProgress.mockReturnValue(fileResponse);
 
         await extension.openUSS(node, false, true, testUSSTree);
 
@@ -2625,14 +2599,16 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
+
+        ussFile.mockReturnValueOnce(fileResponse);
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
         dsNode.contextValue = extension.USS_SESSION_CONTEXT;
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -2665,9 +2641,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -2676,6 +2652,8 @@ describe("Extension Unit Tests", () => {
 
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
+
+        ussFile.mockReturnValueOnce(fileResponse);
 
         await extension.openUSS(dsNode, false, true, testUSSTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
@@ -2700,9 +2678,9 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
                     }),
                 };
@@ -2734,7 +2712,7 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"}
                 };
             })
@@ -2857,10 +2835,10 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(() => {
+                        createNewConnection: jest.fn(()=>{
                             return {newprofile: "fake"};
                         }),
-                        listProfile: jest.fn(() => {
+                        listProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -2884,9 +2862,9 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        promptCredentials: jest.fn(() => {
+                        promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
                     };
@@ -2914,9 +2892,9 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        promptCredentials: jest.fn(() => {
+                        promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
                     };
@@ -2943,9 +2921,9 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        promptCredentials: jest.fn(() => {
+                        promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
                     };
@@ -2973,9 +2951,9 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        promptCredentials: jest.fn(() => {
+                        promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
                     };
@@ -2997,7 +2975,7 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                     };
                 })
@@ -3028,13 +3006,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3054,13 +3032,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3083,13 +3061,13 @@ describe("Extension Unit Tests", () => {
                 items: [qpItem],
                 value: entered,
                 label: "firstName",
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3113,13 +3091,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3141,13 +3119,13 @@ describe("Extension Unit Tests", () => {
                 items: [qpItem],
                 value: entered,
                 label: undefined,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3171,7 +3149,7 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        listProfile: jest.fn(() => {
+                        listProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -3185,13 +3163,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3210,7 +3188,7 @@ describe("Extension Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(() => {
+                        createNewConnection: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -3224,13 +3202,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: entered,
-                show: jest.fn(() => {
+                show: jest.fn(()=>{
                     return {};
                 }),
-                hide: jest.fn(() => {
+                hide: jest.fn(()=>{
                     return {};
                 }),
-                onDidAccept: jest.fn(() => {
+                onDidAccept: jest.fn(()=>{
                     return {};
                 })
             });
@@ -3284,10 +3262,10 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -3317,10 +3295,10 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
-                    promptCredentials: jest.fn(() => {
+                    promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
                 };
@@ -3351,7 +3329,7 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user: undefined, password: undefined}}, {name: "secondName"}],
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile
                 };
@@ -3679,27 +3657,26 @@ describe("Extension Unit Tests", () => {
             commandResponse: "",
             apiResponse: {
                 items: [{
-                    blksz: "6160",
-                    catnm: "ICFCAT.MV3B.CATALOGA",
-                    cdate: "2019/05/08",
-                    dev: "3390",
-                    dsname: "AUSER.A1557332.A996850.TEST1",
-                    dsntp: extension.DS_PDS_CONTEXT,
-                    dsorg: "PO",
-                    edate: "***None***",
-                    extx: "1",
-                    lrecl: "80",
-                    migr: "NO",
-                    mvol: "N",
-                    ovf: "NO",
-                    rdate: "2019/07/17",
-                    recfm: "FB",
-                    sizex: "15",
-                    spacu: "CYLINDERS",
-                    used: "6",
-                    vol: "3BP001",
-                    vols: "3BP001"
-                }]
+                    blksz:"6160",
+                    catnm:"ICFCAT.MV3B.CATALOGA",
+                    cdate:"2019/05/08",
+                    dev:"3390",
+                    dsname:"AUSER.A1557332.A996850.TEST1",
+                    dsntp:extension.DS_PDS_CONTEXT,
+                    dsorg:"PO",
+                    edate:"***None***",
+                    extx:"1",
+                    lrecl:"80",
+                    migr:"NO",
+                    mvol:"N",
+                    ovf:"NO",
+                    rdate:"2019/07/17",
+                    recfm:"FB",
+                    sizex:"15",
+                    spacu:"CYLINDERS",
+                    used:"6",
+                    vol:"3BP001",
+                    vols:"3BP001"}]
             }
         };
         const emptyResponse = {
@@ -3719,7 +3696,7 @@ describe("Extension Unit Tests", () => {
         expect(dataSetList.mock.calls.length).toBe(1);
         expect(dataSetList.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSetList.mock.calls[0][1]).toBe(node.label);
-        expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true});
+        expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
 
         // mock a partitioned data set favorite
         dataSetList.mockReset();
@@ -3779,9 +3756,7 @@ describe("Extension Unit Tests", () => {
 
             showInputBox.mockReset();
             renameDataSet.mockReset();
-            renameDataSet.mockImplementation(() => {
-                throw defaultError;
-            });
+            renameDataSet.mockImplementation(() => { throw defaultError; });
 
             const child = new ZoweNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             child.contextValue = "ds_fav";
@@ -3831,9 +3806,7 @@ describe("Extension Unit Tests", () => {
 
             showInputBox.mockReset();
             renameDataSetMember.mockReset();
-            renameDataSetMember.mockImplementation(() => {
-                throw defaultError;
-            });
+            renameDataSetMember.mockImplementation(() => { throw defaultError; });
 
             const parent = new ZoweNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             const child = new ZoweNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -3860,7 +3833,7 @@ describe("Extension Unit Tests", () => {
             node.contextValue = extension.DS_SESSION_CONTEXT;
 
             await extension.copyDataSet(node);
-            expect(clipboard.readText()).toBe(JSON.stringify({profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE"}));
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
         });
         it("Should copy the label of a favourited node to the clipboard", async () => {
             renameDataSet.mockReset();
@@ -3869,7 +3842,7 @@ describe("Extension Unit Tests", () => {
             node.contextValue = "ds_fav";
 
             await extension.copyDataSet(node);
-            expect(clipboard.readText()).toBe(JSON.stringify({profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE"}));
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
         });
         it("Should copy the label of a member to the clipboard", async () => {
             renameDataSet.mockReset();
@@ -3879,7 +3852,7 @@ describe("Extension Unit Tests", () => {
             parent.contextValue = extension.DS_PDS_CONTEXT;
             child.contextValue = extension.DS_MEMBER_CONTEXT;
             await extension.copyDataSet(child);
-            expect(clipboard.readText()).toBe(JSON.stringify({profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child"}));
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
         });
         it("Should copy the label of a favourited member to the clipboard", async () => {
             renameDataSet.mockReset();
@@ -3889,7 +3862,7 @@ describe("Extension Unit Tests", () => {
             parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
             child.contextValue = extension.DS_MEMBER_CONTEXT;
             await extension.copyDataSet(child);
-            expect(clipboard.readText()).toBe(JSON.stringify({profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child"}));
+            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
         });
     });
     describe("Pasting Data Sets", () => {
@@ -3897,14 +3870,14 @@ describe("Extension Unit Tests", () => {
             const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_SESSION_CONTEXT;
 
-            clipboard.writeText(JSON.stringify({dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest"}));
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
             await extension.pasteDataSet(node, testTree);
 
             expect(copyDataSet.mock.calls.length).toBe(1);
             expect(copyDataSet).toHaveBeenLastCalledWith(
                 node.getSession(),
-                {dataSetName: "HLQ.TEST.BEFORE.NODE"},
-                {dataSetName: "HLQ.TEST.TO.NODE"},
+                { dataSetName: "HLQ.TEST.BEFORE.NODE" },
+                { dataSetName: "HLQ.TEST.TO.NODE" },
             );
         });
         it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
@@ -3914,7 +3887,7 @@ describe("Extension Unit Tests", () => {
             clipboard.writeText("INVALID");
             try {
                 await extension.pasteDataSet(node, testTree);
-            } catch (err) {
+            } catch(err) {
                 error = err;
             }
 
@@ -3929,7 +3902,7 @@ describe("Extension Unit Tests", () => {
             const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
 
-            clipboard.writeText(JSON.stringify({dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest"}));
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
             await extension.pasteDataSet(node, testTree);
 
             expect(copyDataSet.mock.calls.length).toBe(0);
@@ -3942,7 +3915,7 @@ describe("Extension Unit Tests", () => {
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
 
-            clipboard.writeText(JSON.stringify({dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest"}));
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
             await extension.pasteDataSet(node, testTree);
 
             expect(copyDataSet.mock.calls.length).toBe(1);
@@ -3951,8 +3924,8 @@ describe("Extension Unit Tests", () => {
             );
             expect(copyDataSet).toHaveBeenLastCalledWith(
                 node.getSession(),
-                {dataSetName: "HLQ.TEST.BEFORE.NODE"},
-                {dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1"},
+                { dataSetName: "HLQ.TEST.BEFORE.NODE" },
+                { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
         });
         it("Should throw an error when pasting to a member that already exists", async () => {
@@ -3962,11 +3935,11 @@ describe("Extension Unit Tests", () => {
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
 
-            clipboard.writeText(JSON.stringify({dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest"}));
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
             try {
                 await extension.pasteDataSet(node, testTree);
-            } catch (err) {
+            } catch(err) {
                 error = err;
             }
 
@@ -3985,7 +3958,7 @@ describe("Extension Unit Tests", () => {
             findNonFavoritedNode.mockImplementation(() => nonFavoritedNode);
 
             showInputBox.mockResolvedValueOnce("mem1");
-            clipboard.writeText(JSON.stringify({dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest"}));
+            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
             await extension.pasteDataSet(favoritedNode, testTree);
 
             expect(copyDataSet.mock.calls.length).toBe(1);
@@ -3997,8 +3970,8 @@ describe("Extension Unit Tests", () => {
             );
             expect(copyDataSet).toHaveBeenLastCalledWith(
                 favoritedNode.getSession(),
-                {dataSetName: "HLQ.TEST.BEFORE.NODE"},
-                {dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1"},
+                { dataSetName: "HLQ.TEST.BEFORE.NODE" },
+                { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
         });
     });
