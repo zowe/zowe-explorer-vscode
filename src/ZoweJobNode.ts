@@ -204,7 +204,7 @@ export class Job extends vscode.TreeItem implements IZoweTreeNode {
                 jobsInternal = await zowe.GetJobs.getJobsByOwnerAndPrefix(session, owner, prefix);
             } catch (error) {
                 await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
-            }  
+            }
         }
         return jobsInternal;
     }
