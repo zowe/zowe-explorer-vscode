@@ -10,6 +10,7 @@
 */
 
 import * as vscode from "vscode";
+import * as utils from "../utils";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
@@ -48,6 +49,6 @@ export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
         const datasetName = getDatasetLabel(node);
         await ZoweExplorerApiRegister.getMvsApi(node.profile).putContents(doc.fileName, datasetName);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        await utils.errorHandling(e, node.getProfileName(), e.message);
     }
 }

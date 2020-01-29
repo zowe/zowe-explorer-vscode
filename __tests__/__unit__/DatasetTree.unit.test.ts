@@ -37,20 +37,9 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    const ProgressLocation = jest.fn().mockImplementation(() => {
-        return {
-            Notification: 15
-        };
-    });
-    const withProgress = jest.fn().mockImplementation(() => {
-        return {
-            location: 15,
-            title: "Saving file..."
-        };
-    });
-
     // Filter prompt
     const showInformationMessage = jest.fn();
+    const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
@@ -66,8 +55,20 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
@@ -120,6 +121,12 @@ describe("DatasetTree Unit Tests", () => {
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
 
     afterAll(() => {
         jest.restoreAllMocks();
@@ -905,5 +912,21 @@ describe("DatasetTree Unit Tests", () => {
 
         expect(foundNode).toBe(nonFavoritedNode);
         sessionNode.children.pop();
+    });
+
+    it("tests utils error handling", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showErrorMessage.mockReset();
+
+        const label = "invalidCred";
+        // tslint:disable-next-line: object-literal-key-quotes
+        const error = {"mDetails": {"errorCode": 401}};
+        await utils.errorHandling(error, label);
+
+        expect(showErrorMessage.mock.calls.length).toEqual(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        `\n${label}\n` +
+        " are valid or this may lead to a lock-out.");
     });
 });

@@ -10,7 +10,7 @@
 */
 
 import { IProfileLoaded, Logger } from "@brightside/imperative";
-import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems } from "./utils";
+import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
 import * as vscode from "vscode";
 import { IZoweTree } from "./ZoweTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -260,7 +260,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    await errorHandling(error, element.getProfileName(), localize("ussTree.error", "Error encountered in ") + `flipState.optionalProfiles!`);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;
@@ -326,7 +326,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await errorHandling(error, node.getProfileName(), localize("ussTree.error", "Error encountered in ") + `ussFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -460,14 +460,15 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                 node.iconPath = applyIcons(node);
                 this.mFavorites.push(node);
             } catch(e) {
-                vscode.window.showErrorMessage(
-                    localize("initializeUSSFavorites.error.profile1",
+                const errMessage: string =
+                localize("initializeUSSFavorites.error.profile1",
                     "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
                     localize("intializeUSSFavorites.error.profile2",
                     ". To resolve this, you can create a profile with this name, ") +
                     localize("initializeUSSFavorites.error.profile3",
                     "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ") +
-                    getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings."));
+                    getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings.");
+                errorHandling(e, null, errMessage);
                 return;
             }
         });

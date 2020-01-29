@@ -108,6 +108,13 @@ describe("Unit Tests (Jest)", () => {
     testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
+
     afterEach(async () => {
         getConfiguration.mockClear();
     });

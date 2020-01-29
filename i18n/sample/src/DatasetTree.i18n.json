@@ -10,6 +10,7 @@
     "initializeFavorites.fileCorrupted": "Favorites file corrupted: ",
     "addFavorite": "PDS already in favorites",
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
+    "datasetTree.error": "Error encountered in ",
     "searchHistory.options.prompt": "Select a filter",
     "enterPattern.pattern": "No selection made.",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
