@@ -8,6 +8,8 @@
     "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
     "activate.didSaveText.file": "File ",
     "activate.didSaveText.notDataSet": " is not a data set or USS file ",
+    "profile.init.read.imperative": "Unable to read imperative file. ",
+    "initialize.module.load": "Credentials not managed, unable to load security file: ",
     "downloadSpool.select": "Select",
     "submitJcl.noDocumentOpen": "No editor with a document that could be submitted as JCL is currently open.",
     "submitJcl.log.debug": "Submitting JCL in document ",

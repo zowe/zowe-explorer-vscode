@@ -125,7 +125,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().defaultProfile);
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
             }
         }
         this.refresh();

@@ -14,12 +14,10 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
 import { List } from "@brightside/core";
 
 describe("Unit Tests (Jest)", () => {
@@ -33,17 +31,10 @@ describe("Unit Tests (Jest)", () => {
     });
     const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [profileOne, {name: "firstName"}, {name: "secondName"}];
-        })
-    });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});
-
     afterEach(() => {
         jest.resetAllMocks();
     });
+
     /*************************************************************************************************************
      * Creates an ZoweNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/

@@ -146,7 +146,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().defaultProfile);
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
             }
         }
         this.refresh();
