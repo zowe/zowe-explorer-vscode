@@ -416,8 +416,8 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
-        log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
-        utils.errorHandling(err, null, "Error encountered in moveTempFolder.displayOutputChannel! ");
+        log.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
+        utils.errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {
