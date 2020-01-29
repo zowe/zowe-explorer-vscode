@@ -34,10 +34,12 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
 
     // refresh Tree View & favorites
     datasetProvider.refreshElement(node);
-    if (node.contextValue === extension.PDS_FAV_CONTEXT) {
-        datasetProvider.refreshElement(datasetProvider.findNonFavoritedNode(node));
+    if (node.contextValue.includes(extension.FAV_SUFFIX) || node.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+        if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
     } else {
-        datasetProvider.refreshElement(datasetProvider.findFavoritedNode(node));
+        const favNode = datasetProvider.findFavoritedNode(node);
+        if (favNode) { datasetProvider.refreshElement(favNode); }
     }
 }
 

@@ -1176,10 +1176,12 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
     // refresh Tree View & favorites
     if (node.mParent && node.mParent.contextValue !== DS_SESSION_CONTEXT) {
         datasetProvider.refreshElement(node.mParent);
-        if (node.mParent.contextValue === PDS_FAV_CONTEXT || node.mParent.contextValue === FAVORITE_CONTEXT) {
-            datasetProvider.refreshElement(datasetProvider.findNonFavoritedNode(node.mParent));
+        if (node.mParent.contextValue.includes(FAV_SUFFIX) || node.mParent.contextValue === FAVORITE_CONTEXT) {
+            const nonFavNode = datasetProvider.findNonFavoritedNode(node.mParent);
+            if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
         } else {
-            datasetProvider.refreshElement(datasetProvider.findFavoritedNode(node.mParent));
+            const favNode = datasetProvider.findFavoritedNode(node.mParent);
+            if (favNode) { datasetProvider.refreshElement(favNode); }
         }
     } else {
         datasetProvider.refresh();

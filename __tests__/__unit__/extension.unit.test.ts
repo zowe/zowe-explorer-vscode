@@ -1529,8 +1529,7 @@ describe("Extension Unit Tests", () => {
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
             nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
-        expect(mockRefreshElement).toBeCalledWith(nodeAsFavorite);
-        expect(mockRefreshElement).toBeCalledWith(node);
+        expect(findNonFavoritedNode).toBeCalledWith(nodeAsFavorite);
 
         sessNode.children = [];
     });
