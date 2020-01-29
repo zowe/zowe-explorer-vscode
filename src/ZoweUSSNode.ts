@@ -12,21 +12,11 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
-// tslint:disable-next-line: no-duplicate-imports
-import { TreeItemCollapsibleState } from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./ZoweTree";
-// tslint:disable-next-line: no-duplicate-imports
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../src/extension";
-// tslint:disable-next-line: no-duplicate-imports
-import { getUSSDocumentFilePath } from "../src/extension";
 import * as utils from "./utils";
-import { getIconByNode } from "./generators/icons/index";
-// tslint:disable-next-line: no-implicit-dependencies
-import * as moment from "moment";
-import { injectAdditionalDataToTooltip } from "./utils/uss";
-
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -43,8 +33,6 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
     public binaryFiles = {};
     public profileName = "";
     public shortLabel = "";
-    public downloadedTime = null as string;
-    private downloadedInternal = false;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -109,8 +97,8 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public async getChildren(): Promise<ZoweUSSNode[]> {
         if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
-            (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
-                this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
+                (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
+                    this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
             return [];
         }
 
@@ -129,11 +117,14 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
         try {
-            responses.push(await zowe.List.fileList(this.getSession(), this.fullPath));
+            responses.push(await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
+            }, () => {
+               return zowe.List.fileList(this.getSession(), this.fullPath);
+            }));
         } catch (err) {
-            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from ")
-                + `zowe.List\n${err}\n`);
-            throw Error(localize("getChildren.error.response", "Retrieving response from ") + `zowe.List\n${err}\n`);
+            utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -146,7 +137,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
-                const existing = this.children.find((element) => element.label.trim() === item.name);
+                const existing = this.children.find((element) => element.label.trim() === item.name );
                 if (existing) {
                     elementChildren[existing.label] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
@@ -164,7 +155,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
-                        if (this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
+                        if(this.getSessionNode().binaryFiles.hasOwnProperty(this.fullPath + "/" + item.name)) {
                             temp = new ZoweUSSNode(
                                 item.name,
                                 vscode.TreeItemCollapsibleState.None,
@@ -183,10 +174,8 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                                 false,
                                 item.mProfileName);
                         }
-                        temp.command = {
-                            command: "zowe.uss.ZoweUSSNode.open",
-                            title: localize("getChildren.responses.open", "Open"), arguments: [temp]
-                        };
+                        temp.command = {command: "zowe.uss.ZoweUSSNode.open",
+                                        title: localize("getChildren.responses.open", "Open"), arguments: [temp]};
                         elementChildren[temp.label] = temp;
                     }
                 }
@@ -218,7 +207,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
     public setBinary(binary: boolean) {
         this.binary = binary;
-        if (this.binary) {
+        if(this.binary){
             this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
@@ -227,69 +216,22 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         }
         if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
-                this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+             this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
-
-        const icon = getIconByNode(this);
-        if (icon) {
-            this.setIcon(icon.path);
-        }
-
+        utils.applyIcons(this);
         this.dirty = true;
     }
-
-    /**
-     * Helper getter to check dirtiness of node inside opened editor tabs, can be more accurate than saved value
-     *
-     * @returns {boolean}
-     */
-    public get isDirtyInEditor(): boolean {
-        const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = getUSSDocumentFilePath(this);
-
-        for (const document of openedTextDocuments) {
-            if (document.fileName === currentFilePath) {
-                return document.isDirty;
-            }
-        }
-
-        return false;
-    }
-
-    public get openedDocumentInstance(): vscode.TextDocument {
-        const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = getUSSDocumentFilePath(this);
-
-        for (const document of openedTextDocuments) {
-            if (document.fileName === currentFilePath) {
-                return document;
-            }
-        }
-
-        return null;
-    }
-
     /**
      * helper method to change the node names in one go
      * @param oldReference string
      * @param revision string
      */
     public rename(newFullPath: string) {
+        const oldReference = this.shortLabel;
         this.fullPath = newFullPath;
-        this.shortLabel = newFullPath.split("/").pop();
-        this.label = this.shortLabel;
-        this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
-
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-    }
-
-    /**
-     * Helper method which sets an icon of node and initiates reloading of tree
-     * @param iconPath
-     */
-    public setIcon(iconPath: {light: string; dark: string}) {
-        this.iconPath = iconPath;
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        this.shortLabel = newFullPath.substring(newFullPath.lastIndexOf("/"));
+        this.label = this.label.replace(oldReference, this.shortLabel);
+        this.tooltip = this.tooltip.replace(oldReference, this.shortLabel);
     }
 
     /**
@@ -308,37 +250,10 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public setEtag(etagValue): void {
         this.etag = etagValue;
-        /**
-         * helper method to change the node names in one go
-         * @param oldReference string
-         * @param revision string
-         */
-    }
-
     /**
-     * Getter for downloaded property
-     *
-     * @returns boolean
+     * helper method to change the node names in one go
+     * @param oldReference string
+     * @param revision string
      */
-    public get downloaded(): boolean {
-        return this.downloadedInternal;
-    }
-
-    /**
-     * Setter for downloaded property
-     * @param value boolean
-     */
-    public set downloaded(value: boolean) {
-        this.downloadedInternal = value;
-
-        if (value) {
-            this.downloadedTime = moment().toISOString();
-            this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
-        }
-
-        const icon = getIconByNode(this);
-        if (icon) {
-            this.setIcon(icon.path);
-        }
     }
 }
