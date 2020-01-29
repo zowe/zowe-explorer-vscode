@@ -71,6 +71,20 @@ export class CliProfileManager {
 }
 
 // tslint:disable-next-line:max-classes-per-file
+export class ImperativeConfig {
+    public static instance = {
+        cliHome: "/TestLocation/.zowe",
+        loadedConfig: {}
+    }
+    public loadedConfig = {
+        defaultHome: "/TestLocation/.zowe",
+        envVariablePrefix: "ZOWE"
+    };
+    public cliHome: "/TestLocation/.zowe";
+
+}
+
+// tslint:disable-next-line:max-classes-per-file
 export class CredentialManagerFactory {
 }
 

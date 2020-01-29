@@ -14,12 +14,10 @@ jest.mock("vscode");
 jest.mock("@brightside/imperative");
 jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
 jest.mock("Session");
-jest.mock("../../src/ProfileLoader");
 import * as vscode from "vscode";
 import { ZoweNode } from "../../src/ZoweNode";
 import { Session } from "@brightside/imperative";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
 import { List } from "@brightside/core";
 
 describe("Unit Tests (Jest)", () => {
@@ -31,14 +29,24 @@ describe("Unit Tests (Jest)", () => {
         protocol: "https",
         type: "basic",
     });
-
-    Object.defineProperty(profileLoader, "loadNamedProfile", {value: jest.fn()});
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [{name: "firstName"}, {name: "secondName"}];
-        })
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
     });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {value: jest.fn()});
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
 
     afterEach(() => {
         jest.resetAllMocks();
