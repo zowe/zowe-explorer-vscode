@@ -1163,7 +1163,7 @@ export async function cleanTempDir() {
     try {
         cleanDir(BRIGHTTEMPFOLDER);
     } catch (err) {
-        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
 
@@ -1315,7 +1315,7 @@ export function getProfile(node: IZoweTreeNode) {
     let profile = node.getSessionNode().label.trim();
     // if this is a favorite node, further extraction is necessary
     if (profile.includes("[")) {
-        profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));  // TODO MISSED TESTING
+        profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));
     }
     return profile;
 }
@@ -1462,7 +1462,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                     location: vscode.ProgressLocation.Notification,
                     title: "Opening data set..."
                 }, function downloadDataset() {
-                    return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
+                    return zowe.Download.dataSet(node.getSession(), label, {
                         file: documentFilePath,
                         returnEtag: true
                     });
@@ -1706,7 +1706,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label, uploadOptions);  // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);  // TODO MISSED TESTING
+            vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse[0].etag);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
@@ -1735,7 +1735,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
-        vscode.window.showErrorMessage(err.message);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(err.message);
     }
 }
 
@@ -1891,7 +1891,7 @@ export async function openUSS(node: IZoweUSSTreeNode, download = false, previewF
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening USS file...",
             }, function downloadUSSFile() {
-                return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
+                return zowe.Download.ussFile(node.getSession(), node.fullPath, {
                     file: documentFilePath,
                     binary: chooseBinary,
                     returnEtag: true

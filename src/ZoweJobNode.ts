@@ -18,7 +18,8 @@ import * as extension from "./extension";
 import { IZoweJobTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
-
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
@@ -64,10 +65,15 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]>  {
         if (this.dirty) {
-            const elementChildren = [];
             let spools: zowe.IJobFile[] = [];
+            const elementChildren = [];
             if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
-                spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+                spools = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted.")
+                }, () => {
+                   return zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+                });
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
                     if (existing) {
@@ -88,12 +94,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     }
                 });
             } else {
-                let jobs: zowe.IJob[] = [];
-                if (this.searchId.length > 0 ) {
-                    jobs.push(await zowe.GetJobs.getJob(this.session, this._searchId));
-                } else {
-                    jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
-                }
+                const jobs = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted.")
+                }, () => {
+                   return this.getJobs(this.session, this._owner, this._prefix, this._searchId);
+                });
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -180,6 +186,16 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public get searchId() {
         return this._searchId;
+    }
+
+    private async getJobs(session, owner, prefix, searchId): Promise<IJob[]> {
+        let jobsInternal: zowe.IJob[] = [];
+        if (this.searchId.length > 0 ) {
+            jobsInternal.push(await zowe.GetJobs.getJob(session, searchId));
+        } else {
+            jobsInternal = await zowe.GetJobs.getJobsByOwnerAndPrefix(session, owner, prefix);
+        }
+        return jobsInternal;
     }
 }
 

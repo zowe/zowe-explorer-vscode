@@ -97,6 +97,13 @@ describe("Unit Tests (Jest)", () => {
             };
         })
     });
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
+
     afterEach(async () => {
         getConfiguration.mockClear();
     });

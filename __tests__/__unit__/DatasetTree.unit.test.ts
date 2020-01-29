@@ -37,18 +37,6 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    const ProgressLocation = jest.fn().mockImplementation(() => {
-        return {
-            Notification: 15
-        };
-    });
-    const withProgress = jest.fn().mockImplementation(() => {
-        return {
-            location: 15,
-            title: "Saving file..."
-        };
-    });
-
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
@@ -66,6 +54,18 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
@@ -114,6 +114,12 @@ describe("DatasetTree Unit Tests", () => {
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
 
     afterAll(() => {
         jest.restoreAllMocks();
