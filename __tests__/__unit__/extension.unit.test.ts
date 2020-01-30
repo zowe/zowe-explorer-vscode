@@ -442,6 +442,7 @@ describe("Extension Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true
 
@@ -1735,6 +1736,7 @@ describe("Extension Unit Tests", () => {
         concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
         const getSessionSpy = jest.spyOn(mvsApi, "getSession").mockReturnValueOnce(sessionwocred);
         await extension.saveFile(testDoc0, testTree);
+        // tslint:disable-next-line: no-magic-numbers
         expect(getSessionSpy.mock.calls.length).toBe(3);
         expect(getSessionSpy.mock.results[0].value).toEqual(sessionwocred);
 
