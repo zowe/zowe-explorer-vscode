@@ -99,6 +99,20 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
+         * Uploads directory at the given path.
+         *
+         * @param {string} inputDirectory
+         * @param {string} ussname
+         * @param {IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        uploadDirectory(
+            inputDirectory: string,
+            ussname: string,
+            options: zowe.IUploadOptions
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
          * Create a new directory or file in the specified path.
          *
          * @param {string} ussPath

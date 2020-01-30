@@ -63,6 +63,16 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.fileToUSSFile(this.getSession(), inputFile, ussname, binary, localEncoding, etag, returnEtag);
     }
+
+    public async uploadDirectory(
+        inputDirectory: string,
+        ussname: string,
+        options?: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
+        return zowe.Upload.dirToUSSDirRecursive(this.getSession(), inputDirectory, ussname, options
+        );
+    }
+
     public async create(ussPath: string, type: string, mode?: string): Promise<string> {
         return zowe.Create.uss(this.getSession(), ussPath, type);
     }
