@@ -17,7 +17,7 @@ import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
-import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper } from "./utils";
+import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper, errorHandling } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
 
@@ -101,14 +101,15 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
-                    vscode.window.showErrorMessage(
-                        localize("initializeFavorites.error.profile1",
-                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
-                        localize("intializeFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, ") +
-                        localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
-                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings."));
+                    const errMessage: string =
+                    localize("initializeFavorites.error.profile1",
+                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                    localize("intializeFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                    getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
+                    await errorHandling(e, null, errMessage);
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
@@ -117,9 +118,12 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 try {
                     zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
-                    vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
-                        "Initialization Error: Could not find profile named: ")
-                        + sesName + localize("loadNamedProfile.error.period", "."));
+                    const errMessage: string =
+                    localize("loadNamedProfile.error.profileName",
+                    "Initialization Error: Could not find profile named: ") +
+                    + sesName +
+                    localize("loadNamedProfile.error.period", ".");
+                    await errorHandling(error, null, errMessage);
                     continue;
                 }
                 const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
@@ -398,7 +402,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await errorHandling(error, node.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `datasetFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -514,7 +518,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    await errorHandling(error, element.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `flipState.optionalProfiles!`);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;

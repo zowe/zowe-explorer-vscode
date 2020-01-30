@@ -16,7 +16,7 @@ import * as nls from "vscode-nls";
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
-import { FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils";
+import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.languagePack })();
@@ -197,7 +197,7 @@ export class MvsCommandHandler {
                 }
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await errorHandling(error, null, error.message);
         }
         this.history.addHistory(command);
     }

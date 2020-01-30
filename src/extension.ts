@@ -101,7 +101,7 @@ export async function activate(context: vscode.ExtensionContext) {
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
-        vscode.window.showErrorMessage(err.message);
+        await utils.errorHandling(err, null, err.message);
     }
 
     let datasetProvider: DatasetTree;
@@ -149,8 +149,8 @@ export async function activate(context: vscode.ExtensionContext) {
         jobsProvider = await createJobsTree(log);
 
     } catch (err) {
+        await utils.errorHandling(err, null,(localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         log.error(localize("initialize.log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message); // TODO MISSED TESTING
     }
 
     const spoolProvider = new SpoolProvider();
@@ -419,8 +419,8 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
-        log.error("Error encountered when creating temporary folder! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
+        log.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
+        utils.errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
     }
     const previousTemp = path.join(previousTempPath, "temp");
     try {
@@ -465,7 +465,7 @@ export async function downloadSpool(job: Job){
             });
         }
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, error.message);
     }
 
 }
@@ -476,7 +476,7 @@ export async function downloadJcl(job: Job) {
         const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, error.message);
     }
 }
 
@@ -549,7 +549,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        await utils.errorHandling(error, sesName, localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -594,7 +594,7 @@ export async function submitMember(node: ZoweNode) {
         const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
         vscode.window.showInformationMessage(localize("submitMember.jobSubmitted" ,"Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
-        vscode.window.showErrorMessage(localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        await utils.errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
     }
 }
 
@@ -677,13 +677,13 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         try {
             newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, chosenProfile, error.message);
         }
         if (newprofile) {
             try {
                 await Profiles.getInstance().refresh();
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await utils.errorHandling(error, newprofile, error.message);
             }
             await zoweFileProvider.addSession(newprofile);
             await zoweFileProvider.refresh();
@@ -734,7 +734,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
                 baseEncd = values [2];
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, node.getProfileName(), error.message);
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
             node.getSession().ISession.user = usrNme;
@@ -834,7 +834,8 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
             }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(err.message);
+            await utils.errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
+            err.message);
             throw (err);
         }
     }
@@ -860,7 +861,7 @@ export async function createMember(parent: ZoweNode, datasetProvider: DatasetTre
             await zowe.Upload.bufferToDataSet(parent.getSession(), Buffer.from(""), label + "(" + name + ")");
         } catch (err) {
             log.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(localize("createMember.error", "Unable to create member: ") + err.message);
+            await utils.errorHandling(err, label, localize("createMember.error", "Unable to create member: ") + err.message);
             throw (err);
         }
         parent.dirty = true;
@@ -898,7 +899,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
         }
     } catch (err) {
         log.error(localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
-        vscode.window.showErrorMessage(localize("showDSAttributes.error", "Unable to list attributes: ") + err.message);
+        await utils.errorHandling(err, parent.getProfileName(), localize("showDSAttributes.error", "Unable to list attributes: ") + err.message);
         throw (err);
     }
 
@@ -963,7 +964,7 @@ export async function renameDataSet(node: ZoweNode, datasetProvider: DatasetTree
             node.label = `${favPrefix}${afterDataSetName}`;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+            await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
         if (isFavourite) {
@@ -1104,7 +1105,7 @@ export async function renameDataSetMember(node: ZoweNode, datasetProvider: Datas
             node.label = `${profileLabel}${afterMemberName}`;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+            await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
         if (node.mParent.contextValue.includes(FAV_SUFFIX)) {
@@ -1164,7 +1165,7 @@ export async function cleanTempDir() {
     try {
         cleanDir(BRIGHTTEMPFOLDER);
     } catch (err) {
-        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
 
@@ -1226,7 +1227,7 @@ export async function deleteDataset(node: ZoweNode, datasetProvider: DatasetTree
             vscode.window.showInformationMessage(localize("deleteDataSet.notFound.error1", "Unable to find file: ") + label +
             localize("deleteDataSet.notFound.error2", " was probably already deleted."));
         } else {
-            vscode.window.showErrorMessage(err);
+            await utils.errorHandling(err, node.getProfileName(), err.message);
         }
         throw err;
     }
@@ -1315,7 +1316,7 @@ export function getProfile(node: ZoweNode) {
     let profile = node.getSessionNode().label.trim();
     // if this is a favorite node, further extraction is necessary
     if (profile.includes("[")) {
-        profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));  // TODO MISSED TESTING
+        profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));
     }
     return profile;
 }
@@ -1420,7 +1421,7 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
                 baseEncd = values [2];
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, node.getProfileName(), error.message);
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
             node.getSession().ISession.user = usrNme;
@@ -1463,7 +1464,7 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
                     location: vscode.ProgressLocation.Notification,
                     title: "Opening data set..."
                 }, function downloadDataset() {
-                    return zowe.Download.dataSet(node.getSession(), label, { // TODO MISSED TESTING
+                    return zowe.Download.dataSet(node.getSession(), label, {
                         file: documentFilePath,
                         returnEtag: true
                     });
@@ -1479,7 +1480,7 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
                 }
         } catch (err) {
             log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(err.message);
+            await utils.errorHandling(err, node.getProfileName(), err.message);
             throw (err);
         }
     }
@@ -1547,7 +1548,7 @@ export async function refreshPS(node: ZoweNode) {
             vscode.window.showInformationMessage(localize("refreshPS.file1", "Unable to find file: ") + label +
             localize("refreshPS.file2", " was probably deleted."));
         } else {
-            vscode.window.showErrorMessage(err.message);
+            await utils.errorHandling(err, node.getProfileName(), err.message);
         }
     }
 }
@@ -1593,7 +1594,7 @@ export async function refreshUSS(node: ZoweUSSNode) {
             vscode.window.showInformationMessage(localize("refreshUSS.file1", "Unable to find file: ") + label +
             localize("refreshUSS.file2", " was probably deleted."));
         } else {
-            vscode.window.showErrorMessage(err);
+            await utils.errorHandling(err, node.mProfileName, err.message);
         }
     }
 }
@@ -1657,7 +1658,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
                     localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe."));
             }
         } catch (err) {
-            vscode.window.showErrorMessage(err.message + "\n" + err.stack);
+            await utils.errorHandling(err, sesName, err.message);
         }
     }
     // Get specific node based on label and parent tree (session / favorites)
@@ -1707,7 +1708,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             return zowe.Upload.pathToDataSet(documentSession, doc.fileName, label, uploadOptions);  // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
-            vscode.window.showInformationMessage(uploadResponse.commandResponse);  // TODO MISSED TESTING
+            vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse[0].etag);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
@@ -1736,7 +1737,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
     } catch (err) {
-        vscode.window.showErrorMessage(err.message);  // TODO MISSED TESTING
+        vscode.window.showErrorMessage(err.message);
     }
 }
 
@@ -1828,7 +1829,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             await vscode.window.activeTextEditor.document.save();
         } else {
             log.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(err.message);
+            await utils.errorHandling(err, sesName, err.message);
         }
     }
 }
@@ -1848,7 +1849,7 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
                 baseEncd = values [2];
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, node.mProfileName, error.message);
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
             node.getSession().ISession.user = usrNme;
@@ -1891,7 +1892,7 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening USS file...",
             }, function downloadUSSFile() {
-                return zowe.Download.ussFile(node.getSession(), node.fullPath, { // TODO MISSED TESTING
+                return zowe.Download.ussFile(node.getSession(), node.fullPath, {
                     file: documentFilePath,
                     binary: chooseBinary,
                     returnEtag: true
@@ -1909,7 +1910,7 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
                 }
         } catch (err) {
             log.error(localize("openUSS.log.error.openFile", "Error encountered when opening USS file: ") + JSON.stringify(err));
-            vscode.window.showErrorMessage(err.message);
+            await utils.errorHandling(err, node.mProfileName, err.message);
             throw (err);
         }
     }
@@ -1923,7 +1924,7 @@ export async function modifyCommand(job: Job) {
             vscode.window.showInformationMessage(localize("modifyCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, error.message);
     }
 }
 
@@ -1932,7 +1933,7 @@ export async function stopCommand(job: Job) {
         const response = await zowe.IssueCommand.issueSimple(job.session, `p ${job.job.jobname}`);
         vscode.window.showInformationMessage(localize("stopCommand.response", "Command response: ") + response.commandResponse);
     } catch (error) {
-        vscode.window.showErrorMessage(error.message);
+        await utils.errorHandling(error, null, error.message);
     }
 }
 
@@ -1948,7 +1949,7 @@ export async function getSpoolContent(session: string, spool: IJobFile) {
                 baseEncd = values [2];
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, session, error.message);
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
             spoolSess.ISession.user = usrNme;
@@ -1965,7 +1966,7 @@ export async function getSpoolContent(session: string, spool: IJobFile) {
             const document = await vscode.workspace.openTextDocument(uri);
             await vscode.window.showTextDocument(document);
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, session, error.message);
         }
     }
 }
@@ -1998,7 +1999,7 @@ export async function refreshJobsServer(node: Job, jobsProvider: ZosJobsProvider
                 baseEncd = values [2];
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await utils.errorHandling(error, node.getProfileName(), error.message);
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
             node.session.ISession.user = usrNme;

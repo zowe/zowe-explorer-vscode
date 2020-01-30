@@ -48,8 +48,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
-            vscode.window.showErrorMessage(
-                localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
+            utils.errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
         ussFileProvider.refresh();
@@ -70,7 +69,7 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
                 baseEncd = values[2];
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            utils.errorHandling(error, node.mProfileName, localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
             return;
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
@@ -117,7 +116,8 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {
-        vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
+        const errMessage: string = localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message;
+        utils.errorHandling(err, node.mProfileName, errMessage);
         throw (err);
     }
 
@@ -171,7 +171,7 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
                 ussFileProvider.addUSSFavorite(oldFavorite);
             }
         } catch (err) {
-            vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+            utils.errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
             throw (err);
         }
     }
@@ -223,7 +223,7 @@ export async function uploadBinaryFile(node: ZoweUSSNode, filePath: string) {
         const ussName = `${node.fullPath}/${localFileName}`;
         await zowe.Upload.fileToUSSFile(node.getSession(), filePath, ussName, true);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        utils.errorHandling(e, node.mProfileName, e.message);
     }
 }
 
@@ -233,7 +233,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
         const ussName = `${node.fullPath}/${localFileName}`;
         await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        utils.errorHandling(e, node.mProfileName, e.message);
     }
 }
 
