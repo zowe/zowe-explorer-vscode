@@ -265,12 +265,11 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.profile);
             temp.contextValue += extension.FAV_SUFFIX;
-            if (temp.contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
+            if (temp.contextValue === extension.DS_DS_CONTEXT + extension.FAV_SUFFIX) {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
             temp.iconPath = applyIcons(temp);
         }
-        const sessionContext = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) =>
             (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
