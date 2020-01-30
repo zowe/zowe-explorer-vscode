@@ -94,11 +94,13 @@ describe("Unit Tests (Jest)", () => {
     };
     const mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
+    const mockDefaultProfile = jest.fn();
+    mockDefaultProfile.mockReturnValue(profileOne);
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
                 allProfiles: [profileOne, {name: "secondName"}],
-                defaultProfile: profileOne,
+                getDefaultProfile: mockDefaultProfile,
                 loadNamedProfile: mockLoadNamedProfile
             };
         })
@@ -442,11 +444,13 @@ describe("Unit Tests (Jest)", () => {
     it("initialize USSTree is executed successfully", async () => {
         const mockLoadNamedProfile = jest.fn();
         mockLoadNamedProfile.mockReturnValue(profileOne);
+        const mockDefaultProfile = jest.fn();
+        mockDefaultProfile.mockReturnValue(profileOne);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockDefaultProfile,
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })

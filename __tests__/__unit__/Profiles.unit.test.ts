@@ -429,7 +429,6 @@ describe("Profile class unit tests", () => {
         mockJSONParse.mockReturnValueOnce(profileOne);
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
-        expect(Profiles.getInstance().getDefaultProfile()).toEqual(profileOne);
     });
 
     it("should route through to spawn. Coverage of error handling", async () => {
@@ -470,6 +469,5 @@ describe("Profile class unit tests", () => {
         mockJSONParse.mockReturnValueOnce(profileOne);
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
-        expect(Profiles.getInstance().getDefaultProfile()).toEqual(profileOne);
     });
 });

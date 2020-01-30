@@ -184,15 +184,18 @@ describe("Zos Jobs Unit Tests", () => {
 
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
         const mockLoadNamedProfile = jest.fn();
+        const mockLoadDefaultProfile = jest.fn();
 
         beforeEach(() => {
             mockLoadNamedProfile.mockReturnValue(
                 {name:"fake", type:"zosmf", profile: {name:"fake", type:"zosmf", profile:{name:"fake", type:"zosmf"}}});
+            mockLoadDefaultProfile.mockReturnValue(
+                {name:"firstProfileName", type:"zosmf", profile: {name:"firstProfileName", type:"zosmf", profile:{name:"firstProfileName", type:"zosmf"}}});
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstProfileName", type:"zosmf"}, {name: "fake", type:"zosmf"}],
-                        defaultProfile: {name: "firstProfileName", type:"zosmf"},
+                        getDefaultProfile: mockLoadDefaultProfile,
                         loadNamedProfile: mockLoadNamedProfile,
                         promptCredentials: jest.fn(()=> {
                             return ["fakeUser","","fakeEncoding"];
@@ -365,7 +368,7 @@ describe("Zos Jobs Unit Tests", () => {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        getDefaultProfile: () => ({name: "firstName"}),
                         promptCredentials: undefined
                     };
                 })
@@ -481,7 +484,7 @@ describe("Zos Jobs Unit Tests", () => {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        getDefaultProfile: () => ({name: "firstName"})
                     };
                 })
             });
