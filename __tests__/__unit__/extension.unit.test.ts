@@ -1735,7 +1735,7 @@ describe("Extension Unit Tests", () => {
         concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
         const getSessionSpy = jest.spyOn(mvsApi, "getSession").mockReturnValueOnce(sessionwocred);
         await extension.saveFile(testDoc0, testTree);
-        expect(getSessionSpy.mock.calls.length).toBe(2);
+        expect(getSessionSpy.mock.calls.length).toBe(3);
         expect(getSessionSpy.mock.results[0].value).toEqual(sessionwocred);
 
         // testing if no documentSession is found (no session + no profile)

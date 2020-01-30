@@ -165,10 +165,8 @@ describe("Unit Tests (Jest)", () => {
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
             rootNode.getChildren();
-            // TODO: NEED HELP.
-            // I see that the core.ts mock is called and it throws exception, but somehow the exception is not caught in ZoweUSSNode
-            // expect(showErrorMessage.mock.calls.length).toEqual(1);
-            // expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
@@ -186,10 +184,8 @@ describe("Unit Tests (Jest)", () => {
             subNode.fullPath = "THROW ERROR";
             subNode.dirty = true;
             subNode.getChildren();
-            // TODO: NEED HELP.
-            // I see that the core.ts mock is called and it throws exception, but somehow the exception is not caught in ZoweUSSNode
-            // expect(showErrorMessage.mock.calls.length).toEqual(1);
-            // expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
 
     /*************************************************************************************************************
