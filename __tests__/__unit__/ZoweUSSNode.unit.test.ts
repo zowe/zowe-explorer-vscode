@@ -164,9 +164,9 @@ describe("Unit Tests (Jest)", () => {
             rootNode.contextValue = extension.USS_SESSION_CONTEXT;
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
-            rootNode.getChildren();
+            await rootNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list");
         });
 
     /*************************************************************************************************************
@@ -183,9 +183,9 @@ describe("Unit Tests (Jest)", () => {
                 "Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
             subNode.fullPath = "THROW ERROR";
             subNode.dirty = true;
-            subNode.getChildren();
+            await subNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list");
         });
 
     /*************************************************************************************************************

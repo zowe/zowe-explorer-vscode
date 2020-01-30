@@ -148,7 +148,7 @@ describe("Unit Tests (Jest)", () => {
             rootNode.contextValue = extension.DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
-            rootNode.getChildren();
+            await rootNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
             expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
         });
