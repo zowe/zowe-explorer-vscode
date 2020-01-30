@@ -6,6 +6,7 @@ out/__tests__/**
 out/src/__mocks__/**
 out/resources/testProfileData.*
 out/**/*.map
+out
 resources/testProfileData.ts
 resources/Favorites.txt
 results/**
