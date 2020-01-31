@@ -19,7 +19,7 @@ const outDest = 'dist';
 // For new languages, add { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to array below
 // Ex. for Chinese add: { folderName: 'zho', id: 'zh-cn' }
 /* ************************* ADD NEW LANGUAGES HERE ******************************** */
-const languages = [];
+const languages = [{folderName:'fra', id:'fr'}];
 /* ********************************************************************************* */
 const cleanTask = function() {
 	return del(['dist/**', 'package.nls.*.json', 'vscode-extension-for-zowe*.vsix']);
