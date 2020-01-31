@@ -45,31 +45,31 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
  */
 export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
 
-    public async fileList(path: string): Promise<zowe.IZosFilesResponse> {
-        return zowe.List.fileList(this.getSession(), path);
+    public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+        return zowe.List.fileList(this.getSession(), ussFilePath);
     }
 
-    public async isFileTagBinOrAscii(USSFileName: string): Promise<boolean> {
-        return zowe.Utilities.isFileTagBinOrAscii(this.getSession(), USSFileName);
+    public async isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
+        return zowe.Utilities.isFileTagBinOrAscii(this.getSession(), ussFilePath);
     }
 
-    public async getContents(ussFileName: string, options: zowe.IDownloadOptions
+    public async getContents(inputFilePath: string, options: zowe.IDownloadOptions
     ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Download.ussFile(this.getSession(), ussFileName, options);
+        return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
-    public async putContents(inputFile: string, ussname: string,
+    public async putContents(inputFilePath: string, ussFilePath: string,
                              binary?: boolean, localEncoding?: string,
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.fileToUSSFile(this.getSession(), inputFile, ussname, binary, localEncoding, etag, returnEtag);
+        return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, etag, returnEtag);
     }
 
     public async uploadDirectory(
-        inputDirectory: string,
-        ussname: string,
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
         options?: zowe.IUploadOptions
     ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.dirToUSSDirRecursive(this.getSession(), inputDirectory, ussname, options
+        return zowe.Upload.dirToUSSDirRecursive(this.getSession(), inputDirectoryPath, ussDirectoryPath, options
         );
     }
 
@@ -77,14 +77,14 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Create.uss(this.getSession(), ussPath, type);
     }
 
-    public async delete(fileName: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+    public async delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
         // handle zosmf api issue with file paths
-        const fixedName = fileName.startsWith("/") ?  fileName.substring(1) :  fileName;
+        const fixedName = ussPath.startsWith("/") ?  ussPath.substring(1) :  ussPath;
         return zowe.Delete.ussFile(this.getSession(), fixedName, recursive);
     }
 
-    public async rename(oldFilePath: string, newFilePath: string): Promise<zowe.IZosFilesResponse> {
-        const result = await zowe.Utilities.renameUSSFile(this.getSession(), oldFilePath, newFilePath);
+    public async rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
+        const result = await zowe.Utilities.renameUSSFile(this.getSession(), currentUssPath, newUssPath);
         return {
             success: true,
             commandResponse: null,
@@ -108,19 +108,19 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         return zowe.List.allMembers(this.getSession(), dataSetName, options);
     }
 
-    public async getContents(name: string, options?: zowe.IDownloadOptions
+    public async getContents(dataSetName: string, options?: zowe.IDownloadOptions
         ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Download.dataSet(this.getSession(), name, options);
+        return zowe.Download.dataSet(this.getSession(), dataSetName, options);
     }
 
-    public async putContents(inputPath: string, dataSetName: string, options?: zowe.IUploadOptions
+    public async putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.pathToDataSet(this.getSession(), inputPath, dataSetName, options);
+        return zowe.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, options);
     }
 
-    public async createDataSet(cmdType: zowe.CreateDataSetTypeEnum, dataSetName: string, options?: Partial<zowe.ICreateDataSetOptions>
+    public async createDataSet(dataSetType: zowe.CreateDataSetTypeEnum, dataSetName: string, options?: Partial<zowe.ICreateDataSetOptions>
         ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Create.dataSet(this.getSession(), cmdType, dataSetName, options);
+        return zowe.Create.dataSet(this.getSession(), dataSetType, dataSetName, options);
     }
 
     public async createDataSetMember(dataSetName: string, options?: zowe.IUploadOptions
@@ -140,14 +140,14 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         );
     }
 
-    public async renameDataSet(beforeDataSetName: string, afterDataSetName: string
+    public async renameDataSet(currentDataSetName: string, newDataSetName: string
         ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Rename.dataSet(this.getSession(), beforeDataSetName, afterDataSetName);
+        return zowe.Rename.dataSet(this.getSession(), currentDataSetName, newDataSetName);
     }
 
-    public async renameDataSetMember(dataSetName: string, beforeMemberName: string, afterMemberName: string,
+    public async renameDataSetMember(currentMemberName: string, newMemberName: string, afterMemberName: string,
     ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Rename.dataSetMember(this.getSession(), dataSetName, beforeMemberName, afterMemberName);
+        return zowe.Rename.dataSetMember(this.getSession(), currentMemberName, newMemberName, afterMemberName);
     }
 
     public async deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions

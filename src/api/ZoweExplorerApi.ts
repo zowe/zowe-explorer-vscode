@@ -28,12 +28,14 @@ export namespace ZoweExplorerApi {
 
         /**
          * Return the type name of the CLI profile supported by this api.
+         *
          * @returns {string} the type name as defined by a CLI plugin that implements the profile.
          */
         getProfileTypeName(): string;
 
         /**
-         * Create a session for the specific profile type
+         * Create a session for the specific profile type.
+         *
          * @param {imperative.IProfileLoaded} profile
          *      optional profile reference,
          *      will use the profile the API was retrieved with by default
@@ -50,48 +52,53 @@ export namespace ZoweExplorerApi {
         /**
          * Return the directory elements for a given USS path.
          *
-         * @param {string} path
+         * @param {string} ussFilePath
          * @returns {IZosFilesResponse}
          *     A response structure that contains a boolean success property
          *     as well as the list of results in apiResponse.items with
          *     minimal properties name, mode.
          */
         fileList(
-            path: string
+            ussFilePath: string
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
-         * Check th USS chtag.
+         * Check th USS chtag to see if a file requires conversion.
          *
-         * @param {string} USSFileName
+         * @param {string} ussFilePath
          * @returns {Promise<boolean>}
          */
         isFileTagBinOrAscii(
-            USSFileName: string
+            ussFilePath: string
         ): Promise<boolean>;
 
         /**
          * Retrieve the contents of a USS file.
-         * @param {string} ussFileName
+         *
+         * @param {string} ussFilePath
          * @param {zowe.IDownloadOptions} options
          */
         getContents(
-            ussFileName: string,
+            ussFilePath: string,
             options: zowe.IDownloadOptions
         ): Promise<zowe.IZosFilesResponse> ;
 
         /**
-         * Uploads the files at the given path. Use for Save.
+         * Uploads the file at the given path. Use for Save.
          *
-         * @param {string} inputFile
-         * @param {string} ussname
+         * @param {string} inputFilePath
+         * @param {string} ussFilePath
          * @param {boolean} [binary]
+         *      Indicates if a conversion should be attempted or treated as binary.
          * @param {string} [localEncoding]
+         *      Optional encoding that can be used by an implementation to overwrite defaults
+         * @param {string} [etag]
+         * @param {boolean} [returnEtag]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         putContents(
-            inputFile: string,
-            ussname: string,
+            inputFilePath: string,
+            ussFilePath: string,
             binary?: boolean,
             localEncoding?: string,
             etag?: string,
@@ -101,14 +108,14 @@ export namespace ZoweExplorerApi {
         /**
          * Uploads directory at the given path.
          *
-         * @param {string} inputDirectory
-         * @param {string} ussname
+         * @param {string} inputDirectoryPath
+         * @param {string} ussDirectoryPath
          * @param {IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         uploadDirectory(
-            inputDirectory: string,
-            ussname: string,
+            inputDirectoryPath: string,
+            ussDirectoryPath: string,
             options: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
@@ -117,7 +124,9 @@ export namespace ZoweExplorerApi {
          *
          * @param {string} ussPath
          * @param {string} type
+         *      Either "file" or "directory".
          * @param {string} [mode]
+         *      An optional Unix string representation of the permissions.
          * @returns {Promise<string>}
          */
         create(
@@ -127,27 +136,27 @@ export namespace ZoweExplorerApi {
         ): Promise<string>;
 
         /**
-         * Deletes the USS file at the given path.
+         * Deletes the USS directory or file at the given path.
          *
-         * @param {string} fileName
+         * @param {string} ussPath
          * @param {boolean} [recursive]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         delete(
-            fileName: string,
+            ussPath: string,
             recursive?: boolean
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Rename a file or directory.
          *
-         * @param {string} oldFilePath
-         * @param {string} newFilePath
+         * @param {string} currentUssPath
+         * @param {string} newUssPath
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         rename(
-            oldFilePath: string,
-            newFilePath: string
+            currentUssPath: string,
+            newUssPath: string
         ): Promise<zowe.IZosFilesResponse>;
     }
 
@@ -184,25 +193,25 @@ export namespace ZoweExplorerApi {
         /**
          * Get the contents of a data set or member specified by name.
          *
-         * @param {string} name
+         * @param {string} dataSetName
          * @param {zowe.IDownloadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         getContents(
-            name: string,
+            dataSetName: string,
             options?: zowe.IDownloadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Upload the content of a file to a data set or member.
          *
-         * @param {string} inputPath
+         * @param {string} inputFilePath
          * @param {string} dataSetName
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         putContents(
-            inputPath: string,
+            inputFilePath: string,
             dataSetName: string,
             options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
@@ -210,13 +219,13 @@ export namespace ZoweExplorerApi {
         /**
          * Create a new data set with the specified options.
          *
-         * @param {zowe.CreateDataSetTypeEnum} cmdType
+         * @param {zowe.CreateDataSetTypeEnum} dataSetType
          * @param {string} dataSetName
          * @param {Partial<zowe.ICreateDataSetOptions>} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         createDataSet(
-            cmdType: zowe.CreateDataSetTypeEnum,
+            dataSetType: zowe.CreateDataSetTypeEnum,
             dataSetName: string,
             options?: Partial<zowe.ICreateDataSetOptions>
         ): Promise<zowe.IZosFilesResponse>;
@@ -229,7 +238,8 @@ export namespace ZoweExplorerApi {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         createDataSetMember(
-            dataSetName: string, options?: zowe.IUploadOptions
+            dataSetName: string,
+            options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
@@ -249,27 +259,27 @@ export namespace ZoweExplorerApi {
         /**
          * Renames a data set.
          *
-         * @param {string} beforeDataSetName
-         * @param {string} afterDataSetName
+         * @param {string} currentDataSetName
+         * @param {string} newDataSetName
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         renameDataSet(
-            beforeDataSetName: string,
-            afterDataSetName: string
+            currentDataSetName: string,
+            newDataSetName: string
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Renames a data set member.
          *
          * @param {string} dataSetName
-         * @param {string} beforeMemberName
-         * @param {string} afterMemberName
+         * @param {string} currentMemberName
+         * @param {string} newMemberName
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         renameDataSetMember(
             dataSetName: string,
-            beforeMemberName: string,
-            afterMemberName: string,
+            currentMemberName: string,
+            newMemberName: string,
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
