@@ -308,11 +308,6 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public setEtag(etagValue): void {
         this.etag = etagValue;
-        /**
-         * helper method to change the node names in one go
-         * @param oldReference string
-         * @param revision string
-         */
     }
 
     /**
