@@ -9,13 +9,13 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
 import * as utils from "../utils";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -52,7 +52,7 @@ export function getDatasetLabel(node: ZoweNode) {
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
+        await ZoweExplorerApiRegister.getMvsApi(node.profile).putContents(doc.fileName, datasetName);
     } catch (e) {
         await utils.errorHandling(e, node.getProfileName(), e.message);
     }

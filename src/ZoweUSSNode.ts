@@ -10,12 +10,14 @@
 */
 
 import * as zowe from "@brightside/core";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./ZoweTree";
 import * as extension from "../src/extension";
 import * as utils from "./utils";
+import { Profiles } from "./Profiles";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -34,8 +36,9 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
     public children: ZoweUSSNode[] = [];
     public binaryFiles = {};
-    public profileName = "";
     public shortLabel = "";
+    public profileName = "";
+    public profile: IProfileLoaded; // TODO: This reference should be stored instead of the name
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -78,6 +81,13 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             // Display name for favorited file or directory in tree view
             this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
+        }
+        // TODO: this should not be necessary of each node gets initialized with the profile reference.
+        if (mProfileName) {
+            this.profile = Profiles.getInstance().loadNamedProfile(mProfileName);
+        } else if (mParent && mParent.mProfileName) {
+            this.mProfileName = mParent.mProfileName;
+            this.profile = Profiles.getInstance().loadNamedProfile(mParent.mProfileName);
         }
         this.etag = etag ? etag : "";
         utils.applyIcons(this);
@@ -124,10 +134,10 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
             }, () => {
-               return zowe.List.fileList(this.getSession(), this.fullPath);
+               return ZoweExplorerApiRegister.getUssApi(this.profile).fileList(this.fullPath);
             }));
         } catch (err) {
-            utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
