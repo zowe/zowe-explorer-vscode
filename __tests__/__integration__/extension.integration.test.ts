@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
-import { Logger, CliProfileManager } from "@brightside/imperative";
+import { Logger, CliProfileManager, IProfileLoaded } from "@brightside/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -26,18 +26,27 @@ import { DatasetTree, createDatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import { ZosJobsProvider } from "../../src/ZosJobsProvider";
+import { Profiles } from "../../src/Profiles";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
+
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
 
 describe("Extension Integration Tests", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
+    const sessionNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+        session, undefined, undefined, testProfile);
     sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
@@ -876,6 +885,7 @@ describe("Extension Integration Tests - USS", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
+    // Profiles.createInstance(Logger.getAppLogger());
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const ussSessionNode = new ZoweUSSNode(
         testConst.profile.name,
