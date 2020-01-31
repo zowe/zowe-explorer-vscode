@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
-import { Logger } from "@brightside/imperative";
+import { Logger, IProfileLoaded } from "@brightside/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -22,16 +22,25 @@ import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
+import { Profiles } from "../../src/Profiles";
 declare var it: any;
+
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
 
 describe("USSTree Integration Tests", async () => {
     const TIMEOUT = 120000;
-
     chai.use(chaiAsPromised);
+
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
-         null, session, "", false, testConst.profile.name);
+         null, session, "", false, testProfile.name);
     sessNode.contextValue = extension.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;

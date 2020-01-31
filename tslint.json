@@ -40,7 +40,8 @@
       true,
       "dev",
       ["@brightside/imperative"]
-    ]
+    ],
+    "no-namespace": false
   },
   "linterOptions": {
     "exclude": [

@@ -11,6 +11,7 @@
 
 import * as spoolprovider from "../../src/SpoolProvider";
 import * as brightside from "@brightside/core";
+import * as imperative from "@brightside/imperative";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
 
@@ -97,13 +98,23 @@ describe("SpoolProvider Unit Tests", () => {
     it("Tests that the spool content is returned", () => {
         const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
+        const profileOne: imperative.IProfileLoaded = {
+            name: "sessionName",
+            profile: {
+                user:undefined,
+                password: undefined
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
         const mockLoadNamedProfile = jest.fn();
-        mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+        mockLoadNamedProfile.mockReturnValue(profileOne);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [profileOne, {name: "secondName"}],
+                    defaultProfile: profileOne,
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
