@@ -12,17 +12,12 @@
 import * as zowe from "@brightside/core";
 import { Session } from "@brightside/imperative";
 import * as vscode from "vscode";
-// tslint:disable-next-line: no-duplicate-imports
-import { TreeItemCollapsibleState } from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./ZoweTree";
 // tslint:disable-next-line: no-duplicate-imports
 import * as extension from "../src/extension";
-// tslint:disable-next-line: no-duplicate-imports
-import { getUSSDocumentFilePath } from "../src/extension";
 import * as utils from "./utils";
 import { getIconByNode } from "./generators/icons/index";
-// tslint:disable-next-line: no-implicit-dependencies
 import * as moment from "moment";
 import { injectAdditionalDataToTooltip } from "./utils/uss";
 
@@ -250,7 +245,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public get isDirtyInEditor(): boolean {
         const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = getUSSDocumentFilePath(this);
+        const currentFilePath = extension.getUSSDocumentFilePath(this);
 
         for (const document of openedTextDocuments) {
             if (document.fileName === currentFilePath) {
@@ -263,7 +258,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
     public get openedDocumentInstance(): vscode.TextDocument {
         const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = getUSSDocumentFilePath(this);
+        const currentFilePath = extension.getUSSDocumentFilePath(this);
 
         for (const document of openedTextDocuments) {
             if (document.fileName === currentFilePath) {
