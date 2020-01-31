@@ -8,6 +8,8 @@
 'use strict';
 
 const path = require('path');
+var webpack = require("webpack");
+var fs = require("fs");
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -57,6 +59,9 @@ const config = {
                 },
         ]},
     ]},
+    plugins: [
+        new webpack.BannerPlugin(fs.readFileSync('./.vscode/banner.txt', 'utf8'))
+    ]
 }
 if (process.argv.includes('--vscode-nls')) {
 	// rewrite nls call when being asked for
