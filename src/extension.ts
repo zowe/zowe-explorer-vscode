@@ -836,14 +836,14 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
 
                 // Check if current filter includes the new node
                 const matchedFilters = currentFilters.filter((filter) => {
-                    const regex = new RegExp(filter.trim().replace(`*`, "") + "(.+)$");
+                    const regex = new RegExp(filter.trim().replace(`*`, "") + "(.*)$");
                     return regex.test(name);
                 });
 
                 if (matchedFilters.length === 0) {
                     // remove the last segement with a dot of the name for the new filter
-                    const newFilter = name.replace(/\.(?:.(?!\.))+$/, "");
-                    theFilter = `${theFilter},${newFilter}.*`;
+                    const newFilterBase = name.replace(/\.(?:.(?!\.))+$/, "");
+                    theFilter = `${theFilter},${newFilterBase}.*`;
                     datasetProvider.addHistory(theFilter);
                 }
             } else {

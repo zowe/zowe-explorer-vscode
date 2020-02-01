@@ -1262,7 +1262,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReturnValueOnce(["NODE1"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1, NODE");
+        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
         expect(testTree.reveal.mock.calls.length).toBe(1);
 
         testTree.addHistory.mockReset();
