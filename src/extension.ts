@@ -832,17 +832,18 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
 
             // Check if filter is currently applied
             if (currChildren[0].contextValue !== "information" && theFilter) {
-                let addNewFilter = true;
-                const currentFilters = theFilter.split(", ");
+                const currentFilters = theFilter.split(",");
 
                 // Check if current filter includes the new node
-                currentFilters.forEach((filter) => {
-                    const regex = new RegExp(filter.replace(`*`, `(.+)`) + "$");
-                    addNewFilter = regex.test(name) ? false : addNewFilter;
+                const matchedFilters = currentFilters.filter((filter) => {
+                    const regex = new RegExp(filter.trim().replace(`*`, "") + "(.+)$");
+                    return regex.test(name);
                 });
 
-                if (addNewFilter) {
-                    theFilter = `${theFilter}, ${name}`;
+                if (matchedFilters.length === 0) {
+                    // remove the last segement with a dot of the name for the new filter
+                    const newFilter = name.replace(/\.(?:.(?!\.))+$/, "");
+                    theFilter = `${theFilter},${newFilter}.*`;
                     datasetProvider.addHistory(theFilter);
                 }
             } else {
