@@ -2,12 +2,31 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.2.0`
+
+- Support CLI plugin extensibility. Thanks @phaumer
+- Fixed Issue for filters after creating dataset. Thanks @phaumer
+- Managing text/binary download choice. Thanks @stepanzharychevbroadcom
+- Addressed 'Uploading zip file (binary)' silent failures. Thanks @stepanzharychevbroadcom
+- Consistency updates for context menu. Thanks @sladyn98
+- Automatically use Changelog contents in pipeline as release description. Thanks @awharn
+- Provision of warning message after two failed login attempts. Thanks @jellypuno
+- Consistency, added filter tip to convey ability to add multiple filters entries. Thanks @katelynienaber
+- Tree view refresh when dataset memberadded or deleted. Thanks @katelynienaber
+- Code improvement - Centralized error handling. Thanks @crawr
+- Integration Script updates. Thanks @zFernand0
+- Keytar (Secure credentials) compatibility support. @Colin-Stone
+- Improved usability of MVS Command feature including 'Recall' function. @Colin-Stone
+- Fixed issue where Job folder did not auto-expand. @Colin-Stone
+- Use Progress indicator wrapper around longer running list functions. @Colin-Stone
+
 ## `1.1.0`
 
 - Updates to Readme to include links to Theia Readme. Thanks @IgorCATech
 - Fix for incorrect profile name in some favorites. Thanks @lauren-li
 - Update dataset filters on dataset creation. Thanks @katelynienaber
 - Include VSIX in Github release. Thanks @zFernand0
+- Fix dataset delete fails silently bug. @Colin-Stone
 - Fix to handle "Show Dataset Attributes" in Favorites. Thanks @katelynienaber
 - Enhancements to profile creation. Thanks @jellypuno
 - Theia specific QuickPick modifications. Thanks @phaumer
