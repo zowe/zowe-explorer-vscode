@@ -22,6 +22,7 @@ import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 
 /**
@@ -39,7 +40,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await zowe.Create.uss(node.getSession(), filePath, nodeType);
+            await ZoweExplorerApiRegister.getUssApi(node.profile).create(filePath, nodeType);
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
@@ -96,8 +97,6 @@ export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: US
 }
 
 export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    // handle zosmf api issue with file paths
-    const nodePath = node.fullPath.startsWith("/") ? node.fullPath.substring(1) : node.fullPath;
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + node.label,
         ignoreFocusOut: true,
@@ -110,7 +109,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     }
     try {
         const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-        await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
+        await ZoweExplorerApiRegister.getUssApi(node.profile).delete(node.fullPath, isRecursive);
         node.mParent.dirty = true;
         deleteFromDisk(node, filePath);
     } catch (err) {
@@ -161,9 +160,10 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
     if (newName && newName !== oldLabel) {
         try {
             const newNamePath = path.join(parentPath + newName);
-            await zowe.Utilities.renameUSSFile(originalNode.getSession(), originalNode.fullPath, newNamePath);
+            await ZoweExplorerApiRegister.getUssApi(
+                originalNode.profile).rename(originalNode.fullPath, newNamePath);
             originalNode.rename(newNamePath);
-
+            
             if (oldFavorite) {
                 ussFileProvider.removeUSSFavorite(oldFavorite);
                 oldFavorite.rename(newNamePath);
@@ -174,7 +174,6 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
             throw (err);
         }
     }
-
 }
 
 /**
@@ -231,7 +230,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
+        await ZoweExplorerApiRegister.getUssApi(node.profile).putContents(doc.fileName, ussName);
     } catch (e) {
         utils.errorHandling(e, node.mProfileName, e.message);
     }
