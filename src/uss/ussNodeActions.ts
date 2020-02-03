@@ -16,7 +16,8 @@ import * as zowe from "@brightside/core";
 import * as fs from "fs";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../../src/extension";
 import * as path from "path";
 import { ISTHEIA } from "../extension";
@@ -102,7 +103,7 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
         canPickMany: false
     };
     if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
-    localize("deleteUSSNode.showQuickPick.no", "No")],
+            localize("deleteUSSNode.showQuickPick.no", "No")],
         quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
         return;
     }
@@ -155,13 +156,14 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
     const oldFavorite = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
-    const newName = await vscode.window.showInputBox({ value: oldLabel });
+    const newName = await vscode.window.showInputBox({value: oldLabel});
     if (newName && newName !== oldLabel) {
         try {
             const newNamePath = path.join(parentPath + newName);
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.profile).rename(originalNode.fullPath, newNamePath);
-            ussFileProvider.refresh();
+            originalNode.rename(newNamePath);
+
             if (oldFavorite) {
                 ussFileProvider.removeUSSFavorite(oldFavorite);
                 oldFavorite.rename(newNamePath);
@@ -185,8 +187,9 @@ export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
             fs.unlinkSync(filePath);
         }
     }
-    // tslint:disable-next-line: no-empty
-    catch (err) { }
+        // tslint:disable-next-line: no-empty
+    catch (err) {
+    }
 }
 
 export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
@@ -200,15 +203,15 @@ export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) 
 
     await Promise.all(
         value.map(async (item) => {
-            const isBinary = isBinaryFileSync(item.fsPath);
+                const isBinary = isBinaryFileSync(item.fsPath);
 
-            if (isBinary) {
-                await uploadBinaryFile(node, item.fsPath);
-            } else {
-                const doc = await vscode.workspace.openTextDocument(item);
-                await uploadFile(node, doc);
+                if (isBinary) {
+                    await uploadBinaryFile(node, item.fsPath);
+                } else {
+                    const doc = await vscode.workspace.openTextDocument(item);
+                    await uploadFile(node, doc);
+                }
             }
-        }
         ));
     ussFileProvider.refresh();
 }
