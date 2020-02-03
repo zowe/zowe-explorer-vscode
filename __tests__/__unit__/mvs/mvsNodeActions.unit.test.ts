@@ -13,10 +13,14 @@ import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweNode } from "../../../src/ZoweNode";
 import * as extension from "../../../src/extension";
+import * as brtimperative from "@brightside/imperative";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
 const openTextDocument = jest.fn();
+const mockRefreshElement = jest.fn();
+const mockFindFavoritedNode = jest.fn();
+const mockFindNonFavoritedNode = jest.fn();
 
 Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
 Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
@@ -24,25 +28,61 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     return {
         mSessionNodes: [],
         mFavorites: [],
-        refresh: mockRefresh
+        refresh: mockRefresh,
+        refreshElement: mockRefreshElement,
+        findFavoritedNode: mockFindFavoritedNode,
+        findNonFavoritedNode: mockFindNonFavoritedNode
     };
 });
 
+const session = new brtimperative.Session({
+    user: "fake",
+    password: "fake",
+    hostname: "fake",
+    protocol: "https",
+    type: "basic",
+});
+
 const testTree = DatasetTree();
+const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
 
 describe("mvsNodeActions", () => {
     afterEach(() => {
         jest.resetAllMocks();
     });
     it("should call upload dialog and upload file", async () => {
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const nodeAsFavorite = new ZoweNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, extension.PDS_FAV_CONTEXT);
+        testTree.mFavorites.push(nodeAsFavorite);
         const fileUri = {fsPath: "/tmp/foo"};
+
         showOpenDialog.mockReturnValue([fileUri]);
         openTextDocument.mockReturnValue({});
+        mockFindFavoritedNode.mockReturnValue(nodeAsFavorite);
+
         await mvsNodeActions.uploadDialog(node, testTree);
+
         expect(showOpenDialog).toBeCalled();
         expect(openTextDocument).toBeCalled();
-        expect(testTree.refresh).toBeCalled();
+        expect(testTree.refreshElement).toBeCalledWith(node);
+        expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
+    });
+    it("should call upload dialog and upload file (from favorites)", async () => {
+        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const nodeAsFavorite = new ZoweNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, extension.PDS_FAV_CONTEXT);
+        testTree.mFavorites.push(nodeAsFavorite);
+        const fileUri = {fsPath: "/tmp/foo"};
+
+        showOpenDialog.mockReturnValue([fileUri]);
+        openTextDocument.mockReturnValue({});
+        mockFindNonFavoritedNode.mockReturnValue(node);
+
+        await mvsNodeActions.uploadDialog(nodeAsFavorite, testTree);
+
+        expect(showOpenDialog).toBeCalled();
+        expect(openTextDocument).toBeCalled();
+        expect(testTree.refreshElement).toBeCalledWith(node);
+        expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
     });
     describe("getDatasetLabel", () => {
         afterEach(() => {

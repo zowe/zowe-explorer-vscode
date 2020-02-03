@@ -22,6 +22,7 @@ import * as extension from "../../src/extension";
 import { Profiles } from "../../src/Profiles";
 
 describe("Unit Tests (Jest)", () => {
+    Object.defineProperty(vscode.commands, "executeCommand", {value: jest.fn()});
     // Globals
     const session = new Session({
         user: "fake",
@@ -240,7 +241,7 @@ describe("Unit Tests (Jest)", () => {
 
         child.setBinary(true);
         expect(child.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX);
-        expect(JSON.stringify(child.iconPath)).toContain("document.svg");
+        expect(JSON.stringify(child.iconPath)).toContain("document-binary.svg");
         child.setBinary(false);
         expect(child.contextValue).toEqual(extension.DS_TEXT_FILE_CONTEXT);
         subNode.setBinary(true);
