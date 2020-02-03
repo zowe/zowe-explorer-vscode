@@ -5,6 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `1.2.0`
 
 - Support CLI plugin extensibility Thanks @phaumer
+- Managing text/binary download choice. Thanks @stepanzharychevbroadcom
 - Addressed 'Uploading zip file (binary)' silent failures. Thanks @stepanzharychevbroadcom
 - Consistency updates for context menu. Thanks @sladyn98
 - Automatically use Changelog contents in pipeline as release description. Thanks @awharn
