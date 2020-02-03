@@ -1,0 +1,11 @@
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Document Downloaded Light</title>
+    <desc></desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" transform="translate(3, 1)" fill-rule="evenodd">
+        <g id="document_light" fill="#424242" opacity="0.3">
+            <path d="M1,0 L0,1 L0,13 L1,14 L10,14 L11,13 L11,4 L10.7071,3.29289 L7.7071,0.29289 L7,0 L1,0 Z M1,13 L1,1 L6,1 L6,5 L10,5 L10,13 L1,13 Z M10,4 L7,1 L7,4 L10,4 Z" id="Shape">
+            </path>
+        </g>
+        <circle id="Oval" fill="#27A15B" cx="9" cy="12" r="3"></circle>
+    </g>
+</svg>
