@@ -163,7 +163,7 @@ export async function renameUSSNode(originalNode: ZoweUSSNode, ussFileProvider: 
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.profile).rename(originalNode.fullPath, newNamePath);
             originalNode.rename(newNamePath);
-            
+
             if (oldFavorite) {
                 ussFileProvider.removeUSSFavorite(oldFavorite);
                 oldFavorite.rename(newNamePath);

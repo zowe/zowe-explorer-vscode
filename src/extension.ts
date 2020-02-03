@@ -17,7 +17,16 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
+import {
+    Logger,
+    TextUtils,
+    IProfileLoaded,
+    ImperativeConfig,
+    Session,
+    CredentialManagerFactory,
+    ImperativeError,
+    DefaultCredentialManager
+} from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -36,7 +45,7 @@ import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatu
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 // Localization support
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // Globals
 export let BRIGHTTEMPFOLDER;
@@ -80,7 +89,7 @@ let log: Logger;
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
 
-   // Get temp folder location from settings
+    // Get temp folder location from settings
     let preferencesTempPath: string =
         vscode.workspace.getConfiguration()
             /* tslint:disable:no-string-literal */
@@ -152,7 +161,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         jobsProvider = await createJobsTree(log);
 
     } catch (err) {
-        await utils.errorHandling(err, null,(localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
+        await utils.errorHandling(err, null, (localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         log.error(localize("initialize.log.error", "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
     }
 
@@ -367,9 +376,9 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         const value1 = settings.overrides.CredentialManager;
         const value2 = settings.overrides["credential-manager"];
         imperativeIsSsecure = ((typeof value1 === "string") && (value1.length > 0)) ||
-                            ((typeof value2 === "string") && (value2.length > 0));
+            ((typeof value2 === "string") && (value2.length > 0));
     } catch (error) {
-        log.warn(localize("profile.init.read.imperative","Unable to read imperative file. ")+ error.message);
+        log.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
         vscode.window.showInformationMessage(error.message);
         return undefined;
     }
@@ -380,13 +389,13 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
             return require(`${appRoot}/node_modules/${moduleName}`);
         } catch (err) {
             vscode.window.showWarningMessage(localize("initialize.module.load",
-                    "Credentials not managed, unable to load security file: ") + moduleName);
+                "Credentials not managed, unable to load security file: ") + moduleName);
         }
         try {
             return require(`${appRoot}/node_modules.asar/${moduleName}`);
         } catch (err) {
             vscode.window.showWarningMessage(localize("initialize.module.load",
-                    "Credentials not managed, unable to load security file: ") + moduleName);
+                "Credentials not managed, unable to load security file: ") + moduleName);
         }
     }
     return undefined;
@@ -519,7 +528,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     const regExp = sessionregex.exec(doc.fileName);
     const profiles = await Profiles.getInstance();
     let sessProfileName;
-    if(regExp === null){
+    if (regExp === null) {
         const allProfiles: IProfileLoaded[] = profiles.allProfiles;
         const profileNamesList = allProfiles.map((profile) => {
             return profile.name;
@@ -544,7 +553,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
 
     // get profile from session name
     let sessProfile: IProfileLoaded;
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim()=== sessProfileName);
+    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.trim() === sessProfileName);
     if (sesNode) {
         sessProfile = sesNode.profile;
     } else {
@@ -588,7 +597,7 @@ export async function submitMember(node: ZoweNode) {
         case (DS_PDS_CONTEXT + FAV_SUFFIX):
             regex = labelregex.exec(node.mParent.label);
             sesName = regex[1];
-            label = regex[2] + "(" + node.label.trim()+ ")";
+            label = regex[2] + "(" + node.label.trim() + ")";
             sessProfile = node.mParent.profile;
             break;
         case (DS_SESSION_CONTEXT):
@@ -598,7 +607,7 @@ export async function submitMember(node: ZoweNode) {
             break;
         case (DS_PDS_CONTEXT):
             sesName = node.mParent.mParent.label;
-            label = node.mParent.label.trim()+ "(" + node.label.trim()+ ")";
+            label = node.mParent.label.trim() + "(" + node.label.trim() + ")";
             sessProfile = node.mParent.mParent.profile;
             break;
         default:
@@ -870,7 +879,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
-            err.message);
+                err.message);
             throw (err);
         }
     }
@@ -926,7 +935,7 @@ export async function showDSAttributes(parent: ZoweNode, datasetProvider: Datase
     log.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
     let attributes: any;
     try {
-        attributes = await ZoweExplorerApiRegister.getMvsApi(parent.profile).dataSet(label, { attributes: true });
+        attributes = await ZoweExplorerApiRegister.getMvsApi(parent.profile).dataSet(label, {attributes: true});
         attributes = attributes.apiResponse.items;
         attributes = attributes.filter((dataSet) => {
             return dataSet.dsname.toUpperCase() === label.toUpperCase();
@@ -1091,8 +1100,8 @@ export async function pasteDataSet(node: ZoweNode, datasetProvider: DatasetTree)
             }
         }
         await ZoweExplorerApiRegister.getMvsApi(node.profile).copyDataSetMember(
-            { dataSetName: beforeDataSetName, memberName: beforeMemberName },
-            { dataSetName, memberName },
+            {dataSetName: beforeDataSetName, memberName: beforeMemberName},
+            {dataSetName, memberName},
         );
 
         if (memberName) {
@@ -1624,9 +1633,9 @@ export async function refreshUSS(node: ZoweUSSNode) {
 
         if ((isDirty && !node.isDirtyInEditor && !wasSaved) || !isDirty) {
             const response = await ZoweExplorerApiRegister.getUssApi(node.profile).getContents(node.fullPath, {
-            file: ussDocumentFilePath,
-            returnEtag: true
-             });
+                file: ussDocumentFilePath,
+                returnEtag: true
+            });
             node.setEtag(response.apiResponse.etag);
             node.downloaded = true;
 
@@ -1869,18 +1878,18 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
             const oldDocLineCount = doc.lineCount;
             const downloadResponse = await ZoweExplorerApiRegister.getUssApi(node.profile).getContents(
                 node.fullPath, {
-                file: getUSSDocumentFilePath(node),
-                binary,
-                returnEtag: true
-            });
+                    file: getUSSDocumentFilePath(node),
+                    binary,
+                    returnEtag: true
+                });
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
             if (downloadEtag !== etagToUpload) {
                 node.setEtag(downloadEtag);
             }
             node.downloaded = true;
-            
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch","Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
+
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
             const startPosition = new vscode.Position(0, 0);
             const endPosition = new vscode.Position(oldDocLineCount, 0);
             const deleteRange = new vscode.Range(startPosition, endPosition);
@@ -1953,14 +1962,16 @@ export async function openUSS(node: ZoweUSSNode, download = false, previewFile: 
                 const chooseBinary = node.binary ||
                     await ZoweExplorerApiRegister.getUssApi(node.profile).isFileTagBinOrAscii(node.fullPath);
                 const response = await vscode.window.withProgress({
-                    location: vscode.ProgressLocation.Notification,
-                    title: "Opening USS file..."},
+                        location: vscode.ProgressLocation.Notification,
+                        title: "Opening USS file..."
+                    },
                     function downloadUSSFile() {
                         return ZoweExplorerApiRegister.getUssApi(node.profile).getContents(
                             node.fullPath, {
-                            file: documentFilePath,
-                            binary: chooseBinary,
-                            returnEtag: true});
+                                file: documentFilePath,
+                                binary: chooseBinary,
+                                returnEtag: true
+                            });
                     }
                 );
 
