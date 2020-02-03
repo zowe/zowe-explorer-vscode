@@ -1161,8 +1161,8 @@
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
-    "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\"",
+    "lint:src": "tslint --format stylish --exclude \"./__tests__/**/*.ts\" \"src/**/*.ts\"",
+    "lint:tests": "tslint --format stylish \"./__tests__/**/*.ts\"",
     "clean": "gulp clean"
   },
   "engines": {
@@ -1214,6 +1214,7 @@
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
     "isbinaryfile": "^4.0.4",
+    "moment": "^2.24.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

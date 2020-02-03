@@ -9,12 +9,12 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
 import * as utils from "../utils";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {
@@ -56,7 +56,7 @@ export function getDatasetLabel(node: ZoweNode) {
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
+        await ZoweExplorerApiRegister.getMvsApi(node.profile).putContents(doc.fileName, datasetName);
     } catch (e) {
         await utils.errorHandling(e, node.getProfileName(), e.message);
     }

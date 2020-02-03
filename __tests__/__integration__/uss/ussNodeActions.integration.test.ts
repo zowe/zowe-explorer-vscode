@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@brightside/core";
-import { Logger } from "@brightside/imperative";
+import { Logger, IProfileLoaded } from "@brightside/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
@@ -20,16 +20,27 @@ import * as vscode from "vscode";
 import { USSTree } from "../../../src/USSTree";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as extension from "../../../src/extension";
+import { Profiles } from "../../../src/Profiles";
+
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
 // declare var describe: any;
+
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
 
 describe("ussNodeActions integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const sessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
+        null, session, null, false, testProfile.name);
     sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
     const testTree = new USSTree();
     testTree.mSessionNodes.push(sessionNode);

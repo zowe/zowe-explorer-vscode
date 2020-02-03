@@ -9,8 +9,6 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-// tslint:disable-next-line: no-implicit-dependencies
 import { IProfileLoaded, Logger } from "@brightside/imperative";
 import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
 import * as vscode from "vscode";
@@ -18,8 +16,10 @@ import { IZoweTree } from "./ZoweTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
 import { PersistentFilters } from "./PersistentFilters";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -128,25 +128,25 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
-            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (zosmfProfile) {
-                this.addSingleSession(zosmfProfile);
+            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (profile) {
+                this.addSingleSession(profile);
             }
         } else {
-            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const zosmfProfile of zosmfProfiles) {
+            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const profile of allProfiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === zosmfProfile.name) {
-                        this.addSingleSession(zosmfProfile);
+                    if (session === profile.name) {
+                        this.addSingleSession(profile);
                     }
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().defaultProfile);
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
             }
         }
         this.refresh();
@@ -431,8 +431,8 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
-                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
-                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+                const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
                     node = new ZoweUSSNode(nodeName,
@@ -478,22 +478,22 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
      * Adds a single session to the USS tree
      *
      */
-    private async addSingleSession(zosmfProfile: IProfileLoaded) {
-        if (zosmfProfile) {
+    private async addSingleSession(profile: IProfileLoaded) {
+        if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                 return;
             }
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // Uses loaded profile to create a session with the USS API
+            const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
-                             zosmfProfile.name);
+            const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
+                             profile.name);
             node.contextValue = extension.USS_SESSION_CONTEXT;
             node.iconPath = applyIcons(node);
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(zosmfProfile.name);
+            this.mHistory.addSession(profile.name);
         }
     }
 }
