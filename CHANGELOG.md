@@ -2,12 +2,11 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-
 ## `1.2.0`
 
 - Support CLI plugin extensibility Thanks @phaumer
 - Addressed 'Uploading zip file (binary)' silent failures. Thanks @stepanzharychevbroadcom
-- Consistency updates for context menu. Thanks @sladyn98 
+- Consistency updates for context menu. Thanks @sladyn98
 - Automatically use Changelog contents in pipeline as release description. Thanks @awharn
 - Provision of warning message after two failed login attempts. Thanks @jellypuno
 - Consistency, added filter tip to convey ability to add multiple filters entries. Thanks @katelynienaber
