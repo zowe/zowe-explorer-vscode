@@ -51,6 +51,7 @@ describe("Extension Integration Tests", () => {
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
     const testTree = new DatasetTree();
+    testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
