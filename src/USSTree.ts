@@ -52,6 +52,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this.mOnDidChangeTreeData.event;
+    public treeView: vscode.TreeView<ZoweUSSNode>;
 
     private mHistory: PersistentFilters;
     private log: Logger;

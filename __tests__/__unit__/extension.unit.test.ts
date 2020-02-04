@@ -147,12 +147,14 @@ describe("Extension Unit Tests", () => {
     const mkdirSync = jest.fn();
     const moveSync = jest.fn();
     const getAllProfileNames = jest.fn();
-    const createTreeView = jest.fn();
-    const reveal = jest.fn();
+    const mockReveal = jest.fn();
     const createWebviewPanel = jest.fn();
+    const createTreeView = jest.fn();
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
+    const onDidChangeSelection = jest.fn();
+    const onDidChangeVisibility = jest.fn();
     const onDidCollapseElement = jest.fn();
     const onDidExpandElement = jest.fn();
     const existsSync = jest.fn();
@@ -268,12 +270,24 @@ describe("Extension Unit Tests", () => {
         };
     });
     const CliProfileManager = jest.fn().mockImplementation(() => {
-        return {getAllProfileNames, load};
+        return { getAllProfileNames, load };
+    });
+    const TreeView = jest.fn().mockImplementation(() => {
+        return {
+            reveal: mockReveal,
+            onDidExpandElement,
+            onDidCollapseElement,
+            selection: [],
+            onDidChangeSelection,
+            visible: true,
+            onDidChangeVisibility
+        };
     });
     const DatasetTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
             mFavorites: [],
+            treeView: new TreeView(),
             addSession: mockAddZoweSession,
             addHistory: mockAddHistory,
             getHistory: mockGetHistory,
@@ -328,7 +342,6 @@ describe("Extension Unit Tests", () => {
     testTree.mSessionNodes.push(sessNode);
     Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
     Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
-    Object.defineProperty(testTree, "reveal", {value: jest.fn()});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
 
     const testUSSTree = USSTree();
@@ -362,7 +375,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {value: onDidSaveTextDocument});
     Object.defineProperty(vscode.window, "onDidCollapseElement", {value: onDidCollapseElement});
     Object.defineProperty(vscode.window, "onDidExpandElement", {value: onDidExpandElement});
-    Object.defineProperty(vscode.window, "reveal", {value: reveal});
     Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {value: onDidChangeConfiguration});
     Object.defineProperty(fs, "readdirSync", {value: readdirSync});
@@ -459,7 +471,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that activate correctly executes", async () => {
-        createTreeView.mockReturnValue(testTree);
+        createTreeView.mockReturnValue(new TreeView());
 
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(true);
@@ -1194,6 +1206,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
+        createTreeView.mockReturnValue(new TreeView());
         showInputBox.mockReturnValue("node");
         allMembers.mockReturnValue(uploadResponse);
         dataSetList.mockReturnValue(uploadResponse);
@@ -1257,14 +1270,14 @@ describe("Extension Unit Tests", () => {
         expect(showErrorMessage.mock.calls.length).toBe(0);
 
         mockGetHistory.mockReset();
-        testTree.reveal.mockReset();
+        testTree.treeView.reveal.mockReset();
 
         // Testing the addition of new node to tree view
         mockGetHistory.mockReturnValueOnce(["NODE1"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
-        expect(testTree.reveal.mock.calls.length).toBe(1);
+        expect(testTree.treeView.reveal.mock.calls.length).toBe(1);
 
         testTree.addHistory.mockReset();
 
@@ -1326,6 +1339,7 @@ describe("Extension Unit Tests", () => {
         allMembers.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
+        createTreeView.mockReturnValue(new TreeView());
         showInputBox.mockReturnValue("FakeName");
         mockGetHistory.mockReturnValue(["mockHistory"]);
         dataSetList.mockReturnValue(uploadResponse);
@@ -1409,6 +1423,7 @@ describe("Extension Unit Tests", () => {
 
         getConfiguration.mockReturnValue("FakeConfig");
         showInputBox.mockReturnValue("FakeName");
+        createTreeView.mockReturnValue(new TreeView());
         testTree.getChildren.mockReturnValue([new ZoweNode("node", vscode.TreeItemCollapsibleState.None, sessNode,
             null, undefined, undefined, profileOne), sessNode]);
         allMembers.mockReturnValue(uploadResponse);

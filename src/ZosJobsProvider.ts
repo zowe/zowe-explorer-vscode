@@ -66,6 +66,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     public readonly onDidChangeTreeData: vscode.Event<Job | undefined> = this.mOnDidChangeTreeData.event;
     public createOwner = new OwnerFilterDescriptor();
     public createId = new JobIdFilterDescriptor();
+    public treeView: vscode.TreeView<Job>;
 
     private validProfile: number = -1;
     private mHistory: PersistentFilters;

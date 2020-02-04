@@ -228,13 +228,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         });
         // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
-        const databaseView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
-        context.subscriptions.push(databaseView);
+        datasetProvider.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
+        context.subscriptions.push(datasetProvider.treeView);
         if (!ISTHEIA) {
-            databaseView.onDidCollapseElement(async (e) => {
+            datasetProvider.treeView.onDidCollapseElement(async (e) => {
                 datasetProvider.flipState(e.element, false);
             });
-            databaseView.onDidExpandElement(async (e) => {
+            datasetProvider.treeView.onDidExpandElement(async (e) => {
                 datasetProvider.flipState(e.element, true);
             });
         }
@@ -266,13 +266,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             ussFileProvider.onDidChangeConfiguration(e);
         });
-        const ussView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
-        context.subscriptions.push(ussView);
+        ussFileProvider.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
+        context.subscriptions.push(ussFileProvider.treeView);
         if (!ISTHEIA) {
-            ussView.onDidCollapseElement(async (e) => {
+            ussFileProvider.treeView.onDidCollapseElement(async (e) => {
                 ussFileProvider.flipState(e.element, false);
             });
-            ussView.onDidExpandElement(async (e) => {
+            ussFileProvider.treeView.onDidExpandElement(async (e) => {
                 ussFileProvider.flipState(e.element, true);
             });
         }
@@ -321,7 +321,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             const job = jobs.find((jobNode) => {
                 return jobNode.job.jobid === jobid;
             });
-            jobsProvider.setJob(jobView, job);
+            jobsProvider.setJob(jobsProvider.treeView, job);
         });
         vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
         vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueMvsCommand());
@@ -334,13 +334,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
         vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
-        const jobView = vscode.window.createTreeView("zowe.jobs", {treeDataProvider: jobsProvider});
-        context.subscriptions.push(jobView);
+        jobsProvider.treeView = vscode.window.createTreeView("zowe.jobs", {treeDataProvider: jobsProvider});
+        context.subscriptions.push(jobsProvider.treeView);
         if (!ISTHEIA) {
-            jobView.onDidCollapseElement(async (e: { element: Job; }) => {
+            jobsProvider.treeView.onDidCollapseElement(async (e: { element: Job; }) => {
                 jobsProvider.flipState(e.element, false);
             });
-            jobView.onDidExpandElement(async (e: { element: Job; }) => {
+            jobsProvider.treeView.onDidExpandElement(async (e: { element: Job; }) => {
                 jobsProvider.flipState(e.element, true);
             });
         }
@@ -874,8 +874,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
                 node.dirty = true;
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-                const newNodeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
-                newNodeView.reveal(newNode, {select: true});
+                datasetProvider.treeView.reveal(newNode, {select: true});
             }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));

@@ -53,6 +53,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<ZoweNode | undefined> = new vscode.EventEmitter<ZoweNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweNode | undefined> = this.mOnDidChangeTreeData.event;
+    public treeView: vscode.TreeView<ZoweNode>;
     private mHistory: PersistentFilters;
     private log: Logger;
     private validProfile: number = -1;

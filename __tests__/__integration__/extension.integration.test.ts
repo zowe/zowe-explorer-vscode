@@ -249,13 +249,13 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(pattern);
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
+            testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            await testTreeView.reveal(childrenFromTree[0]);
-            expect(childrenFromTree[0]).to.deep.equal(testTreeView.selection[0]);
+            await testTree.treeView.reveal(childrenFromTree[0]);
+            expect(childrenFromTree[0]).to.deep.equal(testTree.treeView.selection[0]);
 
         }).timeout(TIMEOUT);
 
@@ -270,14 +270,14 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(search.toUpperCase());
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
+            testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const sessionChildren = await sessionNode.getChildren();
             const childrenFromTree = await getAllNodes(sessionChildren);
 
             for (const child of childrenFromTree) {
-                await testTreeView.reveal(child);
-                expect(child).to.deep.equal(testTreeView.selection[0]);
+                await testTree.treeView.reveal(child);
+                expect(child).to.deep.equal(testTree.treeView.selection[0]);
             }
         }).timeout(TIMEOUT);
 
@@ -302,7 +302,7 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(searchPattern.toUpperCase());
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
+            testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const childrenFromTree = await sessionNode.getChildren();
             expect(childrenFromTree[0].children).to.deep.equal([]);
@@ -920,17 +920,17 @@ describe("Extension Integration Tests - USS", () => {
             const ussFileProvider = new USSTree();
 
             // Create the TreeView using ussFileProvider to create tree structure
-            const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
+            ussFileProvider.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
 
             const nonFavorites = ussFileProvider.mSessionNodes.filter((node) => node.contextValue !== extension.FAVORITE_CONTEXT );
             const allNodes = await getAllUSSNodes(nonFavorites);
             for (const node of allNodes) {
                 // For each node, select that node in TreeView by calling reveal()
-                await ussTestTreeView.reveal(node);
+                await ussFileProvider.treeView.reveal(node);
                 // Test that the node is successfully selected
-                expect(node).to.deep.equal(ussTestTreeView.selection[0]);
+                expect(node).to.deep.equal(ussFileProvider.treeView.selection[0]);
             }
-            ussTestTreeView.dispose();
+            ussFileProvider.treeView.dispose();
         }).timeout(TIMEOUT);
     });
 
@@ -990,14 +990,14 @@ describe("Extension Integration Tests - USS", () => {
             expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
             expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            const ussTestTreeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
+            ussTestTree.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
 
             const childrenFromTree = await ussSessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
             for (const child of childrenFromTree) {
-                await ussTestTreeView.reveal(child);
-                expect(child).to.deep.equal(ussTestTreeView.selection[0]);
+                await ussTestTree.treeView.reveal(child);
+                expect(child).to.deep.equal(ussTestTree.treeView.selection[0]);
             }
         }).timeout(TIMEOUT);
 
