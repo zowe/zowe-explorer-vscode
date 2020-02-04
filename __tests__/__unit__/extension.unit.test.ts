@@ -1263,7 +1263,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReturnValueOnce(["NODE1"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1, NODE");
+        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
         expect(testTree.reveal.mock.calls.length).toBe(1);
 
         testTree.addHistory.mockReset();
@@ -1507,12 +1507,16 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockReset();
         const deleteSpy = jest.spyOn(mvsApi, "deleteDataSet");
 
-        let node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne);
-        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, undefined, undefined, profileOne);
-        let child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, profileOne);
+        let node = new ZoweNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.Expanded, sessNode, null);
+        const parent = new ZoweNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const parentAsFavorite = new ZoweNode("[sestest]: parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        parentAsFavorite.contextValue = extension.PDS_FAV_CONTEXT;
+        let child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
+        testTree.mFavorites.push(parentAsFavorite);
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
+        findFavoritedNode.mockReturnValue(parentAsFavorite);
         await extension.deleteDataset(node, testTree);
         expect(deleteSpy.mock.calls.length).toBe(1);
         expect(deleteSpy.mock.calls[0][0]).toBe(node.label);
@@ -1564,6 +1568,8 @@ describe("Extension Unit Tests", () => {
         node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
         child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, node, null, undefined, undefined, profileOne);
         await extension.deleteDataset(child, testTree);
+        expect(mockRefreshElement).toHaveBeenCalledWith(parent);
+        expect(mockRefreshElement).toHaveBeenCalledWith(parentAsFavorite);
     });
 
     it("Testing that deleteDataset is executed successfully for favorite", async () => {
@@ -1573,12 +1579,17 @@ describe("Extension Unit Tests", () => {
         const deleteSpy = jest.spyOn(mvsApi, "deleteDataSet");
         mockRemoveFavorite.mockReset();
 
-        const node = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = extension.FAVORITE_CONTEXT;
+        const node = new ZoweNode("HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const nodeAsFavorite = new ZoweNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const child = new ZoweNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, nodeAsFavorite, null);
+        nodeAsFavorite.contextValue = extension.FAVORITE_CONTEXT;
+        sessNode.children.push(node, nodeAsFavorite, child);
+        testTree.mFavorites.push(nodeAsFavorite);
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
+        findNonFavoritedNode.mockReturnValue(node);
+
         await extension.deleteDataset(child, testTree);
 
         expect(deleteSpy.mock.calls.length).toBe(1);
@@ -1587,10 +1598,13 @@ describe("Extension Unit Tests", () => {
         expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.NODE" );
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
+            nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
         expect(unlinkSync.mock.calls.length).toBe(1);
         expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
+            nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
+        expect(findNonFavoritedNode).toBeCalledWith(nodeAsFavorite);
+
+        sessNode.children = [];
     });
 
     it("Testing that deleteDataset is executed successfully for pdsf", async () => {
