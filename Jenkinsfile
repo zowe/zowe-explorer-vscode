@@ -209,14 +209,15 @@ pipeline {
           sh "git config --global user.email \"zowe.robot@gmail.com\""
 
           def vscodePackageJson = readJSON file: "package.json"
-          def version = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
+          def version = "v${vscodePackageJson.version}"
+          def versionName = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
 
-          sh "npx vsce package -o ${version}.vsix"
+          sh "npx vsce package -o ${versionName}.vsix"
 
           // Release to Artifactory
           withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) { script {
-            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${version}.vsix"
-            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${version}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+            def uploadUrlArtifactory = "${DL_ARTIFACTORY_URL}/${versionName}.vsix"
+            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${versionName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
           } }
 
           withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
@@ -235,9 +236,9 @@ pipeline {
             def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
             def releaseParsed = readJSON text: releaseCreated
 
-            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${version}.vsix"
+            def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${versionName}.vsix"
 
-            sh "curl -X POST --data-binary @${version}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
+            sh "curl -X POST --data-binary @${versionName}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
           } }
         } }
       }
