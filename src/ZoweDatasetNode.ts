@@ -11,12 +11,13 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "./extension";
 import { IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -45,8 +46,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 mParent: IZoweDatasetTreeNode,
                 session: Session,
                 contextOverride?: string,
-                private etag?: string) {
-        super(label, collapsibleState, mParent, session);
+                private etag?: string,
+                profile?: IProfileLoaded) {
+        super(label, collapsibleState, mParent, session, profile);
+
         if (contextOverride) {
             this.contextValue = contextOverride;
         } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
@@ -67,7 +70,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.label.trim();
+        return this.getProfile() ? this.getProfile().name : undefined;
     }
 
     /**
@@ -120,21 +123,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[existing.label] = existing;
                 // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed,
+                                                     this, null, undefined, undefined, this.getProfile());
                     elementChildren[temp.label] = temp;
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
-                                    this, null, extension.DS_MIGRATED_FILE_CONTEXT);
+                                                     this, null, extension.DS_MIGRATED_FILE_CONTEXT,
+                        undefined, this.getProfile());
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweDatasetNode for a PS
-                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
-                    temp.command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [temp]};
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
+                                                     this, null, undefined, undefined, this.getProfile());
+                    temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const temp = new ZoweDatasetNode(item.member, vscode.TreeItemCollapsibleState.None, this, null);
-                    temp.command = {command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [temp]};
+                    const temp = new ZoweDatasetNode(item.member, vscode.TreeItemCollapsibleState.None,
+                                                     this, null, undefined, undefined, this.getProfile());
+                    temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 }
             }
@@ -177,7 +184,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {
-                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).dataSet(pattern.trim(), {attributes: true}));
                 }
             } else {
                 // Check if node is a favorite
@@ -185,7 +192,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (this.label.startsWith("[")) {
                     label = this.label.substring(this.label.indexOf(":") + 1).trim();
                 }
-                responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, {attributes: true}));
             }
         } catch (err) {
             await utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);

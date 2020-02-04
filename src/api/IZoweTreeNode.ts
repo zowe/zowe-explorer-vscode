@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import { IJob } from "@brightside/core";
 
 /**
@@ -78,6 +78,10 @@ export interface IZoweTreeNode {
      * Retrieves the session object in use with this node
      */
     getSession(): Session;
+    /**
+     * Retrieves the profile object in use with this node
+     */
+    getProfile(): IProfileLoaded;
 }
 
 /**
@@ -135,7 +139,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Specific profile name in use with this node
      */
     mProfileName?: string;
-
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode
      *
@@ -169,7 +172,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
  * @interface export interface IZoweJobTreeNode extends IZoweTreeNode {
  */
 export interface IZoweJobTreeNode extends IZoweTreeNode {
-
     /**
      * Standard job response document
      * Represents the attributes and status of a z/OS batch job

@@ -10,7 +10,7 @@
 */
 
 import * as zowe from "@brightside/core";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
@@ -20,6 +20,8 @@ import * as utils from "./utils";
 import * as fs from "fs";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
+import { Profiles } from "./Profiles";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -37,6 +39,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public binary = false;
     public profileName = "";
     public shortLabel = "";
+    // public profile: IProfileLoaded; // TODO: This reference should be stored instead of the name
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -56,8 +59,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 private parentPath: string,
                 binary = false,
                 public mProfileName?: string,
-                private etag: string = "") {
-        super(label, collapsibleState, mParent, session);
+                private etag: string = "",
+                profile?: IProfileLoaded) {
+        super(label, collapsibleState, mParent, session, profile);
         this.binary = binary;
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
@@ -82,6 +86,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
+        // TODO: this should not be necessary of each node gets initialized with the profile reference.
+        if (mProfileName) {
+            this.setProfile(Profiles.getInstance().loadNamedProfile(mProfileName));
+        } else if (mParent && mParent.mProfileName) {
+            this.mProfileName = mParent.mProfileName;
+            this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
+        }
+        this.etag = etag ? etag : "";
         utils.applyIcons(this);
     }
 
@@ -130,10 +142,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
             }, () => {
-               return zowe.List.fileList(this.getSession(), this.fullPath);
+               return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
-            utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};

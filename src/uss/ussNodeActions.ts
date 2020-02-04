@@ -22,7 +22,8 @@ import * as path from "path";
 import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
-import { IZoweTreeNode, IZoweUSSTreeNode } from "../api/IZoweTreeNode";
+import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 
 /**
@@ -40,7 +41,7 @@ export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await zowe.Create.uss(node.getSession(), filePath, nodeType);
+            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
@@ -133,7 +134,8 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
     if (newName && newName !== oldLabel) {
         try {
             const newNamePath = path.join(parentPath + newName);
-            await zowe.Utilities.renameUSSFile(originalNode.getSession(), originalNode.fullPath, newNamePath);
+            await ZoweExplorerApiRegister.getUssApi(
+                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
             ussFileProvider.refresh();
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
@@ -145,7 +147,21 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
             throw (err);
         }
     }
+}
 
+/**
+ * Marks file as deleted from disk
+ *
+ * @param {ZoweUSSNode} node
+ */
+export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
+    // tslint:disable-next-line: no-empty
+    catch (err) { }
 }
 
 export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
@@ -186,7 +202,7 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(doc.fileName, ussName);
     } catch (e) {
         utils.errorHandling(e, node.mProfileName, e.message);
     }

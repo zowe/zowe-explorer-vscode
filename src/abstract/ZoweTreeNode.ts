@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 // import * as extension from "../extension";
 
@@ -43,8 +43,13 @@ export class ZoweTreeNode extends vscode.TreeItem {
     constructor(label: string,
                 collapsibleState: vscode.TreeItemCollapsibleState,
                 private mParent: IZoweTreeNode,
-                protected session: Session) {
+                protected session: Session,
+                private profile: IProfileLoaded) {
         super(label, collapsibleState);
+        // TODO Check this
+        if (!profile && mParent && mParent.getProfile()) {
+            this.profile = mParent.getProfile();
+        }
     }
 
     /**
@@ -66,10 +71,41 @@ export class ZoweTreeNode extends vscode.TreeItem {
     }
 
     /**
+     * Returns the IProfileLoaded profile for this node
+     *
+     * @returns {IProfileLoaded}
+     */
+    public getProfile(): IProfileLoaded {
+        return (this.profile) ? this.profile : this.getParent() ? this.getParent().getProfile() : undefined;
+    }
+
+    /**
+     * Implements access to profile name
+     *
+     * @returns {string}
+     */
+    public getProfileName(): string {
+        if (this.profile) {
+            return this.profile.name;
+        }
+        return undefined;
+    }
+
+    /**
      * This is the default was that the label should be accessed as it
      * automatically trims the value
      */
     public getLabel(): string {
         return this.label.trim();
+    }
+
+    /**
+     * Sets the IProfileLoaded profile for this node.
+     * Only used by ZoweTreeNode and should be refactored out
+     *
+     * @param {IProfileLoaded}
+     */
+    protected setProfile(aProfile: IProfileLoaded) {
+        this.profile = aProfile;
     }
 }

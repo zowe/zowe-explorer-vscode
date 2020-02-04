@@ -10,6 +10,7 @@
 */
 
 import * as zowe from "@brightside/core";
+import { Logger, IProfileLoaded } from "@brightside/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 // tslint:disable-next-line:no-implicit-dependencies
@@ -18,14 +19,25 @@ import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
 import * as extension from "../../src/extension";
+import { Profiles } from "../../src/Profiles";
 declare var it: any;
 
-describe("ZoweDatasetNode Integration Tests", async () => {
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
+
+describe("ZoweNode Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
+
     // Uses loaded profile to create a zosmf session with brightside
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
+    const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
+                                         null, session, undefined, undefined, testProfile);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const pattern = testConst.normalPattern.toUpperCase();
@@ -82,9 +94,9 @@ describe("ZoweDatasetNode Integration Tests", async () => {
             new ZoweDatasetNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null)
         ];
 
-        sampleChildren[0].command = { command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
         // tslint:disable-next-line:no-magic-numbers
-        sampleChildren[3].command = { command: "zowe.ZoweDatasetNode.openPS", title: "", arguments: [sampleChildren[3]] };
+        sampleChildren[3].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[3]] };
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessChildren).toEqual(sampleChildren);
