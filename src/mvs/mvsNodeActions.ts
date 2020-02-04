@@ -9,11 +9,12 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
+import * as utils from "../utils";
 import { ZoweNode } from "../ZoweNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
     const fileOpenOptions = {
@@ -31,7 +32,16 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
             await uploadFile(node, doc);
         }
     ));
-    datasetProvider.refresh();
+
+    // refresh Tree View & favorites
+    datasetProvider.refreshElement(node);
+    if (node.contextValue.includes(extension.FAV_SUFFIX) || node.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+        if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
+    } else {
+        const favNode = datasetProvider.findFavoritedNode(node);
+        if (favNode) { datasetProvider.refreshElement(favNode); }
+    }
 }
 
 export function getDatasetLabel(node: ZoweNode) {
@@ -46,8 +56,8 @@ export function getDatasetLabel(node: ZoweNode) {
 export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
+        await ZoweExplorerApiRegister.getMvsApi(node.profile).putContents(doc.fileName, datasetName);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        await utils.errorHandling(e, node.getProfileName(), e.message);
     }
 }

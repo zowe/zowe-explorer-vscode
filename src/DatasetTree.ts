@@ -17,7 +17,8 @@ import * as nls from "vscode-nls";
 import * as extension from "../src/extension";
 import { PersistentFilters } from "./PersistentFilters";
 import { Profiles } from "./Profiles";
-import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper } from "./utils";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { sortTreeItems, applyIcons, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper, errorHandling } from "./utils";
 import { IZoweTree } from "./ZoweTree";
 import { ZoweNode } from "./ZoweNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -83,45 +84,49 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
-                    const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
-                    const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+                    const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                    const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     let node: ZoweNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.DS_PDS_CONTEXT) {
                         node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
-                            this.mFavoriteSession, session);
+                            this.mFavoriteSession, session, undefined, undefined, profile);
                     } else {
                         node = new ZoweNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
-                            this.mFavoriteSession, session);
+                            this.mFavoriteSession, session, undefined, undefined, profile);
                         node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
                     }
                     node.contextValue += extension.FAV_SUFFIX;
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
                 } catch(e) {
-                    vscode.window.showErrorMessage(
-                        localize("initializeFavorites.error.profile1",
-                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
-                        localize("intializeFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, ") +
-                        localize("initializeFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
-                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings."));
+                    const errMessage: string =
+                    localize("initializeFavorites.error.profile1",
+                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                    localize("intializeFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                    getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
+                    await errorHandling(e, null, errMessage);
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-                let zosmfProfile: IProfileLoaded;
+                let profile: IProfileLoaded;
                 try {
-                    zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                    profile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
-                    vscode.window.showErrorMessage(localize("loadNamedProfile.error.profileName",
-                        "Initialization Error: Could not find profile named: ")
-                        + sesName + localize("loadNamedProfile.error.period", "."));
+                    const errMessage: string =
+                    localize("loadNamedProfile.error.profileName",
+                    "Initialization Error: Could not find profile named: ") +
+                    + sesName +
+                    localize("loadNamedProfile.error.period", ".");
+                    await errorHandling(error, null, errMessage);
                     continue;
                 }
-                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+                const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 const node = new ZoweNode(line.substring(0, line.lastIndexOf("{")),
-                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session);
+                    vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session, undefined, undefined, profile);
                 node.command = { command: "zowe.pattern", title: "", arguments: [node] };
                 const light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
                 const dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
@@ -201,8 +206,8 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 this.addSingleSession(zosmfProfile);
             }
         } else {
-            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const zosmfProfile of zosmfProfiles) {
+            const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const zosmfProfile of profiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                     continue;
@@ -214,7 +219,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().defaultProfile);
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
             }
         }
         this.refresh();
@@ -251,21 +256,20 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             return;
         } else if (node.contextValue === extension.DS_SESSION_CONTEXT) {
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
-                this.mFavoriteSession, node.getSession());
+                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.profile);
             temp.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
             temp.iconPath =  applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
         } else {    // pds | ds
             temp = new ZoweNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
-                this.mFavoriteSession, node.getSession());
+                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.profile);
             temp.contextValue += extension.FAV_SUFFIX;
-            if (temp.contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
+            if (temp.contextValue === extension.DS_DS_CONTEXT + extension.FAV_SUFFIX) {
                 temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
             temp.iconPath = applyIcons(temp);
         }
-        const sessionContext = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         if (!this.mFavorites.find((tempNode) =>
             (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
@@ -374,93 +378,6 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         return this.mHistory.getHistory();
     }
 
-    public async addRecall(criteria: string) {
-        this.mHistory.addRecall(criteria);
-        this.refresh();
-    }
-
-    public getRecall() {
-        return this.mHistory.getRecall();
-    }
-
-    public removeRecall(name) {
-        this.mHistory.removeRecall(name);
-    }
-
-    public async recentMemberPrompt(datasetProvider: DatasetTree) {
-        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
-        let pattern: string;
-        let parentNode: ZoweNode;
-
-        // Get user selection
-        if (datasetProvider.getRecall().length > 0) {
-            const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
-            const items: vscode.QuickPickItem[] = datasetProvider.getRecall().map((element) => new FilterItem(element));
-            if (extension.ISTHEIA) {
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open")
-                };
-
-                const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
-                if (!choice) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                    return;
-                }
-                pattern = choice === createPick ? "" : choice.label;
-            } else {
-                const quickpick = vscode.window.createQuickPick();
-                quickpick.items = [createPick, ...items];
-                quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member to open");
-                quickpick.ignoreFocusOut = true;
-                quickpick.show();
-                const choice = await resolveQuickPickHelper(quickpick);
-                quickpick.hide();
-                if (!choice || choice === createPick) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                    return;
-                } else if (choice instanceof FilterDescriptor) {
-                    if (quickpick.value) {
-                        pattern = quickpick.value;
-                    }
-                } else {
-                    pattern = choice.label;
-                }
-            }
-
-            // Find the selected member's parent node
-            const favoritesAndSessions = [...datasetProvider.mFavorites, ...datasetProvider.mSessionNodes];
-            let i: ZoweNode;
-            const nodeName = pattern.substring(0, pattern.indexOf("("));
-            favoritesAndSessions.forEach((thisNode) => {
-                if (thisNode.contextValue === extension.FAVORITE_CONTEXT || thisNode.contextValue === extension.PDS_FAV_CONTEXT) {
-                    const faveName = thisNode.label.substring(thisNode.label.indexOf(":") + 2);
-                    i = (faveName === nodeName) ? thisNode : null;
-                } else {
-                    i = thisNode.children.find((child) => child.label === nodeName);
-                }
-                parentNode = (i) ? i : parentNode;
-            });
-
-            // Update the treeview with the new pattern
-            const memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
-            const node = new ZoweNode(memberName, vscode.TreeItemCollapsibleState.Expanded, parentNode, null);
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            node.dirty = true;
-            node.contextValue = extension.DS_MEMBER_CONTEXT;
-            node.iconPath = applyIcons(node, extension.ICON_STATE_OPEN);
-
-            // Open the member
-            extension.openPS(node, true, datasetProvider);
-        } else {
-            vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
-            return;
-        }
-        if (!pattern) {
-            vscode.window.showInformationMessage(localize("enterPattern.noPattern", "No pattern entered."));
-            return;
-        }
-    }
-
     public async datasetFilterPrompt(node: ZoweNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
@@ -482,7 +399,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                     baseEncd = values [2];
                 }
             } catch (error) {
-                vscode.window.showErrorMessage(error.message);
+                await errorHandling(error, node.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `datasetFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -598,7 +515,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                         baseEncd = values [2];
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    await errorHandling(error, element.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `flipState.optionalProfiles!`);
                 }
                 if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                     element.getSession().ISession.user = usrNme;
@@ -627,20 +544,21 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
      * Adds a single session to the data set tree
      *
      */
-    private addSingleSession(zosmfProfile: IProfileLoaded) {
-        if (zosmfProfile) {
+    private addSingleSession(profile: IProfileLoaded) {
+        if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                 return;
             }
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+            // Uses loaded profile to create a session with the MVS API
+            const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session);
+            const node = new ZoweNode(
+                profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
             node.contextValue = extension.DS_SESSION_CONTEXT;
             node.iconPath = applyIcons(node);
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(zosmfProfile.name);
+            this.mHistory.addSession(profile.name);
         }
     }
 }

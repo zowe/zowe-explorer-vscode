@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -58,13 +58,6 @@
         }
       ]
     },
-    "keybindings": [
-      {
-        "command": "zowe.openRecent",
-        "key": "ctrl+alt+r",
-        "mac": "cmd+alt+r"
-      }
-    ],
     "commands": [
       {
         "command": "zowe.uss.copyPath",
@@ -1090,7 +1083,6 @@
             "persistence": true,
             "favorites": [],
             "history": [],
-            "recall": [],
             "sessions": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",
@@ -1101,6 +1093,12 @@
             "folderPath": ""
           },
           "description": "Zowe-Temp-Folder-Loacation",
+          "scope": "window"
+        },
+        "Zowe Security: Credential Key": {
+          "type": "string",
+          "default": "",
+          "description": "%Zowe-Builtin-Security%",
           "scope": "window"
         },
         "Zowe-USS-Persistent": {
@@ -1154,6 +1152,8 @@
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "npm run test:unit",
+    "pretest:integration": "ts-node ./scripts/create-env.ts",
+    "posttest:integration": "ts-node ./scripts/clean-env.ts",
     "update": "node stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
@@ -1161,8 +1161,8 @@
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
-    "lint:src": "tslint --format stylish --exclude \"**/__tests__/**/*.ts\" \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\"",
+    "lint:src": "tslint --format stylish --exclude \"./__tests__/**/*.ts\" \"src/**/*.ts\"",
+    "lint:tests": "tslint --format stylish \"./__tests__/**/*.ts\"",
     "clean": "gulp clean"
   },
   "engines": {
@@ -1196,12 +1196,14 @@
     "jest-html-reporter": "^2.4.0",
     "jsdoc": "^3.6.3",
     "jsdom": "11.11.0",
+    "keytar": "^5.0.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
     "mem": ">=4.0.0",
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
     "ts-jest": "^24.0.2",
+    "ts-node": "^8.6.2",
     "tslint": "^5.17.0",
     "typescript": "^3.5.1",
     "vsce": "^1.60.0",
@@ -1211,6 +1213,8 @@
   "dependencies": {
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
+    "isbinaryfile": "^4.0.4",
+    "moment": "^2.24.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

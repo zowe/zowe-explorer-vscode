@@ -9,6 +9,7 @@
 *                                                                                 *
 */
 
+jest.mock("@brightside/imperative");
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as brtimperative from "@brightside/imperative";
@@ -17,6 +18,7 @@ import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
+import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
 
 const Create = jest.fn();
@@ -44,10 +46,19 @@ const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
+const isBinaryFileSync = jest.fn();
+
+const profileOne: brtimperative.IProfileLoaded = {
+    name: "profile1",
+    profile: {},
+    type: "zosmf",
+    message: "",
+    failNotFound: false
+};
 
 function getUSSNode() {
-    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode1.fullPath = "/u/myuser";
     ussNode1.mParent = mParent;
@@ -55,8 +66,8 @@ function getUSSNode() {
 }
 
 function getFavoriteUSSNode() {
-    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     mParent.contextValue = extension.FAVORITE_CONTEXT;
     ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
@@ -66,8 +77,8 @@ function getFavoriteUSSNode() {
 }
 
 function getUSSTree() {
-    const ussNode1= getUSSNode();
-    const ussNodeFav= getFavoriteUSSNode();
+    const ussNode1 = getUSSNode();
+    const ussNodeFav = getFavoriteUSSNode();
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
@@ -96,32 +107,46 @@ const session = new brtimperative.Session({
     type: "basic",
 });
 
-const ussNode = getUSSNode();
-const ussFavNode = getFavoriteUSSNode();
-const testUSSTree = getUSSTree();
-
-Object.defineProperty(zowe, "Create", { value: Create });
-Object.defineProperty(zowe, "Delete", { value: Delete });
-Object.defineProperty(zowe, "Utilities", { value: Utilities });
-Object.defineProperty(Create, "uss", { value: uss });
-Object.defineProperty(Delete, "ussFile", { value: ussFile });
-Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
-Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
-Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
-Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
-Object.defineProperty(fs, "existsSync", {value: existsSync});
-Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
-
 describe("ussNodeActions", () => {
+
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue(profileOne);
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"},
+                type: "zosmf",
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
+    const ussNode = getUSSNode();
+    const ussFavNode = getFavoriteUSSNode();
+    const testUSSTree = getUSSTree();
+
+    Object.defineProperty(zowe, "Create", { value: Create });
+    Object.defineProperty(zowe, "Delete", { value: Delete });
+    Object.defineProperty(zowe, "Utilities", { value: Utilities });
+    Object.defineProperty(Create, "uss", { value: uss });
+    Object.defineProperty(Delete, "ussFile", { value: ussFile });
+    Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
+    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
+    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+    Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
+    Object.defineProperty(fs, "existsSync", {value: existsSync});
+    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+
     beforeEach(() => {
         showErrorMessage.mockReset();
         testUSSTree.refresh.mockReset();
         testUSSTree.refreshAll.mockReset();
+        testUSSTree.refreshElement.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
         existsSync.mockReturnValue(true);
@@ -170,7 +195,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.createUSSNode(ussNode, testUSSTree, "file");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
@@ -180,6 +205,8 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
+            mockLoadNamedProfile.mockReturnValue(profileOne);
+
             const sessionwocred = new brtimperative.Session({
                 user: "",
                 password: "",
@@ -188,25 +215,31 @@ describe("ussNodeActions", () => {
                 protocol: "https",
                 type: "basic",
             });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        type: "zosmf",
                         promptCredentials: jest.fn(()=> {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                         }),
                     };
                 })
             });
+            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
+                sessionwocred, null, false, profileOne.name);
+            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
 
             showInputBox.mockReturnValueOnce("fake");
             showInputBox.mockReturnValueOnce("fake");
-
+            showQuickPick.mockReturnValueOnce("directory");
             await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
 
             expect(testUSSTree.refresh).toHaveBeenCalled();
@@ -232,8 +265,13 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        type: "zosmf",
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
@@ -266,7 +304,10 @@ describe("ussNodeActions", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: {user: undefined, password: undefined}
+                        }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"}
                     };
                 })
@@ -301,7 +342,7 @@ describe("ussNodeActions", () => {
             });
             try {
                 await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -310,61 +351,78 @@ describe("ussNodeActions", () => {
     });
 
     describe("renameUSSNode", () => {
-        it("should exit if blank input is provided", () => {
+        const executeCommand = jest.fn();
+        Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
+
+        const resetMocks = () => {
+            executeCommand.mockReset();
+            showErrorMessage.mockReset();
+            renameUSSFile.mockReset();
+            showInputBox.mockReset();
+        };
+        const resetNode = (node: ZoweUSSNode) => {
+          node.label = "";
+          node.shortLabel = "";
+        };
+
+        it("should exit if blank input is provided", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce("");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(0);
+            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
         });
         it("should execute rename USS file and and refresh the tree", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce("new name");
             await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
-            expect(showErrorMessage.mock.calls.length).toBe(0);
-            expect(renameUSSFile.mock.calls.length).toBe(1);
-        });
-        it("should execute rename USS file and and refreshAll the tree", async () => {
-            renameUSSFile.mockReset();
-            showInputBox.mockReturnValueOnce("new name");
-            ussNode.contextValue = extension.USS_DIR_CONTEXT;
-            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, extension.DS_SESSION_CONTEXT);
-            // expect(testUSSTree.refreshAll).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
         });
         it("should attempt rename USS file but abort with no name", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce(undefined);
             await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-        it("should attempt to rename USS file but throw an error", async () => {
-            showErrorMessage.mockReset();
-            showInputBox.mockReturnValueOnce("new name");
-            renameUSSFile.mockImplementationOnce(() => {
-                throw (Error("testError"));
-            });
-            try {
-                await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            // tslint:disable-next-line:no-empty
-            } catch (err) {
-            }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
+            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
         });
         it("should execute rename favorite USS file", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce("new name");
             await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
             expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
             expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
         });
+        it("should attempt to rename USS file but throw an error", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("new name");
+            renameUSSFile.mockRejectedValueOnce(Error("testError"));
+            try {
+                await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
+                // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
     });
     describe("uploadFile", () => {
         Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
+        Object.defineProperty(isbinaryfile, "isBinaryFileSync", {value: isBinaryFileSync});
 
-        it("should call upload dialog and upload file", async () => {
+        it("should call upload dialog and upload not binary file", async () => {
             fileToUSSFile.mockReset();
             const testDoc2: vscode.TextDocument = {
                 fileName: path.normalize("/sestest/tmp/foo.txt"),
@@ -389,9 +447,22 @@ describe("ussNodeActions", () => {
             const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
+            isBinaryFileSync.mockReturnValueOnce(false);
             await ussNodeActions.uploadDialog(ussNode, testUSSTree);
             expect(showOpenDialog).toBeCalled();
             expect(openTextDocument).toBeCalled();
+            expect(testUSSTree.refresh).toBeCalled();
+        });
+        it("should call upload dialog and upload binary file", async () => {
+            showErrorMessage.mockReset();
+            fileToUSSFile.mockReset();
+
+            const fileUri = {fsPath: "/tmp/foo.zip"};
+            showOpenDialog.mockReturnValue([fileUri]);
+            isBinaryFileSync.mockReturnValueOnce(true);
+            await ussNodeActions.uploadDialog(ussNode, testUSSTree);
+
+            expect(showOpenDialog).toBeCalled();
             expect(testUSSTree.refresh).toBeCalled();
         });
         it("should attempt to upload USS file but throw an error", async () => {
@@ -423,10 +494,11 @@ describe("ussNodeActions", () => {
             const fileUri = {fsPath: "/tmp/foo.txt"};
             showOpenDialog.mockReturnValue([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
+            isBinaryFileSync.mockReturnValueOnce(false);
 
             try {
                 await ussNodeActions.uploadDialog(ussNode, testUSSTree);
-            // tslint:disable-next-line:no-empty
+                // tslint:disable-next-line:no-empty
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -439,7 +511,7 @@ describe("ussNodeActions", () => {
         });
         it("should not copy the node's full path to the system clipboard if theia", async () => {
             let theia = true;
-            Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
+            Object.defineProperty(extension, "ISTHEIA", {get: () => theia});
             await ussNodeActions.copyPath(ussNode);
             expect(writeText).not.toBeCalled();
             theia = false;

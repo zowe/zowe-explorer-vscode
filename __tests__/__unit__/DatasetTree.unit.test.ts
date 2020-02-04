@@ -11,14 +11,16 @@
 
 jest.mock("vscode");
 jest.mock("fs");
+jest.mock("util");
 jest.mock("Session");
 jest.mock("@brightside/core");
 jest.mock("@brightside/imperative");
+jest.mock("isbinaryfile");
 jest.mock("../../src/Profiles");
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
 import { ZoweNode } from "../../src/ZoweNode";
-import { Session, Logger } from "@brightside/imperative";
+import { Session, Logger, IProfileLoaded } from "@brightside/imperative";
 import * as zowe from "@brightside/core";
 import * as utils from "../../src/utils";
 import { Profiles } from "../../src/Profiles";
@@ -35,69 +37,16 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    const DatasetTreeTest = jest.fn().mockImplementation(() => {
-        return {
-            mSessionNodes: [],
-            mFavorites: [],
-            addSession: mockAddZoweSession,
-            addHistory: mockAddHistory,
-            addRecall: mockAddRecall,
-            refresh: mockRefresh,
-            refreshElement: mockRefreshElement,
-            getChildren: mockGetChildren,
-            getRecall: mockGetRecall,
-            removeFavorite: mockRemoveFavorite,
-            enterPattern: mockPattern,
-            initializeFavorites: mockInitialize,
-            renameFavorite: mockRenameFavorite,
-            updateFavorites: mockUpdateFavorites,
-            renameNode: mockRenameNode,
-            removeRecall: mockRemoveRecall,
-            findFavoritedNode,
-            findNonFavoritedNode,
-        };
-    });
-
-    const ProgressLocation = jest.fn().mockImplementation(() => {
-        return {
-            Notification: 15
-        };
-    });
-    const withProgress = jest.fn().mockImplementation(() => {
-        return {
-            location: 15,
-            title: "Saving file..."
-        };
-    });
-
     // Filter prompt
     const showInformationMessage = jest.fn();
+    const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
-    const openTextDocument = jest.fn();
-    const showTextDocument = jest.fn();
-    const recentMemberPrompt = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
-    const findFavoritedNode = jest.fn();
-    const findNonFavoritedNode = jest.fn();
-    const mockRenameFavorite = jest.fn();
-    const mockUpdateFavorites = jest.fn();
-    const mockRenameNode = jest.fn();
-    const mockRemoveRecall = jest.fn();
-    const mockInitialize = jest.fn();
-    const mockPattern = jest.fn();
-    const mockRemoveFavorite = jest.fn();
-    const mockGetChildren = jest.fn();
-    const mockGetRecall = jest.fn();
-    const mockAddZoweSession = jest.fn();
-    const mockAddHistory = jest.fn();
-    const mockAddRecall = jest.fn();
-    const mockRefresh = jest.fn();
-    const mockRefreshElement = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
         value: jest.fn(() => {
@@ -106,16 +55,26 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-    Object.defineProperty(vscode.window, "openRecent", {value: recentMemberPrompt});
-    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
-    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
-    Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
-    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
@@ -140,7 +99,14 @@ describe("DatasetTree Unit Tests", () => {
     });
     Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
     const mockLoadNamedProfile = jest.fn();
-    mockLoadNamedProfile.mockReturnValue({name:"aProfile", profile: {name:"aProfile", type:"zosmf", profile:{name:"aProfile", type:"zosmf"}}});
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+    mockLoadNamedProfile.mockReturnValue(profileOne);
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -150,21 +116,17 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
-    Profiles.createInstance(Logger.getAppLogger());
-
     const testTree = new DatasetTree();
-    testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session));
+    testTree.mSessionNodes.push(new ZoweNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne));
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
 
-    const testTree2 = new DatasetTreeTest();
-    testTree2.mSessionNodes = [];
-    Object.defineProperty(testTree2, "onDidExpandElement", {value: jest.fn()});
-    Object.defineProperty(testTree2, "onDidCollapseElement", {value: jest.fn()});
-    Object.defineProperty(testTree2, "getRecall", {value: jest.fn()});
-    Object.defineProperty(testTree2, "reveal", {value: jest.fn()});
-    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
 
     afterAll(() => {
         jest.restoreAllMocks();
@@ -257,10 +219,13 @@ describe("DatasetTree Unit Tests", () => {
         const sessChildren = await testTree.getChildren(testTree.mSessionNodes[1]);
         // Creating fake datasets and dataset members to test
         const sampleChildren: ZoweNode[] = [
-            new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null),
-            new ZoweNode("BRTVS99.CA10", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null, extension.DS_MIGRATED_FILE_CONTEXT),
-            new ZoweNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
-            new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null),
+            new ZoweNode("BRTVS99", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null, undefined, undefined, profileOne),
+            new ZoweNode("BRTVS99.CA10", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1],
+                null, extension.DS_MIGRATED_FILE_CONTEXT, undefined, profileOne),
+            new ZoweNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
+                null, undefined, undefined, profileOne),
+            new ZoweNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
+            null, undefined, undefined, profileOne),
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -312,15 +277,8 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Tests the getHistory command", async () => {
         testTree.addHistory("testHistory");
+        const sampleElement = new ZoweNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         expect(testTree.getHistory()[0]).toEqual("testHistory");
-    });
-
-    /*************************************************************************************************************
-     * Test the getRecall command
-     *************************************************************************************************************/
-    it("Tests the getRecall command", async () => {
-        testTree.addRecall("testHistory");
-        expect(testTree.getRecall()[0]).toEqual("testHistory");
     });
 
     /*************************************************************************************************************
@@ -550,70 +508,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
     });
 
-    /*************************************************************************************************************
-     * Recent Member Prompts
-     *************************************************************************************************************/
-    it("Testing that recentMemberPrompt (opening a recent member) is executed successfully", async () => {
-        testTree.initialize(Logger.getAppLogger());
-        const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
-        sessNode.pattern = "test hlq";
-        testTree2.mSessionNodes.push(sessNode);
-        const parent = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-        child.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        child.dirty = true;
-        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
-        );
-        testTree2.getRecall.mockReturnValue([child.label]);
-        createQuickPick.mockReturnValue({
-            activeItems: [child.label],
-            ignoreFocusOut: true,
-            items: [child.label],
-            value: "node(child)",
-            show: jest.fn(() => {
-                return {};
-            }),
-            hide: jest.fn(() => {
-                return {};
-            }),
-            onDidAccept: jest.fn(() => {
-                return {};
-            })
-        });
-
-        sessNode.children.push(parent);
-
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        const openPS = jest.spyOn(extension, "openPS");
-        await testTree.recentMemberPrompt(testTree2);
-
-        expect(openPS).toBeCalledWith(child, true, testTree2);
-
-        sessNode.children.pop();
-
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-    });
-
-    it("Testing that recentMemberPrompt fails if no members were opened recently", async () => {
-        testTree.initialize(Logger.getAppLogger());
-        testTree2.getRecall.mockReturnValue([]);
-        const openPS = jest.spyOn(extension, "openPS");
-
-        testTree2.addRecall.mockReset();
-        openPS.mockReset();
-
-        await testTree.recentMemberPrompt(testTree2);
-
-        expect(testTree2.getRecall).toHaveReturnedWith([]);
-        expect(openPS).toBeCalledTimes(0);
-    });
-
-    /*************************************************************************************************************
+     /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully, theia route", async () => {
@@ -659,7 +554,7 @@ describe("DatasetTree Unit Tests", () => {
     it("Testing that user filter prompts are executed successfully for favorites", async () => {
         // Executing from favorites
         const favoriteSearch = new ZoweNode("[aProfile]: HLQ.PROD1.STUFF",
-        vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], session);
+            vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], session, undefined, undefined, profileOne);
         favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
         const checkSession = jest.spyOn(testTree, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
@@ -1017,5 +912,21 @@ describe("DatasetTree Unit Tests", () => {
 
         expect(foundNode).toBe(nonFavoritedNode);
         sessionNode.children.pop();
+    });
+
+    it("tests utils error handling", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showErrorMessage.mockReset();
+
+        const label = "invalidCred";
+        // tslint:disable-next-line: object-literal-key-quotes
+        const error = {"mDetails": {"errorCode": 401}};
+        await utils.errorHandling(error, label);
+
+        expect(showErrorMessage.mock.calls.length).toEqual(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        `\n${label}\n` +
+        " are valid or this may lead to a lock-out.");
     });
 });

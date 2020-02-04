@@ -16,7 +16,7 @@ import * as nls from "vscode-nls";
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
-import { FilterDescriptor, FilterItem, resolveQuickPickHelper } from "../utils";
+import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -129,10 +129,11 @@ export class MvsCommandHandler {
                 response = choice === createPick ? "" : choice.label;
             } else {
                 const quickpick = vscode.window.createQuickPick();
-                quickpick.placeholder = localize("issueMvsCommand.command.hostname", "Select a command to run against ") + hostname +
-                                                (alwaysEdit ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)") :
-                                                        localize("issueMvsCommand.command.immediately", " immediately"));
-                // quickpick.placeholder = localize("issueMvsCommand.options.prompt", "Select and edit a previous command");
+                quickpick.placeholder = alwaysEdit ?
+                                            localize("issueMvsCommand.command.hostnameAlt", "Select a command to run against ") + hostname +
+                                            localize("issueMvsCommand.command.edit", " (An option to edit will follow)"):
+                                            localize("issueMvsCommand.command.hostname", "Select a command to run immediately against ") + hostname;
+
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
                 quickpick.show();
@@ -194,7 +195,7 @@ export class MvsCommandHandler {
                 }
             }
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await errorHandling(error, null, error.message);
         }
         this.history.addHistory(command);
     }

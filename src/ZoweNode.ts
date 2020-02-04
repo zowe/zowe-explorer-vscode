@@ -11,11 +11,13 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { Session } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "../src/extension";
 import { IZoweTreeNode } from "./ZoweTree";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -44,8 +46,12 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                 public mParent: ZoweNode,
                 private session: Session,
                 contextOverride?: string,
-                private etag?: string) {
+                private etag?: string,
+                public profile?: IProfileLoaded) {
         super(label, collapsibleState);
+        if (!profile && mParent && mParent.profile) {
+            this.profile = mParent.profile;
+        }
         if (contextOverride) {
             this.contextValue = contextOverride;
         } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
@@ -67,7 +73,7 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.label.trim();
+        return this.profile ? this.profile.name : undefined;
     }
 
     /**
@@ -96,29 +102,14 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
             throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
         }
 
-        // Check if node is a favorite
-        let label = this.label.trim();
-        if (this.label.startsWith("[")) {
-            label = this.label.substring(this.label.indexOf(":") + 1).trim();
-        }
-
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
-        const responses: zowe.IZosFilesResponse[] = [];
-        try {
-            if (this.contextValue === extension.DS_SESSION_CONTEXT) {
-                this.pattern = this.pattern.toUpperCase();
-                // loop through each pattern
-                for (const pattern of this.pattern.split(",")) {
-                    responses.push(await zowe.List.dataSet(this.getSession(), pattern.trim(), {attributes: true}));
-                }
-            } else {
-                responses.push(await zowe.List.allMembers(this.getSession(), label, {attributes: true}));
-            }
-        } catch (err) {
-            vscode.window.showErrorMessage(localize("getChildren.error.response", "Retrieving response from zowe.List")
-                                                     + `\n${err}\n`);
-            throw Error(localize("getChildren.error.response", "Retrieving response from zowe.List") + `\n${err}\n`);
-        }
+        let responses: zowe.IZosFilesResponse[] = [];
+        responses = await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: localize("ZoweJobNode.getJobs.progress", "Get Dataset list command submitted.")
+        }, () => {
+            return this.getDatasets();
+        });
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -135,19 +126,20 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
                     elementChildren[existing.label] = existing;
                 // Creates a ZoweNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null);
+                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.Collapsed, this, null, undefined, undefined, this.profile);
                     elementChildren[temp.label] = temp;
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, extension.DS_MIGRATED_FILE_CONTEXT);
+                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, extension.DS_MIGRATED_FILE_CONTEXT,
+                        undefined, this.profile);
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweNode for a PS
-                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null);
+                    const temp = new ZoweNode(item.dsname, vscode.TreeItemCollapsibleState.None, this, null, undefined, undefined, this.profile);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 } else {
                     // Creates a ZoweNode for a PDS member
-                    const temp = new ZoweNode(item.member, vscode.TreeItemCollapsibleState.None, this, null);
+                    const temp = new ZoweNode(item.member, vscode.TreeItemCollapsibleState.None, this, null, undefined, undefined, this.profile);
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 }
@@ -197,5 +189,28 @@ export class ZoweNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public setEtag(etagValue): void {
         this.etag = etagValue;
+    }
+
+    private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+        const responses: zowe.IZosFilesResponse[] = [];
+        try {
+            if (this.contextValue === extension.DS_SESSION_CONTEXT) {
+                this.pattern = this.pattern.toUpperCase();
+                // loop through each pattern
+                for (const pattern of this.pattern.split(",")) {
+                    responses.push(await ZoweExplorerApiRegister.getMvsApi(this.profile).dataSet(pattern.trim(), {attributes: true}));
+                }
+            } else {
+                // Check if node is a favorite
+                let label = this.label.trim();
+                if (this.label.startsWith("[")) {
+                    label = this.label.substring(this.label.indexOf(":") + 1).trim();
+                }
+                responses.push(await ZoweExplorerApiRegister.getMvsApi(this.profile).allMembers(label, {attributes: true}));
+            }
+        } catch (err) {
+            await utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+        }
+        return responses;
     }
 }
