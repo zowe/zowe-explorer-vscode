@@ -228,13 +228,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         });
         // Attaches the TreeView as a subscriber to the refresh event of datasetProvider
-        datasetProvider.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
-        context.subscriptions.push(datasetProvider.treeView);
+        const theTreeView = datasetProvider.getTreeView();
+        context.subscriptions.push(theTreeView);
         if (!ISTHEIA) {
-            datasetProvider.treeView.onDidCollapseElement(async (e) => {
+            theTreeView.onDidCollapseElement(async (e) => {
                 datasetProvider.flipState(e.element, false);
             });
-            datasetProvider.treeView.onDidExpandElement(async (e) => {
+            theTreeView.onDidExpandElement(async (e) => {
                 datasetProvider.flipState(e.element, true);
             });
         }
@@ -266,13 +266,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             ussFileProvider.onDidChangeConfiguration(e);
         });
-        ussFileProvider.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
-        context.subscriptions.push(ussFileProvider.treeView);
+        const theTreeView = ussFileProvider.getTreeView();
+        context.subscriptions.push(theTreeView);
         if (!ISTHEIA) {
-            ussFileProvider.treeView.onDidCollapseElement(async (e) => {
+            theTreeView.onDidCollapseElement(async (e) => {
                 ussFileProvider.flipState(e.element, false);
             });
-            ussFileProvider.treeView.onDidExpandElement(async (e) => {
+            theTreeView.onDidExpandElement(async (e) => {
                 ussFileProvider.flipState(e.element, true);
             });
         }
@@ -321,7 +321,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             const job = jobs.find((jobNode) => {
                 return jobNode.job.jobid === jobid;
             });
-            jobsProvider.setJob(jobsProvider.treeView, job);
+            jobsProvider.setJob(jobsProvider.getTreeView(), job);
         });
         vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
         vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueMvsCommand());
@@ -334,13 +334,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
         vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeJobsFavorite(node));
-        jobsProvider.treeView = vscode.window.createTreeView("zowe.jobs", {treeDataProvider: jobsProvider});
-        context.subscriptions.push(jobsProvider.treeView);
+        const theTreeView = jobsProvider.getTreeView();
+        context.subscriptions.push(theTreeView);
         if (!ISTHEIA) {
-            jobsProvider.treeView.onDidCollapseElement(async (e: { element: Job; }) => {
+            theTreeView.onDidCollapseElement(async (e: { element: Job; }) => {
                 jobsProvider.flipState(e.element, false);
             });
-            jobsProvider.treeView.onDidExpandElement(async (e: { element: Job; }) => {
+            theTreeView.onDidExpandElement(async (e: { element: Job; }) => {
                 jobsProvider.flipState(e.element, true);
             });
         }
@@ -874,7 +874,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
                 node.dirty = true;
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-                datasetProvider.treeView.reveal(newNode, {select: true});
+                datasetProvider.getTreeView().reveal(newNode, {select: true});
             }
         } catch (err) {
             log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));

@@ -51,7 +51,6 @@ describe("Extension Integration Tests", () => {
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
     const testTree = new DatasetTree();
-    testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
@@ -250,13 +249,12 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(pattern);
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
-            await testTree.treeView.reveal(childrenFromTree[0]);
-            expect(childrenFromTree[0]).to.deep.equal(testTree.treeView.selection[0]);
+            await testTree.getTreeView().reveal(childrenFromTree[0]);
+            expect(childrenFromTree[0]).to.deep.equal(testTree.getTreeView().selection[0]);
 
         }).timeout(TIMEOUT);
 
@@ -271,14 +269,13 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(search.toUpperCase());
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const sessionChildren = await sessionNode.getChildren();
             const childrenFromTree = await getAllNodes(sessionChildren);
 
             for (const child of childrenFromTree) {
-                await testTree.treeView.reveal(child);
-                expect(child).to.deep.equal(testTree.treeView.selection[0]);
+                await testTree.getTreeView().reveal(child);
+                expect(child).to.deep.equal(testTree.getTreeView().selection[0]);
             }
         }).timeout(TIMEOUT);
 
@@ -302,8 +299,6 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].pattern).to.equal(searchPattern.toUpperCase());
             expect(testTree.mSessionNodes[1].tooltip).to.equal(searchPattern.toUpperCase());
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
-
-            testTree.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
 
             const childrenFromTree = await sessionNode.getChildren();
             expect(childrenFromTree[0].children).to.deep.equal([]);

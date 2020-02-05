@@ -53,7 +53,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<ZoweNode | undefined> = new vscode.EventEmitter<ZoweNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweNode | undefined> = this.mOnDidChangeTreeData.event;
-    public treeView: vscode.TreeView<ZoweNode>;
+    private treeView: vscode.TreeView<ZoweNode>;
     private mHistory: PersistentFilters;
     private log: Logger;
     private validProfile: number = -1;
@@ -64,6 +64,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
         this.mHistory = new PersistentFilters(DatasetTree.persistenceSchema);
+        this.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: this});
     }
 
     /**
@@ -149,6 +150,15 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
      */
     public getTreeItem(element: ZoweNode): vscode.TreeItem {
         return element;
+    }
+
+    /**
+     * Returns the tree view for the current DatasetTree
+     *
+     * @returns {vscode.TreeView<ZoweNode>}
+     */
+    public getTreeView(): vscode.TreeView<ZoweNode> {
+        return this.treeView;
     }
 
     /**

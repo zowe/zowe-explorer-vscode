@@ -214,6 +214,7 @@ describe("Extension Unit Tests", () => {
     const isFile = jest.fn();
     const load = jest.fn();
     const GetJobs = jest.fn();
+    const getTreeView = jest.fn();
     const getSpoolContentById = jest.fn();
     const getJclForJob = jest.fn();
     const DownloadJobs = jest.fn();
@@ -294,6 +295,7 @@ describe("Extension Unit Tests", () => {
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
+            getTreeView,
             removeFavorite: mockRemoveFavorite,
             enterPattern: mockPattern,
             initializeFavorites: mockInitialize,
@@ -312,6 +314,8 @@ describe("Extension Unit Tests", () => {
             refresh: mockUSSRefresh,
             addHistory: mockAddHistory,
             getHistory: mockGetHistory,
+            getTreeView,
+            treeView: new TreeView(),
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
@@ -324,6 +328,8 @@ describe("Extension Unit Tests", () => {
             getChildren: jest.fn(),
             addSession: jest.fn(),
             refresh: jest.fn(),
+            getTreeView,
+            treeView: new TreeView(),
             refreshElement: jest.fn(),
             getProfileName: jest.fn()
         };
@@ -1211,6 +1217,7 @@ describe("Extension Unit Tests", () => {
         allMembers.mockReturnValue(uploadResponse);
         dataSetList.mockReturnValue(uploadResponse);
         mockGetHistory.mockReturnValue([]);
+        testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(sessNode2, testTree);
@@ -1344,6 +1351,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReturnValue(["mockHistory"]);
         dataSetList.mockReturnValue(uploadResponse);
         allMembers.mockReturnValue(uploadResponse);
+        testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
@@ -1429,6 +1437,7 @@ describe("Extension Unit Tests", () => {
         allMembers.mockReturnValue(uploadResponse);
         dataSet.mockReturnValue(uploadResponse);
         mockGetHistory.mockReturnValue(["mockHistory1"]);
+        testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);
@@ -1508,6 +1517,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReturnValueOnce(["mockHistory"]);
         allMembers.mockReturnValueOnce(uploadResponse);
         dataSetList.mockReturnValue(uploadResponse);
+        testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await extension.createFile(newsessNode, testTree);

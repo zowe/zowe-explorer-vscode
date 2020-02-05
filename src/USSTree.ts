@@ -52,7 +52,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
     // Event Emitters used to notify subscribers that the refresh event has fired
     public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this.mOnDidChangeTreeData.event;
-    public treeView: vscode.TreeView<ZoweUSSNode>;
+    private treeView: vscode.TreeView<ZoweUSSNode>;
 
     private mHistory: PersistentFilters;
     private log: Logger;
@@ -66,6 +66,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
         this.mSessionNodes = [this.mFavoriteSession];
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mHistory = new PersistentFilters(USSTree.persistenceSchema);
+        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
     }
 
     /**
@@ -76,6 +77,15 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
      */
     public getTreeItem(element: ZoweUSSNode): vscode.TreeItem {
         return element;
+    }
+
+    /**
+     * Returns the tree view for the current USSTree
+     *
+     * @returns {vscode.TreeView<ZoweUSSNode>}
+     */
+    public getTreeView(): vscode.TreeView<ZoweUSSNode> {
+        return this.treeView;
     }
 
     /**
