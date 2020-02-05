@@ -477,11 +477,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const ussDocumentFilePath = this.getUSSDocumentFilePath();
-            const response1 = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
-                file: ussDocumentFilePath,
-                returnEtag: true
-            });
-            this.setEtag(response1.apiResponse.etag);
             const isDirty = this.isDirtyInEditor;
             let wasSaved = false;
 
@@ -496,11 +491,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
-                const response2 = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
+                const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
                     returnEtag: true
                 });
-                this.setEtag(response2.apiResponse.etag);
+                this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;
 
                 if (isDirty) {

@@ -2164,116 +2164,116 @@ describe("Extension Unit Tests", () => {
 
     });
 
-    // describe("refresh USS checking", () => {
-    //     const isDirtyInEditor = jest.fn();
-    //     const openedDocumentInstance = jest.fn();
+    describe("refresh USS checking", () => {
+        const isDirtyInEditor = jest.fn();
+        const openedDocumentInstance = jest.fn();
 
-    //     const setMocksForNode = (node: ZoweUSSNode) => {
-    //         Object.defineProperty(node, "isDirtyInEditor", {
-    //             get: isDirtyInEditor
-    //         });
-    //         Object.defineProperty(node, "openedDocumentInstance", {
-    //             get: openedDocumentInstance
-    //         });
+        const setMocksForNode = (node: ZoweUSSNode) => {
+            Object.defineProperty(node, "isDirtyInEditor", {
+                get: isDirtyInEditor
+            });
+            Object.defineProperty(node, "openedDocumentInstance", {
+                get: openedDocumentInstance
+            });
 
-    //         node.contextValue = extension.USS_SESSION_CONTEXT;
-    //         node.fullPath = "/u/myuser";
-    //     };
-    //     const resetMocks = () => {
-    //         showErrorMessage.mockReset();
-    //         showTextDocument.mockReset();
-    //         ussFile.mockReset();
-    //         executeCommand.mockReset();
-    //         isDirtyInEditor.mockReset();
-    //         openedDocumentInstance.mockReset();
-    //     };
+            node.contextValue = extension.USS_SESSION_CONTEXT;
+            node.fullPath = "/u/myuser";
+        };
+        const resetMocks = () => {
+            showErrorMessage.mockReset();
+            showTextDocument.mockReset();
+            ussFile.mockReset();
+            executeCommand.mockReset();
+            isDirtyInEditor.mockReset();
+            openedDocumentInstance.mockReset();
+        };
 
-    //     it("refreshUSS works correctly for dirty file state, when user didn't cancel file save", async () => {
-    //         const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+        it("refreshUSS works correctly for dirty file state, when user didn't cancel file save", async () => {
+            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
 
-    //         resetMocks();
-    //         setMocksForNode(node);
+            resetMocks();
+            setMocksForNode(node);
 
-    //         const response: brightside.IZosFilesResponse = {
-    //             success: true,
-    //             commandResponse: null,
-    //             apiResponse: {
-    //                 etag: "132"
-    //             }
-    //         };
-    //         ussFile.mockResolvedValue(response);
-    //         isDirtyInEditor.mockReturnValueOnce(true);
-    //         isDirtyInEditor.mockReturnValueOnce(false);
-    //         await node.refreshUSS();
+            const response: brightside.IZosFilesResponse = {
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    etag: "132"
+                }
+            };
+            ussFile.mockResolvedValue(response);
+            isDirtyInEditor.mockReturnValueOnce(true);
+            isDirtyInEditor.mockReturnValueOnce(false);
+            await node.refreshUSS();
 
-    //         expect(ussFile.mock.calls.length).toBe(1);
-    //         expect(showTextDocument.mock.calls.length).toBe(2);
-    //         expect(executeCommand.mock.calls.length).toBe(1);
-    //         expect(node.downloaded).toBe(true);
-    //     });
-    //     it("refreshUSS works correctly for dirty file state, when user cancelled file save", async () => {
-    //         const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+            expect(ussFile.mock.calls.length).toBe(1);
+            expect(showTextDocument.mock.calls.length).toBe(2);
+            expect(executeCommand.mock.calls.length).toBe(1);
+            expect(node.downloaded).toBe(true);
+        });
+        it("refreshUSS works correctly for dirty file state, when user cancelled file save", async () => {
+            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
 
-    //         resetMocks();
-    //         setMocksForNode(node);
+            resetMocks();
+            setMocksForNode(node);
 
-    //         const response: brightside.IZosFilesResponse = {
-    //             success: true,
-    //             commandResponse: null,
-    //             apiResponse: {
-    //                 etag: "132"
-    //             }
-    //         };
-    //         ussFile.mockResolvedValueOnce(response);
-    //         isDirtyInEditor.mockReturnValueOnce(true);
-    //         isDirtyInEditor.mockReturnValueOnce(true);
-    //         await node.refreshUSS();
+            const response: brightside.IZosFilesResponse = {
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    etag: "132"
+                }
+            };
+            ussFile.mockResolvedValueOnce(response);
+            isDirtyInEditor.mockReturnValueOnce(true);
+            isDirtyInEditor.mockReturnValueOnce(true);
+            await node.refreshUSS();
 
-    //         expect(ussFile.mock.calls.length).toBe(0);
-    //         expect(showTextDocument.mock.calls.length).toBe(1);
-    //         expect(executeCommand.mock.calls.length).toBe(1);
-    //         expect(node.downloaded).toBe(false);
-    //     });
-    //     it("refreshUSS works correctly for not dirty file state", async () => {
-    //         const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+            expect(ussFile.mock.calls.length).toBe(0);
+            expect(showTextDocument.mock.calls.length).toBe(1);
+            expect(executeCommand.mock.calls.length).toBe(1);
+            expect(node.downloaded).toBe(false);
+        });
+        it("refreshUSS works correctly for not dirty file state", async () => {
+            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
 
-    //         resetMocks();
-    //         setMocksForNode(node);
+            resetMocks();
+            setMocksForNode(node);
 
-    //         const response: brightside.IZosFilesResponse = {
-    //             success: true,
-    //             commandResponse: null,
-    //             apiResponse: {
-    //                 etag: "132"
-    //             }
-    //         };
-    //         ussFile.mockResolvedValueOnce(response);
-    //         isDirtyInEditor.mockReturnValueOnce(false);
-    //         isDirtyInEditor.mockReturnValueOnce(false);
-    //         await node.refreshUSS();
+            const response: brightside.IZosFilesResponse = {
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    etag: "132"
+                }
+            };
+            ussFile.mockResolvedValueOnce(response);
+            isDirtyInEditor.mockReturnValueOnce(false);
+            isDirtyInEditor.mockReturnValueOnce(false);
+            await node.refreshUSS();
 
-    //         expect(ussFile.mock.calls.length).toBe(1);
-    //         expect(showTextDocument.mock.calls.length).toBe(0);
-    //         expect(executeCommand.mock.calls.length).toBe(0);
-    //         expect(node.downloaded).toBe(true);
-    //     });
-    //     it("refreshUSS works correctly with exception thrown in process", async () => {
-    //         const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
+            expect(ussFile.mock.calls.length).toBe(1);
+            expect(showTextDocument.mock.calls.length).toBe(0);
+            expect(executeCommand.mock.calls.length).toBe(0);
+            expect(node.downloaded).toBe(true);
+        });
+        it("refreshUSS works correctly with exception thrown in process", async () => {
+            const node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
 
-    //         resetMocks();
-    //         setMocksForNode(node);
+            resetMocks();
+            setMocksForNode(node);
 
-    //         ussFile.mockRejectedValueOnce(Error(""));
-    //         isDirtyInEditor.mockReturnValueOnce(true);
-    //         isDirtyInEditor.mockReturnValueOnce(false);
-    //         await node.refreshUSS();
+            ussFile.mockRejectedValueOnce(Error(""));
+            isDirtyInEditor.mockReturnValueOnce(true);
+            isDirtyInEditor.mockReturnValueOnce(false);
+            await node.refreshUSS();
 
-    //         expect(ussFile.mock.calls.length).toBe(1);
-    //         expect(showTextDocument.mock.calls.length).toBe(1);
-    //         expect(executeCommand.mock.calls.length).toBe(1);
-    //         expect(node.downloaded).toBe(false);
-    //     });
-    // });
+            expect(ussFile.mock.calls.length).toBe(1);
+            expect(showTextDocument.mock.calls.length).toBe(1);
+            expect(executeCommand.mock.calls.length).toBe(1);
+            expect(node.downloaded).toBe(false);
+        });
+    });
 
     describe("Add USS Session Unit Test", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
