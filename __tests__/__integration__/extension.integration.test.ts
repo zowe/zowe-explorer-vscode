@@ -915,18 +915,15 @@ describe("Extension Integration Tests - USS", () => {
             // Initialize uss file provider
             const ussFileProvider = new USSTree();
 
-            // Create the TreeView using ussFileProvider to create tree structure
-            ussFileProvider.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussFileProvider});
-
             const nonFavorites = ussFileProvider.mSessionNodes.filter((node) => node.contextValue !== extension.FAVORITE_CONTEXT );
             const allNodes = await getAllUSSNodes(nonFavorites);
             for (const node of allNodes) {
                 // For each node, select that node in TreeView by calling reveal()
-                await ussFileProvider.treeView.reveal(node);
+                await ussFileProvider.getTreeView().reveal(node);
                 // Test that the node is successfully selected
-                expect(node).to.deep.equal(ussFileProvider.treeView.selection[0]);
+                expect(node).to.deep.equal(ussFileProvider.getTreeView().selection[0]);
             }
-            ussFileProvider.treeView.dispose();
+            ussFileProvider.getTreeView().dispose();
         }).timeout(TIMEOUT);
     });
 
@@ -986,14 +983,12 @@ describe("Extension Integration Tests - USS", () => {
             expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
             expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            ussTestTree.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
-
             const childrenFromTree = await ussSessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
             for (const child of childrenFromTree) {
-                await ussTestTree.treeView.reveal(child);
-                expect(child).to.deep.equal(ussTestTree.treeView.selection[0]);
+                await ussTestTree.getTreeView().reveal(child);
+                expect(child).to.deep.equal(ussTestTree.getTreeView().selection[0]);
             }
         }).timeout(TIMEOUT);
 
