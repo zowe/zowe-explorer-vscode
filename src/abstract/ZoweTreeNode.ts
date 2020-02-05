@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import { Session, IProfileLoaded } from "@brightside/imperative";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
-// import * as extension from "../extension";
 
 /**
  * Common implementation of functions and methods associated with the
@@ -44,7 +43,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
                 collapsibleState: vscode.TreeItemCollapsibleState,
                 private mParent: IZoweTreeNode,
                 protected session: Session,
-                private profile: IProfileLoaded) {
+                protected profile: IProfileLoaded) {
         super(label, collapsibleState);
         // TODO Check this
         if (!profile && mParent && mParent.getProfile()) {

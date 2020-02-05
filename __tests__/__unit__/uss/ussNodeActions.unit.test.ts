@@ -144,6 +144,7 @@ describe("ussNodeActions", () => {
         showErrorMessage.mockReset();
         testUSSTree.refresh.mockReset();
         testUSSTree.refreshAll.mockReset();
+        testUSSTree.refreshElement.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
         existsSync.mockReturnValue(true);
@@ -349,39 +350,65 @@ describe("ussNodeActions", () => {
     });
 
     describe("renameUSSNode", () => {
-        it("should exit if blank input is provided", () => {
+        const executeCommand = jest.fn();
+        Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
+
+        const resetMocks = () => {
+            executeCommand.mockReset();
+            showErrorMessage.mockReset();
+            renameUSSFile.mockReset();
+            showInputBox.mockReset();
+        };
+        const resetNode = (node: ZoweUSSNode) => {
+          node.label = "";
+          node.shortLabel = "";
+        };
+
+        it("should exit if blank input is provided", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce("");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(0);
+            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
         });
         it("should execute rename USS file and and refresh the tree", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce("new name");
             await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
-            expect(showErrorMessage.mock.calls.length).toBe(0);
-            expect(renameUSSFile.mock.calls.length).toBe(1);
-        });
-        it("should execute rename USS file and and refreshAll the tree", async () => {
-            renameUSSFile.mockReset();
-            showInputBox.mockReturnValueOnce("new name");
-            ussNode.contextValue = extension.USS_DIR_CONTEXT;
-            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, extension.DS_SESSION_CONTEXT);
-            // expect(testUSSTree.refreshAll).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
         });
         it("should attempt rename USS file but abort with no name", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce(undefined);
             await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
+            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
         });
+        // TODO CHeck this has been duplicated
+        // it("should execute rename favorite USS file", async () => {
+        //     resetMocks();
+        //     resetNode(ussNode);
+
+        //     showInputBox.mockReturnValueOnce("new name");
+        //     await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
+        //     expect(showErrorMessage.mock.calls.length).toBe(0);
+        //     expect(renameUSSFile.mock.calls.length).toBe(1);
+        //     expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
+        //     expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
+        // });
         it("should attempt to rename USS file but throw an error", async () => {
-            showErrorMessage.mockReset();
+            resetMocks();
+            resetNode(ussNode);
+
             showInputBox.mockReturnValueOnce("new name");
-            renameUSSFile.mockImplementationOnce(() => {
-                throw (Error("testError"));
-            });
+            renameUSSFile.mockRejectedValueOnce(Error("testError"));
             try {
                 await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
                 // tslint:disable-next-line:no-empty

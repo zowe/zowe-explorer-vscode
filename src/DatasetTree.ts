@@ -54,7 +54,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     constructor() {
         super(DatasetTree.persistenceSchema, new ZoweDatasetNode(localize("Favorites", "Favorites"),
-        vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
+                                                    vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];

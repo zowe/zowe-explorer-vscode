@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { Session, IProfileLoaded } from "@brightside/imperative";
 import { IJob } from "@brightside/core";
+import { IZoweTree } from "./IZoweTree";
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
@@ -123,6 +124,8 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
  * @interface export interface IZoweUSSTreeNode extends IZoweTreeNode {
  */
 export interface IZoweUSSTreeNode extends IZoweTreeNode {
+
+
     /**
      * Retrieves an abridged for of the label
      */
@@ -163,6 +166,53 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {string} newNamePath
      */
     rename?(newNamePath: string);
+    /**
+     * Specifies the field as binary
+     * @param binary true is a binary file otherwise false
+     */
+    setBinary?(binary: boolean);
+    /**
+     * Opens the text document
+     * @return vscode.TextDocument
+     */
+    getOpenedDocumentInstance?(): vscode.TextDocument;
+    /**
+     * Downloads and displays a file in a text editor view
+     *
+     * @param download Download the file default false
+     * @param preview the file, true or false
+     * @param ussFileProvider the tree provider
+     */
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    /**
+     * Returns the local file path for the ZoweUSSNode
+     *
+     */
+    getUSSDocumentFilePath?(): string;
+    /**
+     * Refreshes the node with current mainframe data
+     *
+     */
+    refreshUSS?();
+    /**
+     *
+     * @param ussFileProvider Deletes the USS tree node
+     * @param filePath
+     */
+    deleteUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
+    /**
+     * Process for renaming a USS Node. This could be a Favorite Node
+     *
+     * @param {USSTree} ussFileProvider
+     * @param {string} filePath
+     */
+    renameUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
+    /**
+     * Adds a search node to the USS favorites list
+     *
+     * @param {USSTree} ussFileProvider
+     */
+    addUSSSearchFavorite?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
 }
 
 /**
@@ -192,7 +242,6 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * Attribute of Job query
      */
     owner?: string;
-
     /**
      * Retrieves child nodes of this IZoweJobTreeNode
      *

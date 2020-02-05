@@ -32,7 +32,16 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: Datas
             await uploadFile(node, doc);
         }
     ));
-    datasetProvider.refresh();
+
+    // refresh Tree View & favorites
+    datasetProvider.refreshElement(node);
+    if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+        const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+        if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
+    } else {
+        const favNode = datasetProvider.findFavoritedNode(node);
+        if (favNode) { datasetProvider.refreshElement(favNode); }
+    }
 }
 
 export function getDatasetLabel(node: ZoweDatasetNode) {

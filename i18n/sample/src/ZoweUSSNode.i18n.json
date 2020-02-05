@@ -7,5 +7,13 @@
     "deleteUSSNode.quickPickOption": "Are you sure you want to delete ",
     "deleteUSSNode.showQuickPick.yes": "Yes",
     "deleteUSSNode.showQuickPick.no": "No",
-    "deleteUSSNode.error.node": "Unable to delete node: "
+    "deleteUSSNode.error.node": "Unable to delete node: ",
+    "openUSS.error.invalidNode": "open() called from invalid node.",
+    "refreshUSS.error.invalidNode": "refreshPS() called from invalid node.",
+    "refreshUSS.error.notFound": "not found",
+    "refreshUSS.file1": "Unable to find file: ",
+    "refreshUSS.file2": " was probably deleted.",
+    "openUSS.log.info.failedToOpenAsText.yes": "Yes, re-download",
+    "openUSS.log.info.failedToOpenAsText.no": "No",
+    "openUSS.log.info.failedToOpenAsText": "Failed to open file as text. Do you want to try with re-downloading it as binary?"
 }

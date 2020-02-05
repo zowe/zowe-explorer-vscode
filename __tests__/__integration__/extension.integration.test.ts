@@ -1017,7 +1017,7 @@ describe("Extension Integration Tests - USS", () => {
     });
 
     describe("Saving a USS File", () => {
-
+        // TODO Move to appropriate class
         it("should download, change, and re-upload a file", async () => {
             const changedData = "File Upload Test "+ Math.random().toString(36).slice(2);
 
@@ -1031,7 +1031,7 @@ describe("Extension Integration Tests - USS", () => {
             const localPath = path.join(extension.USS_DIR, "/",  testConst.profile.name,
             dirChildren[0].fullPath);
 
-            await extension.openUSS(dirChildren[0], false, true);
+            await dirChildren[0].openUSS(false, true, ussTestTree);
             const doc = await vscode.workspace.openTextDocument(localPath);
 
             const originalData = doc.getText().trim();
@@ -1044,7 +1044,7 @@ describe("Extension Integration Tests - USS", () => {
             await fs.unlinkSync(localPath);
 
             // Download file
-            await extension.openUSS(dirChildren[0], false, true);
+            await dirChildren[0].openUSS(false, true, ussTestTree);
 
             // Change contents back
             fs.writeFileSync(localPath, originalData);

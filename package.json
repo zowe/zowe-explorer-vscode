@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -1214,6 +1214,7 @@
     "@brightside/core": "^2.36.0",
     "fs-extra": "^8.0.1",
     "isbinaryfile": "^4.0.4",
+    "moment": "^2.24.0",
     "vscode-nls": "^4.1.1"
   },
   "jest": {

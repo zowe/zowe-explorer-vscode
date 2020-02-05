@@ -59,4 +59,14 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param favorite Node to refresh
      */
     refreshElement(node: IZoweTreeNode): void;
+    /**
+     * Event Emitters used to notify subscribers that the refresh event has fired
+     */
+    onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent);
+    /**
+     * Change the state of an expandable node
+     * @param element the node being flipped
+     * @param isOpen the intended state of the the tree view provider, true or false
+     */
+    flipState(element: IZoweTreeNode, isOpen: boolean);
 }
