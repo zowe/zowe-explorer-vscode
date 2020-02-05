@@ -125,7 +125,6 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
  */
 export interface IZoweUSSTreeNode extends IZoweTreeNode {
 
-
     /**
      * Retrieves an abridged for of the label
      */
@@ -171,11 +170,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param binary true is a binary file otherwise false
      */
     setBinary?(binary: boolean);
-    /**
-     * Opens the text document
-     * @return vscode.TextDocument
-     */
-    getOpenedDocumentInstance?(): vscode.TextDocument;
+    // /**
+    //  * Opens the text document
+    //  * @return vscode.TextDocument
+    //  */
+    // getOpenedDocumentInstance?(): vscode.TextDocument;
     /**
      * Downloads and displays a file in a text editor view
      *

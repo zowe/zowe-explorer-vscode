@@ -115,7 +115,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
-        return this.session ? this : this.getParent().getSessionNode(); // as IZoweUSSTreeNode; // TODO BAD
+        return this.session ? this : this.getParent().getSessionNode();
     }
 
     /**
@@ -257,7 +257,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return false;
     }
 
-    public getOpenedDocumentInstance(): vscode.TextDocument {
+    public get openedDocumentInstance(): vscode.TextDocument {
         const openedTextDocuments = vscode.workspace.textDocuments;
         const currentFilePath = this.getUSSDocumentFilePath();
 
@@ -488,7 +488,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (isDirty) {
                 attachRecentSaveListener();
 
-                vscode.window.showTextDocument(this.getOpenedDocumentInstance());
+                vscode.window.showTextDocument(this.openedDocumentInstance);
                 await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
                 wasSaved = getRecentSaveStatus();
 
@@ -565,6 +565,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      */
     public getUSSDocumentFilePath() {
-        return path.join(extension.USS_DIR, "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+        return path.join(extension.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 }
