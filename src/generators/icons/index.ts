@@ -11,7 +11,7 @@
 
 import { TreeItem } from "vscode";
 import { ZoweUSSNode } from "../../ZoweUSSNode";
-import { ZoweNode } from "../../ZoweNode";
+import { ZoweTreeNode } from "../../abstract/ZoweTreeNode";
 
 export enum IconId {
     "document" = "document",
@@ -24,7 +24,7 @@ export enum IconHierarchyType {
     "derived" = "derived"
 }
 
-type CombinedNode = TreeItem | ZoweUSSNode | ZoweNode;
+type CombinedNode = TreeItem | ZoweUSSNode | ZoweTreeNode;
 export interface IIconItem {
     id: IconId;
     type: IconHierarchyType;

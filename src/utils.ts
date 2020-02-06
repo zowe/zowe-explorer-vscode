@@ -13,12 +13,12 @@ import * as path from "path";
 import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-import { ZoweUSSNode } from "./ZoweUSSNode";
-import { ZoweNode } from "./ZoweNode";
+import { IZoweTreeNode } from "./api/IZoweTreeNode";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 
 /*
  * Created this file to be a place where commonly used functions will be defined.
@@ -148,22 +148,8 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
-    let allNodes = new Array<ZoweUSSNode>();
-
-    for (const node of nodes) {
-        allNodes = allNodes.concat(concatUSSChildNodes(node.children));
-        allNodes.push(node);
-    }
-
-    return allNodes;
-}
-
-/*************************************************************************************************************
- * Returns array of all subnodes of given node
- *************************************************************************************************************/
-export function concatChildNodes(nodes: ZoweNode[]) {
-    let allNodes = new Array<ZoweNode>();
+export function concatChildNodes(nodes: IZoweTreeNode[]) {
+    let allNodes = new Array<IZoweTreeNode>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(concatChildNodes(node.children));
