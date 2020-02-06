@@ -66,6 +66,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     public readonly onDidChangeTreeData: vscode.Event<Job | undefined> = this.mOnDidChangeTreeData.event;
     public createOwner = new OwnerFilterDescriptor();
     public createId = new JobIdFilterDescriptor();
+    private treeView: vscode.TreeView<Job>;
 
     private validProfile: number = -1;
     private mHistory: PersistentFilters;
@@ -77,6 +78,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
         this.mHistory = new PersistentFilters(ZosJobsProvider.persistenceSchema);
+        this.treeView = vscode.window.createTreeView("zowe.jobs", {treeDataProvider: this});
     }
 
     public getChildren(element?: Job | undefined): vscode.ProviderResult<Job[]> {
@@ -96,6 +98,16 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     public getTreeItem(element: Job): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
     }
+
+    /**
+     * Returns the tree view for the current JobTree
+     *
+     * @returns {vscode.TreeView<Job>}
+     */
+    public getTreeView(): vscode.TreeView<Job> {
+        return this.treeView;
+    }
+
     public getParent(element: Job): Job {
         return element.mParent;
     }

@@ -69,6 +69,7 @@ describe("Unit Tests (Jest)", () => {
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
     const createQuickPick = jest.fn();
+    const createTreeView = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
@@ -79,7 +80,9 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(filters, "getFilters", { value: getFilters });
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
+    createTreeView.mockReturnValue("testTreeView");
 
     const testTree = new USSTree();
     const profileOne: IProfileLoaded = {
@@ -142,6 +145,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that the uss tree is defined", async () => {
         expect(testTree.mSessionNodes).toBeDefined();
+        expect(testTree.getTreeView()).toEqual("testTreeView");
     });
 
     /*************************************************************************************************************
