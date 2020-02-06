@@ -21,6 +21,7 @@
         ".vscode-test"
     ],
     "include": [
+        "src/**/*.ts",
         "__tests__",
         "resources/testProfileData.example.ts",
         "resources/testProfileData.ts"

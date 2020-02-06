@@ -2,7 +2,6 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es6",
-        "outDir": "out",
         "jsx": "react",
         "lib": [
             "es6", "dom"
@@ -27,9 +26,6 @@
     ],
     "include": [
         "src/**/*.ts",
-        "__tests__",
-        "resources/testProfileData.example.ts",
-        "resources/testProfileData.ts",
         "./node_modules/vscode/vscode.d.ts",
         "./node_modules/vscode/lib/*"
     ]
