@@ -73,14 +73,14 @@ export class CliProfileManager {
 // tslint:disable-next-line:max-classes-per-file
 export class ImperativeConfig {
     public static instance = {
-        cliHome: "/TestLocation/.zowe",
+        cliHome: "./__tests__/.zowe",
         loadedConfig: {}
-    }
+    };
     public loadedConfig = {
-        defaultHome: "/TestLocation/.zowe",
+        defaultHome: "./__tests__/.zowe",
         envVariablePrefix: "ZOWE"
     };
-    public cliHome: "/TestLocation/.zowe";
+    public cliHome: "./__tests__/.zowe";
 
 }
 
