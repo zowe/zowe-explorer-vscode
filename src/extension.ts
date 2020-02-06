@@ -1705,20 +1705,22 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             location: vscode.ProgressLocation.Notification,
             title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
-            return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).putContents(doc.fileName, label, uploadOptions); // TODO MISSED TESTING
+            return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName, label, uploadOptions);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
-            node.setEtag(uploadResponse.apiResponse[0].etag);
+            if (node) {
+                node.setEtag(uploadResponse.apiResponse[0].etag);
+            }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(label, {
+            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
                 file: doc.fileName,
                 returnEtag: true
             });
             // re-assign etag, so that it can be used with subsequent requests
             const downloadEtag = downloadResponse.apiResponse.etag;
-            if (downloadEtag !== node.getEtag()) {
+            if (node && downloadEtag !== node.getEtag()) {
                 node.setEtag(downloadEtag);
             }
             vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
