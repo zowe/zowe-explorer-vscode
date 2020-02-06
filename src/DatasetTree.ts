@@ -162,6 +162,15 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
     }
 
     /**
+     * Sets the tree view for the current USSTree
+     *
+     * @param {vscode.TreeView<ZoweNode>}
+     */
+    public setTreeView(newView) {
+        this.treeView = newView;
+    }
+
+    /**
      * Takes argument of type ZoweNode and retrieves all of the first level children
      *
      * @param {ZoweNode} [element] - Optional parameter; if not passed, returns root session nodes

@@ -89,6 +89,15 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
     }
 
     /**
+     * Sets the tree view for the current USSTree
+     *
+     * @param {vscode.TreeView<ZoweUSSNode>}
+     */
+    public setTreeView(newView) {
+        this.treeView = newView;
+    }
+
+    /**
      * Takes argument of type ZoweUSSNode and retrieves all of the first level children
      *
      * @param {ZoweUSSNode} [element] - Optional parameter; if not passed, returns root session nodes

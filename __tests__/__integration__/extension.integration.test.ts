@@ -249,6 +249,8 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(pattern);
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
+            const newView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
+            testTree.setTreeView(newView);
 
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
@@ -268,7 +270,6 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].pattern).to.equal(search.toUpperCase());
             expect(testTree.mSessionNodes[1].tooltip).to.equal(search.toUpperCase());
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
-
 
             const sessionChildren = await sessionNode.getChildren();
             const childrenFromTree = await getAllNodes(sessionChildren);
@@ -923,7 +924,6 @@ describe("Extension Integration Tests - USS", () => {
                 // Test that the node is successfully selected
                 expect(node).to.deep.equal(ussFileProvider.getTreeView().selection[0]);
             }
-            ussFileProvider.getTreeView().dispose();
         }).timeout(TIMEOUT);
     });
 
@@ -983,8 +983,16 @@ describe("Extension Integration Tests - USS", () => {
             expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
             expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
+            const newView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
+            ussTestTree.setTreeView(newView);
+
             const childrenFromTree = await ussSessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
+
+            for (const child of childrenFromTree) {
+                await ussTestTree.getTreeView().reveal(child);
+                expect(child).to.deep.equal(ussTestTree.getTreeView().selection[0]);
+            }
 
             for (const child of childrenFromTree) {
                 await ussTestTree.getTreeView().reveal(child);
@@ -1050,17 +1058,14 @@ describe("TreeView", () => {
     it("should create the TreeView", async () => {
         // Initialize dataset provider
         const datasetProvider = new DatasetTree();
-        // Create the TreeView using datasetProvider to create tree structure
-        const testTreeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: datasetProvider});
 
         const allNodes = await getAllNodes(datasetProvider.mSessionNodes);
         for (const node of allNodes) {
             // For each node, select that node in TreeView by calling reveal()
-            await testTreeView.reveal(node);
+            await datasetProvider.getTreeView().reveal(node);
             // Test that the node is successfully selected
-            expect(node).to.deep.equal(testTreeView.selection[0]);
+            expect(node).to.deep.equal(datasetProvider.getTreeView().selection[0]);
         }
-        testTreeView.dispose();
     }).timeout(TIMEOUT);
 });
 

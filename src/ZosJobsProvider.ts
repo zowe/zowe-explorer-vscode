@@ -108,6 +108,15 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         return this.treeView;
     }
 
+    /**
+     * Sets the tree view for the current JobTree
+     *
+     * @param {vscode.TreeView<Job>}
+     */
+    public setTreeView(newView) {
+        this.treeView = newView;
+    }
+
     public getParent(element: Job): Job {
         return element.mParent;
     }
