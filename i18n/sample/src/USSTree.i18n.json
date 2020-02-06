@@ -1,7 +1,7 @@
 {
     "Favorites": "Favorites",
-    "ussTree.error": "Error encountered in ",
     "ussFilterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
+    "ussTree.error": "Error encountered in ",
     "searchHistory.options.prompt": "Select a filter",
     "enterPattern.pattern": "No selection made.",
     "ussFilterPrompt.option.prompt.search": "Create a new filter",
