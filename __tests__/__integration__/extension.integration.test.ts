@@ -249,15 +249,11 @@ describe("Extension Integration Tests", () => {
             expect(testTree.mSessionNodes[1].tooltip).to.equal(pattern);
             expect(testTree.mSessionNodes[1].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
-            const newView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: testTree});
-            testTree.setTreeView(newView);
-
             const childrenFromTree = await sessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
             await testTree.getTreeView().reveal(childrenFromTree[0]);
             expect(childrenFromTree[0]).to.deep.equal(testTree.getTreeView().selection[0]);
-
         }).timeout(TIMEOUT);
 
         it("should match data sets for multiple patterns", async () => {
@@ -972,31 +968,25 @@ describe("Extension Integration Tests - USS", () => {
 
     describe("Enter USS Pattern", () => {
         it("should output path that match the user-provided path", async () => {
+            const ussTestTree1 = new USSTree();
+            ussTestTree1.mSessionNodes.splice(-1, 0, ussSessionNode);
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns(fullUSSPath);
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(fullUSSPath));
 
-            await ussTestTree.ussFilterPrompt(ussSessionNode);
+            await ussTestTree1.ussFilterPrompt(ussSessionNode);
 
-            expect(ussTestTree.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
-            expect(ussTestTree.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
-            expect(ussTestTree.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
-
-            const newView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: ussTestTree});
-            ussTestTree.setTreeView(newView);
+            expect(ussTestTree1.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
+            expect(ussTestTree1.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
+            expect(ussTestTree1.mSessionNodes[0].collapsibleState).to.equal(vscode.TreeItemCollapsibleState.Expanded);
 
             const childrenFromTree = await ussSessionNode.getChildren();
             childrenFromTree.unshift(...(await childrenFromTree[0].getChildren()));
 
             for (const child of childrenFromTree) {
-                await ussTestTree.getTreeView().reveal(child);
-                expect(child).to.deep.equal(ussTestTree.getTreeView().selection[0]);
-            }
-
-            for (const child of childrenFromTree) {
-                await ussTestTree.getTreeView().reveal(child);
-                expect(child).to.deep.equal(ussTestTree.getTreeView().selection[0]);
+                await ussTestTree1.getTreeView().reveal(child);
+                expect(child).to.deep.equal(ussTestTree1.getTreeView().selection[0]);
             }
         }).timeout(TIMEOUT);
 
