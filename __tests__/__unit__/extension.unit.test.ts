@@ -246,6 +246,8 @@ describe("Extension Unit Tests", () => {
     const concatUSSChildNodes = jest.fn();
     const ImperativeError  = jest.fn();
     const getProfileName = jest.fn();
+    const HMigrate = jest.fn();
+    const hMigrateDataSet = jest.fn();
     let mockClipboardData: string;
     const fileResponse: brightside.IZosFilesResponse = {
         success: true,
@@ -434,6 +436,8 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { value: cliHome });
+    Object.defineProperty(brightside, "HMigrate", { value: HMigrate });
+    Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
@@ -601,7 +605,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(65);
+        expect(registerCommand.mock.calls.length).toBe(66);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -634,6 +638,7 @@ describe("Extension Unit Tests", () => {
             "zowe.copyDataSet",
             "zowe.pasteDataSet",
             "zowe.renameDataSetMember",
+            "zowe.hMigrateDataSet",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -4099,6 +4104,18 @@ describe("Extension Unit Tests", () => {
                 { dataSetName: "HLQ.TEST.BEFORE.NODE" },
                 { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
             );
+        });
+    });
+    describe("Migrate Data Sets", () => {
+        it("should call HMigrate.hMigrateDataSet on a sequential data set", async () => {
+            const migrateSpy = jest.spyOn(mvsApi, "hMigrateDataSet");
+            const node = new ZoweNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            node.contextValue = extension.DS_DS_CONTEXT;
+
+            await extension.hMigrateDataSet(node);
+
+            expect(migrateSpy.mock.calls.length).toBe(1);
+            expect(migrateSpy).toHaveBeenLastCalledWith("HLQ.TEST.TO.NODE");
         });
     });
 });

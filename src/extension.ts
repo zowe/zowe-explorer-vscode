@@ -36,7 +36,7 @@ import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 // tslint:disable-next-line: no-duplicate-imports
-import { IJobFile, IUploadOptions } from "@brightside/core";
+import { IJobFile, IUploadOptions, HMigrate } from "@brightside/core";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
@@ -213,6 +213,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
         vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => renameDataSetMember(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => hMigrateDataSet(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -1056,6 +1057,18 @@ function getNodeLabels(node: ZoweNode) {
  */
 export async function copyDataSet(node: ZoweNode) {
     return vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(node)));
+}
+
+/**
+ * Paste data sets
+ *
+ * @export
+ * @param {ZoweNode} node - The node to paste to
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function hMigrateDataSet(node: ZoweNode) {
+    const { dataSetName } = getNodeLabels(node);
+    return ZoweExplorerApiRegister.getMvsApi(node.profile).hMigrateDataSet(dataSetName);
 }
 
 /**
