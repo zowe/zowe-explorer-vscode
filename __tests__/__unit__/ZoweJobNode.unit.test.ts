@@ -297,7 +297,10 @@ describe("Zos Jobs Unit Tests", () => {
             expect(job.prefix).toEqual("*");
             job.prefix = "zowe*";
             expect(job.prefix).toEqual("zowe*");
-            job.reset();
+            // reset
+            utils.labelHack(job);
+            job.children = [];
+            job.dirty = true;
         });
 
         it("should set the search jobid to a specific value", async () => {
@@ -308,7 +311,10 @@ describe("Zos Jobs Unit Tests", () => {
             const job = jobs[0];
             job.searchId = "JOB12345";
             expect(job.searchId).toEqual("JOB12345");
-            job.reset();
+            // reset
+            utils.labelHack(job);
+            job.children = [];
+            job.dirty = true;
         });
 
         it("Testing that expand tree is executed successfully", async () => {
@@ -325,7 +331,7 @@ describe("Zos Jobs Unit Tests", () => {
             expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
-                testJobsProvider.mSessionNodes[1].session, iJob, profileOne);
+                testJobsProvider.mSessionNodes[1].getSession(), iJob, profileOne);
             job.contextValue = "job";
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
@@ -343,7 +349,7 @@ describe("Zos Jobs Unit Tests", () => {
             const refresh = jest.fn();
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.profile);
+                jobNode, sessionwocred, iJob, jobNode.getProfile());
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
@@ -376,7 +382,7 @@ describe("Zos Jobs Unit Tests", () => {
             const refresh = jest.fn();
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.profile);
+                jobNode, sessionwocred, iJob, jobNode.getProfile());
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
@@ -395,7 +401,7 @@ describe("Zos Jobs Unit Tests", () => {
          *************************************************************************************************************/
         it("Testing that prompt credentials is called when searchPrompt is triggered", async () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.profile);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
@@ -430,14 +436,52 @@ describe("Zos Jobs Unit Tests", () => {
             expect(newjobNode.searchId).toEqual("");
         });
 
+        /*************************************************************************************************************
+         * Jobs Filter prompts
+         *************************************************************************************************************/
+        it("Testing that prompt credentials is called when searchPrompt is triggered but undefined returned", async () => {
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
+            newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
+            testJobsProvider.initializeJobsTree(Logger.getAppLogger());
+            createQuickPick.mockReturnValue({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [testJobsProvider.createOwner, testJobsProvider.createId],
+                value: "",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+            showInformationMessage.mockReset();
+            showInputBox.mockReturnValueOnce("MYHLQ");
+            showInputBox.mockReturnValueOnce("");
+            showInputBox.mockReturnValueOnce(undefined);
+            await testJobsProvider.searchPrompt(newjobNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
+        });
+
         it("Testing that prompt credentials is called when searchPrompt is triggered for fav", async () => {
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.profile);
+                jobNode, sessionwocred, iJob, jobNode.getProfile());
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            newjobNode.session.ISession.user = "";
-            newjobNode.session.ISession.password = "";
-            newjobNode.session.ISession.base64EncodedAuth = "";
+            newjobNode.getSession().ISession.user = "";
+            newjobNode.getSession().ISession.password = "";
+            newjobNode.getSession().ISession.base64EncodedAuth = "";
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
@@ -491,7 +535,7 @@ describe("Zos Jobs Unit Tests", () => {
 
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.profile);
+                jobNode, sessionwocred, iJob, jobNode.getProfile());
             newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
@@ -721,10 +765,10 @@ describe("Zos Jobs Unit Tests", () => {
             const testTree = await createJobsTree(Logger.getAppLogger());
             testTree.mFavorites = [];
             const job = new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
-                testTree.mSessionNodes[1].session, iJob, profileOne);
+                testTree.mSessionNodes[1].getSession(), iJob, profileOne);
 
             // Check adding job
-            await testTree.addJobsFavorite(job);
+            await testTree.addFavorite(job);
             expect(testTree.mFavorites.length).toEqual(1);
 
             testTree.mSessionNodes[1].owner = "myHLQ";
@@ -751,10 +795,10 @@ describe("Zos Jobs Unit Tests", () => {
             // tslint:disable-next-line: no-magic-numbers
             expect(testTree.mFavorites[3].label).toEqual("[firstProfileName]: MYHLQ(JOB1283)");
 
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
-            testTree.removeJobsFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
+            testTree.removeFavorite(testTree.mFavorites[0]);
             expect(testTree.mFavorites).toEqual([]);
         });
 

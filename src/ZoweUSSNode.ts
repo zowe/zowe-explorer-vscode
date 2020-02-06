@@ -13,17 +13,20 @@ import * as zowe from "@brightside/core";
 import { Session, IProfileLoaded } from "@brightside/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-import { IZoweTreeNode } from "./ZoweTree";
-// tslint:disable-next-line: no-duplicate-imports
+import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 import * as extension from "../src/extension";
 import * as utils from "./utils";
+import * as fs from "fs";
+import * as path from "path";
+import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
+import { IZoweTree } from "./api/IZoweTree";
 import { getIconByNode } from "./generators/icons/index";
 import * as moment from "moment";
 import { injectAdditionalDataToTooltip } from "./utils/uss";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -32,15 +35,16 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  * @class ZoweUSSNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
+export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public fullPath = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-    public children: ZoweUSSNode[] = [];
+    public children: IZoweUSSTreeNode[] = [];
     public binaryFiles = {};
+    public binary = false;
+    public profileName = "";
     public shortLabel = "";
     public downloadedTime = null as string;
-    public profileName = "";
     public profile: IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
 
@@ -49,20 +53,23 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      *
      * @param {string} label - Displayed in the [TreeView]
      * @param {vscode.TreeItemCollapsibleState} collapsibleState - file/directory
-     * @param {ZoweUSSNode} mParent - The parent node
+     * @param {IZoweUSSTreeNode} mParent - The parent node
      * @param {Session} session
      * @param {String} parentPath - The file path of the parent on the server
+     * @param {boolean} binary - Indictaes if this is a text or binary file
      * @param {String} mProfileName - Profile to which the node belongs to
      */
     constructor(label: string,
                 collapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: ZoweUSSNode,
-                private session: Session,
+                mParent: IZoweUSSTreeNode,
+                session: Session,
                 private parentPath: string,
-                public binary = false,
+                binary = false,
                 public mProfileName?: string,
-                private etag?: string) {
-        super(label, collapsibleState);
+                private etag: string = "",
+                profile?: IProfileLoaded) {
+        super(label, collapsibleState, mParent, session, profile);
+        this.binary = binary;
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
@@ -77,7 +84,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        if (mParent && mParent.contextValue === extension.FAVORITE_CONTEXT) {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
@@ -88,10 +95,10 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         }
         // TODO: this should not be necessary of each node gets initialized with the profile reference.
         if (mProfileName) {
-            this.profile = Profiles.getInstance().loadNamedProfile(mProfileName);
+            this.setProfile(Profiles.getInstance().loadNamedProfile(mProfileName));
         } else if (mParent && mParent.mProfileName) {
             this.mProfileName = mParent.mProfileName;
-            this.profile = Profiles.getInstance().loadNamedProfile(mParent.mProfileName);
+            this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
         }
         this.etag = etag ? etag : "";
         utils.applyIcons(this);
@@ -99,7 +106,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
     /**
      * Implements access to profile name
-     * for {IZoweTreeNode}.
+     * for {IZoweUSSTreeNode}.
      *
      * @returns {string}
      */
@@ -107,12 +114,16 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         return this.mProfileName;
     }
 
+    public getSessionNode(): IZoweUSSTreeNode {
+        return this.session ? this : this.getParent().getSessionNode();
+    }
+
     /**
-     * Retrieves child nodes of this ZoweUSSNode
+     * Retrieves child nodes of this IZoweTreeNode
      *
-     * @returns {Promise<ZoweUSSNode[]>}
+     * @returns {Promise<IZoweUSSTreeNode[]>}
      */
-    public async getChildren(): Promise<ZoweUSSNode[]> {
+    public async getChildren(): Promise<IZoweUSSTreeNode[]> {
         if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
             (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
                 this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
@@ -138,7 +149,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
             }, () => {
-               return ZoweExplorerApiRegister.getUssApi(this.profile).fileList(this.fullPath);
+               return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
             utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
@@ -206,24 +217,6 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
     }
 
-    /**
-     * Returns the [Session] for this node
-     *
-     * @returns {Session}
-     */
-    public getSession(): Session {
-        return this.session || this.mParent.getSession();
-    }
-
-    /**
-     * Returns the session node for this node
-     *
-     * @returns {ZoweUSSNode}
-     */
-    public getSessionNode(): ZoweUSSNode {
-        return this.session ? this : this.mParent.getSessionNode();
-    }
-
     public setBinary(binary: boolean) {
         this.binary = binary;
         if (this.binary) {
@@ -233,7 +226,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.mParent && this.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        if (this.getParent() && this.getParent().contextValue === extension.FAVORITE_CONTEXT) {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
                 this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
@@ -253,7 +246,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public get isDirtyInEditor(): boolean {
         const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = extension.getUSSDocumentFilePath(this);
+        const currentFilePath = this.getUSSDocumentFilePath();
 
         for (const document of openedTextDocuments) {
             if (document.fileName === currentFilePath) {
@@ -266,7 +259,7 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
 
     public get openedDocumentInstance(): vscode.TextDocument {
         const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = extension.getUSSDocumentFilePath(this);
+        const currentFilePath = this.getUSSDocumentFilePath();
 
         for (const document of openedTextDocuments) {
             if (document.fileName === currentFilePath) {
@@ -300,6 +293,38 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
+    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
+        // handle zosmf api issue with file paths
+        const nodePath = this.fullPath.startsWith("/") ? this.fullPath.substring(1) : this.fullPath;
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
+        localize("deleteUSSNode.showQuickPick.no", "No")],
+            quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
+            return;
+        }
+        try {
+            const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
+            await zowe.Delete.ussFile(this.getSession(), nodePath, isRecursive);
+            this.getParent().dirty = true;
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            // tslint:disable-next-line: no-empty
+            } catch (err) { }
+        } catch (err) {
+            vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
+            throw (err);
+        }
+
+        // Remove node from the USS Favorites tree
+        ussFileProvider.removeFavorite(this);
+        ussFileProvider.refresh();
+    }
     /**
      * Returns the [etag] for this node
      *
@@ -343,5 +368,198 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         if (icon) {
             this.setIcon(icon.path);
         }
+    }
+    /**
+     * Downloads and displays a file in a text editor view
+     *
+     * @param {IZoweTreeNode} node
+     */
+    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
+        let usrNme: string;
+        let passWrd: string;
+        let baseEncd: string;
+        let validProfile: number = -1;
+        if ((!this.getSession().ISession.user) || (!this.getSession().ISession.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(this.getProfileName());
+                if (values !== undefined) {
+                    usrNme = values[0];
+                    passWrd = values[1];
+                    baseEncd = values[2];
+                }
+            } catch (error) {
+                await utils.errorHandling(error, this.getProfileName(), error.message);
+            }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                this.getSession().ISession.user = usrNme;
+                this.getSession().ISession.password = passWrd;
+                this.getSession().ISession.base64EncodedAuth = baseEncd;
+                validProfile = 0;
+            } else {
+                return;
+            }
+            await ussFileProvider.refreshElement(this);
+            await ussFileProvider.refresh();
+        } else {
+            validProfile = 0;
+        }
+        if (validProfile === 0) {
+            try {
+                let label: string;
+                switch (this.getParent().contextValue) {
+                    case (extension.FAVORITE_CONTEXT):
+                        label = this.label.substring(this.label.indexOf(":") + 1).trim();
+                        break;
+                    // Handle file path for files in directories and favorited directories
+                    case (extension.USS_DIR_CONTEXT):
+                    case (extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX):
+                        label = this.fullPath;
+                        break;
+                    case (extension.USS_SESSION_CONTEXT):
+                        label = this.label;
+                        break;
+                    default:
+                        vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
+                        throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
+                }
+                // if local copy exists, open that instead of pulling from mainframe
+                const documentFilePath = this.getUSSDocumentFilePath();
+                if (download || !fs.existsSync(documentFilePath)) {
+                    const profile = this.getProfile();
+                    const fullPath = this.fullPath;
+                    const chooseBinary = this.binary ||
+                        await ZoweExplorerApiRegister.getUssApi(profile).isFileTagBinOrAscii(this.fullPath);
+                    const response = await vscode.window.withProgress({
+                            location: vscode.ProgressLocation.Notification,
+                            title: "Opening USS file..."
+                        },
+                        function downloadUSSFile() {
+                            return ZoweExplorerApiRegister.getUssApi(profile).getContents(
+                                fullPath, {
+                                    file: documentFilePath,
+                                    binary: chooseBinary,
+                                    returnEtag: true
+                                });
+                        }
+                    );
+
+                    this.downloaded = true;
+                    this.setEtag(response.apiResponse.etag);
+                }
+
+                await this.initializeFileOpening(documentFilePath, previewFile);
+            } catch (err) {
+                await utils.errorHandling(err, this.mProfileName, err.message);
+                throw (err);
+            }
+        }
+    }
+    /**
+     * Refreshes the passed node with current mainframe data
+     *
+     * @param {ZoweUSSNode} node - The node which represents the file
+     */
+    public async refreshUSS() {
+        let label;
+        switch (this.getParent().contextValue) {
+            case (extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX):
+                label = this.fullPath;
+                break;
+            case (extension.USS_DIR_CONTEXT):
+                label = this.fullPath;
+                break;
+            case (extension.USS_SESSION_CONTEXT):
+                label = this.label;
+                break;
+            default:
+                vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
+                throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
+        }
+        try {
+            const ussDocumentFilePath = this.getUSSDocumentFilePath();
+            const isDirty = this.isDirtyInEditor;
+            let wasSaved = false;
+
+            if (isDirty) {
+                attachRecentSaveListener();
+
+                vscode.window.showTextDocument(this.openedDocumentInstance);
+                await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+                wasSaved = getRecentSaveStatus();
+
+                disposeRecentSaveListener();
+            }
+
+            if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
+                const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
+                    file: ussDocumentFilePath,
+                    returnEtag: true
+                });
+                this.setEtag(response.apiResponse.etag);
+                this.downloaded = true;
+
+                if (isDirty) {
+                    await this.initializeFileOpening(ussDocumentFilePath, true);
+                }
+            } else if (wasSaved) {
+                await this.initializeFileOpening(ussDocumentFilePath, true);
+            }
+        } catch (err) {
+            if (err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
+                vscode.window.showInformationMessage(localize("refreshUSS.file1", "Unable to find file: ") + label +
+                    localize("refreshUSS.file2", " was probably deleted."));
+            } else {
+                await utils.errorHandling(err, this.mProfileName, err.message);
+            }
+        }
+    }
+
+    public async initializeFileOpening(documentPath: string, previewFile?: boolean) {
+        let document;
+        let openingTextFailed = false;
+
+        if (!this.binary) {
+            try {
+                document = await vscode.workspace.openTextDocument(documentPath);
+            } catch (err) {
+                openingTextFailed = true;
+            }
+
+            if (openingTextFailed) {
+                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Yes, re-download");
+                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "No");
+
+                const response = await vscode.window.showErrorMessage(
+                    localize(
+                        "openUSS.log.info.failedToOpenAsText",
+                        "Failed to open file as text. Do you want to try with re-downloading it as binary?"),
+                    ...[
+                        yesResponse,
+                        noResponse
+                    ]
+                );
+
+                if (response === yesResponse.toString()) {
+                    await vscode.commands.executeCommand("zowe.uss.binary", this);
+                }
+            } else {
+                if (previewFile === true) {
+                    await vscode.window.showTextDocument(document);
+                } else {
+                    await vscode.window.showTextDocument(document, {preview: false});
+                }
+            }
+        } else {
+            const uriPath = vscode.Uri.file(documentPath);
+            await vscode.commands.executeCommand("vscode.open", uriPath);
+        }
+    }
+
+    /**
+     * Returns the local file path for the ZoweUSSNode
+     *
+     */
+    public getUSSDocumentFilePath() {
+        return path.join(extension.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 }

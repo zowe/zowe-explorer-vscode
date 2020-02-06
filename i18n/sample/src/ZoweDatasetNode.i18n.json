@@ -1,0 +1,8 @@
+{
+    "getChildren.search": "Use the search button to display datasets",
+    "getChildren.error.invalidNode": "Invalid node",
+    "ZoweJobNode.getJobs.progress": "Get Dataset list command submitted.",
+    "getChildren.responses.error": "The response from Zowe CLI was not successful",
+    "getChildren.noDataset": "No datasets found",
+    "getChildren.error.response": "Retrieving response from "
+}

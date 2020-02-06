@@ -1,5 +1,5 @@
 {
-    "FavoriteSession": "Favorites",
+    "Favorites": "Favorites",
     "initializeFavorites.log.debug": "initializing favorites",
     "initializeFavorites.error.profile1": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ",
     "intializeFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
