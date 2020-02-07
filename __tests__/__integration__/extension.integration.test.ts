@@ -808,7 +808,7 @@ describe("Extension Integration Tests", () => {
         });
         describe("Failure Scenarios", () => {
             describe("Migrate a sequential data set", () => {
-                const dataSetName = `${pattern}.test.f1325`;
+                const dataSetName = `${pattern}.TEST.FAIL`;
 
                 it("Should fail if data set doesn't exist", async () => {
                     let error;
