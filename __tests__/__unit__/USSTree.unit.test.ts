@@ -136,7 +136,7 @@ describe("Unit Tests (Jest)", () => {
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
-        expect(testNode.mParent).toBeDefined();
+        expect(testNode.getParent()).toBeDefined();
         expect(testNode.getSession()).toBeDefined();
     });
 
@@ -299,11 +299,11 @@ describe("Unit Tests (Jest)", () => {
         childFile.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
         // Check adding directory
-        await testTree.addUSSFavorite(parentDir);
+        await testTree.addFavorite(parentDir);
         // Check adding duplicates
-        await testTree.addUSSFavorite(parentDir);
+        await testTree.addFavorite(parentDir);
         // Check adding file
-        await testTree.addUSSFavorite(childFile);
+        await testTree.addFavorite(childFile);
 
         expect(testTree.mFavorites.length).toEqual(2);
     });
@@ -326,8 +326,8 @@ describe("Unit Tests (Jest)", () => {
      * Testing that removeFavorite works properly
      *************************************************************************************************************/
     it("Testing that removeFavorite works properly", async () => {
-        testTree.removeUSSFavorite(testTree.mFavorites[0]);
-        testTree.removeUSSFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
 
         expect(testTree.mFavorites).toEqual([]);
     });
@@ -344,14 +344,14 @@ describe("Unit Tests (Jest)", () => {
         childFile.contextValue = extension.USS_SESSION_CONTEXT;
 
         // Check adding file
-        await testTree.addUSSFavorite(childFile);
+        await testTree.addFavorite(childFile);
 
         expect(testTree.mFavorites.length).toEqual(1);
 
         childFile = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.None,
         parentDir, null, "/parent");
         childFile.contextValue = extension.USS_DIR_CONTEXT;
-        await testTree.addUSSFavorite(childFile);
+        await testTree.addFavorite(childFile);
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(2);
 
