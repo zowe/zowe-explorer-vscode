@@ -27,7 +27,6 @@ import { ZoweNode } from "../../src/ZoweNode";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import { Profiles } from "../../src/Profiles";
-import { IListOptions } from "@brightside/core";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -56,13 +55,13 @@ describe("Extension Integration Tests", () => {
 
     let sandbox;
 
-    beforeEach(async function () {
+    beforeEach(async function() {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
         await extension.cleanTempDir();
     });
 
-    afterEach(async function () {
+    afterEach(async function() {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
         try {
@@ -825,7 +824,6 @@ describe("Extension Integration Tests", () => {
                 }).timeout(TIMEOUT);
             });
         });
-        
     });
 
     describe("Updating Temp Folder", () => {
@@ -981,13 +979,13 @@ describe("Extension Integration Tests - USS", () => {
 
     let sandbox;
 
-    beforeEach(async function () {
+    beforeEach(async function() {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
         await extension.deactivate();
     });
 
-    afterEach(async function () {
+    afterEach(async function() {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
