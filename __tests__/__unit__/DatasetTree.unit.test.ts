@@ -45,6 +45,7 @@ describe("DatasetTree Unit Tests", () => {
     const filters = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
+    const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
@@ -71,11 +72,13 @@ describe("DatasetTree Unit Tests", () => {
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
+    createTreeView.mockReturnValue("testTreeView");
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     getConfiguration.mockReturnValue({
@@ -141,6 +144,7 @@ describe("DatasetTree Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that the dataset tree is defined", async () => {
         expect(testTree.mSessionNodes).toBeDefined();
+        expect(testTree.getTreeView()).toEqual("testTreeView");
     });
 
     /*************************************************************************************************************

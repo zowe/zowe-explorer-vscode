@@ -26,8 +26,10 @@ describe("Zos Jobs Unit Tests", () => {
     const GetJobs = jest.fn();
     const getConfiguration = jest.fn();
     const showErrorMessage = jest.fn();
+    const createTreeView = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     getConfiguration.mockReturnValue({
         get: (setting: string) => [
             "[test]: Owner:stonecc Prefix:*{server}",
@@ -37,6 +39,7 @@ describe("Zos Jobs Unit Tests", () => {
             return {};
         })
     });
+    createTreeView.mockReturnValue("testTreeView");
 
     const enums = jest.fn().mockImplementation(() => {
         return {
@@ -230,6 +233,10 @@ describe("Zos Jobs Unit Tests", () => {
             expect(testJobsProvider.mSessionNodes[sessions]).toBeDefined();
             expect(testJobsProvider.mSessionNodes[sessions].label).toEqual("fake");
             expect(testJobsProvider.mSessionNodes[sessions].tooltip).toEqual("fake - owner:  prefix: *");
+        });
+
+        it("tests that the TreeView is created successfully", async () => {
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
         });
 
         it("tests that the user is informed when a job is deleted", async () => {

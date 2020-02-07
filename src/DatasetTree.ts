@@ -54,6 +54,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
     public mFavorites: IZoweDatasetTreeNode[] = [];
+    private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
     constructor() {
         super(DatasetTree.persistenceSchema, new ZoweDatasetNode(localize("Favorites", "Favorites"),
@@ -61,6 +62,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
+        this.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: this});
     }
 
     /**
@@ -152,6 +154,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
             }
         }
+    }
+
+    /**
+     * Returns the tree view for the current DatasetTree
+     *
+     * @returns {vscode.TreeView<ZoweNode>}
+     */
+    public getTreeView(): vscode.TreeView<IZoweDatasetTreeNode> {
+        return this.treeView;
     }
 
     /**
