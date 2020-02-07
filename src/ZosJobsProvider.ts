@@ -63,6 +63,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public mFavorites: IZoweJobTreeNode[] = [];
     public createOwner = new OwnerFilterDescriptor();
     public createId = new JobIdFilterDescriptor();
+    private treeView: vscode.TreeView<IZoweJobTreeNode>;
 
     constructor() {
         super(ZosJobsProvider.persistenceSchema,
@@ -70,6 +71,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
+        this.treeView = vscode.window.createTreeView("zowe.jobs", {treeDataProvider: this});
     }
 
     /**
@@ -90,6 +92,15 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             return element.getChildren();
         }
         return this.mSessionNodes;
+    }
+
+    /**
+     * Returns the tree view for the current JobTree
+     *
+     * @returns {vscode.TreeView<Job>}
+     */
+    public getTreeView(): vscode.TreeView<IZoweJobTreeNode> {
+        return this.treeView;
     }
 
     /**

@@ -49,6 +49,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
     public mFavorites: IZoweUSSTreeNode[] = [];
+    private treeView: vscode.TreeView<IZoweUSSTreeNode>;
 
     constructor() {
         super(USSTree.persistenceSchema, new ZoweUSSNode(localize("Favorites", "Favorites"),
@@ -56,6 +57,16 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
+        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
+    }
+
+    /**
+     * Returns the tree view for the current USSTree
+     *
+     * @returns {vscode.TreeView<ZoweUSSNode>}
+     */
+    public getTreeView(): vscode.TreeView<IZoweUSSTreeNode> {
+        return this.treeView;
     }
 
     /**
