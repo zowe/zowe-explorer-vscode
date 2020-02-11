@@ -31,8 +31,8 @@ const mockaddZoweSession = jest.fn();
 const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
-const mockRemoveUSSFavorite = jest.fn();
-const mockAddUSSFavorite = jest.fn();
+const mockRemoveFavorite = jest.fn();
+const mockAddFavorite = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
@@ -57,11 +57,10 @@ const profileOne: brtimperative.IProfileLoaded = {
 };
 
 function getUSSNode() {
-    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+    const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
     ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
     ussNode1.fullPath = "/u/myuser";
-    ussNode1.mParent = mParent;
     return ussNode1;
 }
 
@@ -72,7 +71,6 @@ function getFavoriteUSSNode() {
     ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";
-    ussNodeF.mParent = mParent;
     return ussNodeF;
 }
 
@@ -88,8 +86,8 @@ function getUSSTree() {
             refreshAll: mockUSSRefresh,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
-            addUSSFavorite: mockAddUSSFavorite,
-            removeUSSFavorite: mockRemoveUSSFavorite,
+            addFavorite: mockAddFavorite,
+            removeFavorite: mockRemoveFavorite,
             initializeUSSFavorites: mockInitializeFavorites
         };
     });
@@ -318,20 +316,21 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
     });
+
     describe("deleteUSSNode", () => {
         it("should delete node if user verified", async () => {
             showQuickPick.mockResolvedValueOnce("Yes");
-            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNode.deleteUSSNode(testUSSTree, "");
             expect(testUSSTree.refresh).toHaveBeenCalled();
         });
         it("should not delete node if user did not verify", async () => {
             showQuickPick.mockResolvedValueOnce("No");
-            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNode.deleteUSSNode(testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
         it("should not delete node if user cancelled", async () => {
             showQuickPick.mockResolvedValueOnce(undefined);
-            await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
+            await ussNode.deleteUSSNode(testUSSTree, "");
             expect(testUSSTree.refresh).not.toHaveBeenCalled();
         });
         it("should not delete node if an error thrown", async () => {
@@ -341,7 +340,7 @@ describe("ussNodeActions", () => {
                 throw (Error("testError"));
             });
             try {
-                await ussNodeActions.deleteUSSNode(ussNode, testUSSTree, "");
+                await ussNode.deleteUSSNode(testUSSTree, "");
                 // tslint:disable-next-line:no-empty
             } catch (err) {
             }
@@ -392,17 +391,18 @@ describe("ussNodeActions", () => {
             await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
             expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
         });
-        it("should execute rename favorite USS file", async () => {
-            resetMocks();
-            resetNode(ussNode);
+        // TODO CHeck this has been duplicated
+        // it("should execute rename favorite USS file", async () => {
+        //     resetMocks();
+        //     resetNode(ussNode);
 
-            showInputBox.mockReturnValueOnce("new name");
-            await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-            expect(showErrorMessage.mock.calls.length).toBe(0);
-            expect(renameUSSFile.mock.calls.length).toBe(1);
-            expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
-            expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
-        });
+        //     showInputBox.mockReturnValueOnce("new name");
+        //     await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
+        //     expect(showErrorMessage.mock.calls.length).toBe(0);
+        //     expect(renameUSSFile.mock.calls.length).toBe(1);
+        //     expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
+        //     expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
+        // });
         it("should attempt to rename USS file but throw an error", async () => {
             resetMocks();
             resetNode(ussNode);
@@ -415,6 +415,15 @@ describe("ussNodeActions", () => {
             } catch (err) {
             }
             expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
+        it("should execute rename favorite USS file", async () => {
+            showInputBox.mockReturnValueOnce("new name");
+            await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
+            expect(testUSSTree.refresh).toHaveBeenCalled();
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+            expect(mockRemoveFavorite.mock.calls.length).toBe(1);
+            expect(mockAddFavorite.mock.calls.length).toBe(1);
         });
     });
     describe("uploadFile", () => {

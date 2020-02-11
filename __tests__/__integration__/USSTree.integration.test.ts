@@ -118,7 +118,7 @@ describe("USSTree Integration Tests", async () => {
         expect(sessChildren2.length).toEqual(sampleRChildren.length);
         expect(dirChildren.length).toBe(2);
         expect(dirChildren[0].label).toBe("aFile4.txt");
-        expect(dirChildren[0].mParent.tooltip).toContain("/group/aDir5");
+        expect(dirChildren[0].getParent().tooltip).toContain("/group/aDir5");
         expect(dirChildren[0].tooltip).toContain("/group/aDir5/aFile4.txt");
         expect(dirChildren[1].label).toBe("aFile5.txt");
         expect(dirChildren[1].tooltip).toContain("/group/aDir5/aFile5.txt");
@@ -210,7 +210,7 @@ describe("USSTree Integration Tests", async () => {
             await testTree.addSession();
             const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
                 sessNode, null, sessNode.fullPath, testConst.profile.name);
-            await testTree.addUSSFavorite(favoriteNode);
+            await testTree.addFavorite(favoriteNode);
             const filtered = testTree.mFavorites.filter((temp) => temp.label ===
                 `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);
