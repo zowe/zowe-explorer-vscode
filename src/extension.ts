@@ -10,6 +10,7 @@
 */
 
 import * as zowe from "@brightside/core";
+import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import { moveSync } from "fs-extra";
@@ -18,12 +19,12 @@ import * as vscode from "vscode";
 import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
+         ImperativeError, DefaultCredentialManager, Imperative, IImperativeConfig } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
 import { USSTree, createUSSTree } from "./USSTree";
-import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
@@ -141,6 +142,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     throw new ImperativeError({msg: err.toString()});
                 }
             }
+        }
+
+        // TODO: Would like to just run this, but there seems a timing issue.
+        //       Files get created, but errors are thrown that the are not available.
+        // const imperativePath = require.resolve("@brightside/core/lib/imperative.js");
+        // await Imperative.init({ configurationModule: imperativePath});
+        // Instead bring back spawn mechanism
+        const imperativeInitProcess = spawnSync("node", [path.join(__dirname, "ImperativeInit.js")]);
+        if (imperativeInitProcess.status !== 0) {
+            throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve inititalize Zowe CLI!\n") +
+                imperativeInitProcess.stderr.toString());
         }
 
         await Profiles.createInstance(log);
