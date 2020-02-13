@@ -149,11 +149,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // const imperativePath = require.resolve("@brightside/core/lib/imperative.js");
         // await Imperative.init({ configurationModule: imperativePath});
         // Instead bring back spawn mechanism
-        const imperativeInitProcess = spawnSync("node", [path.join(__dirname, "ImperativeInit.js")]);
-        if (imperativeInitProcess.status !== 0) {
-            throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve inititalize Zowe CLI!\n") +
-                imperativeInitProcess.stderr.toString());
-        }
+        // TODO remove
+        // const imperativeInitProcess = spawnSync("node", [path.join(__dirname, "ImperativeInit.js")]);
+        // if (imperativeInitProcess.status !== 0) {
+        //     throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve inititalize Zowe CLI!\n") +
+        //         imperativeInitProcess.stderr.toString());
+        // }
 
         await Profiles.createInstance(log);
         // Initialize dataset provider
@@ -374,7 +375,7 @@ export function defineGlobals(tempPath: string | undefined) {
 export function getSecurityModules(moduleName): NodeRequire | undefined {
     let imperativeIsSsecure: boolean = false;
     try {
-        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
+        const fileName = path.join(getZoweDir(), "settings", "Wimperative.json");
         const settings = JSON.parse(fs.readFileSync(fileName).toString());
         const value1 = settings.overrides.CredentialManager;
         const value2 = settings.overrides["credential-manager"];
@@ -383,6 +384,11 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
     } catch (error) {
         log.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
         vscode.window.showInformationMessage(error.message);
+        const imperativeInitProcess = spawnSync("node", [path.join(__dirname, "ImperativeInit.js")]);
+        if (imperativeInitProcess.status !== 0) {
+            throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve inititalize Zowe CLI!\n") +
+                imperativeInitProcess.stderr.toString());
+        }
         return undefined;
     }
     if (imperativeIsSsecure) {
