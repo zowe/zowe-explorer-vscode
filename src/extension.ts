@@ -144,18 +144,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         }
 
-        // TODO: Would like to just run this, but there seems a timing issue.
-        //       Files get created, but errors are thrown that the are not available.
-        // const imperativePath = require.resolve("@brightside/core/lib/imperative.js");
-        // await Imperative.init({ configurationModule: imperativePath});
-        // Instead bring back spawn mechanism
-        // TODO remove
-        // const imperativeInitProcess = spawnSync("node", [path.join(__dirname, "ImperativeInit.js")]);
-        // if (imperativeInitProcess.status !== 0) {
-        //     throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve inititalize Zowe CLI!\n") +
-        //         imperativeInitProcess.stderr.toString());
-        // }
-
         await Profiles.createInstance(log);
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
@@ -388,6 +376,11 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
     } catch (error) {
         log.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
         vscode.window.showInformationMessage(error.message);
+        // TODO: Would like to just run this, but there seems a timing issue.
+        //       Files get created, but errors are thrown that the are not available.
+        // const imperativePath = require.resolve("@brightside/core/lib/imperative.js");
+        // await Imperative.init({ configurationModule: imperativePath});
+        // Instead bring back spawn mechanism
         const imperativeInitProcess = spawnSync("node", [path.join(__dirname, "ImperativeInit.js")]);
         if (imperativeInitProcess.status !== 0) {
             throw new Error(localize("loadAllProfiles.error.spawnProcess", "Failed to spawn process to retrieve inititalize Zowe CLI!\n") +
