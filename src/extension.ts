@@ -1061,6 +1061,8 @@ export async function copyDataSet(node: ZoweDatasetNode) {
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     const { dataSetName } = getNodeLabels(node);
+    vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration request for: ") + dataSetName +
+    localize("hMigrate.requestSent2", " sent."));
     return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
 }
 

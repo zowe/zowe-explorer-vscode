@@ -4196,6 +4196,7 @@ describe("Extension Unit Tests", () => {
             await extension.hMigrateDataSet(node);
 
             expect(migrateSpy.mock.calls.length).toBe(1);
+            expect(showInformationMessage).toHaveBeenCalled()
             expect(migrateSpy).toHaveBeenLastCalledWith("HLQ.TEST.TO.NODE");
         });
     });
