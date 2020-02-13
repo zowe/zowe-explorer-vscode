@@ -21,6 +21,7 @@ import * as brightside from "@brightside/core";
 import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
+import * as child_process from "child_process";
 import * as profileLoader from "../../src/Profiles";
 import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
@@ -150,6 +151,7 @@ describe("Extension Unit Tests", () => {
     const mockReveal = jest.fn();
     const createWebviewPanel = jest.fn();
     const createTreeView = jest.fn();
+    const spawnSync = jest.fn();
     const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
@@ -390,6 +392,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(fs, "rmdirSync", {value: rmdirSync});
     Object.defineProperty(fs, "readFileSync", {value: readFileSync});
     Object.defineProperty(fsextra, "moveSync", {value: moveSync});
+    Object.defineProperty(child_process, "spawnSync", {value: spawnSync});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showWarningMessage", {value: showWarningMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
@@ -585,6 +588,8 @@ describe("Extension Unit Tests", () => {
             extensionPath: path.join(__dirname, "..")
         } as vscode.ExtensionContext));
         const mock = new extensionMock();
+        readFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
+        spawnSync.mockReturnValue({status: 0});
 
         await extension.activate(mock);
 
