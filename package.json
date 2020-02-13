@@ -1211,7 +1211,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "^2.36.0",
+    "@brightside/core": "^2.36.4",
     "fs-extra": "^8.0.1",
     "isbinaryfile": "^4.0.4",
     "moment": "^2.24.0",
