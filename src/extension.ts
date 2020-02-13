@@ -18,7 +18,8 @@ import * as vscode from "vscode";
 import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session,
+         CredentialManagerFactory, ImperativeError, DefaultCredentialManager, ISession } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -1539,8 +1540,31 @@ export async function refreshAll(datasetProvider: DatasetTree) {
             sessNode.dirty = true;
         }
     });
-    datasetProvider.refresh();
-    Profiles.getInstance().refresh();
+    await datasetProvider.refresh();
+    await Profiles.getInstance().refresh();
+
+    const allProf = Profiles.getInstance().getProfiles();
+    datasetProvider.mSessionNodes.forEach((sessNode) => {
+        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
+            for (const profNode of allProf) {
+                if (sessNode.getProfileName() === profNode.name) {
+                    sessNode.getProfile().profile = profNode.profile;
+                    const SessionProfile = profNode.profile as ISession;
+                    // * Is there a better way to refresh this?
+                    if (sessNode.getSession().ISession !== SessionProfile) {
+                        sessNode.getSession().ISession.user = SessionProfile.user;
+                        sessNode.getSession().ISession.password = SessionProfile.password;
+                        sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                        sessNode.getSession().ISession.hostname = SessionProfile.hostname;
+                        sessNode.getSession().ISession.port = SessionProfile.port;
+                        sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+                    }
+                }
+            }
+        }
+    });
+    await datasetProvider.refresh();
+
 }
 
 /**

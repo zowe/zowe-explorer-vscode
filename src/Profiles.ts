@@ -53,17 +53,17 @@ export class Profiles {
 
     // TODO: Temporary hack for creditials entered via user prompts to survive a refresh.
     // The way credentials are prompted and queried needs to be rewritten and a clear method added.
-    private static credentialsHash = new Map<string,Map<string, string>>();
-    private static credentialHashPropUsername = "user";
-    private static credentialHashPropPassword = "password";
-    private static credentialHashSetValue(profile: string, property: string, value: string): void {
-        let properties = this.credentialsHash.get(profile);
-        if (!properties) {
-            properties = new Map<string, string>();
-            this.credentialsHash.set(profile, properties);
-        }
-        properties.set(property, value);
-    }
+    // private static credentialsHash = new Map<string,Map<string, string>>();
+    // private static credentialHashPropUsername = "user";
+    // private static credentialHashPropPassword = "password";
+    // private static credentialHashSetValue(profile: string, property: string, value: string): void {
+    //     let properties = this.credentialsHash.get(profile);
+    //     if (!properties) {
+    //         properties = new Map<string, string>();
+    //         this.credentialsHash.set(profile, properties);
+    //     }
+    //     properties.set(property, value);
+    // }
 
     public allProfiles: IProfileLoaded[] = [];
 
@@ -106,13 +106,13 @@ export class Profiles {
         }
         // TODO: Temporary hack to be consistent with sessions storing prompted passwords.
         // Should be rewritten and a clear method needs to be added.
-        for (const profile of this.allProfiles) {
-            const credentialProps = Profiles.credentialsHash.get(profile.name);
-            if (credentialProps) {
-                profile.profile.user = credentialProps.get(Profiles.credentialHashPropUsername);
-                profile.profile.password = credentialProps.get(Profiles.credentialHashPropPassword);
-            }
-        }
+        // for (const profile of this.allProfiles) {
+        //     const credentialProps = Profiles.credentialsHash.get(profile.name);
+        //     if (credentialProps) {
+        //         profile.profile.user = credentialProps.get(Profiles.credentialHashPropUsername);
+        //         profile.profile.password = credentialProps.get(Profiles.credentialHashPropPassword);
+        //     }
+        // }
     }
 
     public validateAndParseUrl(newUrl: string): IUrlValidator {
@@ -272,7 +272,7 @@ export class Profiles {
         let passWord: string;
         let options: vscode.InputBoxOptions;
 
-        const loadProfile = this.loadNamedProfile(sessName);
+        const loadProfile = this.loadNamedProfile(sessName.trim());
         const loadSession = loadProfile.profile as ISession;
 
         if (!loadSession.user) {
@@ -290,7 +290,7 @@ export class Profiles {
                 return;
             } else {
                 loadSession.user = loadProfile.profile.user = userName;
-                Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropUsername, userName);
+            //     Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropUsername, userName);
             }
         }
 
@@ -311,7 +311,7 @@ export class Profiles {
                 return;
             } else {
                 loadSession.password = loadProfile.profile.password = passWord.trim();
-                Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropPassword, loadSession.password);
+            //     Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropPassword, loadSession.password);
             }
         }
         const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
