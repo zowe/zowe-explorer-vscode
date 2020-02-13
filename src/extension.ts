@@ -379,7 +379,7 @@ export function defineGlobals(tempPath: string | undefined) {
 export function getSecurityModules(moduleName): NodeRequire | undefined {
     let imperativeIsSsecure: boolean = false;
     try {
-        const fileName = path.join(getZoweDir(), "settings", "Wimperative.json");
+        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
         const settings = JSON.parse(fs.readFileSync(fileName).toString());
         const value1 = settings.overrides.CredentialManager;
         const value2 = settings.overrides["credential-manager"];
