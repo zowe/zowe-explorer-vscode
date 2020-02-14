@@ -283,7 +283,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             stopCommand(job);
         });
         vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node, jobsProvider));
-        vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
+        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => {
             jobsProvider.mSessionNodes.forEach((jobNode) => {
                 if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
                     // reset
@@ -292,8 +292,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     jobNode.dirty = true;
                 }
             });
-            jobsProvider.refresh();
-            Profiles.getInstance().refresh();
+            await jobsProvider.refresh();
+            await Profiles.getInstance().refresh();
+
+            const allProf = Profiles.getInstance().getProfiles();
+            jobsProvider.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.contextValue === JOBS_SESSION_CONTEXT) {
+                for (const profNode of allProf) {
+                    if (sessNode.getProfileName() === profNode.name) {
+                        sessNode.getProfile().profile = profNode.profile;
+                        const SessionProfile = profNode.profile as ISession;
+                        // * Is there a better way to refresh this?
+                        if (sessNode.getSession().ISession !== SessionProfile) {
+                            sessNode.getSession().ISession.user = SessionProfile.user;
+                            sessNode.getSession().ISession.password = SessionProfile.password;
+                            sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                            sessNode.getSession().ISession.hostname = SessionProfile.hostname;
+                            sessNode.getSession().ISession.port = SessionProfile.port;
+                            sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+                            }
+                        }
+                    }
+                }
+            });
+            await jobsProvider.refresh();
         });
         vscode.commands.registerCommand("zowe.addJobsSession", () => addZoweSession(jobsProvider));
         vscode.commands.registerCommand("zowe.setOwner", (node) => {
@@ -664,6 +686,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
     }
     const createPick = new utils.FilterDescriptor("\uFF0B " + createNewProfile);
     const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new utils.FilterItem(element));
+    const quickpick = vscode.window.createQuickPick();
     const placeholder = localize("addSession.quickPickOption",
         "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
 
@@ -679,7 +702,6 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         }
         chosenProfile = choice === createPick ? "" : choice.label;
     } else {
-        const quickpick = vscode.window.createQuickPick();
         quickpick.items = [createPick, ...items];
         quickpick.placeholder = placeholder;
         quickpick.ignoreFocusOut = true;
@@ -700,6 +722,10 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
     if (chosenProfile === "") {
         let newprofile: any;
         let profileName: string;
+        if (quickpick.value) {
+            profileName = quickpick.value;
+        }
+        
         const options = {
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),

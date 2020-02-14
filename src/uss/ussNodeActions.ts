@@ -26,6 +26,7 @@ import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
+import { ISession } from "@brightside/imperative";
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -111,8 +112,33 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
             sessNode.dirty = true;
         }
     });
-    ussFileProvider.refresh();
-    return Profiles.getInstance().refresh();
+
+    await ussFileProvider.refresh();
+    await Profiles.getInstance().refresh();
+
+    const allProf = Profiles.getInstance().getProfiles();
+    ussFileProvider.mSessionNodes.forEach((sessNode) => {
+        if (sessNode.contextValue === extension.USS_SESSION_CONTEXT) {
+            for (const profNode of allProf) {
+                if (sessNode.getProfileName() === profNode.name) {
+                    sessNode.getProfile().profile = profNode.profile;
+                    const SessionProfile = profNode.profile as ISession;
+                    // * Is there a better way to refresh this?
+                    if (sessNode.getSession().ISession !== SessionProfile) {
+                        sessNode.getSession().ISession.user = SessionProfile.user;
+                        sessNode.getSession().ISession.password = SessionProfile.password;
+                        sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                        sessNode.getSession().ISession.hostname = SessionProfile.hostname;
+                        sessNode.getSession().ISession.port = SessionProfile.port;
+                        sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+                    }
+                }
+            }
+        }
+    });
+
+    await ussFileProvider.refresh();
+
 }
 
 /**
