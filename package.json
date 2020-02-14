@@ -113,19 +113,19 @@
       },
       {
         "command": "zowe.renameDataSet",
-        "title": "%renameDataSet%"
+        "title": "%rename%"
       },
       {
         "command": "zowe.copyDataSet",
-        "title": "%copyDataSet%"
+        "title": "%copy%"
       },
       {
         "command": "zowe.pasteDataSet",
-        "title": "%pasteDataSet%"
+        "title": "%paste%"
       },
       {
         "command": "zowe.renameDataSetMember",
-        "title": "%renameDataSetMember%"
+        "title": "%rename%"
       },
       {
         "command": "zowe.deleteDataset",
