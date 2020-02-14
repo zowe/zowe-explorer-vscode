@@ -17,6 +17,7 @@ import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
+import { ZoweUSSNode } from "./ZoweUSSNode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
 import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
          ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
