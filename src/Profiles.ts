@@ -40,10 +40,6 @@ let IConnection: {
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
-        await CliProfileManager.initialize({
-            configuration: zowe.getImperativeConfig().profiles,
-            profileRootDirectory: path.join(getZoweDir(), "profiles"),
-        });
         Profiles.loader = new Profiles(log);
         await Profiles.loader.refresh();
         return Profiles.loader;

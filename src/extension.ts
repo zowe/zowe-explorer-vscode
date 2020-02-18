@@ -18,7 +18,8 @@ import * as vscode from "vscode";
 import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
+    ImperativeError, DefaultCredentialManager, CliProfileManager } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -143,6 +144,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         }
 
+        // Ensure that ~/.zowe folder exists
+        await CliProfileManager.initialize({
+            configuration: zowe.getImperativeConfig().profiles,
+            profileRootDirectory: path.join(getZoweDir(), "profiles"),
+        });
+        // Initialize profile manager
         await Profiles.createInstance(log);
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
