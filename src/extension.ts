@@ -247,7 +247,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) => changeFileType(node, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) => changeFileType(node, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) =>
-                                                                        node.renameUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
+                                                            ussActions.renameUSSNode(node, ussFileProvider, node.getUSSDocumentFilePath()));
         vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.createNode", async (node: IZoweUSSTreeNode) =>
                                                                             ussActions.createUSSNodeDialog(node, ussFileProvider));
