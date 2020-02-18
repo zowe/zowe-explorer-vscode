@@ -301,7 +301,9 @@ describe("Extension Unit Tests", () => {
             renameNode: mockRenameNode,
             findFavoritedNode,
             findNonFavoritedNode,
-            getProfileName: jest.fn()
+            getProfileName: jest.fn(),
+            getSession: jest.fn(),
+            getProfiles: jest.fn()
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -317,6 +319,9 @@ describe("Extension Unit Tests", () => {
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
             ussFilterPrompt: ussPattern,
+            getProfiles: jest.fn(),
+            getProfileName: jest.fn(),
+            getSession: jest.fn()
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
@@ -328,7 +333,9 @@ describe("Extension Unit Tests", () => {
             getTreeView,
             treeView: new TreeView(),
             refreshElement: jest.fn(),
-            getProfileName: jest.fn()
+            getProfiles: jest.fn(),
+            getProfileName: jest.fn(),
+            getSession: jest.fn()
         };
     });
 
@@ -453,8 +460,10 @@ describe("Extension Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     getDefaultProfile: mockLoadNamedProfile,
                     loadNamedProfile: mockLoadNamedProfile,
-                    usesSecurity: true
-
+                    promptCredentials: jest.fn(),
+                    usesSecurity: true,
+                    getProfiles: jest.fn(),
+                    refresh: jest.fn(),
                 };
             })
         });
@@ -1955,6 +1964,21 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that refreshAll is executed successfully", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
         extension.refreshAll(testTree);
     });
 
@@ -1975,7 +1999,7 @@ describe("Extension Unit Tests", () => {
         withProgress.mockReturnValue(fileResponse);
         openTextDocument.mockResolvedValueOnce("test doc");
 
-        await extension.openPS(node, true);
+        await extension.openPS(node, true, testTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
         expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
@@ -2000,7 +2024,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce("test doc");
         const node2 = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
-        await extension.openPS(node2, true);
+        await extension.openPS(node2, true, testTree);
 
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -2025,7 +2049,7 @@ describe("Extension Unit Tests", () => {
 
         const child2 = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
-            await extension.openPS(child2, true);
+            await extension.openPS(child2, true, testTree);
         } catch (err) {
             // do nothing
         }
@@ -2033,7 +2057,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showTextDocument.mockReset();
         parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.openPS(child, true);
+        await extension.openPS(child, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
@@ -2041,7 +2065,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
 
         parent.contextValue = extension.FAVORITE_CONTEXT;
-        await extension.openPS(child, true);
+        await extension.openPS(child, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
@@ -2053,6 +2077,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         showTextDocument.mockReset();
         openTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(fileResponse);
         const sessionwocred = new brtimperative.Session({
             user: "",
             password: "",
@@ -2071,6 +2096,7 @@ describe("Extension Unit Tests", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    getProfiles: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
@@ -2558,9 +2584,24 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that refreshAllUSS is executed successfully", async () => {
-        const spy = jest.fn(testTree.refresh);
-        ussNodeActions.refreshAllUSS(testTree);
-        expect(testTree.refresh).toHaveBeenCalled();
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+        const spy = jest.fn(testUSSTree.refresh);
+        ussNodeActions.refreshAllUSS(testUSSTree);
+        expect(testUSSTree.refresh).toHaveBeenCalled();
     });
 
     // TODO Node tests
@@ -2572,7 +2613,26 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, profileOne.name);
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, session, "/", false, profileOne.name);
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/", false, profileOne.name);
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent", false, profileOne.name);
 
@@ -2666,12 +2726,31 @@ describe("Extension Unit Tests", () => {
 
         openTextDocument.mockResolvedValueOnce("test.doc");
 
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
         // Set up mock favorite session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name);
         favoriteSession.contextValue = extension.FAVORITE_CONTEXT;
 
         // Set up favorited nodes (directly under Favorites)
-        const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, null, "/", false, profileOne.name);
+        const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, session, "/", false, profileOne.name);
         favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/",
             false, profileOne.name);
@@ -2699,7 +2778,26 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, ussNode.getProfileName());
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, session, "/", false, ussNode.getProfileName());
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 

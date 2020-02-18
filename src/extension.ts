@@ -302,7 +302,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     if (sessNode.getProfileName() === profNode.name) {
                         sessNode.getProfile().profile = profNode.profile;
                         const SessionProfile = profNode.profile as ISession;
-                        // * Is there a better way to refresh this?
                         if (sessNode.getSession().ISession !== SessionProfile) {
                             sessNode.getSession().ISession.user = SessionProfile.user;
                             sessNode.getSession().ISession.password = SessionProfile.password;
@@ -725,7 +724,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         if (quickpick.value) {
             profileName = quickpick.value;
         }
-        
+
         const options = {
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
@@ -1576,7 +1575,6 @@ export async function refreshAll(datasetProvider: DatasetTree) {
                 if (sessNode.getProfileName() === profNode.name) {
                     sessNode.getProfile().profile = profNode.profile;
                     const SessionProfile = profNode.profile as ISession;
-                    // * Is there a better way to refresh this?
                     if (sessNode.getSession().ISession !== SessionProfile) {
                         sessNode.getSession().ISession.user = SessionProfile.user;
                         sessNode.getSession().ISession.password = SessionProfile.password;

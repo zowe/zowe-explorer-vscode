@@ -123,7 +123,6 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
                 if (sessNode.getProfileName() === profNode.name) {
                     sessNode.getProfile().profile = profNode.profile;
                     const SessionProfile = profNode.profile as ISession;
-                    // * Is there a better way to refresh this?
                     if (sessNode.getSession().ISession !== SessionProfile) {
                         sessNode.getSession().ISession.user = SessionProfile.user;
                         sessNode.getSession().ISession.password = SessionProfile.password;
