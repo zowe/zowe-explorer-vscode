@@ -283,39 +283,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             stopCommand(job);
         });
         vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node, jobsProvider));
-        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => {
-            jobsProvider.mSessionNodes.forEach((jobNode) => {
-                if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
-                    // reset
-                    utils.labelHack(jobNode);
-                    jobNode.children = [];
-                    jobNode.dirty = true;
-                }
-            });
-            await jobsProvider.refresh();
-            await Profiles.getInstance().refresh();
+        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => refreshAllJobs(jobsProvider));
 
-            const allProf = Profiles.getInstance().getProfiles();
-            jobsProvider.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.contextValue === JOBS_SESSION_CONTEXT) {
-                for (const profNode of allProf) {
-                    if (sessNode.getProfileName() === profNode.name) {
-                        sessNode.getProfile().profile = profNode.profile;
-                        const SessionProfile = profNode.profile as ISession;
-                        if (sessNode.getSession().ISession !== SessionProfile) {
-                            sessNode.getSession().ISession.user = SessionProfile.user;
-                            sessNode.getSession().ISession.password = SessionProfile.password;
-                            sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                            sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                            sessNode.getSession().ISession.port = SessionProfile.port;
-                            sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
-                            }
-                        }
-                    }
-                }
-            });
-            await jobsProvider.refresh();
-        });
         vscode.commands.registerCommand("zowe.addJobsSession", () => addZoweSession(jobsProvider));
         vscode.commands.registerCommand("zowe.setOwner", (node) => {
             setOwner(node, jobsProvider);
@@ -1992,4 +1961,39 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
     if (validProfile === 0) {
         await jobsProvider.refreshElement(node);
     }
+}
+
+export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+
+    jobsProvider.mSessionNodes.forEach((jobNode) => {
+        if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
+            utils.labelHack(jobNode);
+            jobNode.children = [];
+            jobNode.dirty = true;
+        }
+    });
+
+    await jobsProvider.refresh();
+    await Profiles.getInstance().refresh();
+
+    const allProf = Profiles.getInstance().getProfiles();
+    jobsProvider.mSessionNodes.forEach((jobNode) => {
+    if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
+        for (const profNode of allProf) {
+            if (jobNode.getProfileName() === profNode.name) {
+                jobNode.getProfile().profile = profNode.profile;
+                const SessionProfile = profNode.profile as ISession;
+                if (jobNode.getSession().ISession !== SessionProfile) {
+                    jobNode.getSession().ISession.user = SessionProfile.user;
+                    jobNode.getSession().ISession.password = SessionProfile.password;
+                    jobNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                    jobNode.getSession().ISession.hostname = SessionProfile.hostname;
+                    jobNode.getSession().ISession.port = SessionProfile.port;
+                    jobNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+                    }
+                }
+            }
+        }
+    });
+    await jobsProvider.refresh();
 }

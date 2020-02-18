@@ -143,6 +143,7 @@ describe("Extension Unit Tests", () => {
     ussNode.fullPath = "/u/myuser";
 
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
+    jobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
 
     const mkdirSync = jest.fn();
     const moveSync = jest.fn();
@@ -3239,6 +3240,27 @@ describe("Extension Unit Tests", () => {
             newjobNode.contextValue = "server";
             await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
+        });
+
+        it("Testing that refreshAllJobs is executed successfully", async () => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        getDefaultProfile: mockLoadNamedProfile,
+                        loadNamedProfile: mockLoadNamedProfile,
+                        usesSecurity: true,
+                        getProfiles: jest.fn(() => {
+                            return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                        }),
+                        refresh: jest.fn(),
+                    };
+                })
+            });
+            const spy = jest.fn(testJobsTree.refresh);
+            extension.refreshAllJobs(testJobsTree);
+            expect(testJobsTree.refresh).toHaveBeenCalled();
         });
 
         it("Testing that addJobsSession will cancel if there is no profile name", async () => {
