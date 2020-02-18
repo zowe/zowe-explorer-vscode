@@ -1139,32 +1139,27 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
     if (afterMemberName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = `${profileLabel}${afterMemberName}`;
+            node.label = afterMemberName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
+        let otherParent;
+
         if (node.getParent().contextValue.includes(FAV_SUFFIX)) {
-            const nonFavoritedParent = datasetProvider.findNonFavoritedNode(node.getParent());
-            if (nonFavoritedParent) {
-                const nonFavoritedMember = nonFavoritedParent.children.find((child) => child.label === beforeMemberName);
-                if (nonFavoritedMember) {
-                    nonFavoritedMember.label = afterMemberName;
-                    datasetProvider.refreshElement(nonFavoritedParent);
-                }
-            }
+            otherParent = datasetProvider.findNonFavoritedNode(node.getParent());
         } else {
-            const favoritedParent = datasetProvider.findFavoritedNode(node.getParent());
-            if (favoritedParent) {
-                const favoritedMember = favoritedParent.children.find((child) => child.label === beforeMemberName);
-                if (favoritedMember) {
-                    favoritedMember.label = afterMemberName;
-                    datasetProvider.refreshElement(favoritedParent);
-                }
+            otherParent = datasetProvider.findFavoritedNode(node.getParent());
+        }
+        if (otherParent) {
+            const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
+            if (otherMember) {
+                otherMember.label = afterMemberName;
+                datasetProvider.refreshElement(otherMember);
             }
         }
-        datasetProvider.refreshElement(node.getParent());
+        datasetProvider.refreshElement(node);
     }
 }
 
