@@ -139,9 +139,9 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     public async copyDataSetMember(
         { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
         { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
-        options?: any // Needs typed. See https://github.com/zowe/zowe-cli/issues/676
+        options?: zowe.ICopyDatasetOptions
     ): Promise<zowe.IZosFilesResponse> {
-        let newOptions: any = {}; // Needs typed. See https://github.com/zowe/zowe-cli/issues/676
+        let newOptions: zowe.ICopyDatasetOptions;
         if (options) {
             if (options.fromDataSet) {
                 newOptions = options;
