@@ -141,10 +141,20 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
         options?: any // Needs typed. See https://github.com/zowe/zowe-cli/issues/676
     ): Promise<zowe.IZosFilesResponse> {
+        let newOptions: any = {}; // Needs typed. See https://github.com/zowe/zowe-cli/issues/676
+        if (options) {
+            if (options.fromDataSet) {
+                newOptions = options;
+            } else {
+                // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
+                newOptions = {...options, ...{fromDataSet: { dataSetName: toDataSetName, memberName: toMemberName }}};
+            }
+        } else {
+            newOptions = {fromDataSet: { dataSetName: toDataSetName, memberName: toMemberName }};
+        }
         return zowe.Copy.dataSet(this.getSession(),
             { dataSetName: fromDataSetName, memberName: fromMemberName },
-            // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
-            options.fromDataSet ? options : {...options, ...{fromDataSet: { dataSetName: toDataSetName, memberName: toMemberName }}}
+            newOptions
         );
     }
 
