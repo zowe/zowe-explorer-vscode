@@ -71,7 +71,6 @@
     "openPS.error.invalidNode": "openPS() called from invalid node.",
     "openPS.log.debug.openDataSet": "opening physical sequential data set from label ",
     "openPS.log.error.openDataSet": "Error encountered when opening data set! ",
-    "refreshAll.log.debug.refreshDataSet": "Refreshing data set tree view",
     "refreshPS.error.invalidNode": "refreshPS() called from invalid node.",
     "refreshPS.log.error.refresh": "Error encountered when refreshing data set view: ",
     "refreshPS.error.notFound": "not found",

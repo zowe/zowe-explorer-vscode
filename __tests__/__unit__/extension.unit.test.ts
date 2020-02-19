@@ -1964,25 +1964,6 @@ describe("Extension Unit Tests", () => {
         expect(concatChildNodes.mock.calls.length).toBe(1);
     });
 
-    it("Testing that refreshAll is executed successfully", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    getDefaultProfile: mockLoadNamedProfile,
-                    loadNamedProfile: mockLoadNamedProfile,
-                    usesSecurity: true,
-                    getProfiles: jest.fn(() => {
-                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
-                    }),
-                    refresh: jest.fn(),
-                };
-            })
-        });
-        extension.refreshAll(testTree);
-    });
-
     it("Testing that openPS is executed successfully", async () => {
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -3240,27 +3221,6 @@ describe("Extension Unit Tests", () => {
             newjobNode.contextValue = "server";
             await extension.refreshJobsServer(newjobNode, testJobsTree);
             expect(extension.refreshJobsServer).toHaveBeenCalled();
-        });
-
-        it("Testing that refreshAllJobs is executed successfully", async () => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
-                        getDefaultProfile: mockLoadNamedProfile,
-                        loadNamedProfile: mockLoadNamedProfile,
-                        usesSecurity: true,
-                        getProfiles: jest.fn(() => {
-                            return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
-                        }),
-                        refresh: jest.fn(),
-                    };
-                })
-            });
-            const spy = jest.fn(testJobsTree.refresh);
-            extension.refreshAllJobs(testJobsTree);
-            expect(testJobsTree.refresh).toHaveBeenCalled();
         });
 
         it("Testing that addJobsSession will cancel if there is no profile name", async () => {

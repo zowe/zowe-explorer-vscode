@@ -27,6 +27,8 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
+import * as dsActions from "./dataset/dsNodeActions";
+import * as jobActions from "./job/jobNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 // tslint:disable-next-line: no-duplicate-imports
 import { IJobFile, IUploadOptions } from "@brightside/core";
@@ -166,7 +168,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     if (datasetProvider) {
         vscode.commands.registerCommand("zowe.addSession", async () => addZoweSession(datasetProvider));
         vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
-        vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
+        vscode.commands.registerCommand("zowe.refreshAll", () => dsActions.refreshAll(datasetProvider));
         vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
         vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
         vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true, datasetProvider));
@@ -283,7 +285,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             stopCommand(job);
         });
         vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node, jobsProvider));
-        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => refreshAllJobs(jobsProvider));
+        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => jobActions.refreshAllJobs(jobsProvider));
 
         vscode.commands.registerCommand("zowe.addJobsSession", () => addZoweSession(jobsProvider));
         vscode.commands.registerCommand("zowe.setOwner", (node) => {
@@ -1521,46 +1523,6 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
 }
 
 /**
- * Refreshes treeView
- *
- * @param {DataSetTree} datasetProvider
- */
-export async function refreshAll(datasetProvider: DatasetTree) {
-    log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
-    datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
-            utils.labelHack(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-        }
-    });
-    await datasetProvider.refresh();
-    await Profiles.getInstance().refresh();
-
-    const allProf = Profiles.getInstance().getProfiles();
-    datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
-            for (const profNode of allProf) {
-                if (sessNode.getProfileName() === profNode.name) {
-                    sessNode.getProfile().profile = profNode.profile;
-                    const SessionProfile = profNode.profile as ISession;
-                    if (sessNode.getSession().ISession !== SessionProfile) {
-                        sessNode.getSession().ISession.user = SessionProfile.user;
-                        sessNode.getSession().ISession.password = SessionProfile.password;
-                        sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                        sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                        sessNode.getSession().ISession.port = SessionProfile.port;
-                        sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
-                    }
-                }
-            }
-        }
-    });
-    await datasetProvider.refresh();
-
-}
-
-/**
  * Refreshes the passed node with current mainframe data
  *
  * @param {ZoweDatasetNode} node - The node which represents the dataset
@@ -1961,39 +1923,4 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
     if (validProfile === 0) {
         await jobsProvider.refreshElement(node);
     }
-}
-
-export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-
-    jobsProvider.mSessionNodes.forEach((jobNode) => {
-        if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
-            utils.labelHack(jobNode);
-            jobNode.children = [];
-            jobNode.dirty = true;
-        }
-    });
-
-    await jobsProvider.refresh();
-    await Profiles.getInstance().refresh();
-
-    const allProf = Profiles.getInstance().getProfiles();
-    jobsProvider.mSessionNodes.forEach((jobNode) => {
-    if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
-        for (const profNode of allProf) {
-            if (jobNode.getProfileName() === profNode.name) {
-                jobNode.getProfile().profile = profNode.profile;
-                const SessionProfile = profNode.profile as ISession;
-                if (jobNode.getSession().ISession !== SessionProfile) {
-                    jobNode.getSession().ISession.user = SessionProfile.user;
-                    jobNode.getSession().ISession.password = SessionProfile.password;
-                    jobNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                    jobNode.getSession().ISession.hostname = SessionProfile.hostname;
-                    jobNode.getSession().ISession.port = SessionProfile.port;
-                    jobNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
-                    }
-                }
-            }
-        }
-    });
-    await jobsProvider.refresh();
 }
