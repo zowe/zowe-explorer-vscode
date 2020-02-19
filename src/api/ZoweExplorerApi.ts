@@ -127,13 +127,13 @@ export namespace ZoweExplorerApi {
          *      Either "file" or "directory".
          * @param {string} [mode]
          *      An optional Unix string representation of the permissions.
-         * @returns {Promise<string>}
+         * @returns {Promise<zowe.IZosFilesResponse>}
          */
         create(
             ussPath: string,
             type: string,
             mode?: string
-        ): Promise<string>;
+        ): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Deletes the USS directory or file at the given path.
