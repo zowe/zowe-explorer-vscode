@@ -146,10 +146,10 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
             if (options.fromDataSet) {
                 newOptions = options;
             } else {
-                // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
-                newOptions = {...options, ...{fromDataSet: { dataSetName: toDataSetName, memberName: toMemberName }}};
+              newOptions = {...options, ...{fromDataSet: { dataSetName: toDataSetName, memberName: toMemberName }}};
             }
-        } else {
+          } else {
+            // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
             newOptions = {fromDataSet: { dataSetName: toDataSetName, memberName: toMemberName }};
         }
         return zowe.Copy.dataSet(this.getSession(),
