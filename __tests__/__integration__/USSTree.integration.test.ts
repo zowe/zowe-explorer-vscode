@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { Logger } from "@zowe/imperative";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -22,16 +22,25 @@ import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
+
 declare var it: any;
+
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
 
 describe("USSTree Integration Tests", async () => {
     const TIMEOUT = 120000;
-
     chai.use(chaiAsPromised);
+
     // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
-         null, session, "", false, testConst.profile.name);
+         null, session, "", false, testProfile.name);
     sessNode.contextValue = extension.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
@@ -109,7 +118,7 @@ describe("USSTree Integration Tests", async () => {
         expect(sessChildren2.length).toEqual(sampleRChildren.length);
         expect(dirChildren.length).toBe(2);
         expect(dirChildren[0].label).toBe("aFile4.txt");
-        expect(dirChildren[0].mParent.tooltip).toContain("/group/aDir5");
+        expect(dirChildren[0].getParent().tooltip).toContain("/group/aDir5");
         expect(dirChildren[0].tooltip).toContain("/group/aDir5/aFile4.txt");
         expect(dirChildren[1].label).toBe("aFile5.txt");
         expect(dirChildren[1].tooltip).toContain("/group/aDir5/aFile5.txt");
@@ -201,7 +210,7 @@ describe("USSTree Integration Tests", async () => {
             await testTree.addSession();
             const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
                 sessNode, null, sessNode.fullPath, testConst.profile.name);
-            await testTree.addUSSFavorite(favoriteNode);
+            await testTree.addFavorite(favoriteNode);
             const filtered = testTree.mFavorites.filter((temp) => temp.label ===
                 `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);

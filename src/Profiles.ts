@@ -15,7 +15,8 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { getZoweDir } from "./extension";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
@@ -35,30 +36,43 @@ let IConnection: {
 
 export class Profiles {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger, type: string = "zosmf") {
-        const profile = new Profiles(log, type);
-        profile.type = type;
-        await profile.refresh();
-        Profiles.loader.set(type, profile);
-        return profile;
+    public static async createInstance(log: Logger): Promise<Profiles> {
+        Profiles.loader = new Profiles(log);
+        await Profiles.loader.refresh();
+        return Profiles.loader;
     }
 
-    public static getInstance(type: string = "zosmf") {
-        return Profiles.loader.get(type);
+    public static getInstance(): Profiles {
+        return Profiles.loader;
     }
 
-    private static loader: Map<string, Profiles> = new Map();
+    private static loader: Profiles;
+
+    // TODO: Temporary hack for creditials entered via user prompts to survive a refresh.
+    // The way credentials are prompted and queried needs to be rewritten and a clear method added.
+    private static credentialsHash = new Map<string,Map<string, string>>();
+    private static credentialHashPropUsername = "user";
+    private static credentialHashPropPassword = "password";
+    private static credentialHashSetValue(profile: string, property: string, value: string): void {
+        let properties = this.credentialsHash.get(profile);
+        if (!properties) {
+            properties = new Map<string, string>();
+            this.credentialsHash.set(profile, properties);
+        }
+        properties.set(property, value);
+    }
 
     public allProfiles: IProfileLoaded[] = [];
-    public defaultProfile: IProfileLoaded;
-    private profileManager;
 
-    private constructor(private log: Logger, private type: string) {
+    private profilesByType = new Map<string, IProfileLoaded[]>();
+    private defaultProfileByType = new Map<string, IProfileLoaded>();
+    private profileManagerByType= new Map<string, CliProfileManager>();
+    private constructor(private log: Logger) {
     }
 
-    public loadNamedProfile(name: string): IProfileLoaded {
+    public loadNamedProfile(name: string, type?: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && profile.type === this.type) {
+            if (profile.name === name && (type ? profile.type === type : true)) {
                 return profile;
             }
         }
@@ -66,22 +80,39 @@ export class Profiles {
             + name + localize("loadNamedProfile.error.period", "."));
     }
 
-    public getDefaultProfile(): IProfileLoaded {
-        return this.defaultProfile;
+    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded {
+        return this.defaultProfileByType.get(type);
     }
 
-    public async refresh() {
-        const profileManager = await this.getCliProfileManager(this.type);
-        this.allProfiles = (await profileManager.loadAll()).filter((profile) => {
-            return profile.type === this.type;
-        });
-        if (this.allProfiles.length > 0) {
-            this.defaultProfile = (await profileManager.load({ loadDefault: true }));
+    public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
+        return this.profilesByType.get(type);
+    }
+
+    public async refresh(): Promise<void> {
+        this.allProfiles = [];
+        for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+            const profileManager = await this.getCliProfileManager(type);
+            const profilesForType = (await profileManager.loadAll()).filter((profile) => {
+                return profile.type === type;
+            });
+            if (profilesForType && profilesForType.length > 0) {
+                this.allProfiles.push(...profilesForType);
+                this.profilesByType.set(type, profilesForType);
+                this.defaultProfileByType.set(type, (await profileManager.load({ loadDefault: true })));
+            }
+        }
+        // TODO: Temporary hack to be consistent with sessions storing prompted passwords.
+        // Should be rewritten and a clear method needs to be added.
+        for (const profile of this.allProfiles) {
+            const credentialProps = Profiles.credentialsHash.get(profile.name);
+            if (credentialProps) {
+                profile.profile.user = credentialProps.get(Profiles.credentialHashPropUsername);
+                profile.profile.password = credentialProps.get(Profiles.credentialHashPropPassword);
+            }
         }
     }
 
-    public validateAndParseUrl = (newUrl: string): IUrlValidator => {
-
+    public validateAndParseUrl(newUrl: string): IUrlValidator {
         let url: URL;
         const validProtocols: string[] = ["https"];
         const DEFAULT_HTTPS_PORT: number = 443;
@@ -130,7 +161,7 @@ export class Profiles {
         });
     }
 
-    public async createNewConnection(profileName: string, ProfileType: string ="zosmf"): Promise<string | undefined> {
+    public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
         let zosmfURL: string;
@@ -225,7 +256,7 @@ export class Profiles {
         let newProfile: IProfile;
 
         try {
-            newProfile = await this.saveProfile(IConnection, IConnection.name, ProfileType);
+            newProfile = await this.saveProfile(IConnection, IConnection.name, profileType);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -256,7 +287,8 @@ export class Profiles {
                         "Please enter your z/OS username. Operation Cancelled"));
                 return;
             } else {
-                loadSession.user = userName;
+                loadSession.user = loadProfile.profile.user = userName;
+                Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropUsername, userName);
             }
         }
 
@@ -276,7 +308,8 @@ export class Profiles {
                         "Please enter your z/OS password. Operation Cancelled"));
                 return;
             } else {
-                loadSession.password = passWord.trim();
+                loadSession.password = loadProfile.profile.password = passWord.trim();
+                Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropPassword, loadSession.password);
             }
         }
         const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
@@ -293,13 +326,19 @@ export class Profiles {
         return zosmfProfile.profile;
     }
 
-    private async getCliProfileManager( type: string ) {
-        if (!this.profileManager) {
-            this.profileManager = await new CliProfileManager({
+    private async getCliProfileManager(type: string): Promise<CliProfileManager> {
+        let profileManager = this.profileManagerByType.get(type);
+        if (!profileManager) {
+            profileManager = await new CliProfileManager({
                 profileRootDirectory: path.join(getZoweDir(), "profiles"),
                 type
             });
+            if (profileManager) {
+                this.profileManagerByType.set(type, profileManager);
+            } else {
+                return undefined;
+            }
         }
-        return this.profileManager;
+        return profileManager;
     }
 }

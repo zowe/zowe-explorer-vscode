@@ -40,7 +40,8 @@
       true,
       "dev",
       ["@zowe/imperative"]
-    ]
+    ],
+    "no-namespace": false
   },
   "linterOptions": {
     "exclude": [
