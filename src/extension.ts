@@ -19,7 +19,7 @@ import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, DefaultCredentialManager } from "@zowe/imperative";
+    ImperativeError, DefaultCredentialManager, CliProfileManager } from "@zowe/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -143,6 +143,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         }
 
+        // Ensure that ~/.zowe folder exists
+        await CliProfileManager.initialize({
+            configuration: zowe.getImperativeConfig().profiles,
+            profileRootDirectory: path.join(getZoweDir(), "profiles"),
+        });
+        // Initialize profile manager
         await Profiles.createInstance(log);
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
@@ -364,34 +370,33 @@ export function defineGlobals(tempPath: string | undefined) {
  * Imports the neccesary security modules
  */
 export function getSecurityModules(moduleName): NodeRequire | undefined {
-    let imperativeIsSsecure: boolean = false;
+    let imperativeIsSecure: boolean = false;
     try {
         const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-        const settings = JSON.parse(fs.readFileSync(fileName).toString());
-        const value1 = settings.overrides.CredentialManager;
-        const value2 = settings.overrides["credential-manager"];
-        imperativeIsSsecure = ((typeof value1 === "string") && (value1.length > 0)) ||
+        let settings: any;
+        if (fs.existsSync(fileName)) {
+            settings = JSON.parse(fs.readFileSync(fileName).toString());
+        }
+        const value1 = settings?.overrides.CredentialManager;
+        const value2 = settings?.overrides["credential-manager"];
+        imperativeIsSecure = ((typeof value1 === "string") && (value1.length > 0)) ||
             ((typeof value2 === "string") && (value2.length > 0));
     } catch (error) {
         log.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-        vscode.window.showInformationMessage(error.message);
+        vscode.window.showWarningMessage(error.message);
         return undefined;
     }
-    if (imperativeIsSsecure) {
+    if (imperativeIsSecure) {
         // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
         const appRoot = ISTHEIA ? process.cwd() : vscode.env.appRoot;
         try {
             return require(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) {
-            vscode.window.showWarningMessage(localize("initialize.module.load",
-                "Credentials not managed, unable to load security file: ") + moduleName);
-        }
+        } catch (err) { /* Do nothing */ }
         try {
             return require(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) {
-            vscode.window.showWarningMessage(localize("initialize.module.load",
-                "Credentials not managed, unable to load security file: ") + moduleName);
-        }
+        } catch (err) { /* Do nothing */ }
+        vscode.window.showWarningMessage(localize("initialize.module.load",
+            "Credentials not managed, unable to load security file: ") + moduleName);
     }
     return undefined;
 }

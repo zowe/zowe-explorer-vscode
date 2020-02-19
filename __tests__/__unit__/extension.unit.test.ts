@@ -94,7 +94,7 @@ describe("Extension Unit Tests", () => {
     const profileOne: imperative.IProfileLoaded = {
         name: "sestest",
         profile: {
-            user:undefined,
+            user: undefined,
             password: undefined
         },
         type: "zosmf",
@@ -104,9 +104,11 @@ describe("Extension Unit Tests", () => {
     let mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
     const profileOps = {
-        allProfiles: [profileOne, {name: "secondName"}],
-        defaultProfile: profileOne,
-        loadNamedProfile: mockLoadNamedProfile
+        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+        defaultProfile: {name: "firstName"},
+        getDefaultProfile: mockLoadNamedProfile,
+        loadNamedProfile: mockLoadNamedProfile,
+        usesSecurity: jest.fn().mockReturnValue(true)
     };
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
@@ -256,11 +258,13 @@ describe("Extension Unit Tests", () => {
     };
     const cliHome = jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe"));
     const icInstance = jest.fn();
-    const ImperativeConfig =jest.fn();
+    const ImperativeConfig = jest.fn();
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
     };
+    const initialize = jest.fn();
+    const getImperativeConfig = jest.fn().mockReturnValue({profiles: []});
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
@@ -356,15 +360,6 @@ describe("Extension Unit Tests", () => {
     testJobsTree.mSessionNodes.push(jobNode);
 
     mockLoadNamedProfile = jest.fn();
-    Object.defineProperty(profileLoader.Profiles, "createInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
-                usesSecurity: jest.fn().mockReturnValue(true)
-            };
-        })
-    });
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(imperative, "CliProfileManager", {value: CliProfileManager});
@@ -443,21 +438,14 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
+    Object.defineProperty(CliProfileManager, "initialize", { value: initialize });
+    Object.defineProperty(zowe, "getImperativeConfig", { value: getImperativeConfig });
+    Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
+    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
+    Object.defineProperty(icInstance, "cliHome", { get: cliHome });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    getDefaultProfile: mockLoadNamedProfile,
-                    loadNamedProfile: mockLoadNamedProfile,
-                    usesSecurity: true
-
-                };
-            })
-        });
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -473,6 +461,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(false);
+        existsSync.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["firstFile.txt", "secondFile.txt", "firstDir"]);
         isFile.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
@@ -570,7 +559,7 @@ describe("Extension Unit Tests", () => {
             };
         });
         Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
-// tslint:disable-next-line: no-object-literal-type-assertion
+        // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
             extensionPath: path.join(__dirname, "..")
@@ -689,7 +678,7 @@ describe("Extension Unit Tests", () => {
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         // tslint:disable-next-line: no-magic-numbers
-        expect(existsSync.mock.calls.length).toBe(3);
+        expect(existsSync.mock.calls.length).toBe(4);
         expect(existsSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(readdirSync.mock.calls.length).toBe(1);
         expect(readdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
@@ -698,6 +687,11 @@ describe("Extension Unit Tests", () => {
         expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.ZOWETEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
         expect(rmdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(initialize.mock.calls.length).toBe(1);
+        expect(initialize.mock.calls[0][0]).toStrictEqual({
+            configuration: [],
+            profileRootDirectory: path.join(cliHome(), "profiles")
+        });
 
         existsSync.mockReset();
         readdirSync.mockReset();
@@ -741,10 +735,11 @@ describe("Extension Unit Tests", () => {
             })
         });
         existsSync.mockReturnValueOnce(true);
+        existsSync.mockReturnValueOnce(true);
 
         await extension.activate(mock);
 
-        expect(existsSync.mock.calls.length).toBe(1);
+        expect(existsSync.mock.calls.length).toBe(2);
         expect(readdirSync.mock.calls.length).toBe(0);
 
         existsSync.mockReset();
