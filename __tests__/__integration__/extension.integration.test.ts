@@ -417,7 +417,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(afterDataSetName);
 
-                        await extension.renameDataSet(testNode, testTree);
+                        await testTree.rename(testNode);
                         beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
                         afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
                     } catch (err) {
@@ -484,7 +484,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(afterDataSetName);
 
-                        await extension.renameDataSet(testNode, testTree);
+                        await testTree.rename(testNode);
                         beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
                         afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
                     } catch (err) {
@@ -508,7 +508,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns("MISSING.DATA.SET");
 
-                        await extension.renameDataSet(testNode, testTree);
+                        await testTree.rename(testNode);
                     } catch (err) {
                         error = err;
                     }
@@ -976,7 +976,7 @@ describe("Extension Integration Tests - USS", () => {
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(fullUSSPath));
 
-            await ussTestTree1.ussFilterPrompt(ussSessionNode);
+            await ussTestTree1.filterPrompt(ussSessionNode);
 
             expect(ussTestTree1.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
             expect(ussTestTree1.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
@@ -999,7 +999,7 @@ describe("Extension Integration Tests - USS", () => {
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns("");
             const showInfoStub2 = sandbox.spy(vscode.window, "showInformationMessage");
-            await ussTestTree.ussFilterPrompt(ussSessionNode);
+            await ussTestTree.filterPrompt(ussSessionNode);
             const gotCalled = showInfoStub2.calledWith("You must enter a path.");
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);

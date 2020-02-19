@@ -128,7 +128,7 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
     const oldLabel = isFav ? originalNode.shortLabel : originalNode.label;
     const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
     // Check if an old favorite exists for this node
-    const oldFavorite = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
+    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
     const newName = await vscode.window.showInputBox({value: oldLabel});
