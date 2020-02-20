@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { KeytarCredentialManager } from "../../src/KeytarCredentialManager";
+const KeytarCredentialManager = require("../../src/KeytarCredentialManager");
 
 describe("KeytarCredentialManager Unit Tests", () => {
     // Use a fake insecure credential store
@@ -20,7 +20,7 @@ describe("KeytarCredentialManager Unit Tests", () => {
         "Broadcom-Plugin_user4": "froyo"
     };
 
-    const credentialMgr = new KeytarCredentialManager("Awesome-Service", "");
+    let credentialMgr: any;
 
     // Mock the Keytar module
     KeytarCredentialManager.keytar = {
@@ -36,6 +36,11 @@ describe("KeytarCredentialManager Unit Tests", () => {
             delete credentialStore[`${service}_${account}`];
         })
     };
+
+    beforeAll(async () => {
+        credentialMgr = new KeytarCredentialManager("Awesome-Service", "");
+        await credentialMgr.initialize();
+    });
 
     afterEach(() => {
         jest.resetAllMocks();
@@ -70,11 +75,11 @@ describe("KeytarCredentialManager Unit Tests", () => {
     it("Test saving passwords to credential store", async () => {
         expect(credentialMgr["Zowe-Plugin_user1"]).toBeDefined();
         await credentialMgr.save("user1", "cupcake");
-        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenLastCalledWith("Awesome-Plugin", "user1", "cupcake");
+        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1", "cupcake");
         expect(credentialMgr["Zowe-Plugin_user1"]).toBeUndefined();
 
         const secret = await credentialMgr.load("user1");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Awesome-Plugin", "user1");
+        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1");
         expect(secret).toBe("cupcake");
     });
 });
