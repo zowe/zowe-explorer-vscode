@@ -2,6 +2,20 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.2.3`
+
+- Secure credentials backwards compatibility. Thanks @tjohnsonBCM
+
+## `1.2.2`
+
+- Fix requirement of ~/.zowe folder. Thanks @phaumer
+
+## `1.2.1`
+
+- Fix for automatic release of VSIX. Thanks @awharn
+- Fixed creating data sets causes tree to lose expand behavior issue. Thanks @katelynienaber
+- Fixed issue with undefined node. @Colin-Stone
+
 ## `1.2.0`
 
 - Support CLI plugin extensibility. Thanks @phaumer
