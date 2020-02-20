@@ -10,9 +10,8 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
-import { Logger, IProfileLoaded } from "@brightside/imperative";
-// tslint:disable-next-line:no-implicit-dependencies
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";
@@ -22,7 +21,7 @@ import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
-import { Profiles } from "../../src/Profiles";
+
 declare var it: any;
 
 const testProfile: IProfileLoaded = {
@@ -36,7 +35,7 @@ const testProfile: IProfileLoaded = {
 describe("DatasetTree Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
-    // Uses loaded profile to create a zosmf session with brightside
+    // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
                                          null, session, undefined, undefined, testProfile);
