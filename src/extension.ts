@@ -35,6 +35,7 @@ import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { KeytarCredentialManager } from "./KeytarCredentialManager";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -126,7 +127,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
         const keytar = getSecurityModules("keytar");
         if (keytar) {
-            const KeytarCredentialManager = require("./KeytarCredentialManager");
             KeytarCredentialManager.keytar = keytar;
             const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
 
