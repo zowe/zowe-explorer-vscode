@@ -594,7 +594,7 @@ describe("Extension Unit Tests", () => {
             light: path.join(__dirname, "..", "..", "..", "resources", "light", "pattern.svg")
         };
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         // tslint:disable-next-line: no-magic-numbers
         expect(createTreeView.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
@@ -3669,7 +3669,7 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(defaultPreference);
@@ -3687,7 +3687,7 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(path.join(path.sep, "test", "path", "temp"));
@@ -3739,7 +3739,7 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(0);
     });
@@ -3760,7 +3760,7 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         expect(moveSync.mock.calls.length).toBe(0);
 
     });

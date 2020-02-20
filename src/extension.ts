@@ -40,6 +40,7 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // Globals
 export let ZOWETEMPFOLDER;
+export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
@@ -102,6 +103,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     try {
         fs.mkdirSync(ZOWETEMPFOLDER);
+        fs.mkdirSync(ZOWE_TMP_FOLDER);
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
@@ -360,6 +362,7 @@ export function defineGlobals(tempPath: string | undefined) {
         ZOWETEMPFOLDER = path.join(tempPath, "temp") :
         ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
 
+    ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
 }
@@ -431,6 +434,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
 
     try {
         fs.mkdirSync(ZOWETEMPFOLDER);
+        fs.mkdirSync(ZOWE_TMP_FOLDER);
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
@@ -1090,7 +1094,9 @@ export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: Datas
     if (beforeProfileName === profileName) {
         if (memberName) {
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`);
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`, {
+                    file: path.join(ZOWE_TMP_FOLDER, getProfile(node), `${dataSetName}(${memberName})`)
+                });
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
             } catch (err) {
                 if (!err.message.includes("Member not found")) {
