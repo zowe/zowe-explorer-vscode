@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";

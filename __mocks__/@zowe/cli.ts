@@ -10,8 +10,8 @@
 */
 
 import { Session } from "../Session";
-import { IListOptions } from "@brightside/core";
-import * as imperative from "../@brightside/imperative";
+import { IListOptions } from "@zowe/cli";
+import * as imperative from "./imperative";
 
 // tslint:disable-next-line:no-namespace
 export namespace ZosmfSession {
