@@ -449,8 +449,6 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(CliProfileManager, "initialize", { value: initialize });
     Object.defineProperty(zowe, "getImperativeConfig", { value: getImperativeConfig });
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
-    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
-    Object.defineProperty(icInstance, "cliHome", { get: cliHome });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
