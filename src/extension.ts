@@ -19,8 +19,7 @@ import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-         ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
