@@ -71,7 +71,6 @@
     "rename": "Rename",
     "copy": "Copy",
     "paste": "Paste",
-    "renameDataSetMember": "Rename Member",
     "profile.configuration.title": "Zowe z/OSMF Profiles",
     "profile.configuration.name": "Profile Name",
     "profile.configuration.url": "z/OSMF URL",
