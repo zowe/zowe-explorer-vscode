@@ -9,9 +9,9 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { Session, IProfileLoaded } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "./extension";
@@ -111,7 +111,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
         responses.forEach((response) => {
-            // Throws reject if the brightside command does not throw an error but does not succeed
+            // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
             }
