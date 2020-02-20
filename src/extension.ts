@@ -34,7 +34,6 @@ import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-// import { KeytarCredentialManager } from "./KeytarCredentialManager";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
