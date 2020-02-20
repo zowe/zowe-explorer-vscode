@@ -440,15 +440,16 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(brightside, "Copy", {value: Copy});
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
-    Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
-    Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: getProfileName });
-    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
-    Object.defineProperty(icInstance, "cliHome", { value: cliHome });
     Object.defineProperty(brightside, "HMigrate", { value: HMigrate });
     Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
+    Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
+    Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: getProfileName });
     Object.defineProperty(CliProfileManager, "initialize", { value: initialize });
     Object.defineProperty(brightside, "getImperativeConfig", { value: getImperativeConfig });
     Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
+    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
+    Object.defineProperty(icInstance, "cliHome", { get: cliHome });
+
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
