@@ -19,9 +19,9 @@ describe("KeytarCredentialManager Unit Tests", () => {
     // Use a fake insecure credential store
     const credentialStore: {[key: string]: string} = {
         "Zowe-Plugin_user1": b64Encode("cupcake"),
-        "@brightside/core_user2": b64Encode("donut"),
+        "@brightside/core_user2_password": b64Encode("donut"),
         "@zowe/cli_user3": b64Encode("eclair"),
-        "Broadcom-Plugin_user4": b64Encode("froyo")
+        "Broadcom-Plugin_user4_user": b64Encode("froyo")
     };
 
     const credentialMgr = new KeytarCredentialManager("Awesome-Service", "");
@@ -50,16 +50,16 @@ describe("KeytarCredentialManager Unit Tests", () => {
         expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Zowe-Plugin", "user1");
         expect(secret).toBe("cupcake");
 
-        secret = await credentialMgr.load("user2");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("@brightside/core", "user2");
+        secret = await credentialMgr.load("user2_pass");
+        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("@brightside/core", "user2_password");
         expect(secret).toBe("donut");
 
         secret = await credentialMgr.load("user3");
         expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("@zowe/cli", "user3");
         expect(secret).toBe("eclair");
 
-        secret = await credentialMgr.load("user4");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Broadcom-Plugin", "user4");
+        secret = await credentialMgr.load("user4_username");
+        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Broadcom-Plugin", "user4_user");
         expect(secret).toBe("froyo");
     });
 
@@ -77,6 +77,15 @@ describe("KeytarCredentialManager Unit Tests", () => {
         expect(error).toBeDefined();
         expect(error.additionalDetails).toContain("Service = Awesome-Service");
         expect(error.additionalDetails).toContain("Account = user3");
+
+        try {
+            await credentialMgr.delete("user5");
+        } catch (err) {
+            error = err;
+        }
+        expect(error).toBeDefined();
+        expect(error.additionalDetails).toContain("Service = Awesome-Service");
+        expect(error.additionalDetails).toContain("Account = user5");
     });
 
     it("Test saving passwords to credential store", async () => {
