@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as os from "os";
 import { moveSync } from "fs-extra";
@@ -19,19 +19,18 @@ import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, DefaultCredentialManager, CliProfileManager, ISession  } from "@brightside/imperative";
+    ImperativeError, DefaultCredentialManager, CliProfileManager, ISession } from "@zowe/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
 import { USSTree, createUSSTree } from "./USSTree";
-import { ZoweUSSNode } from "./ZoweUSSNode";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import * as dsActions from "./dataset/dsNodeActions";
 import * as jobActions from "./job/jobNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 // tslint:disable-next-line: no-duplicate-imports
-import { IJobFile, IUploadOptions } from "@brightside/core";
+import { IJobFile, IUploadOptions } from "@zowe/cli";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
@@ -42,7 +41,8 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // Globals
-export let BRIGHTTEMPFOLDER;
+export let ZOWETEMPFOLDER;
+export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
@@ -104,7 +104,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await deactivate();
 
     try {
-        fs.mkdirSync(BRIGHTTEMPFOLDER);
+        fs.mkdirSync(ZOWETEMPFOLDER);
+        fs.mkdirSync(ZOWE_TMP_FOLDER);
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
@@ -350,11 +351,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
  */
 export function defineGlobals(tempPath: string | undefined) {
     tempPath !== "" && tempPath !== undefined ?
-        BRIGHTTEMPFOLDER = path.join(tempPath, "temp") :
-        BRIGHTTEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
+        ZOWETEMPFOLDER = path.join(tempPath, "temp") :
+        ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
 
-    USS_DIR = path.join(BRIGHTTEMPFOLDER, "_U_");
-    DS_DIR = path.join(BRIGHTTEMPFOLDER, "_D_");
+    ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
+    USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
+    DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
 }
 
 /**
@@ -423,7 +425,8 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
     cleanTempDir();
 
     try {
-        fs.mkdirSync(BRIGHTTEMPFOLDER);
+        fs.mkdirSync(ZOWETEMPFOLDER);
+        fs.mkdirSync(ZOWE_TMP_FOLDER);
         fs.mkdirSync(USS_DIR);
         fs.mkdirSync(DS_DIR);
     } catch (err) {
@@ -433,7 +436,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
     const previousTemp = path.join(previousTempPath, "temp");
     try {
         // If source and destination path are same, exit
-        if (previousTemp === BRIGHTTEMPFOLDER) {
+        if (previousTemp === ZOWETEMPFOLDER) {
             return;
         }
 
@@ -445,7 +448,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
             return;
         }
 
-        moveSync(previousTemp, BRIGHTTEMPFOLDER, {overwrite: true});
+        moveSync(previousTemp, ZOWETEMPFOLDER, { overwrite: true });
     } catch (err) {
         log.error("Error moving temporary folder! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
@@ -742,7 +745,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
  * TODO: Consider changing configuration to allow "custom" data set specifications
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * @export
- * @param {ZoweDatasetNode} node - Desired Brightside session
+ * @param {ZoweDatasetNode} node - Desired Zowe session
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
@@ -950,7 +953,7 @@ export async function showDSAttributes(parent: ZoweDatasetNode, datasetProvider:
     // if there's only one result (which there should be), we will just pass in attributes[0]
     // so that prettyJson doesn't display the attributes as an array with a hyphen character
     const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
-    // const attributesFilePath = path.join(BRIGHTTEMPFOLDER, label + ".yaml");
+    // const attributesFilePath = path.join(ZOWETEMPFOLDER, label + ".yaml");
     // fs.writeFileSync(attributesFilePath, attributesText);
     // const document = await vscode.workspace.openTextDocument(attributesFilePath);
     // await vscode.window.showTextDocument(document);
@@ -1087,7 +1090,9 @@ export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: Datas
     if (beforeProfileName === profileName) {
         if (memberName) {
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`);
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`, {
+                    file: path.join(ZOWE_TMP_FOLDER, getProfile(node), `${dataSetName}(${memberName})`)
+                });
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
             } catch (err) {
                 if (!err.message.includes("Member not found")) {
@@ -1097,7 +1102,7 @@ export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: Datas
         }
         await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
             { dataSetName: beforeDataSetName, memberName: beforeMemberName },
-            { dataSetName, memberName },
+            { dataSetName, memberName }
         );
 
         if (memberName) {
@@ -1198,11 +1203,11 @@ export function cleanDir(directory) {
  */
 export async function cleanTempDir() {
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(BRIGHTTEMPFOLDER)) {
+    if (!fs.existsSync(ZOWETEMPFOLDER)) {
         return;
     }
     try {
-        cleanDir(BRIGHTTEMPFOLDER);
+        cleanDir(ZOWETEMPFOLDER);
     } catch (err) {
         vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
@@ -1706,7 +1711,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             if (node && downloadEtag !== node.getEtag()) {
                 node.setEtag(downloadEtag);
             }
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
+                "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
             // Store document in a separate variable, to be used on merge conflict
             const oldDoc = doc;
             const oldDocText = oldDoc.getText();
@@ -1779,7 +1785,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
 
     try {
-        const uploadResponse = await vscode.window.withProgress({
+        const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
@@ -1813,7 +1819,8 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             }
             this.downloaded = true;
 
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
+            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
+                "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
             const startPosition = new vscode.Position(0, 0);
             const endPosition = new vscode.Position(oldDocLineCount, 0);
             const deleteRange = new vscode.Range(startPosition, endPosition);
@@ -1851,7 +1858,7 @@ export async function stopCommand(job: Job) {
     }
 }
 
-export async function getSpoolContent(session: string, spool: IJobFile) {
+export async function getSpoolContent(session: string, spool: zowe.IJobFile) {
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     const spoolSess = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     if ((!spoolSess.ISession.user) || (!spoolSess.ISession.password)) {
