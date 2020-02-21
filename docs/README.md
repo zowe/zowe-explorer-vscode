@@ -10,7 +10,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 ## Install to VSC from source
 
-You can build the extension (VSIX file) from this source repository and install it to VSC.  
+You can build the extension (VSIX file) from this source repository and install it to VSC.
 
 **Important!** Follow the [instructions  for creating testProfileData.ts](#run-system-tests) before performing these steps.
 
@@ -41,7 +41,7 @@ The following topics describe how to run system tests on the Visual Studio Code 
 In your copy of this repository, create a `testProfileData.ts` file in the `resources` directory. In this file, include the following text with your credentials:
 
 ```typescript
-import { IProfile } from "@brightside/imperative";
+import { IProfile } from "@zowe/imperative";
 
 export const profile: IProfile = {
     type : "zosmf",

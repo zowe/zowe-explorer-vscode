@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
 import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
 import * as extension from "../../../src/extension";
-import * as brtimperative from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -35,7 +35,7 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     };
 });
 
-const session = new brtimperative.Session({
+const session = new Session({
     user: "fake",
     password: "fake",
     hostname: "fake",
@@ -44,7 +44,7 @@ const session = new brtimperative.Session({
 });
 
 const testTree = DatasetTree();
-const profileOne: brtimperative.IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
+const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
 const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
 
 describe("mvsNodeActions", () => {

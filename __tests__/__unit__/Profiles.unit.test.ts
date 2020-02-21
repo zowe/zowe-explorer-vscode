@@ -11,14 +11,13 @@
 
 jest.mock("vscode");
 jest.mock("child_process");
-import { Logger, ISession, ImperativeConfig } from "@brightside/imperative";
 import * as path from "path";
 import * as os from "os";
-import * as child_process from "child_process";
 import * as vscode from "vscode";
+import * as child_process from "child_process";
+import { Logger, ISession } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
-
-import { ZosmfSession } from "@brightside/core";
+import { ZosmfSession } from "@zowe/cli";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug

@@ -113,19 +113,19 @@
       },
       {
         "command": "zowe.renameDataSet",
-        "title": "%renameDataSet%"
+        "title": "%rename%"
       },
       {
         "command": "zowe.copyDataSet",
-        "title": "%copyDataSet%"
+        "title": "%copy%"
       },
       {
         "command": "zowe.pasteDataSet",
-        "title": "%pasteDataSet%"
+        "title": "%paste%"
       },
       {
         "command": "zowe.renameDataSetMember",
-        "title": "%renameDataSetMember%"
+        "title": "%rename%"
       },
       {
         "command": "zowe.deleteDataset",
@@ -1161,15 +1161,15 @@
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
-    "lint:src": "tslint --format stylish --exclude \"./__tests__/**/*.ts\" \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"./__tests__/**/*.ts\"",
+    "lint:src": "tslint --format stylish --exclude [\"**/__tests__/**/*.ts\",\"node_modules/**/*\"] \"src/**/*.ts\"",
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\"",
     "clean": "gulp clean"
   },
   "engines": {
     "vscode": "^1.34.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.4",
+    "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
     "@types/fs-extra": "^7.0.0",
@@ -1185,7 +1185,7 @@
     "del": "^4.1.1",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
-    "glob": "^7.1.2",
+    "glob": "^7.1.6",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.2.0",
     "gulp-filter": "^5.1.0",
@@ -1193,29 +1193,28 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
     "jest": "^24.8.0",
-    "jest-html-reporter": "^2.4.0",
+    "jest-html-reporter": "^2.7.0",
     "jsdoc": "^3.6.3",
     "jsdom": "11.11.0",
     "keytar": "^5.0.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
-    "mem": ">=4.0.0",
+    "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.6.2",
+    "ts-jest": "^24.2.0",
     "tslint": "^5.17.0",
-    "typescript": "^3.5.1",
-    "vsce": "^1.60.0",
+    "typescript": "^3.7.2",
+    "vsce": "^1.70.0",
     "vscode": "^1.1.36",
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "^2.36.0",
-    "fs-extra": "^8.0.1",
-    "isbinaryfile": "^4.0.4",
-    "moment": "^2.24.0",
-    "vscode-nls": "^4.1.1"
+    "@zowe/cli": "6.8.2",
+    "isbinaryfile": "4.0.4",
+    "fs-extra": "8.0.1",
+    "moment": "2.24.0",
+    "vscode-nls": "4.1.1"
   },
   "jest": {
     "moduleFileExtensions": [

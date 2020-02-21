@@ -9,17 +9,14 @@
 *                                                                                 *
 */
 
-// tslint:disable: max-classes-per-file
-
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession } from "@brightside/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, ImperativeConfig } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
-
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
@@ -157,7 +154,8 @@ export class Profiles {
                 if (this.validateAndParseUrl(urlInputBox.value).valid) {
                     resolve(urlInputBox.value);
                 } else {
-                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL", "Please enter a valid URL in the format https://url:port.");
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
+                        "Please enter a valid URL in the format https://url:port.");
                 }
             });
         });

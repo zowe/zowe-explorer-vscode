@@ -9,9 +9,9 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { IProfileLoaded, ISession, Session, IProfile } from "@brightside/imperative";
+import { IProfileLoaded, ISession, Session, IProfile } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
