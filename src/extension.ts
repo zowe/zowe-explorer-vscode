@@ -1062,11 +1062,10 @@ export async function copyDataSet(node: ZoweDatasetNode) {
 }
 
 /**
- * Paste data sets
+ * Migrate data sets
  *
  * @export
  * @param {ZoweDatasetNode} node - The node to paste to
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     const { dataSetName } = getNodeLabels(node);

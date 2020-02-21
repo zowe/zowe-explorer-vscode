@@ -439,13 +439,13 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
     Object.defineProperty(zowe, "Copy", {value: Copy});
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
+    Object.defineProperty(zowe, "HMigrate", { value: HMigrate });
+    Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
     Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: getProfileName });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { value: cliHome });
-    Object.defineProperty(zowe, "HMigrate", { value: HMigrate });
-    Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
     Object.defineProperty(CliProfileManager, "initialize", { value: initialize });
     Object.defineProperty(zowe, "getImperativeConfig", { value: getImperativeConfig });
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
