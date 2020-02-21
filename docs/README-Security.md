@@ -7,7 +7,18 @@ The support for secure credentials has recently been enhanced to support backwar
 Zowe Explorer users who already have Zowe CLI installed or in addition have a version of the SCS plugin installed can now seamlessly take advantage of the profiles defined in Zowe CLI and use them within Zowe Explorer with secure credentials.
 Secure credentials are stored in a keystore appropriate for the operating system they are running under. Zowe Explorer automatically identifies these profiles and what's more allows you to create new profiles that are also available to the Zowe CLI. 
 
-the Secure Credentials Store Plugin (SCS) is simply installed into the Zowe CLI using the command **zowe plugins install @zowe/secure-credential-store-for-zowe-cli.** For more details clickthis following: [@zowe/secure-credential-store-for-zowe-cli](https://www.npmjs.com/package/@zowe/secure-credential-store-for-zowe-cli)
+the Secure Credentials Store Plugin (SCS) is simply installed into the Zowe CLI using the command **zowe plugins install @zowe/secure-credential-store-for-zowe-cli.** For more details click [@zowe/secure-credential-store-for-zowe-cli](https://www.npmjs.com/package/@zowe/secure-credential-store-for-zowe-cli)
+
+**Using the Secure Credential Store Plug-in for Zowe**
+
+The plug-in introduces a new command group, zowe scs, that lets you update existing user profiles and enable or disable the plug-in.
+
+Securing your credentials
+
+After you install the plug-in, any user profiles that you create will automatically store your credentials securely.
+To secure credentials in existing user profiles (profiles that you created prior to installing the SCS plug-in), issue the following command:
+
+    zowe scs update
 
 ## Zowe Explorer is installed "Standalone"
 
