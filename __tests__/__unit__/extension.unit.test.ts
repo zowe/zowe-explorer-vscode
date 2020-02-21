@@ -444,11 +444,11 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
     Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: getProfileName });
-    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
-    Object.defineProperty(icInstance, "cliHome", { value: cliHome });
     Object.defineProperty(CliProfileManager, "initialize", { value: initialize });
     Object.defineProperty(zowe, "getImperativeConfig", { value: getImperativeConfig });
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
+    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
+    Object.defineProperty(icInstance, "cliHome", { get: cliHome });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
