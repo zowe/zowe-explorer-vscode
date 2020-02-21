@@ -9,20 +9,20 @@
 *                                                                                 *
 */
 
-jest.mock("@brightside/imperative");
-jest.mock("@brightside/core");
+jest.mock("@zowe/imperative");
+jest.mock("@zowe/cli");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
-import * as brtimperative from "@brightside/imperative";
-import * as zowe from "@brightside/core";
+import * as brtimperative from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
 import * as dsNodeActions from "../../../src/dataset/dsNodeActions";
 import * as extension from "../../../src/extension";
 import { Profiles } from "../../../src/Profiles";
 
 jest.mock("vscode");
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("util");

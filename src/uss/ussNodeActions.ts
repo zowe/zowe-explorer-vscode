@@ -26,7 +26,7 @@ import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
-import { ISession } from "@brightside/imperative";
+import { ISession } from "@zowe/imperative";
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path

@@ -18,7 +18,7 @@ import * as extension from "../../src/extension";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode, IZoweJobTreeNode } from "../api/IZoweTreeNode";
-import { ISession } from "@brightside/imperative";
+import { ISession } from "@zowe/imperative";
 
 export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
 

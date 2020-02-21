@@ -15,7 +15,7 @@ import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
-import { ISession, Logger } from "@brightside/imperative";
+import { ISession, Logger } from "@zowe/imperative";
 import { DatasetTree } from "../DatasetTree";
 // tslint:disable-next-line: prefer-const
 let log: Logger;
