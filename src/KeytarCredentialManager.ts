@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { AbstractCredentialManager, ImperativeError, SecureCredential } from "@brightside/imperative";
+import { AbstractCredentialManager, ImperativeError, SecureCredential } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 
 // Localization support

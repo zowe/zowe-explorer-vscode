@@ -247,8 +247,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.ussFilterPrompt(node));
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode) => ussFileProvider.deleteSession(node));
-        vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "file"));
-        vscode.commands.registerCommand("zowe.uss.createFolder", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
+        vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
+            ussActions.createUSSNode(node, ussFileProvider, "file"));
+        vscode.commands.registerCommand("zowe.uss.createFolder", async (node: IZoweUSSTreeNode) =>
+            ussActions.createUSSNode(node, ussFileProvider, "directory"));
         vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
                                                                          node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) => changeFileType(node, true, ussFileProvider));
@@ -1722,7 +1724,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
             }
-        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
+            localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
             const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
                 file: doc.fileName,
                 returnEtag: true
