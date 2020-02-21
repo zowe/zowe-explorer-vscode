@@ -9,29 +9,29 @@ Secure credentials are stored in a keystore appropriate for the operating system
 
 the Secure Credentials Store Plugin (SCS) is simply installed into the Zowe CLI using the command **zowe plugins install @zowe/secure-credential-store-for-zowe-cli.** For more details clickthis following: [@zowe/secure-credential-store-for-zowe-cli](https://www.npmjs.com/package/@zowe/secure-credential-store-for-zowe-cli)
 
-## Zowe Explorer is installed "Standalone" 
+## Zowe Explorer is installed "Standalone"
 
 Although our recommendation is for users to use the latest SCS plugin, this is not an option for Zowe Explorer users who operate without CLI installed locally. In this situation users can still use credentials that are integrated with operating systems credentials store using a in-built mechanism. To enable this two manual updates are required.
 
-**Step 1. Update the ~/.zowe/settings/imperative.json file**  
+**Step 1. Update the ~/.zowe/settings/imperative.json file**
 - Located in the user root folder is the ./zowe folder containing configuration information for CLI and the Zowe Explorer. Navigate down to the ./settings folder and edit the imperative.json files as follows:
 
 - Add the following new key: "credential-manager": "managed by default credential manager"
 
-<img src="images/ZE-imperative.jpg" width="500">
+<img src="images/ZE-Imperative.jpg" width="500">
 
 - Save the file
 
 **Step 2. Set the relevant setting in VSCode.**
 
-- Open the Command Palette and select Preferences: Open settings (UI) 
+- Open the Command Palette and select Preferences: Open settings (UI)
 
 - Click on extensions and select Zowe Explorer (at the very bottom of the list)
 
 - Confirm that the Zowe Security: Credential Key is set to @zowe/cli
 
-<img src="images/ZE-settings.jpg" width="975">
+<img src="images/ZE-Settings.jpg" width="975">
 
-- Restart VSCode to pick up your changes. 
+- Restart VSCode to pick up your changes.
 
-There is currently no mechanism with which you can update exiting profiles and it is necessary to remove all existing profiles before restarting VSCode. Once you have done this please restart VSCode and use the add profile options to create new profiles. 
+There is currently no mechanism with which you can update exiting profiles and it is necessary to remove all existing profiles before restarting VSCode. Once you have done this please restart VSCode and use the add profile options to create new profiles.
