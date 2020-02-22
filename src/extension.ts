@@ -19,8 +19,7 @@ import * as vscode from "vscode";
 import { ZoweNode } from "./ZoweNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { IZoweTree, IZoweTreeNode } from "./ZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-         ImperativeError, DefaultCredentialManager } from "@brightside/imperative";
+import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory, ImperativeError } from "@brightside/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -36,6 +35,7 @@ import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { KeytarCredentialManager } from "./KeytarCredentialManager";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -127,21 +127,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
         const keytar = getSecurityModules("keytar");
         if (keytar) {
+            KeytarCredentialManager.keytar = keytar;
             const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
-            if (service) {
-                try {
-                    // Override Imperative credential manager to use VSCode keytar
-                    DefaultCredentialManager.prototype.initialize = async () => {
-                        (DefaultCredentialManager.prototype as any).keytar = keytar;
-                    };
-                    CredentialManagerFactory.initialize(
-                        {
-                            service
-                        }
-                    );
-                } catch (err) {
-                    throw new ImperativeError({msg: err.toString()});
-                }
+
+            try {
+                CredentialManagerFactory.initialize(
+                    {
+                        service: service || "Zowe-Plugin",
+                        Manager: KeytarCredentialManager,
+                        displayName: localize("displayName", "Zowe Explorer")
+                    }
+                );
+            } catch (err) {
+                throw new ImperativeError({msg: err.toString()});
             }
         }
 

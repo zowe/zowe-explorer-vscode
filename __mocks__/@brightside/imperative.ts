@@ -93,6 +93,9 @@ export class DefaultCredentialManager {
      public test: "test";
 }
 
+// tslint:disable-next-line:max-classes-per-file
+export class AbstractCredentialManager {
+}
 
 // tslint:disable-next-line:max-classes-per-file
 export class Logger {
