@@ -10,7 +10,7 @@
 */
 
 // Don't mock Imperative because we want its AbstractCredentialManager class
-jest.unmock("@brightside/imperative");
+jest.unmock("@zowe/imperative");
 import { KeytarCredentialManager } from "../../src/KeytarCredentialManager";
 
 describe("KeytarCredentialManager Unit Tests", () => {
