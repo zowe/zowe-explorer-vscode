@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.2.3`
+
+- Secure credentials backwards compatibility. Thanks @tjohnsonBCM
+
 ## `1.2.2`
 
 - Fix requirement of ~/.zowe folder. Thanks @phaumer
