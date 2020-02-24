@@ -213,6 +213,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
         vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => renameDataSetMember(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => hMigrateDataSet(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -1058,10 +1059,23 @@ export async function copyDataSet(node: ZoweDatasetNode) {
 }
 
 /**
- * Paste data sets
+ * Migrate data sets
  *
  * @export
  * @param {ZoweDatasetNode} node - The node to paste to
+ */
+export async function hMigrateDataSet(node: ZoweDatasetNode) {
+    const { dataSetName } = getNodeLabels(node);
+    vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
+    localize("hMigrate.requestSent2", " requested."));
+    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+}
+
+/**
+ * Paste data sets
+ *
+ * @export
+ * @param {ZoweNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: DatasetTree) {

@@ -54,6 +54,8 @@
     "renameDataSet.log.debug": "Renaming data set ",
     "renameDataSet.log.error": "Error encountered when renaming data set! ",
     "renameDataSet.error": "Unable to rename data set: ",
+    "hMigrate.requestSent1": "Migration of dataset: ",
+    "hMigrate.requestSent2": " requested.",
     "renameDataSet.name": "Name of Data Set Member",
     "deactivate.error": "Unable to delete temporary folder. ",
     "deleteDataset.log.debug": "Deleting data set ",

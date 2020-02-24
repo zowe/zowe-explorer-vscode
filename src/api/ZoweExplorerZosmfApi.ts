@@ -168,6 +168,11 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         return zowe.Rename.dataSetMember(this.getSession(), currentMemberName, newMemberName, afterMemberName);
     }
 
+    public async hMigrateDataSet(dataSetName: string,
+    ): Promise<zowe.IZosFilesResponse> {
+        return zowe.HMigrate.dataSet(this.getSession(), dataSetName);
+    }
+
     public async deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions
         ): Promise<zowe.IZosFilesResponse> {
             return zowe.Delete.dataSet(this.getSession(), dataSetName);

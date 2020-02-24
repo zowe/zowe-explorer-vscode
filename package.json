@@ -120,6 +120,10 @@
         "title": "%copy%"
       },
       {
+        "command": "zowe.hMigrateDataSet",
+        "title": "%hMigrateDataSet%"
+      },
+      {
         "command": "zowe.pasteDataSet",
         "title": "%paste%"
       },
@@ -639,6 +643,11 @@
           "group": "9_cutcopypaste"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds",
+          "command": "zowe.hMigrateDataSet",
+          "group": "7_hsmcommands"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == ds_fav",
           "command": "zowe.refreshNode",
           "group": "inline"
@@ -684,6 +693,11 @@
           "group": "9_cutcopypaste"
         },
         {
+          "when": "view == zowe.explorer && viewItem == ds_fav",
+          "command": "zowe.hMigrateDataSet",
+          "group": "7_hsmcommands"
+        },
+        {
           "when": "view == zowe.explorer && viewItem == pds",
           "command": "zowe.createMember",
           "group": "1_create"
@@ -717,6 +731,11 @@
           "when": "view == zowe.explorer && viewItem == pds",
           "command": "zowe.pasteDataSet",
           "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds",
+          "command": "zowe.hMigrateDataSet",
+          "group": "7_hsmcommands"
         },
         {
           "when": "view == zowe.explorer && viewItem == pds_fav",
@@ -757,6 +776,11 @@
           "when": "view == zowe.explorer && viewItem == pds_fav",
           "command": "zowe.pasteDataSet",
           "group": "9_cutcopypaste"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == pds_fav",
+          "command": "zowe.hMigrateDataSet",
+          "group": "7_hsmcommands"
         },
         {
           "when": "view == zowe.explorer && viewItem == migr",
