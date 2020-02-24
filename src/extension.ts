@@ -131,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
 
             try {
-                CredentialManagerFactory.initialize(
+                await CredentialManagerFactory.initialize(
                     {
                         service: service || "Zowe-Plugin",
                         Manager: KeytarCredentialManager,
