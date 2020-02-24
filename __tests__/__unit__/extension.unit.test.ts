@@ -14,10 +14,10 @@ import * as treeMock from "../../src/DatasetTree";
 import * as treeUSSMock from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
-import * as brtimperative from "@brightside/imperative";
+import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as path from "path";
-import * as brightside from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
@@ -29,8 +29,8 @@ import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 
 jest.mock("vscode");
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("util");
@@ -40,7 +40,7 @@ jest.mock("USSTree");
 
 describe("Extension Unit Tests", () => {
     // Globals
-    const session = new brtimperative.Session({
+    const session = new imperative.Session({
         user: "fake",
         password: "fake",
         hostname: "fake",
@@ -48,7 +48,7 @@ describe("Extension Unit Tests", () => {
         type: "basic",
     });
 
-    const iJob: brightside.IJob = {
+    const iJob: zowe.IJob = {
         "jobid": "JOB1234",
         "jobname": "TESTJOB",
         "files-url": "fake/files",
@@ -74,7 +74,7 @@ describe("Extension Unit Tests", () => {
         "url": "fake/url"
     };
 
-    const iJobFile: brightside.IJobFile = {
+    const iJobFile: zowe.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
@@ -91,10 +91,10 @@ describe("Extension Unit Tests", () => {
         "subsystem": ""
     };
 
-    const profileOne: brtimperative.IProfileLoaded = {
+    const profileOne: imperative.IProfileLoaded = {
         name: "sestest",
         profile: {
-            user:undefined,
+            user: undefined,
             password: undefined
         },
         type: "zosmf",
@@ -104,9 +104,11 @@ describe("Extension Unit Tests", () => {
     let mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
     const profileOps = {
-        allProfiles: [profileOne, {name: "secondName"}],
-        defaultProfile: profileOne,
-        loadNamedProfile: mockLoadNamedProfile
+        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+        defaultProfile: {name: "firstName"},
+        getDefaultProfile: mockLoadNamedProfile,
+        loadNamedProfile: mockLoadNamedProfile,
+        usesSecurity: jest.fn().mockReturnValue(true)
     };
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
@@ -247,7 +249,7 @@ describe("Extension Unit Tests", () => {
     const findNonFavoritedNode = jest.fn();
     const concatChildNodes = jest.fn();
     let mockClipboardData: string;
-    const fileResponse: brightside.IZosFilesResponse = {
+    const fileResponse: zowe.IZosFilesResponse = {
         success: true,
         commandResponse: null,
         apiResponse: {
@@ -256,11 +258,13 @@ describe("Extension Unit Tests", () => {
     };
     const cliHome = jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe"));
     const icInstance = jest.fn();
-    const ImperativeConfig =jest.fn();
+    const ImperativeConfig = jest.fn();
     const clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
     };
+    const initialize = jest.fn();
+    const getImperativeConfig = jest.fn().mockReturnValue({profiles: []});
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
@@ -356,18 +360,9 @@ describe("Extension Unit Tests", () => {
     testJobsTree.mSessionNodes.push(jobNode);
 
     mockLoadNamedProfile = jest.fn();
-    Object.defineProperty(profileLoader.Profiles, "createInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
-                usesSecurity: jest.fn().mockReturnValue(true)
-            };
-        })
-    });
     Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
-    Object.defineProperty(brtimperative, "CliProfileManager", {value: CliProfileManager});
+    Object.defineProperty(imperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
     Object.defineProperty(vscode, "Uri", {value: Uri});
@@ -394,17 +389,17 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(document, "save", {value: save});
     Object.defineProperty(document, "getText", {value: getText});
     Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
-    Object.defineProperty(brightside, "ZosmfSession", {value: ZosmfSession});
+    Object.defineProperty(zowe, "ZosmfSession", {value: ZosmfSession});
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
-    Object.defineProperty(brightside, "Upload", {value: Upload});
+    Object.defineProperty(zowe, "Upload", {value: Upload});
     Object.defineProperty(Upload, "bufferToDataSet", {value: bufferToDataSet});
     Object.defineProperty(Upload, "pathToDataSet", {value: pathToDataSet});
     Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
-    Object.defineProperty(brightside, "Create", {value: Create});
+    Object.defineProperty(zowe, "Create", {value: Create});
     Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
-    Object.defineProperty(brightside, "Get", {value: Get});
+    Object.defineProperty(zowe, "Get", {value: Get});
     Object.defineProperty(Get, "dataSet", {value: dataSetGet});
-    Object.defineProperty(brightside, "List", {value: List});
+    Object.defineProperty(zowe, "List", {value: List});
     Object.defineProperty(List, "dataSet", {value: dataSetList});
     Object.defineProperty(List, "fileList", {value: fileList});
     Object.defineProperty(List, "allMembers", {value: allMembers});
@@ -414,50 +409,43 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
-    Object.defineProperty(brightside, "Download", {value: Download});
+    Object.defineProperty(zowe, "Download", {value: Download});
     Object.defineProperty(Download, "dataSet", {value: dataSet});
     Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
     Object.defineProperty(treeUSSMock, "USSTree", {value: USSTree});
-    Object.defineProperty(brightside, "Delete", {value: Delete});
+    Object.defineProperty(zowe, "Delete", {value: Delete});
     Object.defineProperty(Delete, "dataSet", {value: delDataset});
-    Object.defineProperty(brightside, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
-    Object.defineProperty(brightside, "Utilities", {value: Utilities});
+    Object.defineProperty(zowe, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
+    Object.defineProperty(zowe, "Utilities", {value: Utilities});
     Object.defineProperty(Download, "ussFile", {value: ussFile});
     Object.defineProperty(Utilities, "isFileTagBinOrAscii", {value: isFileTagBinOrAscii});
-    Object.defineProperty(brightside, "GetJobs", {value: GetJobs});
+    Object.defineProperty(zowe, "GetJobs", {value: GetJobs});
     Object.defineProperty(GetJobs, "getSpoolContentById", {value: getSpoolContentById});
     Object.defineProperty(GetJobs, "getJclForJob", {value: getJclForJob});
-    Object.defineProperty(brightside, "DownloadJobs", {value: DownloadJobs});
+    Object.defineProperty(zowe, "DownloadJobs", {value: DownloadJobs});
     Object.defineProperty(DownloadJobs, "downloadAllSpoolContentCommon", {value: downloadAllSpoolContentCommon});
-    Object.defineProperty(brightside, "SubmitJobs", {value: SubmitJobs});
+    Object.defineProperty(zowe, "SubmitJobs", {value: SubmitJobs});
     Object.defineProperty(SubmitJobs, "submitJcl", {value: submitJcl});
     Object.defineProperty(SubmitJobs, "submitJob", {value: submitJob});
-    Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
+    Object.defineProperty(zowe, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
     Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider});
     Object.defineProperty(vscode.Disposable, "from", {value: from});
     Object.defineProperty(vscode.Uri, "parse", {value: parse});
-    Object.defineProperty(brightside, "Rename", {value: Rename});
+    Object.defineProperty(zowe, "Rename", {value: Rename});
     Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
-    Object.defineProperty(brightside, "Copy", {value: Copy});
+    Object.defineProperty(zowe, "Copy", {value: Copy});
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
+    Object.defineProperty(CliProfileManager, "initialize", { value: initialize });
+    Object.defineProperty(zowe, "getImperativeConfig", { value: getImperativeConfig });
+    Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
+    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
+    Object.defineProperty(icInstance, "cliHome", { get: cliHome });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    getDefaultProfile: mockLoadNamedProfile,
-                    loadNamedProfile: mockLoadNamedProfile,
-                    usesSecurity: true
-
-                };
-            })
-        });
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -473,6 +461,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(true);
         existsSync.mockReturnValueOnce(false);
+        existsSync.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["firstFile.txt", "secondFile.txt", "firstDir"]);
         isFile.mockReturnValueOnce(true);
         readdirSync.mockReturnValueOnce(["thirdFile.txt"]);
@@ -570,7 +559,7 @@ describe("Extension Unit Tests", () => {
             };
         });
         Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
-// tslint:disable-next-line: no-object-literal-type-assertion
+        // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
             extensionPath: path.join(__dirname, "..")
@@ -605,7 +594,7 @@ describe("Extension Unit Tests", () => {
             light: path.join(__dirname, "..", "..", "..", "resources", "light", "pattern.svg")
         };
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         // tslint:disable-next-line: no-magic-numbers
         expect(createTreeView.mock.calls.length).toBe(3);
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
@@ -689,15 +678,20 @@ describe("Extension Unit Tests", () => {
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         // tslint:disable-next-line: no-magic-numbers
-        expect(existsSync.mock.calls.length).toBe(3);
-        expect(existsSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(existsSync.mock.calls.length).toBe(4);
+        expect(existsSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(readdirSync.mock.calls.length).toBe(1);
-        expect(readdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(readdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(unlinkSync.mock.calls.length).toBe(2);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/firstFile.txt"));
-        expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.BRIGHTTEMPFOLDER + "/secondFile.txt"));
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.ZOWETEMPFOLDER + "/firstFile.txt"));
+        expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.ZOWETEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
-        expect(rmdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(rmdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(initialize.mock.calls.length).toBe(1);
+        expect(initialize.mock.calls[0][0]).toStrictEqual({
+            configuration: [],
+            profileRootDirectory: path.join(cliHome(), "profiles")
+        });
 
         existsSync.mockReset();
         readdirSync.mockReset();
@@ -741,10 +735,11 @@ describe("Extension Unit Tests", () => {
             })
         });
         existsSync.mockReturnValueOnce(true);
+        existsSync.mockReturnValueOnce(true);
 
         await extension.activate(mock);
 
-        expect(existsSync.mock.calls.length).toBe(1);
+        expect(existsSync.mock.calls.length).toBe(2);
         expect(readdirSync.mock.calls.length).toBe(0);
 
         existsSync.mockReset();
@@ -915,7 +910,7 @@ describe("Extension Unit Tests", () => {
 
     it("Call Change File type", async () => {
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        const response: brightside.IZosFilesResponse = {
+        const response: zowe.IZosFilesResponse = {
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -1195,7 +1190,7 @@ describe("Extension Unit Tests", () => {
         const childNode = new ZoweDatasetNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null, undefined, undefined, profileOne);
         sessNode2.children.push(childNode);
 
-        const uploadResponse: brightside.IZosFilesResponse = {
+        const uploadResponse: zowe.IZosFilesResponse = {
             success: true,
             commandResponse: "success",
             apiResponse: {
@@ -1318,14 +1313,14 @@ describe("Extension Unit Tests", () => {
 
             })
         });
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
             protocol: "https",
             type: "basic",
         });
-        const uploadResponse: brightside.IZosFilesResponse = {
+        const uploadResponse: zowe.IZosFilesResponse = {
             success: true,
             commandResponse: "success",
             apiResponse: {
@@ -1402,14 +1397,14 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
             protocol: "https",
             type: "basic",
         });
-        const uploadResponse: brightside.IZosFilesResponse = {
+        const uploadResponse: zowe.IZosFilesResponse = {
             success: true,
             commandResponse: "success",
             apiResponse: {
@@ -1486,14 +1481,15 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-        const uploadResponse: brightside.IZosFilesResponse = {
+
+        const uploadResponse: zowe.IZosFilesResponse = {
             success: true,
             commandResponse: "success",
             apiResponse: {
                 items: []
             }
         };
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -1768,7 +1764,7 @@ describe("Extension Unit Tests", () => {
         };
 
         // If session node is not defined, it should take the session from Profile
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -1818,7 +1814,7 @@ describe("Extension Unit Tests", () => {
             sessNode, null, undefined, undefined, profileOne), sessNode]);
         showErrorMessage.mockReset();
         const dataSetSpy = jest.spyOn(mvsApi, "dataSet").mockImplementationOnce(
-            async () => testResponse as brightside.IZosFilesResponse);
+            async () => testResponse as zowe.IZosFilesResponse);
         await extension.saveFile(testDoc, testTree);
         expect(dataSetSpy.mock.calls.length).toBe(1);
         expect(dataSetSpy.mock.calls[0][0]).toBe("HLQ.TEST.AFILE");
@@ -1834,7 +1830,7 @@ describe("Extension Unit Tests", () => {
         concatChildNodes.mockReset();
         const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
         mockSetEtag.mockReset();
-        const uploadResponse: brightside.IZosFilesResponse = {
+        const uploadResponse: zowe.IZosFilesResponse = {
             success: true,
             commandResponse: "success",
             apiResponse: [{
@@ -2053,7 +2049,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         showTextDocument.mockReset();
         openTextDocument.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2089,7 +2085,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2125,7 +2121,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2158,7 +2154,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2219,7 +2215,7 @@ describe("Extension Unit Tests", () => {
             resetMocks();
             setMocksForNode(node);
 
-            const response: brightside.IZosFilesResponse = {
+            const response: zowe.IZosFilesResponse = {
                 success: true,
                 commandResponse: null,
                 apiResponse: {
@@ -2242,7 +2238,7 @@ describe("Extension Unit Tests", () => {
             resetMocks();
             setMocksForNode(node);
 
-            const response: brightside.IZosFilesResponse = {
+            const response: zowe.IZosFilesResponse = {
                 success: true,
                 commandResponse: null,
                 apiResponse: {
@@ -2265,7 +2261,7 @@ describe("Extension Unit Tests", () => {
             resetMocks();
             setMocksForNode(node);
 
-            const response: brightside.IZosFilesResponse = {
+            const response: zowe.IZosFilesResponse = {
                 success: true,
                 commandResponse: null,
                 apiResponse: {
@@ -2733,7 +2729,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         showTextDocument.mockReset();
         openTextDocument.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2771,7 +2767,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2809,7 +2805,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -2844,7 +2840,7 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -3017,7 +3013,7 @@ describe("Extension Unit Tests", () => {
                     };
                 })
             });
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new imperative.Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -3047,7 +3043,7 @@ describe("Extension Unit Tests", () => {
                     };
                 })
             });
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new imperative.Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -3076,7 +3072,7 @@ describe("Extension Unit Tests", () => {
                     };
                 })
             });
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new imperative.Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -3128,7 +3124,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new imperative.Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -3430,7 +3426,7 @@ describe("Extension Unit Tests", () => {
     it("tests that the spool content credentials prompt is executed successfully", async () => {
         showTextDocument.mockReset();
         openTextDocument.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -3464,7 +3460,7 @@ describe("Extension Unit Tests", () => {
     it("tests that the spool content credentials prompt ends in error", async () => {
         showTextDocument.mockReset();
         openTextDocument.mockReset();
-        const sessionwocred = new brtimperative.Session({
+        const sessionwocred = new imperative.Session({
             user: "",
             password: "",
             hostname: "fake",
@@ -3669,12 +3665,12 @@ describe("Extension Unit Tests", () => {
 
         const originalPreferencePath = "";
         const updatedPreferencePath = "/testing";
-        const defaultPreference = extension.BRIGHTTEMPFOLDER;
+        const defaultPreference = extension.ZOWETEMPFOLDER;
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
-        expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(mkdirSync.mock.calls.length).toBe(4);
+        expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(defaultPreference);
         expect(moveSync.mock.calls[0][1]).toBe(path.join(path.sep, "testing", "temp"));
@@ -3691,8 +3687,8 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
-        expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(mkdirSync.mock.calls.length).toBe(4);
+        expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(path.join(path.sep, "test", "path", "temp"));
         expect(moveSync.mock.calls[0][1]).toBe(path.join(path.sep, "new", "test", "path", "temp"));
@@ -3743,8 +3739,8 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
-        expect(mkdirSync.mock.calls[0][0]).toBe(extension.BRIGHTTEMPFOLDER);
+        expect(mkdirSync.mock.calls.length).toBe(4);
+        expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(0);
     });
 
@@ -3764,7 +3760,7 @@ describe("Extension Unit Tests", () => {
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
-        expect(mkdirSync.mock.calls.length).toBe(3);
+        expect(mkdirSync.mock.calls.length).toBe(4);
         expect(moveSync.mock.calls.length).toBe(0);
 
     });
@@ -4119,7 +4115,7 @@ describe("Extension Unit Tests", () => {
             );
         });
         it("Should throw an error when pasting to a member that already exists", async () => {
-            const testResponse: brightside.IZosFilesResponse = {
+            const testResponse: zowe.IZosFilesResponse = {
                 success: true,
                 commandResponse: "",
                 apiResponse: {

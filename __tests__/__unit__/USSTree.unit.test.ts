@@ -11,12 +11,12 @@
 
 // tslint:disable:no-shadowed-variable
 jest.mock("vscode");
-jest.mock("@brightside/imperative");
-jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
+jest.mock("@zowe/imperative");
 jest.mock("Session");
 jest.mock("../../src/Profiles");
-import * as brightside from "@brightside/core";
-import { Session, Logger, IProfileLoaded } from "@brightside/imperative";
+
+import * as zowe from "@zowe/cli";
+import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
 import * as utils from "../../src/utils";
@@ -702,7 +702,7 @@ describe("Unit Tests (Jest)", () => {
             type: "basic",
         });
         const ZosmfSession = jest.fn();
-        Object.defineProperty(brightside, "ZosmfSession", { value: ZosmfSession });
+        Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
         const createBasicZosmfSession = jest.fn();
         Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
         createBasicZosmfSession.mockReturnValue(sessionwocred);
@@ -778,11 +778,12 @@ describe("Unit Tests (Jest)", () => {
             type: "basic",
         });
         const ZosmfSession = jest.fn();
-        Object.defineProperty(brightside, "ZosmfSession", { value: ZosmfSession });
+        Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
         const createBasicZosmfSession = jest.fn();
         Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
         createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const dsNode = new ZoweUSSNode("[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred, null, false, "ussTestSess2");
+        const dsNode = new ZoweUSSNode(
+          "[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred, null, false, "ussTestSess2");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {

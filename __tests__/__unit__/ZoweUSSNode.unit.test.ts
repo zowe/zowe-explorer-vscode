@@ -11,10 +11,9 @@
 
 // tslint:disable:no-shadowed-variable
 jest.mock("vscode");
-jest.mock("@brightside/imperative");
-jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
+jest.mock("@zowe/imperative");
 jest.mock("Session");
-import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
+import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as utils from "../../src/utils";
@@ -157,7 +156,7 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Checks that the catch block is reached when an error is thrown
      *************************************************************************************************************/
-    it("Checks that when bright.List. causes an error on the brightside call, " +
+    it("Checks that when bright.List. causes an error on the zowe call, " +
         "it throws an error and the catch block is reached", async () => {
             // Creating a rootNode
             const rootNode = new ZoweUSSNode(

@@ -10,8 +10,8 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
-import { Logger, CliProfileManager, IProfileLoaded } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Logger, CliProfileManager, IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -163,7 +163,7 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.ZOWETEMPFOLDER);
                 fs.mkdirSync(extension.DS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
@@ -338,10 +338,10 @@ describe("Extension Integration Tests", () => {
 
             const changedData = "PS Upload Test";
 
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[1].label + "[" + profiles[1].label + "]"), changedData);
+            fs.writeFileSync(path.join(extension.ZOWETEMPFOLDER, children[1].label + "[" + profiles[1].label + "]"), changedData);
 
             // Upload file
-            const doc = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER,
+            const doc = await vscode.workspace.openTextDocument(path.join(extension.ZOWETEMPFOLDER,
                 children[1].label + "[" + profiles[1].label + "]"));
             await extension.saveFile(doc, testTree);
 
@@ -352,7 +352,7 @@ describe("Extension Integration Tests", () => {
 
             // Change contents back
             const originalData = "";
-            fs.writeFileSync(path.join(path.join(extension.BRIGHTTEMPFOLDER, children[1].label)), originalData);
+            fs.writeFileSync(path.join(path.join(extension.ZOWETEMPFOLDER, children[1].label)), originalData);
         }).timeout(TIMEOUT);
 
         it("should download, change, and re-upload a PDS member", async () => {
@@ -368,10 +368,10 @@ describe("Extension Integration Tests", () => {
 
             const changedData2 = "PO Member Upload Test";
 
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), changedData2);
+            fs.writeFileSync(path.join(extension.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), changedData2);
 
             // Upload file
-            const doc2 = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER, children[0].label +
+            const doc2 = await vscode.workspace.openTextDocument(path.join(extension.ZOWETEMPFOLDER, children[0].label +
                 "(" + childrenMembers[0].label + ")"));
             extension.saveFile(doc2, testTree);
 
@@ -382,7 +382,7 @@ describe("Extension Integration Tests", () => {
 
             // Change contents back
             const originalData2 = "";
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), originalData2);
+            fs.writeFileSync(path.join(extension.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), originalData2);
         }).timeout(TIMEOUT);
 
         // TODO add tests for saving data set from favorites
@@ -761,8 +761,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
 
-            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(testingPath, "temp"));
+            // expect(extension.ZOWETEMPFOLDER).to.equal(`${testingPath}/temp`);
+            expect(extension.ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(testingPath);
@@ -780,8 +780,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
             { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
 
-            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
+            // expect(extension.ZOWETEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            expect(extension.ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(providedPathOne);
@@ -792,7 +792,7 @@ describe("Extension Integration Tests", () => {
             const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: "" }, vscode.ConfigurationTarget.Global);
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(expectedDefaultTemp);
+            expect(extension.ZOWETEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
     });
 
@@ -952,7 +952,7 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.ZOWETEMPFOLDER);
                 fs.mkdirSync(extension.USS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again

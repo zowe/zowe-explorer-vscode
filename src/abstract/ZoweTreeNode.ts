@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { Session, IProfileLoaded } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 
 /**
