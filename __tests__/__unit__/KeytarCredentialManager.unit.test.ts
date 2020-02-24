@@ -45,6 +45,10 @@ describe("KeytarCredentialManager Unit Tests", () => {
         })
     };
 
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     it("Test loading passwords from credential store", async () => {
         let secret = await credentialMgr.load("user1");
         expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Zowe-Plugin", "user1");
