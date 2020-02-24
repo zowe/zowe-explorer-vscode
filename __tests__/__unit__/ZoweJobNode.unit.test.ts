@@ -193,7 +193,8 @@ describe("Zos Jobs Unit Tests", () => {
             mockLoadNamedProfile.mockReturnValue(
                 {name:"fake", type:"zosmf", profile: {name:"fake", type:"zosmf", profile:{name:"fake", type:"zosmf"}}});
             mockLoadDefaultProfile.mockReturnValue(
-                {name:"firstProfileName", type:"zosmf", profile: {name:"firstProfileName", type:"zosmf", profile:{name:"firstProfileName", type:"zosmf"}}});
+                {name:"firstProfileName", type:"zosmf", profile:
+                    {name:"firstProfileName", type:"zosmf", profile:{name:"firstProfileName", type:"zosmf"}}});
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {

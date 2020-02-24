@@ -34,6 +34,7 @@ import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { KeytarCredentialManager } from "./KeytarCredentialManager";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -127,21 +128,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
         const keytar = getSecurityModules("keytar");
         if (keytar) {
+            KeytarCredentialManager.keytar = keytar;
             const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
-            if (service) {
-                try {
-                    // Override Imperative credential manager to use VSCode keytar
-                    DefaultCredentialManager.prototype.initialize = async () => {
-                        (DefaultCredentialManager.prototype as any).keytar = keytar;
-                    };
-                    CredentialManagerFactory.initialize(
-                        {
-                            service
-                        }
-                    );
-                } catch (err) {
-                    throw new ImperativeError({msg: err.toString()});
-                }
+
+            try {
+                CredentialManagerFactory.initialize(
+                    {
+                        service: service || "Zowe-Plugin",
+                        Manager: KeytarCredentialManager,
+                        displayName: localize("displayName", "Zowe Explorer")
+                    }
+                );
+            } catch (err) {
+                throw new ImperativeError({msg: err.toString()});
             }
         }
 
@@ -248,8 +247,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.ussFilterPrompt(node));
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode) => ussFileProvider.deleteSession(node));
-        vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "file"));
-        vscode.commands.registerCommand("zowe.uss.createFolder", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
+        vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
+            ussActions.createUSSNode(node, ussFileProvider, "file"));
+        vscode.commands.registerCommand("zowe.uss.createFolder", async (node: IZoweUSSTreeNode) =>
+            ussActions.createUSSNode(node, ussFileProvider, "directory"));
         vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
                                                                          node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) => changeFileType(node, true, ussFileProvider));
@@ -1723,7 +1724,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
             }
-        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
+            localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
             const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
                 file: doc.fileName,
                 returnEtag: true
