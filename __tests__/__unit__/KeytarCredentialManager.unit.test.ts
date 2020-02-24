@@ -24,7 +24,7 @@ describe("KeytarCredentialManager Unit Tests", () => {
         "Broadcom-Plugin_user4_user": b64Encode("froyo")
     };
 
-    const credentialMgr = new KeytarCredentialManager("Awesome-Service", "");
+    let credentialMgr = new KeytarCredentialManager("Awesome-Service", "");
 
     // Mock the Keytar module
     KeytarCredentialManager.keytar = {
@@ -98,5 +98,15 @@ describe("KeytarCredentialManager Unit Tests", () => {
         const secret = await credentialMgr.load("user1");
         expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1");
         expect(secret).toBe("cupcake");
+    });
+
+    it("Test saving passwords to credential store under previous service name", async () => {
+        credentialMgr = new KeytarCredentialManager("Broadcom-Plugin", "");
+
+        expect(credentialStore["Broadcom-Plugin_user5"]).toBeUndefined();
+        await credentialMgr.save("user5", "gingerbread");
+        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenCalledTimes(1);
+        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenLastCalledWith("Broadcom-Plugin", "user5", b64Encode("gingerbread"));
+        expect(credentialStore["Broadcom-Plugin_user5"]).toBeDefined();
     });
 });
