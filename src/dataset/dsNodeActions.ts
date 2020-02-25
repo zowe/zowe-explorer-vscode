@@ -25,35 +25,14 @@ let log: Logger;
  * @param {DataSetTree} datasetProvider
  */
 export async function refreshAll(datasetProvider: DatasetTree) {
+    await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === extension.DS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            utils.refreshTree(sessNode);
         }
     });
     await datasetProvider.refresh();
-    await Profiles.getInstance().refresh();
-
-    const allProf = Profiles.getInstance().getProfiles();
-    datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === extension.DS_SESSION_CONTEXT) {
-            for (const profNode of allProf) {
-                if (sessNode.getProfileName() === profNode.name) {
-                    sessNode.getProfile().profile = profNode.profile;
-                    const SessionProfile = profNode.profile as ISession;
-                    if (sessNode.getSession().ISession !== SessionProfile) {
-                        sessNode.getSession().ISession.user = SessionProfile.user;
-                        sessNode.getSession().ISession.password = SessionProfile.password;
-                        sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                        sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                        sessNode.getSession().ISession.port = SessionProfile.port;
-                        sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
-                    }
-                }
-            }
-        }
-    });
-    await datasetProvider.refresh();
-
 }

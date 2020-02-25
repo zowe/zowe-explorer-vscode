@@ -833,7 +833,7 @@ describe("Extension Unit Tests", () => {
         }
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Unable to create member: test");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Unable to create member: test Error: test");
 
         bufferToDataSet.mockReset();
 
@@ -900,7 +900,7 @@ describe("Extension Unit Tests", () => {
 
         expect(dataSet.mock.calls[0][1]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
@@ -1287,7 +1287,7 @@ describe("Extension Unit Tests", () => {
             // do nothing
         }
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error Error: Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -1609,7 +1609,7 @@ describe("Extension Unit Tests", () => {
         await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
 
         showQuickPick.mockResolvedValueOnce("No");
 
@@ -2044,7 +2044,7 @@ describe("Extension Unit Tests", () => {
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getDocumentFilePath(parent.label + "(" + child.label + ")", node));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("testError");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
 
         const child2 = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
@@ -2582,28 +2582,7 @@ describe("Extension Unit Tests", () => {
 
         });
     });
-
-    it("Testing that refreshAllUSS is executed successfully", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    getDefaultProfile: mockLoadNamedProfile,
-                    loadNamedProfile: mockLoadNamedProfile,
-                    usesSecurity: true,
-                    getProfiles: jest.fn(() => {
-                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
-                    }),
-                    refresh: jest.fn(),
-                };
-            })
-        });
-        const spy = jest.fn(testUSSTree.refresh);
-        ussNodeActions.refreshAllUSS(testUSSTree);
-        expect(testUSSTree.refresh).toHaveBeenCalled();
-    });
-
+    
     // TODO Node tests
     it("Testing that open is executed successfully", async () => {
         ussFile.mockReset();
@@ -2687,7 +2666,7 @@ describe("Extension Unit Tests", () => {
         expect(openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("testError");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
 
         const child2 = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, node2, null, null);
         try {
@@ -2713,7 +2692,7 @@ describe("Extension Unit Tests", () => {
         expect(ussFile.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
-        expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node.");
+        expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
     });
 
     // TODO Node tests
@@ -3043,7 +3022,7 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
 
         concatChildNodes.mockReset();
         concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
@@ -3810,7 +3789,7 @@ describe("Extension Unit Tests", () => {
         });
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error encountered when creating temporary folder! testAsError 1");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error encountered when creating temporary folder! testAsError 1 Error: testAsError 1");
     });
 
     it("Tests that temp folder error thrown 2", () => {
@@ -4005,7 +3984,7 @@ describe("Extension Unit Tests", () => {
             Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(
-            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
+            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
     });
 
     describe("Renaming Data Sets", () => {

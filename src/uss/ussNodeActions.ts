@@ -106,39 +106,16 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
  * @param {USSTree} ussFileProvider
  */
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+    await Profiles.getInstance().refresh();
     ussFileProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === extension.USS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            utils.refreshTree(sessNode);
         }
     });
-
     await ussFileProvider.refresh();
-    await Profiles.getInstance().refresh();
-
-    const allProf = Profiles.getInstance().getProfiles();
-    ussFileProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === extension.USS_SESSION_CONTEXT) {
-            for (const profNode of allProf) {
-                if (sessNode.getProfileName() === profNode.name) {
-                    sessNode.getProfile().profile = profNode.profile;
-                    const SessionProfile = profNode.profile as ISession;
-                    if (sessNode.getSession().ISession !== SessionProfile) {
-                        sessNode.getSession().ISession.user = SessionProfile.user;
-                        sessNode.getSession().ISession.password = SessionProfile.password;
-                        sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                        sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                        sessNode.getSession().ISession.port = SessionProfile.port;
-                        sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
-                    }
-                }
-            }
-        }
-    });
-
-    await ussFileProvider.refresh();
-
 }
 
 /**

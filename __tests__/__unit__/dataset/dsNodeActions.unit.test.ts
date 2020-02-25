@@ -18,6 +18,7 @@ import * as zowe from "@zowe/cli";
 import * as dsNodeActions from "../../../src/dataset/dsNodeActions";
 import * as extension from "../../../src/extension";
 import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -178,9 +179,9 @@ describe("dsNodeActions", () => {
                     };
                 })
             });
-            const spy = jest.fn(testDSTree.refresh);
+            const spy = jest.spyOn(dsNodeActions, "refreshAll");
             dsNodeActions.refreshAll(testDSTree);
-            expect(testDSTree.refresh).toHaveBeenCalled();
+            expect(spy).toHaveBeenCalledTimes(1);
         });
     });
 });

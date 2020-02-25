@@ -18,6 +18,7 @@ import * as zowe from "@zowe/cli";
 import * as jobNodeActions from "../../../src/job/jobNodeActions";
 import * as extension from "../../../src/extension";
 import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -178,9 +179,9 @@ describe("jobNodeActions", () => {
                     };
                 })
             });
-            const spy = jest.fn(testJobTree.refresh);
+            const spy = jest.spyOn(jobNodeActions, "refreshAllJobs");
             jobNodeActions.refreshAllJobs(testJobTree);
-            expect(testJobTree.refresh).toHaveBeenCalled();
+            expect(spy).toHaveBeenCalledTimes(1);
         });
     });
 });
