@@ -2582,8 +2582,7 @@ describe("Extension Unit Tests", () => {
 
         });
     });
-    
-    // TODO Node tests
+  // TODO Node tests
     it("Testing that open is executed successfully", async () => {
         ussFile.mockReset();
         openTextDocument.mockReset();
