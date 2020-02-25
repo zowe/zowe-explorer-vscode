@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.2.4`
+
+- Fix to Credentials initialization to wait on promise. @Colin-Stone
+
 ## `1.2.3`
 
 - Secure credentials backwards compatibility. Thanks @tjohnsonBCM
