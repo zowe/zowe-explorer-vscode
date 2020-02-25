@@ -52,10 +52,10 @@ export class KeytarCredentialManager extends AbstractCredentialManager {
         super(service, displayName);
 
         if (this.allServices.indexOf(service) === -1) {
-            this.allServices.unshift(service);
+            this.allServices.push(service);
         }
 
-        this.preferredService = this.allServices[0];
+        this.preferredService = service;
     }
 
     /**
