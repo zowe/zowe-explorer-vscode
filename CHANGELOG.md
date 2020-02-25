@@ -2,6 +2,32 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.3.0`
+
+- Dependency on ~/.zowe folder existing removed. Thanks @tjohnsonBCM
+- Label changes for specific datset functionality. Thanks @CForrest97
+- Zowe Explorer to incorporate @zowe CLI implementation. Thanks @zFernand0
+- Profiles manage other profile types apart from zosmf. Thanks @Colin-Stone
+- Exploit imperative bundled keytar for secure credentials when standalone. Thanks @Colin-Stone
+
+## `1.2.4`
+
+- Fix to Credentials initialization to wait on promise. Thanks @Colin-Stone
+
+## `1.2.3`
+
+- Secure credentials backwards compatibility. Thanks @tjohnsonBCM
+
+## `1.2.2`
+
+- Fix requirement of ~/.zowe folder. Thanks @phaumer
+
+## `1.2.1`
+
+- Fix for automatic release of VSIX. Thanks @awharn
+- Fixed creating data sets causes tree to lose expand behavior issue. Thanks @katelynienaber
+- Fixed issue with undefined node. Thanks @Colin-Stone
+
 ## `1.2.0`
 
 - Support CLI plugin extensibility. Thanks @phaumer
@@ -15,10 +41,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Tree view refresh when dataset memberadded or deleted. Thanks @katelynienaber
 - Code improvement - Centralized error handling. Thanks @crawr
 - Integration Script updates. Thanks @zFernand0
-- Keytar (Secure credentials) compatibility support. @Colin-Stone
-- Improved usability of MVS Command feature including 'Recall' function. @Colin-Stone
-- Fixed issue where Job folder did not auto-expand. @Colin-Stone
-- Use Progress indicator wrapper around longer running list functions. @Colin-Stone
+- Keytar (Secure credentials) compatibility support. Thanks @Colin-Stone
+- Improved usability of MVS Command feature including 'Recall' function. Thanks @Colin-Stone
+- Fixed issue where Job folder did not auto-expand. Thanks @Colin-Stone
+- Use Progress indicator wrapper around longer running list functions. Thanks @Colin-Stone
 
 ## `1.1.0`
 
@@ -26,7 +52,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fix for incorrect profile name in some favorites. Thanks @lauren-li
 - Update dataset filters on dataset creation. Thanks @katelynienaber
 - Include VSIX in Github release. Thanks @zFernand0
-- Fix dataset delete fails silently bug. @Colin-Stone
+- Fix dataset delete fails silently bug. Thanks @Colin-Stone
 - Fix to handle "Show Dataset Attributes" in Favorites. Thanks @katelynienaber
 - Enhancements to profile creation. Thanks @jellypuno
 - Theia specific QuickPick modifications. Thanks @phaumer
@@ -66,14 +92,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## 0.28.0
 
 - Provide ability to add new profiles in explorer. Thanks @crawr, @jellypuno
-- Recognize migrated dataset context. @Colin-Stone
-- Fix dataset delete fails silently bug. @Colin-Stone
+- Recognize migrated dataset context. Thanks @Colin-Stone
+- Fix dataset delete fails silently bug. Thanks @Colin-Stone
 
 ## 0.27.0
 
 - Name change to Zowe Explorer
-- Enhancements to the History recall 'QuickPick' dialogs. @Colin-Stone
-- Favorites are now sorted. @Colin-Stone
+- Enhancements to the History recall 'QuickPick' dialogs. Thanks @Colin-Stone
+- Favorites are now sorted. Thanks @Colin-Stone
 
 ## 0.26.1
 
@@ -81,20 +107,20 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## 0.26.0
 
-- Added Persistence for profiles selection. @Colin-Stone
-- Performance enhancements for Profile loading operations. @Colin-Stone
-- Filter rewording. @Colin-Stone
+- Added Persistence for profiles selection. Thanks @Colin-Stone
+- Performance enhancements for Profile loading operations. Thanks @Colin-Stone
+- Filter rewording. Thanks @Colin-Stone
 
 ## 0.25.0
 
 - Add Edit to context menu for MVS and USS Tree. Thanks to Rodney-Wilson
-- Restructured all search and filters dialogs to incorporate a recall/history function. @Colin-Stone
-- Added Search Favorite for USS Favorites. @Colin-Stone
-- Added Job and Search Favorite for Jobs. @Colin-Stone
-- Provided support for specifying jobs by job id. @Colin-Stone
-- Fixed issue with submitting datasets job link. @Colin-Stone
-- Fixed label for Jobs Refresh All. @Colin-Stone
-- Minor icon improvement to distinguish Favorites from LPAR's. @Colin-Stone
+- Restructured all search and filters dialogs to incorporate a recall/history function. Thanks @Colin-Stone
+- Added Search Favorite for USS Favorites. Thanks @Colin-Stone
+- Added Job and Search Favorite for Jobs. Thanks @Colin-Stone
+- Provided support for specifying jobs by job id. Thanks @Colin-Stone
+- Fixed issue with submitting datasets job link. Thanks @Colin-Stone
+- Fixed label for Jobs Refresh All. Thanks @Colin-Stone
+- Minor icon improvement to distinguish Favorites from LPAR's. Thanks @Colin-Stone
 - Support copy path Thanks @lauren-li
 - Progress Bar animation on opening large files. Thanks to Rodney-Wilson
 
@@ -141,7 +167,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## 0.20.0
 
-- Combined Spool files with Jobs in Jobs view. Colin Stone
+- Combined Spool files with Jobs in Jobs view. Thanks Colin Stone
 
 ## 0.19.1
 
