@@ -26,6 +26,7 @@ import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
+import { getIconByNode } from "../../src/generators/icons";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -591,9 +592,18 @@ describe("Extension Unit Tests", () => {
             title: "",
             arguments: [sampleFavorites[1]]
         };
-        sampleFavorites[0].iconPath = utils.applyIcons(sampleFavorites[0]);
-        sampleFavorites[1].iconPath = utils.applyIcons(sampleFavorites[1]);
-        sampleFavorites[2].iconPath = utils.applyIcons(sampleFavorites[2]);
+        let targetIcon = getIconByNode(sampleFavorites[0]);
+        if (targetIcon) {
+            sampleFavorites[0].iconPath = targetIcon.path;
+        }
+        targetIcon = getIconByNode(sampleFavorites[1]);
+        if (targetIcon) {
+            sampleFavorites[1].iconPath = targetIcon.path;
+        }
+        targetIcon = getIconByNode(sampleFavorites[2]);
+        if (targetIcon) {
+            sampleFavorites[2].iconPath = targetIcon.path;
+        }
         sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
         sampleFavorites[2].iconPath = {
             dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),

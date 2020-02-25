@@ -9,32 +9,42 @@
 *                                                                                 *
 */
 
+// tslint:disable-next-line: no-duplicate-imports
 import * as zowe from "@zowe/cli";
+import { IUploadOptions } from "@zowe/cli";
 import * as fs from "fs";
 import * as os from "os";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
+import { CommentThreadCollapsibleState, TreeItemCollapsibleState } from "vscode";
+import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, DefaultCredentialManager, CliProfileManager } from "@zowe/imperative";
-import { DatasetTree, createDatasetTree } from "./DatasetTree";
-import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
+import {
+    CliProfileManager,
+    CredentialManagerFactory,
+    ImperativeConfig,
+    ImperativeError,
+    IProfileLoaded,
+    Logger,
+    Session,
+    TextUtils
+} from "@zowe/imperative";
+import { createDatasetTree, DatasetTree } from "./DatasetTree";
+import { createJobsTree, ZosJobsProvider } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
-import { USSTree, createUSSTree } from "./USSTree";
+import { createUSSTree, USSTree } from "./USSTree";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
-// tslint:disable-next-line: no-duplicate-imports
-import { IJobFile, IUploadOptions } from "@zowe/cli";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import { getIconByNode } from "./generators/icons";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -875,7 +885,10 @@ export async function createFile(node: ZoweDatasetNode, datasetProvider: Dataset
                 node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
                 node.dirty = true;
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
@@ -1379,7 +1392,10 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
-    node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
+    const icon = getIconByNode(node);
+    if (icon) {
+        node.iconPath = icon.path;
+    }
     datasetProvider.addHistory(node.pattern);
 }
 
