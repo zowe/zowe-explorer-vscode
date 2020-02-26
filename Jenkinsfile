@@ -70,18 +70,18 @@ node('ca-jenkins-agent') {
         sh "npm run build"
       },
       archiveOperation: {
-          def vscodePackageJson = readJSON file: "package.json"
-          def date = new Date()
-          String buildDate = date.format("yyyyMMddHHmmss")
-          def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${BRANCH_NAME}-${buildDate}"
+        def vscodePackageJson = readJSON file: "package.json"
+        def date = new Date()
+        String buildDate = date.format("yyyyMMddHHmmss")
+        def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${BRANCH_NAME}-${buildDate}"
 
-          sh "npx vsce package -o ${fileName}.vsix"
+        sh "npx vsce package -o ${fileName}.vsix"
 
-          // Release to Artifactory
-          withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
-            sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
-          }
+        // Release to Artifactory
+        withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+          def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
+          sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+        }
       }
   )
 
@@ -105,15 +105,8 @@ node('ca-jenkins-agent') {
       coverageResults: [dir: "${UNIT_TEST_ROOT}/coverage/lcov-report", files: "index.html", name: "${PRODUCT_NAME} - Unit Test Coverage Report"],
       junitOutput: UNIT_JUNIT_OUTPUT,
       cobertura: [
-        // autoUpdateStability: false,
         coberturaReportFile: "${UNIT_TEST_ROOT}/coverage/cobertura-coverage.xml",
-        // classCoverageTargets: '85, 80, 75',
-        // conditionalCoverageTargets: '70, 65, 60',
-        // failUnstable: false,
-        // fileCoverageTargets: '80, 70, 50',
-        // lineCoverageTargets: '80, 70, 50',
         maxNumberOfBuilds: 20,
-        // methodCoverageTargets: '80, 70, 50',
         sourceEncoding: 'ASCII'
       ]
   )
