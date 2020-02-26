@@ -12,7 +12,7 @@
 import { USSTree } from "../USSTree";
 import { ZoweUSSNode } from "../ZoweUSSNode";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";
@@ -70,7 +70,8 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
                 baseEncd = values[2];
             }
         } catch (error) {
-            utils.errorHandling(error, node.mProfileName, localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
+            utils.errorHandling(error, node.mProfileName,
+                localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
             return;
         }
         if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {

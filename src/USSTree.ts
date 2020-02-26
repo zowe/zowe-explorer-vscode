@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger } from "@brightside/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
 import * as ussNodeActions from "./uss/ussNodeActions";
 import * as vscode from "vscode";
@@ -257,7 +257,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     baseEncd = values [2];
                 }
             } catch (error) {
-                await errorHandling(error, node.getProfileName(), localize("ussTree.error", "Error encountered in ") + `filterPrompt.optionalProfiles!`);
+                await errorHandling(error, node.getProfileName(),
+                    localize("ussTree.error", "Error encountered in ") + `ussFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;

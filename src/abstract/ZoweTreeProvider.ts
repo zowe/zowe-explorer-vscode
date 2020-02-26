@@ -10,8 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { Logger } from "@brightside/imperative";
-// tslint:disable-next-line: no-duplicate-imports
+import { Logger } from "@zowe/imperative";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor, applyIcons } from "../utils";

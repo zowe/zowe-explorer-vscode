@@ -9,8 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
@@ -45,7 +45,8 @@ export async function createDatasetTree(log: Logger) {
  */
 export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweDatasetTreeNode> {
     private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
-    private static readonly defaultDialogText: string = "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search", "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
+    private static readonly defaultDialogText: string = "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search",
+        "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
     public mFavoriteSession: ZoweDatasetNode;
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
@@ -201,7 +202,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     /**
      * Returns the tree view for the current DatasetTree
      *
-     * @returns {vscode.TreeView<ZoweNode>}
+     * @returns {vscode.TreeView<IZoweDatasetTreeNode>}
      */
     public getTreeView(): vscode.TreeView<IZoweDatasetTreeNode> {
         return this.treeView;
@@ -413,7 +414,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     baseEncd = values [2];
                 }
             } catch (error) {
-                await errorHandling(error, node.getProfileName(), localize("datasetTree.error", "Error encountered in ") + `datasetFilterPrompt.optionalProfiles!`);
+                await errorHandling(error, node.getProfileName(),
+                    localize("datasetTree.error", "Error encountered in ") + `datasetFilterPrompt.optionalProfiles!`);
             }
             if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
                 node.getSession().ISession.user = usrNme;
@@ -515,7 +517,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // Uses loaded profile to create a session with the MVS API
             const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
             node.contextValue = extension.DS_SESSION_CONTEXT;

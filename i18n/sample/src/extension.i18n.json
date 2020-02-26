@@ -1,5 +1,6 @@
 {
     "initialize.log.debug": "Initialized logger from VSCode extension",
+    "displayName": "Zowe Explorer",
     "initialize.log.error": "Error encountered while activating and initializing logger! ",
     "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
     "onDidSaveTextDocument2": " against directory ",
@@ -53,6 +54,8 @@
     "renameDataSet.log.debug": "Renaming data set ",
     "renameDataSet.log.error": "Error encountered when renaming data set! ",
     "renameDataSet.error": "Unable to rename data set: ",
+    "hMigrate.requestSent1": "Migration of dataset: ",
+    "hMigrate.requestSent2": " requested.",
     "renameDataSet.name": "Name of Data Set Member",
     "deactivate.error": "Unable to delete temporary folder. ",
     "deleteDataset.log.debug": "Deleting data set ",

@@ -10,9 +10,8 @@
 */
 
 import * as vscode from "vscode";
-import { ZosmfSession, IJob, DeleteJobs } from "@brightside/core";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
-// tslint:disable-next-line: no-duplicate-imports
+import { ZosmfSession, IJob, DeleteJobs } from "@zowe/cli";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
 import { Job } from "./ZoweJobNode";
 import {
@@ -377,7 +376,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         options = {
                             prompt: localize("jobsFilterPrompt.option.prompt.owner",
                             "Enter the Job Owner. Default is *."),
-                            validateInput: (value: string) => (value.match(/ /g) ? localize("jobs.enter.valid.owner", "Please enter a valid owner name (no spaces allowed).") : ""),
+                            validateInput: (value: string) => (value.match(/ /g) ? localize("jobs.enter.valid.owner",
+                                "Please enter a valid owner name (no spaces allowed).") : ""),
                             value: node.owner
                         };
                         // get user input
@@ -581,7 +581,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
                 return;
             }
-            // Uses loaded profile to create a zosmf session with brightside
+            // Uses loaded profile to create a zosmf session with Zowe
             const session = ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, zosmfProfile);
