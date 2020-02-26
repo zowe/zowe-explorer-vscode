@@ -1234,8 +1234,6 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@brightside/core": "^2.36.4",
-    "@brightside/imperative": "^2.7.5",
     "@zowe/cli": "6.8.2",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
