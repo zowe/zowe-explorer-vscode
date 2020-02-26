@@ -138,7 +138,7 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
             const newNamePath = path.join(parentPath + newName);
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
-            ussFileProvider.refresh();
+            originalNode.rename(newNamePath);
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
                 oldFavorite.rename(newNamePath);
