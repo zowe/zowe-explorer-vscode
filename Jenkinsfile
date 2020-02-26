@@ -64,6 +64,11 @@ node('ca-jenkins-agent') {
   // Build the application
   pipeline.build(
       timeout: [ time: 10, unit: 'MINUTES' ],
+      operation: {
+        // Create a dummy TestProfileData in order to build the source code. See issue #556
+        sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
+        sh "npm run build"
+      },
       archiveOperation: {
           def vscodePackageJson = readJSON file: "package.json"
           def date = new Date()
