@@ -10,7 +10,6 @@
 */
 
 import * as vscode from "vscode";
-import { TreeItemCollapsibleState } from "vscode";
 import { Logger } from "@zowe/imperative";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
@@ -82,7 +81,7 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
-        element.collapsibleState = isOpen ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed;
+        element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
 
         if (element.label !== "Favorites") {
             let usrNme: string;
