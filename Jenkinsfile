@@ -162,7 +162,7 @@ node('ca-jenkins-agent') {
       }
 
       // Create the GitHub Release
-      withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) { script {
+      withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
         sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
 
         // Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
