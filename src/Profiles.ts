@@ -265,15 +265,35 @@ export class Profiles {
         return profileName;
     }
 
-    public async promptCredentials(sessName) {
+    public async promptCredentials(sessName, rePrompt?: boolean) {
         let userName: string;
         let passWord: string;
         let options: vscode.InputBoxOptions;
+        let optUser: boolean = false;
+        let optPass: boolean = false;
 
         const loadProfile = this.loadNamedProfile(sessName);
         const loadSession = loadProfile.profile as ISession;
 
-        if (!loadSession.user) {
+        if (rePrompt) {
+
+            for (const profile of this.allProfiles) {
+                if (profile.name === sessName) {
+                const OrigProfile = profile.profile as ISession;
+                if (!OrigProfile.user) {
+                        optUser = true;
+                    }
+                if (!OrigProfile.password) {
+                    optPass = true;
+                    }
+                }
+            }
+
+            userName = loadSession.user;
+            passWord = loadSession.password;
+        }
+
+        if (!loadSession.user || rePrompt) {
 
             options = {
                 placeHolder: localize("promptcredentials.option.prompt.username.placeholder", "User Name"),
@@ -292,7 +312,7 @@ export class Profiles {
             }
         }
 
-        if (!loadSession.password) {
+        if (!loadSession.password || rePrompt) {
             passWord = loadSession.password;
 
             options = {
@@ -313,6 +333,19 @@ export class Profiles {
             }
         }
         const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+
+        if (rePrompt) {
+            if (optUser) {
+                loadSession.user = userName;
+            }
+            if (optPass) {
+                loadSession.user = passWord;
+            }
+
+            (await this.getCliProfileManager(loadSession.type)).update(loadSession as IProfileLoaded);
+            // await this.saveProfile(loadSession, sessName, "zosmf");
+        }
+
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
