@@ -2246,7 +2246,7 @@ describe("Extension Unit Tests", () => {
 
             expect(ussFile.mock.calls.length).toBe(1);
             expect(showTextDocument.mock.calls.length).toBe(2);
-            expect(executeCommand.mock.calls.length).toBe(1);
+            expect(executeCommand.mock.calls.length).toBe(2);
             expect(node.downloaded).toBe(true);
         });
         it("refreshUSS works correctly for dirty file state, when user cancelled file save", async () => {
@@ -2292,7 +2292,7 @@ describe("Extension Unit Tests", () => {
 
             expect(ussFile.mock.calls.length).toBe(1);
             expect(showTextDocument.mock.calls.length).toBe(0);
-            expect(executeCommand.mock.calls.length).toBe(0);
+            expect(executeCommand.mock.calls.length).toBe(1);
             expect(node.downloaded).toBe(true);
         });
         it("refreshUSS works correctly with exception thrown in process", async () => {

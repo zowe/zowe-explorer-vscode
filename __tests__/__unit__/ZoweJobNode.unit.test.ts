@@ -347,10 +347,6 @@ describe("Zos Jobs Unit Tests", () => {
             expect(JSON.stringify(job.iconPath)).toContain("folder-closed.svg");
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
-
-            job.contextValue = "jobber";
-            await testJobsProvider.flipState(job, true);
-            expect(job.iconPath).not.toBeDefined();
         });
 
         it("Testing that prompt credentials work", async () => {
@@ -371,10 +367,6 @@ describe("Zos Jobs Unit Tests", () => {
             job.contextValue = "job";
             await testJobsProvider.flipState(job, true);
             expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
-
-            job.contextValue = "jobber";
-            await testJobsProvider.flipState(job, true);
-            expect(job.iconPath).not.toBeDefined();
         });
 
         it("Testing that prompt credentials will have an error", async () => {
