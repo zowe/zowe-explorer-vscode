@@ -11,7 +11,6 @@
 
 // tslint:disable-next-line: no-duplicate-imports
 import * as zowe from "@zowe/cli";
-import { IUploadOptions } from "@zowe/cli";
 import * as fs from "fs";
 import * as os from "os";
 import { moveSync } from "fs-extra";
@@ -1726,7 +1725,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     });
 
     // define upload options
-    let uploadOptions: IUploadOptions;
+    let uploadOptions: zowe.IUploadOptions;
     if (node) {
         uploadOptions = {
             etag: node.getEtag(),

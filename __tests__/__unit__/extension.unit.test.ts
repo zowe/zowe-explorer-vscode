@@ -1986,7 +1986,7 @@ describe("Extension Unit Tests", () => {
         expect(withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: "Opening data set..."
+                title: "Opening dataset..."
             }, expect.any(Function)
         );
         withProgress(downloadDataset);
