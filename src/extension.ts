@@ -9,32 +9,41 @@
 *                                                                                 *
 */
 
+// tslint:disable-next-line: no-duplicate-imports
 import * as zowe from "@zowe/cli";
+import { IUploadOptions } from "@zowe/cli";
 import * as fs from "fs";
 import * as os from "os";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
+import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, DefaultCredentialManager, CliProfileManager } from "@zowe/imperative";
-import { DatasetTree, createDatasetTree } from "./DatasetTree";
-import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
+import {
+    CliProfileManager,
+    CredentialManagerFactory,
+    ImperativeConfig,
+    ImperativeError,
+    IProfileLoaded,
+    Logger,
+    Session,
+    TextUtils
+} from "@zowe/imperative";
+import { createDatasetTree, DatasetTree } from "./DatasetTree";
+import { createJobsTree, ZosJobsProvider } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
-import { USSTree, createUSSTree } from "./USSTree";
+import { createUSSTree, USSTree } from "./USSTree";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
-// tslint:disable-next-line: no-duplicate-imports
-import { IJobFile, IUploadOptions } from "@zowe/cli";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import { getMessageByNode, MessageContentType } from "./generators/messages";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -1528,7 +1537,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             if (!fs.existsSync(documentFilePath)) {
                 const response = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
-                    title: "Opening data set..."
+                    title: getMessageByNode(node, MessageContentType.open)
                 }, function downloadDataset() {
                     return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(label, {
                         file: documentFilePath,
@@ -1728,7 +1737,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: localize("saveFile.response.save.title", "Saving data set...")
+            title: localize("saveFile.response.save.title", getMessageByNode(node, MessageContentType.upload))
         }, () => {
             return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName, label, uploadOptions);
         });
