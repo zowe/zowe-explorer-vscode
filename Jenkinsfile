@@ -70,14 +70,16 @@ node('ca-jenkins-agent') {
         sh "npm run build"
       },
       archiveOperation: {
+        // Gather details for build archives
         def vscodePackageJson = readJSON file: "package.json"
         def date = new Date()
         String buildDate = date.format("yyyyMMddHHmmss")
         def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${BRANCH_NAME}-${buildDate}"
 
+        // Generate a vsix for archiving purposes
         sh "npx vsce package -o ${fileName}.vsix"
 
-        // Release to Artifactory
+        // Upload vsix to Artifactory
         withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
           def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
           sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
@@ -111,7 +113,7 @@ node('ca-jenkins-agent') {
       ]
   )
 
-  // Upload Reports to Code Coverage
+  // Upload Reports to Codecov. This may be replaced with Sonar Cloud in the near future. See #473
   pipeline.createStage(
     name: "Codecov",
     stage: {
@@ -124,12 +126,13 @@ node('ca-jenkins-agent') {
   // Check for Vulnerabilities
   pipeline.checkVulnerabilities()
 
-  // Upload Reports to Code Coverage
+  // Publish a new version of the extensions if needed
   pipeline.createStage(
     name: "Publish",
     shouldExecute: { env.BRANCH_NAME == MASTER_BRANCH },
     timeout: [ time: 10, unit: 'MINUTES' ],
     stage: {
+      // Gather details about the extension for comparison
       def vscodePackageJson = readJSON file: "package.json"
       def extensionMetadata = sh(returnStdout: true, script: "npx vsce show ${vscodePackageJson.publisher}.${vscodePackageJson.name} --json").trim()
       def extensionInfo = readJSON text: extensionMetadata
@@ -169,21 +172,23 @@ node('ca-jenkins-agent') {
         sh "node ./scripts/d2uChangelog.js"
         def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
 
+        // Gather details about the GitHub APIs used to publish a release
         def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
         def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
         def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 
+        // Create the release
         def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
         def releaseParsed = readJSON text: releaseCreated
 
+        // Upload vsix to the release that was just created
         def uploadUrl = "https://$TOKEN:x-oauth-basic@uploads.github.com/${releaseAPI}/${releaseParsed.id}/assets?name=${versionName}.vsix"
-
         sh "curl -X POST --data-binary @${versionName}.vsix -H \"Content-Type: application/octet-stream\" ${uploadUrl}"
       }
     }
   )
 
-  // Once called, no stages can be added and all added stages will be executed. On completion
-  // appropriate emails will be sent out by the shared library.
+  // Once called, no stages can be added and all added stages will be executed.
+  // On completion appropriate emails will be sent out by the shared library.
   pipeline.end()
 }
