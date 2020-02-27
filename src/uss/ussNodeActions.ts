@@ -135,7 +135,8 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
     const newName = await vscode.window.showInputBox({value: oldLabel});
     if (newName && newName !== oldLabel) {
         try {
-            const newNamePath = path.join(parentPath + newName);
+            let newNamePath = path.join(parentPath + newName);
+            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
