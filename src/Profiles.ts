@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, ImperativeConfig } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfile } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as path from "path";
 import { URL } from "url";
@@ -269,26 +269,11 @@ export class Profiles {
         let userName: string;
         let passWord: string;
         let options: vscode.InputBoxOptions;
-        let optUser: boolean = false;
-        let optPass: boolean = false;
 
         const loadProfile = this.loadNamedProfile(sessName);
         const loadSession = loadProfile.profile as ISession;
 
         if (rePrompt) {
-
-            for (const profile of this.allProfiles) {
-                if (profile.name === sessName) {
-                const OrigProfile = profile.profile as ISession;
-                if (!OrigProfile.user) {
-                        optUser = true;
-                    }
-                if (!OrigProfile.password) {
-                    optPass = true;
-                    }
-                }
-            }
-
             userName = loadSession.user;
             passWord = loadSession.password;
         }
@@ -308,7 +293,6 @@ export class Profiles {
                 return;
             } else {
                 loadSession.user = loadProfile.profile.user = userName;
-                Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropUsername, userName);
             }
         }
 
@@ -329,24 +313,49 @@ export class Profiles {
                 return;
             } else {
                 loadSession.password = loadProfile.profile.password = passWord.trim();
-                Profiles.credentialHashSetValue(sessName, Profiles.credentialHashPropPassword, loadSession.password);
             }
         }
+
         const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
 
         if (rePrompt) {
-            if (optUser) {
-                loadSession.user = userName;
-            }
-            if (optPass) {
-                loadSession.user = passWord;
-            }
-
-            (await this.getCliProfileManager(loadSession.type)).update(loadSession as IProfileLoaded);
-            // await this.saveProfile(loadSession, sessName, "zosmf");
+            await this.updateProfile(loadProfile);
         }
 
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+    }
+
+    private async updateProfile(ProfileInfo) {
+        let loadedProfile: IProfileLoaded;
+
+        for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+            const profileManager = await this.getCliProfileManager(type);
+            loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+        }
+
+
+        const OrigProfileInfo = loadedProfile.profile as ISession;
+        const NewProfileInfo = ProfileInfo.profile;
+
+        if (OrigProfileInfo.user) {
+            OrigProfileInfo.user = NewProfileInfo.user;
+        }
+
+        if (OrigProfileInfo.password) {
+            OrigProfileInfo.password = NewProfileInfo.password;
+        }
+
+        const updateParms: IUpdateProfile = {
+            name: loadedProfile.name,
+            merge: true,
+            profile: OrigProfileInfo as IProfile
+        };
+
+        try {
+            (await this.getCliProfileManager(loadedProfile.type)).update(updateParms);
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
