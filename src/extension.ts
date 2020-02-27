@@ -1736,7 +1736,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: localize("saveFile.response.save.title", getMessageByNode(node, MessageContentType.upload))
+            title: getMessageByNode(node, MessageContentType.upload)
         }, () => {
             return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName, label, uploadOptions);
         });
