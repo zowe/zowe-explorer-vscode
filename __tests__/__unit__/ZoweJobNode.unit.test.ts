@@ -10,11 +10,11 @@
 */
 
 jest.mock("Session");
-jest.mock("@brightside/core");
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/cli");
+jest.mock("@zowe/imperative");
 import * as vscode from "vscode";
-import * as brightside from "@brightside/core";
-import { Session, Logger, IProfileLoaded } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/Profiles";
 import * as utils from "../../src/utils";
@@ -50,7 +50,7 @@ describe("Zos Jobs Unit Tests", () => {
     });
 
     beforeAll(() => {
-        Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
+        Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
     });
 
     afterAll(() => {
@@ -78,7 +78,7 @@ describe("Zos Jobs Unit Tests", () => {
         Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
         Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
         Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
-        Object.defineProperty(brightside, "ZosmfSession", { value: ZosmfSession });
+        Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
         Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
         Object.defineProperty(GetJobs, "getJobsByOwnerAndPrefix", { value: getJobsByOwnerAndPrefix });
         Object.defineProperty(GetJobs, "getJob", { value: getJob });
@@ -116,7 +116,7 @@ describe("Zos Jobs Unit Tests", () => {
             })
         });
 
-        const iJob: brightside.IJob = {
+        const iJob: zowe.IJob = {
             "jobid": "JOB1234",
             "jobname": "TESTJOB",
             "files-url": "fake/files",
@@ -142,7 +142,7 @@ describe("Zos Jobs Unit Tests", () => {
             "url": "fake/url"
         };
 
-        const iJobComplete: brightside.IJob = {
+        const iJobComplete: zowe.IJob = {
             "jobid": "JOB1235",
             "jobname": "TESTJOB",
             "files-url": "fake/files",
@@ -182,7 +182,7 @@ describe("Zos Jobs Unit Tests", () => {
         Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
         Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
         Object.defineProperty(filters, "getFilters", { value: getFilters });
-        Object.defineProperty(brightside, "DeleteJobs", {value: DeleteJobs});
+        Object.defineProperty(zowe, "DeleteJobs", {value: DeleteJobs});
         Object.defineProperty(DeleteJobs, "deleteJob", {value: deleteJob});
 
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
@@ -193,7 +193,8 @@ describe("Zos Jobs Unit Tests", () => {
             mockLoadNamedProfile.mockReturnValue(
                 {name:"fake", type:"zosmf", profile: {name:"fake", type:"zosmf", profile:{name:"fake", type:"zosmf"}}});
             mockLoadDefaultProfile.mockReturnValue(
-                {name:"firstProfileName", type:"zosmf", profile: {name:"firstProfileName", type:"zosmf", profile:{name:"firstProfileName", type:"zosmf"}}});
+                {name:"firstProfileName", type:"zosmf", profile:
+                    {name:"firstProfileName", type:"zosmf", profile:{name:"firstProfileName", type:"zosmf"}}});
             Object.defineProperty(profileLoader.Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -810,7 +811,7 @@ describe("Zos Jobs Unit Tests", () => {
         });
 
         it("Tests the children are the spool files", async () => {
-            const iJobFile: brightside.IJobFile = {
+            const iJobFile: zowe.IJobFile = {
                 "byte-count": 128,
                 "job-correlator": "",
                 "record-count": 1,
@@ -829,7 +830,7 @@ describe("Zos Jobs Unit Tests", () => {
             const jobNodeSpool = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
             jobNodeSpool.contextValue = "job";
             const getSpoolFiles = jest.fn();
-            Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
+            Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
             Object.defineProperty(GetJobs, "getSpoolFiles", { value: getSpoolFiles });
             getSpoolFiles.mockReturnValue([iJobFile]);
             jobNodeSpool.dirty = true;

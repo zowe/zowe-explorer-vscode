@@ -10,8 +10,8 @@
 */
 
 import * as vscode from "vscode";
-import { Session, IProfileLoaded } from "@brightside/imperative";
-import { IJob } from "@brightside/core";
+import { Session, IProfileLoaded } from "@zowe/imperative";
+import { IJob } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
 
 /**
