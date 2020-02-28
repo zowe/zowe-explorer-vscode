@@ -71,7 +71,7 @@
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
     "openPS.invalidNode": "openPS() called from invalid node.",
-    "openPS.error.invalidNode": "openPS() called from invalid node. ",
+    "openPS.error.invalidNode": "openPS() called from invalid node.",
     "openPS.log.debug.openDataSet": "opening physical sequential data set from label ",
     "openPS.log.error.openDataSet": "Error encountered when opening data set! ",
     "refreshAll.log.debug.refreshDataSet": "Refreshing data set tree view",
