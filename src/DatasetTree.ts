@@ -56,11 +56,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     constructor() {
         super(DatasetTree.persistenceSchema, new ZoweDatasetNode(localize("Favorites", "Favorites"),
-            vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
+              vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: this });
+        this.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: this});
     }
 
     /**
@@ -112,15 +112,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     node.contextValue += extension.FAV_SUFFIX;
                     node.iconPath = applyIcons(node);
                     this.mFavorites.push(node);
-                } catch (e) {
+                } catch(e) {
                     const errMessage: string =
-                        localize("initializeFavorites.error.profile1",
-                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
-                        localize("intializeFavorites.error.profile2",
-                            ". To resolve this, you can create a profile with this name, ") +
-                        localize("initializeFavorites.error.profile3",
-                            "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
-                        getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
+                    localize("initializeFavorites.error.profile1",
+                    "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                    localize("intializeFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                    getAppName(extension.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
                     await errorHandling(e, null, errMessage);
                     continue;
                 }
@@ -131,10 +131,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     profile = Profiles.getInstance().loadNamedProfile(sesName);
                 } catch (error) {
                     const errMessage: string =
-                        localize("loadNamedProfile.error.profileName",
-                            "Initialization Error: Could not find profile named: ") +
-                        + sesName +
-                        localize("loadNamedProfile.error.period", ".");
+                    localize("loadNamedProfile.error.profileName",
+                    "Initialization Error: Could not find profile named: ") +
+                    + sesName +
+                    localize("loadNamedProfile.error.period", ".");
                     await errorHandling(error, null, errMessage);
                     continue;
                 }
@@ -329,15 +329,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async onDidChangeConfiguration(e) {
-        if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get(DatasetTree.persistenceSchema) };
-            if (!setting.persistence) {
-                setting.favorites = [];
-                setting.history = [];
-                await vscode.workspace.getConfiguration().update(DatasetTree.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+            if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
+                const setting: any = { ...vscode.workspace.getConfiguration().get(DatasetTree.persistenceSchema) };
+                if (!setting.persistence) {
+                    setting.favorites = [];
+                    setting.history = [];
+                    await vscode.workspace.getConfiguration().update(DatasetTree.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                }
             }
         }
-    }
 
     public async addHistory(criteria: string) {
         this.mHistory.addHistory(criteria);

@@ -364,7 +364,6 @@ export function defineGlobals(tempPath: string | undefined) {
     tempPath !== "" && tempPath !== undefined ?
         ZOWETEMPFOLDER = path.join(tempPath, "temp") :
         ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
-
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");

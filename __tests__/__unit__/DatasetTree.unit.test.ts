@@ -37,30 +37,6 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    const DatasetTreeTest = jest.fn().mockImplementation(() => {
-        return {
-            mSessionNodes: [],
-            mFavorites: [],
-            addSession: mockAddZoweSession,
-            addHistory: mockAddHistory,
-            addRecall: mockAddRecall,
-            refresh: mockRefresh,
-            refreshElement: mockRefreshElement,
-            getChildren: mockGetChildren,
-            getRecall: mockGetRecall,
-            addFilterString: mockAddFilterString,
-            removeFavorite: mockRemoveFavorite,
-            enterPattern: mockPattern,
-            initializeFavorites: mockInitialize,
-            renameFavorite: mockRenameFavorite,
-            updateFavorites: mockUpdateFavorites,
-            renameNode: mockRenameNode,
-            removeRecall: mockRemoveRecall,
-            findFavoritedNode,
-            findNonFavoritedNode,
-        };
-    });
-
     // Filter prompt
     const showInformationMessage = jest.fn();
     const showErrorMessage = jest.fn();
@@ -166,8 +142,8 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
-    Profiles.createInstance(Logger.getAppLogger());
 
+    Profiles.createInstance(Logger.getAppLogger());
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
                                 null, session, undefined, undefined, profileOne));
@@ -175,12 +151,6 @@ describe("DatasetTree Unit Tests", () => {
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
 
-    const testTree2 = new DatasetTreeTest();
-    testTree2.mSessionNodes = [];
-    Object.defineProperty(testTree2, "onDidExpandElement", {value: jest.fn()});
-    Object.defineProperty(testTree2, "onDidCollapseElement", {value: jest.fn()});
-    Object.defineProperty(testTree2, "getRecall", {value: jest.fn()});
-    Object.defineProperty(testTree2, "reveal", {value: jest.fn()});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
 
     beforeEach(() => {

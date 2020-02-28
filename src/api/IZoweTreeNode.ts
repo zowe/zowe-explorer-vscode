@@ -83,12 +83,6 @@ export interface IZoweTreeNode {
      * Retrieves the profile object in use with this node
      */
     getProfile(): IProfileLoaded;
-    /**
-     * Sets the etag value for the file
-     *
-     * @param {string}
-     */
-    setEtag?(etag: string);
 }
 
 /**
