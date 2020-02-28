@@ -63,7 +63,7 @@ export class Profiles {
     }
 
     public allProfiles: IProfileLoaded[] = [];
-
+    public loadedProfile: IProfileLoaded;
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -326,15 +326,14 @@ export class Profiles {
     }
 
     private async updateProfile(ProfileInfo) {
-        let loadedProfile: IProfileLoaded;
 
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
-            loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
         }
 
 
-        const OrigProfileInfo = loadedProfile.profile as ISession;
+        const OrigProfileInfo = this.loadedProfile.profile as ISession;
         const NewProfileInfo = ProfileInfo.profile;
 
         if (OrigProfileInfo.user) {
@@ -346,13 +345,13 @@ export class Profiles {
         }
 
         const updateParms: IUpdateProfile = {
-            name: loadedProfile.name,
+            name: this.loadedProfile.name,
             merge: true,
             profile: OrigProfileInfo as IProfile
         };
 
         try {
-            (await this.getCliProfileManager(loadedProfile.type)).update(updateParms);
+            (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }

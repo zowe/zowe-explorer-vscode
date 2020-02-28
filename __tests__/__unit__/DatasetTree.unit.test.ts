@@ -110,15 +110,6 @@ describe("DatasetTree Unit Tests", () => {
         failNotFound: false
     };
     mockLoadNamedProfile.mockReturnValue(profileOne);
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
-                loadNamedProfile: mockLoadNamedProfile
-            };
-        })
-    });
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
                                 null, session, undefined, undefined, profileOne));
@@ -129,6 +120,17 @@ describe("DatasetTree Unit Tests", () => {
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(),
+                    updateProfile: jest.fn()
+                };
+            })
         });
     });
 
@@ -926,18 +928,6 @@ describe("DatasetTree Unit Tests", () => {
         showErrorMessage.mockReset();
 
         showErrorMessage.mockResolvedValueOnce("Check Credentials");
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile,
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                };
-            })
-        });
 
         const label = "invalidCred";
         // tslint:disable-next-line: object-literal-key-quotes
@@ -945,7 +935,7 @@ describe("DatasetTree Unit Tests", () => {
         await utils.errorHandling(error, label);
 
         expect(showErrorMessage.mock.calls.length).toEqual(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for" +
         `\n${label}\n` +
         " are valid or this may lead to a lock-out.");
     });
@@ -959,18 +949,6 @@ describe("DatasetTree Unit Tests", () => {
 
         const theia = true;
         Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile,
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                };
-            })
-        });
 
         const label = "invalidCred";
         // tslint:disable-next-line: object-literal-key-quotes
@@ -978,7 +956,7 @@ describe("DatasetTree Unit Tests", () => {
         await utils.errorHandling(error, label);
 
         expect(showErrorMessage.mock.calls.length).toEqual(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for" +
         `\n${label}\n` +
         " are valid or this may lead to a lock-out.");
     });
