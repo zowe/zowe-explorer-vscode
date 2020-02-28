@@ -70,6 +70,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 profile?: IProfileLoaded) {
         super(label, collapsibleState, mParent, session, profile);
         this.binary = binary;
+        this.fullPath = label.trim();
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
