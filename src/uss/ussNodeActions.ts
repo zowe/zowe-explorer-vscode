@@ -128,7 +128,7 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
 export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
     // Could be a favorite or regular entry always deal with the regular entry
     const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
-    const oldLabel = isFav ? originalNode.shortLabel : originalNode.label;
+    const oldLabel = originalNode.label;
     const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
     // Check if an old favorite exists for this node
     const oldFavorite = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
@@ -137,10 +137,13 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
     const newName = await vscode.window.showInputBox({value: oldLabel});
     if (newName && newName !== oldLabel) {
         try {
-            const newNamePath = path.join(parentPath + newName);
+            let newNamePath = path.join(parentPath + newName);
+            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
-            ussFileProvider.refresh();
+            await deleteFromDisk(originalNode, filePath);
+            originalNode.rename(newNamePath);
+
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
                 oldFavorite.rename(newNamePath);
@@ -158,7 +161,7 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
  *
  * @param {ZoweUSSNode} node
  */
-export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
+export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
     try {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
