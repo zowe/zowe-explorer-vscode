@@ -420,7 +420,6 @@ describe("ussNodeActions", () => {
         it("should execute rename favorite USS file", async () => {
             showInputBox.mockReturnValueOnce("new name");
             await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
             expect(mockRemoveFavorite.mock.calls.length).toBe(1);
