@@ -324,6 +324,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
+    public async addRecall(criteria: string) {
+        throw new Error("Method not implemented.");
+    }
+
     public async initialize(log: Logger) {
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));

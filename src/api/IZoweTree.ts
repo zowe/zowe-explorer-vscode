@@ -69,4 +69,16 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     flipState(element: IZoweTreeNode, isOpen: boolean);
+    /**
+     * Retrieves the VSCode tree view
+     *
+     * @returns {vscode.TreeView<IZoweTree>}
+     */
+    getTreeView(): vscode.TreeView<IZoweTreeNode>;
+    /**
+     * Adds a recently-opened member to the persistent recall array
+     *
+     * @param {string}
+     */
+    addRecall(label: string);
 }

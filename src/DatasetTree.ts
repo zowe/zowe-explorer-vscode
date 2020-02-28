@@ -56,7 +56,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     constructor() {
         super(DatasetTree.persistenceSchema, new ZoweDatasetNode(localize("Favorites", "Favorites"),
-                                                    vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
+              vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
@@ -202,7 +202,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public deleteSession(node: IZoweDatasetTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
-        let revisedLabel =  node.label;
+        let revisedLabel = node.label;
         if (revisedLabel.includes("[")) {
             revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
         }
@@ -228,7 +228,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
             temp.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            temp.iconPath =  applyIcons(temp);
+            temp.iconPath = applyIcons(temp);
             // add a command to execute the search
             temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
         } else {    // pds | ds
@@ -348,6 +348,139 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.getHistory();
     }
 
+    public async addRecall(criteria: string) {
+        this.mHistory.addRecall(criteria);
+        this.refresh();
+    }
+
+    public getRecall() {
+        return this.mHistory.getRecall();
+    }
+
+    public removeRecall(name) {
+        this.mHistory.removeRecall(name);
+    }
+
+    public async addFilterString(newFilter: string, node: IZoweDatasetTreeNode) {
+        // Store previous filters (before refreshing)
+        let theFilter = this.getHistory()[0] || null;
+
+        // Check if filter is currently applied
+        if (node.pattern !== "" && theFilter) {
+            const currentFilters = node.pattern.split(",");
+
+            // Check if current filter includes the new node
+            const matchedFilters = currentFilters.filter((filter) => {
+                const regex = new RegExp(filter.trim().replace(`*`, "") + "$");
+                return regex.test(newFilter);
+            });
+
+            if (matchedFilters.length === 0) {
+                // remove the last segement with a dot of the name for the new filter
+                theFilter = `${node.pattern},${newFilter}`;
+            } else { theFilter = node.pattern; }
+        } else {
+            // No filter is currently applied
+            theFilter = newFilter;
+        }
+        return theFilter;
+    }
+
+    public async recentMemberPrompt() {
+        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
+        let pattern: string;
+
+        // Get user selection
+        if (this.getRecall().length > 0) {
+            const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
+            const items: vscode.QuickPickItem[] = this.getRecall().map((element) => new FilterItem(element));
+            if (extension.ISTHEIA) {
+                const options1: vscode.QuickPickOptions = {
+                    placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open")
+                };
+
+                const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                if (!choice) {
+                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                    return;
+                }
+                pattern = choice === createPick ? "" : choice.label;
+            } else {
+                const quickpick = vscode.window.createQuickPick();
+                quickpick.items = [createPick, ...items];
+                quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member to open");
+                quickpick.ignoreFocusOut = true;
+                quickpick.show();
+                const choice = await resolveQuickPickHelper(quickpick);
+                quickpick.hide();
+                if (!choice || choice === createPick) {
+                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                    return;
+                } else if (choice instanceof FilterDescriptor) {
+                    if (quickpick.value) {
+                        pattern = quickpick.value;
+                    }
+                } else {
+                    pattern = choice.label;
+                }
+            }
+
+            const sessionName = pattern.substring(1, pattern.indexOf("]")).trim();
+            const sessionNode = this.mSessionNodes.find((sessNode) => sessNode.label.trim() === sessionName);
+            let parentNode: IZoweDatasetTreeNode = null;
+            let memberNode: IZoweDatasetTreeNode;
+
+            if (pattern.indexOf("(") > -1) {
+                // Open PDS member
+                const parentName = pattern.substring(pattern.indexOf(" ") + 1, pattern.indexOf("(")).trim();
+                sessionNode.tooltip = sessionNode.pattern = await this.addFilterString(parentName, sessionNode);
+                sessionNode.dirty = true;
+                this.refresh();
+
+                // Find the selected member's parent node
+                const children = await sessionNode.getChildren();
+                if (children.length > 0 && children[0].contextValue !== extension.INFORMATION_CONTEXT) {
+                    parentNode = sessionNode.children.find((child) => child.label.trim() === parentName);
+                    parentNode.tooltip = parentNode.pattern = pattern;
+                    parentNode.dirty = true;
+                }
+                memberNode = new ZoweDatasetNode(null, null, parentNode, sessionNode.getSession(), extension.DS_MEMBER_CONTEXT);
+                memberNode.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                memberNode.label = memberNode.tooltip = memberNode.pattern = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
+                this.addHistory(`${parentName}(${memberNode.label})`);
+            } else {
+                // Open DS
+                memberNode = new ZoweDatasetNode(null, null, sessionNode, sessionNode.getSession(), extension.DS_MEMBER_CONTEXT);
+                memberNode.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                memberNode.label = memberNode.tooltip = memberNode.pattern = pattern.substring(pattern.indexOf(" ") + 1);
+                sessionNode.tooltip = sessionNode.pattern = await this.addFilterString(memberNode.label, sessionNode);
+                this.addHistory(memberNode.label);
+            }
+
+            // Expand session node in tree view
+            sessionNode.label = sessionNode.label.trim() + " ";
+            sessionNode.label.trim();
+            sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            // Expand parent node in tree view
+            if (memberNode.getParent() && memberNode.getParent().contextValue !== extension.DS_SESSION_CONTEXT) {
+                memberNode.getParent().label = memberNode.getParent().label.trim() + " ";
+                memberNode.getParent().label.trim();
+                memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            }
+
+            // Open the member
+            extension.openPS(memberNode, true, this);
+        } else {
+            vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
+            return;
+        }
+        if (!pattern) {
+            vscode.window.showInformationMessage(localize("enterPattern.noPattern", "No pattern entered."));
+            return;
+        }
+    }
+
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
@@ -364,9 +497,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
                 if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
+                    usrNme = values[0];
+                    passWrd = values[1];
+                    baseEncd = values[2];
                 }
             } catch (error) {
                 await errorHandling(error, node.getProfileName(),
@@ -426,7 +559,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     // manually entering a search
                     const options2: vscode.InputBoxOptions = {
                         prompt: localize("enterPattern.options.prompt",
-                                            "Search data sets by entering patterns: use a comma to separate multiple patterns"),
+                            "Search data sets by entering patterns: use a comma to separate multiple patterns"),
                         value: node.pattern,
                     };
                     // get user input
@@ -450,7 +583,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // update the treeview with the new pattern
-            node.label = node.label.trim()+ " ";
+            node.label = node.label.trim() + " ";
             node.label.trim();
             node.tooltip = node.pattern = pattern.toUpperCase();
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;

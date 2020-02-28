@@ -193,6 +193,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     localize("activate.didSaveText.notDataSet", " is not a data set or USS file "));
             }
         });
+        vscode.commands.registerCommand("zowe.openRecent", () => datasetProvider.recentMemberPrompt());
         vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
         vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
         vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
@@ -363,7 +364,6 @@ export function defineGlobals(tempPath: string | undefined) {
     tempPath !== "" && tempPath !== undefined ?
         ZOWETEMPFOLDER = path.join(tempPath, "temp") :
         ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
-
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
@@ -841,32 +841,9 @@ export async function createFile(node: ZoweDatasetNode, datasetProvider: Dataset
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
             node.dirty = true;
 
-            // Store previous filters (before refreshing)
-            const currChildren = await node.getChildren();
-            let theFilter = datasetProvider.getHistory()[0] || null;
+            const theFilter = await datasetProvider.addFilterString(name, node);
 
-            // Check if filter is currently applied
-            if (currChildren[0].contextValue !== "information" && theFilter) {
-                const currentFilters = theFilter.split(",");
-
-                // Check if current filter includes the new node
-                const matchedFilters = currentFilters.filter((filter) => {
-                    const regex = new RegExp(filter.trim().replace(`*`, "") + "(.*)$");
-                    return regex.test(name);
-                });
-
-                if (matchedFilters.length === 0) {
-                    // remove the last segement with a dot of the name for the new filter
-                    const newFilterBase = name.replace(/\.(?:.(?!\.))+$/, "");
-                    theFilter = `${theFilter},${newFilterBase}.*`;
-                    datasetProvider.addHistory(theFilter);
-                }
-            } else {
-                // No filter is currently applied
-                theFilter = name;
-                datasetProvider.addHistory(theFilter);
-            }
-
+            datasetProvider.addHistory(theFilter);
             datasetProvider.refresh();
 
             // Show newly-created data set in expanded tree view
@@ -1295,6 +1272,9 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: Datase
         throw err;
     }
 
+    // remove node from recent files
+    datasetProvider.removeRecall(label);
+
     // remove node from tree
     if (fav) {
         datasetProvider.mSessionNodes.forEach((ses) => {
@@ -1520,9 +1500,10 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                     break;
                 default:
                     vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
-                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
+                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node. "));
             }
             log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
+
             // if local copy exists, open that instead of pulling from mainframe
             const documentFilePath = getDocumentFilePath(label, node);
             if (!fs.existsSync(documentFilePath)) {
@@ -1537,12 +1518,21 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                 });
                 node.setEtag(response.apiResponse.etag);
             }
+
+            // Show document contents in VSCode workspace
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
+            node.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             if (previewMember === true) {
                 await vscode.window.showTextDocument(document);
             } else {
-                await vscode.window.showTextDocument(document, {preview: false});
+                await vscode.window.showTextDocument(document, { preview: false });
             }
+
+            // Add document name to recently-opened files
+            datasetProvider.addRecall(`[${node.getProfileName()}]: ${label}`);
+
+            // Reveal node in tree
+            datasetProvider.getTreeView().reveal(node, {select: true, focus: true, expand: true});
         } catch (err) {
             log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, node.getProfileName(), err.message);

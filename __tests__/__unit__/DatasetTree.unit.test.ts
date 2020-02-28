@@ -43,11 +43,30 @@ describe("DatasetTree Unit Tests", () => {
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
+    const openTextDocument = jest.fn();
+    const showTextDocument = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
     const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
+    const findFavoritedNode = jest.fn();
+    const findNonFavoritedNode = jest.fn();
+    const mockRenameFavorite = jest.fn();
+    const mockUpdateFavorites = jest.fn();
+    const mockRenameNode = jest.fn();
+    const mockRemoveRecall = jest.fn();
+    const mockInitialize = jest.fn();
+    const mockPattern = jest.fn();
+    const mockAddFilterString = jest.fn();
+    const mockRemoveFavorite = jest.fn();
+    const mockGetChildren = jest.fn();
+    const mockGetRecall = jest.fn();
+    const mockAddZoweSession = jest.fn();
+    const mockAddHistory = jest.fn();
+    const mockAddRecall = jest.fn();
+    const mockRefresh = jest.fn();
+    const mockRefreshElement = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
         value: jest.fn(() => {
@@ -77,6 +96,10 @@ describe("DatasetTree Unit Tests", () => {
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
+    Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     createTreeView.mockReturnValue("testTreeView");
     const getConfiguration = jest.fn();
@@ -119,13 +142,14 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
+    Profiles.createInstance(Logger.getAppLogger());
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
                                 null, session, undefined, undefined, profileOne));
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
-
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
@@ -284,6 +308,14 @@ describe("DatasetTree Unit Tests", () => {
         testTree.addHistory("testHistory");
         const sampleElement = new ZoweDatasetNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         expect(testTree.getHistory()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the getRecall command
+     *************************************************************************************************************/
+    it("Tests the getRecall command", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
     });
 
     /*************************************************************************************************************
@@ -514,7 +546,110 @@ describe("DatasetTree Unit Tests", () => {
         expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
     });
 
-     /*************************************************************************************************************
+    /*************************************************************************************************************
+     * Recent Member Prompts
+     *************************************************************************************************************/
+    it("Testing that recentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode.pattern = "node";
+        const parent = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, session);
+        child.contextValue = extension.DS_MEMBER_CONTEXT;
+        child.pattern = child.label;
+        sessNode.children.push(parent);
+        testTree.mSessionNodes.push(sessNode);
+
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        createQuickPick.mockReturnValue({
+            activeItems: [child.label],
+            ignoreFocusOut: true,
+            items: [child.label],
+            value: "[sestest]: node(child)",
+            show: jest.fn(() => {
+                return {};
+            }),
+            hide: jest.fn(() => {
+                return {};
+            }),
+            onDidAccept: jest.fn(() => {
+                return {};
+            })
+        });
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const getSessionSpy = jest.spyOn(sessNode, "getSession").mockReturnValue(session);
+        spyOn(sessNode, "getChildren").and.returnValue(Promise.resolve([parent]));
+        const addFilterStringSpy = jest.spyOn(testTree, "addFilterString").mockReturnValue(Promise.resolve("node"));
+        const openPS = jest.spyOn(extension, "openPS");
+
+        await testTree.recentMemberPrompt();
+
+        expect(openPS).toBeCalledWith(child, true, testTree);
+
+        sessNode.children.pop();
+        testTree.mSessionNodes.pop();
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+    });
+
+    it("Testing that recentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        const sessNode = new ZoweDatasetNode("sestest ", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode.pattern = "sestest ";
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, sessNode, session, extension.DS_MEMBER_CONTEXT);
+        child.pattern = child.label;
+        sessNode.children.push(child);
+        testTree.mSessionNodes.push(sessNode);
+
+        createQuickPick.mockReset();
+
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        createQuickPick.mockReturnValue({
+            activeItems: [child.label],
+            ignoreFocusOut: true,
+            items: [child.label],
+            value: "[sestest]: child",
+            show: jest.fn(() => {
+                return {};
+            }),
+            hide: jest.fn(() => {
+                return {};
+            }),
+            onDidAccept: jest.fn(() => {
+                return {};
+            })
+        });
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const getSessionSpy = jest.spyOn(sessNode, "getSession").mockReturnValue(session);
+        const addFilterStringSpy = jest.spyOn(testTree, "addFilterString").mockReturnValue(Promise.resolve("sestest "));
+        const openPS = jest.spyOn(extension, "openPS");
+
+        await testTree.recentMemberPrompt();
+
+        expect(openPS).toBeCalledWith(child, true, testTree);
+
+        sessNode.children.pop();
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+    });
+
+    /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully, theia route", async () => {
