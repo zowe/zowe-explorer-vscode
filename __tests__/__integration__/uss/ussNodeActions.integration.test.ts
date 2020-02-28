@@ -88,8 +88,9 @@ describe("ussNodeActions integration test", async () => {
         }).timeout(TIMEOUT);
     });
     describe("Rename USS File", async () => {
-        const beforeFileName = `/tmp/filetest1`;
-        const afterFileName = `/tmp/filetest1rename`;
+        const path = testConst.ussPattern;
+        const beforeFileName = `${path}/filetest1`;
+        const afterFileName = `${path}/filetest1rename`;
 
         afterEach(async () => {
             await Promise.all([
@@ -112,7 +113,7 @@ describe("ussNodeActions integration test", async () => {
             const afterNameBase = afterFileName.split("/").pop();
 
             try {
-                const testFolder = new ZoweUSSNode("/tmp", vscode.TreeItemCollapsibleState.Expanded,
+                const testFolder = new ZoweUSSNode(path, vscode.TreeItemCollapsibleState.Expanded,
                     sessionNode, session, null, false, testProfile.name);
                 const testNode = new ZoweUSSNode(beforeNameBase, vscode.TreeItemCollapsibleState.None,
                     testFolder, session, testFolder.label, false, testProfile.name);
@@ -120,7 +121,7 @@ describe("ussNodeActions integration test", async () => {
                 inputBoxStub.returns(afterNameBase);
 
                 await renameUSSNode(testNode, testTree, testNode.getUSSDocumentFilePath());
-                list = await zowe.List.fileList(sessionNode.getSession(), "/tmp");
+                list = await zowe.List.fileList(sessionNode.getSession(), path);
                 list = list.apiResponse.items ? list.apiResponse.items.map((entry) => entry.name) : [];
             } catch (err) {
                 error = err;
