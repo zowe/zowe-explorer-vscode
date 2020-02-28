@@ -58,13 +58,6 @@
         }
       ]
     },
-    "keybindings": [
-      {
-        "command": "zowe.openRecent",
-        "key": "ctrl+alt+r",
-        "mac": "cmd+alt+r"
-      }
-    ],
     "commands": [
       {
         "command": "zowe.uss.copyPath",
@@ -1114,7 +1107,6 @@
             "persistence": true,
             "favorites": [],
             "history": [],
-            "recall": [],
             "sessions": []
           },
           "description": "%Zowe-Default-Datasets-Favorites%",
@@ -1245,9 +1237,8 @@
   },
   "dependencies": {
     "@zowe/cli": "6.8.2",
-    "@zowe/imperative": "^4.5.0",
-    "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
+    "fs-extra": "8.0.1",
     "moment": "2.24.0",
     "vscode-nls": "4.1.1"
   },

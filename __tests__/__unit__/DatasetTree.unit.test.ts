@@ -142,7 +142,6 @@ describe("DatasetTree Unit Tests", () => {
             };
         })
     });
-
     Profiles.createInstance(Logger.getAppLogger());
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
@@ -150,9 +149,7 @@ describe("DatasetTree Unit Tests", () => {
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
-
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
-
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();

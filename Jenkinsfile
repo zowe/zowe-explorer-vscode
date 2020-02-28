@@ -176,6 +176,7 @@ node('ca-jenkins-agent') {
         def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
         def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"master\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
         def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
+
         // Create the release
         def releaseCreated = sh(returnStdout: true, script: "curl -H \"Content-Type: application/json\" -X POST -d '${releaseDetails}' ${releaseUrl}").trim()
         def releaseParsed = readJSON text: releaseCreated
