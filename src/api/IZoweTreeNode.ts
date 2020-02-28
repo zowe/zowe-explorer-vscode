@@ -109,6 +109,12 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @returns {string}
      */
     getEtag?(): string;
+    /**
+     * Sets the etag value for the file
+     *
+     * @param {string}
+     */
+    setEtag?(etag: string);
 }
 
 /**
