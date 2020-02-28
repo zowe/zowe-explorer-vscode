@@ -221,7 +221,7 @@ describe("USSTree Integration Tests", async () => {
         it("should add a favorite search", async () => {
             const log = new Logger(undefined);
             await testTree.addSession();
-            await testTree.addUSSSearchFavorite(sessNode);
+            await testTree.saveSearch(sessNode);
             const filtered = testTree.mFavorites.filter((temp) =>
                 temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);
             expect(filtered.length).toEqual(1);
