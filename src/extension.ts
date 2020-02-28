@@ -1500,7 +1500,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                     break;
                 default:
                     vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
-                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
+                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node. "));
             }
             log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
 
