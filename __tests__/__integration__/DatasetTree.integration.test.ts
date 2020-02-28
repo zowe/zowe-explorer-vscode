@@ -11,7 +11,7 @@
 
 // tslint:disable:no-magic-numbers
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded } from "@zowe/imperative";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/DatasetTree";

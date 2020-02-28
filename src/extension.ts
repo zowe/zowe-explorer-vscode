@@ -364,7 +364,6 @@ export function defineGlobals(tempPath: string | undefined) {
     tempPath !== "" && tempPath !== undefined ?
         ZOWETEMPFOLDER = path.join(tempPath, "temp") :
         ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
-
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
@@ -1501,7 +1500,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                     break;
                 default:
                     vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
-                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node."));
+                    throw Error(localize("openPS.error.invalidNode", "openPS() called from invalid node. "));
             }
             log.debug(localize("openPS.log.debug.openDataSet", "opening physical sequential data set from label ") + label);
 
