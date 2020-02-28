@@ -113,9 +113,9 @@ describe("ussNodeActions integration test", async () => {
 
             try {
                 const testFolder = new ZoweUSSNode("/tmp", vscode.TreeItemCollapsibleState.Expanded,
-                    null, session, null, false, testProfile.name);
+                    sessionNode, session, null, false, testProfile.name);
                 const testNode = new ZoweUSSNode(beforeNameBase, vscode.TreeItemCollapsibleState.None,
-                    testFolder, session, testFolder.fullPath, false, testProfile.name);
+                    testFolder, session, testFolder.label, false, testProfile.name);
                 const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                 inputBoxStub.returns(afterNameBase);
 
