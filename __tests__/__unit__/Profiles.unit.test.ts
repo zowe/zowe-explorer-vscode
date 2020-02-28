@@ -289,16 +289,10 @@ describe("Profile class unit tests", () => {
         profiles.loadNamedProfile = jest.fn(() => {
             return promptProfile as any;
         });
-        const OrigProf = {name: "profile1", profile: {user: "oldfake", password: "oldfake"}, type: "zosmf"};
-        profiles.loadedProfile = OrigProf as any;
+
         Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
             value: jest.fn(() => {
                 return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-            })
-        });
-        Object.defineProperty(CliProfileManager, "load", {
-            value: jest.fn(() => {
-                return {OrigProf};
             })
         });
 
