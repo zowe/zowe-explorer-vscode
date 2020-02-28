@@ -1218,6 +1218,8 @@
     "gulp-typescript": "^5.0.1",
     "jest": "^24.8.0",
     "jest-html-reporter": "^2.7.0",
+    "jest-junit": "^10.0.0",
+    "jest-stare": "^1.26.0",
     "jsdoc": "^3.6.3",
     "jsdom": "11.11.0",
     "keytar": "^5.0.0",
@@ -1265,12 +1267,28 @@
     ],
     "reporters": [
       "default",
-      "./node_modules/jest-html-reporter"
+      "jest-junit",
+      "jest-stare",
+      "jest-html-reporter"
     ],
-    "coverageDirectory": "<rootDir>/results/coverage"
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "cobertura"
+    ],
+    "coverageDirectory": "<rootDir>/results/unit/coverage"
   },
   "jest-html-reporter": {
     "pageTitle": "Zowe Extension Tests",
-    "outputPath": "results/results.html"
+    "outputPath": "results/unit/results.html"
+  },
+  "jest-stare": {
+    "resultDir": "results/unit/jest-stare",
+    "coverageLink": "../coverage/lcov-report/index.html"
+  },
+  "jest-junit": {
+    "outputDirectory": "<rootDir>/results/unit",
+    "outputName": "junit.xml"
   }
 }
