@@ -1,5 +1,5 @@
 {
-    "FavoriteSession": "Favorites",
+    "Favorites": "Favorites",
     "deleteJob.job": "Job ",
     "deleteJob.delete": " deleted",
     "initializeFavorites.log.debug": "initializing favorites",

@@ -9,10 +9,13 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import * as imperative from "@brightside/imperative";
-
+import * as zowe from "@zowe/cli";
+import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import * as nls from "vscode-nls";
+
+// Localization support
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // tslint:disable: max-classes-per-file
 
@@ -24,15 +27,15 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         return "zosmf";
     }
 
-    private session: imperative.Session;
-    constructor(public profile?: imperative.IProfileLoaded) {
+    private session: Session;
+    constructor(public profile?: IProfileLoaded) {
     }
 
     public getProfileTypeName(): string {
         return ZosmfUssApi.getProfileTypeName();
     }
 
-    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
+    public getSession(profile?: IProfileLoaded): Session {
         if (!this.session) {
             this.session = zowe.ZosmfSession.createBasicZosmfSession((profile||this.profile).profile);
         }
@@ -61,7 +64,12 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
     public async putContents(inputFilePath: string, ussFilePath: string,
                              binary?: boolean, localEncoding?: string,
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, etag, returnEtag);
+        const task: ITaskWithStatus = {
+            percentComplete: 0,
+            statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
+            stageName: TaskStage.IN_PROGRESS
+        };
+        return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, task, etag, returnEtag);
     }
 
     public async uploadDirectory(
@@ -73,7 +81,7 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         );
     }
 
-    public async create(ussPath: string, type: string, mode?: string): Promise<string> {
+    public async create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
         return zowe.Create.uss(this.getSession(), ussPath, type);
     }
 
@@ -131,12 +139,22 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     public async copyDataSetMember(
         { dataSetName: fromDataSetName, memberName: fromMemberName }: zowe.IDataSet,
         { dataSetName: toDataSetName, memberName: toMemberName }: zowe.IDataSet,
-        options?: {replace?: boolean}
+        options?: zowe.ICopyDatasetOptions
     ): Promise<zowe.IZosFilesResponse> {
+        let newOptions: zowe.ICopyDatasetOptions;
+        if (options) {
+            if (options.fromDataSet) {
+                newOptions = options;
+            } else {
+              newOptions = {...options, ...{fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName }}};
+            }
+          } else {
+            // If we decide to match 1:1 the Zowe.Copy.dataSet implementation, we will need to break the interface definition in the ZoweExploreApi
+            newOptions = {fromDataSet: { dataSetName: fromDataSetName, memberName: fromMemberName }};
+        }
         return zowe.Copy.dataSet(this.getSession(),
-            { dataSetName: fromDataSetName, memberName: fromMemberName },
             { dataSetName: toDataSetName, memberName: toMemberName },
-            options
+            newOptions
         );
     }
 
@@ -148,6 +166,11 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
     public async renameDataSetMember(currentMemberName: string, newMemberName: string, afterMemberName: string,
     ): Promise<zowe.IZosFilesResponse> {
         return zowe.Rename.dataSetMember(this.getSession(), currentMemberName, newMemberName, afterMemberName);
+    }
+
+    public async hMigrateDataSet(dataSetName: string,
+    ): Promise<zowe.IZosFilesResponse> {
+        return zowe.HMigrate.dataSet(this.getSession(), dataSetName);
     }
 
     public async deleteDataSet(dataSetName: string, options?: zowe.IDeleteDatasetOptions

@@ -223,6 +223,11 @@ Array [
     "when": "view == zowe.explorer && viewItem == ds",
   },
   Object {
+    "command": "zowe.hMigrateDataSet",
+    "group": "7_hsmcommands",
+    "when": "view == zowe.explorer && viewItem == ds",
+  },
+  Object {
     "command": "zowe.refreshNode",
     "group": "inline",
     "when": "view == zowe.explorer && viewItem == ds_fav",
@@ -268,6 +273,11 @@ Array [
     "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
+    "command": "zowe.hMigrateDataSet",
+    "group": "7_hsmcommands",
+    "when": "view == zowe.explorer && viewItem == ds_fav",
+  },
+  Object {
     "command": "zowe.createMember",
     "group": "1_create",
     "when": "view == zowe.explorer && viewItem == pds",
@@ -300,6 +310,11 @@ Array [
   Object {
     "command": "zowe.pasteDataSet",
     "group": "9_cutcopypaste",
+    "when": "view == zowe.explorer && viewItem == pds",
+  },
+  Object {
+    "command": "zowe.hMigrateDataSet",
+    "group": "7_hsmcommands",
     "when": "view == zowe.explorer && viewItem == pds",
   },
   Object {
@@ -340,6 +355,11 @@ Array [
   Object {
     "command": "zowe.pasteDataSet",
     "group": "9_cutcopypaste",
+    "when": "view == zowe.explorer && viewItem == pds_fav",
+  },
+  Object {
+    "command": "zowe.hMigrateDataSet",
+    "group": "7_hsmcommands",
     "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {

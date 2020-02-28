@@ -11,9 +11,9 @@
 
 import * as vscode from "vscode";
 import * as mvsNodeActions from "../../../src/mvs/mvsNodeActions";
-import { ZoweNode } from "../../../src/ZoweNode";
+import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
 import * as extension from "../../../src/extension";
-import * as brtimperative from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -35,7 +35,7 @@ const DatasetTree = jest.fn().mockImplementation(() => {
     };
 });
 
-const session = new brtimperative.Session({
+const session = new Session({
     user: "fake",
     password: "fake",
     hostname: "fake",
@@ -44,15 +44,18 @@ const session = new brtimperative.Session({
 });
 
 const testTree = DatasetTree();
-const sessNode = new ZoweNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
+const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
 
 describe("mvsNodeActions", () => {
     afterEach(() => {
         jest.resetAllMocks();
     });
+    // TODO this test is actually throwing an error biut gets away with it from the tests perspective
     it("should call upload dialog and upload file", async () => {
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const nodeAsFavorite = new ZoweNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, extension.PDS_FAV_CONTEXT);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
+        const nodeAsFavorite = new ZoweDatasetNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed,
+                                                     sessNode, null, null, extension.PDS_FAV_CONTEXT, profileOne);
         testTree.mFavorites.push(nodeAsFavorite);
         const fileUri = {fsPath: "/tmp/foo"};
 
@@ -68,8 +71,9 @@ describe("mvsNodeActions", () => {
         expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
     });
     it("should call upload dialog and upload file (from favorites)", async () => {
-        const node = new ZoweNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const nodeAsFavorite = new ZoweNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, extension.PDS_FAV_CONTEXT);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const nodeAsFavorite = new ZoweDatasetNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed,
+                                                     sessNode, null, extension.PDS_FAV_CONTEXT);
         testTree.mFavorites.push(nodeAsFavorite);
         const fileUri = {fsPath: "/tmp/foo"};
 
@@ -90,16 +94,16 @@ describe("mvsNodeActions", () => {
         });
         it("should return default label for dataset", () => {
             const labelName = "dataset.test";
-            const node = new ZoweNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
+            const node = new ZoweDatasetNode(labelName, vscode.TreeItemCollapsibleState.Collapsed, null, null);
             const label = mvsNodeActions.getDatasetLabel(node);
             expect(label).toEqual(labelName);
         });
         it("should return default label for dataset", () => {
             const labelNameWithProfile = "[myProfile123]: dataset.test";
             const labelName = "dataset.test";
-            const parentNode = new ZoweNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+            const parentNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
             parentNode.contextValue = extension.FAVORITE_CONTEXT;
-            const node = new ZoweNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
+            const node = new ZoweDatasetNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
             const label = mvsNodeActions.getDatasetLabel(node);
             expect(label).toEqual(labelName);
         });
