@@ -193,7 +193,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     localize("activate.didSaveText.notDataSet", " is not a data set or USS file "));
             }
         });
-        vscode.commands.registerCommand("zowe.openRecent", () => datasetProvider.recentMemberPrompt());
+        vscode.commands.registerCommand("zowe.openRecentMember", () => datasetProvider.openRecentMemberPrompt());
         vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
         vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
         vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
@@ -841,7 +841,7 @@ export async function createFile(node: ZoweDatasetNode, datasetProvider: Dataset
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
             node.dirty = true;
 
-            const theFilter = await datasetProvider.addFilterString(name, node);
+            const theFilter = await datasetProvider.createFilterString(name, node);
 
             datasetProvider.addHistory(theFilter);
             datasetProvider.refresh();

@@ -58,7 +58,7 @@ describe("DatasetTree Unit Tests", () => {
     const mockRemoveRecall = jest.fn();
     const mockInitialize = jest.fn();
     const mockPattern = jest.fn();
-    const mockAddFilterString = jest.fn();
+    const mockCreateFilterString = jest.fn();
     const mockRemoveFavorite = jest.fn();
     const mockGetChildren = jest.fn();
     const mockGetRecall = jest.fn();
@@ -549,7 +549,7 @@ describe("DatasetTree Unit Tests", () => {
     /*************************************************************************************************************
      * Recent Member Prompts
      *************************************************************************************************************/
-    it("Testing that recentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
+    it("Testing that openRecentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
         testTree.initialize(Logger.getAppLogger());
         const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
         sessNode.contextValue = extension.DS_SESSION_CONTEXT;
@@ -586,10 +586,10 @@ describe("DatasetTree Unit Tests", () => {
 
         const getSessionSpy = jest.spyOn(sessNode, "getSession").mockReturnValue(session);
         spyOn(sessNode, "getChildren").and.returnValue(Promise.resolve([parent]));
-        const addFilterStringSpy = jest.spyOn(testTree, "addFilterString").mockReturnValue(Promise.resolve("node"));
+        const createFilterStringSpy = jest.spyOn(testTree, "createFilterString").mockReturnValue(Promise.resolve("node"));
         const openPS = jest.spyOn(extension, "openPS");
 
-        await testTree.recentMemberPrompt();
+        await testTree.openRecentMemberPrompt();
 
         expect(openPS).toBeCalledWith(child, true, testTree);
 
@@ -600,7 +600,7 @@ describe("DatasetTree Unit Tests", () => {
         showInputBox.mockReset();
     });
 
-    it("Testing that recentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
+    it("Testing that openRecentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
         testTree.initialize(Logger.getAppLogger());
         const sessNode = new ZoweDatasetNode("sestest ", vscode.TreeItemCollapsibleState.Expanded, null, session);
         sessNode.contextValue = extension.DS_SESSION_CONTEXT;
@@ -636,10 +636,10 @@ describe("DatasetTree Unit Tests", () => {
         showInputBox.mockReset();
 
         const getSessionSpy = jest.spyOn(sessNode, "getSession").mockReturnValue(session);
-        const addFilterStringSpy = jest.spyOn(testTree, "addFilterString").mockReturnValue(Promise.resolve("sestest "));
+        const createFilterStringSpy = jest.spyOn(testTree, "createFilterString").mockReturnValue(Promise.resolve("sestest "));
         const openPS = jest.spyOn(extension, "openPS");
 
-        await testTree.recentMemberPrompt();
+        await testTree.openRecentMemberPrompt();
 
         expect(openPS).toBeCalledWith(child, true, testTree);
 

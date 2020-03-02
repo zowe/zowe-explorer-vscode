@@ -382,6 +382,22 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         });
     }
 
+    public getRecall(): string[] {
+        throw new Error("Method not implemented.");
+    }
+
+    public removeRecall(name: string) {
+        throw new Error("Method not implemented.");
+    }
+
+    public async createFilterString(newFilter: string, node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+
+    public async openRecentMemberPrompt() {
+        throw new Error("Method not implemented.");
+    }
+
     /**
      * Adds a single session to the USS tree
      *

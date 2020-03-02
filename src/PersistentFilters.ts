@@ -127,7 +127,7 @@ export class PersistentFilters {
         return this.mRecall;
     }
 
-    public removeRecall(name) {
+    public removeRecall(name: string) {
         const index = this.mRecall.findIndex((recallItem) => {
             return recallItem.includes(name);
         });

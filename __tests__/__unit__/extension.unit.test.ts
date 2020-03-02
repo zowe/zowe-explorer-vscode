@@ -232,7 +232,7 @@ describe("Extension Unit Tests", () => {
     const from = jest.fn();
     const Uri = jest.fn();
     const parse = jest.fn();
-    const mockAddFilterString = jest.fn();
+    const mockCreateFilterString = jest.fn();
     const withProgress = jest.fn();
     const downloadDataset = jest.fn();
     const downloadUSSFile = jest.fn();
@@ -304,7 +304,7 @@ describe("Extension Unit Tests", () => {
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
-            addFilterString: mockAddFilterString,
+            createFilterString: mockCreateFilterString,
             getTreeView,
             removeFavorite: mockRemoveFavorite,
             removeRecall: mockRemoveRecall,
@@ -628,7 +628,7 @@ describe("Extension Unit Tests", () => {
             "zowe.refreshNode",
             "zowe.pattern",
             "zowe.ZoweNode.openPS",
-            "zowe.openRecent",
+            "zowe.openRecentMember",
             "zowe.createDataset",
             "zowe.createMember",
             "zowe.deleteDataset",
@@ -1222,7 +1222,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
-        mockAddFilterString.mockReturnValue("NODE");
+        mockCreateFilterString.mockReturnValue("NODE");
         createTreeView.mockReturnValue(new TreeView());
         showInputBox.mockReturnValue("NODE");
         allMembers.mockReturnValue(uploadResponse);
@@ -1289,8 +1289,8 @@ describe("Extension Unit Tests", () => {
 
         mockGetHistory.mockReset();
         testTree.treeView.reveal.mockReset();
-        mockAddFilterString.mockReset();
-        mockAddFilterString.mockReturnValue("NODE1,NODE.*");
+        mockCreateFilterString.mockReset();
+        mockCreateFilterString.mockReturnValue("NODE1,NODE.*");
 
         // Testing the addition of new node to tree view
         mockGetHistory.mockReturnValueOnce(["NODE1"]);
@@ -1306,10 +1306,10 @@ describe("Extension Unit Tests", () => {
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory.mock.calls.length).toBe(1);
 
-        mockAddFilterString.mockReset();
+        mockCreateFilterString.mockReset();
 
         mockGetHistory.mockReturnValueOnce([null]);
-        mockAddFilterString.mockReturnValueOnce("NODE");
+        mockCreateFilterString.mockReturnValueOnce("NODE");
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await extension.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
@@ -1363,7 +1363,7 @@ describe("Extension Unit Tests", () => {
         allMembers.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
-        mockAddFilterString.mockReturnValue("NODE");
+        mockCreateFilterString.mockReturnValue("NODE");
         createTreeView.mockReturnValue(new TreeView());
         showInputBox.mockReturnValue("FakeName");
         mockGetHistory.mockReturnValue(["mockHistory"]);
@@ -1449,7 +1449,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
-        mockAddFilterString.mockReturnValue("NODE");
+        mockCreateFilterString.mockReturnValue("NODE");
         showInputBox.mockReturnValue("FakeName");
         createTreeView.mockReturnValue(new TreeView());
         testTree.getChildren.mockReturnValue([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode,
@@ -1535,7 +1535,7 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
 
         getConfiguration.mockReturnValueOnce("FakeConfig");
-        mockAddFilterString.mockReturnValue("NODE");
+        mockCreateFilterString.mockReturnValue("NODE");
         showInputBox.mockReturnValueOnce("sestest");
         mockGetHistory.mockReturnValueOnce(["mockHistory"]);
         allMembers.mockReturnValueOnce(uploadResponse);

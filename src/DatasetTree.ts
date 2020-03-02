@@ -353,15 +353,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.refresh();
     }
 
-    public getRecall() {
+    public getRecall(): string[] {
         return this.mHistory.getRecall();
     }
 
-    public removeRecall(name) {
+    public removeRecall(name: string) {
         this.mHistory.removeRecall(name);
     }
 
-    public async addFilterString(newFilter: string, node: IZoweDatasetTreeNode) {
+    public async createFilterString(newFilter: string, node: IZoweDatasetTreeNode) {
         // Store previous filters (before refreshing)
         let theFilter = this.getHistory()[0] || null;
 
@@ -386,7 +386,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return theFilter;
     }
 
-    public async recentMemberPrompt() {
+    public async openRecentMemberPrompt() {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
         let pattern: string;
 
@@ -433,7 +433,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (pattern.indexOf("(") > -1) {
                 // Open PDS member
                 const parentName = pattern.substring(pattern.indexOf(" ") + 1, pattern.indexOf("(")).trim();
-                sessionNode.tooltip = sessionNode.pattern = await this.addFilterString(parentName, sessionNode);
+                sessionNode.tooltip = sessionNode.pattern = await this.createFilterString(parentName, sessionNode);
                 sessionNode.dirty = true;
                 this.refresh();
 
@@ -453,8 +453,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 memberNode = new ZoweDatasetNode(null, null, sessionNode, sessionNode.getSession(), extension.DS_MEMBER_CONTEXT);
                 memberNode.collapsibleState = vscode.TreeItemCollapsibleState.None;
                 memberNode.label = memberNode.tooltip = memberNode.pattern = pattern.substring(pattern.indexOf(" ") + 1);
-                sessionNode.tooltip = sessionNode.pattern = await this.addFilterString(memberNode.label, sessionNode);
+                sessionNode.tooltip = sessionNode.pattern = await this.createFilterString(memberNode.label, sessionNode);
+                sessionNode.dirty = true;
                 this.addHistory(memberNode.label);
+                this.refresh();
             }
 
             // Expand session node in tree view
