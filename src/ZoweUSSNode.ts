@@ -27,6 +27,7 @@ import { injectAdditionalDataToTooltip } from "./utils/uss";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
+import { checkTextFileIsOpened } from "./utils/workspace";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -101,7 +102,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
         }
         this.etag = etag ? etag : "";
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 
     /**
@@ -275,8 +279,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param oldReference string
      * @param revision string
      */
-    public rename(newFullPath: string) {
-        const hasOpenedInstance = this.openedDocumentInstance && !this.openedDocumentInstance.isClosed;
+    public async rename(newFullPath: string) {
+        const currentFilePath = this.getUSSDocumentFilePath();
+        const hasOpenedInstance = await checkTextFileIsOpened(currentFilePath);
 
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();

@@ -11,7 +11,7 @@ export async function checkTextFileIsOpened(path: string) {
     const openNextTab = () => {
         return new Promise((resolve) => {
             vscode.commands.executeCommand("workbench.action.nextEditor");
-            setTimeout(() => resolve, tabSwitchDelay);
+            setTimeout(() => resolve(), tabSwitchDelay);
         });
     };
 
