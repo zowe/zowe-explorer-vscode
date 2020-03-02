@@ -330,6 +330,8 @@ describe("Extension Unit Tests", () => {
             getProfiles: jest.fn(),
             getProfileName: jest.fn(),
             getSession: jest.fn()
+            filterPrompt: ussPattern,
+
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
