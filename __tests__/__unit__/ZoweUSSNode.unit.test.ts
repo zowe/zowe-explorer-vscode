@@ -166,7 +166,7 @@ describe("Unit Tests (Jest)", () => {
             rootNode.dirty = true;
             await rootNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list");
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
         });
 
     /*************************************************************************************************************
@@ -185,7 +185,7 @@ describe("Unit Tests (Jest)", () => {
             subNode.dirty = true;
             await subNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list");
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
         });
 
     /*************************************************************************************************************
