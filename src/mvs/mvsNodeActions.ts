@@ -15,8 +15,10 @@ import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
 import * as utils from "../utils";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { IZoweTree } from "../api/IZoweTree";
+import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 
-export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
        canSelectFiles: true,
        openLabel: "Upload File",

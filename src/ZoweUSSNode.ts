@@ -282,6 +282,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
     }
 
     /**
@@ -308,7 +309,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-            await zowe.Delete.ussFile(this.getSession(), nodePath, isRecursive);
+            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(nodePath, isRecursive);
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {
