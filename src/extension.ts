@@ -996,7 +996,7 @@ export async function showDSAttributes(parent: ZoweDatasetNode, datasetProvider:
  */
 export async function renameDataSet(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
     let beforeDataSetName = node.label.trim();
-    let favPrefix;
+    let favPrefix = "";
     let isFavourite;
 
     if (node.contextValue.includes(FAV_SUFFIX)) {
@@ -1011,22 +1011,22 @@ export async function renameDataSet(node: ZoweDatasetNode, datasetProvider: Data
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
             node.label = `${favPrefix}${afterDataSetName}`;
+
+            if (isFavourite) {
+                const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
+                datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
+            } else {
+                const temp = node.label;
+                node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
+                datasetProvider.renameFavorite(node, afterDataSetName);
+                node.label = temp;
+            }
+            datasetProvider.refreshElement(node);
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
-        if (isFavourite) {
-            const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-            datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
-        } else {
-            const temp = node.label;
-            node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-            datasetProvider.renameFavorite(node, afterDataSetName);
-            node.label = temp;
-        }
-        datasetProvider.refreshElement(node.getParent());
-        datasetProvider.updateFavorites();
     }
 }
 
