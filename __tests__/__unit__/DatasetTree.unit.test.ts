@@ -9,6 +9,8 @@
 *                                                                                 *
 */
 
+import { getIconByNode } from "../../src/generators/icons";
+
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("util");
@@ -124,7 +126,10 @@ describe("DatasetTree Unit Tests", () => {
                                 null, session, undefined, undefined, profileOne));
     testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
-    testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+    const icon = getIconByNode(testTree.mSessionNodes[1]);
+    if (icon) {
+        testTree.mSessionNodes[1].iconPath = icon.path;
+    }
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
@@ -171,8 +176,14 @@ describe("DatasetTree Unit Tests", () => {
         sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
         sessNode[1].contextValue = extension.DS_SESSION_CONTEXT;
         sessNode[1].pattern = "test";
-        sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
-        sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
+        let targetIcon = getIconByNode(sessNode[0]);
+        if (targetIcon) {
+            sessNode[0].iconPath = targetIcon.path;
+        }
+        targetIcon = getIconByNode(sessNode[1]);
+        if (targetIcon) {
+            sessNode[1].iconPath = targetIcon.path;
+        }
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode[0]).toMatchObject(rootChildren[0]);
@@ -396,7 +407,10 @@ describe("DatasetTree Unit Tests", () => {
         testTree.addSession("testSess2");
         testTree.mSessionNodes[startLength].contextValue = extension.DS_SESSION_CONTEXT;
         testTree.mSessionNodes[startLength].pattern = "test";
-        testTree.mSessionNodes[startLength].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+        const targetIcon = getIconByNode(testTree.mSessionNodes[startLength]);
+        if (targetIcon) {
+            testTree.mSessionNodes[startLength].iconPath = targetIcon.path;
+        }
         testTree.deleteSession(testTree.mSessionNodes[startLength]);
         expect(testTree.mSessionNodes.length).toEqual(startLength);
     });
