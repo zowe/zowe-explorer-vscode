@@ -13,7 +13,7 @@ import * as path from "path";
 import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /*
@@ -144,14 +144,13 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatChildNodes(nodes: IZoweTreeNode[]) {
-    let allNodes = new Array<IZoweTreeNode>();
+export function concatChildNodes(nodes: IZoweNodeType[]) {
+    let allNodes = new Array<IZoweNodeType>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(concatChildNodes(node.children));
         allNodes.push(node);
     }
-
     return allNodes;
 }
 

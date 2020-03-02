@@ -44,7 +44,6 @@ export async function createDatasetTree(log: Logger) {
  * @implements {vscode.TreeDataProvider}
  */
 export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweDatasetTreeNode> {
-
     private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
     private static readonly defaultDialogText: string = "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search",
         "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
@@ -61,6 +60,52 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
         this.mSessionNodes = [this.mFavoriteSession];
         this.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: this});
+    }
+
+    /**
+     * Rename data sets
+     *
+     * @export
+     * @param {ZoweDatasetNode} node - The node
+     * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+     */
+    public async rename(node: IZoweDatasetTreeNode) {
+        switch (node.contextValue) {
+            case extension.DS_DS_CONTEXT:
+            case (extension.DS_DS_CONTEXT + extension.FAV_SUFFIX):
+                return extension.renameDataSet(node, this);
+            case extension.DS_MEMBER_CONTEXT:
+            case (extension.DS_MEMBER_CONTEXT + extension.FAV_SUFFIX):
+                return extension.renameDataSetMember(node, this);
+        }
+    }
+
+    public open(node: IZoweDatasetTreeNode, preview: boolean) {
+        throw new Error("Method not implemented.");
+    }
+    public copy(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public paste(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public delete(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public saveSearch(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public saveFile(document: vscode.TextDocument) {
+        throw new Error("Method not implemented.");
+    }
+    public refreshPS(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public uploadDialog(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public filterPrompt(node: IZoweDatasetTreeNode) {
+        throw new Error("Method not implemented.");
     }
 
     /**
