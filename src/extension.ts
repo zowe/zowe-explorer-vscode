@@ -510,7 +510,7 @@ export async function downloadJcl(job: Job) {
 export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     node.setBinary(binary);
     await node.openUSS(true, true, ussFileProvider);
-    ussFileProvider.refresh();
+    ussFileProvider.refreshElement(node);
 }
 
 /**

@@ -276,13 +276,17 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param revision string
      */
     public rename(newFullPath: string) {
+        const hasOpenedInstance = this.openedDocumentInstance && !this.openedDocumentInstance.isClosed;
+
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        if (hasOpenedInstance || this.binary) {
+            vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        }
     }
 
     /**
