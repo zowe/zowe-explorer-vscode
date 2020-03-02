@@ -127,7 +127,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         throw new Error("Method not implemented.");
     }
     public filterPrompt(node: IZoweJobTreeNode) {
-        throw new Error("Method not implemented.");
+        return this.searchPrompt(node);
     }
 
     /**

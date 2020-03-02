@@ -108,7 +108,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         throw new Error("Method not implemented.");
     }
     public filterPrompt(node: IZoweDatasetTreeNode) {
-        throw new Error("Method not implemented.");
+        return this.datasetFilterPrompt(node);
     }
 
     /**

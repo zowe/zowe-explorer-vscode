@@ -10,6 +10,8 @@
 */
 
 import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
+import { ISession } from "@zowe/imperative";
+import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -117,9 +119,32 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             break;
         }
         default: {
-            window.showErrorMessage(moreInfo);
+            window.showErrorMessage(moreInfo + " " +  errorDetails);
             break;
         }
     }
     return;
+}
+
+/*************************************************************************************************************
+ * Refresh Profile and Session
+ * @param {sessNode} IZoweTreeNode
+ * @param {profile} IProfileLoaded
+ *************************************************************************************************************/
+export function refreshTree(sessNode: IZoweTreeNode) {
+    const allProf = Profiles.getInstance().getProfiles();
+    for (const profNode of allProf) {
+        if (sessNode.getProfileName() === profNode.name) {
+            sessNode.getProfile().profile = profNode.profile;
+            const SessionProfile = profNode.profile as ISession;
+            if (sessNode.getSession().ISession !== SessionProfile) {
+                sessNode.getSession().ISession.user = SessionProfile.user;
+                sessNode.getSession().ISession.password = SessionProfile.password;
+                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
+                sessNode.getSession().ISession.port = SessionProfile.port;
+                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+            }
+        }
+    }
 }
