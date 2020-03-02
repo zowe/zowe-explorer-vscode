@@ -329,7 +329,7 @@ describe("Extension Unit Tests", () => {
             ussFilterPrompt: ussPattern,
             getProfiles: jest.fn(),
             getProfileName: jest.fn(),
-            getSession: jest.fn()
+            getSession: jest.fn(),
             filterPrompt: ussPattern,
 
         };

@@ -17,6 +17,8 @@ import * as extension from "../extension";
 import { Profiles } from "../Profiles";
 import { ISession, Logger } from "@zowe/imperative";
 import { DatasetTree } from "../DatasetTree";
+import { IZoweTree } from "../api/IZoweTree";
+import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 // tslint:disable-next-line: prefer-const
 let log: Logger;
 /**
@@ -24,7 +26,7 @@ let log: Logger;
  *
  * @param {DataSetTree} datasetProvider
  */
-export async function refreshAll(datasetProvider: DatasetTree) {
+export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === extension.DS_SESSION_CONTEXT) {
