@@ -102,10 +102,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
         }
         this.etag = etag ? etag : "";
-        const icon = getIconByNode(this);
-        if (icon) {
-            this.iconPath = icon.path;
-        }
+        utils.applyIcons(this);
     }
 
     /**
