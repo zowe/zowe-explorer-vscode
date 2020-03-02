@@ -25,6 +25,8 @@ import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
 import { Profiles } from "../../src/Profiles";
+import { IZoweTree } from "../../src/api/IZoweTree";
+import { IZoweUSSTreeNode } from "../../src/api/IZoweTreeNode";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -86,7 +88,7 @@ describe("Unit Tests (Jest)", () => {
     getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
     createTreeView.mockReturnValue("testTreeView");
 
-    const testTree = new USSTree();
+    const testTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
     const profileOne: IProfileLoaded = {
         name: "aProfile",
         profile: {
@@ -349,7 +351,7 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Testing that addUSSFavorite sorting works
      *************************************************************************************************************/
-    it("Testing that addUSSSearchFavorite works properly", async () => {
+    it("Testing that saveSearch works properly", async () => {
         testTree.mFavorites = [];
         const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             testTree.mSessionNodes[1], null, "/");
@@ -370,17 +372,17 @@ describe("Unit Tests (Jest)", () => {
         expect(testTree.mFavorites.length).toEqual(2);
 
         testTree.mSessionNodes[1].fullPath = "/z1234";
-        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        await testTree.saveSearch(testTree.mSessionNodes[1]);
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(3);
 
         testTree.mSessionNodes[1].fullPath = "/a1234";
-        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        await testTree.saveSearch(testTree.mSessionNodes[1]);
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(4);
 
         testTree.mSessionNodes[1].fullPath = "/r1234";
-        await testTree.addUSSSearchFavorite(testTree.mSessionNodes[1]);
+        await testTree.saveSearch(testTree.mSessionNodes[1]);
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(5);
     });
@@ -506,7 +508,7 @@ describe("Unit Tests (Jest)", () => {
         showInputBox.mockReturnValueOnce("/u/myFiles");
 
         // Assert choosing the new filter specification followed by a path
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/myFiles");
 
         // Assert edge condition user cancels the input path box
@@ -515,26 +517,26 @@ describe("Unit Tests (Jest)", () => {
         showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
 
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
 
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(undefined);
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
         theia = false;
     });
 
     it("Testing that user filter prompts are executed successfully, VSCode route", async () => {
-        testTree.initialize(Logger.getAppLogger());
+        // testTree.initialize(Logger.getAppLogger());
         let qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
         expect(qpItem.description).toBeFalsy();
         expect(qpItem.alwaysShow).toBe(true);
@@ -566,14 +568,14 @@ describe("Unit Tests (Jest)", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce("/U/HARRY");
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
 
         // User cancels out of input field
         showInformationMessage.mockReset();
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
 
@@ -598,7 +600,7 @@ describe("Unit Tests (Jest)", () => {
 
         showInformationMessage.mockReset();
         // Assert choosing the new filter specification but fills in path in QuickPick
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.USS_SESSION_CONTEXT);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/BIGSTUFF");
 
@@ -622,13 +624,13 @@ describe("Unit Tests (Jest)", () => {
                 return {};
             })
         });
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
 
         // Assert edge condition user cancels from the quick pick
         showInformationMessage.mockReset();
         qpItem = undefined;
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
     });
@@ -697,7 +699,7 @@ describe("Unit Tests (Jest)", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await testTree.ussFilterPrompt(dsNode);
+        await testTree.filterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
@@ -746,7 +748,7 @@ describe("Unit Tests (Jest)", () => {
             () => Promise.resolve(qpItem)
         );
         const spyMe = new USSTree();
-        Object.defineProperty(spyMe, "ussFilterPrompt", {
+        Object.defineProperty(spyMe, "filterPrompt", {
             value: jest.fn(() => {
                 return {
                     tempNode: dsNode,
@@ -771,7 +773,7 @@ describe("Unit Tests (Jest)", () => {
             })
         });
 
-        await testTree.ussFilterPrompt(dsNode);
+        await testTree.filterPrompt(dsNode);
 
         // TODO: this test does not seem correct: they fourth node is already present when the test starts
         // const nodeLength = testTree.mSessionNodes.length - 1;
@@ -818,7 +820,7 @@ describe("Unit Tests (Jest)", () => {
         testTree.mSessionNodes.push(dsNode);
 
         const spyMe = new USSTree();
-        Object.defineProperty(spyMe, "ussFilterPrompt", {
+        Object.defineProperty(spyMe, "filterPrompt", {
             value: jest.fn(() => {
                 return {
                     tempNode: dsNode,
@@ -827,7 +829,7 @@ describe("Unit Tests (Jest)", () => {
             })
         });
 
-        await testTree.ussFilterPrompt(dsNode);
+        await testTree.filterPrompt(dsNode);
 
         const nodeLength = testTree.mSessionNodes.length - 1;
         expect(testTree.mSessionNodes[nodeLength].fullPath).toEqual("/u/myFile.txt");
@@ -858,7 +860,7 @@ describe("Unit Tests (Jest)", () => {
             })
         });
 
-        await testTree.ussFilterPrompt(dsNode);
+        await testTree.filterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 

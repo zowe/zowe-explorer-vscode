@@ -11,6 +11,7 @@
 
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
+import * as ussNodeActions from "./uss/ussNodeActions";
 import * as vscode from "vscode";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
@@ -45,7 +46,8 @@ export async function createUSSTree(log: Logger) {
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
 
-    public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
+
+    public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
@@ -62,6 +64,31 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
         this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
+    }
+
+    public async rename(originalNode: IZoweUSSTreeNode) {
+        await ussNodeActions.renameUSSNode(originalNode, this, undefined);
+    }
+    public open(node: IZoweUSSTreeNode, preview: boolean) {
+        throw new Error("Method not implemented.");
+    }
+    public copy(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public paste(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public delete(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public saveFile(document: vscode.TextDocument) {
+        throw new Error("Method not implemented.");
+    }
+    public refreshPS(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public uploadDialog(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
     }
 
     /**
@@ -172,7 +199,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async addUSSSearchFavorite(node: IZoweUSSTreeNode) {
+    public async saveSearch(node: IZoweUSSTreeNode) {
         const label = "[" + node.getSessionNode().getProfileName() + "]: " + node.fullPath;
         const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
             this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().getProfileName());
@@ -221,9 +248,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {IZoweUSSTreeNode} node - The session node
      * @returns {Promise<void>}
      */
-    public async ussFilterPrompt(node: IZoweUSSTreeNode) {
+    public async filterPrompt(node: IZoweUSSTreeNode) {
         if (this.log) {
-            this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
+            this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         let sessionNode = node.getSessionNode();
         let remotepath: string;
@@ -296,14 +323,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (!remotepath) {
                     // manually entering a search - switch to an input box
                     const options: vscode.InputBoxOptions = {
-                        prompt: localize("ussFilterPrompt.option.prompt.search",
+                        prompt: localize("filterPrompt.option.prompt.search",
                             "Create a new filter"),
                         value: sessionNode.fullPath
                     };
                     // get user input
                     remotepath = await vscode.window.showInputBox(options);
                     if (!remotepath || remotepath.length === 0) {
-                        vscode.window.showInformationMessage(localize("ussFilterPrompt.enterPath", "You must enter a path."));
+                        vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                         return;
                     }
                 }

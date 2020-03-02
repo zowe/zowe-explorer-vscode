@@ -324,7 +324,7 @@ describe("Extension Unit Tests", () => {
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
-            ussFilterPrompt: ussPattern,
+            filterPrompt: ussPattern,
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
