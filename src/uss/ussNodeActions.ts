@@ -180,19 +180,25 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
     };
 
     const value = await vscode.window.showOpenDialog(fileOpenOptions);
+    const promises = value.map(async (item) => {
+            const isBinary = isBinaryFileSync(item.fsPath);
 
-    await Promise.all(
-        value.map(async (item) => {
-                const isBinary = isBinaryFileSync(item.fsPath);
-
-                if (isBinary) {
-                    await uploadBinaryFile(node, item.fsPath);
-                } else {
-                    const doc = await vscode.workspace.openTextDocument(item);
-                    await uploadFile(node, doc);
-                }
+            if (isBinary) {
+                await uploadBinaryFile(node, item.fsPath);
+            } else {
+                const doc = await vscode.workspace.openTextDocument(item);
+                await uploadFile(node, doc);
             }
-        ));
+        }
+    );
+
+    await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Uploading USS file(s)..."
+        },
+        () => Promise.all(promises)
+    );
+
     ussFileProvider.refresh();
 }
 
@@ -200,7 +206,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
         utils.errorHandling(e, node.mProfileName, e.message);
     }

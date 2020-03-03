@@ -1,0 +1,22 @@
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Document Downloading Icon.</title>
+    <desc></desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="document_dark" fill="#71A3FE" transform="translate(3, -8)">
+            <path d="M1,9 L0,10 L0,22 L1,23 L10,23 L11,22 L11,13 L10.7071,12.29289 L7.7071,9.29289 L7,9 L1,9 Z M1,22 L1,10 L6,10 L6,14 L10,14 L10,22 L1,22 Z M10,13 L7,10 L7,13 L10,13 Z"
+                  id="Shape"></path>
+        </g>
+        <g fill="#71A3FE" transform="translate(3, -10)">
+            <polygon id="cloud-cloud_download-arrow-down-2-glyph-path"
+                     points="4.79476699 6.70445743 2.9999997 5.18149637 2 6.030053 5.5 9 9 6.030053 8.0000003 5.18149637 6.20787618 6.70221456 6.20787618 0 4.79476699 0"></polygon>
+            <animateTransform attributeName="transform"
+                              attributeType="XML"
+                              type="translate"
+                              from="3 -10"
+                              to="3 15"
+                              dur="3s"
+                              repeatCount="indefinite"/>
+        </g>
+    </g>
+</svg>
