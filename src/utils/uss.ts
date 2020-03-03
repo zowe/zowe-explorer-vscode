@@ -12,6 +12,8 @@
 import { ZoweUSSNode } from "../ZoweUSSNode";
 // tslint:disable-next-line: no-implicit-dependencies
 import * as moment from "moment";
+import { IFileSize } from "../types/node";
+import { fileSizeThreshold, megabyteDivider } from "../config/constants";
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -26,4 +28,12 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
     }
 
     return tooltip;
+}
+
+export function checkIfDownloadLimitReached(node: IFileSize) {
+    if (node.fileSize) {
+        return (node.fileSize / megabyteDivider) >= fileSizeThreshold;
+    }
+
+    return false;
 }

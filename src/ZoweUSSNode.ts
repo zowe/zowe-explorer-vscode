@@ -24,10 +24,12 @@ import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { getIconByNode } from "./generators/icons/index";
 import * as moment from "moment";
-import { injectAdditionalDataToTooltip } from "./utils/uss";
+import { checkIfDownloadLimitReached, injectAdditionalDataToTooltip } from "./utils/uss";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
+import { IDownload, IDownloading, IFileSize } from "./types/node";
+import { fileSizeThreshold } from "./config/constants";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -36,7 +38,7 @@ import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatu
  * @class ZoweUSSNode
  * @extends {vscode.TreeItem}
  */
-export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
+export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode, IDownload, IDownloading, IFileSize {
     public command: vscode.Command;
     public fullPath = "";
     public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
@@ -49,6 +51,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public profile: IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
     private downloadingInternal = false;
+    private fileSizeInternal = 0;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -69,9 +72,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 binary = false,
                 public mProfileName?: string,
                 private etag: string = "",
-                profile?: IProfileLoaded) {
+                profile?: IProfileLoaded,
+                size?: number) {
         super(label, collapsibleState, mParent, session, profile);
         this.binary = binary;
+        this.fileSizeInternal = size;
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
@@ -196,7 +201,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                 null,
                                 this.fullPath,
                                 true,
-                                item.mProfileName);
+                                item.mProfileName,
+                                "",
+                                null,
+                                item.size
+                            );
                         } else {
                             temp = new ZoweUSSNode(
                                 item.name,
@@ -205,7 +214,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                 null,
                                 this.fullPath,
                                 false,
-                                item.mProfileName);
+                                item.mProfileName,
+                                "",
+                                null,
+                                item.size
+                            );
                         }
                         temp.command = {
                             command: "zowe.uss.ZoweUSSNode.open",
@@ -401,11 +414,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
+     * Getter for size of node.
+     *
+     * @return number
+     */
+    public get fileSize(): number {
+        return this.fileSizeInternal;
+    }
+
+    /**
      * Downloads and displays a file in a text editor view
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
+    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>, ignoreDownloadCheck?: boolean) {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
@@ -456,31 +478,53 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // if local copy exists, open that instead of pulling from mainframe
                 const documentFilePath = this.getUSSDocumentFilePath();
                 if (download || !fs.existsSync(documentFilePath)) {
-                    this.downloading = true;
-                    const profile = this.getProfile();
-                    const fullPath = this.fullPath;
-                    const chooseBinary = this.binary ||
-                        await ZoweExplorerApiRegister.getUssApi(profile).isFileTagBinOrAscii(this.fullPath);
-                    const response = await vscode.window.withProgress({
-                            location: vscode.ProgressLocation.Notification,
-                            title: "Opening USS file..."
-                        },
-                        function downloadUSSFile() {
-                            return ZoweExplorerApiRegister.getUssApi(profile).getContents(
-                                fullPath, {
-                                    file: documentFilePath,
-                                    binary: chooseBinary,
-                                    returnEtag: true
-                                });
-                        }
-                    );
+                    const fileExceedsThreshold = checkIfDownloadLimitReached(this);
+                    let promptResponse;
+                    const yesResponse = localize("openUSS.log.info.downloadThresholdReached.yes", "Yes, download");
+                    const noResponse = localize("openUSS.log.info.downloadThresholdReached.no", "No");
 
-                    this.downloading = false;
-                    this.downloaded = true;
-                    this.setEtag(response.apiResponse.etag);
+                    if (!ignoreDownloadCheck && fileExceedsThreshold) {
+                        promptResponse = await vscode.window.showErrorMessage(
+                            localize(
+                                "openUSS.log.info.downloadThresholdReached",
+                                "Notice that file is bigger than {0}Mb, do you still want to download it?",
+                                fileSizeThreshold),
+                            ...[
+                                yesResponse,
+                                noResponse
+                            ]
+                        );
+                    }
+
+                    if (promptResponse === yesResponse.toString() || ignoreDownloadCheck || !fileExceedsThreshold) {
+                        this.downloading = true;
+                        const profile = this.getProfile();
+                        const fullPath = this.fullPath;
+                        const chooseBinary = this.binary ||
+                            await ZoweExplorerApiRegister.getUssApi(profile).isFileTagBinOrAscii(this.fullPath);
+                        const response = await vscode.window.withProgress({
+                                location: vscode.ProgressLocation.Notification,
+                                title: "Opening USS file..."
+                            },
+                            function downloadUSSFile() {
+                                return ZoweExplorerApiRegister.getUssApi(profile).getContents(
+                                    fullPath, {
+                                        file: documentFilePath,
+                                        binary: chooseBinary,
+                                        returnEtag: true
+                                    });
+                            }
+                        );
+
+                        this.downloading = false;
+                        this.downloaded = true;
+                        this.setEtag(response.apiResponse.etag);
+                    }
                 }
 
-                await this.initializeFileOpening(documentFilePath, previewFile);
+                if (this.downloaded) {
+                    await this.initializeFileOpening(documentFilePath, previewFile);
+                }
             } catch (err) {
                 await utils.errorHandling(err, this.mProfileName, err.message);
                 throw (err);
@@ -574,7 +618,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 );
 
                 if (response === yesResponse.toString()) {
-                    await vscode.commands.executeCommand("zowe.uss.binary", this);
+                    await vscode.commands.executeCommand("zowe.uss.binary", this, true);
                 }
             } else {
                 if (previewFile === true) {
