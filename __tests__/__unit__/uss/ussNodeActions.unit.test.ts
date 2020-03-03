@@ -14,6 +14,8 @@ jest.mock("@zowe/imperative");
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import { Session, IProfileLoaded } from "@zowe/imperative";
+// tslint:disable-next-line: no-duplicate-imports
+import * as imperative from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
@@ -21,7 +23,6 @@ import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
-import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -42,6 +43,7 @@ const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
 const showOpenDialog = jest.fn();
+const withProgress = jest.fn();
 const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
@@ -117,7 +119,11 @@ describe("ussNodeActions", () => {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
-                loadNamedProfile: mockLoadNamedProfile
+                loadNamedProfile: mockLoadNamedProfile,
+                getProfiles: jest.fn(() => {
+                    return [];
+                }),
+                refresh: jest.fn()
             };
         })
     });
@@ -125,22 +131,30 @@ describe("ussNodeActions", () => {
     const ussFavNode = getFavoriteUSSNode();
     const testUSSTree = getUSSTree();
 
-    Object.defineProperty(zowe, "Create", { value: Create });
-    Object.defineProperty(zowe, "Delete", { value: Delete });
-    Object.defineProperty(zowe, "Utilities", { value: Utilities });
-    Object.defineProperty(Create, "uss", { value: uss });
-    Object.defineProperty(Delete, "ussFile", { value: ussFile });
-    Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
-    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(imperative, "TaskStage", {value: {}});
+    Object.defineProperty(zowe, "Create", {value: Create});
+    Object.defineProperty(zowe, "Delete", {value: Delete});
+    Object.defineProperty(zowe, "Utilities", {value: Utilities});
+    Object.defineProperty(Create, "uss", {value: uss});
+    Object.defineProperty(Delete, "ussFile", {value: ussFile});
+    Object.defineProperty(Utilities, "renameUSSFile", {value: renameUSSFile});
+    Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+    Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
+    Object.defineProperty(vscode.window, "withProgress", {
+        value: (options, task) => new Promise((resolve) => {
+            withProgress();
+            task().then(() => resolve());
+        })
+    });
+    Object.defineProperty(vscode, "ProgressLocation", {value: {}});
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
     Object.defineProperty(fs, "existsSync", {value: existsSync});
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
 
     beforeEach(() => {
         showErrorMessage.mockReset();
@@ -247,9 +261,13 @@ describe("ussNodeActions", () => {
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                         }),
+                        getProfiles: jest.fn(() => {
+                            return [];
+                        }),
+                        refresh: jest.fn()
                     };
                 })
             });
@@ -294,9 +312,13 @@ describe("ussNodeActions", () => {
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return [undefined, undefined, undefined];
                         }),
+                        getProfiles: jest.fn(() => {
+                            return [];
+                        }),
+                        refresh: jest.fn()
                     };
                 })
             });
@@ -330,7 +352,11 @@ describe("ussNodeActions", () => {
                             name: "firstName",
                             profile: {user: undefined, password: undefined}
                         }, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"}
+                        defaultProfile: {name: "firstName"},
+                        getProfiles: jest.fn(() => {
+                            return [];
+                        }),
+                        refresh: jest.fn()
                     };
                 })
             });
@@ -384,8 +410,8 @@ describe("ussNodeActions", () => {
             showInputBox.mockReset();
         };
         const resetNode = (node: ZoweUSSNode) => {
-          node.label = "";
-          node.shortLabel = "";
+            node.label = "";
+            node.shortLabel = "";
         };
 
         it("should exit if blank input is provided", async () => {
@@ -501,9 +527,7 @@ describe("ussNodeActions", () => {
             showInputBox.mockReturnValueOnce("new name");
             showErrorMessage.mockReset();
             fileToUSSFile.mockReset();
-            fileToUSSFile.mockImplementationOnce(() => {
-                throw (Error("testError"));
-            });
+            fileToUSSFile.mockRejectedValueOnce(new Error("testError"));
             const testDoc2: vscode.TextDocument = {
                 fileName: path.normalize("/sestest/tmp/foo.txt"),
                 uri: null,
@@ -524,7 +548,7 @@ describe("ussNodeActions", () => {
                 validatePosition: null
             };
             const fileUri = {fsPath: "/tmp/foo.txt"};
-            showOpenDialog.mockReturnValue([fileUri]);
+            showOpenDialog.mockResolvedValueOnce([fileUri]);
             openTextDocument.mockResolvedValueOnce(testDoc2);
             isBinaryFileSync.mockReturnValueOnce(false);
 
@@ -533,6 +557,7 @@ describe("ussNodeActions", () => {
                 // tslint:disable-next-line:no-empty
             } catch (err) {
             }
+
             expect(showErrorMessage.mock.calls.length).toBe(1);
         });
     });
