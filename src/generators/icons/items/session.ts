@@ -10,27 +10,18 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import * as extension from "../../../extension";
 import { getIconPathInResources } from "../../../utils/icon";
+import * as extension from "../../../extension";
 
 const icon: IIconItem = {
-    id: IconId.document,
+    id: IconId.session,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("document.svg"),
+    path: getIconPathInResources("folder-root-default-closed.svg"),
     check: (node) => {
-        // TODO: Move contexts to constants file and do constructor as well
-        const contexts = [extension.DS_DS_CONTEXT,
-            extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_MEMBER_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.JOBS_SPOOL_CONTEXT,
-            extension.DS_MIGRATED_FILE_CONTEXT,
-            extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_BINARY_FILE_CONTEXT,
-            extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX
-        ];
-
+        const contexts = [
+            extension.DS_SESSION_CONTEXT,
+            extension.USS_SESSION_CONTEXT,
+            extension.JOBS_SESSION_CONTEXT];
         return contexts.indexOf(node.contextValue) > -1;
     }
 };
