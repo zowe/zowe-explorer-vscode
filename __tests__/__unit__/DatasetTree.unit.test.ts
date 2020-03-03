@@ -112,15 +112,6 @@ describe("DatasetTree Unit Tests", () => {
         failNotFound: false
     };
     mockLoadNamedProfile.mockReturnValue(profileOne);
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
-                loadNamedProfile: mockLoadNamedProfile
-            };
-        })
-    });
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
                                 null, session, undefined, undefined, profileOne));
@@ -134,6 +125,17 @@ describe("DatasetTree Unit Tests", () => {
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(),
+                    updateProfile: jest.fn()
+                };
+            })
         });
     });
 
@@ -459,7 +461,7 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -489,7 +491,7 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -749,7 +751,7 @@ describe("DatasetTree Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -938,6 +940,28 @@ describe("DatasetTree Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showErrorMessage.mockReset();
+        showErrorMessage.mockResolvedValueOnce("Check Credentials");
+
+        const label = "invalidCred";
+        // tslint:disable-next-line: object-literal-key-quotes
+        const error = {"mDetails": {"errorCode": 401}};
+        await utils.errorHandling(error, label);
+
+        expect(showErrorMessage.mock.calls.length).toEqual(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        `\n${label}\n` +
+        " are valid or this may lead to a lock-out.");
+    });
+
+    it("tests utils error handling: Theia", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showErrorMessage.mockReset();
+
+        showErrorMessage.mockResolvedValueOnce("Check Credentials");
+
+        const theia = true;
+        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
 
         const label = "invalidCred";
         // tslint:disable-next-line: object-literal-key-quotes

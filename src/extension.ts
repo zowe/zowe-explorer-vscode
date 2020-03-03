@@ -716,7 +716,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
                 "Profile Name was not supplied. Operation Cancelled"));
             return;
         }
-        chosenProfile = profileName;
+        chosenProfile = profileName.trim();
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
             newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
