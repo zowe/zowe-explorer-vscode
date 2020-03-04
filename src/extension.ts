@@ -633,7 +633,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
 
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
-    let chosenProfile: string;
+    let chosenProfile: string = "";
 
     // Get all profiles
     let profileNamesList = allProfiles.map((profile) => {
@@ -681,20 +681,22 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         }
         chosenProfile = choice === createPick ? "" : choice.label;
     } else {
-        quickpick.items = [createPick, ...items];
-        quickpick.placeholder = placeholder;
-        quickpick.ignoreFocusOut = true;
-        quickpick.show();
-        const choice = await utils.resolveQuickPickHelper(quickpick);
-        quickpick.hide();
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        if (choice instanceof utils.FilterDescriptor) {
-            chosenProfile = "";
-        } else {
-            chosenProfile = choice.label;
+        if (profileNamesList.length > 0) {
+            quickpick.items = [createPick, ...items];
+            quickpick.placeholder = placeholder;
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await utils.resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice instanceof utils.FilterDescriptor) {
+                chosenProfile = "";
+            } else {
+                chosenProfile = choice.label;
+            }
         }
     }
 
