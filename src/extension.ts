@@ -258,10 +258,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             ussActions.createUSSNode(node, ussFileProvider, "directory"));
         vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
             node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
-        vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode, ignoreDownloadCheck: boolean) =>
-            changeFileType(node, true, ussFileProvider, ignoreDownloadCheck));
-        vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode, ignoreDownloadCheck: boolean) =>
-            changeFileType(node, false, ussFileProvider, ignoreDownloadCheck));
+        vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) =>
+            changeFileType(node, true, ussFileProvider));
+        vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) =>
+            changeFileType(node, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) => ussFileProvider.rename(node));
         vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.createNode", async (node: IZoweUSSTreeNode) =>
@@ -505,10 +505,9 @@ export async function downloadJcl(job: Job) {
  * @param binary Whether the file should be downloaded as binary or not
  * @param ussFileProvider Our USSTree object
  */
-export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
-                                     ignoreDownloadCheck = false) {
+export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     node.setBinary(binary);
-    await node.openUSS(true, true, ussFileProvider, ignoreDownloadCheck);
+    await node.openUSS(true, true, ussFileProvider);
     ussFileProvider.refresh();
 }
 

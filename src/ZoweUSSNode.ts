@@ -30,6 +30,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
 import { IDownload, IDownloading, IFileSize } from "./types/node";
 import { fileSizeThreshold } from "./config/constants";
+import cache from "./services/cache";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -427,7 +428,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode, IDown
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>, ignoreDownloadCheck?: boolean) {
+    public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         let usrNme: string;
         let passWrd: string;
         let baseEncd: string;
@@ -478,10 +479,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode, IDown
                 // if local copy exists, open that instead of pulling from mainframe
                 const documentFilePath = this.getUSSDocumentFilePath();
                 if (download || !fs.existsSync(documentFilePath)) {
+                    const ignoreDownloadCheck = cache.ignoreUSSDownloadCheck;
                     const fileExceedsThreshold = checkIfDownloadLimitReached(this);
                     let promptResponse;
                     const yesResponse = localize("openUSS.log.info.downloadThresholdReached.yes", "Yes, download");
                     const noResponse = localize("openUSS.log.info.downloadThresholdReached.no", "No");
+
+                    cache.ignoreUSSDownloadCheck = false;
 
                     if (!ignoreDownloadCheck && fileExceedsThreshold) {
                         promptResponse = await vscode.window.showErrorMessage(
@@ -618,7 +622,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode, IDown
                 );
 
                 if (response === yesResponse.toString()) {
-                    await vscode.commands.executeCommand("zowe.uss.binary", this, true);
+                    cache.ignoreUSSDownloadCheck = true;
+                    await vscode.commands.executeCommand("zowe.uss.binary", this);
                 }
             } else {
                 if (previewFile === true) {

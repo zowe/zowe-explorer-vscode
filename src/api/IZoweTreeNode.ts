@@ -185,7 +185,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param ussFileProvider the tree provider
      * @param ignoreDownloadCheck
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, ignoreDownloadCheck?: boolean);
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
     /**
      * Returns the local file path for the ZoweUSSNode
      *
