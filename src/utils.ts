@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
+import { TreeItem, QuickPickItem, QuickPick, window, TreeItemCollapsibleState } from "vscode";
 import * as extension from "../src/extension";
 import { ISession } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
@@ -120,7 +120,9 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                 Profiles.getInstance().promptCredentials(label.trim());
             } else {
                 window.showErrorMessage(errMsg, "Check Credentials").then((selection) => {
-                    Profiles.getInstance().promptCredentials(label.trim(), true);
+                    if (selection) {
+                        Profiles.getInstance().promptCredentials(label.trim(), true);
+                    }
                 });
             }
             break;
@@ -154,4 +156,5 @@ export function refreshTree(sessNode: IZoweTreeNode) {
             }
         }
     }
+    sessNode.collapsibleState = TreeItemCollapsibleState.Collapsed;
 }
