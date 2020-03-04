@@ -27,6 +27,7 @@ import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../../src/generators/icons";
+import cache from "../../src/services/cache";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -253,6 +254,7 @@ describe("Extension Unit Tests", () => {
     const getProfileName = jest.fn();
     const HMigrate = jest.fn();
     const hMigrateDataSet = jest.fn();
+    const ignoreUSSDownloadCheck = jest.fn();
     let mockClipboardData: string;
     const fileResponse: zowe.IZosFilesResponse = {
         success: true,
@@ -460,6 +462,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { get: cliHome });
+    Object.defineProperty(cache, "ignoreUSSDownloadCheck", {get: ignoreUSSDownloadCheck, set: jest.fn()});
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
@@ -2629,6 +2632,7 @@ describe("Extension Unit Tests", () => {
         const isBinSpy = jest.spyOn(ussApi, "isFileTagBinOrAscii");
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
+        ignoreUSSDownloadCheck.mockReturnValue(true);
 
         ussFile.mockReturnValueOnce(fileResponse);
         withProgress.mockReturnValue(fileResponse);
@@ -2636,7 +2640,7 @@ describe("Extension Unit Tests", () => {
         await node.openUSS(false, true, testUSSTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + extension.getUSSProfile(node) + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR || "", "/" + extension.getUSSProfile(node) + "/", node.fullPath));
         expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
         expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
@@ -2667,6 +2671,7 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
+            child.downloaded = true;
             await child.openUSS(false, true, testUSSTree);
         } catch (err) {
             // do nothing
@@ -2674,7 +2679,6 @@ describe("Extension Unit Tests", () => {
 
         expect(ussFile.mock.calls.length).toBe(0);
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
@@ -2742,12 +2746,14 @@ describe("Extension Unit Tests", () => {
         // Set up favorited nodes (directly under Favorites)
         const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, session, "/", false, profileOne.name);
         favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+        favoriteFile.downloaded = true;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/",
             false, profileOne.name);
         favoriteParent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
         // Set up child of favoriteDir - make sure we can open the child of a favored directory
         const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir", false, profileOne.name);
         child.contextValue = extension.DS_TEXT_FILE_CONTEXT;
+        child.downloaded = true;
 
         // For each node, make sure that code below the log.debug statement is execute
         await favoriteFile.openUSS(false, true, testUSSTree);
