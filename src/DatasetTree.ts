@@ -76,6 +76,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         switch (node.contextValue) {
             case extension.DS_DS_CONTEXT:
             case (extension.DS_DS_CONTEXT + extension.FAV_SUFFIX):
+            case extension.DS_PDS_CONTEXT:
+            case (extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX):
                 return extension.renameDataSet(node, this);
             case extension.DS_MEMBER_CONTEXT:
             case (extension.DS_MEMBER_CONTEXT + extension.FAV_SUFFIX):
