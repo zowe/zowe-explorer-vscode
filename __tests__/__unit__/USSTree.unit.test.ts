@@ -10,6 +10,8 @@
 */
 
 // tslint:disable:no-shadowed-variable
+import { getIconByNode } from "../../src/generators/icons";
+
 jest.mock("vscode");
 jest.mock("@zowe/imperative");
 jest.mock("Session");
@@ -114,7 +116,10 @@ describe("Unit Tests (Jest)", () => {
         null, false, profileOne.name, undefined));
     testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
-    testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+    const targetIcon = getIconByNode(testTree.mSessionNodes[1]);
+    if (targetIcon) {
+        testTree.mSessionNodes[1].iconPath = targetIcon.path;
+    }
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
@@ -171,9 +176,15 @@ describe("Unit Tests (Jest)", () => {
             new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name),
         ];
         sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
-        sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
+        let targetIcon = getIconByNode(sessNode[0]);
+        if (targetIcon) {
+            sessNode[0].iconPath = targetIcon.path;
+        }
         sessNode[1].contextValue = extension.USS_SESSION_CONTEXT;
-        sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
+        targetIcon = getIconByNode(sessNode[1]);
+        if (targetIcon) {
+            sessNode[1].iconPath = targetIcon.path;
+        }
         sessNode[1].fullPath = "test";
 
         // Checking that the rootChildren are what they are expected to be
@@ -319,7 +330,10 @@ describe("Unit Tests (Jest)", () => {
         testTree.addSession("ussTestSess2");
         testTree.mSessionNodes[startLength].contextValue = extension.USS_SESSION_CONTEXT;
         testTree.mSessionNodes[startLength].fullPath = "test";
-        testTree.mSessionNodes[startLength].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+        const targetIcon = getIconByNode(testTree.mSessionNodes[startLength]);
+        if (targetIcon) {
+            testTree.mSessionNodes[startLength].iconPath = targetIcon.path;
+        }
         testTree.deleteSession(testTree.mSessionNodes[startLength]);
         expect(testTree.mSessionNodes.length).toEqual(startLength);
     });

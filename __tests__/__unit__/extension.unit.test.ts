@@ -26,6 +26,7 @@ import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
+import { getIconByNode } from "../../src/generators/icons";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -145,6 +146,7 @@ describe("Extension Unit Tests", () => {
     ussNode.fullPath = "/u/myuser";
 
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
+    jobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
 
     const mkdirSync = jest.fn();
     const moveSync = jest.fn();
@@ -315,7 +317,9 @@ describe("Extension Unit Tests", () => {
             renameNode: mockRenameNode,
             findFavoritedNode,
             findNonFavoritedNode,
-            getProfileName: jest.fn()
+            getProfileName: jest.fn(),
+            getSession: jest.fn(),
+            getProfiles: jest.fn()
         };
     });
     const USSTree = jest.fn().mockImplementation(() => {
@@ -330,7 +334,12 @@ describe("Extension Unit Tests", () => {
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             initializeUSSFavorites: mockInitializeUSS,
+            ussFilterPrompt: ussPattern,
+            getProfiles: jest.fn(),
+            getProfileName: jest.fn(),
+            getSession: jest.fn(),
             filterPrompt: ussPattern,
+
         };
     });
     const JobsTree = jest.fn().mockImplementation(() => {
@@ -342,7 +351,9 @@ describe("Extension Unit Tests", () => {
             getTreeView,
             treeView: new TreeView(),
             refreshElement: jest.fn(),
-            getProfileName: jest.fn()
+            getProfiles: jest.fn(),
+            getProfileName: jest.fn(),
+            getSession: jest.fn()
         };
     });
 
@@ -459,6 +470,22 @@ describe("Extension Unit Tests", () => {
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
+
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(),
+                    usesSecurity: true,
+                    getProfiles: jest.fn(),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -598,9 +625,18 @@ describe("Extension Unit Tests", () => {
             title: "",
             arguments: [sampleFavorites[1]]
         };
-        sampleFavorites[0].iconPath = utils.applyIcons(sampleFavorites[0]);
-        sampleFavorites[1].iconPath = utils.applyIcons(sampleFavorites[1]);
-        sampleFavorites[2].iconPath = utils.applyIcons(sampleFavorites[2]);
+        let targetIcon = getIconByNode(sampleFavorites[0]);
+        if (targetIcon) {
+            sampleFavorites[0].iconPath = targetIcon.path;
+        }
+        targetIcon = getIconByNode(sampleFavorites[1]);
+        if (targetIcon) {
+            sampleFavorites[1].iconPath = targetIcon.path;
+        }
+        targetIcon = getIconByNode(sampleFavorites[2]);
+        if (targetIcon) {
+            sampleFavorites[2].iconPath = targetIcon.path;
+        }
         sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
         sampleFavorites[2].iconPath = {
             dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),
@@ -817,7 +853,7 @@ describe("Extension Unit Tests", () => {
         }
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Unable to create member: test");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Unable to create member: test Error: test");
 
         bufferToDataSet.mockReset();
 
@@ -884,7 +920,7 @@ describe("Extension Unit Tests", () => {
 
         expect(dataSet.mock.calls[0][1]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
@@ -1272,7 +1308,7 @@ describe("Extension Unit Tests", () => {
             // do nothing
         }
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error Error: Generic Error");
 
         showQuickPick.mockReset();
         showErrorMessage.mockReset();
@@ -1602,7 +1638,7 @@ describe("Extension Unit Tests", () => {
         await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
 
         showQuickPick.mockResolvedValueOnce("No");
 
@@ -1974,10 +2010,6 @@ describe("Extension Unit Tests", () => {
         expect(concatChildNodes.mock.calls.length).toBe(1);
     });
 
-    it("Testing that refreshAll is executed successfully", async () => {
-        extension.refreshAll(testTree);
-    });
-
     it("Testing that openPS is executed successfully", async () => {
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -2041,7 +2073,7 @@ describe("Extension Unit Tests", () => {
         expect(openTextDocument.mock.calls[0][0]).toBe(extension.getDocumentFilePath(parent.label + "(" + child.label + ")", node));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("testError");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
 
         const child2 = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
@@ -2073,6 +2105,8 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         showTextDocument.mockReset();
         openTextDocument.mockReset();
+        dataSet.mockReturnValueOnce(fileResponse);
+
         const sessionwocred = new imperative.Session({
             user: "",
             password: "",
@@ -2091,6 +2125,7 @@ describe("Extension Unit Tests", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    getProfiles: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
@@ -2253,7 +2288,7 @@ describe("Extension Unit Tests", () => {
 
             expect(ussFile.mock.calls.length).toBe(1);
             expect(showTextDocument.mock.calls.length).toBe(2);
-            expect(executeCommand.mock.calls.length).toBe(1);
+            expect(executeCommand.mock.calls.length).toBe(2);
             expect(node.downloaded).toBe(true);
         });
         it("refreshUSS works correctly for dirty file state, when user cancelled file save", async () => {
@@ -2299,7 +2334,7 @@ describe("Extension Unit Tests", () => {
 
             expect(ussFile.mock.calls.length).toBe(1);
             expect(showTextDocument.mock.calls.length).toBe(0);
-            expect(executeCommand.mock.calls.length).toBe(0);
+            expect(executeCommand.mock.calls.length).toBe(1);
             expect(node.downloaded).toBe(true);
         });
         it("refreshUSS works correctly with exception thrown in process", async () => {
@@ -2576,14 +2611,7 @@ describe("Extension Unit Tests", () => {
 
         });
     });
-
-    it("Testing that refreshAllUSS is executed successfully", async () => {
-        const spy = jest.fn(testTree.refresh);
-        ussNodeActions.refreshAllUSS(testTree);
-        expect(testTree.refresh).toHaveBeenCalled();
-    });
-
-    // TODO Node tests
+  // TODO Node tests
     it("Testing that open is executed successfully", async () => {
         ussFile.mockReset();
         openTextDocument.mockReset();
@@ -2592,7 +2620,26 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, profileOne.name);
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, session, "/", false, profileOne.name);
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/", false, profileOne.name);
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent", false, profileOne.name);
 
@@ -2647,7 +2694,7 @@ describe("Extension Unit Tests", () => {
         expect(openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("testError");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
 
         const child2 = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, node2, null, null);
         try {
@@ -2673,7 +2720,7 @@ describe("Extension Unit Tests", () => {
         expect(ussFile.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
-        expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node.");
+        expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
     });
 
     // TODO Node tests
@@ -2686,12 +2733,31 @@ describe("Extension Unit Tests", () => {
 
         openTextDocument.mockResolvedValueOnce("test.doc");
 
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
         // Set up mock favorite session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name);
         favoriteSession.contextValue = extension.FAVORITE_CONTEXT;
 
         // Set up favorited nodes (directly under Favorites)
-        const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, null, "/", false, profileOne.name);
+        const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, session, "/", false, profileOne.name);
         favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/",
             false, profileOne.name);
@@ -2719,7 +2785,26 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/", false, ussNode.getProfileName());
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                    loadNamedProfile: mockLoadNamedProfile,
+                    usesSecurity: true,
+                    getProfiles: jest.fn(() => {
+                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                    }),
+                    refresh: jest.fn(),
+                };
+            })
+        });
+
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, session, "/", false, ussNode.getProfileName());
         const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, ussNode, null, "/");
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent");
 
@@ -2965,7 +3050,7 @@ describe("Extension Unit Tests", () => {
 
         await extension.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error");
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
 
         concatChildNodes.mockReset();
         concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
@@ -3732,7 +3817,7 @@ describe("Extension Unit Tests", () => {
         });
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error encountered when creating temporary folder! testAsError 1");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Error encountered when creating temporary folder! testAsError 1 Error: testAsError 1");
     });
 
     it("Tests that temp folder error thrown 2", () => {
@@ -3927,7 +4012,7 @@ describe("Extension Unit Tests", () => {
             Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(
-            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
+            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
     });
 
     describe("Renaming Data Sets", () => {

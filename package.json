@@ -1244,8 +1244,8 @@
   },
   "dependencies": {
     "@zowe/cli": "6.8.2",
-    "isbinaryfile": "4.0.4",
     "fs-extra": "8.0.1",
+    "isbinaryfile": "4.0.4",
     "moment": "2.24.0",
     "vscode-nls": "4.1.1"
   },
