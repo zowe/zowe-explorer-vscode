@@ -247,6 +247,10 @@ export class Profiles {
         let passWord: string;
         let options: vscode.InputBoxOptions;
 
+        if (sessName.includes("[")) {
+            sessName = sessName.substring(0, sessName.indexOf(" ["));
+        }
+
         const loadProfile = this.loadNamedProfile(sessName.trim());
         const loadSession = loadProfile.profile as ISession;
 
