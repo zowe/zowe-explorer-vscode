@@ -115,6 +115,10 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
     switch(httpErrCode) {
         // tslint:disable-next-line: no-magic-numbers
         case 401 : {
+            if (label.includes("[")) {
+                label = label.substring(0, label.indexOf(" ["));
+            }
+
             if (extension.ISTHEIA) {
                 window.showErrorMessage(errMsg);
                 Profiles.getInstance().promptCredentials(label.trim());
