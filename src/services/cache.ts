@@ -9,10 +9,12 @@
 *                                                                                 *
 */
 
+import { ZoweUSSNode } from "../ZoweUSSNode";
+
 class Cache {
     private static instance;
     private uss = {
-        ignoreDownloadSizeCheck: false
+        ignoreDownloadSizeCheck: [] as string[]
     };
 
     constructor() {
@@ -23,12 +25,18 @@ class Cache {
         return Cache.instance;
     }
 
-    public get ignoreUSSDownloadCheck(): boolean {
-        return this.uss.ignoreDownloadSizeCheck;
+    public setIgnoreUSSDownloadCheck(node: ZoweUSSNode, status: boolean) {
+        if (status) {
+            if (this.uss.ignoreDownloadSizeCheck.indexOf(node.fullPath) === -1) {
+                this.uss.ignoreDownloadSizeCheck.push(node.fullPath);
+            }
+        } else {
+            this.uss.ignoreDownloadSizeCheck = this.uss.ignoreDownloadSizeCheck.filter((entry) => entry !== node.fullPath);
+        }
     }
 
-    public set ignoreUSSDownloadCheck(value: boolean) {
-        this.uss.ignoreDownloadSizeCheck = value;
+    public getIgnoreUSSDownloadCheck(node: ZoweUSSNode): boolean {
+        return this.uss.ignoreDownloadSizeCheck.indexOf(node.fullPath) > -1;
     }
 }
 

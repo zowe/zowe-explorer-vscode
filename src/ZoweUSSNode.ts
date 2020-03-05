@@ -479,13 +479,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode, IDown
                 // if local copy exists, open that instead of pulling from mainframe
                 const documentFilePath = this.getUSSDocumentFilePath();
                 if (download || !fs.existsSync(documentFilePath)) {
-                    const ignoreDownloadCheck = cache.ignoreUSSDownloadCheck;
+                    const ignoreDownloadCheck = cache.getIgnoreUSSDownloadCheck(this);
                     const fileExceedsThreshold = checkIfDownloadLimitReached(this);
                     let promptResponse;
                     const yesResponse = localize("openUSS.log.info.downloadThresholdReached.yes", "Yes, download");
                     const noResponse = localize("openUSS.log.info.downloadThresholdReached.no", "No");
 
-                    cache.ignoreUSSDownloadCheck = false;
+                    cache.setIgnoreUSSDownloadCheck(this, false);
 
                     if (!ignoreDownloadCheck && fileExceedsThreshold) {
                         promptResponse = await vscode.window.showErrorMessage(
@@ -622,7 +622,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode, IDown
                 );
 
                 if (response === yesResponse.toString()) {
-                    cache.ignoreUSSDownloadCheck = true;
+                    cache.setIgnoreUSSDownloadCheck(this, true);
                     await vscode.commands.executeCommand("zowe.uss.binary", this);
                 }
             } else {

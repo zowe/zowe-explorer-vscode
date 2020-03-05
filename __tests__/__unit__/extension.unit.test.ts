@@ -254,7 +254,7 @@ describe("Extension Unit Tests", () => {
     const getProfileName = jest.fn();
     const HMigrate = jest.fn();
     const hMigrateDataSet = jest.fn();
-    const ignoreUSSDownloadCheck = jest.fn();
+    const getIgnoreUSSDownloadCheck = jest.fn();
     let mockClipboardData: string;
     const fileResponse: zowe.IZosFilesResponse = {
         success: true,
@@ -462,7 +462,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { get: cliHome });
-    Object.defineProperty(cache, "ignoreUSSDownloadCheck", {get: ignoreUSSDownloadCheck, set: jest.fn()});
+    Object.defineProperty(cache, "ignoreUSSDownloadCheck", {value: getIgnoreUSSDownloadCheck});
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
@@ -2632,7 +2632,7 @@ describe("Extension Unit Tests", () => {
         const isBinSpy = jest.spyOn(ussApi, "isFileTagBinOrAscii");
         existsSync.mockReturnValue(null);
         openTextDocument.mockResolvedValueOnce("test.doc");
-        ignoreUSSDownloadCheck.mockReturnValue(true);
+        getIgnoreUSSDownloadCheck.mockReturnValue(true);
 
         ussFile.mockReturnValueOnce(fileResponse);
         withProgress.mockReturnValue(fileResponse);
