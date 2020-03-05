@@ -58,6 +58,13 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "zowe.searchInAllLoadedItems",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      }
+    ],
     "commands": [
       {
         "command": "zowe.uss.copyPath",
@@ -1268,7 +1275,6 @@
     "reporters": [
       "default",
       "jest-junit",
-      "jest-stare",
       "jest-html-reporter"
     ],
     "coverageReporters": [

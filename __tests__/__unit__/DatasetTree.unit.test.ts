@@ -679,6 +679,24 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
+     * Testing searchInLoadedItems
+     *************************************************************************************************************/
+    it("Testing that searchInLoadedItems returns the correct array", async () => {
+        const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, testTree.mSessionNodes[1], session, extension.DS_DS_CONTEXT);
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testTree.mSessionNodes[1]])
+        );
+        const sessionGetChildren = jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testNode])
+        );
+
+        const loadedItems = await testTree.searchInLoadedItems();
+
+        expect(loadedItems).toStrictEqual([testNode]);
+    });
+
+    /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/
     it("Testing the onDidConfiguration", async () => {

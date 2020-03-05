@@ -322,6 +322,23 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
+     * Testing searchInLoadedItems
+     *************************************************************************************************************/
+    it("Testing that searchInLoadedItems returns the correct array", async () => {
+        const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, "/");
+        const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testTree.mSessionNodes[1]])
+        );
+        const sessionGetChildren = jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
+            () => Promise.resolve([folder])
+        );
+
+        const loadedItems = await testTree.searchInLoadedItems();
+
+        expect(loadedItems).toStrictEqual([folder]);
+    });
+
+    /*************************************************************************************************************
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
