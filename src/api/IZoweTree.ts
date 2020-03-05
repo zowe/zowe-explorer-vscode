@@ -177,8 +177,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     renameFavorite(node: IZoweDatasetTreeNode, newLabel: string);
     /**
-     * Renames a node based on the profile and it's label
-     * @deprecated should not be visible outside of class
+     * Adds an item to the array of recently-opened member names
      *
      * @param {string} criteria the member name to add
      */
@@ -208,6 +207,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     createFilterString?(newFilter: string, node: IZoweNodeType);
     /**
+     * Renames a node based on the profile and it's label
+     * @deprecated should not be visible outside of class
+     *
      * @param {string} profileLabel
      * @param {string} beforeLabel
      * @param {string} afterLabel
