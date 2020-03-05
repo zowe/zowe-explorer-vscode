@@ -10,7 +10,8 @@
 */
 
 import { IProfileLoaded, Logger } from "@zowe/imperative";
-import { applyIcons, FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
+import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
+import * as ussNodeActions from "./uss/ussNodeActions";
 import * as vscode from "vscode";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
@@ -20,6 +21,7 @@ import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { getIconByNode } from "./generators/icons";
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -44,7 +46,8 @@ export async function createUSSTree(log: Logger) {
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
 
-    public static readonly defaultDialogText: string = "\uFF0B " + localize("ussFilterPrompt.option.prompt.search", "Create a new filter");
+
+    public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
@@ -55,9 +58,37 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         super(USSTree.persistenceSchema, new ZoweUSSNode(localize("Favorites", "Favorites"),
             vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
-        this.mFavoriteSession.iconPath = applyIcons(this.mFavoriteSession);
+        const icon = getIconByNode(this.mFavoriteSession);
+        if (icon) {
+            this.mFavoriteSession.iconPath = icon.path;
+        }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
         this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
+    }
+
+    public async rename(originalNode: IZoweUSSTreeNode) {
+        await ussNodeActions.renameUSSNode(originalNode, this, undefined);
+    }
+    public open(node: IZoweUSSTreeNode, preview: boolean) {
+        throw new Error("Method not implemented.");
+    }
+    public copy(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public paste(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public delete(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public saveFile(document: vscode.TextDocument) {
+        throw new Error("Method not implemented.");
+    }
+    public refreshPS(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public uploadDialog(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
     }
 
     /**
@@ -151,7 +182,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             temp.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
-        temp.iconPath = applyIcons(node);
+        const icon = getIconByNode(temp);
+        if (icon) {
+            temp.iconPath = icon.path;
+        }
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
             sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
@@ -165,7 +199,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async addUSSSearchFavorite(node: IZoweUSSTreeNode) {
+    public async saveSearch(node: IZoweUSSTreeNode) {
         const label = "[" + node.getSessionNode().getProfileName() + "]: " + node.fullPath;
         const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
             this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().getProfileName());
@@ -173,7 +207,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
         temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-        temp.iconPath =  applyIcons(temp);
+        const icon = getIconByNode(temp);
+        if (icon) {
+            temp.iconPath = icon.path;
+        }
         temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
@@ -211,9 +248,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {IZoweUSSTreeNode} node - The session node
      * @returns {Promise<void>}
      */
-    public async ussFilterPrompt(node: IZoweUSSTreeNode) {
+    public async filterPrompt(node: IZoweUSSTreeNode) {
         if (this.log) {
-            this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
+            this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         let sessionNode = node.getSessionNode();
         let remotepath: string;
@@ -286,14 +323,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (!remotepath) {
                     // manually entering a search - switch to an input box
                     const options: vscode.InputBoxOptions = {
-                        prompt: localize("ussFilterPrompt.option.prompt.search",
+                        prompt: localize("filterPrompt.option.prompt.search",
                             "Create a new filter"),
                         value: sessionNode.fullPath
                     };
                     // get user input
                     remotepath = await vscode.window.showInputBox(options);
                     if (!remotepath || remotepath.length === 0) {
-                        vscode.window.showInformationMessage(localize("ussFilterPrompt.enterPath", "You must enter a path."));
+                        vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
                         return;
                     }
                 }
@@ -316,7 +353,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const sanitizedPath = remotepath.replace(/\/\/+/, "/");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
             sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            sessionNode.iconPath = applyIcons(sessionNode, extension.ICON_STATE_OPEN);
+            const icon = getIconByNode(sessionNode);
+            if (icon) {
+                sessionNode.iconPath = icon.path;
+            }
             // update the treeview with the new path
             sessionNode.label = `${sessionNode.getProfileName()} [${sanitizedPath}]`;
             sessionNode.dirty = true;
@@ -361,7 +401,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                                     title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
                 }
                 node.contextValue += extension.FAV_SUFFIX;
-                node.iconPath = applyIcons(node);
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
                 this.mFavorites.push(node);
             } catch(e) {
                 const errMessage: string =
@@ -394,7 +437,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profile.name);
             node.contextValue = extension.USS_SESSION_CONTEXT;
-            node.iconPath = applyIcons(node);
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
+            }
             node.dirty = true;
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);

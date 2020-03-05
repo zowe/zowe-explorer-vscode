@@ -152,7 +152,7 @@ describe("Unit Tests (Jest)", () => {
             rootNode.dirty = true;
             await rootNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List Error: Throwing an error to check error handling for unit tests!");
         });
 
     /*************************************************************************************************************

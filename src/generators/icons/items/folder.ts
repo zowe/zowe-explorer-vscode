@@ -10,27 +10,21 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import * as extension from "../../../extension";
 import { getIconPathInResources } from "../../../utils/icon";
+import * as extension from "../../../extension";
 
 const icon: IIconItem = {
-    id: IconId.document,
+    id: IconId.folder,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("document.svg"),
+    path: getIconPathInResources("folder-closed.svg"),
     check: (node) => {
-        // TODO: Move contexts to constants file and do constructor as well
-        const contexts = [extension.DS_DS_CONTEXT,
-            extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_MEMBER_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.JOBS_SPOOL_CONTEXT,
-            extension.DS_MIGRATED_FILE_CONTEXT,
-            extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_BINARY_FILE_CONTEXT,
-            extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX
-        ];
-
+        const contexts = [
+            extension.DS_PDS_CONTEXT,
+            extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX,
+            extension.USS_DIR_CONTEXT,
+            extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX,
+            extension.JOBS_JOB_CONTEXT,
+            extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX];
         return contexts.indexOf(node.contextValue) > -1;
     }
 };

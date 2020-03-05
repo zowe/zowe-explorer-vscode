@@ -9,77 +9,12 @@
 *                                                                                 *
 */
 
-import * as path from "path";
 import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
-import * as extension from "../src/extension";
+import { ISession } from "@zowe/imperative";
+import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
-import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-
-/*
- * Created this file to be a place where commonly used functions will be defined.
- * I noticed we have a lot of repetition of some common
- * functionality in many places.
- */
-export function applyIcons(node: TreeItem, state?: string ): any {
-    let light: string;
-    let dark: string;
-
-    if ([extension.DS_PDS_CONTEXT, extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX,
-            extension.USS_DIR_CONTEXT,
-            extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX,
-            extension.JOBS_JOB_CONTEXT,
-            extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        if (state === extension.ICON_STATE_OPEN) {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-open.svg");
-        } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-closed.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-closed.svg");
-        }
-    } else if ([extension.FAVORITE_CONTEXT].includes(node.contextValue)) {
-        if (state === extension.ICON_STATE_OPEN) {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-open.svg");
-        } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-favorite-closed.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-favorite-closed.svg");
-        }
-    } else if ([extension.DS_SESSION_CONTEXT, extension.USS_SESSION_CONTEXT,
-                extension.JOBS_SESSION_CONTEXT].includes(node.contextValue)) {
-        if (state === extension.ICON_STATE_OPEN) {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-open.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-open.svg");
-        } else {
-            light = path.join(__dirname, "..", "..", "resources", "light", "folder-root-default-closed.svg");
-            dark = path.join(__dirname, "..", "..", "resources", "dark", "folder-root-default-closed.svg");
-        }
-    } else if ([extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX,
-                extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX,
-                extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "light", "pattern.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg");
-    } else if ([extension.DS_DS_CONTEXT,
-                extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
-                extension.DS_MEMBER_CONTEXT, extension.DS_TEXT_FILE_CONTEXT,
-                extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
-                extension.JOBS_SPOOL_CONTEXT].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
-    } else if ([extension.DS_MIGRATED_FILE_CONTEXT,
-                extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
-    } else if ([extension.DS_BINARY_FILE_CONTEXT,
-                extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX].includes(node.contextValue)) {
-        light = path.join(__dirname, "..", "..", "resources", "light", "document.svg");
-        dark = path.join(__dirname, "..", "..", "resources", "dark", "document.svg");
-    } else {
-        return undefined;
-    }
-    node.iconPath = { light, dark };
-    return { light, dark };
-}
 
 export function sortTreeItems(favorites: TreeItem[], specificContext ) {
     favorites.sort((a, b) => {
@@ -144,14 +79,13 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatChildNodes(nodes: IZoweTreeNode[]) {
-    let allNodes = new Array<IZoweTreeNode>();
+export function concatChildNodes(nodes: IZoweNodeType[]) {
+    let allNodes = new Array<IZoweNodeType>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(concatChildNodes(node.children));
         allNodes.push(node);
     }
-
     return allNodes;
 }
 
@@ -185,9 +119,32 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             break;
         }
         default: {
-            window.showErrorMessage(moreInfo);
+            window.showErrorMessage(moreInfo + " " +  errorDetails);
             break;
         }
     }
     return;
+}
+
+/*************************************************************************************************************
+ * Refresh Profile and Session
+ * @param {sessNode} IZoweTreeNode
+ * @param {profile} IProfileLoaded
+ *************************************************************************************************************/
+export function refreshTree(sessNode: IZoweTreeNode) {
+    const allProf = Profiles.getInstance().getProfiles();
+    for (const profNode of allProf) {
+        if (sessNode.getProfileName() === profNode.name) {
+            sessNode.getProfile().profile = profNode.profile;
+            const SessionProfile = profNode.profile as ISession;
+            if (sessNode.getSession().ISession !== SessionProfile) {
+                sessNode.getSession().ISession.user = SessionProfile.user;
+                sessNode.getSession().ISession.password = SessionProfile.password;
+                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
+                sessNode.getSession().ISession.port = SessionProfile.port;
+                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+            }
+        }
+    }
 }
