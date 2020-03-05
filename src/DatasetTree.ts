@@ -285,7 +285,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (icon) {
                 temp.iconPath = icon.path;
             }
-            // add a command to execute the search
+            // add a command to execute the searchh
             temp.command = {command: "zowe.pattern", title: "", arguments: [temp]};
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
