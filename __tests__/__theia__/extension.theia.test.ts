@@ -10,6 +10,7 @@
 */
 
 import { Builder, By, Key, until } from "selenium-webdriver";
+// tslint:disable-next-line:no-submodule-imports
 import * as firefox from "selenium-webdriver/firefox";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -17,22 +18,23 @@ import * as chaiAsPromised from "chai-as-promised";
 const TIMEOUT = 45000;
 declare var it: any;
 
-describe('Extension Theia Tests', () => {
+describe("Extension Theia Tests", () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
     const firefoxOptions = new firefox.Options();
     firefoxOptions.headless();
-    const driver = new Builder().forBrowser('firefox').setFirefoxOptions(firefoxOptions).build();
+    const driver = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 
-    it('should open Zowe Explorer and find the Favorites node', async () => {
-        await driver.get('http://localhost:3000');
+    it("should open Zowe Explorer and find the Favorites node", async () => {
+        await driver.get("http://localhost:3000");
+        // tslint:disable-next-line: no-magic-numbers
         await driver.sleep(10000);
-        let button = driver.wait(until.elementLocated(By.id('shell-tab-plugin-view-container:zowe')));
+        const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
-        console.log(`Zowe Explorer opened`);
-        let favoriteLink = await driver.wait(until.elementLocated(By.id('/0:Favorites')), 30000).getAttribute('title');
-        expect(favoriteLink).to.equal('Favorites');
+        // tslint:disable-next-line: no-magic-numbers
+        const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), 30000).getAttribute("title");
+        expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
 
     after(async () => driver.quit());
