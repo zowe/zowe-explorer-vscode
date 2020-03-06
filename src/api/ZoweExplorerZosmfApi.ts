@@ -13,7 +13,6 @@ import * as zowe from "@zowe/cli";
 import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as nls from "vscode-nls";
-import { IUploadOptions } from "@zowe/cli";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -63,7 +62,7 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
     }
 
     public async putContents(inputFilePath: string, ussFilePath: string,
-                             options: IUploadOptions = {}): Promise<zowe.IZosFilesResponse> {
+                             options: zowe.IUploadOptions = {}): Promise<zowe.IZosFilesResponse> {
         if (typeof options.task === "undefined") {
             options.task = {
                 percentComplete: 0,

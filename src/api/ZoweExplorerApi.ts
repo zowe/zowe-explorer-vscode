@@ -11,7 +11,6 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session } from "@zowe/imperative";
-import { IUploadOptions } from "@zowe/cli";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -95,7 +94,7 @@ export namespace ZoweExplorerApi {
         putContents(
             inputFilePath: string,
             ussFilePath: string,
-            options?: IUploadOptions
+            options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
