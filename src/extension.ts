@@ -681,22 +681,20 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         }
         chosenProfile = choice === createPick ? "" : choice.label;
     } else {
-        if (profileNamesList.length > 0) {
-            quickpick.items = [createPick, ...items];
-            quickpick.placeholder = placeholder;
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await utils.resolveQuickPickHelper(quickpick);
-            quickpick.hide();
-            if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                return;
-            }
-            if (choice instanceof utils.FilterDescriptor) {
-                chosenProfile = "";
-            } else {
-                chosenProfile = choice.label;
-            }
+        quickpick.items = [createPick, ...items];
+        quickpick.placeholder = placeholder;
+        quickpick.ignoreFocusOut = true;
+        quickpick.show();
+        const choice = await utils.resolveQuickPickHelper(quickpick);
+        quickpick.hide();
+        if (!choice) {
+            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+            return;
+        }
+        if (choice instanceof utils.FilterDescriptor) {
+            chosenProfile = "";
+        } else {
+            chosenProfile = choice.label;
         }
     }
 
