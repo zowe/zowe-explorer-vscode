@@ -206,7 +206,9 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, {
+            binary: true
+        });
     } catch (e) {
         utils.errorHandling(e, node.mProfileName, e.message);
     }

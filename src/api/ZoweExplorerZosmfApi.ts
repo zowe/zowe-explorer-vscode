@@ -13,6 +13,7 @@ import * as zowe from "@zowe/cli";
 import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import * as nls from "vscode-nls";
+import { IUploadOptions } from "@zowe/cli";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -62,14 +63,15 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
     }
 
     public async putContents(inputFilePath: string, ussFilePath: string,
-                             binary?: boolean, localEncoding?: string,
-                             etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
-        const task: ITaskWithStatus = {
-            percentComplete: 0,
-            statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
-            stageName: TaskStage.IN_PROGRESS
-        };
-        return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, task, etag, returnEtag);
+                             options: IUploadOptions = {}): Promise<zowe.IZosFilesResponse> {
+        if (typeof options.task === "undefined") {
+            options.task = {
+                percentComplete: 0,
+                statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
+                stageName: TaskStage.IN_PROGRESS
+            };
+        }
+        return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
     }
 
     public async uploadDirectory(
