@@ -751,6 +751,60 @@ describe("DatasetTree Unit Tests", () => {
         showInputBox.mockReset();
     });
 
+    it("Testing that openRecentMemberPrompt fails when there are no recent members", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        while(testTree.getRecall().length > 0) {
+            testTree.removeRecall(testTree.getRecall()[0]);
+        }
+        const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
+        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode.pattern = "node";
+        const parent = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, session);
+        child.contextValue = extension.DS_MEMBER_CONTEXT;
+        child.pattern = child.label;
+        sessNode.children.push(parent);
+        testTree.mSessionNodes.push(sessNode);
+
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        createQuickPick.mockReturnValue({
+            activeItems: [child.label],
+            ignoreFocusOut: true,
+            items: [child.label],
+            value: "[sestest]: node(child)",
+            show: jest.fn(() => {
+                return {};
+            }),
+            hide: jest.fn(() => {
+                return {};
+            }),
+            onDidAccept: jest.fn(() => {
+                return {};
+            })
+        });
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const getSessionSpy = jest.spyOn(sessNode, "getSession").mockReturnValue(session);
+        spyOn(sessNode, "getChildren").and.returnValue(Promise.resolve([parent]));
+        const createFilterStringSpy = jest.spyOn(testTree, "createFilterString").mockReturnValue(Promise.resolve("node"));
+        const openPS = jest.spyOn(extension, "openPS");
+
+        await testTree.openRecentMemberPrompt();
+
+        expect(openPS).toBeCalledTimes(0);
+
+        sessNode.children.pop();
+        testTree.mSessionNodes.pop();
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+    });
+
     /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
