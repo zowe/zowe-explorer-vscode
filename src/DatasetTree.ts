@@ -538,10 +538,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
             return;
         }
-        if (!pattern) {
-            vscode.window.showInformationMessage(localize("enterPattern.noPattern", "No pattern entered."));
-            return;
-        }
     }
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {

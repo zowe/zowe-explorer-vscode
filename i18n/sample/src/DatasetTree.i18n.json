@@ -14,7 +14,6 @@
     "memberHistory.options.prompt": "Select a recent member to open",
     "enterPattern.pattern": "No selection made.",
     "getRecentMembers.empty": "No recent members found.",
-    "enterPattern.noPattern": "No pattern entered.",
     "datasetTree.error": "Error encountered in ",
     "searchHistory.options.prompt": "Select a filter",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",

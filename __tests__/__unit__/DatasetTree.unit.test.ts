@@ -57,10 +57,8 @@ describe("DatasetTree Unit Tests", () => {
     const mockRenameFavorite = jest.fn();
     const mockUpdateFavorites = jest.fn();
     const mockRenameNode = jest.fn();
-    const mockRemoveRecall = jest.fn();
     const mockInitialize = jest.fn();
     const mockPattern = jest.fn();
-    const mockCreateFilterString = jest.fn();
     const mockRemoveFavorite = jest.fn();
     const mockGetChildren = jest.fn();
     const mockGetRecall = jest.fn();
@@ -562,6 +560,57 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
+     * Create Filter String
+     *************************************************************************************************************/
+    it("Testing that createFilterString works when a previous filter IS NOT defined", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        node.pattern = "";
+
+        const newFilter = await testTree.createFilterString("test", node);
+
+        expect(newFilter).toEqual("test");
+    });
+
+    it("Testing that createFilterString works when a previous filter IS defined", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        node.pattern = "node";
+
+        const newFilter = await testTree.createFilterString("test", node);
+
+        expect(newFilter).toEqual("node,test");
+    });
+
+    /*************************************************************************************************************
+     * Recall functions: addRecall, removeRecall, getRecall
+     *************************************************************************************************************/
+    it("Testing that addRecall removes an entry when the list is too large", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        const recall = ["a", "b", "c", "d", "e",
+                        "f", "g", "h", "i", "j",
+                        "k", "l", "m", "n", "o"];
+
+        while(testTree.getRecall().length > 0) {
+            testTree.removeRecall(testTree.getRecall()[0]);
+        }
+        recall.forEach((item) => testTree.addRecall(item));
+
+        await testTree.addRecall("test");
+
+        expect(testTree.getRecall().find((elt) => elt === "a")).toBeUndefined();
+    });
+
+    it("Testing that removeRecall removes a recently-opened member from the list", async () => {
+        testTree.initialize(Logger.getAppLogger());
+        testTree.addRecall("test");
+
+        await testTree.removeRecall("test");
+
+        expect(testTree.getRecall().find((elt) => elt === "test")).toBeUndefined();
+    });
+
+    /*************************************************************************************************************
      * Recent Member Prompts
      *************************************************************************************************************/
     it("Testing that openRecentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
@@ -659,6 +708,44 @@ describe("DatasetTree Unit Tests", () => {
         expect(openPS).toBeCalledWith(child, true, testTree);
 
         sessNode.children.pop();
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+    });
+
+    it("Testing that openRecentMemberPrompt fails when no selection is made", async () => {
+        testTree.initialize(Logger.getAppLogger());
+
+        createQuickPick.mockReset();
+
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(null)
+        );
+        createQuickPick.mockReturnValue({
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: null,
+            show: jest.fn(() => {
+                return {};
+            }),
+            hide: jest.fn(() => {
+                return {};
+            }),
+            onDidAccept: jest.fn(() => {
+                return {};
+            })
+        });
+
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const openPS = jest.spyOn(extension, "openPS");
+        openPS.mockReset();
+
+        await testTree.openRecentMemberPrompt();
+
+        expect(openPS).toBeCalledTimes(0);
 
         showQuickPick.mockReset();
         showInputBox.mockReset();
