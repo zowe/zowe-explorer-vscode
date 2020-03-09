@@ -13,7 +13,7 @@ node('ibm-jenkins-slave-nvm') {
 
   def pipeline = lib.pipelines.nodejs.NodeJSPipeline.new(this)
 
-  pipeline.admins.add("crawr")
+  pipeline.admins.add("jackjia")
 
   pipeline.setup(
     packageName: 'ze-regression-test'
@@ -22,7 +22,21 @@ node('ibm-jenkins-slave-nvm') {
   // build stage is required
   pipeline.build(
     operation: {
-      echo "build holder"
+      echo "Install yarn"
+      sh "yarn --version"
+      echo "Build Theia"
+      sh "git clone https://github.com/eclipse-theia/theia""
+      sh "node -v"
+      sh "pwd"
+      sh "cd theia"
+      sh "yarn"
+      echo "Copy vsix to plugins folder"
+      sh "mkdir -p plugins"
+      sh "cd plugins"
+      sh "bash -c 'curl https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode/vscode-extension-for-zowe-v1.1.0.vsix -o vscode-extension-for-zowe-v1.1.0.vsix'"
+      sh "cd .."
+      sh "cd .."
+      sh "firefox --version | more"
     }
   )
 
@@ -33,12 +47,6 @@ node('ibm-jenkins-slave-nvm') {
     },
     allowMissingJunit : true
   )
-
-  // define we need publish stage
-  pipeline.publish()
-
-  // define we need release stage
-  pipeline.release()
 
   pipeline.end()
 }
