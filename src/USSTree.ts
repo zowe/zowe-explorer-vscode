@@ -364,10 +364,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
-    public async addRecall(criteria: string) {
-        throw new Error("Method not implemented.");
-    }
-
     public async initialize(log: Logger) {
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
@@ -423,22 +419,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return;
             }
         });
-    }
-
-    public getRecall(): string[] {
-        throw new Error("Method not implemented.");
-    }
-
-    public removeRecall(name: string) {
-        throw new Error("Method not implemented.");
-    }
-
-    public async createFilterString(newFilter: string, node: IZoweUSSTreeNode) {
-        throw new Error("Method not implemented.");
-    }
-
-    public async openRecentMemberPrompt() {
-        throw new Error("Method not implemented.");
     }
 
     /**
