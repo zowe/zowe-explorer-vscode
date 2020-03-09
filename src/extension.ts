@@ -583,12 +583,12 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     const items: IZoweNodeType[] = [];
     const qpItems = [];
     const quickpick = vscode.window.createQuickPick();
-    quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a data set filter");
+    quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
     quickpick.ignoreFocusOut = true;
     quickpick.onDidChangeValue(async (value) => {
         if (value) {
             quickpick.items = [...qpItems.filter((item) => item.label.includes(quickpick.value))];
-        } else { quickpick.items = []; }
+        } else { quickpick.items = [...qpItems]; }
     });
 
     // Get loaded items from Tree Providers
@@ -607,15 +607,16 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
             if (item.contextValue === DS_MEMBER_CONTEXT) {
                 qpItem = new utils.FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`, "Data Set Member");
             } else {
-                qpItem = new utils.FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set Node");
+                qpItem = new utils.FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
             }
             qpItems.push(qpItem);
         } else if (item.constructor.name === "ZoweUSSNode") {
             const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label.trim()}`;
-            qpItem = new utils.FilterItem(filterItem, "USS Node");
+            qpItem = new utils.FilterItem(filterItem, "USS");
             qpItems.push(qpItem);
         }
     }
+    quickpick.items = [...qpItems];
 
     quickpick.show();
     const choice = await utils.resolveQuickPickHelper(quickpick);

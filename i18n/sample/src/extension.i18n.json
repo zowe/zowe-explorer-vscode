@@ -20,7 +20,7 @@
     "submitJcl.log.error.nullSession": "Session for submitting JCL was null or undefined!",
     "submitJcl.jobSubmitted": "Job submitted ",
     "submitJcl.jobSubmissionFailed": "Job submission failed\n",
-    "searchHistory.options.prompt": "Enter a data set filter",
+    "searchHistory.options.prompt": "Enter a filter",
     "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
     "submitMember.invalidNode": "submitMember() called from invalid node.",
     "submitMember.error.invalidNode": "submitMember() called from invalid node.",
