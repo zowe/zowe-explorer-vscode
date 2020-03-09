@@ -86,23 +86,15 @@ export namespace ZoweExplorerApi {
         /**
          * Uploads the file at the given path. Use for Save.
          *
-         * @param {string} inputFilePath
-         * @param {string} ussFilePath
-         * @param {boolean} [binary]
-         *      Indicates if a conversion should be attempted or treated as binary.
-         * @param {string} [localEncoding]
-         *      Optional encoding that can be used by an implementation to overwrite defaults
-         * @param {string} [etag]
-         * @param {boolean} [returnEtag]
-         * @returns {Promise<zowe.IZosFilesResponse>}
+         * @param inputFilePath - Path to local file
+         * @param ussFilePath   - Name of USS file to write to
+         * @param options   - Uploading options
+         * @returns {Promise<IZosFilesResponse>} - A response indicating the outcome
          */
         putContents(
             inputFilePath: string,
             ussFilePath: string,
-            binary?: boolean,
-            localEncoding?: string,
-            etag?: string,
-            returnEtag?: boolean
+            options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
         /**

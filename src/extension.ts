@@ -1813,7 +1813,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
             return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
-                doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+                doc.fileName, remote, {
+                    binary,
+                    etag: etagToUpload,
+                    returnEtag
+                });  // TODO MISSED TESTING
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
