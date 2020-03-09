@@ -326,16 +326,19 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that searchInLoadedItems returns the correct array", async () => {
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, "/");
+        const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+        testTree.mSessionNodes[1].children = [folder];
+        folder.children.push(file);
         const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
             () => Promise.resolve([testTree.mSessionNodes[1]])
         );
         const sessionGetChildren = jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
-            () => Promise.resolve([folder])
+            () => Promise.resolve(testTree.mSessionNodes[1].children)
         );
 
         const loadedItems = await testTree.searchInLoadedItems();
 
-        expect(loadedItems).toStrictEqual([folder]);
+        expect(loadedItems).toStrictEqual([file, folder]);
     });
 
     /*************************************************************************************************************

@@ -619,63 +619,63 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
     quickpick.show();
     const choice = await utils.resolveQuickPickHelper(quickpick);
-    pattern = choice.label;
-    quickpick.dispose();
-
-    if (!pattern) {
+    if (!choice) {
         vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
         return;
-    }
+    } else { pattern = choice.label; }
+    quickpick.dispose();
 
-    // Parse pattern for item name
-    let filePath: string;
-    let nodeName: string;
-    let memberName: string;
-    const sessionName = pattern.substring(1, pattern.indexOf("]"));
-    if (pattern.indexOf("(") !== -1) {
-        nodeName = pattern.substring(pattern.indexOf(" ") + 1, pattern.indexOf("("));
-        memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
-    } else if (pattern.indexOf("/") !== -1) {
-        filePath = pattern.substring(pattern.indexOf(" ") + 1);
-    } else { nodeName = pattern.substring(pattern.indexOf(" ") + 1); }
+    if (pattern) {
+        // Parse pattern for item name
+        let filePath: string;
+        let nodeName: string;
+        let memberName: string;
+        const sessionName = pattern.substring(1, pattern.indexOf("]"));
+        if (pattern.indexOf("(") !== -1) {
+            nodeName = pattern.substring(pattern.indexOf(" ") + 1, pattern.indexOf("("));
+            memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
+        } else if (pattern.indexOf("/") !== -1) {
+            filePath = pattern.substring(pattern.indexOf(" ") + 1);
+        } else { nodeName = pattern.substring(pattern.indexOf(" ") + 1); }
 
-    // Find & reveal nodes in tree
-    if (pattern.indexOf("/") !== -1) {
-        // USS nodes
-        const node = items.filter((item) => item.fullPath.trim() === filePath)[0];
-        ussFileProvider.setItem(ussFileProvider.getTreeView(), node);
+        // Find & reveal nodes in tree
+        if (pattern.indexOf("/") !== -1) {
+            // USS nodes
+            const node = items.filter((item) => item.fullPath.trim() === filePath)[0];
+            ussFileProvider.setItem(ussFileProvider.getTreeView(), node);
 
-        if (node.contextValue !== USS_DIR_CONTEXT) {
-            // If selected item is file, open it in workspace
-            ussFileProvider.addHistory(node.fullPath);
-            const ussNode: IZoweUSSTreeNode = node;
-            ussNode.openUSS(false, true, ussFileProvider);
-        }
-    } else {
-        // Data set nodes
-        const sessions = await datasetProvider.getChildren();
-        const sessionNode = sessions.filter((session) => session.label.trim() === sessionName)[0];
-        let children = await datasetProvider.getChildren(sessionNode);
-        const node = children.filter((child) => child.label.trim() === nodeName)[0];
-
-        if (memberName) {
-            // Members
-            children = await datasetProvider.getChildren(node);
-            const member = children.filter((child) => child.label.trim() === memberName)[0];
-            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            datasetProvider.setItem(datasetProvider.getTreeView(), member);
-
-            // Open in workspace
-            datasetProvider.addHistory(`${nodeName}(${memberName})`);
-            openPS(member, true, datasetProvider);
+            if (node.contextValue !== USS_DIR_CONTEXT) {
+                // If selected item is file, open it in workspace
+                ussFileProvider.addHistory(node.fullPath);
+                const ussNode: IZoweUSSTreeNode = node;
+                ussNode.openUSS(false, true, ussFileProvider);
+            }
         } else {
-            // PDS & SDS
-            datasetProvider.setItem(datasetProvider.getTreeView(), node);
+            // Data set nodes
+            const sessions = await datasetProvider.getChildren();
+            const sessionNode = sessions.filter((session) => session.label.trim() === sessionName)[0];
+            let children = await datasetProvider.getChildren(sessionNode);
+            const node = children.filter((child) => child.label.trim() === nodeName)[0];
 
-            // If selected node was SDS, open it in workspace
-            if (node.contextValue === DS_DS_CONTEXT) {
-                datasetProvider.addHistory(nodeName);
-                openPS(node, true, datasetProvider);
+            if (memberName) {
+                // Members
+                children = await datasetProvider.getChildren(node);
+                const member = children.filter((child) => child.label.trim() === memberName)[0];
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                datasetProvider.setItem(datasetProvider.getTreeView(), member);
+
+                // Open in workspace
+                datasetProvider.addHistory(`${nodeName}(${memberName})`);
+                openPS(member, true, datasetProvider);
+            } else {
+                // PDS & SDS
+                datasetProvider.setItem(datasetProvider.getTreeView(), node);
+
+                // If selected node was SDS, open it in workspace
+                if (node.contextValue === DS_DS_CONTEXT) {
+                    datasetProvider.addHistory(nodeName);
+                    openPS(node, true, datasetProvider);
+                }
             }
         }
     }

@@ -2403,6 +2403,7 @@ describe("Extension Unit Tests", () => {
                     return Promise.resolve([sessNode]);
                 }
             });
+
             const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
             createQuickPick.mockReturnValueOnce({
                 placeholder: "Select a filter",
@@ -2542,6 +2543,39 @@ describe("Extension Unit Tests", () => {
 
             expect(mockAddHistory).toBeCalledWith("/folder/file");
             expect(openNode).toHaveBeenCalledWith(false, true, testUSSTree);
+        });
+    });
+
+    describe("Add searchForLoadedItems Tests", () => {
+        it("Testing that searchForLoadedItems fails when no pattern is entered", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(null));
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: null,
+                ignoreFocusOut: true,
+                items: null,
+                value: null,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+            mockAddHistory.mockReset();
         });
     });
 
