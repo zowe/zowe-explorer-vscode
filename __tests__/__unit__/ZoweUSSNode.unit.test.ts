@@ -94,15 +94,7 @@ describe("Unit Tests (Jest)", () => {
         rootNode.iconPath = "Ref: 'folder.svg'";
         testDir.iconPath = "Ref: 'folder.svg'";
         testFile.iconPath = "Ref: 'document.svg'";
-        try{
-            expect(testFile).toMatchSnapshot();
-        } catch (e) {
-            // tslint:disable-next-line:no-console
-            console.log(e.message);
-            // tslint:disable-next-line:no-console
-            console.log(e);
-            throw e;
-        }
+        expect(testFile).toMatchSnapshot();
     });
 
     /*************************************************************************************************************
