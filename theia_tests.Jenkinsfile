@@ -25,7 +25,7 @@ node('ibm-jenkins-slave-nvm') {
       echo "Install yarn"
       sh "yarn --version"
       echo "Build Theia"
-      sh "git clone https://github.com/eclipse-theia/theia""
+      sh "git clone https://github.com/eclipse-theia/theia"
       sh "node -v"
       sh "pwd"
       sh "cd theia"
