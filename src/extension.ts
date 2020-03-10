@@ -37,7 +37,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { getIconByNode } from "./generators/icons";
-import { checkTextFileIsOpened } from "./utils/workspace";
+import { closeOpenedTextFile } from "./utils/workspace";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -1004,7 +1004,8 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
         beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
     }
     const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
-    const hasOpenedInstance = await checkTextFileIsOpened(getDocumentFilePath(node.getLabel(), node));
+    const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
+    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
     if (afterDataSetName) {
@@ -1029,7 +1030,11 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
         datasetProvider.refreshElement(node);
         datasetProvider.updateFavorites();
 
-        if (hasOpenedInstance) {
+        if (fs.existsSync(beforeFullPath)) {
+            fs.unlinkSync(beforeFullPath);
+        }
+
+        if (closedOpenedInstance) {
             vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
         }
     }
@@ -1165,7 +1170,8 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
         dataSetName = node.getParent().getLabel();
     }
     const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
-    const hasOpenedInstance = await checkTextFileIsOpened(getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node));
+    const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
+    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
     if (afterMemberName) {
@@ -1197,7 +1203,12 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
             }
         }
         datasetProvider.refreshElement(node.getParent());
-        if (hasOpenedInstance) {
+
+        if (fs.existsSync(beforeFullPath)) {
+            fs.unlinkSync(beforeFullPath);
+        }
+
+        if (closedOpenedInstance) {
             vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
         }
     }
