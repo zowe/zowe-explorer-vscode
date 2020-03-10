@@ -27,7 +27,7 @@ import { injectAdditionalDataToTooltip } from "./utils/uss";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
-import { checkTextFileIsOpened } from "./utils/workspace";
+import { closeOpenedTextFile } from "./utils/workspace";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -281,7 +281,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async rename(newFullPath: string) {
         const currentFilePath = this.getUSSDocumentFilePath();
-        const hasOpenedInstance = await checkTextFileIsOpened(currentFilePath);
+        const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
 
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
@@ -289,7 +289,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        if (hasOpenedInstance || (this.binary && this.downloaded)) {
+        if (hasClosedInstance || (this.binary && this.downloaded)) {
             vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
     }
