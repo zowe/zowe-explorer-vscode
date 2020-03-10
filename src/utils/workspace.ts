@@ -59,7 +59,7 @@ export async function closeOpenedTextFile(path: string) {
         await openNextTab(tabSwitchDelay);
         selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
-        if (selectedEditor.document.fileName === path) {
+        if (selectedEditor && selectedEditor.document.fileName === path) {
             vscode.commands.executeCommand("workbench.action.closeActiveEditor");
             return true;
         }
