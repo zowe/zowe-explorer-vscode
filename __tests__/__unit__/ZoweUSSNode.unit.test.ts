@@ -75,7 +75,7 @@ describe("Unit Tests (Jest)", () => {
 
     Profiles.createInstance(Logger.getAppLogger());
 
-    /*************************************************************************************************************
+    /************************************************************************************************************* Oh hey this line is too long. Is this a problem?
      * Checks that the ZoweUSSNode structure is the same as the snapshot
      *************************************************************************************************************/
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
