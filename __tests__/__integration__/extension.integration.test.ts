@@ -453,7 +453,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns("mem2");
 
-                        await extension.renameDataSetMember(childNode, testTree);
+                        await testTree.rename(childNode);
                         list = await zowe.List.allMembers(sessionNode.getSession(), beforeDataSetName);
                     } catch (err) {
                         error = err;
@@ -526,7 +526,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns("mem2");
 
-                        await extension.renameDataSetMember(childNode, testTree);
+                        await testTree.rename(childNode);
                     } catch (err) {
                         error = err;
                     }

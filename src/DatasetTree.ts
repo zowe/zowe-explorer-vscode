@@ -66,22 +66,18 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Rename data sets
+     * Rename data set
      *
      * @export
-     * @param {ZoweDatasetNode} node - The node
-     * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+     * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
         switch (node.contextValue) {
-            case extension.DS_DS_CONTEXT:
-            case (extension.DS_DS_CONTEXT + extension.FAV_SUFFIX):
-            case extension.DS_PDS_CONTEXT:
-            case (extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX):
-                return extension.renameDataSet(node, this);
             case extension.DS_MEMBER_CONTEXT:
             case (extension.DS_MEMBER_CONTEXT + extension.FAV_SUFFIX):
-                return extension.renameDataSetMember(node, this);
+                return this.renameDataSetMember(node);
+            default :
+                return this.renameDataSet(node);
         }
     }
 
@@ -521,6 +517,100 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node.iconPath = icon.path;
             }
             this.addHistory(node.pattern);
+        }
+    }
+
+    /**
+     * Rename data set member
+     *
+     * @param node - The node
+     */
+    private async renameDataSetMember(node: IZoweDatasetTreeNode) {
+        const beforeMemberName = node.label.trim();
+        let dataSetName;
+        let profileLabel;
+
+        if (node.getParent().contextValue.includes(extension.FAV_SUFFIX)) {
+            profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
+            dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
+        } else {
+            dataSetName = node.getParent().getLabel();
+        }
+        const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
+
+        this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
+        if (afterMemberName) {
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
+                node.label = `${profileLabel}${afterMemberName}`;
+            } catch (err) {
+                this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+                await errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                throw err;
+            }
+            if (node.getParent().contextValue.includes(extension.FAV_SUFFIX)) {
+                const nonFavoritedParent = this.findNonFavoritedNode(node.getParent());
+                if (nonFavoritedParent) {
+                    const nonFavoritedMember = nonFavoritedParent.children.find((child) => child.label === beforeMemberName);
+                    if (nonFavoritedMember) {
+                        nonFavoritedMember.label = afterMemberName;
+                        this.refreshElement(nonFavoritedParent);
+                    }
+                }
+            } else {
+                const favoritedParent = this.findFavoritedNode(node.getParent());
+                if (favoritedParent) {
+                    const favoritedMember = favoritedParent.children.find((child) => child.label === beforeMemberName);
+                    if (favoritedMember) {
+                        favoritedMember.label = afterMemberName;
+                        this.refreshElement(favoritedParent);
+                    }
+                }
+            }
+            this.refreshElement(node.getParent());
+        }
+    }
+
+
+    /**
+     * Rename data sets
+     *
+     * @export
+     * @param {IZoweDatasetTreeNode} node - The node
+     */
+    private async renameDataSet(node: IZoweDatasetTreeNode) {
+        let beforeDataSetName = node.label.trim();
+        let favPrefix;
+        let isFavourite;
+
+        if (node.contextValue.includes(extension.FAV_SUFFIX)) {
+            isFavourite = true;
+            favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
+            beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
+        }
+        const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
+
+        this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
+        if (afterDataSetName) {
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
+                node.label = `${favPrefix}${afterDataSetName}`;
+            } catch (err) {
+                this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+                await errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                throw err;
+            }
+            if (isFavourite) {
+                const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
+                this.renameNode(profile, beforeDataSetName, afterDataSetName);
+            } else {
+                const temp = node.label;
+                node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
+                this.renameFavorite(node, afterDataSetName);
+                node.label = temp;
+            }
+            this.refreshElement(node.getParent());
+            this.updateFavorites();
         }
     }
 

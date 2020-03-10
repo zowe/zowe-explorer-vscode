@@ -3998,106 +3998,6 @@ describe("Extension Unit Tests", () => {
             "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
     });
 
-    describe("Renaming Data Sets", () => {
-        it("Should rename the node", async () => {
-            showInputBox.mockReset();
-            renameDataSet.mockReset();
-
-            const child = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-
-            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
-            await extension.renameDataSet(child, testTree);
-
-            expect(renameDataSet.mock.calls.length).toBe(1);
-            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
-        });
-        it("Should rename a favorited node", async () => {
-            showInputBox.mockReset();
-            renameDataSet.mockReset();
-
-            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            child.contextValue = "ds_fav";
-            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
-            await extension.renameDataSet(child, testTree);
-
-            expect(renameDataSet.mock.calls.length).toBe(1);
-            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
-        });
-        it("Should throw an error if zowe.Rename.dataSet throws", async () => {
-            let error;
-            const defaultError = new Error("Default error message");
-
-            showInputBox.mockReset();
-            renameDataSet.mockReset();
-            renameDataSet.mockImplementation(() => { throw defaultError; });
-
-            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            child.contextValue = "ds_fav";
-            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
-            try {
-                await extension.renameDataSet(child, testTree);
-            } catch (err) {
-                error = err;
-            }
-
-            expect(renameDataSet.mock.calls.length).toBe(1);
-            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
-            expect(error).toBe(defaultError);
-        });
-        it("Should rename the member", async () => {
-            showInputBox.mockReset();
-            renameDataSet.mockReset();
-
-            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
-
-            showInputBox.mockResolvedValueOnce("mem2");
-            await extension.renameDataSetMember(child, testTree);
-
-            expect(renameDataSetMember.mock.calls.length).toBe(1);
-            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
-        });
-        it("Should rename a favorited member", async () => {
-            showInputBox.mockReset();
-            renameDataSet.mockReset();
-
-            const parent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
-
-            parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-            child.contextValue = extension.DS_MEMBER_CONTEXT;
-
-            showInputBox.mockResolvedValueOnce("mem2");
-            await extension.renameDataSetMember(child, testTree);
-
-            expect(renameDataSetMember.mock.calls.length).toBe(1);
-            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
-        });
-        it("Should throw an error if zowe.Rename.dataSetMember throws", async () => {
-            let error;
-            const defaultError = new Error("Default error message");
-
-            showInputBox.mockReset();
-            renameDataSetMember.mockReset();
-            renameDataSetMember.mockImplementation(() => { throw defaultError; });
-
-            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
-
-            child.contextValue = extension.DS_MEMBER_CONTEXT;
-
-            showInputBox.mockResolvedValueOnce("mem2");
-            try {
-                await extension.renameDataSetMember(child, testTree);
-            } catch (err) {
-                error = err;
-            }
-
-            expect(renameDataSetMember.mock.calls.length).toBe(1);
-            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
-            expect(error).toBe(defaultError);
-        });
-    });
     describe("Copying Data Sets", () => {
         it("Should copy the label of a node to the clipboard", async () => {
             renameDataSet.mockReset();
@@ -4171,6 +4071,7 @@ describe("Extension Unit Tests", () => {
             expect(copyDataSet.mock.calls.length).toBe(0);
         });
         it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
+            showInputBox.mockReset();
             dataSetGet.mockImplementation(() => {
                 throw Error("Member not found");
             });

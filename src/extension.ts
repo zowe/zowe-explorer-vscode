@@ -985,49 +985,6 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
 
 }
 
-/**
- * Rename data sets
- *
- * @export
- * @param {IZoweDatasetTreeNode} node - The node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    let beforeDataSetName = node.label.trim();
-    let favPrefix;
-    let isFavourite;
-
-    if (node.contextValue.includes(FAV_SUFFIX)) {
-        isFavourite = true;
-        favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
-        beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
-    }
-    const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
-
-    log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
-    if (afterDataSetName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
-        } catch (err) {
-            log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
-        }
-        if (isFavourite) {
-            const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-            datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
-        } else {
-            const temp = node.label;
-            node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-            datasetProvider.renameFavorite(node, afterDataSetName);
-            node.label = temp;
-        }
-        datasetProvider.refreshElement(node.getParent());
-        datasetProvider.updateFavorites();
-    }
-}
-
 function getProfileAndDataSetName(node: IZoweNodeType) {
     let profileName;
     let dataSetName;
@@ -1136,59 +1093,6 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
         } else {
             refreshPS(node);
         }
-    }
-}
-
-/**
- * Rename data set members
- *
- * @export
- * @param {IZoweTreeNode} node - The node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const beforeMemberName = node.label.trim();
-    let dataSetName;
-    let profileLabel;
-
-    if (node.getParent().contextValue.includes(FAV_SUFFIX)) {
-        profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
-        dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
-    } else {
-        dataSetName = node.getParent().getLabel();
-    }
-    const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
-
-    log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
-    if (afterMemberName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = `${profileLabel}${afterMemberName}`;
-        } catch (err) {
-            log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
-        }
-        if (node.getParent().contextValue.includes(FAV_SUFFIX)) {
-            const nonFavoritedParent = datasetProvider.findNonFavoritedNode(node.getParent());
-            if (nonFavoritedParent) {
-                const nonFavoritedMember = nonFavoritedParent.children.find((child) => child.label === beforeMemberName);
-                if (nonFavoritedMember) {
-                    nonFavoritedMember.label = afterMemberName;
-                    datasetProvider.refreshElement(nonFavoritedParent);
-                }
-            }
-        } else {
-            const favoritedParent = datasetProvider.findFavoritedNode(node.getParent());
-            if (favoritedParent) {
-                const favoritedMember = favoritedParent.children.find((child) => child.label === beforeMemberName);
-                if (favoritedMember) {
-                    favoritedMember.label = afterMemberName;
-                    datasetProvider.refreshElement(favoritedParent);
-                }
-            }
-        }
-        datasetProvider.refreshElement(node.getParent());
     }
 }
 
