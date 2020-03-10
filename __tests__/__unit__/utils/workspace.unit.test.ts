@@ -9,13 +9,13 @@ const executeCommand = jest.fn();
 Object.defineProperty(vscode.window, "activeTextEditor", {get: activeTextEditor});
 Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
 
-describe("Checking Workspace file status method", () => {
+describe("Workspace file status method", () => {
     beforeEach(() => {
         activeTextEditor.mockReset();
         executeCommand.mockReset();
     });
 
-    it("Tests if method runs correctly with no tabs available", async () => {
+    it("Runs correctly with no tabs available", async () => {
         const targetTextFile = "/doc";
         activeTextEditor.mockReturnValueOnce(null);
 
@@ -23,7 +23,7 @@ describe("Checking Workspace file status method", () => {
         expect(result).toBe(false);
         expect(executeCommand.mock.calls.length).toBe(0);
     });
-    it("Tests if method runs correctly with tabs and target document available", async () => {
+    it("Runs correctly with tabs and target document available", async () => {
         const targetTextFile = "/doc3";
         const mockDocuments = [
             {
@@ -52,7 +52,7 @@ describe("Checking Workspace file status method", () => {
         expect(executeCommand.mock.calls.map((call) => call[0]))
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
     });
-    it("Tests if method runs correctly with tabs available but no target document opened", async () => {
+    it("Runs correctly with tabs available but no target document opened", async () => {
         const targetTextFile = "/doc";
         const mockDocuments = [
             {
@@ -82,13 +82,13 @@ describe("Checking Workspace file status method", () => {
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
     });
 });
-describe("Checking Workspace file close method", () => {
+describe("Workspace file close method", () => {
     beforeEach(() => {
         activeTextEditor.mockReset();
         executeCommand.mockReset();
     });
 
-    it("Tests if method runs correctly with no tabs available", async () => {
+    it("Runs correctly with no tabs available", async () => {
         const targetTextFile = "/doc";
         activeTextEditor.mockReturnValueOnce(null);
 
@@ -96,7 +96,7 @@ describe("Checking Workspace file close method", () => {
         expect(result).toBe(false);
         expect(executeCommand.mock.calls.length).toBe(0);
     });
-    it("Tests if method runs correctly with tabs and target document available", async () => {
+    it("Runs correctly with tabs and target document available", async () => {
         const targetTextFile = "/doc3";
         const mockDocuments = [
             {
@@ -125,7 +125,7 @@ describe("Checking Workspace file close method", () => {
         expect(executeCommand.mock.calls.map((call) => call[0]))
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.closeActiveEditor"]);
     });
-    it("Tests if method runs correctly with tabs available but no target document opened", async () => {
+    it("Runs correctly with tabs available but no target document opened", async () => {
         const targetTextFile = "/doc";
         const mockDocuments = [
             {
