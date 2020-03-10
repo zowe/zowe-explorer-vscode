@@ -1107,9 +1107,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     if (beforeProfileName === profileName) {
         if (memberName) {
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`, {
-                    file: path.join(ZOWE_TMP_FOLDER, getProfile(node), `${dataSetName}(${memberName})`)
-                });
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`);
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
             } catch (err) {
                 if (!err.message.includes("Member not found")) {
