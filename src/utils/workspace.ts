@@ -6,7 +6,6 @@ interface IExtTextEditor extends vscode.TextEditor {
 
 /**
  * Opens the next tab in editor with given delay
- * @param delay number Delay with which tab is going to be opened
  */
 function openNextTab(delay: number) {
     return new Promise((resolve) => {
@@ -21,9 +20,6 @@ function openNextTab(delay: number) {
  * There's an issue on GitHub for such feature: https://github.com/Microsoft/vscode/issues/15178 let's track it
  * Idea of the approach was borrowed from the another extension: https://github.com/eamodio/vscode-restore-editors/blob/master/src/documentManager.ts
  * Also notice that timer delay as well as iteration through opened tabs can cause side-effects on slow machines
- * @param path string Path of the locally saved file
- *
- * @returns boolean Opened status of file
  */
 export async function checkTextFileIsOpened(path: string) {
     const tabSwitchDelay = 200;
@@ -44,9 +40,6 @@ export async function checkTextFileIsOpened(path: string) {
  * Closes opened file tab using iteration through the tabs
  * This kind of method is caused by incompleteness of VSCode API, which allows to close only currently selected editor
  * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
- * @param path string Path of the locally saved file
- *
- * @returns boolean Status of the close file operation
  */
 export async function closeOpenedTextFile(path: string) {
     const tabSwitchDelay = 200;
