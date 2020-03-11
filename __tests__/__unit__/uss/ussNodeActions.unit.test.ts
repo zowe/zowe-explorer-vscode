@@ -117,7 +117,9 @@ describe("ussNodeActions", () => {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
-                loadNamedProfile: mockLoadNamedProfile
+                loadNamedProfile: mockLoadNamedProfile,
+                refresh: jest.fn(),
+                getProfiles: jest.fn(() => [])
             };
         })
     });
@@ -199,7 +201,7 @@ describe("ussNodeActions", () => {
                         getProfiles: jest.fn(() => {
                             return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
                         }),
-                        refresh: jest.fn(),
+                        refresh: jest.fn()
                     };
                 })
             });
@@ -250,6 +252,8 @@ describe("ussNodeActions", () => {
                         promptCredentials: jest.fn(()=> {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                         }),
+                        refresh: jest.fn(),
+                        getProfiles: jest.fn(() => [])
                     };
                 })
             });
@@ -297,6 +301,8 @@ describe("ussNodeActions", () => {
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
+                        refresh: jest.fn(),
+                        getProfiles: jest.fn(() => [])
                     };
                 })
             });
@@ -330,7 +336,9 @@ describe("ussNodeActions", () => {
                             name: "firstName",
                             profile: {user: undefined, password: undefined}
                         }, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"}
+                        defaultProfile: {name: "firstName"},
+                        refresh: jest.fn(),
+                        getProfiles: jest.fn(() => [])
                     };
                 })
             });
