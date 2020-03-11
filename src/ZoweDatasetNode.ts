@@ -56,7 +56,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.contextValue = extension.DS_PDS_CONTEXT;
         } else if (mParent && mParent.getParent()) {
             this.contextValue = extension.DS_MEMBER_CONTEXT;
-//            this.dirty = false;
         } else {
             this.contextValue = extension.DS_DS_CONTEXT;
         }
