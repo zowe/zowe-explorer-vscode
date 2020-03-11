@@ -2,6 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.3.1`
+
+- Address VSC tree expand behavior changes. Thanks @phaumer
+- Refresh all action includes profiles. Thanks @jellypuno
+- Consistent handling of renaming USS files. Thanks @stepanzharychevbroadcom
+- Renaming datasets should update open tab. Thanks @stepanzharychevbroadcom
+- USS delete function reinstated. Thanks @Colin-Stone
+- Issue with uploadBinaryFile API not being correctly redirected. Thanks @Colin-Stone
+- OnSave Upload trigger correction for USSFile . Thanks Alexandru-Dumitru
+
 ## `1.3.0`
 
 - Dependency on ~/.zowe folder existing removed. Thanks @tjohnsonBCM
