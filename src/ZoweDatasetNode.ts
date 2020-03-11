@@ -31,7 +31,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     public children: ZoweDatasetNode[] = [];
 
     /**

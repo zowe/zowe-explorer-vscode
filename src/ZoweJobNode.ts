@@ -29,7 +29,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly Prefix = "Prefix:";
 
     public children: IZoweJobTreeNode[] = [];
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     // tslint:disable-next-line: variable-name
     private _owner: string;
     // tslint:disable-next-line: variable-name
