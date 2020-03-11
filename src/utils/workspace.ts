@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { workspaceUtilTabSwitchDelay, workspaceUtilMaxEmptyWindowsInTheRow } from "../config/constants";
 
 interface IExtTextEditor extends vscode.TextEditor {
     id: string;
@@ -22,14 +23,23 @@ function openNextTab(delay: number) {
  * Also notice that timer delay as well as iteration through opened tabs can cause side-effects on slow machines
  */
 export async function checkTextFileIsOpened(path: string) {
-    const tabSwitchDelay = 200;
     const openedWindows = [] as IExtTextEditor[];
 
+    let emptySelectedCountInTheRow = 0;
     let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    while (selectedEditor && !openedWindows.some((window) => window.id === selectedEditor.id)) {
-        openedWindows.push(selectedEditor);
 
-        await openNextTab(tabSwitchDelay);
+    // The idea of the condition is we can meet binary files opened, which have no text editor
+    // So we should set some maximum occurrences point and get out of the loop
+    while (emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
+    !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)) {
+        if (selectedEditor) {
+            emptySelectedCountInTheRow = 0;
+            openedWindows.push(selectedEditor);
+        } else {
+            emptySelectedCountInTheRow++;
+        }
+
+        await openNextTab(workspaceUtilTabSwitchDelay);
         selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
     }
 
@@ -42,14 +52,23 @@ export async function checkTextFileIsOpened(path: string) {
  * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
  */
 export async function closeOpenedTextFile(path: string) {
-    const tabSwitchDelay = 200;
     const openedWindows = [] as IExtTextEditor[];
 
+    let emptySelectedCountInTheRow = 0;
     let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    while (selectedEditor && !openedWindows.some((window) => window.id === selectedEditor.id)) {
-        openedWindows.push(selectedEditor);
 
-        await openNextTab(tabSwitchDelay);
+    // The idea of the condition is we can meet binary files opened, which have no text editor
+    // So we should set some maximum occurrences point and get out of the loop
+    while (emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
+    !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)) {
+        if (selectedEditor) {
+            emptySelectedCountInTheRow = 0;
+            openedWindows.push(selectedEditor);
+        } else {
+            emptySelectedCountInTheRow++;
+        }
+
+        await openNextTab(workspaceUtilTabSwitchDelay);
         selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
         if (selectedEditor && selectedEditor.document.fileName === path) {
