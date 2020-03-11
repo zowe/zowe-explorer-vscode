@@ -39,7 +39,7 @@ import { closeOpenedTextFile } from "./utils/workspace";
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
     public binaryFiles = {};
     public binary = false;
