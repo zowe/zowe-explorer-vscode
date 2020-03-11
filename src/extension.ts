@@ -9,32 +9,34 @@
 *                                                                                 *
 */
 
+// tslint:disable-next-line: no-duplicate-imports
 import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as os from "os";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import { IZoweTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
-import { ZoweDatasetNode } from "./ZoweDatasetNode";
+import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, DefaultCredentialManager, CliProfileManager } from "@zowe/imperative";
+    ImperativeError, CliProfileManager } from "@zowe/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
-import { USSTree, createUSSTree } from "./USSTree";
+import { createUSSTree, USSTree } from "./USSTree";
 import * as ussActions from "./uss/ussNodeActions";
 import * as mvsActions from "./mvs/mvsNodeActions";
+import * as dsActions from "./dataset/dsNodeActions";
+import * as jobActions from "./job/jobNodeActions";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
-// tslint:disable-next-line: no-duplicate-imports
-import { IJobFile, IUploadOptions } from "@zowe/cli";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import SpoolProvider, { encodeJobFile } from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import { getIconByNode } from "./generators/icons";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -111,9 +113,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         await utils.errorHandling(err, null, err.message);
     }
 
-    let datasetProvider: DatasetTree;
-    let ussFileProvider: USSTree;
-    let jobsProvider: ZosJobsProvider;
+    let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
+    let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+    let jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
     try {
         // Initialize Imperative Logger
@@ -172,9 +174,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     if (datasetProvider) {
         vscode.commands.registerCommand("zowe.addSession", async () => addZoweSession(datasetProvider));
         vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
-        vscode.commands.registerCommand("zowe.refreshAll", () => refreshAll(datasetProvider));
+        vscode.commands.registerCommand("zowe.refreshAll", () => dsActions.refreshAll(datasetProvider));
         vscode.commands.registerCommand("zowe.refreshNode", (node) => refreshPS(node));
-        vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.datasetFilterPrompt(node));
+        vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.filterPrompt(node));
         vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => openPS(node, true, datasetProvider));
         vscode.workspace.onDidSaveTextDocument(async (savedFile) => {
             log.debug(localize("onDidSaveTextDocument1",
@@ -207,10 +209,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.submitJcl", async () => submitJcl(datasetProvider));
         vscode.commands.registerCommand("zowe.submitMember", async (node) => submitMember(node));
         vscode.commands.registerCommand("zowe.showDSAttributes", (node) => showDSAttributes(node, datasetProvider));
-        vscode.commands.registerCommand("zowe.renameDataSet", (node) => renameDataSet(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.renameDataSet", (node) => datasetProvider.rename(node));
         vscode.commands.registerCommand("zowe.copyDataSet", (node) => copyDataSet(node));
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
-        vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => renameDataSetMember(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
         vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => hMigrateDataSet(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
@@ -245,7 +247,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS());
         vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) => refreshUSSInTree(node, ussFileProvider));
-        vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.ussFilterPrompt(node));
+        vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.filterPrompt(node));
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode) => ussFileProvider.deleteSession(node));
         vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
@@ -256,14 +258,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                                                                          node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) => changeFileType(node, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) => changeFileType(node, false, ussFileProvider));
-        vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) =>
-                                                            ussActions.renameUSSNode(node, ussFileProvider, node.getUSSDocumentFilePath()));
+        vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) => ussFileProvider.rename(node));
         vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.createNode", async (node: IZoweUSSTreeNode) =>
                                                                             ussActions.createUSSNodeDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node));
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
-        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => node.addUSSSearchFavorite(ussFileProvider));
+        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => node.saveSearch(ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             ussFileProvider.onDidChangeConfiguration(e);
@@ -284,7 +285,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.zosJobsOpenspool", (session, spool) => {
             getSpoolContent(session, spool);
         });
-        vscode.commands.registerCommand("zowe.deleteJob", (job) => jobsProvider.deleteJob(job));
+        vscode.commands.registerCommand("zowe.deleteJob", (job) => jobsProvider.delete(job));
         vscode.commands.registerCommand("zowe.runModifyCommand", (job) => {
             modifyCommand(job);
         });
@@ -292,18 +293,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             stopCommand(job);
         });
         vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node, jobsProvider));
-        vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
-            jobsProvider.mSessionNodes.forEach((jobNode) => {
-                if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
-                    // reset
-                    utils.labelHack(jobNode);
-                    jobNode.children = [];
-                    jobNode.dirty = true;
-                }
-            });
-            jobsProvider.refresh();
-            Profiles.getInstance().refresh();
-        });
+        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => jobActions.refreshAllJobs(jobsProvider));
+
         vscode.commands.registerCommand("zowe.addJobsSession", () => addZoweSession(jobsProvider));
         vscode.commands.registerCommand("zowe.setOwner", (node) => {
             setOwner(node, jobsProvider);
@@ -322,13 +313,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             });
             sessionNode.dirty = true;
             jobsProvider.refresh();
-            const jobs = await sessionNode.getChildren();
-            const job = jobs.find((jobNode) => {
+            const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
+            const job: IZoweJobTreeNode = jobs.find((jobNode) => {
                 return jobNode.job.jobid === jobid;
             });
             jobsProvider.setItem(theTreeView, job);
         });
-        vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.searchPrompt(node));
+        vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node));
         vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueMvsCommand());
         vscode.commands.registerCommand("zowe.issueMvsCmd", async (node, command) =>
             MvsCommandHandler.getInstance().issueMvsCommand(node.session, command));
@@ -520,7 +511,7 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
-export async function submitJcl(datasetProvider: DatasetTree) {
+export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     if (!vscode.window.activeTextEditor) {
         vscode.window.showErrorMessage(
             localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open."));
@@ -638,7 +629,7 @@ export async function submitMember(node: IZoweTreeNode) {
  * @export
  * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
  */
-export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTreeNode>) {
 
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
@@ -674,6 +665,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
     }
     const createPick = new utils.FilterDescriptor("\uFF0B " + createNewProfile);
     const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new utils.FilterItem(element));
+    const quickpick = vscode.window.createQuickPick();
     const placeholder = localize("addSession.quickPickOption",
         "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
 
@@ -689,7 +681,6 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         }
         chosenProfile = choice === createPick ? "" : choice.label;
     } else {
-        const quickpick = vscode.window.createQuickPick();
         quickpick.items = [createPick, ...items];
         quickpick.placeholder = placeholder;
         quickpick.ignoreFocusOut = true;
@@ -710,6 +701,10 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
     if (chosenProfile === "") {
         let newprofile: any;
         let profileName: string;
+        if (quickpick.value) {
+            profileName = quickpick.value;
+        }
+
         const options = {
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
@@ -751,10 +746,10 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
  * TODO: Consider changing configuration to allow "custom" data set specifications
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * @export
- * @param {ZoweDatasetNode} node - Desired Zowe session
+ * @param {IZoweDatasetTreeNode} node - Desired Zowe session
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createFile(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
@@ -875,7 +870,10 @@ export async function createFile(node: ZoweDatasetNode, datasetProvider: Dataset
                 node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
                 node.dirty = true;
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
@@ -894,10 +892,10 @@ export async function createFile(node: ZoweDatasetNode, datasetProvider: Dataset
  * Creates a PDS member
  *
  * @export
- * @param {ZoweDatasetNode} parent - The parent Node
+ * @param {IZoweDatasetTreeNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createMember(parent: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
@@ -927,10 +925,10 @@ export async function createMember(parent: ZoweDatasetNode, datasetProvider: Dat
  * Shows data set attributes in a new text editor
  *
  * @export
- * @param {ZoweDatasetNode} parent - The parent Node
+ * @param {IZoweDatasetTreeNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function showDSAttributes(parent: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
 
     let label = parent.label.trim();
     if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_DS_CONTEXT + FAV_SUFFIX) {
@@ -991,10 +989,10 @@ export async function showDSAttributes(parent: ZoweDatasetNode, datasetProvider:
  * Rename data sets
  *
  * @export
- * @param {ZoweDatasetNode} node - The node
+ * @param {IZoweDatasetTreeNode} node - The node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function renameDataSet(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     let beforeDataSetName = node.label.trim();
     let favPrefix;
     let isFavourite;
@@ -1030,7 +1028,7 @@ export async function renameDataSet(node: ZoweDatasetNode, datasetProvider: Data
     }
 }
 
-function getProfileAndDataSetName(node: IZoweTreeNode) {
+function getProfileAndDataSetName(node: IZoweNodeType) {
     let profileName;
     let dataSetName;
     if (node.contextValue.includes(FAV_SUFFIX)) {
@@ -1044,7 +1042,7 @@ function getProfileAndDataSetName(node: IZoweTreeNode) {
     return {profileName, dataSetName};
 }
 
-function getNodeLabels(node: IZoweTreeNode) {
+function getNodeLabels(node: IZoweNodeType) {
     if (node.contextValue.includes(DS_MEMBER_CONTEXT)) {
         return { ...getProfileAndDataSetName(node.getParent()), memberName: node.getLabel()};
     } else {
@@ -1056,9 +1054,9 @@ function getNodeLabels(node: IZoweTreeNode) {
  * Copy data sets
  *
  * @export
- * @param {ZoweDatasetNode} node - The node to copy
+ * @param {IZoweNodeType} node - The node to copy
  */
-export async function copyDataSet(node: ZoweDatasetNode) {
+export async function copyDataSet(node: IZoweNodeType) {
     return vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(node)));
 }
 
@@ -1066,7 +1064,7 @@ export async function copyDataSet(node: ZoweDatasetNode) {
  * Migrate data sets
  *
  * @export
- * @param {ZoweDatasetNode} node - The node to paste to
+ * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     const { dataSetName } = getNodeLabels(node);
@@ -1082,7 +1080,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * @param {ZoweNode} node - The node to paste to
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const { profileName, dataSetName } = getNodeLabels(node);
     let memberName;
     let beforeDataSetName;
@@ -1148,7 +1146,7 @@ export async function pasteDataSet(node: ZoweDatasetNode, datasetProvider: Datas
  * @param {IZoweTreeNode} node - The node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: DatasetTree) {
+export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const beforeMemberName = node.label.trim();
     let dataSetName;
     let profileLabel;
@@ -1246,9 +1244,9 @@ export async function deactivate() {
  *
  * @export
  * @param {IZoweTreeNode} node - The node to be deleted
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param {IZoweTree<IZoweDatasetTreeNode>} datasetProvider - the tree which contains the nodes
  */
-export async function deleteDataset(node: IZoweTreeNode, datasetProvider: DatasetTree) {
+export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     log.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
     const quickPickOptions: vscode.QuickPickOptions = {
         placeHolder: localize("deleteDataset.quickPickOption", "Are you sure you want to delete ") + node.label,
@@ -1379,7 +1377,10 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;
-    node.iconPath = utils.applyIcons(node, ICON_STATE_OPEN);
+    const icon = getIconByNode(node);
+    if (icon) {
+        node.iconPath = icon.path;
+    }
     datasetProvider.addHistory(node.pattern);
 }
 
@@ -1460,7 +1461,7 @@ function appendSuffix(label: string): string {
  *
  * @export
  * @param {string} label - If node is a member, label includes the name of the PDS
- * @param {ZoweDatasetNode} node
+ * @param {IZoweDatasetTreeNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
     return path.join(DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
@@ -1552,27 +1553,9 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
 }
 
 /**
- * Refreshes treeView
- *
- * @param {DataSetTree} datasetProvider
- */
-export async function refreshAll(datasetProvider: DatasetTree) {
-    log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
-    datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
-            utils.labelHack(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-        }
-    });
-    datasetProvider.refresh();
-    Profiles.getInstance().refresh();
-}
-
-/**
  * Refreshes the passed node with current mainframe data
  *
- * @param {ZoweDatasetNode} node - The node which represents the dataset
+ * @param {IZoweDatasetTreeNode} node - The node which represents the dataset
  */
 export async function refreshPS(node: IZoweDatasetTreeNode) {
     let label;
@@ -1687,7 +1670,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
         }
     }
     // Get specific node based on label and parent tree (session / favorites)
-    let nodes: IZoweTreeNode[];
+    let nodes: IZoweNodeType[];
     let isFromFavorites: boolean;
     if (!sesNode || sesNode.children.length === 0) {
         // saving from favorites
@@ -1717,7 +1700,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     });
 
     // define upload options
-    let uploadOptions: IUploadOptions;
+    let uploadOptions: zowe.IUploadOptions;
     if (node) {
         uploadOptions = {
             etag: node.getEtag(),
@@ -1789,7 +1772,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let documentSession: Session;
     let binary;
     let node: IZoweUSSTreeNode;
-    const sesNode = (await ussFileProvider.mSessionNodes.find((child) => child.getProfileName() && child.getProfileName()=== sesName.trim()));
+    // TODO remove as
+    const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
+                                child.getProfileName() && child.getProfileName() === sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
@@ -1930,13 +1915,13 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile) {
     }
 }
 
-export async function setOwner(job: IZoweJobTreeNode, jobsProvider: ZosJobsProvider) {
+export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
 
-export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: ZosJobsProvider) {
+export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);

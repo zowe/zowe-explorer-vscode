@@ -18,6 +18,7 @@ import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
+import { getIconByNode } from "./generators/icons";
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -48,7 +49,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
         this._prefix = "*";
         this._searchId = "";
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 
     /**
@@ -81,7 +85,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                             this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
-                        spoolNode.iconPath = utils.applyIcons(spoolNode);
+                        const icon = getIconByNode(spoolNode);
+                        if (icon) {
+                            spoolNode.iconPath = icon.path;
+                        }
                         spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [sessionName, spool] };
                         elementChildren.push(spoolNode);
                     }
@@ -108,7 +115,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
                         if (!jobNode.iconPath) {
-                            jobNode.iconPath = utils.applyIcons(jobNode);
+                            const icon = getIconByNode(jobNode);
+                            if (icon) {
+                                jobNode.iconPath = icon.path;
+                            }
                         }
                         elementChildren.push(jobNode);
                     }
@@ -202,6 +212,9 @@ class Spool extends Job {
                 session: Session, spool: zowe.IJobFile, job: zowe.IJob, parent: IZoweJobTreeNode) {
         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
         this.contextValue = extension.JOBS_SPOOL_CONTEXT;
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 }

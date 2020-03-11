@@ -14,6 +14,8 @@ import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IJob } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
 
+export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
+
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
@@ -211,7 +213,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      *
      * @param {USSTree} ussFileProvider
      */
-    addUSSSearchFavorite?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    saveSearch?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
 }
 
 /**
