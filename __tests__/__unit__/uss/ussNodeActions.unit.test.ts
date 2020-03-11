@@ -21,6 +21,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -185,6 +186,28 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refreshElement).toHaveBeenCalled();
             expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
         });
+
+        it("Testing that refreshAllUSS is executed successfully", async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        getDefaultProfile: mockLoadNamedProfile,
+                        loadNamedProfile: mockLoadNamedProfile,
+                        usesSecurity: true,
+                        getProfiles: jest.fn(() => {
+                            return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                        }),
+                        refresh: jest.fn(),
+                    };
+                })
+            });
+            const spy = jest.spyOn(ussNodeActions, "refreshAllUSS");
+            ussNodeActions.refreshAllUSS(testUSSTree);
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
         it("createUSSNode throws an error", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
             showErrorMessage.mockReset();
@@ -420,7 +443,6 @@ describe("ussNodeActions", () => {
         it("should execute rename favorite USS file", async () => {
             showInputBox.mockReturnValueOnce("new name");
             await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
             expect(mockRemoveFavorite.mock.calls.length).toBe(1);
