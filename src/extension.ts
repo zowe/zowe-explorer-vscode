@@ -189,7 +189,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
             } else if (savedFile.fileName.toUpperCase().indexOf(USS_DIR.toUpperCase()) >= 0) {
                 log.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                await saveFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+                await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
             } else {
                 log.debug(localize("activate.didSaveText.file", "File ") + savedFile.fileName +
                     localize("activate.didSaveText.notDataSet", " is not a data set or USS file "));
@@ -1545,7 +1545,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
 
     // get session from session name
     let documentSession: Session;
-    let node: IZoweUSSTreeNode;
+    let node: IZoweDatasetTreeNode;
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
         child.label.trim() === sesName);
     if (sesNode) {
