@@ -37,6 +37,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { getIconByNode } from "./generators/icons";
+import { closeOpenedTextFile } from "./utils/workspace";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -1003,12 +1004,14 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
         beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
     }
     const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
+    const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
+    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
     if (afterDataSetName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
+            node.label = favPrefix ? `${favPrefix}${afterDataSetName}` : afterDataSetName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
@@ -1023,8 +1026,17 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
             datasetProvider.renameFavorite(node, afterDataSetName);
             node.label = temp;
         }
-        datasetProvider.refreshElement(node.getParent());
+
+        datasetProvider.refreshElement(node);
         datasetProvider.updateFavorites();
+
+        if (fs.existsSync(beforeFullPath)) {
+            fs.unlinkSync(beforeFullPath);
+        }
+
+        if (closedOpenedInstance) {
+            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+        }
     }
 }
 
@@ -1158,12 +1170,14 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
         dataSetName = node.getParent().getLabel();
     }
     const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
+    const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
+    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
     if (afterMemberName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = `${profileLabel}${afterMemberName}`;
+            node.label = profileLabel ? `${profileLabel}${afterMemberName}` : afterMemberName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
@@ -1189,6 +1203,14 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
             }
         }
         datasetProvider.refreshElement(node.getParent());
+
+        if (fs.existsSync(beforeFullPath)) {
+            fs.unlinkSync(beforeFullPath);
+        }
+
+        if (closedOpenedInstance) {
+            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+        }
     }
 }
 
