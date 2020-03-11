@@ -22,10 +22,10 @@ import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
-import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
+import * as workspaceUtils from "../../src/utils/workspace";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -252,6 +252,7 @@ describe("Extension Unit Tests", () => {
     const getProfileName = jest.fn();
     const HMigrate = jest.fn();
     const hMigrateDataSet = jest.fn();
+    const closeOpenedTextFile = jest.fn();
     let mockClipboardData: string;
     const fileResponse: zowe.IZosFilesResponse = {
         success: true,
@@ -459,6 +460,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { get: cliHome });
+    Object.defineProperty(workspaceUtils, "closeOpenedTextFile", {value: closeOpenedTextFile});
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
@@ -3996,6 +3998,7 @@ describe("Extension Unit Tests", () => {
             const child = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
             showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            closeOpenedTextFile.mockResolvedValueOnce(true);
             await extension.renameDataSet(child, testTree);
 
             expect(renameDataSet.mock.calls.length).toBe(1);
