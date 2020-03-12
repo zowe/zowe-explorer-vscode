@@ -8,6 +8,7 @@
 * Copyright Contributors to the Zowe Project.                                     *
 *                                                                                 *
 */
+
 import * as vscode from "vscode";
 import { closeOpenedTextFile, checkTextFileIsOpened } from "../../../src/utils/workspace";
 
