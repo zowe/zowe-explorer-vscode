@@ -842,7 +842,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         // get name of data set
         let name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
         if (name) {
-            name = name.toUpperCase();
+            name = name.trim().toUpperCase();
 
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
