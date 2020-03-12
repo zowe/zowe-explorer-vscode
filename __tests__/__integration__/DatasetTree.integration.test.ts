@@ -80,9 +80,7 @@ describe("DatasetTree Integration Tests", async () => {
     it("Tests that getChildren returns valid list of elements", async () => {
         // Waiting until we populate rootChildren with what getChildren returns
         const rootChildren = await testTree.getChildren();
-        rootChildren[0].dirty = true;
         const sessChildren = await testTree.getChildren(rootChildren[0]);
-        sessChildren[2].dirty = true;
         const PDSChildren = await testTree.getChildren(sessChildren[2]);
 
         const sampleRChildren: ZoweDatasetNode[] = [
@@ -91,6 +89,7 @@ describe("DatasetTree Integration Tests", async () => {
             new ZoweDatasetNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
             new ZoweDatasetNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
         ];
+        sampleRChildren[2].dirty = false; // Because getChildren was subsequently called.
 
         sampleRChildren[0].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]]};
         sampleRChildren[3].command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]]};

@@ -417,13 +417,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         // Add all data sets loaded in the tree to an array
         for (const session of sessions) {
             if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
-                const nodes = await this.getChildren(session);
-                if (nodes) {
-                    for (const node of nodes) {
+                if (session.children) {
+                    for (const node of session.children) {
                         if (node.contextValue !== extension.INFORMATION_CONTEXT) {
                             loadedItems.push(node);
-                            const members = await this.getChildren(node);
-                            for (const member of members) {
+                            for (const member of node.children) {
                                 if (member.contextValue !== extension.INFORMATION_CONTEXT) {
                                     loadedItems.push(member);
                                 }

@@ -684,6 +684,7 @@ describe("DatasetTree Unit Tests", () => {
     it("Testing that searchInLoadedItems returns the correct array", async () => {
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, testTree.mSessionNodes[1], session, extension.DS_DS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        testTree.mSessionNodes[1].children = [testNode];
         const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
             () => Promise.resolve([testTree.mSessionNodes[1]])
         );

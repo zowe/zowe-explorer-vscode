@@ -37,6 +37,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { getIconByNode } from "./generators/icons";
+import { closeOpenedTextFile } from "./utils/workspace";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -189,7 +190,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 await saveFile(savedFile, datasetProvider); // TODO MISSED TESTING
             } else if (savedFile.fileName.toUpperCase().indexOf(USS_DIR.toUpperCase()) >= 0) {
                 log.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                await saveFile(savedFile, ussFileProvider); // TODO MISSED TESTING
+                await saveUSSFile(savedFile, ussFileProvider); // TODO MISSED TESTING
             } else {
                 log.debug(localize("activate.didSaveText.file", "File ") + savedFile.fileName +
                     localize("activate.didSaveText.notDataSet", " is not a data set or USS file "));
@@ -587,7 +588,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     quickpick.ignoreFocusOut = true;
     quickpick.onDidChangeValue(async (value) => {
         if (value) {
-            quickpick.items = [...qpItems.filter((item) => item.label.includes(quickpick.value))];
+            quickpick.items = [...qpItems.filter((item) => item.label.toUpperCase().includes(quickpick.value.toUpperCase()))];
         } else { quickpick.items = [...qpItems]; }
     });
 
@@ -599,6 +600,11 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     if (ussFileProvider) {
         const newItems = await ussFileProvider.searchInLoadedItems();
         items.push(...newItems);
+    }
+
+    if (items.length === 0) {
+        vscode.window.showInformationMessage(localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree."));
+        return;
     }
 
     let qpItem: vscode.QuickPickItem;
@@ -621,7 +627,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     quickpick.show();
     const choice = await utils.resolveQuickPickHelper(quickpick);
     if (!choice) {
-        vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
+        vscode.window.showInformationMessage(localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern."));
         return;
     } else { pattern = choice.label; }
     quickpick.dispose();
@@ -663,14 +669,14 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
                 children = await datasetProvider.getChildren(node);
                 const member = children.filter((child) => child.label.trim() === memberName)[0];
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                datasetProvider.setItem(datasetProvider.getTreeView(), member);
+                await datasetProvider.getTreeView().reveal(member, {select: true, focus: true, expand: false});
 
                 // Open in workspace
                 datasetProvider.addHistory(`${nodeName}(${memberName})`);
                 openPS(member, true, datasetProvider);
             } else {
                 // PDS & SDS
-                datasetProvider.setItem(datasetProvider.getTreeView(), node);
+                await datasetProvider.getTreeView().reveal(node, {select: true, focus: true, expand: false});
 
                 // If selected node was SDS, open it in workspace
                 if (node.contextValue === DS_DS_CONTEXT) {
@@ -1115,12 +1121,14 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
         beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
     }
     const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
+    const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
+    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
     if (afterDataSetName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
+            node.label = favPrefix ? `${favPrefix}${afterDataSetName}` : afterDataSetName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
@@ -1135,8 +1143,17 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
             datasetProvider.renameFavorite(node, afterDataSetName);
             node.label = temp;
         }
-        datasetProvider.refreshElement(node.getParent());
+
+        datasetProvider.refreshElement(node);
         datasetProvider.updateFavorites();
+
+        if (fs.existsSync(beforeFullPath)) {
+            fs.unlinkSync(beforeFullPath);
+        }
+
+        if (closedOpenedInstance) {
+            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+        }
     }
 }
 
@@ -1270,12 +1287,14 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
         dataSetName = node.getParent().getLabel();
     }
     const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
+    const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
+    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
     log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
     if (afterMemberName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = `${profileLabel}${afterMemberName}`;
+            node.label = profileLabel ? `${profileLabel}${afterMemberName}` : afterMemberName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
@@ -1301,6 +1320,14 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
             }
         }
         datasetProvider.refreshElement(node.getParent());
+
+        if (fs.existsSync(beforeFullPath)) {
+            fs.unlinkSync(beforeFullPath);
+        }
+
+        if (closedOpenedInstance) {
+            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+        }
     }
 }
 
@@ -1753,7 +1780,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
 
     // get session from session name
     let documentSession: Session;
-    let node: IZoweUSSTreeNode;
+    let node: IZoweDatasetTreeNode;
     const sesNode = (await datasetProvider.getChildren()).find((child) =>
         child.label.trim() === sesName);
     if (sesNode) {

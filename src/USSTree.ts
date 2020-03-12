@@ -255,17 +255,21 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
         // Add all data sets loaded in the tree to an array
         for (const session of sessions) {
-            const nodes = await session.getChildren();
+                if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                const nodes = await session.getChildren();
 
-            const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
-                const children = nodeToCheck.children;
-                if (children.length !== 0) {
-                    for (const child of children) { await checkForChildren(child); }
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                    const children = nodeToCheck.children;
+                    if (children.length !== 0) {
+                        for (const child of children) { await checkForChildren(child); }
+                    }
+                    loadedNodes.push(nodeToCheck);
+                };
+
+                if (nodes) {
+                    for (const node of nodes) { await checkForChildren(node); }
                 }
-                loadedNodes.push(nodeToCheck);
-            };
-
-            for (const node of nodes) { await checkForChildren(node); }
+            }
         }
         return loadedNodes;
     }
