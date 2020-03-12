@@ -285,8 +285,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
             this.contextValue === extension.DS_FAV_TEXT_FILE_CONTEXT) {
             vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
-        } else {
-            this.getChildren();
         }
     }
 
