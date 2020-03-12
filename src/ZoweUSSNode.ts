@@ -14,7 +14,8 @@ import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../src/extension";
 import * as utils from "./utils";
 import * as fs from "fs";
@@ -153,7 +154,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
             }, () => {
-               return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
+                return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
             utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
@@ -288,9 +289,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        if (hasClosedInstance || (this.binary && this.downloaded)) {
-            vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        if (this.isFolder) {
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        } else {
+            await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        }
+
+        if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
+            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
     }
 
@@ -298,7 +304,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: {light: string; dark: string}) {
+    public setIcon(iconPath: { light: string; dark: string }) {
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
@@ -312,7 +318,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             canPickMany: false
         };
         if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
-        localize("deleteUSSNode.showQuickPick.no", "No")],
+                localize("deleteUSSNode.showQuickPick.no", "No")],
             quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
             return;
         }
@@ -324,8 +330,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
-            // tslint:disable-next-line: no-empty
-            } catch (err) { }
+                // tslint:disable-next-line: no-empty
+            } catch (err) {
+            }
         } catch (err) {
             vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
             throw (err);
@@ -335,6 +342,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ussFileProvider.removeFavorite(this);
         ussFileProvider.refresh();
     }
+
     /**
      * Returns the [etag] for this node
      *
@@ -379,6 +387,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
     }
+
+    /**
+     * Getter for folder type
+     */
+    public get isFolder(): boolean {
+        return [extension.USS_DIR_CONTEXT, extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+    }
+
     /**
      * Downloads and displays a file in a text editor view
      *
@@ -464,6 +480,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         }
     }
+
     /**
      * Refreshes the passed node with current mainframe data
      *
