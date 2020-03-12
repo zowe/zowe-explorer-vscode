@@ -8,7 +8,6 @@
 * Copyright Contributors to the Zowe Project.                                     *
 *                                                                                 *
 */
-
 import * as vscode from "vscode";
 
 interface IExtTextEditor extends vscode.TextEditor {
