@@ -295,8 +295,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
-        // handle zosmf api issue with file paths
-        const nodePath = this.fullPath.startsWith("/") ? this.fullPath.substring(1) : this.fullPath;
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
             ignoreFocusOut: true,
@@ -309,7 +307,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(nodePath, isRecursive);
+            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(this.fullPath, isRecursive);
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {
