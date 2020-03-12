@@ -16,10 +16,18 @@ import * as os from "os";
 import { moveSync } from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
+import {
+    IZoweDatasetTreeNode,
+    IZoweJobTreeNode,
+    IZoweTreeNode,
+    IZoweUSSTreeNode,
+    IZoweNodeType
+} from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, CliProfileManager } from "@zowe/imperative";
+import {
+    Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
+    ImperativeError, CliProfileManager
+} from "@zowe/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";
@@ -40,7 +48,7 @@ import { getIconByNode } from "./generators/icons";
 import { closeOpenedTextFile } from "./utils/workspace";
 
 // Localization support
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 // Globals
 export let ZOWETEMPFOLDER;
@@ -143,7 +151,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     }
                 );
             } catch (err) {
-                throw new ImperativeError({msg: err.toString()});
+                throw new ImperativeError({ msg: err.toString() });
             }
         }
 
@@ -256,13 +264,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.createFolder", async (node: IZoweUSSTreeNode) =>
             ussActions.createUSSNode(node, ussFileProvider, "directory"));
         vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
-                                                                         node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
+            node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
         vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) => changeFileType(node, true, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) => changeFileType(node, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) => ussFileProvider.rename(node));
         vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.createNode", async (node: IZoweUSSTreeNode) =>
-                                                                            ussActions.createUSSNodeDialog(node, ussFileProvider));
+            ussActions.createUSSNodeDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node));
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => node.saveSearch(ussFileProvider));
@@ -334,10 +342,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         const theTreeView = jobsProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         if (!ISTHEIA) {
-            theTreeView.onDidCollapseElement( async (e: { element: IZoweJobTreeNode; }) => {
+            theTreeView.onDidCollapseElement(async (e: { element: IZoweJobTreeNode; }) => {
                 jobsProvider.flipState(e.element, false);
             });
-            theTreeView.onDidExpandElement( async (e: { element: IZoweJobTreeNode; }) => {
+            theTreeView.onDidExpandElement(async (e: { element: IZoweJobTreeNode; }) => {
                 jobsProvider.flipState(e.element, true);
             });
         }
@@ -388,10 +396,12 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         const appRoot = ISTHEIA ? process.cwd() : vscode.env.appRoot;
         try {
             return require(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) { /* Do nothing */ }
+        } catch (err) { /* Do nothing */
+        }
         try {
             return require(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) { /* Do nothing */ }
+        } catch (err) { /* Do nothing */
+        }
         vscode.window.showWarningMessage(localize("initialize.module.load",
             "Credentials not managed, unable to load security file: ") + moduleName);
     }
@@ -462,7 +472,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(job: IZoweJobTreeNode){
+export async function downloadSpool(job: IZoweJobTreeNode) {
     try {
         const dirUri = await vscode.window.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
@@ -486,7 +496,7 @@ export async function downloadSpool(job: IZoweJobTreeNode){
 export async function downloadJcl(job: Job) {
     try {
         const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
-        const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
+        const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
         await utils.errorHandling(error, null, error.message);
@@ -594,7 +604,7 @@ export async function submitMember(node: IZoweTreeNode) {
         case (DS_PDS_CONTEXT + FAV_SUFFIX):
             regex = labelregex.exec(node.getParent().getLabel());
             sesName = regex[1];
-            label = regex[2] + "(" + node.label.trim()+ ")";
+            label = regex[2] + "(" + node.label.trim() + ")";
             sessProfile = node.getParent().getProfile();
             break;
         case (DS_SESSION_CONTEXT):
@@ -604,7 +614,7 @@ export async function submitMember(node: IZoweTreeNode) {
             break;
         case (DS_PDS_CONTEXT):
             sesName = node.getParent().getParent().getLabel();
-            label = node.getParent().getLabel() + "(" + node.label.trim()+ ")";
+            label = node.getParent().getLabel() + "(" + node.label.trim() + ")";
             sessProfile = node.getParent().getParent().getProfile();
             break;
         default:
@@ -830,43 +840,43 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         }
 
         // get name of data set
-        let name = await vscode.window.showInputBox({placeHolder: localize("dataset.name", "Name of Data Set")});
-        name = name.toUpperCase();
+        let name = await vscode.window.showInputBox({ placeHolder: localize("dataset.name", "Name of Data Set") });
+        if (name) {
+            name = name.toUpperCase();
 
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
-            node.dirty = true;
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
+                node.dirty = true;
 
-            // Store previous filters (before refreshing)
-            const currChildren = await node.getChildren();
-            let theFilter = datasetProvider.getHistory()[0] || null;
+                // Store previous filters (before refreshing)
+                const currChildren = await node.getChildren();
+                let theFilter = datasetProvider.getHistory()[0] || null;
 
-            // Check if filter is currently applied
-            if (currChildren[0].contextValue !== "information" && theFilter) {
-                const currentFilters = theFilter.split(",");
+                // Check if filter is currently applied
+                if (currChildren[0].contextValue !== "information" && theFilter) {
+                    const currentFilters = theFilter.split(",");
 
-                // Check if current filter includes the new node
-                const matchedFilters = currentFilters.filter((filter) => {
-                    const regex = new RegExp(filter.trim().replace(`*`, "") + "(.*)$");
-                    return regex.test(name);
-                });
+                    // Check if current filter includes the new node
+                    const matchedFilters = currentFilters.filter((filter) => {
+                        const regex = new RegExp(filter.trim().replace(`*`, "") + "(.*)$");
+                        return regex.test(name);
+                    });
 
-                if (matchedFilters.length === 0) {
-                    // remove the last segement with a dot of the name for the new filter
-                    const newFilterBase = name.replace(/\.(?:.(?!\.))+$/, "");
-                    theFilter = `${theFilter},${newFilterBase}.*`;
+                    if (matchedFilters.length === 0) {
+                        // remove the last segement with a dot of the name for the new filter
+                        const newFilterBase = name.replace(/\.(?:.(?!\.))+$/, "");
+                        theFilter = `${theFilter},${newFilterBase}.*`;
+                        datasetProvider.addHistory(theFilter);
+                    }
+                } else {
+                    // No filter is currently applied
+                    theFilter = name;
                     datasetProvider.addHistory(theFilter);
                 }
-            } else {
-                // No filter is currently applied
-                theFilter = name;
-                datasetProvider.addHistory(theFilter);
-            }
 
-            datasetProvider.refresh();
+                datasetProvider.refresh();
 
-            // Show newly-created data set in expanded tree view
-            if (name) {
+                // Show newly-created data set in expanded tree view
                 node.label = `${node.label} `;
                 node.label = node.label.trim();
                 node.tooltip = node.pattern = theFilter.toUpperCase();
@@ -878,13 +888,13 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 node.dirty = true;
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-                datasetProvider.getTreeView().reveal(newNode, {select: true});
+                datasetProvider.getTreeView().reveal(newNode, { select: true });
+            } catch (err) {
+                log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+                await utils.errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
+                    err.message);
+                throw (err);
             }
-        } catch (err) {
-            log.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            await utils.errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
-                err.message);
-            throw (err);
         }
     }
 }
@@ -1003,7 +1013,7 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
         favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
         beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
     }
-    const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
+    const afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
     const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
     const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
@@ -1051,12 +1061,12 @@ function getProfileAndDataSetName(node: IZoweNodeType) {
         dataSetName = node.label.trim();
     }
 
-    return {profileName, dataSetName};
+    return { profileName, dataSetName };
 }
 
 function getNodeLabels(node: IZoweNodeType) {
     if (node.contextValue.includes(DS_MEMBER_CONTEXT)) {
-        return { ...getProfileAndDataSetName(node.getParent()), memberName: node.getLabel()};
+        return { ...getProfileAndDataSetName(node.getParent()), memberName: node.getLabel() };
     } else {
         return getProfileAndDataSetName(node);
     }
@@ -1081,7 +1091,7 @@ export async function copyDataSet(node: IZoweNodeType) {
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
     const { dataSetName } = getNodeLabels(node);
     vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
-    localize("hMigrate.requestSent2", " requested."));
+        localize("hMigrate.requestSent2", " requested."));
     return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
 }
 
@@ -1100,7 +1110,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     let beforeMemberName;
 
     if (node.contextValue.includes(DS_PDS_CONTEXT)) {
-        memberName = await vscode.window.showInputBox({placeHolder: localize("renameDataSet.name", "Name of Data Set Member")});
+        memberName = await vscode.window.showInputBox({ placeHolder: localize("renameDataSet.name", "Name of Data Set Member") });
         if (!memberName) {
             return;
         }
@@ -1169,7 +1179,7 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
     } else {
         dataSetName = node.getParent().getLabel();
     }
-    const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
+    const afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
     const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
     const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
@@ -1291,14 +1301,14 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
                 fav = true;
                 break;
             case (DS_PDS_CONTEXT + FAV_SUFFIX):
-                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
+                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel() + ")";
                 fav = true;
                 break;
             case (DS_SESSION_CONTEXT):
                 label = node.getLabel();
                 break;
             case (DS_PDS_CONTEXT):
-                label = node.getParent().getLabel()+ "(" + node.getLabel()+ ")";
+                label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
                 break;
             default:
                 throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
@@ -1318,9 +1328,9 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     // remove node from tree
     if (fav) {
         datasetProvider.mSessionNodes.forEach((ses) => {
-            if (node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]")) === ses.label.trim()||
+            if (node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]")) === ses.label.trim() ||
                 node.getParent().getLabel().substring(node.getParent().getLabel().indexOf("["),
-                        node.getParent().getLabel().indexOf("]")) === ses.label) {
+                    node.getParent().getLabel().indexOf("]")) === ses.label) {
                 ses.dirty = true;
             }
         });
@@ -1338,10 +1348,14 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
         datasetProvider.refreshElement(node.getParent());
         if (node.getParent().contextValue.includes(FAV_SUFFIX) || node.getParent().contextValue === FAVORITE_CONTEXT) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node.getParent());
-            if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
+            if (nonFavNode) {
+                datasetProvider.refreshElement(nonFavNode);
+            }
         } else {
             const favNode = datasetProvider.findFavoritedNode(node.getParent());
-            if (favNode) { datasetProvider.refreshElement(favNode); }
+            if (favNode) {
+                datasetProvider.refreshElement(favNode);
+            }
         }
     } else {
         datasetProvider.refresh();
@@ -1486,7 +1500,7 @@ function appendSuffix(label: string): string {
  * @param {IZoweDatasetTreeNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
-    return path.join(DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
+    return path.join(DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label));
 }
 
 /**
@@ -1533,13 +1547,13 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                     label = node.label.substring(node.label.indexOf(":") + 1).trim();
                     break;
                 case (DS_PDS_CONTEXT + FAV_SUFFIX):
-                    label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
+                    label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel() + ")";
                     break;
                 case (DS_SESSION_CONTEXT):
                     label = node.label.trim();
                     break;
                 case (DS_PDS_CONTEXT):
-                    label = node.getParent().getLabel().trim() + "(" + node.getLabel()+ ")";
+                    label = node.getParent().getLabel().trim() + "(" + node.getLabel() + ")";
                     break;
                 default:
                     vscode.window.showErrorMessage(localize("openPS.invalidNode", "openPS() called from invalid node."));
@@ -1564,7 +1578,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             if (previewMember === true) {
                 await vscode.window.showTextDocument(document);
             } else {
-                await vscode.window.showTextDocument(document, {preview: false});
+                await vscode.window.showTextDocument(document, { preview: false });
             }
         } catch (err) {
             log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
@@ -1587,7 +1601,7 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 break;
             case (DS_PDS_CONTEXT + FAV_SUFFIX):
-                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
+                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel() + ")";
                 break;
             case (DS_SESSION_CONTEXT):
                 label = node.label.trim();
@@ -1735,7 +1749,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             location: vscode.ProgressLocation.Notification,
             title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
-            return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName, label, uploadOptions);
+            return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile() : profile).putContents(doc.fileName, label, uploadOptions);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
@@ -1745,7 +1759,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
             localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
+            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile() : profile).getContents(label, {
                 file: doc.fileName,
                 returnEtag: true
             });
@@ -1796,7 +1810,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let node: IZoweUSSTreeNode;
     // TODO remove as
     const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
-                                child.getProfileName() && child.getProfileName() === sesName.trim()));
+        child.getProfileName() && child.getProfileName() === sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
@@ -1813,8 +1827,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     node = nodes.find((zNode) => {
         if (zNode.contextValue === DS_FAV_TEXT_FILE_CONTEXT || zNode.contextValue === DS_TEXT_FILE_CONTEXT) {
             return (zNode.fullPath.trim() === remote);
-        }
-        else {
+        } else {
             return false;
         }
     });
@@ -1884,7 +1897,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
 export async function modifyCommand(job: Job) {
     try {
-        const command = await vscode.window.showInputBox({prompt: localize("modifyCommand.command.prompt", "Modify Command")});
+        const command = await vscode.window.showInputBox({ prompt: localize("modifyCommand.command.prompt", "Modify Command") });
         if (command !== undefined) {
             const response = await zowe.IssueCommand.issueSimple(job.getSession(), `f ${job.job.jobname},${command}`);
             vscode.window.showInformationMessage(localize("modifyCommand.response", "Command response: ") + response.commandResponse);
@@ -1956,7 +1969,7 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
     } else {
         sesNamePrompt = node.label;
     }
-    if ((!node.getSession().ISession.user ) || (!node.getSession().ISession.password)) {
+    if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
             const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
             if (values !== undefined) {
