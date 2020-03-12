@@ -94,7 +94,7 @@ describe("Unit Tests (Jest)", () => {
         rootNode.iconPath = "Ref: 'folder.svg'";
         testDir.iconPath = "Ref: 'folder.svg'";
         testFile.iconPath = "Ref: 'document.svg'";
-        await expect(testFile).toMatchSnapshot();
+        expect(testFile).toMatchSnapshot();
     });
 
     /*************************************************************************************************************
@@ -144,7 +144,7 @@ describe("Unit Tests (Jest)", () => {
         const errorNode = new ZoweUSSNode(
             "", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
         errorNode.dirty = true;
-        await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
+        expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
         // Check that label is different when label contains a []
         const rootNode2 = new ZoweUSSNode(
@@ -197,7 +197,7 @@ describe("Unit Tests (Jest)", () => {
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
         rootNode.contextValue = extension.USS_SESSION_CONTEXT;
         rootNode.dirty = false;
-        await expect(await rootNode.getChildren()).toEqual([]);
+        expect(await rootNode.getChildren()).toEqual([]);
     });
 
     /*************************************************************************************************************
@@ -208,7 +208,7 @@ describe("Unit Tests (Jest)", () => {
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
         rootNode.contextValue = extension.USS_SESSION_CONTEXT;
-        await expect(await rootNode.getChildren()).toEqual([]);
+        expect(await rootNode.getChildren()).toEqual([]);
     });
 
     /*************************************************************************************************************
@@ -223,7 +223,7 @@ describe("Unit Tests (Jest)", () => {
             extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
         const child = new ZoweUSSNode(
             "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, profileOne.name, undefined);
-        await expect(child.getSession()).toBeDefined();
+        expect(child.getSession()).toBeDefined();
     });
 
     /*************************************************************************************************************
