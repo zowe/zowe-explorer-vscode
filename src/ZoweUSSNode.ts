@@ -282,10 +282,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        if (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
-            this.contextValue === extension.DS_FAV_TEXT_FILE_CONTEXT) {
-            vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
-        }
+        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
     }
 
     /**
