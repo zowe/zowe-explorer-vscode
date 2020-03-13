@@ -88,8 +88,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public paste(node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public delete(node: IZoweJobTreeNode) {
-        throw new Error("Method not implemented.");
+    public async delete(node: IZoweJobTreeNode) {
+        try {
+            await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
+            vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
+                localize("deleteJob.delete", " deleted"));
+            await this.removeFavorite(this.createJobsFavorite(node));
+            await vscode.commands.executeCommand("zowe.refreshAllJobs");
+        } catch (error) {
+            await errorHandling(error, node.getProfileName(), error.message);
+        }
     }
     /**
      * Adds a save search to the Jobs favorites list
@@ -189,17 +197,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
         }
         this.refresh();
-    }
-
-    public async deleteJob(node: IZoweJobTreeNode) {
-        try {
-            await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
-            vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
-                localize("deleteJob.delete", " deleted"));
-            this.removeFavorite(this.createJobsFavorite(node));
-        } catch (error) {
-            await errorHandling(error, node.getProfileName(), error.message);
-        }
     }
 
     /**
