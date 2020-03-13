@@ -9,63 +9,75 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
 import * as vscode from "vscode";
-import { ZoweNode } from "../../src/ZoweNode";
+import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
 import * as extension from "../../src/extension";
+
 declare var it: any;
+
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
 
 describe("ZoweNode Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
-    // Uses loaded profile to create a zosmf session with brightside
+
+    // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session);
+    const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
+                                         null, session, undefined, undefined, testProfile);
     sessNode.contextValue = extension.DS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
 
     /*************************************************************************************************************
-     * Creates an ZoweNode and checks that its members are all initialized by the constructor
+     * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
-    it("Testing that the ZoweNode is defined", async () => {
+    it("Testing that the ZoweDatasetNode is defined", async () => {
         // Tests empty PO node
-        const emptyPONode = new ZoweNode(pattern + ".TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const emptyPONode = new ZoweDatasetNode(pattern + ".TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
-        expect(emptyPONode.mParent).toBeDefined();
+        expect(emptyPONode.getParent()).toBeDefined();
 
         // Tests PS node
-        const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const PSNode = new ZoweDatasetNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
-        expect(PSNode.mParent).toBeDefined();
+        expect(PSNode.getParent()).toBeDefined();
     });
 
     /*************************************************************************************************************
-     * Checks that the ZoweNode constructor works as expected when the label parameter is the empty string
+     * Checks that the ZoweDatasetNode constructor works as expected when the label parameter is the empty string
      *************************************************************************************************************/
-    it("Testing that the ZoweNode constructor works as expected when the label parameter is the empty string", async () => {
-        // The ZoweNode should still be constructed, and should not throw an error.
-        const edgeNode = new ZoweNode("", vscode.TreeItemCollapsibleState.None, sessNode, null);
+    it("Testing that the ZoweDatasetNode constructor works as expected when the label parameter is the empty string", async () => {
+        // The ZoweDatasetNode should still be constructed, and should not throw an error.
+        const edgeNode = new ZoweDatasetNode("", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
         expect(edgeNode.label).toBeDefined();
         expect(edgeNode.collapsibleState).toBeDefined();
-        expect(edgeNode.mParent).toBeDefined();
+        expect(edgeNode.getParent()).toBeDefined();
     });
 
     /*************************************************************************************************************
-     * Creates sample ZoweNode list and checks that getChildren() returns the correct array
+     * Creates sample ZoweDatasetNode list and checks that getChildren() returns the correct array
      *************************************************************************************************************/
-    it("Testing that getChildren returns the correct Thenable<ZoweNode[]>", async () => {
+    it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]>", async () => {
         let sessChildren;
         try {
             sessChildren = await sessNode.getChildren();
@@ -75,11 +87,11 @@ describe("ZoweNode Integration Tests", async () => {
         }
 
         // Creating structure of files and folders under BRTVS99 profile
-        const sampleChildren: ZoweNode[] = [
-            new ZoweNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
-            new ZoweNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
-            new ZoweNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null)
+        const sampleChildren: ZoweDatasetNode[] = [
+            new ZoweDatasetNode(pattern + ".PUBLIC.BIN", vscode.TreeItemCollapsibleState.None, sessNode, null),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TCLASSIC", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null),
+            new ZoweDatasetNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null)
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -91,28 +103,28 @@ describe("ZoweNode Integration Tests", async () => {
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
-     * Checks that getChildren() returns the expected value when passed an ZoweNode with all null parameters
+     * Checks that getChildren() returns the expected value when passed an ZoweDatasetNode with all null parameters
      *************************************************************************************************************/
     it("Testing that getChildren works as expected on the null value", async () => {
         const expectChai = chai.expect;
         chai.use(chaiAsPromised);
 
         // The method should throw an error.
-        const nullNode = new ZoweNode(null, null, null, null);
+        const nullNode = new ZoweDatasetNode(null, null, null, null);
         nullNode.contextValue = extension.DS_PDS_CONTEXT;
         nullNode.dirty = true;
         await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
-     * Checks that getChildren() returns the expected value when passed an ZoweNode with all undefined parameters
+     * Checks that getChildren() returns the expected value when passed an ZoweDatasetNode with all undefined parameters
      *************************************************************************************************************/
     it("Testing that getChildren works as expected on an undefined value", async () => {
         const expectChai = chai.expect;
         chai.use(chaiAsPromised);
 
         // The method should throw an error.
-        const undefinedNode = new ZoweNode(undefined, undefined, undefined, undefined);
+        const undefinedNode = new ZoweDatasetNode(undefined, undefined, undefined, undefined);
         undefinedNode.contextValue = extension.DS_PDS_CONTEXT;
         undefinedNode.dirty = true;
         // tslint:disable-next-line:max-line-length
@@ -125,7 +137,7 @@ describe("ZoweNode Integration Tests", async () => {
     *************************************************************************************************************/
     it("Testing that getChildren works as expected on a PS node", async () => {
         // The method should return an empty array.
-        const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const PSNode = new ZoweDatasetNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
         let PSNodeChildren;
         try {
             PSNodeChildren = await PSNode.getChildren();
@@ -142,9 +154,9 @@ describe("ZoweNode Integration Tests", async () => {
      * Checks that getSession() returns the expected value
      *************************************************************************************************************/
     it("Testing that getSession() works as expected", async () => {
-        const PDSNode = new ZoweNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const PSNode = new ZoweNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const MemNode = new ZoweNode(pattern + ".TPDS(TCHILD1)", vscode.TreeItemCollapsibleState.None, PDSNode, null);
+        const PDSNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const PSNode = new ZoweDatasetNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        const MemNode = new ZoweDatasetNode(pattern + ".TPDS(TCHILD1)", vscode.TreeItemCollapsibleState.None, PDSNode, null);
 
         expect(sessNode.getSession()).toEqual(session);
         expect(PDSNode.getSession()).toEqual(session);

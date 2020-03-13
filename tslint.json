@@ -39,8 +39,9 @@
     "no-implicit-dependencies": [
       true,
       "dev",
-      ["@brightside/imperative"]
-    ]
+      ["@zowe/imperative"]
+    ],
+    "no-namespace": false
   },
   "linterOptions": {
     "exclude": [

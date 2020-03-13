@@ -1,10 +1,7 @@
 {
     "createUSSNode.name": "Name of file or directory",
     "createUSSNode.error.create": "Unable to create node: ",
-    "deleteUSSNode.quickPickOption": "Are you sure you want to delete ",
-    "deleteUSSNode.showQuickPick.yes": "Yes",
-    "deleteUSSNode.showQuickPick.no": "No",
-    "deleteUSSNode.error.node": "Unable to delete node: ",
+    "ussNodeActions.error": "Error encountered in ",
     "renameUSSNode.error": "Unable to rename node: ",
     "copyPath.infoMessage": "Copy Path is not yet supported in Theia."
 }

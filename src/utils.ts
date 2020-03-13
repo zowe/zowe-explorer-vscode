@@ -10,14 +10,10 @@
 */
 
 import * as path from "path";
-import * as os from "os";
-import * as zowe from "@brightside/core";
-import { CliProfileManager } from "@brightside/imperative";
-import { TreeItem, QuickPickItem, QuickPick } from "vscode";
+import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
-import { ZoweUSSNode } from "./ZoweUSSNode";
-import { ZoweNode } from "./ZoweNode";
+import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /*
@@ -148,28 +144,13 @@ export class JobIdFilterDescriptor extends FilterDescriptor {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatUSSChildNodes(nodes: ZoweUSSNode[]) {
-    let allNodes = new Array<ZoweUSSNode>();
-
-    for (const node of nodes) {
-        allNodes = allNodes.concat(concatUSSChildNodes(node.children));
-        allNodes.push(node);
-    }
-
-    return allNodes;
-}
-
-/*************************************************************************************************************
- * Returns array of all subnodes of given node
- *************************************************************************************************************/
-export function concatChildNodes(nodes: ZoweNode[]) {
-    let allNodes = new Array<ZoweNode>();
+export function concatChildNodes(nodes: IZoweNodeType[]) {
+    let allNodes = new Array<IZoweNodeType>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(concatChildNodes(node.children));
         allNodes.push(node);
     }
-
     return allNodes;
 }
 
@@ -178,4 +159,34 @@ export function concatChildNodes(nodes: ZoweNode[]) {
  *************************************************************************************************************/
 export function getAppName(isTheia: boolean) {
     return isTheia? "Theia" : "VS Code";
+}
+
+/*************************************************************************************************************
+ * Error Hanndling
+ * @param {errorDetails} error.mDetails
+ * @param {label} - additional information such as profile name, credentials, messageID etc
+ * @param {moreInfo} - additional/customized error messages
+ *************************************************************************************************************/
+export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+    let httpErrCode = null;
+
+    if (errorDetails.mDetails !== undefined) {
+        httpErrCode = errorDetails.mDetails.errorCode;
+    }
+
+    switch(httpErrCode) {
+        // tslint:disable-next-line: no-magic-numbers
+        case 401 : {
+            window.showErrorMessage(localize("errorHandling.invalid.credentials", "Invalid Credentials. ") +
+                localize("errorHandling.invalid.credentials2","Please ensure the username and password for ") +
+                `\n${label}\n` +
+                localize("errorHandling.invalid.credentials3", " are valid or this may lead to a lock-out."));
+            break;
+        }
+        default: {
+            window.showErrorMessage(moreInfo);
+            break;
+        }
+    }
+    return;
 }

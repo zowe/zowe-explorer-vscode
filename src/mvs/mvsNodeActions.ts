@@ -9,13 +9,16 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { ZoweNode } from "../ZoweNode";
+import { ZoweDatasetNode } from "../ZoweDatasetNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
+import * as utils from "../utils";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { IZoweTree } from "../api/IZoweTree";
+import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 
-export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree) {
+export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
        canSelectFiles: true,
        openLabel: "Upload File",
@@ -31,11 +34,20 @@ export async function uploadDialog(node: ZoweNode, datasetProvider: DatasetTree)
             await uploadFile(node, doc);
         }
     ));
-    datasetProvider.refresh();
+
+    // refresh Tree View & favorites
+    datasetProvider.refreshElement(node);
+    if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+        const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+        if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
+    } else {
+        const favNode = datasetProvider.findFavoritedNode(node);
+        if (favNode) { datasetProvider.refreshElement(favNode); }
+    }
 }
 
-export function getDatasetLabel(node: ZoweNode) {
-    if (node.mParent && node.mParent.contextValue === extension.FAVORITE_CONTEXT) {
+export function getDatasetLabel(node: ZoweDatasetNode) {
+    if (node.getParent() && node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
         const profileEnd = "]: ";
         const profileIndex = node.label.indexOf(profileEnd);
         return node.label.substr(profileIndex + profileEnd.length, node.label.length);
@@ -43,11 +55,11 @@ export function getDatasetLabel(node: ZoweNode) {
     return node.label;
 }
 
-export async function uploadFile(node: ZoweNode, doc: vscode.TextDocument) {
+export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await zowe.Upload.fileToDataset(node.getSession(), doc.fileName, datasetName);
+        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).putContents(doc.fileName, datasetName);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        await utils.errorHandling(e, node.getProfileName(), e.message);
     }
 }

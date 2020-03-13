@@ -39,7 +39,7 @@ export class PersistentFilters {
     private mRecall: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(schema: string, private maxHistory = 5, private maxRecall = 15) {
+    constructor(schema: string, private maxHistory = 5, private maxRecall = 10) {
         this.schema = schema;
         this.initialize();
     }
@@ -88,6 +88,7 @@ export class PersistentFilters {
             this.updateHistory();
         }
     }
+
     /**
      * Adds the name of one recently-edited file to the local store and
      * updates persistent store. The store contains a
@@ -126,7 +127,7 @@ export class PersistentFilters {
         return this.mRecall;
     }
 
-    public removeRecall(name) {
+    public removeRecall(name: string) {
         const index = this.mRecall.findIndex((recallItem) => {
             return recallItem.includes(name);
         });

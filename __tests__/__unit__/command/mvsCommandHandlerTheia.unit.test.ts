@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import * as brightside from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as extension from "../../../src/extension";
@@ -68,7 +68,7 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
     Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
-    Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
+    Object.defineProperty(zowe, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
 
