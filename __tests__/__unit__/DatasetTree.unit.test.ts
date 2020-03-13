@@ -719,7 +719,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(testTree.mFavorites[0].label).toBe(`[${sessionNode.label.trim()}]: ${newLabel}`);
     });
 
-    it("Should rename a dataset", async () => {
+    it("Should rename a PDS dataset", async () => {
         const sessionNode = testTree.mSessionNodes[1];
         const newLabel = "USER.NEW.LABEL";
         testTree.mFavorites = [];
@@ -728,7 +728,15 @@ describe("DatasetTree Unit Tests", () => {
         node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
         testTree.rename(node);
         expect(checkSession).toHaveBeenCalledTimes(1);
+    });
 
+    it("Should rename a DS and DS_FAV dataset", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const checkSession = jest.spyOn(testTree, "rename");
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
         node.contextValue = "ds";
         testTree.rename(node);
         expect(checkSession).toHaveBeenCalledTimes(2);
@@ -738,6 +746,15 @@ describe("DatasetTree Unit Tests", () => {
         // tslint:disable-next-line: no-magic-numbers
         expect(checkSession).toHaveBeenCalledTimes(3);
 
+    });
+
+    it("Should rename a Member and Member_FAV dataset", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const checkSession = jest.spyOn(testTree, "rename");
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
         node.contextValue = "member";
         testTree.rename(node);
         // tslint:disable-next-line: no-magic-numbers

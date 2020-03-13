@@ -278,9 +278,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res[0]).toBe("fake");
-            expect(res[1]).toBe("fake");
-            expect(res[2]).toBe("fake");
+            expect(res).toEqual(["fake", "fake", "fake"]);
             (profiles.loadNamedProfile as any).mockReset();
           });
 
@@ -299,9 +297,7 @@ describe("Profile class unit tests", () => {
         showInputBox.mockResolvedValueOnce("fake");
         showInputBox.mockResolvedValueOnce("fake");
         const res = await profiles.promptCredentials(promptProfile.name, true);
-        expect(res[0]).toBe("fake");
-        expect(res[1]).toBe("fake");
-        expect(res[2]).toBe("fake");
+        expect(res).toEqual(["fake", "fake", "fake"]);
         (profiles.loadNamedProfile as any).mockReset();
         });
 
