@@ -2347,45 +2347,26 @@ describe("Extension Unit Tests", () => {
     });
 
     describe("Add searchForLoadedItems Tests", () => {
-        it("Testing that searchForLoadedItems works for an SDS", async () => {
-            showQuickPick.mockReset();
-            testTree.getChildren.mockReset();
+        it("Testing that filterTreeByString returns the correct array", async () => {
+            const qpItems = [
+                new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
+                new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
+                new utils.FilterItem("[sestest]: /test/tree/abc"),
+                new utils.FilterItem("[sestest]: /test/tree/def/abc"),
+            ];
 
-            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_DS_CONTEXT);
-            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-            testTree.getChildren.mockReturnValue([sessNode]);
-            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
-            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testNode]));
-            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
-            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
-                if (arg) {
-                    return Promise.resolve([testNode]);
-                } else {
-                    return Promise.resolve([sessNode]);
-                }
-            });
-            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
-            createQuickPick.mockReturnValueOnce({
-                placeholder: "Select a filter",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: qpItem,
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                onDidChangeValue: jest.fn(()=>{
-                    return {};
-                }),
-                dispose: jest.fn(()=>{
-                    return {};
-                })
-            });
-
-            await extension.searchInAllLoadedItems(testTree, testUSSTree);
-
-            expect(mockAddHistory).toBeCalledWith("HLQ.PROD2.STUFF");
-            mockAddHistory.mockReset();
+            let filteredValues = await extension.filterTreeByString("testmemb", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[1]]);
+            filteredValues = await extension.filterTreeByString("sestest", qpItems);
+            expect(filteredValues).toStrictEqual(qpItems);
+            filteredValues = await extension.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0]]);
+            filteredValues = await extension.filterTreeByString("HLQ.*.STUFF*", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
+            filteredValues = await extension.filterTreeByString("/test/tree/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+            filteredValues = await extension.filterTreeByString("/*/*/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
         });
 
         it("Testing that searchForLoadedItems works for a PDS", async () => {

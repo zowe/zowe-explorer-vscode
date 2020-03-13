@@ -575,6 +575,64 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
     }
 }
 
+export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+    const filteredArray = [];
+    value = (value.includes("/") && value[0] !== "/") ? `/${value.toUpperCase()}` : value.toUpperCase();
+    const filters = value.substring(1).split(/\.|\//);
+    for (const item of treeItems) {
+        // Parse each quickpick item for its session, node name, or file path
+        const itemText = item.label.toUpperCase();
+        let filePath = "";
+        let nodeName = "";
+        let memberName = "";
+        const sessionName = itemText.includes("]") ? itemText.substring(1, itemText.indexOf("]")) : "";
+        if (itemText.includes("(")) {
+            nodeName = itemText.substring(itemText.indexOf(" ") + 1, itemText.indexOf("("));
+            memberName = itemText.substring(itemText.indexOf("(") + 1, itemText.indexOf(")"));
+        } else if (itemText.includes("/")) {
+            filePath = itemText.substring(itemText.indexOf(" /") + 1);
+        } else if (itemText.includes(" ")) { nodeName = itemText.substring(itemText.indexOf(" ") + 1); }
+
+        // Check if filter matches the quickpick item's path
+        let include = true;
+        if (!value.includes("*")) {
+            if (value.includes(".") || !value.match(/\.|\//)) {
+                // Dataset
+                if (!nodeName || (nodeName && !nodeName.startsWith(value))) { include = false; }
+            } else if (value.includes("/") || !value.match(/\.|\//)) {
+                // USS item
+                if (!filePath || (filePath && !filePath.startsWith(value))) { include = false; }
+            }
+        } else {
+            // Path has a wild card (*)
+            const splitName = nodeName ? nodeName.split(/\.|\//) : filePath.substring(1).split(/\.|\//);
+            for (let i = 0; i < filters.length; ++i) {
+                if (!splitName[i] && i !== filters.length - 1) { include = false; }
+                if (filters[i].includes("*")) {
+                    if (!splitName[i].startsWith(filters[i].replace("*", ""))) {
+                        include = false;
+                    }
+                } else if (!splitName[i].includes(filters[i])) {
+                    if (i !== filters.length - 1 || splitName[i] !== filters[i]) { include = false; }
+                }
+            }
+        }
+
+        // If the filter is just a string, simply check if it is included in the path
+        if (filters.length === 1) {
+            filters[0].replace("*", "");
+            include = false;
+            if (nodeName && nodeName.includes(filters[0])) { include = true; }
+            if (filePath && filePath.includes(filters[0])) { include = true; }
+            if (sessionName && sessionName.includes(filters[0])) { include = true; }
+            if (memberName && memberName.includes(filters[0])) { include = true; }
+        }
+
+        if (include && !filteredArray.includes(item)) { filteredArray.push(item); }
+    }
+    return filteredArray;
+}
+
 /**
  * Search for matching items loaded in data set or USS tree
  *
@@ -585,45 +643,10 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     const qpItems = [];
     const quickpick = vscode.window.createQuickPick();
     quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
-    quickpick.ignoreFocusOut = false;
+    quickpick.ignoreFocusOut = true;
     quickpick.onDidChangeValue(async (value) => {
-        const filteredArray = [];
         if (value) {
-            value = value.toUpperCase();
-            const filters = value.split(/\.|\//);
-            for (const item of qpItems) {
-                // Parse each quickpick item for its session, node name, or file path
-                const itemText = item.text.toUpperCase();
-                let filePath = "";
-                let nodeName = "";
-                let memberName = "";
-                const sessionName = value.includes("]") ? value.substring(1, value.indexOf("]")) : "";
-                if (itemText.includes("(")) {
-                    nodeName = itemText.substring(itemText.indexOf(" ") + 1, itemText.indexOf("("));
-                    memberName = itemText.substring(itemText.indexOf("(") + 1, itemText.indexOf(")"));
-                } else if (itemText.includes("/")) {
-                    filePath = itemText.substring(itemText.indexOf(" ") + 1);
-                } else if (itemText.includes(" ")) { nodeName = itemText.substring(itemText.indexOf(" ") + 1); }
-
-                // Check if filter matches the quickpick item's path
-                if (!value.includes("*")) {
-                    if (sessionName && sessionName.includes(value)) { filteredArray.push(item); }
-                    if (value.includes(".") || !value.match(/,|\//)) {
-                        if (nodeName && nodeName.startsWith(value)) { filteredArray.push(item); }
-                        else if (memberName && memberName.startsWith(value)) { filteredArray.push(item); }
-                    } else if (value.includes("/") || !value.match(/,|\//)) {
-                        if (filePath && filePath.startsWith(value)) { filteredArray.push(item); }
-                    }
-                }
-                filters.forEach((filter) => {
-                    if (sessionName && sessionName.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
-                    filter = filter.replace("*", "");
-                    if (nodeName && nodeName.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
-                    else if (memberName && memberName.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
-                    else if (filePath && filePath.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
-                });
-            }
-            quickpick.items = filteredArray;
+            quickpick.items = filterTreeByString(value, qpItems);
         } else { quickpick.items = [...qpItems]; }
     });
 
