@@ -585,10 +585,45 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     const qpItems = [];
     const quickpick = vscode.window.createQuickPick();
     quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
-    quickpick.ignoreFocusOut = true;
+    quickpick.ignoreFocusOut = false;
     quickpick.onDidChangeValue(async (value) => {
+        const filteredArray = [];
         if (value) {
-            quickpick.items = [...qpItems.filter((item) => item.label.toUpperCase().includes(quickpick.value.toUpperCase()))];
+            value = value.toUpperCase();
+            const filters = value.split(/\.|\//);
+            for (const item of qpItems) {
+                // Parse each quickpick item for its session, node name, or file path
+                const itemText = item.text.toUpperCase();
+                let filePath = "";
+                let nodeName = "";
+                let memberName = "";
+                const sessionName = value.includes("]") ? value.substring(1, value.indexOf("]")) : "";
+                if (itemText.includes("(")) {
+                    nodeName = itemText.substring(itemText.indexOf(" ") + 1, itemText.indexOf("("));
+                    memberName = itemText.substring(itemText.indexOf("(") + 1, itemText.indexOf(")"));
+                } else if (itemText.includes("/")) {
+                    filePath = itemText.substring(itemText.indexOf(" ") + 1);
+                } else if (itemText.includes(" ")) { nodeName = itemText.substring(itemText.indexOf(" ") + 1); }
+
+                // Check if filter matches the quickpick item's path
+                if (!value.includes("*")) {
+                    if (sessionName && sessionName.includes(value)) { filteredArray.push(item); }
+                    if (value.includes(".") || !value.match(/,|\//)) {
+                        if (nodeName && nodeName.startsWith(value)) { filteredArray.push(item); }
+                        else if (memberName && memberName.startsWith(value)) { filteredArray.push(item); }
+                    } else if (value.includes("/") || !value.match(/,|\//)) {
+                        if (filePath && filePath.startsWith(value)) { filteredArray.push(item); }
+                    }
+                }
+                filters.forEach((filter) => {
+                    if (sessionName && sessionName.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
+                    filter = filter.replace("*", "");
+                    if (nodeName && nodeName.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
+                    else if (memberName && memberName.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
+                    else if (filePath && filePath.includes(filter) && !filteredArray.includes(item)) { filteredArray.push(item); }
+                });
+            }
+            quickpick.items = filteredArray;
         } else { quickpick.items = [...qpItems]; }
     });
 
