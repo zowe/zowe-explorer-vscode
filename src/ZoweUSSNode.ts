@@ -288,9 +288,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.commands.executeCommand("zowe.uss.refreshAll");
         } else {
             await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        }
-
-        if (!this.isFolder) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
     }
