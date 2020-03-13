@@ -19,7 +19,7 @@ import * as vscode from "vscode";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { Logger, TextUtils, IProfileLoaded, ImperativeConfig, Session, CredentialManagerFactory,
-    ImperativeError, CliProfileManager } from "@zowe/imperative";
+    ImperativeError, DefaultCredentialManager, CliProfileManager, ISession } from "@zowe/imperative";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import { Job } from "./ZoweJobNode";

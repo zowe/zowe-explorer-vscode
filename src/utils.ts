@@ -12,6 +12,7 @@
 import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
 import { ISession } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
+import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
