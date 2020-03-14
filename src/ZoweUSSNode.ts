@@ -38,11 +38,7 @@ import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatu
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public fullPath = "";
-<<<<<<< HEAD
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-=======
     public dirty = true;
->>>>>>> refs/remotes/origin/master
     public children: IZoweUSSTreeNode[] = [];
     public binaryFiles = {};
     public binary = false;
@@ -236,7 +232,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (this.getParent() && this.getParent().contextValue === extension.FAVORITE_CONTEXT) {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
                 this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
-<<<<<<< HEAD
         }
 
         const icon = getIconByNode(this);
@@ -244,15 +239,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
 
-=======
-        }
-
-        const icon = getIconByNode(this);
-        if (icon) {
-            this.setIcon(icon.path);
-        }
-
->>>>>>> refs/remotes/origin/master
         this.dirty = true;
     }
 
@@ -341,10 +327,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
-<<<<<<< HEAD
         ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
-=======
->>>>>>> refs/remotes/origin/master
         ussFileProvider.refresh();
     }
     /**
@@ -469,13 +452,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     this.setEtag(response.apiResponse.etag);
                 }
 
-<<<<<<< HEAD
                 // Add document name to recently-opened files
                 ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, {select: true, focus: true, expand: false});
 
-=======
->>>>>>> refs/remotes/origin/master
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
                 await utils.errorHandling(err, this.mProfileName, err.message);

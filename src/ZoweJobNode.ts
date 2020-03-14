@@ -18,10 +18,7 @@ import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
-<<<<<<< HEAD
-=======
 import { getIconByNode } from "./generators/icons";
->>>>>>> refs/remotes/origin/master
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -32,11 +29,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly Prefix = "Prefix:";
 
     public children: IZoweJobTreeNode[] = [];
-<<<<<<< HEAD
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-=======
     public dirty = true;
->>>>>>> refs/remotes/origin/master
     // tslint:disable-next-line: variable-name
     private _owner: string;
     // tslint:disable-next-line: variable-name

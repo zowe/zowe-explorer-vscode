@@ -1629,27 +1629,6 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
 }
 
 /**
-<<<<<<< HEAD
- * Refreshes treeView
- *
- * @param {DataSetTree} datasetProvider
- */
-export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    log.debug(localize("refreshAll.log.debug.refreshDataSet", "Refreshing data set tree view"));
-    datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === DS_SESSION_CONTEXT) {
-            utils.labelHack(sessNode);
-            sessNode.children = [];
-            sessNode.dirty = true;
-        }
-    });
-    datasetProvider.refresh();
-    Profiles.getInstance().refresh();
-}
-
-/**
-=======
->>>>>>> refs/remotes/origin/master
  * Refreshes the passed node with current mainframe data
  *
  * @param {IZoweDatasetTreeNode} node - The node which represents the dataset

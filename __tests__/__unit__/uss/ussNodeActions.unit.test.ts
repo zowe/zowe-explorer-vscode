@@ -34,10 +34,7 @@ const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
 const mockRemoveFavorite = jest.fn();
-<<<<<<< HEAD
 const mockRemoveRecall = jest.fn();
-=======
->>>>>>> refs/remotes/origin/master
 const mockAddFavorite = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();

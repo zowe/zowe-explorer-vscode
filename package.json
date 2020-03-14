@@ -58,13 +58,6 @@
         }
       ]
     },
-    "keybindings": [
-      {
-        "command": "zowe.openRecentMember",
-        "key": "ctrl+alt+r",
-        "mac": "cmd+alt+r"
-      }
-    ],
     "commands": [
       {
         "command": "zowe.uss.copyPath",
@@ -1223,31 +1216,19 @@
     "gulp-fs": "0.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
-<<<<<<< HEAD
-    "jest": "^24.8.0",
-=======
     "jest": "^25.1.0",
->>>>>>> refs/remotes/origin/master
     "jest-html-reporter": "^2.7.0",
     "jest-junit": "^10.0.0",
     "jest-stare": "^1.26.0",
     "jsdoc": "^3.6.3",
-<<<<<<< HEAD
-    "jsdom": "11.11.0",
-=======
     "jsdom": "^16.0.0",
->>>>>>> refs/remotes/origin/master
     "keytar": "^5.0.0",
     "log4js": "3.0.5",
     "markdownlint-cli": "^0.16.0",
     "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "sinon": "^6.1.0",
-<<<<<<< HEAD
-    "ts-jest": "^24.2.0",
-=======
     "ts-jest": "^25.2.0",
->>>>>>> refs/remotes/origin/master
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
@@ -1256,13 +1237,8 @@
   },
   "dependencies": {
     "@zowe/cli": "6.8.2",
-<<<<<<< HEAD
-    "isbinaryfile": "4.0.4",
-    "fs-extra": "8.0.1",
-=======
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
->>>>>>> refs/remotes/origin/master
     "moment": "2.24.0",
     "vscode-nls": "4.1.1"
   },

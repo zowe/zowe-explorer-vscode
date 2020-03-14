@@ -26,14 +26,10 @@ const icon: IIconItem = {
             extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
             extension.JOBS_SPOOL_CONTEXT,
             extension.DS_MIGRATED_FILE_CONTEXT,
-<<<<<<< HEAD
-            extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX];
-=======
             extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX,
             extension.DS_BINARY_FILE_CONTEXT,
             extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX
         ];
->>>>>>> refs/remotes/origin/master
 
         return contexts.indexOf(node.contextValue) > -1;
     }

@@ -180,7 +180,6 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Renames a node based on the profile and it's label
      * @deprecated should not be visible outside of class
      *
-<<<<<<< HEAD
      * @param {string} criteria the member name to add
      */
     addRecall?(criteria: string);
@@ -204,14 +203,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     createFilterString?(newFilter: string, node: IZoweNodeType);
     /**
-=======
->>>>>>> refs/remotes/origin/master
      * @param {string} profileLabel
      * @param {string} beforeLabel
      * @param {string} afterLabel
      */
     renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string);
-<<<<<<< HEAD
     /**
      * Opens an item & reveals it in the tree
      *
@@ -219,6 +215,4 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {IZoweNodeType} sessionNode the session to use
      */
     openItemFromPath?(path: string, sessionNode: IZoweNodeType);
-=======
->>>>>>> refs/remotes/origin/master
 }

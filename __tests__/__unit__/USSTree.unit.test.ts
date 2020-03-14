@@ -116,14 +116,10 @@ describe("Unit Tests (Jest)", () => {
         null, false, profileOne.name, undefined));
     testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
-<<<<<<< HEAD
-    testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
-=======
     const targetIcon = getIconByNode(testTree.mSessionNodes[1]);
     if (targetIcon) {
         testTree.mSessionNodes[1].iconPath = targetIcon.path;
     }
->>>>>>> refs/remotes/origin/master
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {

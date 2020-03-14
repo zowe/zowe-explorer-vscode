@@ -311,11 +311,7 @@ describe("Extension Integration Tests", () => {
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
             const node = new ZoweDatasetNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
-<<<<<<< HEAD
             await extension.openPS(node, true, testTree);
-=======
-            await extension.openPS(node, true);
->>>>>>> refs/remotes/origin/master
             expect(path.relative(vscode.window.activeTextEditor.document.fileName,
                 extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal("");
             expect(fs.existsSync(extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
