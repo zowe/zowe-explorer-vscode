@@ -18,6 +18,7 @@ import * as extension from "./extension";
 import { IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { getIconByNode } from "./generators/icons";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -30,7 +31,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     public children: ZoweDatasetNode[] = [];
 
     /**
@@ -60,7 +61,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.contextValue = extension.DS_DS_CONTEXT;
         }
         this.tooltip = this.label;
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 
     /**

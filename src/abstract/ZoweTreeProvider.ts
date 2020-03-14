@@ -13,9 +13,16 @@ import * as vscode from "vscode";
 import { Logger } from "@zowe/imperative";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
+<<<<<<< HEAD
 import { OwnerFilterDescriptor, applyIcons } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import * as extension from "../extension";
+=======
+import { OwnerFilterDescriptor } from "../utils";
+import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
+import * as extension from "../extension";
+import { getIconByNode } from "../generators/icons";
+>>>>>>> refs/remotes/origin/master
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -53,7 +60,11 @@ export class ZoweTreeProvider {
      * @param {IZoweTreeNode}
      */
     public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode) {
+<<<<<<< HEAD
         treeView.reveal(item, { select: true, focus: true });
+=======
+        treeView.reveal(item, {select: true, focus: true});
+>>>>>>> refs/remotes/origin/master
     }
 
     /**
@@ -80,6 +91,11 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
+<<<<<<< HEAD
+=======
+        element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
+
+>>>>>>> refs/remotes/origin/master
         if (element.label !== "Favorites") {
             let usrNme: string;
             let passWrd: string;
@@ -118,7 +134,14 @@ export class ZoweTreeProvider {
             this.validProfile = 1;
         }
         if (this.validProfile === 1) {
+<<<<<<< HEAD
             element.iconPath = applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
+=======
+            const icon = getIconByNode(element);
+            if (icon) {
+                element.iconPath = icon.path;
+            }
+>>>>>>> refs/remotes/origin/master
             element.dirty = true;
             this.mOnDidChangeTreeData.fire(element);
         }
@@ -126,7 +149,11 @@ export class ZoweTreeProvider {
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(this.persistenceSchema)) {
+<<<<<<< HEAD
             const setting: any = { ...vscode.workspace.getConfiguration().get(this.persistenceSchema) };
+=======
+            const setting: any = {...vscode.workspace.getConfiguration().get(this.persistenceSchema)};
+>>>>>>> refs/remotes/origin/master
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];

@@ -21,6 +21,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -33,7 +34,10 @@ const mockUSSRefresh = jest.fn();
 const mockUSSRefreshElement = jest.fn();
 const mockGetUSSChildren = jest.fn();
 const mockRemoveFavorite = jest.fn();
+<<<<<<< HEAD
 const mockRemoveRecall = jest.fn();
+=======
+>>>>>>> refs/remotes/origin/master
 const mockAddFavorite = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
@@ -187,6 +191,28 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refreshElement).toHaveBeenCalled();
             expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
         });
+
+        it("Testing that refreshAllUSS is executed successfully", async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        getDefaultProfile: mockLoadNamedProfile,
+                        loadNamedProfile: mockLoadNamedProfile,
+                        usesSecurity: true,
+                        getProfiles: jest.fn(() => {
+                            return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                        }),
+                        refresh: jest.fn(),
+                    };
+                })
+            });
+            const spy = jest.spyOn(ussNodeActions, "refreshAllUSS");
+            ussNodeActions.refreshAllUSS(testUSSTree);
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
         it("createUSSNode throws an error", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
             showErrorMessage.mockReset();

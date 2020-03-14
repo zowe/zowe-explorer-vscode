@@ -26,6 +26,10 @@ import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
+<<<<<<< HEAD
+=======
+import { ISession } from "@zowe/imperative";
+>>>>>>> refs/remotes/origin/master
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -105,15 +109,19 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
  * @param {USSTree} ussFileProvider
  */
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+<<<<<<< HEAD
+=======
+    await Profiles.getInstance().refresh();
+>>>>>>> refs/remotes/origin/master
     ussFileProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === extension.USS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            utils.refreshTree(sessNode);
         }
     });
-    ussFileProvider.refresh();
-    return Profiles.getInstance().refresh();
+    await ussFileProvider.refresh();
 }
 
 /**
