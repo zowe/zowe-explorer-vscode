@@ -275,14 +275,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param oldReference string
      * @param revision string
      */
-    public rename(newFullPath: string) {
+    public async rename(newFullPath: string) {
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        if (this.isFolder) {
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        } else {
+            await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        }
     }
 
     /**
@@ -368,6 +372,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
     }
+
+    /**
+     * Getter for folder type
+     */
+    public get isFolder(): boolean {
+        return [extension.USS_DIR_CONTEXT, extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+    }
+
     /**
      * Downloads and displays a file in a text editor view
      *
