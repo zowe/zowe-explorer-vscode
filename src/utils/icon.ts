@@ -18,7 +18,7 @@ import * as path from "path";
  */
 export function getIconPathInResources(iconFileName: string) {
    return {
-       light: path.join(__dirname, "..", "..", "..", "resources", "light", iconFileName),
-       dark: path.join(__dirname, "..", "..", "..", "resources", "dark", iconFileName)
+       light: path.join(__dirname, "..", "resources", "light", iconFileName),
+       dark: path.join(__dirname, "..", "resources", "dark", iconFileName)
    };
 }
