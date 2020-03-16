@@ -9,17 +9,19 @@
 *                                                                                 *
 */
 
-jest.mock("@brightside/imperative");
+jest.mock("@zowe/imperative");
+
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
-import * as brtimperative from "@brightside/imperative";
-import * as zowe from "@brightside/core";
+import { Session, IProfileLoaded } from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
 import * as ussNodeActions from "../../../src/uss/ussNodeActions";
 import * as extension from "../../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
+import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -48,7 +50,7 @@ const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const isBinaryFileSync = jest.fn();
 
-const profileOne: brtimperative.IProfileLoaded = {
+const profileOne: IProfileLoaded = {
     name: "profile1",
     profile: {},
     type: "zosmf",
@@ -97,7 +99,7 @@ function getUSSTree() {
     return testUSSTree1;
 }
 
-const session = new brtimperative.Session({
+const session = new Session({
     user: "fake",
     password: "fake",
     hostname: "fake",
@@ -184,6 +186,28 @@ describe("ussNodeActions", () => {
             expect(testUSSTree.refreshElement).toHaveBeenCalled();
             expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
         });
+
+        it("Testing that refreshAllUSS is executed successfully", async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        getDefaultProfile: mockLoadNamedProfile,
+                        loadNamedProfile: mockLoadNamedProfile,
+                        usesSecurity: true,
+                        getProfiles: jest.fn(() => {
+                            return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                        }),
+                        refresh: jest.fn(),
+                    };
+                })
+            });
+            const spy = jest.spyOn(ussNodeActions, "refreshAllUSS");
+            ussNodeActions.refreshAllUSS(testUSSTree);
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
         it("createUSSNode throws an error", async () => {
             showInputBox.mockReturnValueOnce("USSFolder");
             showErrorMessage.mockReset();
@@ -205,7 +229,7 @@ describe("ussNodeActions", () => {
             showInformationMessage.mockReset();
             mockLoadNamedProfile.mockReturnValue(profileOne);
 
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -248,7 +272,7 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -287,7 +311,7 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new brtimperative.Session({
+            const sessionwocred = new Session({
                 user: "",
                 password: "",
                 hostname: "fake",
@@ -419,7 +443,6 @@ describe("ussNodeActions", () => {
         it("should execute rename favorite USS file", async () => {
             showInputBox.mockReturnValueOnce("new name");
             await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
             expect(showErrorMessage.mock.calls.length).toBe(0);
             expect(renameUSSFile.mock.calls.length).toBe(1);
             expect(mockRemoveFavorite.mock.calls.length).toBe(1);

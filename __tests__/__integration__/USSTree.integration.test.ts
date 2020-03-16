@@ -10,8 +10,8 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
-import { Logger, IProfileLoaded } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -22,7 +22,7 @@ import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
-import { Profiles } from "../../src/Profiles";
+
 declare var it: any;
 
 const testProfile: IProfileLoaded = {
@@ -37,7 +37,7 @@ describe("USSTree Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
 
-    // Uses loaded profile to create a zosmf session with brightside
+    // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
          null, session, "", false, testProfile.name);
@@ -221,7 +221,7 @@ describe("USSTree Integration Tests", async () => {
         it("should add a favorite search", async () => {
             const log = new Logger(undefined);
             await testTree.addSession();
-            await testTree.addUSSSearchFavorite(sessNode);
+            await testTree.saveSearch(sessNode);
             const filtered = testTree.mFavorites.filter((temp) =>
                 temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);
             expect(filtered.length).toEqual(1);

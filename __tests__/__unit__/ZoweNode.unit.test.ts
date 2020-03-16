@@ -11,14 +11,14 @@
 
 // tslint:disable:no-shadowed-variable
 jest.mock("vscode");
-jest.mock("@brightside/imperative");
-jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
+jest.mock("@zowe/imperative");
+jest.mock("@zowe/cli");
 jest.mock("Session");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
-import { Session, IProfileLoaded } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as extension from "../../src/extension";
-import { List } from "@brightside/core";
+import { List } from "@zowe/cli";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -141,7 +141,7 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Checks that the catch block is reached when an error is thrown
      *************************************************************************************************************/
-    it("Checks that when bright.List.dataSet/allMembers() causes an error on the brightside call, " +
+    it("Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
         "it throws an error and the catch block is reached", async () => {
 
             showErrorMessage.mockReset();
@@ -152,7 +152,7 @@ describe("Unit Tests (Jest)", () => {
             rootNode.dirty = true;
             await rootNode.getChildren();
             expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List");
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List Error: Throwing an error to check error handling for unit tests!");
         });
 
     /*************************************************************************************************************

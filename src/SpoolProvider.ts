@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";

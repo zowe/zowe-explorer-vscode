@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import * as brightside from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as utils from "../../../src/utils";
@@ -86,7 +86,7 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
-    Object.defineProperty(brightside, "IssueCommand", {value: IssueCommand});
+    Object.defineProperty(zowe, "IssueCommand", {value: IssueCommand});
     Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
     Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
@@ -204,7 +204,7 @@ describe("mvsCommandActions unit testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError Error: fake testError");
     });
 
     it("tests the issueMvsCommand function user escapes the quick pick box", async () => {

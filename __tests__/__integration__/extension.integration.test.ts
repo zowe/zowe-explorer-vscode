@@ -10,8 +10,8 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
-import { Logger, CliProfileManager, IProfileLoaded } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Logger, CliProfileManager, IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -163,7 +163,7 @@ describe("Extension Integration Tests", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.ZOWETEMPFOLDER);
                 fs.mkdirSync(extension.DS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
@@ -183,13 +183,13 @@ describe("Extension Integration Tests", () => {
         beforeEach(async () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
-// tslint:disable-next-line: no-empty
+                // tslint:disable-next-line: no-empty
             } catch { }
         });
         afterEach(async () => {
             try {
                 await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName);
-// tslint:disable-next-line: no-empty
+                // tslint:disable-next-line: no-empty
             } catch { }
         });
         it("should delete a data set if user verified", async () => {
@@ -338,10 +338,10 @@ describe("Extension Integration Tests", () => {
 
             const changedData = "PS Upload Test";
 
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[1].label + "[" + profiles[1].label + "]"), changedData);
+            fs.writeFileSync(path.join(extension.ZOWETEMPFOLDER, children[1].label + "[" + profiles[1].label + "]"), changedData);
 
             // Upload file
-            const doc = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER,
+            const doc = await vscode.workspace.openTextDocument(path.join(extension.ZOWETEMPFOLDER,
                 children[1].label + "[" + profiles[1].label + "]"));
             await extension.saveFile(doc, testTree);
 
@@ -352,7 +352,7 @@ describe("Extension Integration Tests", () => {
 
             // Change contents back
             const originalData = "";
-            fs.writeFileSync(path.join(path.join(extension.BRIGHTTEMPFOLDER, children[1].label)), originalData);
+            fs.writeFileSync(path.join(path.join(extension.ZOWETEMPFOLDER, children[1].label)), originalData);
         }).timeout(TIMEOUT);
 
         it("should download, change, and re-upload a PDS member", async () => {
@@ -368,10 +368,10 @@ describe("Extension Integration Tests", () => {
 
             const changedData2 = "PO Member Upload Test";
 
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), changedData2);
+            fs.writeFileSync(path.join(extension.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), changedData2);
 
             // Upload file
-            const doc2 = await vscode.workspace.openTextDocument(path.join(extension.BRIGHTTEMPFOLDER, children[0].label +
+            const doc2 = await vscode.workspace.openTextDocument(path.join(extension.ZOWETEMPFOLDER, children[0].label +
                 "(" + childrenMembers[0].label + ")"));
             extension.saveFile(doc2, testTree);
 
@@ -382,7 +382,7 @@ describe("Extension Integration Tests", () => {
 
             // Change contents back
             const originalData2 = "";
-            fs.writeFileSync(path.join(extension.BRIGHTTEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), originalData2);
+            fs.writeFileSync(path.join(extension.ZOWETEMPFOLDER, children[0].label + "(" + childrenMembers[0].label + ")"), originalData2);
         }).timeout(TIMEOUT);
 
         // TODO add tests for saving data set from favorites
@@ -417,7 +417,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(afterDataSetName);
 
-                        await extension.renameDataSet(testNode, testTree);
+                        await testTree.rename(testNode);
                         beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
                         afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
                     } catch (err) {
@@ -484,7 +484,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(afterDataSetName);
 
-                        await extension.renameDataSet(testNode, testTree);
+                        await testTree.rename(testNode);
                         beforeList = await zowe.List.dataSet(sessionNode.getSession(), beforeDataSetName);
                         afterList = await zowe.List.dataSet(sessionNode.getSession(), afterDataSetName);
                     } catch (err) {
@@ -508,7 +508,7 @@ describe("Extension Integration Tests", () => {
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns("MISSING.DATA.SET");
 
-                        await extension.renameDataSet(testNode, testTree);
+                        await testTree.rename(testNode);
                     } catch (err) {
                         error = err;
                     }
@@ -744,6 +744,82 @@ describe("Extension Integration Tests", () => {
         });
     });
 
+    describe("Migrating a data set", () => {
+        describe("Success Scenarios", () => {
+            describe("Migrate a sequential data set", () => {
+                const dataSetName = `${pattern}.SDATA.SET`;
+
+                beforeEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+                        dataSetName,
+                    );
+                });
+
+                it("Should send a migrate request", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = extension.DS_DS_CONTEXT;
+
+                        await extension.hMigrateDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
+            describe("Migrate a partitioned data set", () => {
+                const dataSetName = `${pattern}.PDATA.SET`;
+
+                beforeEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zowe.Create.dataSet(
+                        sessionNode.getSession(),
+                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        dataSetName,
+                    );
+                });
+
+                it("Should send a migrate request", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = extension.DS_DS_CONTEXT;
+
+                        await extension.hMigrateDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
+        });
+        describe("Failure Scenarios", () => {
+            describe("Migrate a sequential data set", () => {
+                const dataSetName = `${pattern}.TEST.FAIL`;
+
+                it("Should fail if data set doesn't exist", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = extension.DS_DS_CONTEXT;
+
+                        await extension.hMigrateDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.not.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
+        });
+    });
+
     describe("Updating Temp Folder", () => {
         // define paths
         const testingPath = path.join(__dirname, "..", "..", "..", "test");
@@ -761,8 +837,8 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: `${testingPath}` }, vscode.ConfigurationTarget.Global);
 
-            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${testingPath}/temp`);
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(testingPath, "temp"));
+            // expect(extension.ZOWETEMPFOLDER).to.equal(`${testingPath}/temp`);
+            expect(extension.ZOWETEMPFOLDER).to.equal(path.join(testingPath, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(testingPath);
@@ -778,10 +854,10 @@ describe("Extension Integration Tests", () => {
 
             // change preference and test for update
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
-            { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
+                { folderPath: `${providedPathTwo}` }, vscode.ConfigurationTarget.Global);
 
-            // expect(extension.BRIGHTTEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
+            // expect(extension.ZOWETEMPFOLDER).to.equal(`${providedPathTwo}/temp`);
+            expect(extension.ZOWETEMPFOLDER).to.equal(path.join(providedPathTwo, "temp"));
 
             // Remove directory for subsequent tests
             extension.cleanDir(providedPathOne);
@@ -792,7 +868,7 @@ describe("Extension Integration Tests", () => {
             const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: "" }, vscode.ConfigurationTarget.Global);
-            expect(extension.BRIGHTTEMPFOLDER).to.equal(expectedDefaultTemp);
+            expect(extension.ZOWETEMPFOLDER).to.equal(expectedDefaultTemp);
         }).timeout(TIMEOUT);
     });
 
@@ -809,16 +885,16 @@ describe("Extension Integration Tests", () => {
             const log = Logger.getAppLogger();
             const profileName = testConst.profile.name;
             const favorites = [`[${profileName}]: ${pattern}.EXT.PDS{pds}`,
-                               `[${profileName}]: ${pattern}.EXT.PS{ds}`,
-                               `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
-                               `[${profileName}]: ${pattern}.EXT{session}`];
+            `[${profileName}]: ${pattern}.EXT.PS{ds}`,
+            `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
+            `[${profileName}]: ${pattern}.EXT{session}`];
             await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
-                                    `[${profileName}]: ${pattern}.EXT.PS`,
-                                    `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
-                                    `[${profileName}]: ${pattern}.EXT`];
+            `[${profileName}]: ${pattern}.EXT.PS`,
+            `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
+            `[${profileName}]: ${pattern}.EXT`];
             expect(testTree3.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
         }).timeout(TIMEOUT);
 
@@ -842,18 +918,18 @@ describe("Extension Integration Tests", () => {
             testTree.mFavorites = [];
             // Then, update
             const favorites = [`[${profileName}]: ${pattern}.EXT.PDS{pds}`,
-                               `[${profileName}]: ${pattern}.EXT.PS{ds}`,
-                               `['badProfileName']: ${pattern}.EXT.PS{ds}`,
-                               `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
-                               `[${profileName}]: ${pattern}.EXT{session}`];
+            `[${profileName}]: ${pattern}.EXT.PS{ds}`,
+            `['badProfileName']: ${pattern}.EXT.PS{ds}`,
+            `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
+            `[${profileName}]: ${pattern}.EXT{session}`];
             await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await testTree.initialize(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
-                                    `[${profileName}]: ${pattern}.EXT.PS`,
-                                    `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
-                                    `[${profileName}]: ${pattern}.EXT`];
+            `[${profileName}]: ${pattern}.EXT.PS`,
+            `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
+            `[${profileName}]: ${pattern}.EXT`];
             const gotCalledOnce = showErrorStub.calledOnce;
             expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
             expect(gotCalledOnce).to.equal(true);
@@ -952,7 +1028,7 @@ describe("Extension Integration Tests - USS", () => {
     describe("Deactivate", () => {
         it("should clean up the local files when deactivate is invoked", async () => {
             try {
-                fs.mkdirSync(extension.BRIGHTTEMPFOLDER);
+                fs.mkdirSync(extension.ZOWETEMPFOLDER);
                 fs.mkdirSync(extension.USS_DIR);
             } catch (err) {
                 // if operation failed, wait a second and try again
@@ -976,7 +1052,7 @@ describe("Extension Integration Tests - USS", () => {
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(fullUSSPath));
 
-            await ussTestTree1.ussFilterPrompt(ussSessionNode);
+            await ussTestTree1.filterPrompt(ussSessionNode);
 
             expect(ussTestTree1.mSessionNodes[0].fullPath).to.equal(fullUSSPath);
             expect(ussTestTree1.mSessionNodes[0].tooltip).to.equal(fullUSSPath);
@@ -999,7 +1075,7 @@ describe("Extension Integration Tests - USS", () => {
             const inputBoxStub2 = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub2.returns("");
             const showInfoStub2 = sandbox.spy(vscode.window, "showInformationMessage");
-            await ussTestTree.ussFilterPrompt(ussSessionNode);
+            await ussTestTree.filterPrompt(ussSessionNode);
             const gotCalled = showInfoStub2.calledWith("You must enter a path.");
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
@@ -1008,7 +1084,7 @@ describe("Extension Integration Tests - USS", () => {
     describe("Saving a USS File", () => {
         // TODO Move to appropriate class
         it("should download, change, and re-upload a file", async () => {
-            const changedData = "File Upload Test "+ Math.random().toString(36).slice(2);
+            const changedData = "File Upload Test " + Math.random().toString(36).slice(2);
 
             const rootChildren = await ussTestTree.getChildren();
             rootChildren[0].dirty = true;
@@ -1017,8 +1093,8 @@ describe("Extension Integration Tests - USS", () => {
             const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
             sessChildren2[2].dirty = true;
             const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
-            const localPath = path.join(extension.USS_DIR, "/",  testConst.profile.name,
-            dirChildren[0].fullPath);
+            const localPath = path.join(extension.USS_DIR, "/", testConst.profile.name,
+                dirChildren[0].fullPath);
 
             await dirChildren[0].openUSS(false, true, ussTestTree);
             const doc = await vscode.workspace.openTextDocument(localPath);

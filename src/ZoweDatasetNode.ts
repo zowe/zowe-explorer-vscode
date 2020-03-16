@@ -9,15 +9,16 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { Session, IProfileLoaded } from "@brightside/imperative";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as utils from "./utils";
 import * as extension from "./extension";
 import { IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { getIconByNode } from "./generators/icons";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -33,7 +34,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNode {
     public command: vscode.Command;
     public pattern = "";
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     public children: ZoweDatasetNode[] = [];
 
     /**
@@ -63,7 +64,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.contextValue = extension.DS_DS_CONTEXT;
         }
         this.tooltip = this.label;
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 
     /**
@@ -114,7 +118,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
         responses.forEach((response) => {
-            // Throws reject if the brightside command does not throw an error but does not succeed
+            // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
             }

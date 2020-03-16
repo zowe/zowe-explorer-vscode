@@ -11,14 +11,13 @@
 
 jest.mock("vscode");
 jest.mock("child_process");
-import { Logger, ISession, ImperativeConfig } from "@brightside/imperative";
 import * as path from "path";
 import * as os from "os";
-import * as child_process from "child_process";
 import * as vscode from "vscode";
+import * as child_process from "child_process";
+import { Logger, ISession } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
-
-import { ZosmfSession } from "@brightside/core";
+import { ZosmfSession } from "@zowe/cli";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -55,17 +54,12 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
-//    const cliHome = jest.fn().mockReturnValue(homedir);
-//    const icInstance = jest.fn();
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-//    Object.defineProperty(brtimperative, "ImperativeConfig", { value: ImperativeConfig });
-//    Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
-//    Object.defineProperty(icInstance, "cliHome", { value: cliHome });
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({

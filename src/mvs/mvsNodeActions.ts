@@ -13,15 +13,12 @@ import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../ZoweDatasetNode";
 import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
-import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as utils from "../utils";
+import { IZoweTree } from "../api/IZoweTree";
+import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 
-// Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: DatasetTree) {
+export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
        canSelectFiles: true,
        openLabel: "Upload File",

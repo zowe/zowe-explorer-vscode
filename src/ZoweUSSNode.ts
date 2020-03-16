@@ -9,8 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import { Session, IProfileLoaded } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
@@ -41,7 +41,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
     public binaryFiles = {};
     public binary = false;
@@ -104,7 +104,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setProfile(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
         }
         this.etag = etag ? etag : "";
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 
     /**
@@ -160,7 +163,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
         responses.forEach((response) => {
-            // Throws reject if the brightside command does not throw an error but does not succeed
+            // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(
                     localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
@@ -285,6 +288,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
     }
 
     /**
@@ -311,7 +315,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-            await zowe.Delete.ussFile(this.getSession(), nodePath, isRecursive);
+            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(nodePath, isRecursive);
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {

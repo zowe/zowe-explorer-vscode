@@ -17,7 +17,14 @@ export enum IconId {
     "document" = "document",
     "documentBinary" = "documentBinary",
     "downloadedDocument" = "downloadedDocument",
-    "documentBinaryDownloaded" = "documentBinaryDownloaded"
+    "documentBinaryDownloaded" = "documentBinaryDownloaded",
+    "pattern" = "pattern",
+    "session" = "session",
+    "sessionOpen" = "sessionOpen",
+    "sessionFavourite" = "sessionFavourite",
+    "sessionFavouriteOpen" = "sessionFavouriteOpen",
+    "folder" = "folder",
+    "folderOpen" = "folderOpen"
 }
 export enum IconHierarchyType {
     "base" = "base",
@@ -36,7 +43,14 @@ const items = [
     require("./items/document"),
     require("./items/documentBinary"),
     require("./items/downloadedDocument"),
-    require("./items/documentBinaryDownloaded")
+    require("./items/documentBinaryDownloaded"),
+    require("./items/pattern"),
+    require("./items/session"),
+    require("./items/sessionOpen"),
+    require("./items/sessionFavourite"),
+    require("./items/sessionFavouriteOpen"),
+    require("./items/folder"),
+    require("./items/folderOpen")
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {
