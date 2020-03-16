@@ -4,6 +4,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `1.3.1`
 
+- Updated Zowe Icon. Thanks @stepanzharychevbroadcom
 - Address VSC tree expand behavior changes. Thanks @phaumer
 - Refresh all action includes profiles. Thanks @jellypuno
 - Consistent handling of renaming USS files. Thanks @stepanzharychevbroadcom
