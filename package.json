@@ -58,6 +58,13 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "zowe.openRecentMember",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r"
+      }
+    ],
     "commands": [
       {
         "command": "zowe.uss.copyPath",
@@ -1268,6 +1275,7 @@
     "reporters": [
       "default",
       "jest-junit",
+      "jest-stare",
       "jest-html-reporter"
     ],
     "coverageReporters": [

@@ -1607,11 +1607,10 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
 
             // Show document contents in VSCode workspace
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            node.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             if (previewMember === true) {
                 await vscode.window.showTextDocument(document);
             } else {
-                await vscode.window.showTextDocument(document, { preview: false });
+                await vscode.window.showTextDocument(document, {preview: false});
             }
 
             // Add document name to recently-opened files
@@ -1619,7 +1618,6 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
 
             // Reveal node in tree
             datasetProvider.getTreeView().reveal(node, {select: true, focus: true, expand: true});
-            await vscode.window.showTextDocument(document, {preview: false});
         } catch (err) {
             log.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, node.getProfileName(), err.message);
