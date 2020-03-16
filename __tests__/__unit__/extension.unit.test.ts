@@ -251,6 +251,7 @@ describe("Extension Unit Tests", () => {
     const renameDataSetMember = jest.fn();
     const mockRenameFavorite = jest.fn();
     const mockAddRecall = jest.fn();
+    const mockRemoveUSSRecall = jest.fn();
     const mockUpdateFavorites = jest.fn();
     const mockRenameNode = jest.fn();
     const Copy = jest.fn();
@@ -338,6 +339,7 @@ describe("Extension Unit Tests", () => {
             getHistory: mockGetHistory,
             addRecall: mockAddRecall,
             getRecall: mockUSSGetRecall,
+            removeRecall: mockRemoveUSSRecall,
             openItemFromPath: mockUSSOpenItemFromPath,
             getTreeView,
             treeView: new TreeView(),

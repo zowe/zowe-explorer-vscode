@@ -321,11 +321,19 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
-     * Test the getRecall command
+     * Test the addRecall/getRecall commands
      *************************************************************************************************************/
-    it("Tests the getRecall command", async () => {
+    it("Tests the addRecall/getRecall commands", async () => {
         testTree.addRecall("testHistory");
         expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the removeRecall commands
+     *************************************************************************************************************/
+    it("Tests the removeRecall command", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
     });
 
     /*************************************************************************************************************

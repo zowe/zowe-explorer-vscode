@@ -349,6 +349,22 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
+     * Test the addRecall/getRecall commands
+     *************************************************************************************************************/
+    it("Tests the addRecall & getRecall commands", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the removeRecall commands
+     *************************************************************************************************************/
+    it("Tests the removeRecall command", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
+    });
+
+    /*************************************************************************************************************
      * Testing that addUSSFavorite sorting works
      *************************************************************************************************************/
     it("Testing that saveSearch works properly", async () => {
@@ -509,6 +525,20 @@ describe("Unit Tests (Jest)", () => {
 
         expect(testTree.getHistory().includes("[aProfile]: /a/b/c.txt")).toBe(true);
         sessionNode.children.pop();
+    });
+
+    /*************************************************************************************************************
+     * Testing openItemFromPath
+     *************************************************************************************************************/
+    it("Should fail because the child no longer exists", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+
+        const recallSpy = jest.spyOn(testTree, "removeRecall");
+
+        await testTree.openItemFromPath("/d.txt", sessionNode);
+
+        expect(testTree.getHistory().includes("[aProfile]: /d.txt")).toBe(true);
+        expect(recallSpy).toBeCalledWith("[aProfile]: /d.txt");
     });
 
     /*************************************************************************************************************
