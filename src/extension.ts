@@ -634,7 +634,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
 
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
-    let chosenProfile: string;
+    let chosenProfile: string = "";
 
     // Get all profiles
     let profileNamesList = allProfiles.map((profile) => {
@@ -717,7 +717,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
                 "Profile Name was not supplied. Operation Cancelled"));
             return;
         }
-        chosenProfile = profileName;
+        chosenProfile = profileName.trim();
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
             newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
