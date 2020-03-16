@@ -4083,7 +4083,7 @@ describe("Extension Unit Tests", () => {
 
             showInputBox.mockReset();
             renameDataSetMember.mockReset();
-            renameDataSetMember.mockImplementation(() => { throw defaultError; });
+            renameDataSetMember.mockImplementationOnce(() => { throw defaultError; });
 
             const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -4100,6 +4100,57 @@ describe("Extension Unit Tests", () => {
             expect(renameDataSetMember.mock.calls.length).toBe(1);
             expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
             expect(error).toBe(defaultError);
+        });
+        it("Should rename a favorited member and its matching non favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSetMember.mockReset();
+            findNonFavoritedNode.mockReset();
+
+            const favoritedParent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const favoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, favoritedParent, null);
+            favoritedParent.children.push(favoritedChild);
+
+            const nonFavoritedParent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const nonFavoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, nonFavoritedParent, null);
+            nonFavoritedParent.children.push(nonFavoritedChild);
+
+            findNonFavoritedNode.mockImplementationOnce(() => nonFavoritedParent);
+
+            favoritedParent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            favoritedChild.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await extension.renameDataSetMember(favoritedChild, testTree);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(nonFavoritedChild.label).toBe("mem2");
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(favoritedChild.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should rename a non favorited member and its matching favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            findFavoritedNode.mockReset();
+
+            const favoritedParent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const favoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, favoritedParent, null);
+            favoritedParent.children.push(favoritedChild);
+
+            const nonFavoritedParent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const nonFavoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, nonFavoritedParent, null);
+            nonFavoritedParent.children.push(nonFavoritedChild);
+
+            findFavoritedNode.mockImplementationOnce(() => favoritedParent);
+
+            nonFavoritedParent.contextValue = extension.DS_PDS_CONTEXT;
+            nonFavoritedChild.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await extension.renameDataSetMember(nonFavoritedChild, testTree);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(favoritedChild.label).toBe("mem2");
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(nonFavoritedChild.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
         });
     });
     describe("Copying Data Sets", () => {
@@ -4237,6 +4288,7 @@ describe("Extension Unit Tests", () => {
             expect(copyDataSet.mock.calls.length).toBe(0);
         });
         it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
+            findNonFavoritedNode.mockReset();
             jest.spyOn(mvsApi, "getContents").mockImplementation(() => {
                 throw Error("Member not found");
             });
@@ -4250,7 +4302,7 @@ describe("Extension Unit Tests", () => {
             favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
             const nonFavoritedNode = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null,
                 undefined, undefined, profileOne);
-            findNonFavoritedNode.mockImplementation(() => nonFavoritedNode);
+            findNonFavoritedNode.mockImplementationOnce(() => nonFavoritedNode);
 
             showInputBox.mockResolvedValueOnce("mem1");
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
