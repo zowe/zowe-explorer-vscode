@@ -718,38 +718,6 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
-     * Testing openItemFromPath
-     *************************************************************************************************************/
-    it("Should open a DS in the tree", async () => {
-        const sessionNode = testTree.mSessionNodes[1];
-        const node = new ZoweDatasetNode("TEST.PATH", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
-        sessionNode.children.push(node);
-
-        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([node]));
-
-        await testTree.openItemFromPath("[testSess]: TEST.PATH", sessionNode);
-
-        expect(testTree.getHistory().includes("TEST.PATH")).toBe(true);
-        sessionNode.children.pop();
-    });
-
-    it("Should open a member in the tree", async () => {
-        const sessionNode = testTree.mSessionNodes[1];
-        const node = new ZoweDatasetNode("TEST.PATH", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
-        const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, node, null);
-        node.children.push(member);
-        sessionNode.children.push(node);
-
-        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([node]));
-        spyOn(node, "getChildren").and.returnValue(Promise.resolve([member]));
-
-        await testTree.openItemFromPath("[testSess]: TEST.PATH(TESTMEMB)", sessionNode);
-
-        expect(testTree.getHistory().includes("TEST.PATH(TESTMEMB)")).toBe(true);
-        sessionNode.children.pop();
-    });
-
-    /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/
     it("Testing the onDidConfiguration", async () => {
@@ -1019,5 +987,61 @@ describe("DatasetTree Unit Tests", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
         `\n${label}\n` +
         " are valid or this may lead to a lock-out.");
+    });
+});
+
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testTree = new DatasetTree();
+    const sessionNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
+                                            null, session, undefined, undefined, profileOne);
+    sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessionNode.pattern = "test";
+    const pdsNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, pdsNode, null);
+    const dsNode = new ZoweDatasetNode("TEST.DS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    dsNode.contextValue = extension.DS_DS_CONTEXT;
+
+    beforeEach(async () => {
+        pdsNode.children = [member];
+        sessionNode.children = [pdsNode, dsNode];
+        testTree.mSessionNodes = [sessionNode];
+    });
+
+    it("Should open a DS in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([dsNode]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.DS", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.DS")).toBe(true);
+    });
+
+    it("Should open a member in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([pdsNode]));
+        spyOn(pdsNode, "getChildren").and.returnValue(Promise.resolve([member]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.PDS(TESTMEMB)", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.PDS(TESTMEMB)")).toBe(true);
     });
 });
