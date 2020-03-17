@@ -512,36 +512,6 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Testing openItemFromPath
-     *************************************************************************************************************/
-    it("Should open a USS file in the tree", async () => {
-        const sessionNode = testTree.mSessionNodes[1];
-        const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null, "/a/b");
-        sessionNode.children.push(file);
-
-        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([file]));
-
-        await testTree.openItemFromPath("/a/b/c.txt", sessionNode);
-
-        expect(testTree.getHistory().includes("[aProfile]: /a/b/c.txt")).toBe(true);
-        sessionNode.children.pop();
-    });
-
-    /*************************************************************************************************************
-     * Testing openItemFromPath
-     *************************************************************************************************************/
-    it("Should fail because the child no longer exists", async () => {
-        const sessionNode = testTree.mSessionNodes[1];
-
-        const recallSpy = jest.spyOn(testTree, "removeRecall");
-
-        await testTree.openItemFromPath("/d.txt", sessionNode);
-
-        expect(testTree.getHistory().includes("[aProfile]: /d.txt")).toBe(true);
-        expect(recallSpy).toBeCalledWith("[aProfile]: /d.txt");
-    });
-
-    /*************************************************************************************************************
      * USS Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully, theia specific route", async () => {
@@ -910,5 +880,57 @@ describe("Unit Tests (Jest)", () => {
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
+    });
+});
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {
+            user:undefined,
+            password: undefined
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testTree = new USSTree();
+    const sessionNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session,
+        null, false, profileOne.name, undefined);
+    const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null, "/a/b");
+
+    beforeEach(async () => {
+        sessionNode.children = [file];
+        testTree.mSessionNodes = [sessionNode];
+    });
+
+    it("Should open a USS file in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([file]));
+
+        await testTree.openItemFromPath("/a/b/c.txt", sessionNode);
+
+        expect(testTree.getHistory().includes("[aProfile]: /a/b/c.txt")).toBe(true);
+    });
+
+    it("Should fail because the child no longer exists", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([]));
+        const recallSpy = jest.spyOn(testTree, "removeRecall");
+
+        await testTree.openItemFromPath("/d.txt", sessionNode);
+
+        expect(recallSpy).toBeCalledWith("[aProfile]: /d.txt");
     });
 });
