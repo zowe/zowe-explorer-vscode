@@ -9,7 +9,8 @@
 *                                                                                 *
 */
 
-import { TreeItem, QuickPickItem, QuickPick, window } from "vscode";
+import { TreeItem, QuickPickItem, QuickPick, window, TreeItemCollapsibleState } from "vscode";
+import * as extension from "../src/extension";
 import { ISession } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
 import * as nls from "vscode-nls";
@@ -104,6 +105,8 @@ export function getAppName(isTheia: boolean) {
  *************************************************************************************************************/
 export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
     let httpErrCode = null;
+    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the username and password for ") +
+        `\n${label}\n` + localize("errorHandling.invalid.credentials2"," are valid or this may lead to a lock-out.");
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -112,10 +115,20 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
     switch(httpErrCode) {
         // tslint:disable-next-line: no-magic-numbers
         case 401 : {
-            window.showErrorMessage(localize("errorHandling.invalid.credentials", "Invalid Credentials. ") +
-                localize("errorHandling.invalid.credentials2","Please ensure the username and password for ") +
-                `\n${label}\n` +
-                localize("errorHandling.invalid.credentials3", " are valid or this may lead to a lock-out."));
+            if (label.includes("[")) {
+                label = label.substring(0, label.indexOf(" ["));
+            }
+
+            if (extension.ISTHEIA) {
+                window.showErrorMessage(errMsg);
+                Profiles.getInstance().promptCredentials(label.trim());
+            } else {
+                window.showErrorMessage(errMsg, "Check Credentials").then((selection) => {
+                    if (selection) {
+                        Profiles.getInstance().promptCredentials(label.trim(), true);
+                    }
+                });
+            }
             break;
         }
         default: {
@@ -147,4 +160,5 @@ export function refreshTree(sessNode: IZoweTreeNode) {
             }
         }
     }
+    sessNode.collapsibleState = TreeItemCollapsibleState.Collapsed;
 }
