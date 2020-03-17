@@ -1011,7 +1011,7 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
     if (afterDataSetName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
+            node.label = favPrefix ? `${favPrefix}${afterDataSetName}` : afterDataSetName;
 
             if (isFavourite) {
                 const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
@@ -1175,7 +1175,7 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
     if (afterMemberName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = afterMemberName;
+            node.label = profileLabel ? `${profileLabel}${afterMemberName}` : afterMemberName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
