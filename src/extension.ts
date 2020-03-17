@@ -577,59 +577,13 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
-    value = (value.includes("/") && value[0] !== "/") ? `/${value.toUpperCase()}` : value.toUpperCase();
-    const filters = value.substring(1).split(/\.|\//);
-    for (const item of treeItems) {
-        // Parse each quickpick item for its session, node name, or file path
-        const itemText = item.label.toUpperCase();
-        let filePath = "";
-        let nodeName = "";
-        let memberName = "";
-        const sessionName = itemText.includes("]") ? itemText.substring(1, itemText.indexOf("]")) : "";
-        if (itemText.includes("(")) {
-            nodeName = itemText.substring(itemText.indexOf(" ") + 1, itemText.indexOf("("));
-            memberName = itemText.substring(itemText.indexOf("(") + 1, itemText.indexOf(")"));
-        } else if (itemText.includes("/")) {
-            filePath = itemText.substring(itemText.indexOf(" /") + 1);
-        } else if (itemText.includes(" ")) { nodeName = itemText.substring(itemText.indexOf(" ") + 1); }
-
-        // Check if filter matches the quickpick item's path
-        let include = true;
-        if (!value.includes("*")) {
-            if (value.includes(".") || !value.match(/\.|\//)) {
-                // Dataset
-                if (!nodeName || (nodeName && !nodeName.startsWith(value))) { include = false; }
-            } else if (value.includes("/") || !value.match(/\.|\//)) {
-                // USS item
-                if (!filePath || (filePath && !filePath.startsWith(value))) { include = false; }
-            }
-        } else {
-            // Path has a wild card (*)
-            const splitName = nodeName ? nodeName.split(/\.|\//) : filePath.substring(1).split(/\.|\//);
-            for (let i = 0; i < filters.length; ++i) {
-                if (!splitName[i] && i !== filters.length - 1) { include = false; }
-                if (filters[i].includes("*")) {
-                    if (!splitName[i].startsWith(filters[i].replace("*", ""))) {
-                        include = false;
-                    }
-                } else if (!splitName[i].includes(filters[i])) {
-                    if (i !== filters.length - 1 || splitName[i] !== filters[i]) { include = false; }
-                }
-            }
+    value = value.toUpperCase().replace(".", "\.").replace(/\*/g, "(.*)");
+    const regex = new RegExp(value);
+    treeItems.forEach((item) => {
+        if (item.label.toUpperCase().match(regex)) {
+            filteredArray.push(item);
         }
-
-        // If the filter is just a string, simply check if it is included in the path
-        if (filters.length === 1) {
-            filters[0].replace("*", "");
-            include = false;
-            if (nodeName && nodeName.includes(filters[0])) { include = true; }
-            if (filePath && filePath.includes(filters[0])) { include = true; }
-            if (sessionName && sessionName.includes(filters[0])) { include = true; }
-            if (memberName && memberName.includes(filters[0])) { include = true; }
-        }
-
-        if (include && !filteredArray.includes(item)) { filteredArray.push(item); }
-    }
+    });
     return filteredArray;
 }
 

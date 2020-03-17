@@ -2352,7 +2352,6 @@ describe("Extension Unit Tests", () => {
                 new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
                 new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
                 new utils.FilterItem("[sestest]: /test/tree/abc"),
-                new utils.FilterItem("[sestest]: /test/tree/def/abc"),
             ];
 
             let filteredValues = await extension.filterTreeByString("testmemb", qpItems);
@@ -2365,7 +2364,7 @@ describe("Extension Unit Tests", () => {
             expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
             filteredValues = await extension.filterTreeByString("/test/tree/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
-            filteredValues = await extension.filterTreeByString("/*/*/abc", qpItems);
+            filteredValues = await extension.filterTreeByString("*/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
         });
 
