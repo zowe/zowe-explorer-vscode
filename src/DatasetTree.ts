@@ -409,6 +409,31 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.getHistory();
     }
 
+    public async searchInLoadedItems() {
+        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        const loadedItems: IZoweDatasetTreeNode[] = [];
+        const sessions = await this.getChildren();
+
+        // Add all data sets loaded in the tree to an array
+        for (const session of sessions) {
+            if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                if (session.children) {
+                    for (const node of session.children) {
+                        if (node.contextValue !== extension.INFORMATION_CONTEXT) {
+                            loadedItems.push(node);
+                            for (const member of node.children) {
+                                if (member.contextValue !== extension.INFORMATION_CONTEXT) {
+                                    loadedItems.push(member);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return loadedItems;
+    }
+
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
