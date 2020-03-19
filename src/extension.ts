@@ -344,6 +344,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     if (datasetProvider || ussFileProvider) {
         vscode.commands.registerCommand("zowe.openRecentMember", () => openRecentMemberPrompt(datasetProvider, ussFileProvider));
+        vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () => searchInAllLoadedItems(datasetProvider, ussFileProvider));
     }
 
     // return the Extension's API to other extensions that want to register their APIs.
@@ -574,6 +575,131 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
     }
 }
 
+export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+    const filteredArray = [];
+    value = value.toUpperCase().replace(".", "\.").replace(/\*/g, "(.*)");
+    const regex = new RegExp(value);
+    treeItems.forEach((item) => {
+        if (item.label.toUpperCase().match(regex)) {
+            filteredArray.push(item);
+        }
+    });
+    return filteredArray;
+}
+
+/**
+ * Search for matching items loaded in data set or USS tree
+ *
+ */
+export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDatasetTreeNode>, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
+    let pattern: string;
+    const items: IZoweNodeType[] = [];
+    const qpItems = [];
+    const quickpick = vscode.window.createQuickPick();
+    quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
+    quickpick.ignoreFocusOut = true;
+    quickpick.onDidChangeValue(async (value) => {
+        if (value) {
+            quickpick.items = filterTreeByString(value, qpItems);
+        } else { quickpick.items = [...qpItems]; }
+    });
+
+    // Get loaded items from Tree Providers
+    if (datasetProvider) {
+        const newItems = await datasetProvider.searchInLoadedItems();
+        items.push(...newItems);
+    }
+    if (ussFileProvider) {
+        const newItems = await ussFileProvider.searchInLoadedItems();
+        items.push(...newItems);
+    }
+
+    if (items.length === 0) {
+        vscode.window.showInformationMessage(localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree."));
+        return;
+    }
+
+    let qpItem: vscode.QuickPickItem;
+    for (const item of items) {
+        if (item.constructor.name === "ZoweDatasetNode") {
+            if (item.contextValue === DS_MEMBER_CONTEXT) {
+                qpItem = new utils.FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`, "Data Set Member");
+            } else {
+                qpItem = new utils.FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
+            }
+            qpItems.push(qpItem);
+        } else if (item.constructor.name === "ZoweUSSNode") {
+            const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label.trim()}`;
+            qpItem = new utils.FilterItem(filterItem, "USS");
+            qpItems.push(qpItem);
+        }
+    }
+    quickpick.items = [...qpItems];
+
+    quickpick.show();
+    const choice = await utils.resolveQuickPickHelper(quickpick);
+    if (!choice) {
+        vscode.window.showInformationMessage(localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern."));
+        return;
+    } else { pattern = choice.label; }
+    quickpick.dispose();
+
+    if (pattern) {
+        // Parse pattern for item name
+        let filePath: string;
+        let nodeName: string;
+        let memberName: string;
+        const sessionName = pattern.substring(1, pattern.indexOf("]"));
+        if (pattern.indexOf("(") !== -1) {
+            nodeName = pattern.substring(pattern.indexOf(" ") + 1, pattern.indexOf("("));
+            memberName = pattern.substring(pattern.indexOf("(") + 1, pattern.indexOf(")"));
+        } else if (pattern.indexOf("/") !== -1) {
+            filePath = pattern.substring(pattern.indexOf(" ") + 1);
+        } else { nodeName = pattern.substring(pattern.indexOf(" ") + 1); }
+
+        // Find & reveal nodes in tree
+        if (pattern.indexOf("/") !== -1) {
+            // USS nodes
+            const node = items.filter((item) => item.fullPath.trim() === filePath)[0];
+            ussFileProvider.setItem(ussFileProvider.getTreeView(), node);
+
+            if (node.contextValue !== USS_DIR_CONTEXT) {
+                // If selected item is file, open it in workspace
+                ussFileProvider.addHistory(node.fullPath);
+                const ussNode: IZoweUSSTreeNode = node;
+                ussNode.openUSS(false, true, ussFileProvider);
+            }
+        } else {
+            // Data set nodes
+            const sessions = await datasetProvider.getChildren();
+            const sessionNode = sessions.filter((session) => session.label.trim() === sessionName)[0];
+            let children = await datasetProvider.getChildren(sessionNode);
+            const node = children.filter((child) => child.label.trim() === nodeName)[0];
+
+            if (memberName) {
+                // Members
+                children = await datasetProvider.getChildren(node);
+                const member = children.filter((child) => child.label.trim() === memberName)[0];
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                await datasetProvider.getTreeView().reveal(member, {select: true, focus: true, expand: false});
+
+                // Open in workspace
+                datasetProvider.addHistory(`${nodeName}(${memberName})`);
+                openPS(member, true, datasetProvider);
+            } else {
+                // PDS & SDS
+                await datasetProvider.getTreeView().reveal(node, {select: true, focus: true, expand: false});
+
+                // If selected node was SDS, open it in workspace
+                if (node.contextValue === DS_DS_CONTEXT) {
+                    datasetProvider.addHistory(nodeName);
+                    openPS(node, true, datasetProvider);
+                }
+            }
+        }
+    }
+}
+
 /**
  * Submit the selected dataset member as a Job.
  *
@@ -637,7 +763,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
 
     const allProfiles = (await Profiles.getInstance()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
-    let chosenProfile: string;
+    let chosenProfile: string = "";
 
     // Get all profiles
     let profileNamesList = allProfiles.map((profile) => {
@@ -720,7 +846,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
                 "Profile Name was not supplied. Operation Cancelled"));
             return;
         }
-        chosenProfile = profileName;
+        chosenProfile = profileName.trim();
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
             newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
@@ -974,7 +1100,7 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
  */
 export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     let beforeDataSetName = node.label.trim();
-    let favPrefix;
+    let favPrefix = "";
     let isFavourite;
 
     if (node.contextValue.includes(FAV_SUFFIX)) {
@@ -990,31 +1116,31 @@ export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider:
     if (afterDataSetName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = favPrefix ? `${favPrefix}${afterDataSetName}` : afterDataSetName;
+            node.label = `${favPrefix}${afterDataSetName}`;
+
+            if (isFavourite) {
+                const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
+                datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
+            } else {
+                const temp = node.label;
+                node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
+                datasetProvider.renameFavorite(node, afterDataSetName);
+                node.label = temp;
+            }
+            datasetProvider.refreshElement(node);
+            datasetProvider.updateFavorites();
+
+            if (fs.existsSync(beforeFullPath)) {
+              fs.unlinkSync(beforeFullPath);
+            }
+
+            if (closedOpenedInstance) {
+                vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+            }
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
-        }
-        if (isFavourite) {
-            const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-            datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
-        } else {
-            const temp = node.label;
-            node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-            datasetProvider.renameFavorite(node, afterDataSetName);
-            node.label = temp;
-        }
-
-        datasetProvider.refreshElement(node);
-        datasetProvider.updateFavorites();
-
-        if (fs.existsSync(beforeFullPath)) {
-            fs.unlinkSync(beforeFullPath);
-        }
-
-        if (closedOpenedInstance) {
-            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
         }
     }
 }
@@ -1098,9 +1224,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     if (beforeProfileName === profileName) {
         if (memberName) {
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`, {
-                    file: path.join(ZOWE_TMP_FOLDER, getProfile(node), `${dataSetName}(${memberName})`)
-                });
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`);
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
             } catch (err) {
                 if (!err.message.includes("Member not found")) {
@@ -1156,32 +1280,27 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
     if (afterMemberName) {
         try {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = profileLabel ? `${profileLabel}${afterMemberName}` : afterMemberName;
+            node.label = afterMemberName;
         } catch (err) {
             log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
             await utils.errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
             throw err;
         }
+        let otherParent;
+
         if (node.getParent().contextValue.includes(FAV_SUFFIX)) {
-            const nonFavoritedParent = datasetProvider.findNonFavoritedNode(node.getParent());
-            if (nonFavoritedParent) {
-                const nonFavoritedMember = nonFavoritedParent.children.find((child) => child.label === beforeMemberName);
-                if (nonFavoritedMember) {
-                    nonFavoritedMember.label = afterMemberName;
-                    datasetProvider.refreshElement(nonFavoritedParent);
-                }
-            }
+            otherParent = datasetProvider.findNonFavoritedNode(node.getParent());
         } else {
-            const favoritedParent = datasetProvider.findFavoritedNode(node.getParent());
-            if (favoritedParent) {
-                const favoritedMember = favoritedParent.children.find((child) => child.label === beforeMemberName);
-                if (favoritedMember) {
-                    favoritedMember.label = afterMemberName;
-                    datasetProvider.refreshElement(favoritedParent);
-                }
+            otherParent = datasetProvider.findFavoritedNode(node.getParent());
+        }
+        if (otherParent) {
+            const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
+            if (otherMember) {
+                otherMember.label = afterMemberName;
+                datasetProvider.refreshElement(otherMember);
             }
         }
-        datasetProvider.refreshElement(node.getParent());
+        datasetProvider.refreshElement(node);
 
         if (fs.existsSync(beforeFullPath)) {
             fs.unlinkSync(beforeFullPath);

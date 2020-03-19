@@ -1,5 +1,6 @@
 {
     "Favorites": "Favorites",
+    "enterPattern.log.debug.prompt": "Prompting the user to choose a member from the filtered list",
     "filterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
     "ussTree.error": "Error encountered in ",
     "searchHistory.options.prompt": "Select a filter",

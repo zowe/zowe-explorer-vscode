@@ -63,6 +63,11 @@
         "command": "zowe.openRecentMember",
         "key": "ctrl+alt+r",
         "mac": "cmd+alt+r"
+      },
+      {
+        "command": "zowe.searchInAllLoadedItems",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
       }
     ],
     "commands": [

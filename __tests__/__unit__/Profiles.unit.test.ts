@@ -15,7 +15,7 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, ISession } from "@zowe/imperative";
+import { Logger, ISession, CliProfileManager } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
 
@@ -130,6 +130,9 @@ describe("Profile class unit tests", () => {
                             return {profile: {}};
                         }),
                         validateAndParseUrl: jest.fn(()=>{
+                            return {};
+                        }),
+                        updateProfile: jest.fn(()=>{
                             return {};
                         }),
                     };
@@ -275,11 +278,28 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res[0]).toBe("fake");
-            expect(res[1]).toBe("fake");
-            expect(res[2]).toBe("fake");
+            expect(res).toEqual(["fake", "fake", "fake"]);
             (profiles.loadNamedProfile as any).mockReset();
           });
+
+        it("should rePrompt credentials", async () => {
+        const promptProfile = {name: "profile1", profile: {user: "oldfake", password: "oldfake"}};
+        profiles.loadNamedProfile = jest.fn(() => {
+            return promptProfile as any;
+        });
+
+        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+            value: jest.fn(() => {
+                return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
+            })
+        });
+
+        showInputBox.mockResolvedValueOnce("fake");
+        showInputBox.mockResolvedValueOnce("fake");
+        const res = await profiles.promptCredentials(promptProfile.name, true);
+        expect(res).toEqual(["fake", "fake", "fake"]);
+        (profiles.loadNamedProfile as any).mockReset();
+        });
 
         it("should prompt credentials: username invalid", async () => {
             const promptProfile = {name: "profile1", profile: {user: undefined, password: undefined}};

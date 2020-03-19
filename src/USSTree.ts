@@ -242,6 +242,38 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     /**
+     * Searches the loaded USS tree for items whose name contains a search string
+     *
+     */
+    public async searchInLoadedItems() {
+        if (this.log) {
+            this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        }
+        const loadedNodes: IZoweUSSTreeNode[] = [];
+        const sessions = await this.getChildren();
+
+        // Add all data sets loaded in the tree to an array
+        for (const session of sessions) {
+                if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                const nodes = await session.getChildren();
+
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                    const children = nodeToCheck.children;
+                    if (children.length !== 0) {
+                        for (const child of children) { await checkForChildren(child); }
+                    }
+                    loadedNodes.push(nodeToCheck);
+                };
+
+                if (nodes) {
+                    for (const node of nodes) { await checkForChildren(node); }
+                }
+            }
+        }
+        return loadedNodes;
+    }
+
+    /**
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
      * @param {IZoweUSSTreeNode} node - The session node

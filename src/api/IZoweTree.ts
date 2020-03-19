@@ -145,6 +145,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     deleteSession(node: IZoweNodeType): any;
     /**
+     * Lets the user open a dataset by filtering the currently-loaded list
+     */
+    searchInLoadedItems?(): Promise<IZoweUSSTreeNode[]>;
+    /**
      * Retrieves the vscode tree container
      */
     getTreeView(): vscode.TreeView<IZoweNodeType>;
