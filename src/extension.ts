@@ -1248,7 +1248,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     if (beforeProfileName === profileName) {
         if (memberName) {
             const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(`${dataSetName}`);
-            if (responseItem.apiResponse.items.some( (singleItem)  => singleItem.member === memberName.toUpperCase())) {
+            if (responseItem.apiResponse.items.some( (singleItem) => singleItem.member === memberName.toUpperCase())) {
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
             }
         }
