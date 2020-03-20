@@ -302,7 +302,9 @@ describe("Extension Unit Tests", () => {
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
+            setItem: jest.fn(),
             getTreeView,
+            searchInLoadedItems: jest.fn(),
             removeFavorite: mockRemoveFavorite,
             enterPattern: mockPattern,
             initializeFavorites: mockInitialize,
@@ -323,6 +325,8 @@ describe("Extension Unit Tests", () => {
             refresh: mockUSSRefresh,
             addHistory: mockAddHistory,
             getHistory: mockGetHistory,
+            searchInLoadedItems: jest.fn(),
+            setItem: jest.fn(),
             getTreeView,
             treeView: new TreeView(),
             refreshElement: mockUSSRefreshElement,
@@ -644,7 +648,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(66);
+        expect(registerCommand.mock.calls.length).toBe(67);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -718,7 +722,8 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.addFavorite",
             "zowe.jobs.removeFavorite",
             "zowe.jobs.saveSearch",
-            "zowe.jobs.removeSearchFavorite"
+            "zowe.jobs.removeSearchFavorite",
+            "zowe.searchInAllLoadedItems",
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -2338,6 +2343,222 @@ describe("Extension Unit Tests", () => {
             expect(executeCommand.mock.calls.length).toBe(1);
             expect(node.downloaded).toBe(false);
         });
+    });
+
+    describe("Add searchForLoadedItems Tests", () => {
+        it("Testing that filterTreeByString returns the correct array", async () => {
+            const qpItems = [
+                new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
+                new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
+                new utils.FilterItem("[sestest]: /test/tree/abc"),
+            ];
+
+            let filteredValues = await extension.filterTreeByString("testmemb", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[1]]);
+            filteredValues = await extension.filterTreeByString("sestest", qpItems);
+            expect(filteredValues).toStrictEqual(qpItems);
+            filteredValues = await extension.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0]]);
+            filteredValues = await extension.filterTreeByString("HLQ.*.STUFF*", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
+            filteredValues = await extension.filterTreeByString("/test/tree/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+            filteredValues = await extension.filterTreeByString("*/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+        });
+
+        it("Testing that searchForLoadedItems works for a PDS", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+            mockAddHistory.mockReset();
+
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_PDS_CONTEXT);
+            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            testTree.getChildren.mockReturnValue([sessNode]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testNode]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
+                if (arg) {
+                    return Promise.resolve([testNode]);
+                } else {
+                    return Promise.resolve([sessNode]);
+                }
+            });
+
+            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(() => {
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(() => {
+                    return {};
+                }),
+                dispose: jest.fn(() => {
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+        });
+
+        it("Testing that searchForLoadedItems works for a member", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+            mockAddHistory.mockReset();
+
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_DS_CONTEXT);
+            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            const testMember = new ZoweDatasetNode("TESTMEMB", null, testNode, session, extension.DS_MEMBER_CONTEXT);
+            testMember.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            testNode.children.push(testMember);
+            testTree.getChildren.mockReturnValue([sessNode]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testMember]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
+                if (arg === testNode) {
+                    return Promise.resolve([testMember]);
+                } else if (arg) {
+                    return Promise.resolve([testNode]);
+                } else {
+                    return Promise.resolve([sessNode]);
+                }
+            });
+            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF(TESTMEMB)");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(() => {
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(() => {
+                    return {};
+                }),
+                dispose: jest.fn(() => {
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+        });
+
+        it("Testing that searchForLoadedItems works for a USS folder", async () => {
+            showQuickPick.mockReset();
+            testUSSTree.getChildren.mockReset();
+
+            const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, "/");
+            testUSSTree.getChildren.mockReturnValue([testUSSTree.mSessionNodes[0]]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([folder]));
+            jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "sestest");
+            jest.spyOn(testUSSTree.mSessionNodes[0], "getChildren").mockImplementationOnce(() => Promise.resolve([folder]));
+            const qpItem = new utils.FilterItem("[sestest]: /folder");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const openNode = jest.spyOn(folder, "openUSS");
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(openNode).toHaveBeenCalledTimes(0);
+        });
+
+        it("Testing that searchForLoadedItems works for a USS file", async () => {
+            showQuickPick.mockReset();
+            testUSSTree.getChildren.mockReset();
+
+            const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, testUSSTree.mSessionNodes[0], null, "/");
+            const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+            testUSSTree.getChildren.mockReturnValue([testUSSTree.mSessionNodes[0]]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([file]));
+            jest.spyOn(testUSSTree.mSessionNodes[0], "getChildren").mockImplementationOnce(() => Promise.resolve([folder]));
+            jest.spyOn(folder, "getChildren").mockImplementationOnce(() => Promise.resolve([file]));
+            const qpItem = new utils.FilterItem("[sestest]: /folder/file");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const openNode = jest.spyOn(file, "openUSS");
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledWith("/folder/file");
+            expect(openNode).toHaveBeenCalledWith(false, true, testUSSTree);
+        });
+
+        it("Testing that searchForLoadedItems fails when no pattern is entered", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(null));
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: null,
+                ignoreFocusOut: true,
+                items: null,
+                value: null,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+            mockAddHistory.mockReset();
+        });
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showInformationMessage.mockReset();
     });
 
     describe("Add USS Session Unit Test", () => {

@@ -49,9 +49,9 @@ export async function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements QuickPickItem {
-    constructor(private text: string) { }
+    constructor(private text: string, private desc?: string) { }
     get label(): string { return this.text; }
-    get description(): string { return ""; }
+    get description(): string { if (this.desc) { return this.desc; } else { return ""; } }
     get alwaysShow(): boolean { return false; }
 }
 
