@@ -142,11 +142,11 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
-            originalNode.rename(newNamePath);
+            await originalNode.rename(newNamePath);
 
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
-                oldFavorite.rename(newNamePath);
+                await oldFavorite.rename(newNamePath);
                 ussFileProvider.addFavorite(oldFavorite);
             }
         } catch (err) {
@@ -200,7 +200,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
         utils.errorHandling(e, node.mProfileName, e.message);
     }

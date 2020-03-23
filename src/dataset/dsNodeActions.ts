@@ -10,13 +10,11 @@
 */
 
 import * as utils from "../utils";
-import * as nls from "vscode-nls";
-
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
+
 /**
  * Refreshes treeView
  *

@@ -22,7 +22,6 @@ import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
-import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
@@ -4487,11 +4486,14 @@ describe("Extension Unit Tests", () => {
                 success: true,
                 commandResponse: "",
                 apiResponse: {
-                    items: []
+                    items: [
+                        {member: "MEM1"},
+                        {member: "MEM2"}
+                    ]
                 }
             };
             let error;
-            jest.spyOn(mvsApi, "getContents").mockImplementationOnce(async () => testResponse);
+            jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
@@ -4510,9 +4512,14 @@ describe("Extension Unit Tests", () => {
         });
         it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
             findNonFavoritedNode.mockReset();
-            jest.spyOn(mvsApi, "getContents").mockImplementation(() => {
-                throw Error("Member not found");
-            });
+            const testResponse: zowe.IZosFilesResponse = {
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: []
+                }
+            };
+            jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
             const copySpy = jest.spyOn(mvsApi, "copyDataSetMember");
 
             dataSetGet.mockImplementation(() => {
