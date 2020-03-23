@@ -10,17 +10,11 @@
 */
 
 import * as utils from "../utils";
-import * as nls from "vscode-nls";
-
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
-import { ISession, Logger } from "@zowe/imperative";
-import { DatasetTree } from "../DatasetTree";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
-// tslint:disable-next-line: prefer-const
-let log: Logger;
+
 /**
  * Refreshes treeView
  *

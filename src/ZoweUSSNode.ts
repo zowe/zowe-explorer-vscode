@@ -278,14 +278,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param oldReference string
      * @param revision string
      */
-    public rename(newFullPath: string) {
+    public async rename(newFullPath: string) {
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        if (this.isFolder) {
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        } else {
+            await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        }
     }
 
     /**
@@ -298,8 +302,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
-        // handle zosmf api issue with file paths
-        const nodePath = this.fullPath.startsWith("/") ? this.fullPath.substring(1) : this.fullPath;
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
             ignoreFocusOut: true,
@@ -312,7 +314,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(nodePath, isRecursive);
+            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(this.fullPath, isRecursive);
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {
@@ -373,6 +375,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
     }
+
+    /**
+     * Getter for folder type
+     */
+    public get isFolder(): boolean {
+        return [extension.USS_DIR_CONTEXT, extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+    }
+
     /**
      * Downloads and displays a file in a text editor view
      *
@@ -497,6 +507,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
+                    binary: this.binary,
                     returnEtag: true
                 });
                 this.setEtag(response.apiResponse.etag);
