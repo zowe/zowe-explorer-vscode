@@ -265,7 +265,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                                                                             ussActions.createUSSNodeDialog(node, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node));
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
-        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => node.saveSearch(ussFileProvider));
+        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             ussFileProvider.onDidChangeConfiguration(e);
@@ -1247,13 +1247,9 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
 
     if (beforeProfileName === profileName) {
         if (memberName) {
-            try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(`${dataSetName}(${memberName})`);
+            const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(`${dataSetName}`);
+            if (responseItem.apiResponse.items.some( (singleItem) => singleItem.member === memberName.toUpperCase())) {
                 throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
-            } catch (err) {
-                if (!err.message.includes("Member not found")) {
-                    throw err;
-                }
             }
         }
         await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
