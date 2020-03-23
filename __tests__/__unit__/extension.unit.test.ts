@@ -27,6 +27,7 @@ import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../../src/generators/icons";
+import * as workspaceUtils from "../../src/utils/workspace";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -253,6 +254,7 @@ describe("Extension Unit Tests", () => {
     const getProfileName = jest.fn();
     const HMigrate = jest.fn();
     const hMigrateDataSet = jest.fn();
+    const closeOpenedTextFile = jest.fn();
     let mockClipboardData: string;
     const fileResponse: zowe.IZosFilesResponse = {
         success: true,
@@ -301,7 +303,9 @@ describe("Extension Unit Tests", () => {
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             getChildren: mockGetChildren,
+            setItem: jest.fn(),
             getTreeView,
+            searchInLoadedItems: jest.fn(),
             removeFavorite: mockRemoveFavorite,
             enterPattern: mockPattern,
             initializeFavorites: mockInitialize,
@@ -322,6 +326,8 @@ describe("Extension Unit Tests", () => {
             refresh: mockUSSRefresh,
             addHistory: mockAddHistory,
             getHistory: mockGetHistory,
+            searchInLoadedItems: jest.fn(),
+            setItem: jest.fn(),
             getTreeView,
             treeView: new TreeView(),
             refreshElement: mockUSSRefreshElement,
@@ -460,6 +466,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { get: cliHome });
+    Object.defineProperty(workspaceUtils, "closeOpenedTextFile", {value: closeOpenedTextFile});
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
@@ -642,7 +649,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(66);
+        expect(registerCommand.mock.calls.length).toBe(67);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -716,7 +723,8 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.addFavorite",
             "zowe.jobs.removeFavorite",
             "zowe.jobs.saveSearch",
-            "zowe.jobs.removeSearchFavorite"
+            "zowe.jobs.removeSearchFavorite",
+            "zowe.searchInAllLoadedItems",
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -2336,6 +2344,222 @@ describe("Extension Unit Tests", () => {
             expect(executeCommand.mock.calls.length).toBe(1);
             expect(node.downloaded).toBe(false);
         });
+    });
+
+    describe("Add searchForLoadedItems Tests", () => {
+        it("Testing that filterTreeByString returns the correct array", async () => {
+            const qpItems = [
+                new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
+                new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
+                new utils.FilterItem("[sestest]: /test/tree/abc"),
+            ];
+
+            let filteredValues = await extension.filterTreeByString("testmemb", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[1]]);
+            filteredValues = await extension.filterTreeByString("sestest", qpItems);
+            expect(filteredValues).toStrictEqual(qpItems);
+            filteredValues = await extension.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0]]);
+            filteredValues = await extension.filterTreeByString("HLQ.*.STUFF*", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
+            filteredValues = await extension.filterTreeByString("/test/tree/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+            filteredValues = await extension.filterTreeByString("*/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+        });
+
+        it("Testing that searchForLoadedItems works for a PDS", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+            mockAddHistory.mockReset();
+
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_PDS_CONTEXT);
+            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            testTree.getChildren.mockReturnValue([sessNode]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testNode]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
+                if (arg) {
+                    return Promise.resolve([testNode]);
+                } else {
+                    return Promise.resolve([sessNode]);
+                }
+            });
+
+            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(() => {
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(() => {
+                    return {};
+                }),
+                dispose: jest.fn(() => {
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+        });
+
+        it("Testing that searchForLoadedItems works for a member", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+            mockAddHistory.mockReset();
+
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_DS_CONTEXT);
+            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            const testMember = new ZoweDatasetNode("TESTMEMB", null, testNode, session, extension.DS_MEMBER_CONTEXT);
+            testMember.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            testNode.children.push(testMember);
+            testTree.getChildren.mockReturnValue([sessNode]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testMember]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
+                if (arg === testNode) {
+                    return Promise.resolve([testMember]);
+                } else if (arg) {
+                    return Promise.resolve([testNode]);
+                } else {
+                    return Promise.resolve([sessNode]);
+                }
+            });
+            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF(TESTMEMB)");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(() => {
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(() => {
+                    return {};
+                }),
+                dispose: jest.fn(() => {
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+        });
+
+        it("Testing that searchForLoadedItems works for a USS folder", async () => {
+            showQuickPick.mockReset();
+            testUSSTree.getChildren.mockReset();
+
+            const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, "/");
+            testUSSTree.getChildren.mockReturnValue([testUSSTree.mSessionNodes[0]]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([folder]));
+            jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "sestest");
+            jest.spyOn(testUSSTree.mSessionNodes[0], "getChildren").mockImplementationOnce(() => Promise.resolve([folder]));
+            const qpItem = new utils.FilterItem("[sestest]: /folder");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const openNode = jest.spyOn(folder, "openUSS");
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(openNode).toHaveBeenCalledTimes(0);
+        });
+
+        it("Testing that searchForLoadedItems works for a USS file", async () => {
+            showQuickPick.mockReset();
+            testUSSTree.getChildren.mockReset();
+
+            const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, testUSSTree.mSessionNodes[0], null, "/");
+            const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+            testUSSTree.getChildren.mockReturnValue([testUSSTree.mSessionNodes[0]]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([file]));
+            jest.spyOn(testUSSTree.mSessionNodes[0], "getChildren").mockImplementationOnce(() => Promise.resolve([folder]));
+            jest.spyOn(folder, "getChildren").mockImplementationOnce(() => Promise.resolve([file]));
+            const qpItem = new utils.FilterItem("[sestest]: /folder/file");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const openNode = jest.spyOn(file, "openUSS");
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledWith("/folder/file");
+            expect(openNode).toHaveBeenCalledWith(false, true, testUSSTree);
+        });
+
+        it("Testing that searchForLoadedItems fails when no pattern is entered", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(null));
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: null,
+                ignoreFocusOut: true,
+                items: null,
+                value: null,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+            mockAddHistory.mockReset();
+        });
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showInformationMessage.mockReset();
     });
 
     describe("Add USS Session Unit Test", () => {
@@ -3998,6 +4222,158 @@ describe("Extension Unit Tests", () => {
             "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
     });
 
+    describe("Renaming Data Sets", () => {
+        it("Should rename the node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const child = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            closeOpenedTextFile.mockResolvedValueOnce(true);
+            await extension.renameDataSet(child, testTree);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        });
+        it("Should rename a favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            await extension.renameDataSet(child, testTree);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        });
+        it("Should throw an error if zowe.Rename.dataSet throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSet.mockImplementation(() => { throw defaultError; });
+
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            try {
+                await extension.renameDataSet(child, testTree);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+            expect(error).toBe(defaultError);
+        });
+        it("Should rename the member", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await extension.renameDataSetMember(child, testTree);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should rename a favorited member", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const parent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
+
+            parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            child.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await extension.renameDataSetMember(child, testTree);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should throw an error if zowe.Rename.dataSetMember throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+            renameDataSetMember.mockImplementationOnce(() => { throw defaultError; });
+
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, null);
+
+            child.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            try {
+                await extension.renameDataSetMember(child, testTree);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+            expect(error).toBe(defaultError);
+        });
+        it("Should rename a favorited member and its matching non favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSetMember.mockReset();
+            findNonFavoritedNode.mockReset();
+
+            const favoritedParent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const favoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, favoritedParent, null);
+            favoritedParent.children.push(favoritedChild);
+
+            const nonFavoritedParent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const nonFavoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, nonFavoritedParent, null);
+            nonFavoritedParent.children.push(nonFavoritedChild);
+
+            findNonFavoritedNode.mockImplementationOnce(() => nonFavoritedParent);
+
+            favoritedParent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            favoritedChild.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await extension.renameDataSetMember(favoritedChild, testTree);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(nonFavoritedChild.label).toBe("mem2");
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(favoritedChild.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should rename a non favorited member and its matching favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            findFavoritedNode.mockReset();
+
+            const favoritedParent = new ZoweDatasetNode("[sesstest]: HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const favoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, favoritedParent, null);
+            favoritedParent.children.push(favoritedChild);
+
+            const nonFavoritedParent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
+            const nonFavoritedChild = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, nonFavoritedParent, null);
+            nonFavoritedParent.children.push(nonFavoritedChild);
+
+            findFavoritedNode.mockImplementationOnce(() => favoritedParent);
+
+            nonFavoritedParent.contextValue = extension.DS_PDS_CONTEXT;
+            nonFavoritedChild.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await extension.renameDataSetMember(nonFavoritedChild, testTree);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(favoritedChild.label).toBe("mem2");
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(nonFavoritedChild.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+    });
     describe("Copying Data Sets", () => {
         it("Should copy the label of a node to the clipboard", async () => {
             renameDataSet.mockReset();
@@ -4112,11 +4488,14 @@ describe("Extension Unit Tests", () => {
                 success: true,
                 commandResponse: "",
                 apiResponse: {
-                    items: []
+                    items: [
+                        {member: "MEM1"},
+                        {member: "MEM2"}
+                    ]
                 }
             };
             let error;
-            jest.spyOn(mvsApi, "getContents").mockImplementationOnce(async () => testResponse);
+            jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = extension.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
@@ -4134,9 +4513,15 @@ describe("Extension Unit Tests", () => {
             expect(copyDataSet.mock.calls.length).toBe(0);
         });
         it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
-            jest.spyOn(mvsApi, "getContents").mockImplementation(() => {
-                throw Error("Member not found");
-            });
+            findNonFavoritedNode.mockReset();
+            const testResponse: zowe.IZosFilesResponse = {
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: []
+                }
+            };
+            jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
             const copySpy = jest.spyOn(mvsApi, "copyDataSetMember");
 
             dataSetGet.mockImplementation(() => {
@@ -4147,7 +4532,7 @@ describe("Extension Unit Tests", () => {
             favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
             const nonFavoritedNode = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null,
                 undefined, undefined, profileOne);
-            findNonFavoritedNode.mockImplementation(() => nonFavoritedNode);
+            findNonFavoritedNode.mockImplementationOnce(() => nonFavoritedNode);
 
             showInputBox.mockResolvedValueOnce("mem1");
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));

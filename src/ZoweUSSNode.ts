@@ -38,7 +38,7 @@ import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatu
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public fullPath = "";
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
+    public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
     public binaryFiles = {};
     public binary = false;
@@ -497,6 +497,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
+                    binary: this.binary,
                     returnEtag: true
                 });
                 this.setEtag(response.apiResponse.etag);
