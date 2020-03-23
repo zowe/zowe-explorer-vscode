@@ -28,6 +28,7 @@ import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
 import { Profiles } from "../../src/Profiles";
 import * as extension from "../../src/extension";
+import * as fs from "fs";
 
 describe("DatasetTree Unit Tests", () => {
 
@@ -1064,6 +1065,9 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     describe("Renaming Data Sets", () => {
+        const existsSync = jest.fn();
+        Object.defineProperty(fs, "existsSync", {value: existsSync});
+        extension.defineGlobals(undefined);
         const sessionRename = new Session({
             user: "fake",
             password: "fake",
