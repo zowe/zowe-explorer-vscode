@@ -113,6 +113,22 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
     await ussFileProvider.refresh();
 }
 
+/**
+ * Marks file as deleted from disk
+ *
+ * @param {ZoweUSSNode} node
+ */
+export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
+        // tslint:disable-next-line: no-empty
+    catch (err) {
+    }
+}
+
 export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     const fileOpenOptions = {
         canSelectFiles: true,

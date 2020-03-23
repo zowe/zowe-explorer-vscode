@@ -22,7 +22,6 @@ import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as profileLoader from "../../src/Profiles";
-import * as ussNodeActions from "../../src/uss/ussNodeActions";
 import { Job } from "../../src/ZoweJobNode";
 import * as utils from "../../src/utils";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
