@@ -27,7 +27,7 @@ export class ZoweTreeProvider {
     public createOwner = new OwnerFilterDescriptor();
 
     protected mHistory: PersistentFilters;
-    protected log: Logger;
+    protected log: Logger = Logger.getAppLogger();
     protected validProfile: number = -1;
 
     constructor(protected persistenceSchema: string, public mFavoriteSession: IZoweTreeNode) {

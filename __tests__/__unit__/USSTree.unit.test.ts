@@ -38,6 +38,24 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
+    function getUSSNode() {
+        const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+        const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
+        ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
+        ussNode1.fullPath = "/u/myuser";
+        return ussNode1;
+    }
+
+    function getFavoriteUSSNode() {
+        const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+        const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+        mParent.contextValue = extension.FAVORITE_CONTEXT;
+        ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+        ussNodeF.fullPath = "/u/myuser/usstest";
+        ussNodeF.tooltip = "/u/myuser/usstest";
+        return ussNodeF;
+    }
+
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     getConfiguration.mockReturnValue({
@@ -69,7 +87,7 @@ describe("Unit Tests (Jest)", () => {
     };
     withProgress.mockReturnValue(testResponse);
 
-    // Filter prompt
+    const showErrorMessage = jest.fn();
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
     const createQuickPick = jest.fn();
@@ -77,10 +95,15 @@ describe("Unit Tests (Jest)", () => {
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
+    const Utilities = jest.fn();
+    const renameUSSFile = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+    Object.defineProperty(zowe, "Utilities", { value: Utilities });
+    Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
     Object.defineProperty(filters, "getFilters", { value: getFilters });
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
@@ -884,5 +907,75 @@ describe("Unit Tests (Jest)", () => {
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
+    });
+    describe("renameUSSNode", () => {
+        const executeCommand = jest.fn();
+        Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
+        const testTree = new USSTree();
+        const refreshSpy = jest.spyOn(testTree, "refreshElement");
+        const removeFavorite = jest.spyOn(testTree, "removeFavorite");
+        const addFavorite = jest.spyOn(testTree, "addFavorite");
+        const resetMocks = () => {
+            executeCommand.mockReset();
+            showErrorMessage.mockReset();
+            showInputBox.mockReset();
+            renameUSSFile.mockReset();
+        };
+        const resetNode = (node: ZoweUSSNode) => {
+          node.label = "";
+          node.shortLabel = "";
+        };
+        const ussNode = getUSSNode();
+        const ussFavNode = getFavoriteUSSNode();
+
+        it("should exit if blank input is provided", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("");
+            await testTree.rename(ussNode);
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(0);
+            expect(refreshSpy).not.toHaveBeenCalled();
+        });
+        it("should execute rename USS file and and refresh the tree", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("new name");
+            await testTree.rename(ussNode);
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+        });
+        it("should attempt rename USS file but abort with no name", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce(undefined);
+            await testTree.rename(ussNode);
+            expect(refreshSpy).not.toHaveBeenCalled();
+        });
+        it("should attempt to rename USS file but throw an error", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("new name");
+            renameUSSFile.mockRejectedValueOnce(Error("testError"));
+            try {
+                await testTree.rename(ussNode);
+                // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
+        it("should execute rename favorite USS file", async () => {
+            resetMocks();
+            showInputBox.mockReturnValueOnce("new name");
+            await testTree.rename(ussFavNode);
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+            expect(removeFavorite.mock.calls.length).toBe(1);
+            expect(addFavorite.mock.calls.length).toBe(1);
+        });
     });
 });
