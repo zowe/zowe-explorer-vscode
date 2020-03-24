@@ -111,6 +111,38 @@ There is no required structure for the mainframe data sets under `orPattern`.
   **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
 
+## Run Regression Tests for Theia
+
+The following topics describe how to run the regression tests of the Zowe Explorer against a Theia environment.
+
+### Setup your Theia development workspace
+
+1. Build the extension (VSIX file) with your changes
+2. Setup your Theia workspace from this guide: [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
+    - Ensure that your latest VSIX file is in the `plugins` folder.
+3. Verify your setup. Open a Web browser and navigate to <http://localhost:3000>.
+
+  You should see the Theia browser example with your version of the Zowe Explorer.
+
+### Execute the setup script
+
+Issue the following command to run the regression tests:
+
+    `npm run test:theia`
+
+The tests run and the output goes to your VSC debug console.
+
+### Run tests with Firefox UI components visible
+
+The tests are running in headless mode by default. This section describes how to disable this option.
+
+1. Navigate to the `__tests__/__theia__/` folder
+2. Comment out the line `firefoxOptions.headless();` in the tests
+3. Compile the extension
+4. Execute the setup script
+
+  The tests run and the Firefox browser will be visible.
+
 ## Localization
 
 All localized strings must be string literals, you cannot include variables or use template literals within the argument you provide to the localize function.
