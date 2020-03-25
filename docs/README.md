@@ -6,6 +6,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 - [Install to VSC from source](#install-to-vsc-from-source)
 - [Run System Tests](#run-system-tests)
+- [Run Zowe Explorer Regression Tests for Theia](#run-zowe-explorer-regression-tests-for-theia)
 - [Localization](#localization)
 
 ## Install to VSC from source

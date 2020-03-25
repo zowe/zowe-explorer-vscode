@@ -29,6 +29,10 @@ node('ibm-jenkins-slave-nvm') {
   // build stage is required
   pipeline.build(
     operation: {
+      // Gather details for build archives
+      def vscodePackageJson = readJSON file: "package.json"
+      def version = "v${vscodePackageJson.version}"
+      def versionName = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
       sh "mkdir -p /tmp/theia"
       dir ("/tmp/theia") {
           pipeline.nvmShell "git clone https://github.com/eclipse-theia/theia"
@@ -40,7 +44,7 @@ node('ibm-jenkins-slave-nvm') {
             pipeline.nvmShell "yarn"
             sh "mkdir -p plugins"
             dir ("plugins") {
-              sh "bash -c 'curl https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode/vscode-extension-for-zowe-v1.1.0.vsix -o vscode-extension-for-zowe-v1.1.0.vsix'"
+              sh "bash -c 'curl https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode/${versionName}.vsix -o ${versionName}.vsix'"
               sh "pwd"
               sh "ls"
             }
