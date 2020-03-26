@@ -73,7 +73,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
         } else {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
         }
@@ -223,7 +223,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setBinary(binary: boolean) {
         this.binary = binary;
         if (this.binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
