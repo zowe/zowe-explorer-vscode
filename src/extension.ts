@@ -346,7 +346,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     if (datasetProvider || ussFileProvider) {
         vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () => searchInAllLoadedItems(datasetProvider, ussFileProvider));
     }
-
+    vscode.commands.registerCommand("zowe.sample.command", (node) => vscode.window.showInformationMessage("Return info: "+node.job.retcode));
     // return the Extension's API to other extensions that want to register their APIs.
     return ZoweExplorerApiRegister.getInstance();
 }
