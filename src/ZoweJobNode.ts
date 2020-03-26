@@ -10,43 +10,26 @@
 */
 
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import { Session, IProfileLoaded, Logger } from "@brightside/imperative";
-// tslint:disable-next-line: no-duplicate-imports
-import { IJob, IJobFile } from "@brightside/core";
+import * as zowe from "@zowe/cli";
+import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as extension from "./extension";
+import { IZoweJobTreeNode } from "./api/IZoweTreeNode";
+import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 import * as utils from "./utils";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import * as nls from "vscode-nls";
+import { getIconByNode } from "./generators/icons";
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 // tslint:disable-next-line: max-classes-per-file
-export class Job extends vscode.TreeItem {
+export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "JobId:";
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
-    /**
-     * Static method that creates a display string to represent a search
-     * @param owner - The owner search item
-     * @param prefix - The job prefix search item
-     * @param jobid - A specific jobid search item
-     */
-    public static createSearchLabel(owner: string, prefix: string, jobid: string): string {
-        let revisedCriteria: string = "";
-        jobid = jobid.toUpperCase();
-        const alphaNumeric = new RegExp("^\w+$");
-        if (jobid.trim().length > 1 && !alphaNumeric.test(jobid.trim())) {
-            revisedCriteria = Job.JobId+jobid.trim();
-        } else {
-            if (owner.length>0) {
-                revisedCriteria = Job.Owner+owner.trim()+ " ";
-            }
-            if (prefix.length>0) {
-                revisedCriteria += Job.Prefix+prefix.trim();
-            }
-        }
-        return revisedCriteria;
-    }
 
-    public dirty = extension.ISTHEIA;  // Make sure this is true for theia instances
-    private children: Job[] = [];
+    public children: IZoweJobTreeNode[] = [];
+    public dirty = true;
     // tslint:disable-next-line: variable-name
     private _owner: string;
     // tslint:disable-next-line: variable-name
@@ -54,35 +37,40 @@ export class Job extends vscode.TreeItem {
     // tslint:disable-next-line: variable-name
     private _searchId: string;
 
-    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState,
-                public mParent: Job, public session: Session, public job: IJob) {
-        super(label, mCollapsibleState);
+    constructor(label: string,
+                collapsibleState: vscode.TreeItemCollapsibleState,
+                mParent: IZoweJobTreeNode,
+                session: Session,
+                public job: zowe.IJob,
+                profile: IProfileLoaded) {
+        super(label, collapsibleState, mParent, session, profile);
         if (session) {
             this._owner = session.ISession.user;
         }
         this._prefix = "*";
         this._searchId = "";
-        utils.applyIcons(this);
-    }
-
-    public getSessionName(): string {
-        return this.getSessionNode().label.trim();
-    }
-
-    public getSessionNode(): Job {
-        if(this.mParent == null) {
-            return this;
-        } else {
-            return this.mParent;
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
         }
     }
 
-    public async getChildren(): Promise<Job[]> {
+    /**
+     * Retrieves child nodes of this IZoweJobTreeNode
+     *
+     * @returns {Promise<IZoweJobTreeNode[]>}
+     */
+    public async getChildren(): Promise<IZoweJobTreeNode[]>  {
         if (this.dirty) {
-            const elementChildren = [];
             let spools: zowe.IJobFile[] = [];
+            const elementChildren = [];
             if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
-                spools = await zowe.GetJobs.getSpoolFiles(this.session, this.job.jobname, this.job.jobid);
+                spools = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted.")
+                }, () => {
+                   return ZoweExplorerApiRegister.getJesApi(this.getProfile()).getSpoolFiles(this.job.jobname, this.job.jobid);
+                });
                 spools.forEach((spool) => {
                     const existing = this.children.find((element) => element.label.trim() === `${spool.stepname}:${spool.ddname}(${spool.id})` );
                     if (existing) {
@@ -94,21 +82,24 @@ export class Job extends vscode.TreeItem {
                         }
                         const sessionName = this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
                             this.label.substring(1, this.label.lastIndexOf("]")).trim() :
-                            this.getSessionName();
+                            this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
                             vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
-                        spoolNode.iconPath = utils.applyIcons(spoolNode);
+                        const icon = getIconByNode(spoolNode);
+                        if (icon) {
+                            spoolNode.iconPath = icon.path;
+                        }
                         spoolNode.command = { command: "zowe.zosJobsOpenspool", title: "", arguments: [sessionName, spool] };
                         elementChildren.push(spoolNode);
                     }
                 });
             } else {
-                let jobs: zowe.IJob[] = [];
-                if (this.searchId.length > 0 ) {
-                    jobs.push(await zowe.GetJobs.getJob(this.session, this._searchId));
-                } else {
-                    jobs = await zowe.GetJobs.getJobsByOwnerAndPrefix(this.session, this._owner, this._prefix);
-                }
+                const jobs = await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize("ZoweJobNode.getJobs.jobs", "Get Jobs command submitted.")
+                }, () => {
+                   return this.getJobs(this._owner, this._prefix, this._searchId);
+                });
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -120,11 +111,14 @@ export class Job extends vscode.TreeItem {
                     if (existing) {
                         elementChildren.push(existing);
                     } else {
-                        const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job);
+                        const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
                         if (!jobNode.iconPath) {
-                            jobNode.iconPath = utils.applyIcons(jobNode);
+                            const icon = getIconByNode(jobNode);
+                            if (icon) {
+                                jobNode.iconPath = icon.path;
+                            }
                         }
                         elementChildren.push(jobNode);
                     }
@@ -140,16 +134,9 @@ export class Job extends vscode.TreeItem {
         this.dirty = false;
         return this.children;
     }
-    public getDetailLabel(): string {
-        return this.contextValue === "Job" || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
-            `${this.job.jobname}(${this.job.jobid})`
-            : Job.createSearchLabel(this.owner, this.prefix, this.searchId);
-    }
 
-    public reset() {
-        utils.labelHack(this);
-        this.children = [];
-        this.dirty = true;
+    public getSessionNode(): IZoweJobTreeNode {
+        return this.getParent() ? this.getParent().getSessionNode() : this;
     }
 
     get tooltip(): string {
@@ -194,23 +181,40 @@ export class Job extends vscode.TreeItem {
         return this._prefix;
     }
 
-    set searchId(newId: string) {
+    public set searchId(newId: string) {
         if (newId !== undefined) {
             this._searchId = newId;
         }
     }
 
-    get searchId() {
+    public get searchId() {
         return this._searchId;
+    }
+
+    private async getJobs(owner, prefix, searchId): Promise<zowe.IJob[]> {
+        let jobsInternal: zowe.IJob[] = [];
+        if (this.searchId.length > 0 ) {
+            jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJob(searchId));
+        } else {
+            try {
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJobsByOwnerAndPrefix(owner, prefix);
+            } catch (error) {
+                await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+            }
+        }
+        return jobsInternal;
     }
 }
 
 // tslint:disable-next-line: max-classes-per-file
 class Spool extends Job {
-    constructor(public label: string, public mCollapsibleState: vscode.TreeItemCollapsibleState, public mParent: Job,
-                public session: Session, public spool: IJobFile, public job: IJob, public parent: Job) {
-        super(label, mCollapsibleState, mParent, session, job);
+    constructor(label: string, mCollapsibleState: vscode.TreeItemCollapsibleState, mParent: IZoweJobTreeNode,
+                session: Session, spool: zowe.IJobFile, job: zowe.IJob, parent: IZoweJobTreeNode) {
+        super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
         this.contextValue = extension.JOBS_SPOOL_CONTEXT;
-        utils.applyIcons(this);
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.iconPath = icon.path;
+        }
     }
 }

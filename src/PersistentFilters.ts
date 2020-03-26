@@ -18,17 +18,28 @@ import * as vscode from "vscode";
  * @class PersistentFilters
  */
 export class PersistentFilters {
+    /**
+     * Retrieves a generic setting either in user or workspace.
+     * <pre>{@code
+     *  PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
+     * }</pre>
+     * @param key - string. The attribute value that needs retrieving
+     */
+    public static getDirectValue(key: string): string | boolean | undefined {
+        const settings: any = { ...vscode.workspace.getConfiguration() };
+        return settings.get(key);
+    }
     private static readonly favorites: string = "favorites";
     private static readonly history: string = "history";
+    private static readonly sessions: string = "sessions";
 
     public schema: string;
-    public mHistory: string[] = [];
+    private mHistory: string[] = [];
+    private mSessions: string[] = [];
 
-    private maxHistory = 5;
-
-    constructor(schema: string) {
+    constructor(schema: string, private maxHistory = 5) {
         this.schema = schema;
-        this.initializeHistory();
+        this.initialize();
     }
 
     public readFavorites(): string[] {
@@ -59,35 +70,71 @@ export class PersistentFilters {
      * @param {string} criteria - a line of search criteria
      */
     public async addHistory(criteria: string) {
-        // Remove any entries that match
-        this.mHistory = this.mHistory.filter( (element) => {
-            return element.trim() !== criteria.trim();
-        });
+        if (criteria) {
+            // Remove any entries that match
+            this.mHistory = this.mHistory.filter( (element) => {
+                return element.trim() !== criteria.trim();
+            });
 
-        // Add value to frontof stack
-        this.mHistory.unshift(criteria);
+            // Add value to front of stack
+            this.mHistory.unshift(criteria);
 
-        // If list getting too large remove last entry
-        if (this.mHistory.length > this.maxHistory) {
-            this.mHistory.pop();
+            // If list getting too large remove last entry
+            if (this.mHistory.length > this.maxHistory) {
+                this.mHistory.pop();
+            }
+            this.updateHistory();
         }
-        this.updateHistory();
     }
 
     public getHistory() {
         return this.mHistory;
     }
 
-    public async reset() {
+    public async resetHistory() {
         this.mHistory = [];
         this.updateHistory();
     }
+    /**
+     * Adds one line of history to the local store and
+     * updates persistent store.
+     *
+     * If the entry matches a previous entry it is removed from the list
+     * at that position in the stack.
+     *
+     * @param {string} criteria - a session name
+     */
+    public async addSession(criteria: string) {
+        // Remove any entries that match
+        this.mSessions = this.mSessions.filter( (element) => {
+            return element.trim() !== criteria.trim();
+        });
+        this.mSessions.push(criteria);
+
+        // Use standard sorting
+        this.mSessions.sort();
+        this.updateSessions();
+    }
+    public async removeSession(criteria: string) {
+        // Remove any entries that match
+        this.mSessions = this.mSessions.filter( (element) => {
+            return element.trim() !== criteria.trim();
+        });
+        this.updateSessions();
+    }
+    public getSessions() {
+        return this.mSessions;
+    }
+
+    public async resetSessions() {
+        this.mSessions = [];
+        this.updateSessions();
+    }
 
     /**
-     * Initializes the history section by reading from a file
-     *
+     * Initializes the history and sessions sections by reading from a file
      */
-    private async initializeHistory() {
+    private async initialize() {
         let lines: string[];
         if (vscode.workspace.getConfiguration(this.schema)) {
             lines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.history);
@@ -95,7 +142,15 @@ export class PersistentFilters {
         if (lines) {
             this.mHistory = lines;
         } else {
-            this.reset();
+            this.resetHistory();
+        }
+        if (vscode.workspace.getConfiguration(this.schema)) {
+            lines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
+        }
+        if (lines) {
+            this.mSessions = lines;
+        } else {
+            this.resetSessions();
         }
     }
 
@@ -104,6 +159,15 @@ export class PersistentFilters {
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.history = this.mHistory;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    private async updateSessions() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.sessions = this.mSessions;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
         }
     }

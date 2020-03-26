@@ -10,19 +10,23 @@
 */
 
 // tslint:disable:no-shadowed-variable
+import { getIconByNode } from "../../src/generators/icons";
+
 jest.mock("vscode");
-jest.mock("@brightside/imperative");
-jest.mock("@brightside/core/lib/zosfiles/src/api/methods/list/doc/IListOptions");
+jest.mock("@zowe/imperative");
 jest.mock("Session");
-jest.mock("../../src/ProfileLoader");
-import { Session, Logger } from "@brightside/imperative";
+jest.mock("../../src/Profiles");
+
+import * as zowe from "@zowe/cli";
+import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
-import * as profileLoader from "../../src/ProfileLoader";
-
+import { Profiles } from "../../src/Profiles";
+import { IZoweTree } from "../../src/api/IZoweTree";
+import { IZoweUSSTreeNode } from "../../src/api/IZoweTreeNode";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -34,21 +38,24 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
-    Object.defineProperty(profileLoader, "loadNamedProfile", {
-        value: jest.fn((name: string) => {
-            return { name };
-        })
-    });
-    Object.defineProperty(profileLoader, "loadAllProfiles", {
-        value: jest.fn(() => {
-            return [{ name: "profile1" }, { name: "profile2" }];
-        })
-    });
-    Object.defineProperty(profileLoader, "loadDefaultProfile", {
-        value: jest.fn(() => {
-            return { name: "defaultprofile" };
-        })
-    });
+    function getUSSNode() {
+        const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+        const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
+        ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
+        ussNode1.fullPath = "/u/myuser";
+        return ussNode1;
+    }
+
+    function getFavoriteUSSNode() {
+        const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+        const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
+        mParent.contextValue = extension.FAVORITE_CONTEXT;
+        ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+        ussNodeF.fullPath = "/u/myuser/usstest";
+        ussNodeF.tooltip = "/u/myuser/usstest";
+        return ussNodeF;
+    }
+
     const getConfiguration = jest.fn();
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     getConfiguration.mockReturnValue({
@@ -80,25 +87,68 @@ describe("Unit Tests (Jest)", () => {
     };
     withProgress.mockReturnValue(testResponse);
 
-    // Filter prompt
+    const showErrorMessage = jest.fn();
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
+    const createQuickPick = jest.fn();
+    const createTreeView = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
     const getFilters = jest.fn();
+    const Utilities = jest.fn();
+    const renameUSSFile = jest.fn();
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
+    Object.defineProperty(zowe, "Utilities", { value: Utilities });
+    Object.defineProperty(Utilities, "renameUSSFile", { value: renameUSSFile });
     Object.defineProperty(filters, "getFilters", { value: getFilters });
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
+    createTreeView.mockReturnValue("testTreeView");
 
-    const testTree = new USSTree();
-    testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
+    const testTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {
+            user:undefined,
+            password: undefined
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+    const mockLoadNamedProfile = jest.fn();
+    mockLoadNamedProfile.mockReturnValue(profileOne);
+    const mockDefaultProfile = jest.fn();
+    mockDefaultProfile.mockReturnValue(profileOne);
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [profileOne, {name: "secondName"}],
+                getDefaultProfile: mockDefaultProfile,
+                loadNamedProfile: mockLoadNamedProfile
+            };
+        })
+    });
+    testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session,
+        null, false, profileOne.name, undefined));
     testTree.mSessionNodes[1].contextValue = extension.USS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].fullPath = "test";
-    testTree.mSessionNodes[1].iconPath = utils.applyIcons(testTree.mSessionNodes[1]);
+    const targetIcon = getIconByNode(testTree.mSessionNodes[1]);
+    if (targetIcon) {
+        testTree.mSessionNodes[1].iconPath = targetIcon.path;
+    }
+
+    beforeEach(() => {
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+    });
 
     afterEach(async () => {
         getConfiguration.mockClear();
@@ -116,7 +166,7 @@ describe("Unit Tests (Jest)", () => {
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
-        expect(testNode.mParent).toBeDefined();
+        expect(testNode.getParent()).toBeDefined();
         expect(testNode.getSession()).toBeDefined();
     });
 
@@ -125,6 +175,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Testing that the uss tree is defined", async () => {
         expect(testTree.mSessionNodes).toBeDefined();
+        expect(testTree.getTreeView()).toEqual("testTreeView");
     });
 
     /*************************************************************************************************************
@@ -144,17 +195,28 @@ describe("Unit Tests (Jest)", () => {
         const rootChildren = await testTree.getChildren();
         // Creating a rootNode
         const sessNode = [
-            new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null),
-            new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null),
+            new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, false),
+            new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name),
         ];
         sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
-        sessNode[0].iconPath = utils.applyIcons(sessNode[0]);
+        let targetIcon = getIconByNode(sessNode[0]);
+        if (targetIcon) {
+            sessNode[0].iconPath = targetIcon.path;
+        }
         sessNode[1].contextValue = extension.USS_SESSION_CONTEXT;
-        sessNode[1].iconPath = utils.applyIcons(sessNode[1]);
+        targetIcon = getIconByNode(sessNode[1]);
+        if (targetIcon) {
+            sessNode[1].iconPath = targetIcon.path;
+        }
         sessNode[1].fullPath = "test";
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessNode).toEqual(rootChildren);
+
+        // Additional tests for favorite icon state coverage
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-closed.svg");
+        await testTree.flipState(sessNode[0], true);
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-open.svg");
     });
 
     /*************************************************************************************************************
@@ -255,11 +317,10 @@ describe("Unit Tests (Jest)", () => {
      * Test the addSession command
      *************************************************************************************************************/
     it("Test the addSession command ", async () => {
-        const log = new Logger(undefined);
 
-        testTree.addSession(log);
+        testTree.addSession();
 
-        testTree.addSession(log, "fake");
+        testTree.addSession("fake");
     });
 
     /*************************************************************************************************************
@@ -274,30 +335,99 @@ describe("Unit Tests (Jest)", () => {
         childFile.contextValue = extension.DS_TEXT_FILE_CONTEXT;
 
         // Check adding directory
-        await testTree.addUSSFavorite(parentDir);
+        await testTree.addFavorite(parentDir);
         // Check adding duplicates
-        await testTree.addUSSFavorite(parentDir);
+        await testTree.addFavorite(parentDir);
         // Check adding file
-        await testTree.addUSSFavorite(childFile);
+        await testTree.addFavorite(childFile);
 
         expect(testTree.mFavorites.length).toEqual(2);
+    });
+
+    /*************************************************************************************************************
+     * Testing searchInLoadedItems
+     *************************************************************************************************************/
+    it("Testing that searchInLoadedItems returns the correct array", async () => {
+        const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null, "/");
+        const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+        testTree.mSessionNodes[1].children = [folder];
+        folder.children.push(file);
+        const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testTree.mSessionNodes[1]])
+        );
+        const sessionGetChildren = jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
+            () => Promise.resolve(testTree.mSessionNodes[1].children)
+        );
+
+        const loadedItems = await testTree.searchInLoadedItems();
+
+        expect(loadedItems).toStrictEqual([file, folder]);
     });
 
     /*************************************************************************************************************
      * Testing that deleteSession works properly
      *************************************************************************************************************/
     it("Testing that deleteSession works properly", async () => {
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        const startLength = testTree.mSessionNodes.length;
+        testTree.mSessionNodes.push(new ZoweUSSNode("ussTestSess2", vscode.TreeItemCollapsibleState.Collapsed, null, session, null));
+        testTree.addSession("ussTestSess2");
+        testTree.mSessionNodes[startLength].contextValue = extension.USS_SESSION_CONTEXT;
+        testTree.mSessionNodes[startLength].fullPath = "test";
+        const targetIcon = getIconByNode(testTree.mSessionNodes[startLength]);
+        if (targetIcon) {
+            testTree.mSessionNodes[startLength].iconPath = targetIcon.path;
+        }
+        testTree.deleteSession(testTree.mSessionNodes[startLength]);
+        expect(testTree.mSessionNodes.length).toEqual(startLength);
     });
 
     /*************************************************************************************************************
      * Testing that removeFavorite works properly
      *************************************************************************************************************/
     it("Testing that removeFavorite works properly", async () => {
-        testTree.removeUSSFavorite(testTree.mFavorites[0]);
-        testTree.removeUSSFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
+        testTree.removeFavorite(testTree.mFavorites[0]);
 
         expect(testTree.mFavorites).toEqual([]);
+    });
+
+    /*************************************************************************************************************
+     * Testing that addUSSFavorite sorting works
+     *************************************************************************************************************/
+    it("Testing that saveSearch works properly", async () => {
+        testTree.mFavorites = [];
+        const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null, "/");
+        let childFile = new ZoweUSSNode("abcd", vscode.TreeItemCollapsibleState.None,
+            parentDir, null, "/parent");
+        childFile.contextValue = extension.USS_SESSION_CONTEXT;
+
+        // Check adding file
+        await testTree.addFavorite(childFile);
+
+        expect(testTree.mFavorites.length).toEqual(1);
+
+        childFile = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.None,
+        parentDir, null, "/parent");
+        childFile.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.addFavorite(childFile);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(2);
+
+        testTree.mSessionNodes[1].fullPath = "/z1234";
+        await testTree.saveSearch(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(3);
+
+        testTree.mSessionNodes[1].fullPath = "/a1234";
+        await testTree.saveSearch(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(4);
+
+        testTree.mSessionNodes[1].fullPath = "/r1234";
+        await testTree.saveSearch(testTree.mSessionNodes[1]);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(testTree.mFavorites.length).toEqual(5);
     });
 
     /*************************************************************************************************************
@@ -317,10 +447,77 @@ describe("Unit Tests (Jest)", () => {
         expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
     });
 
+    it("Testing that expand tree with credential prompt is executed successfully", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], sessionwocred, null);
+        folder.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+        await testTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Testing that expand tree with credential prompt ends in error", async () => {
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], sessionwocred, null);
+        folder.contextValue = extension.USS_DIR_CONTEXT;
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).not.toEqual("folder-open.svg");
+        await testTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).not.toEqual("folder-closed.svg");
+        await testTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).not.toEqual("folder-open.svg");
+    });
+
     it("initialize USSTree is executed successfully", async () => {
-        // const testUSSTree = new USSTree();
-        // createBasicZosmfSession.mockReturnValue(session);
-        spyOn(utils, "getSession").and.returnValue(session);
+        const mockLoadNamedProfile = jest.fn();
+        mockLoadNamedProfile.mockReturnValue(profileOne);
+        const mockDefaultProfile = jest.fn();
+        mockDefaultProfile.mockReturnValue(profileOne);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    getDefaultProfile: mockDefaultProfile,
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
         const testTree1 = await createUSSTree(Logger.getAppLogger());
         expect(testTree1.mFavorites.length).toBe(2);
 
@@ -344,7 +541,9 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * USS Filter prompts
      *************************************************************************************************************/
-    it("Testing that user filter prompts are executed successfully", async () => {
+    it("Testing that user filter prompts are executed successfully, theia specific route", async () => {
+        let theia = true;
+        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
@@ -352,29 +551,133 @@ describe("Unit Tests (Jest)", () => {
         showInputBox.mockReturnValueOnce("/u/myFiles");
 
         // Assert choosing the new filter specification followed by a path
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/myFiles");
 
         // Assert edge condition user cancels the input path box
         showInformationMessage.mockReset();
-        showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
+        showQuickPick.mockReset();
+        showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
+        showInputBox.mockReset();
         showInputBox.mockReturnValueOnce(undefined);
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
 
         showQuickPick.mockReset();
-        showQuickPick.mockReturnValueOnce("/u/thisFile");
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
 
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(undefined);
-        await testTree.ussFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        theia = false;
+    });
+
+    it("Testing that user filter prompts are executed successfully, VSCode route", async () => {
+        // testTree.initialize(Logger.getAppLogger());
+        let qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+        expect(qpItem.description).toBeFalsy();
+        expect(qpItem.alwaysShow).toBe(true);
+
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        let entered;
+
+        // Assert edge condition user cancels the input path box
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        // Normal route chooses create new then enters a value
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("/U/HARRY");
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HARRY");
+
+        // User cancels out of input field
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce(undefined);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
+
+        // User enters a value in the QuickPick and presses create new
+        entered = "/U/HLQ/BIGSTUFF";
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showInformationMessage.mockReset();
+        // Assert choosing the new filter specification but fills in path in QuickPick
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.USS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/BIGSTUFF");
+
+        showQuickPick.mockReset();
+        qpItem = new utils.FilterItem("/U/HLQ/STUFF");
+        expect(qpItem.description).toBeFalsy();
+        expect(qpItem.alwaysShow).toBe(false);
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
+
+        // Assert edge condition user cancels from the quick pick
+        showInformationMessage.mockReset();
+        qpItem = undefined;
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
     });
+
     /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/
@@ -407,5 +710,272 @@ describe("Unit Tests (Jest)", () => {
         Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
         await testTree.onDidChangeConfiguration(e);
         expect(getConfiguration.mock.calls.length).toBe(2);
+    });
+
+    it("tests the uss filter prompt credentials", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+
+        await testTree.filterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+
+    });
+
+    it("tests the uss filter prompt credentials, favorites route", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const ZosmfSession = jest.fn();
+        Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
+        const createBasicZosmfSession = jest.fn();
+        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [profileOne, {name: "secondName"}],
+                    defaultProfile: profileOne,
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["fake", "fake", "fake"];
+                    }),
+                };
+            })
+        });
+        const dsNode = new ZoweUSSNode(`[${profileOne.name}]: /u/myFile.txt`, vscode.TreeItemCollapsibleState.Expanded,
+            null, sessionwocred, null, false, profileOne.name);
+        dsNode.mProfileName = profileOne.name;
+        dsNode.getSession().ISession.user = "";
+        dsNode.getSession().ISession.password = "";
+        dsNode.getSession().ISession.base64EncodedAuth = "";
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode);
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+
+        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            () => Promise.resolve(qpItem)
+        );
+        const spyMe = new USSTree();
+        Object.defineProperty(spyMe, "filterPrompt", {
+            value: jest.fn(() => {
+                return {
+                    tempNode: dsNode,
+                    mSessionNodes: {Session: {ISession: {user: "", password: "", base64EncodedAuth: ""}}, mProfileName: profileOne.name}
+                };
+            })
+        });
+        createQuickPick.mockReturnValue({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: "",
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        await testTree.filterPrompt(dsNode);
+
+        // TODO: this test does not seem correct: they fourth node is already present when the test starts
+        // const nodeLength = testTree.mSessionNodes.length - 1;
+        // expect(testTree.mSessionNodes[nodeLength].fullPath).toEqual("/u/myFile.txt");
+
+    });
+
+    it("tests the uss filter, favorites route", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const ZosmfSession = jest.fn();
+        Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
+        const createBasicZosmfSession = jest.fn();
+        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+        createBasicZosmfSession.mockReturnValue(sessionwocred);
+        const dsNode = new ZoweUSSNode(
+          "[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionwocred, null, false, "ussTestSess2");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    promptCredentials: jest.fn(()=> {
+                        return ["", "", ""];
+                    }),
+                };
+            })
+        });
+        dsNode.mProfileName = "ussTestSess2";
+        dsNode.getSession().ISession.user = "";
+        dsNode.getSession().ISession.password = "";
+        dsNode.getSession().ISession.base64EncodedAuth = "";
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        testTree.mSessionNodes.push(dsNode);
+
+        const spyMe = new USSTree();
+        Object.defineProperty(spyMe, "filterPrompt", {
+            value: jest.fn(() => {
+                return {
+                    tempNode: dsNode,
+                    mSessionNodes: {Session: {ISession: {user: "", password: "", base64EncodedAuth: ""}}}
+                };
+            })
+        });
+
+        await testTree.filterPrompt(dsNode);
+
+        const nodeLength = testTree.mSessionNodes.length - 1;
+        expect(testTree.mSessionNodes[nodeLength].fullPath).toEqual("/u/myFile.txt");
+
+    });
+
+    it("tests the uss filter prompt credentials error", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"}
+                };
+            })
+        });
+
+        await testTree.filterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+
+    });
+    describe("renameUSSNode", () => {
+        const executeCommand = jest.fn();
+        Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
+        const testTree = new USSTree();
+        const refreshSpy = jest.spyOn(testTree, "refreshElement");
+        const removeFavorite = jest.spyOn(testTree, "removeFavorite");
+        const addFavorite = jest.spyOn(testTree, "addFavorite");
+        const resetMocks = () => {
+            executeCommand.mockReset();
+            showErrorMessage.mockReset();
+            showInputBox.mockReset();
+            renameUSSFile.mockReset();
+        };
+        const resetNode = (node: ZoweUSSNode) => {
+          node.label = "";
+          node.shortLabel = "";
+        };
+        const ussNode = getUSSNode();
+        const ussFavNode = getFavoriteUSSNode();
+
+        it("should exit if blank input is provided", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("");
+            await testTree.rename(ussNode);
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(0);
+            expect(refreshSpy).not.toHaveBeenCalled();
+        });
+        it("should execute rename USS file and and refresh the tree", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("new name");
+            await testTree.rename(ussNode);
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+        });
+        it("should attempt rename USS file but abort with no name", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce(undefined);
+            await testTree.rename(ussNode);
+            expect(refreshSpy).not.toHaveBeenCalled();
+        });
+        it("should attempt to rename USS file but throw an error", async () => {
+            resetMocks();
+            resetNode(ussNode);
+
+            showInputBox.mockReturnValueOnce("new name");
+            renameUSSFile.mockRejectedValueOnce(Error("testError"));
+            try {
+                await testTree.rename(ussNode);
+                // tslint:disable-next-line:no-empty
+            } catch (err) {
+            }
+            expect(showErrorMessage.mock.calls.length).toBe(1);
+        });
+        it("should execute rename favorite USS file", async () => {
+            resetMocks();
+            showInputBox.mockReturnValueOnce("new name");
+            await testTree.rename(ussFavNode);
+            expect(showErrorMessage.mock.calls.length).toBe(0);
+            expect(renameUSSFile.mock.calls.length).toBe(1);
+            expect(removeFavorite.mock.calls.length).toBe(1);
+            expect(addFavorite.mock.calls.length).toBe(1);
+        });
     });
 });

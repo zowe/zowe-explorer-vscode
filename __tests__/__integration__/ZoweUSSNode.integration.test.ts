@@ -9,7 +9,8 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 // tslint:disable-next-line:no-implicit-dependencies
@@ -21,12 +22,21 @@ import * as extension from "../../src/extension";
 
 declare var it: any;
 
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
+
 describe("ZoweUSSNode Integration Tests", async () => {
     const TIMEOUT = 120000;
     chai.use(chaiAsPromised);
-    // Uses loaded profile to create a zosmf session with brightside
+
+    // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session,null);
+    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, testProfile.name);
     sessNode.contextValue = extension.USS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const path = testConst.ussPattern;

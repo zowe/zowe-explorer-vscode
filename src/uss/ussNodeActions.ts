@@ -9,17 +9,20 @@
 *                                                                                 *
 */
 
-import { USSTree } from "../USSTree";
-import { ZoweUSSNode } from "../ZoweUSSNode";
 import * as vscode from "vscode";
-import * as zowe from "@brightside/core";
-import * as fs from "fs";
+import * as zowe from "@zowe/cli";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 import * as extension from "../../src/extension";
 import * as path from "path";
-import { ISTHEIA } from "../extension";
+import { Profiles } from "../Profiles";
+import { IZoweTree } from "../api/IZoweTree";
+import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { isBinaryFileSync } from "isbinaryfile";
+
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
@@ -27,65 +30,69 @@ import { ISTHEIA } from "../extension";
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
-export async function createUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, nodeType: string, isTopLevel?: boolean) {
-    const name = await vscode.window.showInputBox({placeHolder:
-        localize("createUSSNode.name", "Name of file or directory")});
+export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nodeType: string, isTopLevel?: boolean) {
+    const name = await vscode.window.showInputBox({
+        placeHolder:
+            localize("createUSSNode.name", "Name of file or directory")
+    });
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await zowe.Create.uss(node.getSession(), filePath, nodeType);
+            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
-            vscode.window.showErrorMessage(
-                localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
+            utils.errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
             throw (err);
         }
         ussFileProvider.refresh();
     }
 }
 
-export async function createUSSNodeDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: `What would you like to create at ${node.fullPath}?`,
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
-    const isTopLevel = true;
-    createUSSNode(node, ussFileProvider, type, isTopLevel);
-}
-
-export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    // handle zosmf api issue with file paths
-    const nodePath = node.fullPath.startsWith("/") ?  node.fullPath.substring(1) :  node.fullPath;
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + node.label,
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes","Yes"),
-                                           localize("deleteUSSNode.showQuickPick.no", "No")],
-                                           quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes","Yes"))
-    {
-        return;
+export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+    let usrNme: string;
+    let passWrd: string;
+    let baseEncd: string;
+    let validProfile: number = -1;
+    if ((!node.getSession().ISession.user.trim()) || (!node.getSession().ISession.password.trim())) {
+        try {
+            const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
+            if (values !== undefined) {
+                usrNme = values[0];
+                passWrd = values[1];
+                baseEncd = values[2];
+            }
+        } catch (error) {
+            utils.errorHandling(error, node.mProfileName,
+                localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
+            return;
+        }
+        if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+            node.getSession().ISession.user = usrNme;
+            node.getSession().ISession.password = passWrd;
+            node.getSession().ISession.base64EncodedAuth = baseEncd;
+            validProfile = 0;
+        } else {
+            return;
+        }
+        await ussFileProvider.refreshElement(node);
+        await ussFileProvider.refresh();
+    } else {
+        validProfile = 0;
     }
-    try {
-        const isRecursive = node.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-        await zowe.Delete.ussFile(node.getSession(), nodePath, isRecursive);
-        node.mParent.dirty = true;
-        deleteFromDisk(node, filePath);
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
-        throw (err);
+    if (validProfile === 0) {
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: `What would you like to create at ${node.fullPath}?`,
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        const type = await vscode.window.showQuickPick([extension.USS_DIR_CONTEXT, "File"], quickPickOptions);
+        const isTopLevel = true;
+        return createUSSNode(node, ussFileProvider, type, isTopLevel);
     }
-
-    // Remove node from the USS Favorites tree
-    ussFileProvider.removeUSSFavorite(node);
-    ussFileProvider.refresh();
 }
 
 /**
@@ -93,76 +100,60 @@ export async function deleteUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree,
  *
  * @param {USSTree} ussFileProvider
  */
-export async function refreshAllUSS(ussFileProvider: USSTree) {
-    ussFileProvider.mSessionNodes.forEach( (sessNode) => {
+export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+    await Profiles.getInstance().refresh();
+    ussFileProvider.mSessionNodes.forEach((sessNode) => {
         if (sessNode.contextValue === extension.USS_SESSION_CONTEXT) {
             utils.labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            utils.refreshTree(sessNode);
         }
     });
-    ussFileProvider.refresh();
+    await ussFileProvider.refresh();
 }
 
-export async function renameUSSNode(node: ZoweUSSNode, ussFileProvider: USSTree, filePath: string) {
-    const newName = await vscode.window.showInputBox({value: node.label});
-    if (!newName) {
-        return;
-    }
-    try {
-        const newNamePath = node.mParent.fullPath + "/" +  newName;
-        await zowe.Utilities.renameUSSFile(node.getSession(), node.fullPath, newNamePath);
-        if (node.contextValue === extension.USS_DIR_CONTEXT || node.mParent.contextValue === extension.USS_SESSION_CONTEXT) {
-            refreshAllUSS(ussFileProvider);
-        } else {
-            ussFileProvider.refresh();
-        }
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
-        throw (err);
-    }
-}
-
-/**
- * Marks file as deleted from disk
- *
- * @param {ZoweUSSNode} node
- */
-export async function deleteFromDisk(node: ZoweUSSNode, filePath: string) {
-        try {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        }
-// tslint:disable-next-line: no-empty
-        catch (err) {}
-}
-
-export async function uploadDialog(node: ZoweUSSNode, ussFileProvider: USSTree) {
+export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     const fileOpenOptions = {
         canSelectFiles: true,
         openLabel: "Upload Files",
         canSelectMany: true
-     };
+    };
 
     const value = await vscode.window.showOpenDialog(fileOpenOptions);
 
     await Promise.all(
         value.map(async (item) => {
-            const doc = await vscode.workspace.openTextDocument(item);
-            await uploadFile(node, doc);
-        }
-     ));
+                const isBinary = isBinaryFileSync(item.fsPath);
+
+                if (isBinary) {
+                    await uploadBinaryFile(node, item.fsPath);
+                } else {
+                    const doc = await vscode.workspace.openTextDocument(item);
+                    await uploadFile(node, doc);
+                }
+            }
+        ));
     ussFileProvider.refresh();
 }
 
-export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
+export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string) {
+    try {
+        const localFileName = path.parse(filePath).base;
+        const ussName = `${node.fullPath}/${localFileName}`;
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+    } catch (e) {
+        utils.errorHandling(e, node.mProfileName, e.message);
+    }
+}
+
+export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocument) {
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), doc.fileName, ussName);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(doc.fileName, ussName);
     } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        utils.errorHandling(e, node.mProfileName, e.message);
     }
 }
 
@@ -171,8 +162,8 @@ export async function uploadFile(node: ZoweUSSNode, doc: vscode.TextDocument) {
  *
  * @param {ZoweUSSNode} node
  */
-export async function copyPath(node: ZoweUSSNode) {
-    if (ISTHEIA) {
+export async function copyPath(node: IZoweUSSTreeNode) {
+    if (extension.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
         vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
         return;

@@ -10,12 +10,13 @@
 */
 
 import * as spoolprovider from "../../src/SpoolProvider";
-import * as brightside from "@brightside/core";
+import * as zowe from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
-import * as profileLoader from "../../src/ProfileLoader";
+import { Profiles } from "../../src/Profiles";
 
 describe("SpoolProvider Unit Tests", () => {
-    const iJobFile: brightside.IJobFile = {
+    const iJobFile: zowe.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
@@ -47,6 +48,30 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
+
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                defaultProfile: {name: "firstName"}
+            };
+        })
+    });
+    Object.defineProperty(Profiles, "getDefaultProfile", {
+        value: jest.fn(() => {
+            return {
+                name: "firstName"
+            };
+        })
+    });
+    Object.defineProperty(Profiles, "loadNamedProfile", {
+        value: jest.fn(() => {
+            return {
+                name: "firstName"
+            };
+        })
+    });
+
     afterEach(() => {
         jest.resetAllMocks();
     });
@@ -71,14 +96,30 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("Tests that the spool content is returned", () => {
-        const getAllProfileNames = jest.fn();
-        const load = jest.fn();
         const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
-        Object.defineProperty(profileLoader, "loadNamedProfile", { value: jest.fn(() => {
-            return {name: "testSession"};
-        }) });
-        Object.defineProperty(brightside, "GetJobs", { value: GetJobs });
+        const profileOne: IProfileLoaded = {
+            name: "sessionName",
+            profile: {
+                user:undefined,
+                password: undefined
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        const mockLoadNamedProfile = jest.fn();
+        mockLoadNamedProfile.mockReturnValue(profileOne);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [profileOne, {name: "secondName"}],
+                    defaultProfile: profileOne,
+                    loadNamedProfile: mockLoadNamedProfile
+                };
+            })
+        });
+        Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
         Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
         getSpoolContentById.mockReturnValue("spool content");
 

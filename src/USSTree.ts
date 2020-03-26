@@ -9,15 +9,20 @@
 *                                                                                 *
 */
 
-import * as zowe from "@brightside/core";
-import { IProfileLoaded, Logger } from "@brightside/imperative";
-import * as utils from "./utils";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
+import * as path from "path";
 import * as vscode from "vscode";
+import { IZoweTree } from "./api/IZoweTree";
+import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { loadNamedProfile, loadDefaultProfile } from "./ProfileLoader";
-import { PersistentFilters } from "./PersistentFilters";
+import { Profiles } from "./Profiles";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
+import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { getIconByNode } from "./generators/icons";
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
@@ -27,8 +32,8 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
  */
 export async function createUSSTree(log: Logger) {
     const tree = new USSTree();
-    await tree.addSession(log);
     await tree.initialize(log);
+    await tree.addSession();
     return tree;
 }
 
@@ -39,50 +44,101 @@ export async function createUSSTree(log: Logger) {
  * @class USSTree
  * @implements {vscode.TreeDataProvider}
  */
-export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
+export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
 
-    private static readonly persistenceSchema: string = "Zowe-USS-Persistent-Favorites";
-    private static readonly favorites: string = "favorites";
-    private static readonly defaultDialogText: string = localize("SpecifyFilter", " -- Specify Filter -- ");
 
-    public mSessionNodes: ZoweUSSNode[];
+    public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
+    private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
     public mFavoriteSession: ZoweUSSNode;
-    public mFavorites: ZoweUSSNode[] = [];
-
-    // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this.mOnDidChangeTreeData.event;
-
-    private mHistory: PersistentFilters;
-    private log: Logger;
+    public mSessionNodes: IZoweUSSTreeNode[] = [];
+    public mFavorites: IZoweUSSTreeNode[] = [];
+    private treeView: vscode.TreeView<IZoweUSSTreeNode>;
 
     constructor() {
-        this.mSessionNodes = [];
-        this.mFavoriteSession = new ZoweUSSNode(localize("Favorites", "Favorites"),
-            vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        super(USSTree.persistenceSchema, new ZoweUSSNode(localize("Favorites", "Favorites"),
+            vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
-        this.mSessionNodes = [this.mFavoriteSession];
-        this.mFavoriteSession.iconPath = utils.applyIcons(this.mFavoriteSession);
-        this.mHistory = new PersistentFilters(USSTree.persistenceSchema);
+        const icon = getIconByNode(this.mFavoriteSession);
+        if (icon) {
+            this.mFavoriteSession.iconPath = icon.path;
+        }
+        this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
+        this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
     }
 
     /**
-     * Takes argument of type ZoweUSSNode and returns it converted to a general [TreeItem]
+     * Method for renaming a USS Node. This could be a Favorite Node
      *
-     * @param {ZoweUSSNode} element
-     * @returns {vscode.TreeItem}
+     * @param originalNode
+     * @param {string} filePath
      */
-    public getTreeItem(element: ZoweUSSNode): vscode.TreeItem {
-        return element;
+    public async rename(originalNode: IZoweUSSTreeNode) {
+    // Could be a favorite or regular entry always deal with the regular entry
+    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
+    const oldLabel = originalNode.label;
+    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+    // Check if an old favorite exists for this node
+    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
+        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+    );
+    const newName = await vscode.window.showInputBox({value: oldLabel});
+    if (newName && newName !== oldLabel) {
+        try {
+            let newNamePath = path.join(parentPath + newName);
+            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            await ZoweExplorerApiRegister.getUssApi(
+                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
+            originalNode.rename(newNamePath);
+
+            if (oldFavorite) {
+                this.removeFavorite(oldFavorite);
+                oldFavorite.rename(newNamePath);
+                this.addFavorite(oldFavorite);
+            }
+        } catch (err) {
+            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+            throw (err);
+        }
+    }
+    }
+    public open(node: IZoweUSSTreeNode, preview: boolean) {
+        throw new Error("Method not implemented.");
+    }
+    public copy(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public paste(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public delete(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public saveFile(document: vscode.TextDocument) {
+        throw new Error("Method not implemented.");
+    }
+    public refreshPS(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
+    }
+    public uploadDialog(node: IZoweUSSTreeNode) {
+        throw new Error("Method not implemented.");
     }
 
     /**
-     * Takes argument of type ZoweUSSNode and retrieves all of the first level children
+     * Returns the tree view for the current USSTree
      *
-     * @param {ZoweUSSNode} [element] - Optional parameter; if not passed, returns root session nodes
-     * @returns {ZoweUSSNode[] | Promise<ZoweUSSNode[]>}
+     * @returns {vscode.TreeView<ZoweUSSNode>}
      */
-    public getChildren(element?: ZoweUSSNode): ZoweUSSNode[] | Promise<ZoweUSSNode[]> {
+    public getTreeView(): vscode.TreeView<IZoweUSSTreeNode> {
+        return this.treeView;
+    }
+
+    /**
+     * Takes argument of type IZoweUSSTreeNode and retrieves all of the first level children
+     *
+     * @param {IZoweUSSTreeNode} [element] - Optional parameter; if not passed, returns root session nodes
+     * @returns {IZoweUSSTreeNode[] | Promise<IZoweUSSTreeNode[]>}
+     */
+    public async getChildren(element?: IZoweUSSTreeNode | undefined): Promise<IZoweUSSTreeNode[]> {
         if (element) {
             if (element.contextValue === extension.FAVORITE_CONTEXT) {
                 return this.mFavorites;
@@ -93,93 +149,78 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     }
 
     /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refresh(): void {
-        this.mOnDidChangeTreeData.fire();
-    }
-
-    /**
-     * Called whenever the tree needs to be refreshed, and fires the data change event
-     *
-     */
-    public refreshElement(element: ZoweUSSNode): void {
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
-    }
-
-    /**
-     * Returns the parent node or null if it has no parent
-     *
-     * @param {ZoweUSSNode} element
-     * @returns {vscode.ProviderResult<ZoweUSSNode>}
-     */
-    public getParent(element: ZoweUSSNode): vscode.ProviderResult<ZoweUSSNode> {
-        return element.mParent;
-    }
-
-    /**
      * Adds a new session to the uss files tree
      *
-     * @param {string} [sessionName] - optional; loads default profile if not passed
+     * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      */
-    public async addSession(log: Logger, sessionName?: string) {
-        // Loads profile associated with passed sessionName, default if none passed
-        const zosmfProfile: IProfileLoaded = sessionName ? loadNamedProfile(sessionName) : loadDefaultProfile(log);
-        if (zosmfProfile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.mProfileName === zosmfProfile.name)) {
-                return;
+    public async addSession(sessionName?: string) {
+        // Loads profile associated with passed sessionName, persisted profiles or default if none passed
+        if (sessionName) {
+            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (profile) {
+                this.addSingleSession(profile);
             }
-
-            // Uses loaded profile to create a zosmf session with brightside
-            const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
-
-            // Creates ZoweUSSNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweUSSNode(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
-                            zosmfProfile.name);
-            node.contextValue = extension.USS_SESSION_CONTEXT;
-            node.iconPath = utils.applyIcons(node);
-            this.mSessionNodes.push(node);
-            node.dirty = true;
-            this.refresh();
+        } else {
+            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const profile of allProfiles) {
+                // If session is already added, do nothing
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+                    continue;
+                }
+                for (const session of this.mHistory.getSessions()) {
+                    if (session === profile.name) {
+                        this.addSingleSession(profile);
+                    }
+                }
+            }
+            if (this.mSessionNodes.length === 1) {
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+            }
         }
+        this.refresh();
     }
 
     /**
      * Removes a session from the list in the uss files tree
      *
-     * @param {ZoweUSSNode} [node]
+     * @param {IZoweUSSTreeNode} [node]
      */
-    public deleteSession(node: ZoweUSSNode) {
-        // Removes deleted session from mSessionNodes
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
+    public deleteSession(node: IZoweUSSTreeNode) {
+        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
+        let revisedLabel =  node.label;
+        if (revisedLabel.includes("[")) {
+            revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
+        }
+        this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
 
     /**
      * Adds a node to the USS favorites list
      *
-     * @param {ZoweUSSNode} node
+     * @param {IZoweUSSTreeNode} node
      */
-    public async addUSSFavorite(node: ZoweUSSNode) {
+    public async addFavorite(node: IZoweUSSTreeNode) {
         let temp: ZoweUSSNode;
         temp = new ZoweUSSNode(node.fullPath,
             node.collapsibleState,
             this.mFavoriteSession,
             node.getSession(),
-            node.mParent.fullPath,
+            node.getParent().fullPath,
             false,
-            node.getSessionNode().mProfileName);
+            node.getSessionNode().getProfileName());
         temp.contextValue += extension.FAV_SUFFIX;
         if (temp.contextValue === extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX ||
             temp.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
-        temp.iconPath = utils.applyIcons(node);
+        const icon = getIconByNode(temp);
+        if (icon) {
+            temp.iconPath = icon.path;
+        }
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
-            this.mFavorites.push(temp); // testing
+            this.mFavorites.push(temp);
+            sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -188,19 +229,24 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     /**
      * Adds a search node to the USS favorites list
      *
-     * @param {ZoweUSSNode} node
+     * @param {IZoweUSSTreeNode} node
      */
-    public async addUSSSearchFavorite(node: ZoweUSSNode) {
-        const label = "[" + node.getSessionNode().mProfileName + "]: " + node.fullPath;
+    public async saveSearch(node: IZoweUSSTreeNode) {
+        const label = "[" + node.getSessionNode().getProfileName() + "]: " + node.fullPath;
         const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
-            this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().mProfileName);
-        temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+            this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().getProfileName());
+
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
-        temp.iconPath =  utils.applyIcons(temp);
+        temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        const icon = getIconByNode(temp);
+        if (icon) {
+            temp.iconPath = icon.path;
+        }
         temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
+            sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -209,9 +255,9 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     /**
      * Removes a node from the favorites list
      *
-     * @param {ZoweUSSNode} node
+     * @param {IZoweUSSTreeNode} node
      */
-    public async removeUSSFavorite(node: ZoweUSSNode) {
+    public async removeFavorite(node: IZoweUSSTreeNode) {
         this.mFavorites = this.mFavorites.filter((temp) =>
             !((temp.fullPath === node.fullPath) && (temp.contextValue.startsWith(node.contextValue))));
         await this.updateFavorites();
@@ -222,101 +268,164 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
         const settings: any = { ...vscode.workspace.getConfiguration().get(USSTree.persistenceSchema) };
         if (settings.persistence) {
             settings.favorites = this.mFavorites.map((fav) =>
-            (fav.fullPath.startsWith(fav.profileName) ? fav.fullPath : fav.profileName + fav.fullPath) + "{" +
+            (fav.fullPath.startsWith(fav.getProfileName()) ? fav.fullPath : fav.getProfileName() + fav.fullPath) + "{" +
                 fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}");
             await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
         }
     }
 
     /**
-     * Change the state of an expandable node
-     * @param provider the tree view provider
-     * @param element the node being flipped
-     * @param isOpen the intended state of the the tree view provider, true or false
+     * Searches the loaded USS tree for items whose name contains a search string
+     *
      */
-    public async flipState(element: ZoweUSSNode, isOpen: boolean = false) {
-        element.iconPath = utils.applyIcons(element, isOpen ? extension.ICON_STATE_OPEN : extension.ICON_STATE_CLOSED);
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
-    }
+    public async searchInLoadedItems() {
+        if (this.log) {
+            this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        }
+        const loadedNodes: IZoweUSSTreeNode[] = [];
+        const sessions = await this.getChildren();
 
-    public async onDidChangeConfiguration(e) {
-        if (e.affectsConfiguration(USSTree.persistenceSchema)) {
-            const setting: any = { ...vscode.workspace.getConfiguration().get(USSTree.persistenceSchema) };
-            if (!setting.persistence) {
-                setting.favorites = [];
-                setting.history = [];
-                await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema,
-                    setting, vscode.ConfigurationTarget.Global);
+        // Add all data sets loaded in the tree to an array
+        for (const session of sessions) {
+                if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                const nodes = await session.getChildren();
+
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                    const children = nodeToCheck.children;
+                    if (children.length !== 0) {
+                        for (const child of children) { await checkForChildren(child); }
+                    }
+                    loadedNodes.push(nodeToCheck);
+                };
+
+                if (nodes) {
+                    for (const node of nodes) { await checkForChildren(node); }
+                }
             }
         }
-    }
-
-    public async addHistory(criteria: string) {
-        this.mHistory.addHistory(criteria);
-        this.refresh();
+        return loadedNodes;
     }
 
     /**
      * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
      *
-     * @param {ZoweUSSNode} node - The session node
+     * @param {IZoweUSSTreeNode} node - The session node
      * @returns {Promise<void>}
      */
-    public async ussFilterPrompt(node: ZoweUSSNode) {
+    public async filterPrompt(node: IZoweUSSTreeNode) {
         if (this.log) {
-            this.log.debug(localize("ussFilterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
+            this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         let sessionNode = node.getSessionNode();
-        let remotepath: string = USSTree.defaultDialogText;
-        if (node.contextValue === extension.USS_SESSION_CONTEXT) {
-            const modItems = Array.from(this.mHistory.getHistory());
-            if (modItems.length > 0) {
-                // accessing history
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder: localize("searchHistory.options.prompt",
-                    "Choose \"-- Specify Filter --\" to define a new filter or select a previously defined one")
-                };
-                modItems.unshift(USSTree.defaultDialogText);
-                // get user selection
-                remotepath = await vscode.window.showQuickPick(modItems, options1);
-                if (!remotepath) {
-                    vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                    return;
+        let remotepath: string;
+        let usrNme: string;
+        let passWrd: string;
+        let baseEncd: string;
+        if ((!(node.getSession().ISession.user).trim()) || (!(node.getSession().ISession.password).trim())) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(node.getProfileName());
+                if (values !== undefined) {
+                    usrNme = values [0];
+                    passWrd = values [1];
+                    baseEncd = values [2];
                 }
+            } catch (error) {
+                await errorHandling(error, node.getProfileName(),
+                    localize("ussTree.error", "Error encountered in ") + `ussFilterPrompt.optionalProfiles!`);
             }
-            if (remotepath === USSTree.defaultDialogText) {
-                // manually entering a search
-                const options: vscode.InputBoxOptions = {
-                    prompt: localize("ussFilterPrompt.option.prompt.search",
-                        "Search Unix System Services (USS) by entering a path name starting with a /"),
-                    value: sessionNode.fullPath
-                };
-                // get user input
-                remotepath = await vscode.window.showInputBox(options);
-                if (!remotepath) {
-                    vscode.window.showInformationMessage(localize("ussFilterPrompt.enterPath", "You must enter a path."));
-                    return;
-                }
+            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
+                node.getSession().ISession.user = usrNme;
+                node.getSession().ISession.password = passWrd;
+                node.getSession().ISession.base64EncodedAuth = baseEncd;
+                this.validProfile = 0;
+            } else {
+                return;
             }
+            await this.refreshElement(node);
+            await this.refresh();
         } else {
-            // executing search from saved search in favorites
-            remotepath = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-            const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-            await this.addSession(this.log, session);
-            sessionNode = this.mSessionNodes.find((tempNode) =>
-                tempNode.mProfileName === session
-            );
+            this.validProfile = 0;
         }
-        // Sanitization: Replace multiple preceding forward slashes with just one forward slash
-        const sanitizedPath = remotepath.replace(/\/\/+/, "/");
-        sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
-        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        sessionNode.iconPath = utils.applyIcons(sessionNode, extension.ICON_STATE_OPEN);
-        // update the treeview with the new path
-        sessionNode.label = `${sessionNode.mProfileName} [${sanitizedPath}]`;
-        sessionNode.dirty = true;
-        this.addHistory(sanitizedPath);
+        if (this.validProfile === 0) {
+            if (node.contextValue === extension.USS_SESSION_CONTEXT) {
+                if (this.mHistory.getHistory().length > 0) {
+
+                    const createPick = new FilterDescriptor(USSTree.defaultDialogText);
+                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    if (extension.ISTHEIA) {
+                        const options1: vscode.QuickPickOptions = {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter")
+                        };
+                        // get user selection
+                        const choice = (await vscode.window.showQuickPick([createPick, ...items], options1));
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        remotepath = choice === createPick ? "" : choice.label;
+                    } else {
+                        const quickpick = vscode.window.createQuickPick();
+                        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+                        quickpick.items = [createPick, ...items];
+                        quickpick.ignoreFocusOut = true;
+                        quickpick.show();
+                        const choice = await resolveQuickPickHelper(quickpick);
+                        quickpick.hide();
+                        if (!choice) {
+                            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                            return;
+                        }
+                        if (choice instanceof FilterDescriptor) {
+                            if (quickpick.value) {
+                                remotepath = quickpick.value;
+                            }
+                        } else {
+                            remotepath = choice.label;
+                        }
+                    }
+                }
+                if (!remotepath) {
+                    // manually entering a search - switch to an input box
+                    const options: vscode.InputBoxOptions = {
+                        prompt: localize("filterPrompt.option.prompt.search",
+                            "Create a new filter"),
+                        value: sessionNode.fullPath
+                    };
+                    // get user input
+                    remotepath = await vscode.window.showInputBox(options);
+                    if (!remotepath || remotepath.length === 0) {
+                        vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
+                        return;
+                    }
+                }
+            } else {
+                // executing search from saved search in favorites
+                remotepath = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
+                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                await this.addSession(session);
+                const faveNode = node;
+                sessionNode = this.mSessionNodes.find((tempNode) =>
+                    tempNode.getProfileName() === session
+                );
+                if ((!sessionNode.getSession().ISession.user) || (!sessionNode.getSession().ISession.password)) {
+                    sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
+                    sessionNode.getSession().ISession.password = faveNode.getSession().ISession.password;
+                    sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                }
+            }
+            // Sanitization: Replace multiple preceding forward slashes with just one forward slash
+            const sanitizedPath = remotepath.replace(/\/\/+/, "/");
+            sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
+            sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            const icon = getIconByNode(sessionNode);
+            if (icon) {
+                sessionNode.iconPath = icon.path;
+            }
+            // update the treeview with the new path
+            sessionNode.label = `${sessionNode.getProfileName()} [${sanitizedPath}]`;
+            sessionNode.dirty = true;
+            this.addHistory(sanitizedPath);
+        }
     }
 
     public async initialize(log: Logger) {
@@ -330,11 +439,10 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
-                const zosmfProfile = loadNamedProfile(sesName);
-                const session = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
+                const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
-                // if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.USS_DIR_CONTEXT) {
                     node = new ZoweUSSNode(nodeName,
                         vscode.TreeItemCollapsibleState.Collapsed,
                         this.mFavoriteSession, session, "",
@@ -357,19 +465,49 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
                                     title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
                 }
                 node.contextValue += extension.FAV_SUFFIX;
-                node.iconPath = utils.applyIcons(node);
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
                 this.mFavorites.push(node);
-        } catch(e) {
-            vscode.window.showErrorMessage(
+            } catch(e) {
+                const errMessage: string =
                 localize("initializeUSSFavorites.error.profile1",
-                "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
-                localize("intializeUSSFavorites.error.profile2",
-                ". To resolve this, you can create a profile with this name, ") +
-                localize("initializeUSSFavorites.error.profile3",
-                "or remove the favorites with this profile name from the Zowe-USS-Persistent-Favorites setting, ") +
-                localize("initializeUSSFavorites.error.profile4", "which can be found in your VS Code user settings."));
-            return;
-        }
+                    "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ") + profileName +
+                    localize("intializeUSSFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                    localize("initializeUSSFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ") +
+                    getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings.");
+                errorHandling(e, null, errMessage);
+                return;
+            }
         });
+    }
+
+    /**
+     * Adds a single session to the USS tree
+     *
+     */
+    private async addSingleSession(profile: IProfileLoaded) {
+        if (profile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a session with the USS API
+            const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
+                             profile.name);
+            node.contextValue = extension.USS_SESSION_CONTEXT;
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
+            }
+            node.dirty = true;
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(profile.name);
+        }
     }
 }

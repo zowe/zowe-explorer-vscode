@@ -10,8 +10,8 @@
 */
 
 // tslint:disable:no-magic-numbers
-import * as zowe from "@brightside/core";
-import { Logger } from "@brightside/imperative";
+import * as zowe from "@zowe/cli";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
 import * as chai from "chai";
 import * as sinon from "sinon";
 import * as chaiAsPromised from "chai-as-promised";
@@ -22,16 +22,25 @@ import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/USSTree";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import * as extension from "../../src/extension";
+
 declare var it: any;
+
+const testProfile: IProfileLoaded = {
+    name: testConst.profile.name,
+    profile: testConst.profile,
+    type: testConst.profile.type,
+    message: "",
+    failNotFound: false
+};
 
 describe("USSTree Integration Tests", async () => {
     const TIMEOUT = 120000;
-
     chai.use(chaiAsPromised);
-    // Uses loaded profile to create a zosmf session with brightside
+
+    // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
-         null, session, "", false, testConst.profile.name);
+         null, session, "", false, testProfile.name);
     sessNode.contextValue = extension.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
@@ -49,10 +58,10 @@ describe("USSTree Integration Tests", async () => {
         sandbox.restore();
     });
 
-    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent-Favorites");
+    const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent-Favorites", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
     });
 
 
@@ -109,7 +118,7 @@ describe("USSTree Integration Tests", async () => {
         expect(sessChildren2.length).toEqual(sampleRChildren.length);
         expect(dirChildren.length).toBe(2);
         expect(dirChildren[0].label).toBe("aFile4.txt");
-        expect(dirChildren[0].mParent.tooltip).toContain("/group/aDir5");
+        expect(dirChildren[0].getParent().tooltip).toContain("/group/aDir5");
         expect(dirChildren[0].tooltip).toContain("/group/aDir5/aFile4.txt");
         expect(dirChildren[1].label).toBe("aFile5.txt");
         expect(dirChildren[1].tooltip).toContain("/group/aDir5/aFile5.txt");
@@ -182,22 +191,26 @@ describe("USSTree Integration Tests", async () => {
      * Tests the deleteSession() function
      *************************************************************************************************************/
     it("Tests the addSession() function by adding a default, deleting, then adding a passed session", async () => {
-        const len = testTree.mSessionNodes.length;
+        let len = testTree.mSessionNodes.length;
         const log = new Logger(undefined);
-        await testTree.addSession(log);
-        expect(testTree.mSessionNodes.length).toEqual(len + 1);
-        testTree.deleteSession(testTree.mSessionNodes[len]);
-        await testTree.addSession(testConst.profile.name);
+        await testTree.addSession();
+        expect(testTree.mSessionNodes.length).toBeGreaterThanOrEqual(len + 1);
+        len = testTree.mSessionNodes.length;
+        const testNode = testTree.mSessionNodes[len - 1];
+        testTree.deleteSession(testNode);
+        len--;
+        expect(testTree.mSessionNodes.length).toEqual(len);
+        await testTree.addSession(testNode.label);
         expect(testTree.mSessionNodes.length).toEqual(len + 1);
     }).timeout(TIMEOUT);
 
     describe("add USS Favorite for a file and a search", () => {
         it("should add the selected data set to the treeView", async () => {
             const log = new Logger(undefined);
-            await testTree.addSession(log);
+            await testTree.addSession();
             const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
                 sessNode, null, sessNode.fullPath, testConst.profile.name);
-            await testTree.addUSSFavorite(favoriteNode);
+            await testTree.addFavorite(favoriteNode);
             const filtered = testTree.mFavorites.filter((temp) => temp.label ===
                 `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);
@@ -207,8 +220,8 @@ describe("USSTree Integration Tests", async () => {
 
         it("should add a favorite search", async () => {
             const log = new Logger(undefined);
-            await testTree.addSession(log);
-            await testTree.addUSSSearchFavorite(sessNode);
+            await testTree.addSession();
+            await testTree.saveSearch(sessNode);
             const filtered = testTree.mFavorites.filter((temp) =>
                 temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);
             expect(filtered.length).toEqual(1);
