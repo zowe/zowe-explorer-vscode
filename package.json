@@ -143,10 +143,6 @@
         "title": "%deleteDataset%"
       },
       {
-        "command": "zowe.sample.command",
-        "title": "Sample Command Activation"
-      },
-      {
         "command": "zowe.deleteMember",
         "title": "%deleteMember%"
       },
@@ -818,22 +814,13 @@
           "group": "3_systemSpecific"
         },
         {
-          "when": "view == zowe.jobs && viewItem =~ /^job.*/ && viewItem =~ /^.*_rc=CC.*/",
-          "command": "zowe.sample.command",
-          "group": "4_workspace"
-        },   
-        {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.getJobJcl",
           "group": "0_mainframeInteraction"
         }
       ],
       "commandPalette": [
-        {
-          "command": "zowe.sample.command",
-          "when": "never"
-        },        
-        {
+         {
           "command": "zowe.pattern",
           "when": "never"
         },
