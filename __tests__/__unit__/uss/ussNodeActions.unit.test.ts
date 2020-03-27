@@ -21,7 +21,6 @@ import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles } from "../../../src/Profiles";
-import * as utils from "../../../src/utils";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -375,82 +374,6 @@ describe("ussNodeActions", () => {
         });
     });
 
-    describe("renameUSSNode", () => {
-        const executeCommand = jest.fn();
-        Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
-
-        const resetMocks = () => {
-            executeCommand.mockReset();
-            showErrorMessage.mockReset();
-            renameUSSFile.mockReset();
-            showInputBox.mockReset();
-        };
-        const resetNode = (node: ZoweUSSNode) => {
-          node.label = "";
-          node.shortLabel = "";
-        };
-
-        it("should exit if blank input is provided", async () => {
-            resetMocks();
-            resetNode(ussNode);
-
-            showInputBox.mockReturnValueOnce("");
-            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(showErrorMessage.mock.calls.length).toBe(0);
-            expect(renameUSSFile.mock.calls.length).toBe(0);
-            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
-        });
-        it("should execute rename USS file and and refresh the tree", async () => {
-            resetMocks();
-            resetNode(ussNode);
-
-            showInputBox.mockReturnValueOnce("new name");
-            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(showErrorMessage.mock.calls.length).toBe(0);
-            expect(renameUSSFile.mock.calls.length).toBe(1);
-        });
-        it("should attempt rename USS file but abort with no name", async () => {
-            resetMocks();
-            resetNode(ussNode);
-
-            showInputBox.mockReturnValueOnce(undefined);
-            await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-            expect(testUSSTree.refreshElement).not.toHaveBeenCalled();
-        });
-        // TODO CHeck this has been duplicated
-        // it("should execute rename favorite USS file", async () => {
-        //     resetMocks();
-        //     resetNode(ussNode);
-
-        //     showInputBox.mockReturnValueOnce("new name");
-        //     await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-        //     expect(showErrorMessage.mock.calls.length).toBe(0);
-        //     expect(renameUSSFile.mock.calls.length).toBe(1);
-        //     expect(mockRemoveUSSFavorite.mock.calls.length).toBe(1);
-        //     expect(mockAddUSSFavorite.mock.calls.length).toBe(1);
-        // });
-        it("should attempt to rename USS file but throw an error", async () => {
-            resetMocks();
-            resetNode(ussNode);
-
-            showInputBox.mockReturnValueOnce("new name");
-            renameUSSFile.mockRejectedValueOnce(Error("testError"));
-            try {
-                await ussNodeActions.renameUSSNode(ussNode, testUSSTree, "file");
-                // tslint:disable-next-line:no-empty
-            } catch (err) {
-            }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
-        });
-        it("should execute rename favorite USS file", async () => {
-            showInputBox.mockReturnValueOnce("new name");
-            await ussNodeActions.renameUSSNode(ussFavNode, testUSSTree, "file");
-            expect(showErrorMessage.mock.calls.length).toBe(0);
-            expect(renameUSSFile.mock.calls.length).toBe(1);
-            expect(mockRemoveFavorite.mock.calls.length).toBe(1);
-            expect(mockAddFavorite.mock.calls.length).toBe(1);
-        });
-    });
     describe("uploadFile", () => {
         Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});

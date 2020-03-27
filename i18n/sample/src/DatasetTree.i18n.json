@@ -16,5 +16,8 @@
     "enterPattern.pattern": "No selection made.",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
     "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
+    "renameDataSet.log.debug": "Renaming data set ",
+    "renameDataSet.log.error": "Error encountered when renaming data set! ",
+    "renameDataSet.error": "Unable to rename data set: ",
     "defaultFilterPrompt.option.prompt.search": "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)"
 }

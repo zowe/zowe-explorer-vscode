@@ -20,7 +20,6 @@ import * as vscode from "vscode";
 import { USSTree } from "../../../src/USSTree";
 import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
 import * as extension from "../../../src/extension";
-import { renameUSSNode } from "../../../src/uss/ussNodeActions";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -120,7 +119,7 @@ describe("ussNodeActions integration test", async () => {
                 const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                 inputBoxStub.returns(afterNameBase);
 
-                await renameUSSNode(testNode, testTree, testNode.getUSSDocumentFilePath());
+                await testTree.rename(testNode);
                 list = await zowe.List.fileList(sessionNode.getSession(), path);
                 list = list.apiResponse.items ? list.apiResponse.items.map((entry) => entry.name) : [];
             } catch (err) {

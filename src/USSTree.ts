@@ -11,14 +11,13 @@
 
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
-import * as ussNodeActions from "./uss/ussNodeActions";
+import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { Profiles } from "./Profiles";
 import * as extension from "../src/extension";
-import * as path from "path";
 import * as nls from "vscode-nls";
 import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
@@ -65,8 +64,40 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
     }
 
+    /**
+     * Method for renaming a USS Node. This could be a Favorite Node
+     *
+     * @param originalNode
+     * @param {string} filePath
+     */
     public async rename(originalNode: IZoweUSSTreeNode) {
-        await ussNodeActions.renameUSSNode(originalNode, this, undefined);
+    // Could be a favorite or regular entry always deal with the regular entry
+    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
+    const oldLabel = originalNode.label;
+    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+    // Check if an old favorite exists for this node
+    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
+        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+    );
+    const newName = await vscode.window.showInputBox({value: oldLabel});
+    if (newName && newName !== oldLabel) {
+        try {
+            let newNamePath = path.join(parentPath + newName);
+            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            await ZoweExplorerApiRegister.getUssApi(
+                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
+            originalNode.rename(newNamePath);
+
+            if (oldFavorite) {
+                this.removeFavorite(oldFavorite);
+                oldFavorite.rename(newNamePath);
+                this.addFavorite(oldFavorite);
+            }
+        } catch (err) {
+            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+            throw (err);
+        }
+    }
     }
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
