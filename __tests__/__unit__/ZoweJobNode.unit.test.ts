@@ -243,7 +243,7 @@ describe("Zos Jobs Unit Tests", () => {
         it("tests that the user is informed when a job is deleted", async () => {
             showInformationMessage.mockReset();
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            await testJobsProvider.deleteJob(jobNode);
+            await testJobsProvider.delete(jobNode);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toEqual(
                 `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted`

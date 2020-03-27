@@ -11,7 +11,7 @@
 
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
-import * as ussNodeActions from "./uss/ussNodeActions";
+import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
@@ -66,8 +66,40 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
     }
 
+    /**
+     * Method for renaming a USS Node. This could be a Favorite Node
+     *
+     * @param originalNode
+     * @param {string} filePath
+     */
     public async rename(originalNode: IZoweUSSTreeNode) {
-        await ussNodeActions.renameUSSNode(originalNode, this, undefined);
+    // Could be a favorite or regular entry always deal with the regular entry
+    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
+    const oldLabel = originalNode.label;
+    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+    // Check if an old favorite exists for this node
+    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
+        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+    );
+    const newName = await vscode.window.showInputBox({value: oldLabel});
+    if (newName && newName !== oldLabel) {
+        try {
+            let newNamePath = path.join(parentPath + newName);
+            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            await ZoweExplorerApiRegister.getUssApi(
+                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
+            originalNode.rename(newNamePath);
+
+            if (oldFavorite) {
+                this.removeFavorite(oldFavorite);
+                oldFavorite.rename(newNamePath);
+                this.addFavorite(oldFavorite);
+            }
+        } catch (err) {
+            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+            throw (err);
+        }
+    }
     }
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
@@ -240,6 +272,38 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}");
             await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
         }
+    }
+
+    /**
+     * Searches the loaded USS tree for items whose name contains a search string
+     *
+     */
+    public async searchInLoadedItems() {
+        if (this.log) {
+            this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        }
+        const loadedNodes: IZoweUSSTreeNode[] = [];
+        const sessions = await this.getChildren();
+
+        // Add all data sets loaded in the tree to an array
+        for (const session of sessions) {
+                if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                const nodes = await session.getChildren();
+
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                    const children = nodeToCheck.children;
+                    if (children.length !== 0) {
+                        for (const child of children) { await checkForChildren(child); }
+                    }
+                    loadedNodes.push(nodeToCheck);
+                };
+
+                if (nodes) {
+                    for (const node of nodes) { await checkForChildren(node); }
+                }
+            }
+        }
+        return loadedNodes;
     }
 
     /**

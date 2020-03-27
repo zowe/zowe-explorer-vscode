@@ -10,9 +10,10 @@
 */
 
 import { TreeItem, QuickPickItem, QuickPick, window, TreeItemCollapsibleState } from "vscode";
-import * as extension from "../src/extension";
+import * as path from "path";
 import { ISession } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
+import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
 import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -48,9 +49,9 @@ export async function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements QuickPickItem {
-    constructor(private text: string) { }
+    constructor(private text: string, private desc?: string) { }
     get label(): string { return this.text; }
-    get description(): string { return ""; }
+    get description(): string { if (this.desc) { return this.desc; } else { return ""; } }
     get alwaysShow(): boolean { return false; }
 }
 
