@@ -311,7 +311,7 @@ describe("Extension Integration Tests", () => {
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
             const node = new ZoweDatasetNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
-            await extension.openPS(node, true);
+            await extension.openPS(node, true, testTree);
             expect(path.relative(vscode.window.activeTextEditor.document.fileName,
                 extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal("");
             expect(fs.existsSync(extension.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
@@ -320,7 +320,7 @@ describe("Extension Integration Tests", () => {
         it("should display an error message when openPS is passed an invalid node", async () => {
             const node = new ZoweDatasetNode(pattern + ".GARBAGE", vscode.TreeItemCollapsibleState.None, sessionNode, null);
             const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await expect(extension.openPS(node, true)).to.eventually.be.rejectedWith(Error);
+            await expect(extension.openPS(node, true, testTree)).to.eventually.be.rejectedWith(Error);
 
             const called = errorMessageStub.called;
             expect(called).to.equal(true);
@@ -334,7 +334,7 @@ describe("Extension Integration Tests", () => {
             profiles[1].dirty = true;
             const children = await profiles[1].getChildren();
             children[1].dirty = true;
-            await extension.openPS(children[1], true);
+            await extension.openPS(children[1], true, testTree);
 
             const changedData = "PS Upload Test";
 
@@ -346,7 +346,7 @@ describe("Extension Integration Tests", () => {
             await extension.saveFile(doc, testTree);
 
             // Download file
-            await extension.openPS(children[1], true);
+            await extension.openPS(children[1], true, testTree);
 
             expect(doc.getText().trim()).to.deep.equal("PS Upload Test");
 
@@ -364,7 +364,7 @@ describe("Extension Integration Tests", () => {
 
             // Test for member under PO
             const childrenMembers = await testTree.getChildren(children[0]);
-            await extension.openPS(childrenMembers[0], true);
+            await extension.openPS(childrenMembers[0], true, testTree);
 
             const changedData2 = "PO Member Upload Test";
 
@@ -376,7 +376,7 @@ describe("Extension Integration Tests", () => {
             extension.saveFile(doc2, testTree);
 
             // Download file
-            await extension.openPS(childrenMembers[0], true);
+            await extension.openPS(childrenMembers[0], true, testTree);
 
             expect(doc2.getText().trim()).to.deep.equal("PO Member Upload Test");
 
