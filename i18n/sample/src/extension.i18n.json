@@ -70,6 +70,7 @@
     "deleteDataSet.notFound.error2": " was probably already deleted.",
     "enterPattern.log.debug.prompt": "Prompting the user to choose a recent member for editing",
     "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
+    "openPS.response.title": "Opening dataset...",
     "memberHistory.option.prompt.open": "Select a recent member to open",
     "memberHistory.options.prompt": "Select a recent member to open",
     "getRecentMembers.empty": "No recent members found.",
@@ -90,7 +91,7 @@
     "saveFile.log.debug.sessionNode": "couldn't find session node, loading profile with CLI profile manager",
     "saveFile.log.debug.saving": "Saving file ",
     "saveFile.error.saveFailed": "Data set failed to save. Data set may have been deleted on mainframe.",
-    "saveFile.response.save.title": "Saving data set...",
+    "saveFile.response.save.title": "Saving dataset...",
     "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
     "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",
     "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",
@@ -100,5 +101,7 @@
     "modifyCommand.response": "Command response: ",
     "stopCommand.response": "Command response: ",
     "setOwner.newOwner.prompt.owner": "Owner",
-    "setOwner.newOwner.prompt.prefix": "Prefix"
+    "setOwner.newOwner.prompt.prefix": "Prefix",
+    "openMember.response.title": "Opening dataset member...",
+    "saveMember.response.title": "Saving dataset member..."
 }
