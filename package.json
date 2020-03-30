@@ -1244,7 +1244,7 @@
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.4.0",
     "sinon": "^6.1.0",
-    "ts-jest": "^25.2.0",
+    "ts-jest": "^25.3.0",
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
@@ -1252,7 +1252,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@zowe/cli": "6.8.2",
+    "@zowe/cli": "6.10.1",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "moment": "2.24.0",
