@@ -70,8 +70,10 @@ export class Profiles {
         return this.defaultProfileByType.get(type);
     }
 
-    public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
+    public getProfiles(type?: string): IProfileLoaded[] {
         return this.profilesByType.get(type);
+        // const response = this.allProfiles[type];
+        // return this.profilesByType.get(response);
     }
 
     public async refresh(): Promise<void> {
@@ -131,7 +133,7 @@ export class Profiles {
                 if (this.validateAndParseUrl(urlInputBox.value).valid) {
                     resolve(urlInputBox.value);
                 } else {
-                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosURL",
                         "Please enter a valid URL in the format https://url:port.");
                 }
             });
@@ -141,27 +143,42 @@ export class Profiles {
     public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
         let userName: string;
         let passWord: string;
-        let zosmfURL: string;
+        let zosURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
+
+        const type = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
+        // tslint:disable-next-line:no-console
+        console.log(type);
+
+        const typeOptions = Array.from(type);
+
+        const quickPickTypeOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type")
+        };
+
+        const chosenType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+
+        // tslint:disable-next-line:no-console
+        console.log(chosenType);
 
         const urlInputBox = vscode.window.createInputBox();
         urlInputBox.ignoreFocusOut = true;
         urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
         urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-            "Enter a z/OSMF URL in the format 'https://url:port'.");
+            "Enter a z/OS URL in the format 'https://url:port'.");
 
         urlInputBox.show();
-        zosmfURL = await this.getUrl(urlInputBox);
+        zosURL = await this.getUrl(urlInputBox);
         urlInputBox.dispose();
 
-        if (!zosmfURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                "No valid value for z/OSMF URL. Operation Cancelled"));
+        if (!zosURL) {
+            vscode.window.showInformationMessage(localize("createNewConnection.zosURL",
+                "No valid value for z/OS URL. Operation Cancelled"));
             return undefined;
         }
 
-        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
+        const zosUrlParsed = this.validateAndParseUrl(zosURL);
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
@@ -223,8 +240,8 @@ export class Profiles {
 
         IConnection = {
             name: profileName,
-            host: zosmfUrlParsed.host,
-            port: zosmfUrlParsed.port,
+            host: zosUrlParsed.host,
+            port: zosUrlParsed.port,
             user: userName,
             password: passWord,
             rejectUnauthorized: rejectUnauthorize
