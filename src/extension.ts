@@ -37,7 +37,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { getIconByNode } from "./generators/icons";
-import { closeOpenedTextFile } from "./utils/workspace";
+import * as context from "./utils/context";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -48,7 +48,9 @@ export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
-export const FAV_SUFFIX = "_fav";
+export const CONTEXT_PREFIX = "_";
+export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
+export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
 export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";
 export const DS_FAV_CONTEXT = "ds_fav";
@@ -712,25 +714,25 @@ export async function submitMember(node: IZoweTreeNode) {
     let sessProfile;
     let regex;
     const profiles = await Profiles.getInstance();
-    switch (node.getParent().contextValue) {
-        case (FAVORITE_CONTEXT):
+    switch (true) {
+        case (context.isFavoriteContext(node.getParent())):
             regex = labelregex.exec(node.getLabel());
             sesName = regex[1];
             label = regex[2];
             sessProfile = profiles.loadNamedProfile(sesName);
             break;
-        case (DS_PDS_CONTEXT + FAV_SUFFIX):
+        case (context.isFavoritePds(node.getParent())):
             regex = labelregex.exec(node.getParent().getLabel());
             sesName = regex[1];
             label = regex[2] + "(" + node.label.trim()+ ")";
             sessProfile = node.getParent().getProfile();
             break;
-        case (DS_SESSION_CONTEXT):
+        case (context.isDsSession(node.getParent())):
             sesName = node.getParent().getLabel();
             label = node.label;
             sessProfile = node.getParent().getProfile();
             break;
-        case (DS_PDS_CONTEXT):
+        case (context.isPds(node.getParent())):
             sesName = node.getParent().getParent().getLabel();
             label = node.getParent().getLabel() + "(" + node.label.trim()+ ")";
             sessProfile = node.getParent().getParent().getProfile();
@@ -892,7 +894,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
     let sesNamePrompt: string;
-    if (node.contextValue.endsWith(FAV_SUFFIX)) {
+    if (context.isFavorite(node)) {
         sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
     } else {
         sesNamePrompt = node.label;
@@ -1029,7 +1031,7 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
     log.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
         let label = parent.label.trim();
-        if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX) {
+        if (context.isFavoritePds(parent)) {
             label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
         }
 
@@ -1060,7 +1062,7 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
 export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
 
     let label = parent.label.trim();
-    if (parent.contextValue === DS_PDS_CONTEXT + FAV_SUFFIX || parent.contextValue === DS_DS_CONTEXT + FAV_SUFFIX) {
+    if (context.isFavoriteDataset(parent)) {
         label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
     }
 
@@ -1117,7 +1119,7 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
 function getProfileAndDataSetName(node: IZoweNodeType) {
     let profileName;
     let dataSetName;
-    if (node.contextValue.includes(FAV_SUFFIX)) {
+    if (context.isFavorite(node)) {
         profileName = node.label.substring(1, node.label.indexOf("]"));
         dataSetName = node.label.substring(node.label.indexOf(":") + 2);
     } else {
@@ -1205,7 +1207,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
         if (memberName) {
             datasetProvider.refreshElement(node);
             let node2;
-            if (node.contextValue.includes(FAV_SUFFIX)) {
+            if (context.isFavorite(node)) {
                 node2 = datasetProvider.findNonFavoritedNode(node);
             } else {
                 node2 = datasetProvider.findFavoritedNode(node);
@@ -1290,19 +1292,19 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     let label = "";
     let fav = false;
     try {
-        switch (node.getParent().contextValue) {
-            case (FAVORITE_CONTEXT):
+        switch (true) {
+            case (context.isFavoriteContext(node.getParent())):
                 label = node.label.substring(node.label.indexOf(":") + 1).trim();
                 fav = true;
                 break;
-            case (DS_PDS_CONTEXT + FAV_SUFFIX):
+            case (context.isFavoritePds(node.getParent())):
                 label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
                 fav = true;
                 break;
-            case (DS_SESSION_CONTEXT):
+            case (context.isDsSession(node.getParent())):
                 label = node.getLabel();
                 break;
-            case (DS_PDS_CONTEXT):
+            case (context.isPds(node.getParent())):
                 label = node.getParent().getLabel()+ "(" + node.getLabel()+ ")";
                 break;
             default:
@@ -1341,7 +1343,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     // refresh Tree View & favorites
     if (node.getParent() && node.getParent().contextValue !== DS_SESSION_CONTEXT) {
         datasetProvider.refreshElement(node.getParent());
-        if (node.getParent().contextValue.includes(FAV_SUFFIX) || node.getParent().contextValue === FAVORITE_CONTEXT) {
+        if (context.isFavorite(node.getParent()) || context.isFavoriteContext(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node.getParent());
             if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
         } else {
@@ -1501,7 +1503,7 @@ export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
  */
 export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean, datasetProvider?: IZoweTree<IZoweDatasetTreeNode>) {
     let sesNamePrompt: string;
-    if (node.contextValue.endsWith(FAV_SUFFIX)) {
+    if (context.isFavorite(node)) {
         sesNamePrompt = node.getLabel().substring(1, node.getLabel().indexOf("]"));
     } else {
         sesNamePrompt = node.getLabel();
@@ -1533,17 +1535,17 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
     if (validProfile === 0) {
         try {
             let label: string;
-            switch (node.getParent().contextValue) {
-                case (FAVORITE_CONTEXT):
+            switch (true) {
+                case (context.isFavoriteContext(node.getParent())):
                     label = node.label.substring(node.label.indexOf(":") + 1).trim();
                     break;
-                case (DS_PDS_CONTEXT + FAV_SUFFIX):
+                case (context.isFavoritePds(node.getParent())):
                     label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
                     break;
-                case (DS_SESSION_CONTEXT):
+                case (context.isDsSession(node.getParent())):
                     label = node.label.trim();
                     break;
-                case (DS_PDS_CONTEXT):
+                case (context.isPds(node.getParent())):
                     label = node.getParent().getLabel().trim() + "(" + node.getLabel()+ ")";
                     break;
                 default:
@@ -1586,6 +1588,10 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
  */
 export async function refreshPS(node: IZoweDatasetTreeNode) {
     let label;
+
+
+
+    
     try {
         switch (node.getParent().contextValue) {
             case (FAVORITE_CONTEXT):
@@ -1956,7 +1962,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
 
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     let sesNamePrompt: string;
-    if (node.contextValue.endsWith(FAV_SUFFIX)) {
+    if (context.isFavorite(node)) {
         sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
     } else {
         sesNamePrompt = node.label;

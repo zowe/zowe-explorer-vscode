@@ -116,7 +116,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
                         if (job.retcode) {
-                            jobNode.contextValue += `_rc=${job.retcode}`;
+                            jobNode.contextValue += extension.RC_SUFFIX + job.retcode;
                         }
                         if (!jobNode.iconPath) {
                             const icon = getIconByNode(jobNode);
@@ -124,7 +124,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                                 jobNode.iconPath = icon.path;
                             }
                         }
-                        // vscode.commands.executeCommand("setContext", "rc", "s0c4");
                         elementChildren.push(jobNode);
                     }
                 });

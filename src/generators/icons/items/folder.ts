@@ -11,13 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../utils/icon";
-import { isGroup } from "../../../utils/context";
+import { isFolder } from "../../../utils/context";
 
 const icon: IIconItem = {
     id: IconId.folder,
     type: IconHierarchyType.base,
     path: getIconPathInResources("folder-closed.svg"),
-    check: (node) => isGroup(node)
+    check: (node) => isFolder(node)
 };
 
 export default icon;

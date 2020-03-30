@@ -27,6 +27,7 @@ import { injectAdditionalDataToTooltip } from "./utils/uss";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
+import * as context from "./utils/context";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -127,8 +128,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
-        if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
-            (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
+        if ((!this.fullPath && context.isSession(this)) ||
+            (this.contextValue === extension.DS_TEXT_FILE_CONTEXT || // TODO this sequence makes no sense why text file or binary when a favorite?.
                 this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
             return [];
         }
@@ -214,7 +215,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
             }
         });
-        if (this.contextValue === extension.USS_SESSION_CONTEXT) {
+        if (context.isSession(this)) {
             this.dirty = false;
         }
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
@@ -229,7 +230,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.getParent() && this.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+        if (this.getParent() && context.isFavoriteContext(this.getParent())) {
             this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
                 this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
         }
@@ -420,16 +421,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (validProfile === 0) {
             try {
                 let label: string;
-                switch (this.getParent().contextValue) {
-                    case (extension.FAVORITE_CONTEXT):
+                switch (true) {
+                    case (context.isFavoriteContext(this.getParent())):
                         label = this.label.substring(this.label.indexOf(":") + 1).trim();
                         break;
                     // Handle file path for files in directories and favorited directories
-                    case (extension.USS_DIR_CONTEXT):
-                    case (extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX):
+                    case (context.isUssDirectory(this.getParent())):
                         label = this.fullPath;
                         break;
-                    case (extension.USS_SESSION_CONTEXT):
+                    case (context.isUssSession(this.getParent())):
                         label = this.label;
                         break;
                     default:
@@ -475,14 +475,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async refreshUSS() {
         let label;
-        switch (this.getParent().contextValue) {
-            case (extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX):
+        switch (true) {
+            case (context.isUssDirectory(this.getParent())):
                 label = this.fullPath;
                 break;
-            case (extension.USS_DIR_CONTEXT):
-                label = this.fullPath;
-                break;
-            case (extension.USS_SESSION_CONTEXT):
+            case (context.isUssSession(this.getParent())):
                 label = this.label;
                 break;
             default:

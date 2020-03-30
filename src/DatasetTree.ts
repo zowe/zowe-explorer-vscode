@@ -23,6 +23,7 @@ import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconByNode } from "./generators/icons";
 import { closeOpenedTextFile } from "./utils/workspace";
+import * as context from "./utils/context";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -157,7 +158,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             this.mFavoriteSession, session, undefined, undefined, profile);
                         node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
                     }
-                    node.contextValue += extension.FAV_SUFFIX;
+                    context.deriveFavorite(node);
                     const icon = getIconByNode(node);
                     if (icon) {
                         node.iconPath = icon.path;
@@ -287,8 +288,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             temp.command = {command: "zowe.pattern", title: "", arguments: [temp]};
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
-                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
-            temp.contextValue += extension.FAV_SUFFIX;
+            this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
+            context.deriveFavorite(temp);
             if (temp.contextValue === extension.DS_DS_CONTEXT + extension.FAV_SUFFIX) {
                 temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
             }
@@ -382,7 +383,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async updateFavorites() {
         const settings = this.mFavorites.map((fav) =>
-            fav.label + "{" + fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}"
+            fav.label + "{" + context.getBaseContext(fav) + "}"
         );
         this.mHistory.updateFavorites(settings);
     }
@@ -439,7 +440,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let passWrd: string;
         let baseEncd: string;
         let sesNamePrompt: string;
-        if (node.contextValue.endsWith(extension.FAV_SUFFIX)) {
+        if (context.isFavorite(node)) {
             sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
         } else {
             sesNamePrompt = node.label;
@@ -557,7 +558,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let dataSetName;
         let profileLabel;
 
-        if (node.getParent().contextValue.includes(extension.FAV_SUFFIX)) {
+        if (context.isFavorite(node.getParent())) {
             profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
             dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
         } else {
@@ -578,7 +579,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 throw err;
             }
             let otherParent;
-            if (node.getParent().contextValue.includes(extension.FAV_SUFFIX)) {
+            if (context.isFavorite(node.getParent())) {
                 otherParent = this.findNonFavoritedNode(node.getParent());
             } else {
                 otherParent = this.findFavoritedNode(node.getParent());
@@ -611,7 +612,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let favPrefix = "";
         let isFavourite;
 
-        if (node.contextValue.includes(extension.FAV_SUFFIX)) {
+        if (context.isFavorite(node)) {
             isFavourite = true;
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);

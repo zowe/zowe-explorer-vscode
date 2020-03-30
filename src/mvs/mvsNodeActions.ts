@@ -17,6 +17,7 @@ import * as utils from "../utils";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
+import * as context from "../utils/context";
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
@@ -37,7 +38,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
     // refresh Tree View & favorites
     datasetProvider.refreshElement(node);
-    if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+    if (context.isFavorite(node) || context.isFavoriteContext(node)) {
         const nonFavNode = datasetProvider.findNonFavoritedNode(node);
         if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
     } else {
