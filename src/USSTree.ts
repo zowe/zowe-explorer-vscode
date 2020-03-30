@@ -265,9 +265,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public async updateFavorites() {
         const settings: any = { ...vscode.workspace.getConfiguration().get(USSTree.persistenceSchema) };
         if (settings.persistence) {
-            settings.favorites = this.mFavorites.map((fav) =>
-            (fav.fullPath.startsWith(fav.getProfileName()) ? fav.fullPath : fav.getProfileName() + fav.fullPath) + "{" +
-                fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}");
+            settings.favorites = this.mFavorites.map((fav) => {
+                const correctedProfileName = "[" + fav.getProfileName() + "]: ";
+                return (fav.fullPath.startsWith(correctedProfileName) ? fav.fullPath : correctedProfileName + fav.fullPath) + "{" +
+                    fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}";
+                }
+            );
             await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
         }
     }
