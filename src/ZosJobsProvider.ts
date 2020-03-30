@@ -503,6 +503,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return revisedCriteria.trim();
     }
 
+    public async addRecall(criteria: string) {
+        throw new Error("Method not implemented.");
+    }
+
     public interpretFreeform(input: string): string {
         let jobId: string;
         let owner: string;

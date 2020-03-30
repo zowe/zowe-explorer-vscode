@@ -19,6 +19,7 @@ import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
+import * as utils from "../../src/utils";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
 
@@ -58,6 +59,7 @@ describe("DatasetTree Integration Tests", async () => {
     afterEach(async () => {
         sandbox.restore();
     });
+
     /*************************************************************************************************************
      * Creates a datasetTree and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
@@ -230,6 +232,21 @@ describe("DatasetTree Integration Tests", async () => {
             testTree.removeFavorite(testTree.mFavorites[len - 1]);
             expect(testTree.mFavorites.length).toEqual(len - 1);
         });
+    });
+
+    /*************************************************************************************************************
+     * Recently-opened member function tests
+     *************************************************************************************************************/
+    it("Tests that addRecall adds a recently-opened file to the list", async () => {
+        testTree.addRecall(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        const recall = testTree.getRecall();
+        expect(recall[0]).toEqual(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+    });
+
+    it("Tests that removeRecall removes a file from the recall list", async () => {
+        testTree.removeRecall(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS`);
+        const patternIndex = testTree.getRecall().findIndex((recall) => recall === `[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        expect(patternIndex).toEqual(-1);
     });
 
     describe("Renaming a Data Set", () => {

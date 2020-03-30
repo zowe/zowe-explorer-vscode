@@ -45,8 +45,6 @@ export async function createUSSTree(log: Logger) {
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
-
-
     public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
     public mFavoriteSession: ZoweUSSNode;
@@ -483,6 +481,46 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return;
             }
         });
+    }
+
+    public async addRecall(criteria: string) {
+        this.mHistory.addRecall(criteria);
+        this.refresh();
+    }
+
+    public getRecall(): string[] {
+        return this.mHistory.getRecall();
+    }
+
+    public removeRecall(name: string) {
+        this.mHistory.removeRecall(name);
+    }
+
+    /**
+     * Opens a USS item & reveals it in the tree
+     *
+     */
+    public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode) {
+        // USS file was selected
+        const nodePath = itemPath.substring(itemPath.indexOf("/") + 1).trim().split("/");
+        const selectedNodeName = nodePath[nodePath.length - 1];
+
+        // Update the tree filter & expand the tree
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        sessionNode.tooltip = sessionNode.fullPath = `/${nodePath.slice(0, nodePath.length - 1).join("/")}`;
+        sessionNode.label = `${sessionNode.getProfileName()} [/${nodePath.join("/")}]`;
+        sessionNode.dirty = true;
+        this.addHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`);
+        await sessionNode.getChildren();
+
+        // Reveal the searched item in the tree
+        const selectedNode: IZoweUSSTreeNode = sessionNode.children.find((elt) => elt.label === selectedNodeName);
+        if (selectedNode) {
+            selectedNode.openUSS(false, true, this);
+        } else {
+            vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
+            this.removeRecall(`[${sessionNode.getProfileName()}]: ${itemPath}`);
+        }
     }
 
     /**

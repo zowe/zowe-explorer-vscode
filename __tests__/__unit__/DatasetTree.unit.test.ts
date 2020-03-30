@@ -49,11 +49,30 @@ describe("DatasetTree Unit Tests", () => {
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
+    const openTextDocument = jest.fn();
+    const showTextDocument = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
     const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
+    const findFavoritedNode = jest.fn();
+    const findNonFavoritedNode = jest.fn();
+    const mockRenameFavorite = jest.fn();
+    const mockUpdateFavorites = jest.fn();
+    const mockRenameNode = jest.fn();
+    const mockRemoveRecall = jest.fn();
+    const mockInitialize = jest.fn();
+    const mockPattern = jest.fn();
+    const mockCreateFilterString = jest.fn();
+    const mockRemoveFavorite = jest.fn();
+    const mockGetChildren = jest.fn();
+    const mockGetRecall = jest.fn();
+    const mockAddZoweSession = jest.fn();
+    const mockAddHistory = jest.fn();
+    const mockAddRecall = jest.fn();
+    const mockRefresh = jest.fn();
+    const mockRefreshElement = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
         value: jest.fn(() => {
@@ -86,6 +105,10 @@ describe("DatasetTree Unit Tests", () => {
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
+    Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     createTreeView.mockReturnValue("testTreeView");
     const getConfiguration = jest.fn();
@@ -304,6 +327,22 @@ describe("DatasetTree Unit Tests", () => {
         testTree.addHistory("testHistory");
         const sampleElement = new ZoweDatasetNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         expect(testTree.getHistory()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the addRecall/getRecall commands
+     *************************************************************************************************************/
+    it("Tests the addRecall/getRecall commands", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the removeRecall commands
+     *************************************************************************************************************/
+    it("Tests the removeRecall command", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
     });
 
     /*************************************************************************************************************
@@ -537,7 +576,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
     });
 
-     /*************************************************************************************************************
+    /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully, theia route", async () => {
@@ -1175,5 +1214,61 @@ describe("DatasetTree Unit Tests", () => {
             expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
             expect(error).toBe(defaultError);
         });
+    });
+});
+
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testTree = new DatasetTree();
+    const sessionNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
+                                            null, session, undefined, undefined, profileOne);
+    sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessionNode.pattern = "test";
+    const pdsNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, pdsNode, null);
+    const dsNode = new ZoweDatasetNode("TEST.DS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    dsNode.contextValue = extension.DS_DS_CONTEXT;
+
+    beforeEach(async () => {
+        pdsNode.children = [member];
+        sessionNode.children = [pdsNode, dsNode];
+        testTree.mSessionNodes = [sessionNode];
+    });
+
+    it("Should open a DS in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([dsNode]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.DS", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.DS")).toBe(true);
+    });
+
+    it("Should open a member in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([pdsNode]));
+        spyOn(pdsNode, "getChildren").and.returnValue(Promise.resolve([member]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.PDS(TESTMEMB)", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.PDS(TESTMEMB)")).toBe(true);
     });
 });

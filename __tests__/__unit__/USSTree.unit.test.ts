@@ -392,6 +392,22 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
+     * Test the addRecall/getRecall commands
+     *************************************************************************************************************/
+    it("Tests the addRecall & getRecall commands", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the removeRecall commands
+     *************************************************************************************************************/
+    it("Tests the removeRecall command", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
+    });
+
+    /*************************************************************************************************************
      * Testing that addUSSFavorite sorting works
      *************************************************************************************************************/
     it("Testing that saveSearch works properly", async () => {
@@ -977,5 +993,57 @@ describe("Unit Tests (Jest)", () => {
             expect(removeFavorite.mock.calls.length).toBe(1);
             expect(addFavorite.mock.calls.length).toBe(1);
         });
+    });
+});
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {
+            user:undefined,
+            password: undefined
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testTree = new USSTree();
+    const sessionNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, session,
+        null, false, profileOne.name, undefined);
+    const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null, "/a/b");
+
+    beforeEach(async () => {
+        sessionNode.children = [file];
+        testTree.mSessionNodes = [sessionNode];
+    });
+
+    it("Should open a USS file in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([file]));
+
+        await testTree.openItemFromPath("/a/b/c.txt", sessionNode);
+
+        expect(testTree.getHistory().includes("[aProfile]: /a/b/c.txt")).toBe(true);
+    });
+
+    it("Should fail because the child no longer exists", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([]));
+        const recallSpy = jest.spyOn(testTree, "removeRecall");
+
+        await testTree.openItemFromPath("/d.txt", sessionNode);
+
+        expect(recallSpy).toBeCalledWith("[aProfile]: /d.txt");
     });
 });
