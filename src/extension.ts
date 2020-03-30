@@ -37,6 +37,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { getIconByNode } from "./generators/icons";
+import { getMessageByNode, MessageContentType } from "./generators/messages";
 import { closeOpenedTextFile } from "./utils/workspace";
 
 // Localization support
@@ -1598,7 +1599,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             if (!fs.existsSync(documentFilePath)) {
                 const response = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
-                    title: "Opening data set..."
+                    title: getMessageByNode(node, MessageContentType.open)
                 }, function downloadDataset() {
                     return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(label, {
                         file: documentFilePath,
@@ -1788,7 +1789,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     try {
         const uploadResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: localize("saveFile.response.save.title", "Saving data set...")
+            title: getMessageByNode(node, MessageContentType.upload)
         }, () => {
             return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName, label, uploadOptions);
         });
