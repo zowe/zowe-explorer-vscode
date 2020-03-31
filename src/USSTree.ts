@@ -22,6 +22,7 @@ import * as nls from "vscode-nls";
 import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { getIconByNode } from "./generators/icons";
+import * as contextually from "./utils/context";
 
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -72,11 +73,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
     // Could be a favorite or regular entry always deal with the regular entry
-    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
     const oldLabel = originalNode.label;
     const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
     // Check if an old favorite exists for this node
-    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
+    const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
     const newName = await vscode.window.showInputBox({value: oldLabel});
@@ -207,9 +207,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             node.getParent().fullPath,
             false,
             node.getSessionNode().getProfileName());
-        temp.contextValue += extension.FAV_SUFFIX;
-        if (temp.contextValue === extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX ||
-            temp.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX) {
+        contextually.deriveFavorite(temp);
+        if (contextually.isFavoriteTextorBinary(temp)) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
         const icon = getIconByNode(temp);
@@ -268,7 +267,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             settings.favorites = this.mFavorites.map((fav) => {
                 const correctedProfileName = "[" + fav.getProfileName() + "]: ";
                 return (fav.fullPath.startsWith(correctedProfileName) ? fav.fullPath : correctedProfileName + fav.fullPath) + "{" +
-                    fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}";
+                    contextually.getBaseContext(fav) + "}";
                 }
             );
             await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
@@ -465,7 +464,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     node.command = {command: "zowe.uss.ZoweUSSNode.open",
                                     title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
                 }
-                node.contextValue += extension.FAV_SUFFIX;
+                contextually.deriveFavorite(node);
                 const icon = getIconByNode(node);
                 if (icon) {
                     node.iconPath = icon.path;

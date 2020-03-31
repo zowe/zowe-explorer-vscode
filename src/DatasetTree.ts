@@ -23,6 +23,7 @@ import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconByNode } from "./generators/icons";
 import { closeOpenedTextFile } from "./utils/workspace";
+import * as contextually from "./utils/context";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -157,7 +158,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             this.mFavoriteSession, session, undefined, undefined, profile);
                         node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
                     }
-                    node.contextValue += extension.FAV_SUFFIX;
+                    contextually.deriveFavorite(node);
                     const icon = getIconByNode(node);
                     if (icon) {
                         node.iconPath = icon.path;
@@ -268,14 +269,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async addFavorite(node: IZoweDatasetTreeNode) {
         let temp: ZoweDatasetNode;
-        if (node.contextValue === extension.DS_MEMBER_CONTEXT) {
+        if (contextually.isDsMember(node)) {
             if (node.getParent().contextValue === extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX) {
                 vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
             this.addFavorite(node.getParent());
             return;
-        } else if (node.contextValue === extension.DS_SESSION_CONTEXT) {
+        } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
             temp.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
@@ -288,8 +289,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
-            temp.contextValue += extension.FAV_SUFFIX;
-            if (temp.contextValue === extension.DS_DS_CONTEXT + extension.FAV_SUFFIX) {
+            contextually.deriveFavorite(temp);
+            if (contextually.isFavoriteDs(temp)) {
                 temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
             }
 
@@ -382,7 +383,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async updateFavorites() {
         const settings = this.mFavorites.map((fav) =>
-            fav.label + "{" + fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}"
+        fav.label + "{" + contextually.getBaseContext(fav) + "}"
         );
         this.mHistory.updateFavorites(settings);
     }
@@ -537,7 +538,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let passWrd: string;
         let baseEncd: string;
         let sesNamePrompt: string;
-        if (node.contextValue.endsWith(extension.FAV_SUFFIX)) {
+        if (contextually.isFavorite(node)) {
             sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
         } else {
             sesNamePrompt = node.label;
@@ -655,7 +656,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let dataSetName;
         let profileLabel;
 
-        if (node.getParent().contextValue.includes(extension.FAV_SUFFIX)) {
+        if (contextually.isFavorite(node.getParent())) {
             profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
             dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
         } else {
@@ -676,7 +677,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 throw err;
             }
             let otherParent;
-            if (node.getParent().contextValue.includes(extension.FAV_SUFFIX)) {
+            if (contextually.isFavorite(node)) {
                 otherParent = this.findNonFavoritedNode(node.getParent());
             } else {
                 otherParent = this.findFavoritedNode(node.getParent());
@@ -709,7 +710,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let favPrefix = "";
         let isFavourite;
 
-        if (node.contextValue.includes(extension.FAV_SUFFIX)) {
+        if (contextually.isFavorite(node)) {
             isFavourite = true;
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
