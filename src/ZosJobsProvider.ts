@@ -96,7 +96,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {IZoweJobTreeNode} node
      */
     public async saveSearch(node: IZoweJobTreeNode) {
-        const favSessionContext = contextually.deriveFavorite(node);
+        const favSessionContext = contextually.asFavorite(node);
         const favJob = new Job("[" + node.getProfileName() + "]: " +
             this.createSearchLabel(node.owner, node.prefix, node.searchId),
         vscode.TreeItemCollapsibleState.None, node.getParent(), node.getSession(), node.job, node.getProfile());
@@ -581,7 +581,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const favJob = new Job("[" + node.getSessionNode().label + "]: " +
             node.label.substring(0, node.label.lastIndexOf(")") + 1),
             vscode.TreeItemCollapsibleState.Collapsed, node.getParent(), node.getSession(), node.job, node.getProfile());
-        favJob.contextValue = contextually.deriveFavorite(node);
+        favJob.contextValue = contextually.asFavorite(node);
         favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
         const icon = getIconByNode(favJob);
         if (icon) {

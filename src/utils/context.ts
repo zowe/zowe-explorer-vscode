@@ -222,7 +222,7 @@ export function isSessionFavorite(node: TreeItem): boolean {
  * @return If not a favorite an extended contextValue with _fav.
  * If the value is a favorite already that contextValue is returned.
  */
-export function deriveFavorite(node: TreeItem): string {
+export function asFavorite(node: TreeItem): string {
     return isFavorite(node) ? node.contextValue : node.contextValue + extension.FAV_SUFFIX;
 }
 

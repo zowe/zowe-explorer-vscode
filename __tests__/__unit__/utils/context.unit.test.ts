@@ -312,7 +312,7 @@ describe.only("Context helper tests", () => {
         for (const ctx of testListA) {
             treeItem.contextValue = ctx;
             expect(contextually.isFavorite(treeItem)).toBe(true);
-            treeItem.contextValue = contextually.deriveFavorite(treeItem);
+            treeItem.contextValue = contextually.asFavorite(treeItem);
             expect(contextually.isFavorite(treeItem)).toBe(true);
             treeItem.contextValue = contextually.getBaseContext(treeItem);
             expect(contextually.isFavorite(treeItem)).toBe(false);
@@ -322,7 +322,7 @@ describe.only("Context helper tests", () => {
         for (const ctx of testListB) {
             treeItem.contextValue = ctx;
             expect(contextually.isFavorite(treeItem)).toBe(false);
-            treeItem.contextValue = contextually.deriveFavorite(treeItem);
+            treeItem.contextValue = contextually.asFavorite(treeItem);
             expect(contextually.isFavorite(treeItem)).toBe(true);
             treeItem.contextValue = contextually.getBaseContext(treeItem);
             expect(contextually.isFavorite(treeItem)).toBe(false);

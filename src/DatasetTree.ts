@@ -158,7 +158,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             this.mFavoriteSession, session, undefined, undefined, profile);
                         node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
                     }
-                    contextually.deriveFavorite(node);
+                    node.contextValue = contextually.asFavorite(node);
                     const icon = getIconByNode(node);
                     if (icon) {
                         node.iconPath = icon.path;
@@ -289,7 +289,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
-            contextually.deriveFavorite(temp);
+            temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteDs(temp)) {
                 temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
             }

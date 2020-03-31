@@ -207,7 +207,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             node.getParent().fullPath,
             false,
             node.getSessionNode().getProfileName());
-        contextually.deriveFavorite(temp);
+        temp.contextValue = contextually.asFavorite(temp);
         if (contextually.isFavoriteTextorBinary(temp)) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
@@ -464,7 +464,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     node.command = {command: "zowe.uss.ZoweUSSNode.open",
                                     title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
                 }
-                contextually.deriveFavorite(node);
+                node.contextValue = contextually.asFavorite(node);
                 const icon = getIconByNode(node);
                 if (icon) {
                     node.iconPath = icon.path;
