@@ -11,8 +11,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed load error when file names had special characters. Thanks @jellypuno
 - Fixed load os USS file list. Thanks @jellypuno
 - Improved user experience of USS file navigation #461. Thanks @stepanzharychevbroadcom
-- Fixed tab name when renaming dataset. thanks @stepanzharychevbroadcom
-- Improved performance when renaming datasets and members. @thanks @CForrest97
+- Fixed tab name when renaming dataset. Thanks @stepanzharychevbroadcom
+- Improved performance when renaming datasets and members. Thanks @CForrest97
 - Added prompting of credentials if previous credentials where entered incorrectly. Thanks @jellypuno
 - Added support for VSCode Quick Open shortcut. Thanks @katelynienaber
 - Added support for VSCode Open Recent Files shortcut. Thanks @katelynienaber
