@@ -98,7 +98,16 @@ export function isBinary(node: TreeItem): boolean {
 export function isDocument(node: TreeItem): boolean {
     return new RegExp("^(" + extension.DS_DS_CONTEXT + "|" + extension.DS_MEMBER_CONTEXT + "|"
                           + extension.DS_TEXT_FILE_CONTEXT + "|" + extension.JOBS_SPOOL_CONTEXT + "|"
-                        + extension.DS_MIGRATED_FILE_CONTEXT + "|" + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+                        + "|" + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is migrated
+ * @param node
+ * @return true if a migrated dataset, false otherwise
+ */
+export function isMigrated(node: TreeItem): boolean {
+    return new RegExp("^(" + extension.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
