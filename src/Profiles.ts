@@ -242,6 +242,7 @@ export class Profiles {
                     return undefined;
                 }
                 schemaValues[value] = rejectUnauthorize;
+                break;
             default:
                 const description: string = schema[value].optionDefinition.description.toString();
                 switch (schema[value].type) {
@@ -271,6 +272,40 @@ export class Profiles {
                         }
                         schemaValues[value] = isTrue;
                         break;
+                    case "number":
+                        options = {
+                            placeHolder: description,
+                            prompt: description
+                        };
+                        const enteredValue = await vscode.window.showInputBox(options);
+                        const numValue = Number(enteredValue);
+                        // tslint:disable-next-line:no-console
+                        console.log(numValue);
+                        if (Number.isNaN(numValue) === false) {
+                            schemaValues[value] = Number(enteredValue);
+                        } else {
+                            // default value
+                            schemaValues[value] = null;
+                        }
+                        break;
+                    default:
+                        options = {
+                            placeHolder: description,
+                            prompt: description
+                        };
+                        const defaultValue = await vscode.window.showInputBox(options);
+                        switch (defaultValue){
+                            case "true":
+                                schemaValues[value] = true;
+                                break;
+                            case "false":
+                                schemaValues[value] = false;
+                                break;
+                            default:
+                                schemaValues[value] = defaultValue;
+                                break;
+                        }
+                        break;
                 }
             }
         }
@@ -283,6 +318,8 @@ export class Profiles {
             }
         }
 
+        // tslint:disable-next-line:no-console
+        console.log(schemaValues);
         let newProfile: IProfile;
 
         try {
