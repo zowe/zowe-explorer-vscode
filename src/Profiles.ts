@@ -17,23 +17,25 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
+
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
     valid: boolean;
+    protocol: string;
     host: string;
     port: number;
 }
 
-let IConnection: {
-    name: string;
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    rejectUnauthorized: boolean;
-};
-
+// let IConnection: {
+//     name: string;
+//     protocol: string;
+//     host: string;
+//     port: number;
+//     user: string;
+//     password: string;
+//     rejectUnauthorized: boolean;
+// };
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
@@ -72,8 +74,6 @@ export class Profiles {
 
     public getProfiles(type?: string): IProfileLoaded[] {
         return this.profilesByType.get(type);
-        // const response = this.allProfiles[type];
-        // return this.profilesByType.get(response);
     }
 
     public async refresh(): Promise<void> {
@@ -93,11 +93,12 @@ export class Profiles {
 
     public validateAndParseUrl(newUrl: string): IUrlValidator {
         let url: URL;
-        const validProtocols: string[] = ["https"];
+        const validProtocols: string[] = ["https","http"];
         const DEFAULT_HTTPS_PORT: number = 443;
 
         const validationResult: IUrlValidator = {
             valid: false,
+            protocol: null,
             host: null,
             port: null
         };
@@ -121,8 +122,11 @@ export class Profiles {
             validationResult.port = Number(url.port);
         }
 
+        validationResult.protocol = url.protocol.replace(":","");
         validationResult.host = url.hostname;
         validationResult.valid = true;
+        // tslint:disable-next-line:no-console
+        console.log(validationResult);
         return validationResult;
     }
 
@@ -140,96 +144,131 @@ export class Profiles {
         });
     }
 
-    public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
+    public async createNewConnection(profileName: string): Promise<string | undefined> {
+        let profileType: string;
         let userName: string;
         let passWord: string;
         let zosURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
 
-        const type = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
-        // tslint:disable-next-line:no-console
-        console.log(type);
-
-        const typeOptions = Array.from(type);
-
+        // get registered api types and create a quick pick array
+        const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
+        const typeOptions = Array.from(profTypes);
         const quickPickTypeOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type")
-        };
-
-        const chosenType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
-
-        // tslint:disable-next-line:no-console
-        console.log(chosenType);
-
-        const urlInputBox = vscode.window.createInputBox();
-        urlInputBox.ignoreFocusOut = true;
-        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
-        urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-            "Enter a z/OS URL in the format 'https://url:port'.");
-
-        urlInputBox.show();
-        zosURL = await this.getUrl(urlInputBox);
-        urlInputBox.dispose();
-
-        if (!zosURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.zosURL",
-                "No valid value for z/OS URL. Operation Cancelled"));
-            return undefined;
-        }
-
-        const zosUrlParsed = this.validateAndParseUrl(zosURL);
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
-            value: userName
-        };
-        userName = await vscode.window.showInputBox(options);
-
-        if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
-                "Operation Cancelled"));
-            return;
-        }
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
-            password: true,
-            value: passWord
-        };
-        passWord = await vscode.window.showInputBox(options);
-
-        if (passWord === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
-                "Operation Cancelled"));
-            return;
-        }
-
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
+            placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type"),
             ignoreFocusOut: true,
             canPickMany: false
         };
 
-        const selectRU = ["True - Reject connections with self-signed certificates",
-            "False - Accept connections with self-signed certificates"];
+        profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
 
-        const ruOptions = Array.from(selectRU);
+        const profileManager = await this.getCliProfileManager(profileType);
 
-        const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
+        const configOptions = Array.from(profileManager.configurations);
+        let schema: {};
+        for (const val of configOptions) {
+            if (val.type === profileType) {
+                schema = val.schema.properties;
+            }
+        }
+        const schemaArray = Object.keys(schema);
 
-        if (chosenRU === ruOptions[0]) {
-            rejectUnauthorize = true;
-        } else if (chosenRU === ruOptions[1]) {
-            rejectUnauthorize = false;
-        } else {
-            vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                "Operation Cancelled"));
-            return undefined;
+        let zosUrlParsed: any;
+
+        const schemaValues: any = {};
+        // Go through array of schema for input values
+        for (const value of schemaArray) {
+            // schemaValues.prop = value;
+            switch (value) {
+            case "host" :
+                const urlInputBox = vscode.window.createInputBox();
+                urlInputBox.ignoreFocusOut = true;
+                urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
+                urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
+                    "Enter a z/OS URL in the format 'https://url:port'.");
+                urlInputBox.show();
+                zosURL = await this.getUrl(urlInputBox);
+                urlInputBox.dispose();
+                if (!zosURL) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.zosURL", "No valid value for z/OS URL. Operation Cancelled"));
+                    return undefined;
+                }
+                zosUrlParsed = this.validateAndParseUrl(zosURL);
+                schemaValues[value] = zosUrlParsed.host;
+                break;
+            case "port":
+                schemaValues[value] = zosUrlParsed.port;
+                break;
+            case "protocol":
+                schemaValues[value] = zosUrlParsed.protocol;
+                break;
+            case "user":
+                options = {
+                    placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
+                    prompt: localize("createNewConnection.option.prompt.username",
+                    "Enter the user name for the connection. Leave blank to not store."),
+                    value: userName
+                };
+                userName = await vscode.window.showInputBox(options);
+                if (userName === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return;
+                }
+                schemaValues[value] = userName;
+                break;
+            case "password":
+                options = {
+                    placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
+                    prompt: localize("createNewConnection.option.prompt.password",
+                    "Enter the password for the connection. Leave blank to not store."),
+                    password: true,
+                    value: passWord
+                };
+                passWord = await vscode.window.showInputBox(options);
+                if (passWord === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
+                        "Operation Cancelled"));
+                    return;
+                }
+                schemaValues[value] = passWord;
+                break;
+            case "rejectUnauthorized":
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
+                    ignoreFocusOut: true,
+                    canPickMany: false
+                };
+                const selectRU = ["True - Reject connections with self-signed certificates",
+                    "False - Accept connections with self-signed certificates"];
+                const ruOptions = Array.from(selectRU);
+                const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
+                if (chosenRU === ruOptions[0]) {
+                    rejectUnauthorize = true;
+                } else if (chosenRU === ruOptions[1]) {
+                    rejectUnauthorize = false;
+                } else {
+                    vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize","Operation Cancelled"));
+                    return undefined;
+                }
+                schemaValues[value] = chosenRU;
+            default:
+                if (schema[value].type === "string"){
+                    const description: string = schema[value].optionDefinition.description.toString();
+                    options = {
+                        // tslint:disable-next-line:max-line-length
+                        placeHolder: description,
+                        prompt: description,
+                    };
+                    const profValue = await vscode.window.showInputBox(options);
+                    schemaValues[value] = profValue;
+                }
+                break;
+            }
         }
 
+        schemaValues.name = profileName;
         for (const profile of this.allProfiles) {
             if (profile.name === profileName) {
                 vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
@@ -238,19 +277,22 @@ export class Profiles {
             }
         }
 
-        IConnection = {
-            name: profileName,
-            host: zosUrlParsed.host,
-            port: zosUrlParsed.port,
-            user: userName,
-            password: passWord,
-            rejectUnauthorized: rejectUnauthorize
-        };
+        // IConnection = {
+        //     name: profileName,
+        //     protocol: zosUrlParsed.protocol,
+        //     host: zosUrlParsed.host,
+        //     port: zosUrlParsed.port,
+        //     user: userName,
+        //     password: passWord,
+        //     rejectUnauthorized: rejectUnauthorize
+        // };
 
+        // tslint:disable-next-line:no-console
+        console.log(schemaValues);
         let newProfile: IProfile;
 
         try {
-            newProfile = await this.saveProfile(IConnection, IConnection.name, profileType);
+            newProfile = await this.saveProfile(schemaValues, schemaValues.name, profileType);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -349,13 +391,13 @@ export class Profiles {
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        let zosmfProfile: IProfile;
+        let newProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        return zosmfProfile.profile;
+        return newProfile.profile;
     }
 
     private async getCliProfileManager(type: string): Promise<CliProfileManager> {
