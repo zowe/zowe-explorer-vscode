@@ -246,6 +246,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.refresh();
     }
 
+    public async editSession(node: IZoweDatasetTreeNode) {
+        const profile = node.getProfile();
+        Profiles.getInstance().editSession(profile);
+    }
+
     /**
      * Removes a session from the list in the data set tree
      *

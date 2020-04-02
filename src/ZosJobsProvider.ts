@@ -464,6 +464,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
+    public async editSession(node: IZoweJobTreeNode) {
+        const profile = node.getProfile();
+        Profiles.getInstance().editSession(profile);
+    }
+
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(ZosJobsProvider.persistenceSchema)) {
             const setting: any = {...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema)};

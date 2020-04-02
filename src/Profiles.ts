@@ -17,6 +17,8 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
+import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { IZoweTree } from "./api/IZoweTree";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
@@ -33,6 +35,13 @@ let IConnection: {
     password: string;
     rejectUnauthorized: boolean;
 };
+
+let userName: string;
+let passWord: string;
+let zosmfURL: string;
+let rejectUnauthorize: boolean;
+let options: vscode.InputBoxOptions;
+
 
 export class Profiles {
     // Processing stops if there are no profiles detected
@@ -138,13 +147,47 @@ export class Profiles {
         });
     }
 
-    public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
-        let userName: string;
-        let passWord: string;
-        let zosmfURL: string;
-        let rejectUnauthorize: boolean;
-        let options: vscode.InputBoxOptions;
+    public async editSession(profileLoaded: IProfileLoaded): Promise<string | undefined> {
+        const Session = profileLoaded.profile as ISession;
+        const titleEdit = "Edit Profile";
 
+        userName = await this.showInputBox({
+            title: titleEdit,
+            placeholder: "User Name",
+            prompt: "User Name",
+            value: userName,
+            step: 1,
+            totalSteps:2,
+            ignoreFocusOut: true
+        });
+
+        if (userName === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                "Operation Cancelled"));
+            return;
+        }
+
+        passWord = await this.showInputBox({
+            title: titleEdit,
+            placeholder: "Password",
+            prompt: "Password",
+            value: passWord,
+            step: 1,
+            totalSteps:2,
+            ignoreFocusOut: true
+        });
+
+        if (passWord === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
+                "Operation Cancelled"));
+            return;
+        }
+
+        return;
+
+    }
+
+    public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
         const urlInputBox = vscode.window.createInputBox();
         urlInputBox.ignoreFocusOut = true;
         urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
@@ -243,9 +286,6 @@ export class Profiles {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-        let userName: string;
-        let passWord: string;
-        let options: vscode.InputBoxOptions;
 
         const loadProfile = this.loadNamedProfile(sessName.trim());
         const loadSession = loadProfile.profile as ISession;
@@ -355,5 +395,50 @@ export class Profiles {
             }
         }
         return profileManager;
+    }
+
+    /* function for Input Box. This will be called by Profile Functions Add, Edit, Prompt and Delete? No idea.*/
+
+    private async showInputBox({title, placeholder, prompt, value, step, totalSteps, ignoreFocusOut}) {
+
+        const input = vscode.window.createInputBox();
+
+        input.title = title;
+        input.placeholder = placeholder;
+        input.prompt = prompt;
+        input.ignoreFocusOut = ignoreFocusOut;
+        input.value = value;
+        input.step = step;
+        input.totalSteps = totalSteps;
+        if (input.step > 1) {
+            input.buttons = [vscode.QuickInputButtons.Back];
+        }
+
+        input.show();
+
+        if (value) {
+            input.dispose();
+        } else {
+            input.enabled = false;
+            input.busy = true;
+        }
+
+        return value;
+
+        // Try to check Katelyn's Code
+        // public async getUrl(urlInputBox): Promise<string | undefined> {
+        //     return new Promise<string | undefined> ((resolve) => {
+        //         urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+        //         urlInputBox.onDidAccept(() => {
+        //             if (this.validateAndParseUrl(urlInputBox.value).valid) {
+        //                 resolve(urlInputBox.value);
+        //             } else {
+        //                 urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
+        //                     "Please enter a valid URL in the format https://url:port.");
+        //             }
+        //         });
+        //     });
+        // }
+
     }
 }

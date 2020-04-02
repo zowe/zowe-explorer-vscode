@@ -108,6 +108,14 @@
         }
       },
       {
+        "command": "zowe.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.createDataset",
         "title": "%createDataset%",
         "icon": {
@@ -228,6 +236,14 @@
         }
       },
       {
+        "command": "zowe.uss.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.uss.createDirectory",
         "title": "%uss.createDirectory%",
         "icon": {
@@ -345,6 +361,14 @@
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.jobs.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -821,6 +845,11 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == session",
+          "command": "zowe.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == session",
           "command": "zowe.removeSession"
         },
         {
@@ -849,6 +878,11 @@
         },
         {
           "when": "viewItem == uss_session",
+          "command": "zowe.uss.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem == uss_session",
           "command": "zowe.uss.removeSession"
         },
         {
@@ -869,6 +903,11 @@
         {
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.jobs.search",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.jobs.editSession",
           "group": "inline"
         },
         {
@@ -952,6 +991,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.createMember",
           "when": "never"
         },
@@ -996,6 +1039,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.removeSavedSearch",
           "when": "never"
         },
@@ -1033,6 +1080,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.editSession",
           "when": "never"
         },
         {

@@ -526,6 +526,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
+    public async editSession(node: IZoweUSSTreeNode) {
+        const profile = node.getProfile();
+        Profiles.getInstance().editSession(profile);
+    }
+
     /**
      * Adds a single session to the USS tree
      *

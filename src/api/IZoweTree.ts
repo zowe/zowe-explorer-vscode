@@ -43,6 +43,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     addSession(sessionName?: string, type?: string): Promise<void>;
     /**
+     * Adds a session to the container
+     * @param sessionName
+     * @param type e.g. zosmf
+     */
+    editSession(node: IZoweNodeType): Promise<void>;
+
+    /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
