@@ -42,7 +42,6 @@ let zosmfURL: string;
 let rejectUnauthorize: boolean;
 let options: vscode.InputBoxOptions;
 
-
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
@@ -148,43 +147,33 @@ export class Profiles {
     }
 
     public async editSession(profileLoaded: IProfileLoaded): Promise<string | undefined> {
-        const Session = profileLoaded.profile as ISession;
-        const titleEdit = "Edit Profile";
-
-        userName = await this.showInputBox({
-            title: titleEdit,
+        const procUserName = {
+            title: "Edit Profiles",
             placeholder: "User Name",
             prompt: "User Name",
             value: userName,
             step: 1,
-            totalSteps:2,
-            ignoreFocusOut: true
-        });
+            totalSteps: 2,
+            ignoreFocusOut: true,
+            previousStep: null
+        };
 
-        if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
-                "Operation Cancelled"));
-            return;
-        }
+        await this.showInputBox(procUserName);
 
-        passWord = await this.showInputBox({
-            title: titleEdit,
+        const procPassword = {
+            title: "Edit Profiles",
             placeholder: "Password",
-            prompt: "Password",
+            prompt: "password",
             value: passWord,
-            step: 1,
-            totalSteps:2,
-            ignoreFocusOut: true
-        });
+            step: 2,
+            totalSteps: 2,
+            ignoreFocusOut: true,
+            previousStep: procUserName
+        };
 
-        if (passWord === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
-                "Operation Cancelled"));
-            return;
-        }
+        await this.showInputBox(procPassword);
 
         return;
-
     }
 
     public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
@@ -399,7 +388,7 @@ export class Profiles {
 
     /* function for Input Box. This will be called by Profile Functions Add, Edit, Prompt and Delete? No idea.*/
 
-    private async showInputBox({title, placeholder, prompt, value, step, totalSteps, ignoreFocusOut}) {
+    private async showInputBox({title, placeholder, prompt, value, step, totalSteps, ignoreFocusOut, previousStep}) {
 
         const input = vscode.window.createInputBox();
 
@@ -415,30 +404,31 @@ export class Profiles {
         }
 
         input.show();
-
-        if (value) {
-            input.dispose();
-        } else {
-            input.enabled = false;
-            input.busy = true;
-        }
+        value = await this.validateInput(input, previousStep);
+        input.dispose();
 
         return value;
 
-        // Try to check Katelyn's Code
-        // public async getUrl(urlInputBox): Promise<string | undefined> {
-        //     return new Promise<string | undefined> ((resolve) => {
-        //         urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
-        //         urlInputBox.onDidAccept(() => {
-        //             if (this.validateAndParseUrl(urlInputBox.value).valid) {
-        //                 resolve(urlInputBox.value);
-        //             } else {
-        //                 urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
-        //                     "Please enter a valid URL in the format https://url:port.");
-        //             }
-        //         });
-        //     });
-        // }
+    }
 
+    private async validateInput(input, prev?): Promise<string | undefined> {
+        return new Promise<string | undefined> ((resolve) => {
+
+            input.onDidTriggerButton((item) => {
+                if (item === vscode.QuickInputButtons.Back) {
+                    resolve(this.showInputBox(prev)); // Back is working but it doesn't continue :(
+                }
+            });
+            input.onDidHide(() => { resolve(input.value); });
+            input.onDidAccept(() => {
+                if (input.value) {
+                    resolve(input.value);
+                } else {
+                    input.validationMessage = localize("createNewConnection.invalidzosmfURL",
+                        "Please enter a User Name");
+                }
+            });
+        });
     }
 }
+
