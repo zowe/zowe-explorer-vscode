@@ -139,6 +139,7 @@ export class Profiles {
         let zosURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
+        let isTrue: boolean;
 
         // get registered api types and create a quick pick array
         const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
@@ -242,17 +243,35 @@ export class Profiles {
                 }
                 schemaValues[value] = rejectUnauthorize;
             default:
-                if (schema[value].type === "string"){
-                    const description: string = schema[value].optionDefinition.description.toString();
-                    options = {
-                        // tslint:disable-next-line:max-line-length
-                        placeHolder: description,
-                        prompt: description,
-                    };
-                    const profValue = await vscode.window.showInputBox(options);
-                    schemaValues[value] = profValue;
+                const description: string = schema[value].optionDefinition.description.toString();
+                switch (schema[value].type) {
+                    case "string":
+                        options = {
+                            placeHolder: description,
+                            prompt: description,
+                        };
+                        const profValue = await vscode.window.showInputBox(options);
+                        schemaValues[value] = profValue;
+                        break;
+                    case "boolean":
+                        const quickPickBooleanOptions: vscode.QuickPickOptions = {
+                            placeHolder: description,
+                            ignoreFocusOut: true,
+                            canPickMany: false
+                        };
+                        const selectBoolean = ["True", "False"];
+                        const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
+                        if (chosenValue === selectBoolean[0]) {
+                            isTrue = true;
+                        } else if (chosenRU === selectBoolean[1]) {
+                            isTrue = false;
+                        } else {
+                            vscode.window.showInformationMessage(localize("createNewConnection","Operation Cancelled"));
+                            return undefined;
+                        }
+                        schemaValues[value] = isTrue;
+                        break;
                 }
-                break;
             }
         }
 
