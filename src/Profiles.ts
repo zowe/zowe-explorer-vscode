@@ -26,16 +26,6 @@ interface IUrlValidator {
     host: string;
     port: number;
 }
-
-// let IConnection: {
-//     name: string;
-//     protocol: string;
-//     host: string;
-//     port: number;
-//     user: string;
-//     password: string;
-//     rejectUnauthorized: boolean;
-// };
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
@@ -125,8 +115,6 @@ export class Profiles {
         validationResult.protocol = url.protocol.replace(":","");
         validationResult.host = url.hostname;
         validationResult.valid = true;
-        // tslint:disable-next-line:no-console
-        console.log(validationResult);
         return validationResult;
     }
 
@@ -177,9 +165,9 @@ export class Profiles {
         let zosUrlParsed: any;
 
         const schemaValues: any = {};
+        schemaValues.name = profileName;
         // Go through array of schema for input values
         for (const value of schemaArray) {
-            // schemaValues.prop = value;
             switch (value) {
             case "host" :
                 const urlInputBox = vscode.window.createInputBox();
@@ -252,7 +240,7 @@ export class Profiles {
                     vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize","Operation Cancelled"));
                     return undefined;
                 }
-                schemaValues[value] = chosenRU;
+                schemaValues[value] = rejectUnauthorize;
             default:
                 if (schema[value].type === "string"){
                     const description: string = schema[value].optionDefinition.description.toString();
@@ -268,7 +256,6 @@ export class Profiles {
             }
         }
 
-        schemaValues.name = profileName;
         for (const profile of this.allProfiles) {
             if (profile.name === profileName) {
                 vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
@@ -277,18 +264,6 @@ export class Profiles {
             }
         }
 
-        // IConnection = {
-        //     name: profileName,
-        //     protocol: zosUrlParsed.protocol,
-        //     host: zosUrlParsed.host,
-        //     port: zosUrlParsed.port,
-        //     user: userName,
-        //     password: passWord,
-        //     rejectUnauthorized: rejectUnauthorize
-        // };
-
-        // tslint:disable-next-line:no-console
-        console.log(schemaValues);
         let newProfile: IProfile;
 
         try {
