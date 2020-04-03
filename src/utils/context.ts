@@ -97,8 +97,8 @@ export function isBinary(node: TreeItem): boolean {
  */
 export function isDocument(node: TreeItem): boolean {
     return new RegExp("^(" + extension.DS_DS_CONTEXT + "|" + extension.DS_MEMBER_CONTEXT + "|"
-                          + extension.DS_TEXT_FILE_CONTEXT + "|" + extension.JOBS_SPOOL_CONTEXT + "|"
-                        + "|" + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+                        + extension.DS_TEXT_FILE_CONTEXT + "|" + extension.JOBS_SPOOL_CONTEXT + "|" 
+                        + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**

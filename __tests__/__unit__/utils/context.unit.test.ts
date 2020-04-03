@@ -175,16 +175,29 @@ describe.only("Context helper tests", () => {
                 case DS_TEXT_FILE_CONTEXT:
                 case DS_FAV_TEXT_FILE_CONTEXT:
                 case JOBS_SPOOL_CONTEXT:
-                case DS_MIGRATED_FILE_CONTEXT:
                 case DS_BINARY_FILE_CONTEXT:
                 case DS_FAV_CONTEXT:
                     expect(contextually.isDocument(treeItem)).toBe(true);
                     break;
                 default:
+                    console.log(ctx);
                     expect(contextually.isDocument(treeItem)).toBe(false);
             }
         }
     });
+    it("Test is a migrated dataset", async () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case DS_MIGRATED_FILE_CONTEXT:
+                    expect(contextually.isMigrated(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isMigrated(treeItem)).toBe(false);
+            }
+        }
+    });
+
     it("Test is Favorite", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
