@@ -131,13 +131,7 @@ describe.only("Context helper tests", () => {
     it("Test Favorite PDS", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            switch (ctx) {
-                case PDS_FAV_CONTEXT:
-                    expect(contextually.isFavoritePds(treeItem)).toBe(true);
-                    break;
-                default:
-                    expect(contextually.isFavoritePds(treeItem)).toBe(false);
-            }
+            expect(contextually.isFavoritePds(treeItem)).toBe(treeItem.contextValue === PDS_FAV_CONTEXT);
         }
     });
     it("Test Favorite text or Binary", async () => {
@@ -180,7 +174,6 @@ describe.only("Context helper tests", () => {
                     expect(contextually.isDocument(treeItem)).toBe(true);
                     break;
                 default:
-                    console.log(ctx);
                     expect(contextually.isDocument(treeItem)).toBe(false);
             }
         }
@@ -188,13 +181,7 @@ describe.only("Context helper tests", () => {
     it("Test is a migrated dataset", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            switch (ctx) {
-                case DS_MIGRATED_FILE_CONTEXT:
-                    expect(contextually.isMigrated(treeItem)).toBe(true);
-                    break;
-                default:
-                    expect(contextually.isMigrated(treeItem)).toBe(false);
-            }
+            expect(contextually.isMigrated(treeItem)).toBe(treeItem.contextValue === DS_MIGRATED_FILE_CONTEXT);
         }
     });
 
@@ -268,13 +255,7 @@ describe.only("Context helper tests", () => {
     it("Test is a session search", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            switch (ctx) {
-                case FAVORITE_CONTEXT:
-                    expect(contextually.isSessionFavorite(treeItem)).toBe(true);
-                    break;
-                default:
-                    expect(contextually.isSessionFavorite(treeItem)).toBe(false);
-            }
+            expect(contextually.isSessionFavorite(treeItem)).toBe(treeItem.contextValue === FAVORITE_CONTEXT);
         }
     });
     it("Test is a session (Not favorite)", async () => {
