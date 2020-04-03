@@ -469,7 +469,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         sessionNode.tooltip = sessionNode.pattern = await this.createFilterString(parentName, sessionNode);
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         sessionNode.label = sessionNode.label.trim() + " ";
-        sessionNode.label.trim();
+        sessionNode.label = sessionNode.label.trim();
         sessionNode.dirty = true;
         await this.refresh();
         let children = await sessionNode.getChildren();
