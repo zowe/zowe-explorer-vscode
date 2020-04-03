@@ -59,6 +59,28 @@ const profileOne: IProfileLoaded = {
     failNotFound: false
 };
 
+const session = new Session({
+    user: "fake",
+    password: "fake",
+    hostname: "fake",
+    protocol: "https",
+    type: "basic",
+});
+
+const sessionwocred = new Session({
+    user: "",
+    password: "",
+    hostname: "fake",
+    port: 443,
+    protocol: "https",
+    type: "basic",
+});
+
+const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+sessNode.contextValue = globals.USS_SESSION_CONTEXT;
+const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+dsNode.contextValue = globals.USS_SESSION_CONTEXT;
+
 function getUSSNode() {
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
@@ -101,14 +123,6 @@ function getUSSTree() {
     testUSSTree1.mSessionNodes.push(ussNode1);
     return testUSSTree1;
 }
-
-const session = new Session({
-    user: "fake",
-    password: "fake",
-    hostname: "fake",
-    protocol: "https",
-    type: "basic",
-});
 
 describe("ussNodeActions", () => {
 
@@ -234,14 +248,6 @@ describe("ussNodeActions", () => {
             showInformationMessage.mockReset();
             mockLoadNamedProfile.mockReturnValue(profileOne);
 
-            const sessionwocred = new Session({
-                user: "",
-                password: "",
-                hostname: "fake",
-                port: 443,
-                protocol: "https",
-                type: "basic",
-            });
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -260,11 +266,8 @@ describe("ussNodeActions", () => {
                     };
                 })
             });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = globals.USS_SESSION_CONTEXT;
             const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
                 sessionwocred, null, false, profileOne.name);
-            dsNode.contextValue = globals.USS_SESSION_CONTEXT;
 
             showInputBox.mockReturnValueOnce("fake");
             showInputBox.mockReturnValueOnce("fake");
@@ -279,18 +282,6 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new Session({
-                user: "",
-                password: "",
-                hostname: "fake",
-                port: 443,
-                protocol: "https",
-                type: "basic",
-            });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = globals.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-            dsNode.contextValue = globals.USS_SESSION_CONTEXT;
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -320,18 +311,6 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new Session({
-                user: "",
-                password: "",
-                hostname: "fake",
-                port: 443,
-                protocol: "https",
-                type: "basic",
-            });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = globals.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-            dsNode.contextValue = globals.USS_SESSION_CONTEXT;
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
