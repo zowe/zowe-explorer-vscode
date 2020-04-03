@@ -13,11 +13,11 @@ import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../utils/icon";
 import { isMigrated } from "../../../utils/context";
 
-const icon: IIconItem = {
+const migrated: IIconItem = {
     id: IconId.migrated,
     type: IconHierarchyType.base,
     path: getIconPathInResources("migrated.svg"),
     check: (node) => isMigrated(node)
 };
 
-export default icon;
+export default migrated;

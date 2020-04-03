@@ -204,25 +204,6 @@ describe.only("Context helper tests", () => {
             }
         }
     });
-    it("Test is Favorite search", async () => {
-        for (const ctx of testList) {
-            treeItem.contextValue = ctx;
-            switch (ctx) {
-                case PDS_FAV_CONTEXT:
-                case DS_FAV_CONTEXT:
-                case DS_FAV_TEXT_FILE_CONTEXT:
-                case DS_FAV_BINARY_FILE_CONTEXT:
-                case USS_FAV_DIR_CONTEXT:
-                case JOBS_JOB_FAVORITE1:
-                case JOBS_JOB_FAVORITE2:
-                case JOBS_JOB_FAVORITE3:
-                    expect(contextually.isFavorite(treeItem)).toBe(true);
-                    break;
-                default:
-                    expect(contextually.isFavorite(treeItem)).toBe(false);
-            }
-        }
-    });
     it("Test is a session", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
