@@ -307,6 +307,7 @@ describe("Extension Integration Tests", () => {
             // reset tree
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(pattern);
+
             await dsActions.enterPattern(sessionNode, testTree);
         }).timeout(TIMEOUT);
     });

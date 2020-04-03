@@ -528,7 +528,25 @@ describe("Zos Jobs Unit Tests", () => {
         });
 
         it("Testing the jobs prompt credentials error", async () => {
-            // Moved to profiles unit tests, line 445
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        getDefaultProfile: () => ({name: "firstName"}),
+                        validProfile: -1,
+                        checkCurrentProfile: jest.fn()
+                    };
+                })
+            });
+
+            createBasicZosmfSession.mockReturnValue(sessionwocred);
+            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
+                jobNode, sessionwocred, iJob, jobNode.getProfile());
+            newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            testJobsProvider.initializeJobsTree(Logger.getAppLogger());
+            await testJobsProvider.searchPrompt(newjobNode);
+            expect(profileLoader.Profiles.getInstance().validProfile).toBe(-1);
         });
 
         it("Testing that user filter prompts are executed successfully theia specific route", async () => {

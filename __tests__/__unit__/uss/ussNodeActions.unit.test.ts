@@ -35,6 +35,7 @@ const mockGetUSSChildren = jest.fn();
 const mockRemoveFavorite = jest.fn();
 const mockRemoveRecall = jest.fn();
 const mockAddFavorite = jest.fn();
+const mockCheckCurrentProfile = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
@@ -87,6 +88,7 @@ function getUSSTree() {
             refresh: mockUSSRefresh,
             refreshAll: mockUSSRefresh,
             removeRecall: mockRemoveRecall,
+            checkCurrentProfile: mockCheckCurrentProfile,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             addFavorite: mockAddFavorite,

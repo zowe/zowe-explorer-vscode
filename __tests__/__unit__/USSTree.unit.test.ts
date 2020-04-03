@@ -910,7 +910,34 @@ describe("Unit Tests (Jest)", () => {
     });
 
     it("tests the uss filter prompt credentials error", async () => {
-        // Moved to profiles unit tests, line 463
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = globals.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: -1,
+                    checkCurrentProfile: jest.fn()
+                };
+            })
+        });
+
+        await testTree.filterPrompt(dsNode);
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
     });
     describe("renameUSSNode", () => {
         const executeCommand = jest.fn();

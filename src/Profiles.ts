@@ -17,8 +17,6 @@ import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { errorHandling, getZoweDir } from "./utils";
-import { IZoweTreeNode } from "./api/IZoweTreeNode";
-import { IZoweTree } from "./api/IZoweTree";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
@@ -63,7 +61,7 @@ export class Profiles {
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
 
-        if ((!theProfile.profile.getSession().user) || (!theProfile.profile.getSession().password)) {
+        if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
                 if (values !== undefined) {
@@ -77,9 +75,9 @@ export class Profiles {
                 return;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
-                theProfile.profile.getSession().ISession.user = this.usrNme;
-                theProfile.profile.getSession().ISession.password = this.passWrd;
-                theProfile.profile.getSession().ISession.base64EncodedAuth = this.baseEncd;
+                theProfile.profile.user = this.usrNme;
+                theProfile.profile.password = this.passWrd;
+                theProfile.profile.base64EncodedAuth = this.baseEncd;
                 this.validProfile = 0;
             } else {
                 return;
