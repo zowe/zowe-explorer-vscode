@@ -169,12 +169,8 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
                 vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
                 return;
             } else if (choice instanceof FilterDescriptor) {
-                if (quickpick.value) {
-                    pattern = quickpick.value;
-                }
-            } else {
-                pattern = choice.label;
-            }
+                if (quickpick.value) { pattern = quickpick.value; }
+            } else { pattern = choice.label; }
         }
 
         const sessionName = pattern.substring(1, pattern.indexOf("]")).trim();

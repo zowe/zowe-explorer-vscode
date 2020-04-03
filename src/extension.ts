@@ -203,7 +203,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "file"));
     vscode.commands.registerCommand("zowe.uss.createFolder", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "directory"));
-    vscode.commands.registerCommand("zowe.uss.deleteUSSNode", async (node: IZoweUSSTreeNode) =>
+    vscode.commands.registerCommand("zowe.uss.deleteNode", async (node: IZoweUSSTreeNode) =>
         node.deleteUSSNode(ussFileProvider, node.getUSSDocumentFilePath()));
     vscode.commands.registerCommand("zowe.uss.binary", async (node: IZoweUSSTreeNode) => ussActions.changeFileType(node, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.text", async (node: IZoweUSSTreeNode) => ussActions.changeFileType(node, false, ussFileProvider));

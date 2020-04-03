@@ -565,12 +565,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             return;
                         }
                         if (choice instanceof FilterDescriptor) {
-                            if (quickpick.value) {
-                                pattern = quickpick.value;
-                            }
-                        } else {
-                            pattern = choice.label;
-                        }
+                            if (quickpick.value) { pattern = quickpick.value; }
+                        } else { pattern = choice.label; }
                     }
                 }
                 if (!pattern) {
