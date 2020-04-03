@@ -18,7 +18,7 @@ const nls = require('vscode-nls-dev');
 const tsProject = ts.createProject('./tsconfig.json', { typescript });
 
 const inlineMap = true;
-const inlineSource = true;
+const inlineSource = false;
 const outDest = 'out';
 
 // If all VS Code languages are supported, you can use nls.coreLanguages

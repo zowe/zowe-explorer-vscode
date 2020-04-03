@@ -789,11 +789,11 @@ export async function copyDataSet(node: IZoweNodeType) {
  * @export
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
-export async function migrateDataSet(node: ZoweDatasetNode) {
+export async function hMigrateDataSet(node: ZoweDatasetNode) {
     const { dataSetName } = dsUtils.getNodeLabels(node);
     vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
     localize("hMigrate.requestSent2", " requested."));
-    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).migrateDataSet(dataSetName);
+    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
 }
 
 /**

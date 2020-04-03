@@ -267,7 +267,7 @@ describe("Extension Unit Tests", () => {
     const concatChildNodes = jest.fn();
     const getProfileName = jest.fn();
     const HMigrate = jest.fn();
-    const migrateDataSet = jest.fn();
+    const hMigrateDataSet = jest.fn();
     const closeOpenedTextFile = jest.fn();
     let mockClipboardData: string;
     const fileResponse: zowe.IZosFilesResponse = {
@@ -479,7 +479,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(zowe, "Copy", {value: Copy});
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(zowe, "HMigrate", { value: HMigrate });
-    Object.defineProperty(HMigrate, "dataSet", { value: migrateDataSet });
+    Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
     Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: getProfileName });
@@ -706,7 +706,7 @@ describe("Extension Unit Tests", () => {
             "zowe.copyDataSet",
             "zowe.pasteDataSet",
             "zowe.renameDataSetMember",
-            "zowe.migrateDataSet",
+            "zowe.hMigrateDataSet",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -4513,12 +4513,12 @@ describe("Extension Unit Tests", () => {
         });
     });
     describe("Migrate Data Sets", () => {
-        it("should call HMigrate.migrateDataSet on a sequential data set", async () => {
-            const migrateSpy = jest.spyOn(mvsApi, "migrateDataSet");
+        it("should call HMigrate.hMigrateDataSet on a sequential data set", async () => {
+            const migrateSpy = jest.spyOn(mvsApi, "hMigrateDataSet");
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = globals.DS_DS_CONTEXT;
 
-            await dsActions.migrateDataSet(node);
+            await dsActions.hMigrateDataSet(node);
 
             expect(migrateSpy.mock.calls.length).toBe(1);
             expect(showInformationMessage).toHaveBeenCalled();

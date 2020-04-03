@@ -71,7 +71,7 @@
     "rename" : "Rename",
     "copy" : "Copy",
     "paste" : "Paste",
-    "migrateDataSet" : "Migrate Data Set",
+    "hMigrateDataSet" : "Migrate Data Set",
     "profile.configuration.title": "Zowe z/OSMF Profiles",
     "profile.configuration.name": "Profile Name",
     "profile.configuration.url": "z/OSMF URL",

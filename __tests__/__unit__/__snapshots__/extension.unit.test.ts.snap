@@ -223,7 +223,7 @@ Array [
     "when": "view == zowe.explorer && viewItem == ds",
   },
   Object {
-    "command": "zowe.migrateDataSet",
+    "command": "zowe.hMigrateDataSet",
     "group": "7_hsmcommands",
     "when": "view == zowe.explorer && viewItem == ds",
   },
@@ -273,7 +273,7 @@ Array [
     "when": "view == zowe.explorer && viewItem == ds_fav",
   },
   Object {
-    "command": "zowe.migrateDataSet",
+    "command": "zowe.hMigrateDataSet",
     "group": "7_hsmcommands",
     "when": "view == zowe.explorer && viewItem == ds_fav",
   },
@@ -313,7 +313,7 @@ Array [
     "when": "view == zowe.explorer && viewItem == pds",
   },
   Object {
-    "command": "zowe.migrateDataSet",
+    "command": "zowe.hMigrateDataSet",
     "group": "7_hsmcommands",
     "when": "view == zowe.explorer && viewItem == pds",
   },
@@ -358,7 +358,7 @@ Array [
     "when": "view == zowe.explorer && viewItem == pds_fav",
   },
   Object {
-    "command": "zowe.migrateDataSet",
+    "command": "zowe.hMigrateDataSet",
     "group": "7_hsmcommands",
     "when": "view == zowe.explorer && viewItem == pds_fav",
   },
