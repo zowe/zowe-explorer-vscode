@@ -1,0 +1,18 @@
+{
+    "Favorites": "Favorites",
+    "deleteJob.job": "Job ",
+    "deleteJob.delete": " deleted",
+    "initializeFavorites.log.debug": "initializing favorites",
+    "initializeJobsFavorites.error.profile1": "Error: You have Jobs favorites that refer to a non-existent CLI profile named: ",
+    "initializeJobsFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
+    "initializeJobsFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your ",
+    "initializeJobsFavorites.error.profile4": " user settings.",
+    "searchHistory.options.prompt": "Select a filter",
+    "enterPattern.pattern": "No selection made.",
+    "jobsFilterPrompt.option.prompt.owner": "Enter the Job Owner. Default is *.",
+    "jobs.enter.valid.owner": "Please enter a valid owner name (no spaces allowed).",
+    "jobsFilterPrompt.enterPrefix": "Search Cancelled",
+    "jobsFilterPrompt.option.prompt.prefix": "Enter a Job prefix. Default is *.",
+    "jobsFilterPrompt.option.prompt.jobid": "Enter a Job id",
+    "SpecifyCriteria": "Create new.."
+}

@@ -13,9 +13,9 @@ import * as vscode from "vscode";
 import { Logger } from "@zowe/imperative";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
-import { OwnerFilterDescriptor } from "../utils";
+import { OwnerFilterDescriptor } from "../job/utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
-import * as extension from "../extension";
+import * as globals from "../globals";
 import { getIconByNode } from "../generators/icons";
 
 // tslint:disable-next-line: max-classes-per-file
@@ -88,7 +88,7 @@ export class ZoweTreeProvider {
             let passWrd: string;
             let baseEncd: string;
             let sesNamePrompt: string;
-            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+            if (element.contextValue.endsWith(globals.FAV_SUFFIX)) {
                 sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
             } else {
                 sesNamePrompt = element.label;

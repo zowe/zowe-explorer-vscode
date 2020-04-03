@@ -1,0 +1,17 @@
+{
+    "Favorites": "Favorites",
+    "renameUSSNode.error": "Unable to rename node: ",
+    "enterPattern.log.debug.prompt": "Prompting the user to choose a member from the filtered list",
+    "filterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
+    "searchHistory.options.prompt": "Select a filter",
+    "enterPattern.pattern": "No selection made.",
+    "filterPrompt.option.prompt.search": "Create a new filter",
+    "filterPrompt.enterPath": "You must enter a path.",
+    "initializeFavorites.log.debug": "initializing favorites",
+    "initializeUSSFavorites.lines.title": "Open",
+    "initializeUSSFavorites.error.profile1": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: ",
+    "intializeUSSFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
+    "initializeUSSFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ",
+    "initializeUSSFavorites.error.profile4": " user settings.",
+    "findUSSItem.unsuccessful": "File does not exist. It may have been deleted."
+}

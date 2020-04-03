@@ -19,9 +19,9 @@ import * as chaiAsPromised from "chai-as-promised";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
-import { USSTree } from "../../src/USSTree";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import * as extension from "../../src/extension";
+import { USSTree } from "../../src/uss/USSTree";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as globals from "../../src/globals";
 
 declare var it: any;
 
@@ -41,7 +41,7 @@ describe("USSTree Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
          null, session, "", false, testProfile.name);
-    sessNode.contextValue = extension.USS_SESSION_CONTEXT;
+    sessNode.contextValue = globals.USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
     const testTree = new USSTree();

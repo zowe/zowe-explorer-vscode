@@ -10,8 +10,8 @@
 */
 
 import * as vscode from "vscode";
-import { ZoweDatasetNode } from "../ZoweDatasetNode";
-import * as extension from "../../src/extension";
+import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
+import * as globals from "../../src/globals";
 import * as utils from "../utils";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -40,7 +40,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
         // refresh Tree View & favorites
         datasetProvider.refreshElement(node);
-        if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+        if (node.contextValue.includes(globals.FAV_SUFFIX) || node.getParent().contextValue === globals.FAVORITE_CONTEXT) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node);
             if (nonFavNode) {
                 datasetProvider.refreshElement(nonFavNode);
@@ -57,7 +57,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 }
 
 export function getDatasetLabel(node: ZoweDatasetNode) {
-    if (node.getParent() && node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+    if (node.getParent() && node.getParent().contextValue === globals.FAVORITE_CONTEXT) {
         const profileEnd = "]: ";
         const profileIndex = node.label.indexOf(profileEnd);
         return node.label.substr(profileIndex + profileEnd.length, node.label.length);

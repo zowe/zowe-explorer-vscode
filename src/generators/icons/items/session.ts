@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import * as extension from "../../../extension";
+import { getIconPathInResources } from "../../../shared/utils";
+import * as globals from "../../../globals";
 
 const icon: IIconItem = {
     id: IconId.session,
@@ -19,9 +19,9 @@ const icon: IIconItem = {
     path: getIconPathInResources("folder-root-default-closed.svg"),
     check: (node) => {
         const contexts = [
-            extension.DS_SESSION_CONTEXT,
-            extension.USS_SESSION_CONTEXT,
-            extension.JOBS_SESSION_CONTEXT];
+            globals.DS_SESSION_CONTEXT,
+            globals.USS_SESSION_CONTEXT,
+            globals.JOBS_SESSION_CONTEXT];
         return contexts.indexOf(node.contextValue) > -1;
     }
 };

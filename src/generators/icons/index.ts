@@ -10,7 +10,7 @@
 */
 
 import { TreeItem } from "vscode";
-import { ZoweUSSNode } from "../../ZoweUSSNode";
+import { ZoweUSSNode } from "../../uss/ZoweUSSNode";
 import { ZoweTreeNode } from "../../abstract/ZoweTreeNode";
 
 export enum IconId {

@@ -9,15 +9,17 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfile } from "@zowe/imperative";
-import * as nls from "vscode-nls";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfile, Session } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import * as nls from "vscode-nls";
+import { errorHandling, getZoweDir } from "./utils";
+import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { IZoweTree } from "./api/IZoweTree";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
     valid: boolean;
@@ -50,10 +52,42 @@ export class Profiles {
 
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
+    public validProfile: number = -1;
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
-    private constructor(private log: Logger) {
+    private usrNme: string;
+    private passWrd: string;
+    private baseEncd: string;
+    private constructor(private log: Logger) {}
+
+    public async checkCurrentProfile(fileProvider: IZoweTree<IZoweTreeNode>, theProfile?: IProfileLoaded) {
+        const defaultProfile = theProfile ? theProfile : this.getDefaultProfile();
+        if ((!defaultProfile.profile.user) || (!defaultProfile.profile.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(defaultProfile.name);
+                if (values !== undefined) {
+                    this.usrNme = values[0];
+                    this.passWrd = values[1];
+                    this.baseEncd = values[2];
+                }
+            } catch (error) {
+                errorHandling(error, defaultProfile.name,
+                    localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
+                return;
+            }
+            if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
+                defaultProfile.profile.getSession().ISession.user = this.usrNme;
+                defaultProfile.profile.getSession().ISession.password = this.passWrd;
+                defaultProfile.profile.getSession().ISession.base64EncodedAuth = this.baseEncd;
+                this.validProfile = 0;
+            } else {
+                return;
+            }
+            await fileProvider.refresh();
+        } else {
+            this.validProfile = 0;
+        }
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -165,7 +199,8 @@ export class Profiles {
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
+            prompt: localize("createNewConnection.option.prompt.username",
+                                     "Enter the user name for the connection. Leave blank to not store."),
             value: userName
         };
         userName = await vscode.window.showInputBox(options);
@@ -178,7 +213,8 @@ export class Profiles {
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
+            prompt: localize("createNewConnection.option.prompt.password",
+                                     "Enter the password for the connection. Leave blank to not store."),
             password: true,
             value: passWord
         };

@@ -10,9 +10,9 @@
 */
 
 import { getMessageById, getMessageByNode, MessageCategoryId, MessageContentType } from "../../../src/generators/messages";
-import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
+import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { IProfileLoaded, Session } from "@zowe/imperative";
-import { DatasetTree } from "../../../src/DatasetTree";
+import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as vscode from "vscode";
 
 jest.mock("vscode");

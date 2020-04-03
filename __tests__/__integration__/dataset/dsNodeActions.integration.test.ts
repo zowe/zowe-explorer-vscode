@@ -17,10 +17,10 @@ import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
 import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
-import * as extension from "../../../src/extension";
-import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
-import { DatasetTree } from "../../../src/DatasetTree";
-import * as dsActions from "../../../src/dataset/dsNodeActions";
+import * as globals from "../../../src/globals";
+import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
+import { DatasetTree } from "../../../src/dataset/DatasetTree";
+import * as dsActions from "../../../src/dataset/actions";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -41,7 +41,7 @@ describe("dsNodeActions integration test", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null,
         session, undefined, undefined, testProfile);
-    sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
     const testTree = new DatasetTree();

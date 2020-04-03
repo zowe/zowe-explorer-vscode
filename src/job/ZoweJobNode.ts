@@ -11,16 +11,16 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import * as extension from "./extension";
-import { IZoweJobTreeNode } from "./api/IZoweTreeNode";
-import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
-import * as utils from "./utils";
-import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import * as nls from "vscode-nls";
-import { getIconByNode } from "./generators/icons";
+import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
+import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
+import { errorHandling } from "../utils";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { getIconByNode } from "../generators/icons";
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import * as nls from "vscode-nls";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // tslint:disable-next-line: max-classes-per-file
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
@@ -64,7 +64,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (this.dirty) {
             let spools: zowe.IJobFile[] = [];
             const elementChildren = [];
-            if (this.contextValue === extension.JOBS_JOB_CONTEXT || this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX) {
+            if (this.contextValue === globals.JOBS_JOB_CONTEXT || this.contextValue === globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX) {
                 spools = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted.")
@@ -80,7 +80,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
-                        const sessionName = this.contextValue === extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX ?
+                        const sessionName = this.contextValue === globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX ?
                             this.label.substring(1, this.label.lastIndexOf("]")).trim() :
                             this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
@@ -113,7 +113,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
-                        jobNode.contextValue = extension.JOBS_JOB_CONTEXT;
+                        jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
                         if (!jobNode.iconPath) {
                             const icon = getIconByNode(jobNode);
                             if (icon) {
@@ -199,7 +199,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             try {
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJobsByOwnerAndPrefix(owner, prefix);
             } catch (error) {
-                await utils.errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+                await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
             }
         }
         return jobsInternal;
@@ -211,7 +211,7 @@ class Spool extends Job {
     constructor(label: string, mCollapsibleState: vscode.TreeItemCollapsibleState, mParent: IZoweJobTreeNode,
                 session: Session, spool: zowe.IJobFile, job: zowe.IJob, parent: IZoweJobTreeNode) {
         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
-        this.contextValue = extension.JOBS_SPOOL_CONTEXT;
+        this.contextValue = globals.JOBS_SPOOL_CONTEXT;
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;

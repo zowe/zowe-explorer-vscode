@@ -10,23 +10,23 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded } from "@zowe/imperative";
+import * as globals from "../globals";
 import * as vscode from "vscode";
-import * as nls from "vscode-nls";
-import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-import * as extension from "../src/extension";
-import * as utils from "./utils";
 import * as fs from "fs";
 import * as path from "path";
-import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
-import { IZoweTree } from "./api/IZoweTree";
-import { getIconByNode } from "./generators/icons/index";
 import * as moment from "moment";
-import { injectAdditionalDataToTooltip } from "./utils/uss";
-import { Profiles } from "./Profiles";
-import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { attachRecentSaveListener, disposeRecentSaveListener, getRecentSaveStatus } from "./utils/file";
+import { Session, IProfileLoaded } from "@zowe/imperative";
+import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
+import { errorHandling } from "../utils";
+import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
+import { IZoweTree } from "../api/IZoweTree";
+import { getIconByNode } from "../generators/icons/index";
+import { injectAdditionalDataToTooltip } from "../uss/utils";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+
+import * as nls from "vscode-nls";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -71,11 +71,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         super(label, collapsibleState, mParent, session, profile);
         this.binary = binary;
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-            this.contextValue = extension.USS_DIR_CONTEXT;
+            this.contextValue = globals.USS_DIR_CONTEXT;
         } else if (binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
+            this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
         } else {
-            this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
+            this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
         }
         if (this.parentPath) {
             this.fullPath = this.tooltip = this.parentPath + "/" + label;
@@ -84,7 +84,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (mParent && mParent.contextValue === extension.FAVORITE_CONTEXT) {
+        if (mParent && mParent.contextValue === globals.FAVORITE_CONTEXT) {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
@@ -127,9 +127,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
-        if ((!this.fullPath && this.contextValue === extension.USS_SESSION_CONTEXT) ||
-            (this.contextValue === extension.DS_TEXT_FILE_CONTEXT ||
-                this.contextValue === extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX)) {
+        if ((!this.fullPath && this.contextValue === globals.USS_SESSION_CONTEXT) ||
+            (this.contextValue === globals.DS_TEXT_FILE_CONTEXT ||
+                this.contextValue === globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX)) {
             return [];
         }
 
@@ -155,7 +155,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
-            utils.errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
@@ -214,7 +214,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
             }
         });
-        if (this.contextValue === extension.USS_SESSION_CONTEXT) {
+        if (this.contextValue === globals.USS_SESSION_CONTEXT) {
             this.dirty = false;
         }
         return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
@@ -223,15 +223,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setBinary(binary: boolean) {
         this.binary = binary;
         if (this.binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
+            this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
-            this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
+            this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
-        if (this.getParent() && this.getParent().contextValue === extension.FAVORITE_CONTEXT) {
-            this.binary ? this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX :
-                this.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+        if (this.getParent() && this.getParent().contextValue === globals.FAVORITE_CONTEXT) {
+            this.binary ? this.contextValue = globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX :
+                this.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
         const icon = getIconByNode(this);
@@ -313,7 +313,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
+            const isRecursive = this.contextValue === globals.USS_DIR_CONTEXT ? true : false;
             await ZoweExplorerApiRegister.getUssApi(this.profile).delete(this.fullPath, isRecursive);
             this.getParent().dirty = true;
             try {
@@ -381,7 +381,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Getter for folder type
      */
     public get isFolder(): boolean {
-        return [extension.USS_DIR_CONTEXT, extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+        return [globals.USS_DIR_CONTEXT, globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX].indexOf(this.contextValue) > -1;
     }
 
     /**
@@ -390,47 +390,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param {IZoweTreeNode} node
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
-        let usrNme: string;
-        let passWrd: string;
-        let baseEncd: string;
-        let validProfile: number = -1;
-        if ((!this.getSession().ISession.user) || (!this.getSession().ISession.password)) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(this.getProfileName());
-                if (values !== undefined) {
-                    usrNme = values[0];
-                    passWrd = values[1];
-                    baseEncd = values[2];
-                }
-            } catch (error) {
-                await utils.errorHandling(error, this.getProfileName(), error.message);
-            }
-            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                this.getSession().ISession.user = usrNme;
-                this.getSession().ISession.password = passWrd;
-                this.getSession().ISession.base64EncodedAuth = baseEncd;
-                validProfile = 0;
-            } else {
-                return;
-            }
-            await ussFileProvider.refreshElement(this);
-            await ussFileProvider.refresh();
-        } else {
-            validProfile = 0;
-        }
-        if (validProfile === 0) {
+        await Profiles.getInstance().checkCurrentProfile(ussFileProvider);
+        if (Profiles.getInstance().validProfile === 0) {
             try {
                 let label: string;
                 switch (this.getParent().contextValue) {
-                    case (extension.FAVORITE_CONTEXT):
+                    case (globals.FAVORITE_CONTEXT):
                         label = this.label.substring(this.label.indexOf(":") + 1).trim();
                         break;
                     // Handle file path for files in directories and favorited directories
-                    case (extension.USS_DIR_CONTEXT):
-                    case (extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX):
+                    case (globals.USS_DIR_CONTEXT):
+                    case (globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX):
                         label = this.fullPath;
                         break;
-                    case (extension.USS_SESSION_CONTEXT):
+                    case (globals.USS_SESSION_CONTEXT):
                         label = this.label;
                         break;
                     default:
@@ -468,7 +441,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
-                await utils.errorHandling(err, this.mProfileName, err.message);
+                await errorHandling(err, this.mProfileName, err.message);
                 throw (err);
             }
         }
@@ -481,13 +454,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async refreshUSS() {
         let label;
         switch (this.getParent().contextValue) {
-            case (extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX):
+            case (globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX):
                 label = this.fullPath;
                 break;
-            case (extension.USS_DIR_CONTEXT):
+            case (globals.USS_DIR_CONTEXT):
                 label = this.fullPath;
                 break;
-            case (extension.USS_SESSION_CONTEXT):
+            case (globals.USS_SESSION_CONTEXT):
                 label = this.label;
                 break;
             default:
@@ -529,7 +502,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 vscode.window.showInformationMessage(localize("refreshUSS.file1", "Unable to find file: ") + label +
                     localize("refreshUSS.file2", " was probably deleted."));
             } else {
-                await utils.errorHandling(err, this.mProfileName, err.message);
+                await errorHandling(err, this.mProfileName, err.message);
             }
         }
     }
@@ -580,6 +553,45 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      */
     public getUSSDocumentFilePath() {
-        return path.join(extension.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+        return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+    }
+}
+
+let wasSavedRecently = false;
+let saveListener = null;
+
+/**
+ * Helper function which sets up listener for save wiping out the data after certain delay to prevent the fact of second save
+ * @param wipeOutTime {number}
+ */
+export function attachRecentSaveListener(wipeOutTime = 500) {
+    if (saveListener) {
+        saveListener.dispose();
+    }
+
+    saveListener = vscode.workspace.onDidSaveTextDocument(() => {
+        wasSavedRecently = true;
+
+        setTimeout(() => {
+            wasSavedRecently = false;
+        }, wipeOutTime);
+    });
+}
+
+/**
+ * Helper function which returns saved save flag
+ *
+ * @returns {boolean}
+ */
+export function getRecentSaveStatus() {
+    return wasSavedRecently;
+}
+
+/**
+ * Helper function which disposes recent save listener
+ */
+export function disposeRecentSaveListener() {
+    if (saveListener) {
+        saveListener.dispose();
     }
 }

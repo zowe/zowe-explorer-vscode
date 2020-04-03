@@ -288,7 +288,7 @@ export namespace ZoweExplorerApi {
          * @param {string} dataSetName
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        hMigrateDataSet(
+        migrateDataSet(
             dataSetName: string,
         ): Promise<zowe.IZosFilesResponse>;
 

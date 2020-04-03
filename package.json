@@ -132,8 +132,8 @@
         "title": "%copy%"
       },
       {
-        "command": "zowe.hMigrateDataSet",
-        "title": "%hMigrateDataSet%"
+        "command": "zowe.migrateDataSet",
+        "title": "%migrateDataSet%"
       },
       {
         "command": "zowe.pasteDataSet",
@@ -656,7 +656,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == ds",
-          "command": "zowe.hMigrateDataSet",
+          "command": "zowe.migrateDataSet",
           "group": "7_hsmcommands"
         },
         {
@@ -706,7 +706,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == ds_fav",
-          "command": "zowe.hMigrateDataSet",
+          "command": "zowe.migrateDataSet",
           "group": "7_hsmcommands"
         },
         {
@@ -746,7 +746,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == pds",
-          "command": "zowe.hMigrateDataSet",
+          "command": "zowe.migrateDataSet",
           "group": "7_hsmcommands"
         },
         {
@@ -791,7 +791,7 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == pds_fav",
-          "command": "zowe.hMigrateDataSet",
+          "command": "zowe.migrateDataSet",
           "group": "7_hsmcommands"
         },
         {

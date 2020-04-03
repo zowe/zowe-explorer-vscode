@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import * as extension from "../../../extension";
-import { getIconPathInResources } from "../../../utils/icon";
+import * as globals from "../../../globals";
+import { getIconPathInResources } from "../../../shared/utils";
 
 const icon: IIconItem = {
     id: IconId.documentBinary,
@@ -19,8 +19,8 @@ const icon: IIconItem = {
     path: getIconPathInResources("document-binary.svg"),
     check: (node) => {
         // TODO: Move contexts to constants file and do constructor as well
-        const contexts = [extension.DS_BINARY_FILE_CONTEXT,
-            extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX];
+        const contexts = [globals.DS_BINARY_FILE_CONTEXT,
+            globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX];
 
         return contexts.indexOf(node.contextValue) > -1;
     }

@@ -15,9 +15,14 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, ISession, CliProfileManager } from "@zowe/imperative";
+import { Logger } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
+import { createJobsTree } from "../../src/job/ZosJobsProvider";
+import { IZoweTree } from "../../src/api/IZoweTree";
+import { IZoweUSSTreeNode, IZoweDatasetTreeNode } from "../../src/api/IZoweTreeNode";
+import { USSTree } from "../../src/uss/USSTree";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -54,12 +59,18 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
+    const getConfiguration = jest.fn();
+    const createTreeView = jest.fn();
+    const createBasicZosmfSession = jest.fn();
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -118,6 +129,9 @@ describe("Profile class unit tests", () => {
                         defaultProfile: {name: "profile1"},
                         loadNamedProfile: [{name: "profile1"}, {profile: {user: "fake", password: "1234"}}],
                         promptCredentials: jest.fn(()=> {
+                            return {};
+                        }),
+                        checkCurrentProfile: jest.fn(()=> {
                             return {};
                         }),
                         createNewConnection: jest.fn(()=>{
@@ -426,6 +440,124 @@ describe("Profile class unit tests", () => {
         mockJSONParse.mockReturnValueOnce(profileOne);
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+    });
+
+    it("Testing the jobs prompt credentials error, profiles", async () => {
+        const profiles = await Profiles.createInstance(log);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    validProfile: -1,
+                    getDefaultProfile: () => ({name: "firstName"})
+                };
+            })
+        });
+        const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+        testJobsProvider.initializeJobsTree(Logger.getAppLogger());
+        await profiles.checkCurrentProfile(testJobsProvider);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests the uss filter prompt credentials error, profiles", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: -1
+                };
+            })
+        });
+        const profiles = await Profiles.createInstance(log);
+        const testTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
+        await profiles.checkCurrentProfile(testTree);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests the openPS credentials prompt error, profiles", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: 0
+                };
+            })
+        });
+        const profiles = await Profiles.createInstance(log);
+        const testTree: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
+        await profiles.checkCurrentProfile(testTree);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests the openUSS credentials prompt with favorites error, profiles", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: -1,
+                    promptCredentials: jest.fn(()=> {
+                        return [undefined, undefined, undefined];
+                    }),
+                };
+            })
+        });
+        const profiles = await Profiles.createInstance(log);
+        const testTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
+        await profiles.checkCurrentProfile(testTree);
+
+        expect(profiles.validProfile).toBe(-1);
+    });
+
+    it("tests the spool content credentials prompt error, profiles", async () => {
+        const profiles = await Profiles.createInstance(log);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    getDefaultProfile: () => ({name: "firstName"}),
+                    validProfile: -1
+                };
+            })
+        });
+        const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+        testJobsProvider.initializeJobsTree(Logger.getAppLogger());
+        await profiles.checkCurrentProfile(testJobsProvider);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests that checkCurrentProfile ends in error", async () => {
+        const profiles = await Profiles.createInstance(log);
+        const JobsTree = jest.fn().mockImplementation(() => {
+            return {
+                mSessionNodes: [],
+                getChildren: jest.fn(),
+                addSession: jest.fn(),
+                refresh: jest.fn(),
+                getTreeView: jest.fn(),
+                treeView: null,
+                refreshElement: jest.fn(),
+                getProfiles: jest.fn(),
+                getProfileName: jest.fn(),
+                getSession: jest.fn()
+            };
+        });
+        const testJobsTree = JobsTree();
+        const testProfile = { name: "profile1",
+                              profile: {user: undefined, password: undefined},
+                              type: "zosmf",
+                              message: null,
+                              failNotFound: false };
+
+        await profiles.checkCurrentProfile(testJobsTree, testProfile);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        showErrorMessage.mockReset();
     });
 
     it("should route through to spawn. Coverage of error handling", async () => {

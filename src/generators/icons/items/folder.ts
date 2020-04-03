@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import * as extension from "../../../extension";
+import { getIconPathInResources } from "../../../shared/utils";
+import * as globals from "../../../globals";
 
 const icon: IIconItem = {
     id: IconId.folder,
@@ -19,12 +19,12 @@ const icon: IIconItem = {
     path: getIconPathInResources("folder-closed.svg"),
     check: (node) => {
         const contexts = [
-            extension.DS_PDS_CONTEXT,
-            extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX,
-            extension.USS_DIR_CONTEXT,
-            extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX,
-            extension.JOBS_JOB_CONTEXT,
-            extension.JOBS_JOB_CONTEXT + extension.FAV_SUFFIX];
+            globals.DS_PDS_CONTEXT,
+            globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX,
+            globals.USS_DIR_CONTEXT,
+            globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX,
+            globals.JOBS_JOB_CONTEXT,
+            globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX];
         return contexts.indexOf(node.contextValue) > -1;
     }
 };

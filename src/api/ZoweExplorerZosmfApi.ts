@@ -12,9 +12,8 @@
 import * as zowe from "@zowe/cli";
 import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import * as nls from "vscode-nls";
 
-// Localization support
+import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // tslint:disable: max-classes-per-file
@@ -168,7 +167,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         return zowe.Rename.dataSetMember(this.getSession(), currentMemberName, newMemberName, afterMemberName);
     }
 
-    public async hMigrateDataSet(dataSetName: string,
+    public async migrateDataSet(dataSetName: string,
     ): Promise<zowe.IZosFilesResponse> {
         return zowe.HMigrate.dataSet(this.getSession(), dataSetName);
     }

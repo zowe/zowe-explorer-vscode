@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./IZoweTreeNode";
+import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
 
 /**
  * The base interface for Zowe tree browsers that implement the
