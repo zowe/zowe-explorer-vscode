@@ -63,9 +63,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
-    } catch (err) {
-        await errorHandling(err, null, err.message);
-    }
+    } catch (err) { await errorHandling(err, null, err.message); }
 
     let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
@@ -88,9 +86,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                         displayName: localize("displayName", "Zowe Explorer")
                     }
                 );
-            } catch (err) {
-                throw new ImperativeError({msg: err.toString()});
-            }
+            } catch (err) { throw new ImperativeError({msg: err.toString()}); }
         }
 
         // Ensure that ~/.zowe folder exists
@@ -123,8 +119,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     vscode.workspace.onDidChangeConfiguration((e) => {
         // If the temp folder location has been changed, update current temp folder preference
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
-            const updatedPreferencesTempPath: string =
-                vscode.workspace.getConfiguration()
+            const updatedPreferencesTempPath: string = vscode.workspace.getConfiguration()
                     /* tslint:disable:no-string-literal */
                     .get("Zowe-Temp-Folder-Location")["folderPath"];
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
@@ -233,15 +228,11 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.downloadSpool", (job) => jobActions.downloadSpool(job));
     vscode.commands.registerCommand("zowe.getJobJcl", (job) => jobActions.downloadJcl(job));
     vscode.commands.registerCommand("zowe.setJobSpool", async (session, jobid) => {
-        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => {
-            return jobNode.label.trim() === session.trim();
-        });
+        const sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.trim() === session.trim());
         sessionNode.dirty = true;
         jobsProvider.refresh();
         const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
-        const job: IZoweJobTreeNode = jobs.find((jobNode) => {
-            return jobNode.job.jobid === jobid;
-        });
+        const job: IZoweJobTreeNode = jobs.find((jobNode) => jobNode.job.jobid === jobid);
         jobsProvider.setItem(jobsProvider.getTreeView(), job);
     });
     vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node));
@@ -387,9 +378,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((profileName) =>
             // Find all cases where a profile is not already displayed
-            !zoweFileProvider.mSessionNodes.find((sessionNode) =>
-                sessionNode.getProfileName() === profileName
-            )
+            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName )
         );
     }
     const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
