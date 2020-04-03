@@ -762,7 +762,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     // instead of changing the collapsible state
     // change label so the treeview updates
     node.label = node.label.trim() + " ";
-    node.label.trim();
+    node.label = node.label.trim();
     node.tooltip = node.pattern = pattern.toUpperCase();
     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
     node.dirty = true;

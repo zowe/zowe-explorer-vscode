@@ -553,7 +553,7 @@ describe("Unit Tests (Jest)", () => {
                 false, "test"),
         ];
 
-        expectedUSSFavorites.map((node) => node.contextValue += globals.FAV_SUFFIX);
+        expectedUSSFavorites.forEach((node) => node.contextValue += globals.FAV_SUFFIX);
         expectedUSSFavorites.forEach((node) => {
             if (node.contextValue !== globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX) {
                 node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };

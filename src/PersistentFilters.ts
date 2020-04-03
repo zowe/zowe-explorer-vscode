@@ -15,7 +15,7 @@ import * as vscode from "vscode";
  * Standard history and favorite persistance handling routines
  *
  * @export
- * @class PersistentFilterss
+ * @class PersistentFilters
  */
 export class PersistentFilters {
     /**

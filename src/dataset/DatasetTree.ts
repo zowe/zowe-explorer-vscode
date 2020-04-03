@@ -496,7 +496,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return;
             } else {
                 memberNode.getParent().label = memberNode.getParent().label.trim() + " ";
-                memberNode.getParent().label.trim();
+                memberNode.getParent().label = memberNode.getParent().label.trim();
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 this.addHistory(`${parentName}(${memberName})`);
                 dsActions.openPS(memberNode, true, this);
@@ -598,7 +598,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // update the treeview with the new pattern
             node.label = node.label.trim() + " ";
-            node.label.trim();
+            node.label = node.label.trim();
             node.tooltip = node.pattern = pattern.toUpperCase();
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;
