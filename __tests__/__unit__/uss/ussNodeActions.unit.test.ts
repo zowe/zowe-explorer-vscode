@@ -266,13 +266,13 @@ describe("ussNodeActions", () => {
                     };
                 })
             });
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
+            const dsNode2 = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
                 sessionwocred, null, false, profileOne.name);
 
             showInputBox.mockReturnValueOnce("fake");
             showInputBox.mockReturnValueOnce("fake");
             showQuickPick.mockReturnValueOnce("directory");
-            await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
+            await ussNodeActions.createUSSNodeDialog(dsNode2, testUSSTree);
 
             expect(testUSSTree.refresh).toHaveBeenCalled();
 
