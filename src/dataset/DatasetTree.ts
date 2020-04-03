@@ -535,7 +535,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        await Profiles.getInstance().checkCurrentProfile(this);
+        await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === 0) {
             if (node.contextValue === globals.DS_SESSION_CONTEXT) {
                 if (this.mHistory.getHistory().length > 0) {
@@ -609,6 +609,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.addHistory(node.pattern);
         }
     }
+
+    public async checkCurrentProfile(node: IZoweDatasetTreeNode) {
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        await this.refresh();
+    }
+
 
     /**
      * Rename data set member

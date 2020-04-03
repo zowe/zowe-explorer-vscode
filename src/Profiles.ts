@@ -61,30 +61,29 @@ export class Profiles {
     private baseEncd: string;
     private constructor(private log: Logger) {}
 
-    public async checkCurrentProfile(fileProvider: IZoweTree<IZoweTreeNode>, theProfile?: IProfileLoaded) {
-        const defaultProfile = theProfile ? theProfile : this.getDefaultProfile();
-        if ((!defaultProfile.profile.user) || (!defaultProfile.profile.password)) {
+    public async checkCurrentProfile(theProfile: IProfileLoaded) {
+
+        if ((!theProfile.profile.getSession().user) || (!theProfile.profile.getSession().password)) {
             try {
-                const values = await Profiles.getInstance().promptCredentials(defaultProfile.name);
+                const values = await Profiles.getInstance().promptCredentials(theProfile.name);
                 if (values !== undefined) {
                     this.usrNme = values[0];
                     this.passWrd = values[1];
                     this.baseEncd = values[2];
                 }
             } catch (error) {
-                errorHandling(error, defaultProfile.name,
+                errorHandling(error, theProfile.name,
                     localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
                 return;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
-                defaultProfile.profile.getSession().ISession.user = this.usrNme;
-                defaultProfile.profile.getSession().ISession.password = this.passWrd;
-                defaultProfile.profile.getSession().ISession.base64EncodedAuth = this.baseEncd;
+                theProfile.profile.getSession().ISession.user = this.usrNme;
+                theProfile.profile.getSession().ISession.password = this.passWrd;
+                theProfile.profile.getSession().ISession.base64EncodedAuth = this.baseEncd;
                 this.validProfile = 0;
             } else {
                 return;
             }
-            await fileProvider.refresh();
         } else {
             this.validProfile = 0;
         }

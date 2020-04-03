@@ -46,6 +46,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Adds a favorite node
      * @param favorite Adds a favorite node
      */
+    checkCurrentProfile(node: IZoweNodeType);
+    /**
+     * Adds a favorite node
+     * @param favorite Adds a favorite node
+     */
     addFavorite(favorite: IZoweNodeType);
     /**
      * Removes a favorite node

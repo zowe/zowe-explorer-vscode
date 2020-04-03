@@ -390,7 +390,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param {IZoweTreeNode} node
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
-        await Profiles.getInstance().checkCurrentProfile(ussFileProvider);
+        await ussFileProvider.checkCurrentProfile(this);
         if (Profiles.getInstance().validProfile === 0) {
             try {
                 let label: string;

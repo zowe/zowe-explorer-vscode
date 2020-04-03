@@ -137,7 +137,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
     } else {
         sesNamePrompt = node.getLabel();
     }
-    if (datasetProvider) { await Profiles.getInstance().checkCurrentProfile(datasetProvider); }
+    if (datasetProvider) { await datasetProvider.checkCurrentProfile(node); }
     if (Profiles.getInstance().validProfile === 0) {
         try {
             let label: string;
@@ -216,7 +216,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         sesNamePrompt = node.label;
     }
 
-    Profiles.getInstance().checkCurrentProfile(datasetProvider);
+    datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === 0) {
         // get data set type
         const type = await vscode.window.showQuickPick(types, quickPickOptions);

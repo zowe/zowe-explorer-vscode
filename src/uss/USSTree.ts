@@ -320,7 +320,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
         let sessionNode = node.getSessionNode();
         let remotepath: string;
-        await Profiles.getInstance().checkCurrentProfile(this);
+        await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === 0) {
             if (node.contextValue === globals.USS_SESSION_CONTEXT) {
                 if (this.mHistory.getHistory().length > 0) {
@@ -498,6 +498,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
             this.removeRecall(`[${sessionNode.getProfileName()}]: ${itemPath}`);
         }
+    }
+
+    public async checkCurrentProfile(node: IZoweUSSTreeNode) {
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        await this.refresh();
     }
 
     /**

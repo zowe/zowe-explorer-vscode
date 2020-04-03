@@ -61,7 +61,7 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
 }
 
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
-    await Profiles.getInstance().checkCurrentProfile(ussFileProvider);
+    await ussFileProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === 0) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: `What would you like to create at ${node.fullPath}?`,

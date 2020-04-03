@@ -300,7 +300,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         } else {
             sesNamePrompt = node.label;
         }
-        await Profiles.getInstance().checkCurrentProfile(this);
+        await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === 0) {
             if (node.contextValue === globals.JOBS_SESSION_CONTEXT) { // This is the profile object context
                 if (hasHistory) { // Check if user has created some history
@@ -508,6 +508,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             });
         }
         return this.createSearchLabel(owner, prefix, jobId);
+    }
+
+    public async checkCurrentProfile(node: IZoweJobTreeNode) {
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        await this.refresh();
     }
 
     /**
