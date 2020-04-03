@@ -108,7 +108,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Implements access to profile name
+     * Implements access tto profile name
      * for {IZoweUSSTreeNode}.
      *
      * @returns {string}
