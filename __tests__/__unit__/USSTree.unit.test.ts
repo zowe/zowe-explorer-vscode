@@ -738,40 +738,40 @@ describe("Unit Tests (Jest)", () => {
     });
 
     it("tests the uss filter prompt credentials", async () => {
-        // showQuickPick.mockReset();
-        // showInputBox.mockReset();
-        // const sessionwocred = new Session({
-        //     user: "",
-        //     password: "",
-        //     hostname: "fake",
-        //     port: 443,
-        //     protocol: "https",
-        //     type: "basic",
-        // });
-        // const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-        // sessNode.contextValue = globals.USS_SESSION_CONTEXT;
-        // const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-        // dsNode.contextValue = globals.USS_SESSION_CONTEXT;
-        // Object.defineProperty(Profiles, "getInstance", {
-        //     value: jest.fn(() => {
-        //         return {
-        //             allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-        //             defaultProfile: {name: "firstName"},
-        //             validProfile: 0,
-        //             checkCurrentProfile: jest.fn(),
-        //             promptCredentials: jest.fn(()=> {
-        //                 return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
-        //             }),
-        //         };
-        //     })
-        // });
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        const sessionwocred = new Session({
+            user: "",
+            password: "",
+            hostname: "fake",
+            port: 443,
+            protocol: "https",
+            type: "basic",
+        });
+        const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+        sessNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+        dsNode.contextValue = globals.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: -1,
+                    checkCurrentProfile: jest.fn(),
+                    promptCredentials: jest.fn(()=> {
+                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                    }),
+                };
+            })
+        });
 
-        // showInputBox.mockReturnValueOnce("fake");
-        // showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fake");
 
-        // await testTree.filterPrompt(dsNode);
+        await testTree.filterPrompt(dsNode);
 
-        // expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
     });
 
     it("tests the uss filter prompt credentials, favorites route", async () => {

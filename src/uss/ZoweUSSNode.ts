@@ -114,7 +114,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.profileName.substr(1, this.profileName.length - 2);
+        return this.mProfileName;
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
