@@ -15,10 +15,9 @@ jest.mock("@zowe/imperative");
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
-import * as extension from "../../src/extension";
 import * as profileLoader from "../../src/Profiles";
 import * as utils from "../../src/utils";
-import * as sharedUtils from "../../src/shared/utils";
+import { labelHack } from "../../src/shared/utils";
 import * as globals from "../../src/globals";
 import { Job } from "../../src/job/ZoweJobNode";
 import { ZosJobsProvider, createJobsTree } from "../../src/job/ZosJobsProvider";
@@ -310,7 +309,7 @@ describe("Zos Jobs Unit Tests", () => {
             job.prefix = "zowe*";
             expect(job.prefix).toEqual("zowe*");
             // reset
-            sharedUtils.labelHack(job);
+            labelHack(job);
             job.children = [];
             job.dirty = true;
         });
@@ -324,7 +323,7 @@ describe("Zos Jobs Unit Tests", () => {
             job.searchId = "JOB12345";
             expect(job.searchId).toEqual("JOB12345");
             // reset
-            sharedUtils.labelHack(job);
+            labelHack(job);
             job.children = [];
             job.dirty = true;
         });
