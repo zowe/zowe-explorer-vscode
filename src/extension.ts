@@ -1710,7 +1710,50 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     }
     const start = path.join(DS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
-    const sesName = ending.substring(0, ending.indexOf(path.sep));
+    let sesName = ending.substring(0, ending.indexOf(path.sep));
+
+    // Added special handling for attempt to save favourite node
+    if (sesName === "Favorites") {
+        const datasetName = ending.split(path.sep).pop();
+        const memberRegex = /\(.+\)$/;
+        let targetNode;
+
+        if (memberRegex.test(datasetName)) {
+            const nameRegex = new RegExp(`${datasetName.replace(memberRegex, "")}$`);
+            const targetParentNode = datasetProvider.mFavorites.find((favNode) => {
+                return nameRegex.test(favNode.label);
+            });
+
+            if (targetParentNode) {
+                const memberRegexResult = datasetName.match(memberRegex);
+                const memberName = memberRegexResult && memberRegexResult[0];
+
+                const hasMember = targetParentNode.children.some((memNode) => {
+                    return memNode.label === memberName.replace("(", "").replace(")", "");
+                });
+                if (hasMember) {
+                    targetNode = targetParentNode;
+                }
+            }
+        } else {
+            const nameRegex = new RegExp(`${datasetName}$`);
+            targetNode = datasetProvider.mFavorites.find((favNode) => {
+                return nameRegex.test(favNode.label);
+            });
+        }
+
+        if (targetNode) {
+            const sessionRegex = /^\[.+\]/;
+            const sessionRegexResult = targetNode.label
+                .match(sessionRegex);
+            const sessionName = sessionRegexResult && sessionRegexResult[0];
+
+            if (sessionName) {
+                sesName = sessionName.replace("[", "").replace("]", "");
+            }
+        }
+    }
+
     const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
     if (!profile) {
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
