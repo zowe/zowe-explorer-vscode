@@ -23,7 +23,6 @@ import * as vscode from "vscode";
 import { USSTree, createUSSTree } from "../../src/uss/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
 import { Profiles } from "../../src/Profiles";
 import { IZoweTree } from "../../src/api/IZoweTree";
@@ -132,8 +131,6 @@ describe("Unit Tests (Jest)", () => {
             return {
                 allProfiles: [profileOne, {name: "secondName"}],
                 getDefaultProfile: mockDefaultProfile,
-                validProfile: 0,
-                checkCurrentProfile: jest.fn(),
                 loadNamedProfile: mockLoadNamedProfile
             };
         })
@@ -480,8 +477,6 @@ describe("Unit Tests (Jest)", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: 0,
-                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                     }),
@@ -511,9 +506,7 @@ describe("Unit Tests (Jest)", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    validProfile: 0,
-                    checkCurrentProfile: jest.fn(),
+                    defaultProfile: {name: "firstName"}
                 };
             })
         });

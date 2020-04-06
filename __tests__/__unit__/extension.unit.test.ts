@@ -54,6 +54,14 @@ describe("Extension Unit Tests", () => {
         type: "basic",
     });
 
+    const defaultUploadResponse: zowe.IZosFilesResponse = {
+        success: true,
+        commandResponse: "success",
+        apiResponse: {
+            items: []
+        }
+    };
+
     const iJob: zowe.IJob = {
         "jobid": "JOB1234",
         "jobname": "TESTJOB",
@@ -1509,13 +1517,6 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: {
-                items: []
-            }
-        };
 
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
@@ -1537,8 +1538,8 @@ describe("Extension Unit Tests", () => {
         createTreeView.mockReturnValue(new TreeView());
         testTree.getChildren.mockReturnValue([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode,
                                                                   null, undefined, undefined, profileOne), sessNode]);
-        allMembers.mockReturnValue(uploadResponse);
-        dataSet.mockReturnValue(uploadResponse);
+        allMembers.mockReturnValue(defaultUploadResponse);
+        dataSet.mockReturnValue(defaultUploadResponse);
         mockGetHistory.mockReturnValue(["mockHistory1"]);
         testTree.getTreeView.mockReturnValue(new TreeView());
 
@@ -1589,14 +1590,6 @@ describe("Extension Unit Tests", () => {
                 };
             })
         });
-
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: {
-                items: []
-            }
-        };
         const sessionwocred = new imperative.Session({
             user: "",
             password: "",
@@ -1623,8 +1616,8 @@ describe("Extension Unit Tests", () => {
         mockCreateFilterString.mockReturnValue("NODE");
         showInputBox.mockReturnValueOnce("sestest");
         mockGetHistory.mockReturnValueOnce(["mockHistory"]);
-        allMembers.mockReturnValueOnce(uploadResponse);
-        dataSetList.mockReturnValue(uploadResponse);
+        allMembers.mockReturnValueOnce(defaultUploadResponse);
+        dataSetList.mockReturnValue(defaultUploadResponse);
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
