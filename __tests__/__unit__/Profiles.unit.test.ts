@@ -18,11 +18,6 @@ import * as child_process from "child_process";
 import { Logger } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
-import { createJobsTree } from "../../src/job/ZosJobsProvider";
-import { IZoweTree } from "../../src/api/IZoweTree";
-import { IZoweUSSTreeNode, IZoweDatasetTreeNode } from "../../src/api/IZoweTreeNode";
-import { USSTree } from "../../src/uss/USSTree";
-import { DatasetTree } from "../../src/dataset/DatasetTree";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug

@@ -1597,7 +1597,7 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const createFile = jest.spyOn(dsActions, "createFile");
+        const createFileSpy = jest.spyOn(dsActions, "createFile");
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
                                                 null, sessionwocred, undefined, undefined, profileOne);
@@ -1622,7 +1622,7 @@ describe("Extension Unit Tests", () => {
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
         await dsActions.createFile(newsessNode, testTree);
-        expect(dsActions.createFile).toHaveBeenCalled();
+        expect(createFileSpy).toHaveBeenCalled();
 
         dataSetList.mockReset();
     });
@@ -2424,7 +2424,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         const spyopenPS = jest.spyOn(dsActions, "openPS");
         await dsActions.openPS(dsNode, true, testTree);
-        expect(dsActions.openPS).toHaveBeenCalled();
+        expect(spyopenPS).toHaveBeenCalled();
     });
 
     describe("refresh USS checking", () => {

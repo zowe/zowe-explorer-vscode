@@ -55,7 +55,6 @@ describe("DatasetTree Unit Tests", () => {
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
     const createTreeView = jest.fn();
-    const bufferToDataSet = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
     const findFavoritedNode = jest.fn();
@@ -153,7 +152,6 @@ describe("DatasetTree Unit Tests", () => {
     if (icon) {
         testTree.mSessionNodes[1].iconPath = icon.path;
     }
-    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne);
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
