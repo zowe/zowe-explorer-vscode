@@ -114,7 +114,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.mProfileName;
+        return this.returnmProfileName();
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
@@ -554,6 +554,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getUSSDocumentFilePath() {
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+    }
+
+    private returnmProfileName(): string {
+        return this.mProfileName;
     }
 }
 
