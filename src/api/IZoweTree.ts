@@ -184,9 +184,39 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Renames a node based on the profile and it's label
      * @deprecated should not be visible outside of class
      *
+     * @param {string} criteria the member name to add
+     */
+    addRecall?(criteria: string);
+    /**
+     * Returns the array of recently-opened member names
+     *
+     * @returns {string[]} the array of recently-opened member names
+     */
+    getRecall?();
+    /**
+     * Removes a member name from the recently-opened members array
+     *
+     * @param {string} name the member to remove
+     */
+    removeRecall?(name: string);
+    /**
+     * Returns a new dataset filter string, from an old filter and a new string
+     *
+     * @param {string} newFilter the new filter to add
+     * @param {IZoweDatasetTreeNode} node the node with the old filter
+     */
+    createFilterString?(newFilter: string, node: IZoweNodeType);
+    /**
      * @param {string} profileLabel
      * @param {string} beforeLabel
      * @param {string} afterLabel
      */
     renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string);
+    /**
+     * Opens an item & reveals it in the tree
+     *
+     * @param {string} path the path of the item
+     * @param {IZoweNodeType} sessionNode the session to use
+     */
+    openItemFromPath?(path: string, sessionNode: IZoweNodeType);
 }

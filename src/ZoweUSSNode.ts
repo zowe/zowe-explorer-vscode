@@ -73,7 +73,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
         } else {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
         }
@@ -223,7 +223,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setBinary(binary: boolean) {
         this.binary = binary;
         if (this.binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
@@ -329,6 +329,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
+        ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
         ussFileProvider.refresh();
     }
     /**
@@ -460,6 +461,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     this.downloaded = true;
                     this.setEtag(response.apiResponse.etag);
                 }
+
+                // Add document name to recently-opened files
+                ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.getTreeView().reveal(this, {select: true, focus: true, expand: false});
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
