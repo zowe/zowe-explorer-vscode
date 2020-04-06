@@ -2847,6 +2847,75 @@ describe("Extension Unit Tests", () => {
 
         });
 
+        it("Testing that addZoweSession with theia", async () => {
+            const entered = "";
+            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            Object.defineProperty(globals, "ISTHEIA", { get: () => true });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addZoweSession(testUSSTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+            Object.defineProperty(globals, "ISTHEIA", { get: () => false });
+        });
+
+        it("Testing that addZoweSession with theia fails if no choice", async () => {
+            const entered = null;
+            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            Object.defineProperty(globals, "ISTHEIA", { get: () => true });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [],
+                ignoreFocusOut: true,
+                items: [],
+                value: null,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addZoweSession(testUSSTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(showInformationMessage).toHaveBeenCalled();
+
+            Object.defineProperty(globals, "ISTHEIA", { get: () => false });
+        });
+
         it("Testing that addZoweSession with existing profile", async () => {
             const entered = "";
             const addZoweSession = jest.spyOn(extension, "addZoweSession");

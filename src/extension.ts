@@ -63,7 +63,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
-    } catch (err) { await errorHandling(err, null, err.message); }
+    } catch (err) {
+        await errorHandling(err, null, err.message);
+    }
 
     let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
