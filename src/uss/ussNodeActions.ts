@@ -9,22 +9,17 @@
 *                                                                                 *
 */
 
-import { USSTree } from "../USSTree";
-import { ZoweUSSNode } from "../ZoweUSSNode";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as fs from "fs";
 import * as utils from "../utils";
 import * as nls from "vscode-nls";
 import * as extension from "../../src/extension";
 import * as path from "path";
-import { ISTHEIA } from "../extension";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
-import { ISession } from "@zowe/imperative";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -120,60 +115,6 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
     await ussFileProvider.refresh();
 }
 
-/**
- * Process for renaming a USS Node. This could be a Favorite Node
- *
- * @param {IZoweTreeNode} originalNode
- * @param {USSTree} ussFileProvider
- * @param {string} filePath
- */
-export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
-    // Could be a favorite or regular entry always deal with the regular entry
-    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
-    const oldLabel = originalNode.label;
-    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
-    // Check if an old favorite exists for this node
-    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
-        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
-    );
-    const newName = await vscode.window.showInputBox({value: oldLabel});
-    if (newName && newName !== oldLabel) {
-        try {
-            let newNamePath = path.join(parentPath + newName);
-            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
-            await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
-            await deleteFromDisk(originalNode, filePath);
-            originalNode.rename(newNamePath);
-
-            if (oldFavorite) {
-                ussFileProvider.removeFavorite(oldFavorite);
-                oldFavorite.rename(newNamePath);
-                ussFileProvider.addFavorite(oldFavorite);
-            }
-        } catch (err) {
-            utils.errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
-            throw (err);
-        }
-    }
-}
-
-/**
- * Marks file as deleted from disk
- *
- * @param {ZoweUSSNode} node
- */
-export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
-    try {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-    }
-        // tslint:disable-next-line: no-empty
-    catch (err) {
-    }
-}
-
 export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     const fileOpenOptions = {
         canSelectFiles: true,
@@ -202,7 +143,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await zowe.Upload.fileToUSSFile(node.getSession(), filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
         utils.errorHandling(e, node.mProfileName, e.message);
     }

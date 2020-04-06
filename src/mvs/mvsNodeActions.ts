@@ -11,12 +11,14 @@
 
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../ZoweDatasetNode";
-import { DatasetTree } from "../DatasetTree";
 import * as extension from "../../src/extension";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as utils from "../utils";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
+import * as nls from "vscode-nls";
+
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     const fileOpenOptions = {
@@ -27,22 +29,30 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
     const value = await vscode.window.showOpenDialog(fileOpenOptions);
 
-    await Promise.all(
-        value.map(async (item) => {
-            // Convert to vscode.TextDocument
-            const doc = await vscode.workspace.openTextDocument(item);
-            await uploadFile(node, doc);
-        }
-    ));
+    if (value && value.length) {
+        await Promise.all(
+            value.map(async (item) => {
+                    // Convert to vscode.TextDocument
+                    const doc = await vscode.workspace.openTextDocument(item);
+                    await uploadFile(node, doc);
+                }
+            ));
 
-    // refresh Tree View & favorites
-    datasetProvider.refreshElement(node);
-    if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
-        const nonFavNode = datasetProvider.findNonFavoritedNode(node);
-        if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
+        // refresh Tree View & favorites
+        datasetProvider.refreshElement(node);
+        if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+            const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+            if (nonFavNode) {
+                datasetProvider.refreshElement(nonFavNode);
+            }
+        } else {
+            const favNode = datasetProvider.findFavoritedNode(node);
+            if (favNode) {
+                datasetProvider.refreshElement(favNode);
+            }
+        }
     } else {
-        const favNode = datasetProvider.findFavoritedNode(node);
-        if (favNode) { datasetProvider.refreshElement(favNode); }
+        vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
     }
 }
 

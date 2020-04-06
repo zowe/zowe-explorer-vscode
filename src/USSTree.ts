@@ -11,7 +11,7 @@
 
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
-import * as ussNodeActions from "./uss/ussNodeActions";
+import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
@@ -47,8 +47,6 @@ export async function createUSSTree(log: Logger) {
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
-
-
     public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
     private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
     public mFavoriteSession: ZoweUSSNode;
@@ -68,8 +66,40 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
     }
 
+    /**
+     * Method for renaming a USS Node. This could be a Favorite Node
+     *
+     * @param originalNode
+     * @param {string} filePath
+     */
     public async rename(originalNode: IZoweUSSTreeNode) {
-        await ussNodeActions.renameUSSNode(originalNode, this, undefined);
+    // Could be a favorite or regular entry always deal with the regular entry
+    const isFav = originalNode.contextValue.endsWith(extension.FAV_SUFFIX);
+    const oldLabel = originalNode.label;
+    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
+    // Check if an old favorite exists for this node
+    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
+        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+    );
+    const newName = await vscode.window.showInputBox({value: oldLabel});
+    if (newName && newName !== oldLabel) {
+        try {
+            let newNamePath = path.join(parentPath + newName);
+            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            await ZoweExplorerApiRegister.getUssApi(
+                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
+            originalNode.rename(newNamePath);
+
+            if (oldFavorite) {
+                this.removeFavorite(oldFavorite);
+                oldFavorite.rename(newNamePath);
+                this.addFavorite(oldFavorite);
+            }
+        } catch (err) {
+            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+            throw (err);
+        }
+    }
     }
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
@@ -237,11 +267,46 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public async updateFavorites() {
         const settings: any = { ...vscode.workspace.getConfiguration().get(USSTree.persistenceSchema) };
         if (settings.persistence) {
-            settings.favorites = this.mFavorites.map((fav) =>
-            (fav.fullPath.startsWith(fav.getProfileName()) ? fav.fullPath : fav.getProfileName() + fav.fullPath) + "{" +
-                fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}");
+            settings.favorites = this.mFavorites.map((fav) => {
+                const correctedProfileName = "[" + fav.getProfileName() + "]: ";
+                return (fav.fullPath.startsWith(correctedProfileName) ? fav.fullPath : correctedProfileName + fav.fullPath) + "{" +
+                    fav.contextValue.substring(0, fav.contextValue.indexOf(extension.FAV_SUFFIX)) + "}";
+                }
+            );
             await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
         }
+    }
+
+    /**
+     * Searches the loaded USS tree for items whose name contains a search string
+     *
+     */
+    public async searchInLoadedItems() {
+        if (this.log) {
+            this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        }
+        const loadedNodes: IZoweUSSTreeNode[] = [];
+        const sessions = await this.getChildren();
+
+        // Add all data sets loaded in the tree to an array
+        for (const session of sessions) {
+                if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                const nodes = await session.getChildren();
+
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                    const children = nodeToCheck.children;
+                    if (children.length !== 0) {
+                        for (const child of children) { await checkForChildren(child); }
+                    }
+                    loadedNodes.push(nodeToCheck);
+                };
+
+                if (nodes) {
+                    for (const node of nodes) { await checkForChildren(node); }
+                }
+            }
+        }
+        return loadedNodes;
     }
 
     /**
@@ -421,6 +486,46 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return;
             }
         });
+    }
+
+    public async addRecall(criteria: string) {
+        this.mHistory.addRecall(criteria);
+        this.refresh();
+    }
+
+    public getRecall(): string[] {
+        return this.mHistory.getRecall();
+    }
+
+    public removeRecall(name: string) {
+        this.mHistory.removeRecall(name);
+    }
+
+    /**
+     * Opens a USS item & reveals it in the tree
+     *
+     */
+    public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode) {
+        // USS file was selected
+        const nodePath = itemPath.substring(itemPath.indexOf("/") + 1).trim().split("/");
+        const selectedNodeName = nodePath[nodePath.length - 1];
+
+        // Update the tree filter & expand the tree
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        sessionNode.tooltip = sessionNode.fullPath = `/${nodePath.slice(0, nodePath.length - 1).join("/")}`;
+        sessionNode.label = `${sessionNode.getProfileName()} [/${nodePath.join("/")}]`;
+        sessionNode.dirty = true;
+        this.addHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`);
+        await sessionNode.getChildren();
+
+        // Reveal the searched item in the tree
+        const selectedNode: IZoweUSSTreeNode = sessionNode.children.find((elt) => elt.label === selectedNodeName);
+        if (selectedNode) {
+            selectedNode.openUSS(false, true, this);
+        } else {
+            vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
+            this.removeRecall(`[${sessionNode.getProfileName()}]: ${itemPath}`);
+        }
     }
 
     /**

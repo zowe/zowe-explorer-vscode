@@ -17,6 +17,7 @@ jest.mock("util");
 jest.mock("Session");
 jest.mock("@zowe/imperative");
 jest.mock("isbinaryfile");
+jest.mock("DatasetTree");
 jest.mock("../../src/Profiles");
 
 import * as vscode from "vscode";
@@ -27,6 +28,7 @@ import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
 import { Profiles } from "../../src/Profiles";
 import * as extension from "../../src/extension";
+import * as fs from "fs";
 
 describe("DatasetTree Unit Tests", () => {
 
@@ -39,17 +41,38 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    // Filter prompt
+    const Rename = jest.fn();
+    const renameDataSet = jest.fn();
+    const renameDataSetMember = jest.fn();
     const showInformationMessage = jest.fn();
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
+    const openTextDocument = jest.fn();
+    const showTextDocument = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
     const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
+    const findFavoritedNode = jest.fn();
+    const findNonFavoritedNode = jest.fn();
+    const mockRenameFavorite = jest.fn();
+    const mockUpdateFavorites = jest.fn();
+    const mockRenameNode = jest.fn();
+    const mockRemoveRecall = jest.fn();
+    const mockInitialize = jest.fn();
+    const mockPattern = jest.fn();
+    const mockCreateFilterString = jest.fn();
+    const mockRemoveFavorite = jest.fn();
+    const mockGetChildren = jest.fn();
+    const mockGetRecall = jest.fn();
+    const mockAddZoweSession = jest.fn();
+    const mockAddHistory = jest.fn();
+    const mockAddRecall = jest.fn();
+    const mockRefresh = jest.fn();
+    const mockRefreshElement = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
         value: jest.fn(() => {
@@ -68,6 +91,9 @@ describe("DatasetTree Unit Tests", () => {
         return callback();
     });
 
+    Object.defineProperty(zowe, "Rename", {value: Rename});
+    Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
+    Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
@@ -79,6 +105,10 @@ describe("DatasetTree Unit Tests", () => {
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
+    Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     createTreeView.mockReturnValue("testTreeView");
     const getConfiguration = jest.fn();
@@ -297,6 +327,22 @@ describe("DatasetTree Unit Tests", () => {
         testTree.addHistory("testHistory");
         const sampleElement = new ZoweDatasetNode("testValue", vscode.TreeItemCollapsibleState.None, null, null);
         expect(testTree.getHistory()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the addRecall/getRecall commands
+     *************************************************************************************************************/
+    it("Tests the addRecall/getRecall commands", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the removeRecall commands
+     *************************************************************************************************************/
+    it("Tests the removeRecall command", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
     });
 
     /*************************************************************************************************************
@@ -530,7 +576,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
     });
 
-     /*************************************************************************************************************
+    /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully, theia route", async () => {
@@ -678,6 +724,25 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
+    /*************************************************************************************************************
+     * Testing searchInLoadedItems
+     *************************************************************************************************************/
+    it("Testing that searchInLoadedItems returns the correct array", async () => {
+        const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, testTree.mSessionNodes[1], session, extension.DS_DS_CONTEXT);
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        testTree.mSessionNodes[1].children = [testNode];
+        const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testTree.mSessionNodes[1]])
+        );
+        const sessionGetChildren = jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testNode])
+        );
+
+        const loadedItems = await testTree.searchInLoadedItems();
+
+        expect(loadedItems).toStrictEqual([testNode]);
     });
 
     /*************************************************************************************************************
@@ -1036,5 +1101,174 @@ describe("DatasetTree Unit Tests", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
         `\n${label}\n` +
         " are valid or this may lead to a lock-out.");
+    });
+
+    describe("Renaming Data Sets", () => {
+        const existsSync = jest.fn();
+        Object.defineProperty(fs, "existsSync", {value: existsSync});
+        extension.defineGlobals(undefined);
+        const sessionRename = new Session({
+            user: "fake",
+            password: "fake",
+            base64EncodedAuth: "fake",
+        });
+        createBasicZosmfSession.mockReturnValue(sessionRename);
+        it("Should rename the node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            const child = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            await testTree.rename(child);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        });
+        it("Should rename a favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            await testTree.rename(child);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        });
+        it("Should throw an error if zowe.Rename.dataSet throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSet.mockImplementation(() => { throw defaultError; });
+
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            try {
+                await testTree.rename(child);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+            expect(error).toBe(defaultError);
+        });
+        it("Should rename the member", async () => {
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, sessionRename);
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await testTree.rename(child);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should rename a favorited member", async () => {
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+
+            const parent = new ZoweDatasetNode("[testSess]: HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, sessionRename);
+
+            parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            child.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await testTree.rename(child);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should throw an error if zowe.Rename.dataSetMember throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+            renameDataSetMember.mockImplementation(() => { throw defaultError; });
+
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, sessionRename);
+
+            child.contextValue = extension.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            try {
+                await testTree.rename(child);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+            expect(error).toBe(defaultError);
+        });
+    });
+});
+
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testTree = new DatasetTree();
+    const sessionNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
+                                            null, session, undefined, undefined, profileOne);
+    sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessionNode.pattern = "test";
+    const pdsNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, pdsNode, null);
+    const dsNode = new ZoweDatasetNode("TEST.DS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    dsNode.contextValue = extension.DS_DS_CONTEXT;
+
+    beforeEach(async () => {
+        pdsNode.children = [member];
+        sessionNode.children = [pdsNode, dsNode];
+        testTree.mSessionNodes = [sessionNode];
+    });
+
+    it("Should open a DS in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([dsNode]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.DS", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.DS")).toBe(true);
+    });
+
+    it("Should open a member in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([pdsNode]));
+        spyOn(pdsNode, "getChildren").and.returnValue(Promise.resolve([member]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.PDS(TESTMEMB)", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.PDS(TESTMEMB)")).toBe(true);
     });
 });

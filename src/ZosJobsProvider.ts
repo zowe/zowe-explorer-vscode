@@ -90,9 +90,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public paste(node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }
-    public delete(node: IZoweJobTreeNode) {
-        throw new Error("Method not implemented.");
-    }
+
     /**
      * Adds a save search to the Jobs favorites list
      *
@@ -193,7 +191,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.refresh();
     }
 
-    public async deleteJob(node: IZoweJobTreeNode) {
+    public async delete(node: IZoweJobTreeNode) {
         try {
             await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
             vscode.window.showInformationMessage(localize("deleteJob.job", "Job ") + node.job.jobname + "(" + node.job.jobid + ")" +
@@ -505,6 +503,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
         }
         return revisedCriteria.trim();
+    }
+
+    public async addRecall(criteria: string) {
+        throw new Error("Method not implemented.");
     }
 
     public interpretFreeform(input: string): string {

@@ -76,7 +76,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = extension.USS_DIR_CONTEXT;
         } else if (binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
         } else {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
         }
@@ -226,7 +226,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setBinary(binary: boolean) {
         this.binary = binary;
         if (this.binary) {
-            this.contextValue = extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX;
+            this.contextValue = extension.DS_BINARY_FILE_CONTEXT;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
             this.contextValue = extension.DS_TEXT_FILE_CONTEXT;
@@ -281,14 +281,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param oldReference string
      * @param revision string
      */
-    public rename(newFullPath: string) {
+    public async rename(newFullPath: string) {
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
-        vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        if (this.isFolder) {
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        } else {
+            await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+        }
     }
 
     /**
@@ -301,8 +305,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
-        // handle zosmf api issue with file paths
-        const nodePath = this.fullPath.startsWith("/") ? this.fullPath.substring(1) : this.fullPath;
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
             ignoreFocusOut: true,
@@ -315,7 +317,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         try {
             const isRecursive = this.contextValue === extension.USS_DIR_CONTEXT ? true : false;
-            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(nodePath, isRecursive);
+            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(this.fullPath, isRecursive);
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {
@@ -330,6 +332,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
+        ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
         ussFileProvider.refresh();
     }
     /**
@@ -376,6 +379,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
     }
+
+    /**
+     * Getter for folder type
+     */
+    public get isFolder(): boolean {
+        return [extension.USS_DIR_CONTEXT, extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+    }
+
     /**
      * Downloads and displays a file in a text editor view
      *
@@ -453,6 +464,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     this.downloaded = true;
                     this.setEtag(response.apiResponse.etag);
                 }
+
+                // Add document name to recently-opened files
+                ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.getTreeView().reveal(this, {select: true, focus: true, expand: false});
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
