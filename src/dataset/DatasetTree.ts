@@ -175,7 +175,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         localize("initializeFavorites.error.profile3",
                             "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
                         getAppName(globals.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
-                    await errorHandling(e, null, errMessage);
+                    errorHandling(e, null, errMessage);
                     continue;
                 }
             } else if (favoriteSearchPattern.test(line)) {
@@ -189,7 +189,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             "Initialization Error: Could not find profile named: ") +
                         +sesName +
                         localize("loadNamedProfile.error.period", ".");
-                    await errorHandling(error, null, errMessage);
+                    errorHandling(error, null, errMessage);
                     continue;
                 }
                 const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
@@ -473,7 +473,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         sessionNode.label = sessionNode.label.trim() + " ";
         sessionNode.label = sessionNode.label.trim();
         sessionNode.dirty = true;
-        await this.refresh();
+        this.refresh();
         let children = await sessionNode.getChildren();
 
         // Find parent node in tree
@@ -614,7 +614,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async checkCurrentProfile(node: IZoweDatasetTreeNode) {
         const profile = node.getProfile();
         await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
+        this.refresh();
     }
 
 
@@ -645,7 +645,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node.label = afterMemberName;
             } catch (err) {
                 this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-                await errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
                 throw err;
             }
             let otherParent;
@@ -718,7 +718,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             } catch (err) {
                 this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-                await errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
                 throw err;
             }
         }

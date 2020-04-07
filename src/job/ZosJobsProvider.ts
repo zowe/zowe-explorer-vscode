@@ -189,7 +189,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 localize("deleteJob.delete", " deleted"));
             this.removeFavorite(this.createJobsFavorite(node));
         } catch (error) {
-            await errorHandling(error, node.getProfileName(), error.message);
+            errorHandling(error, node.getProfileName(), error.message);
         }
     }
 

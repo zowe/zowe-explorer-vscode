@@ -63,7 +63,7 @@ export async function downloadSpool(job: IZoweJobTreeNode){
             });
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        errorHandling(error, null, error.message);
     }
 
 }
@@ -84,7 +84,7 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
             const document = await vscode.workspace.openTextDocument(uri);
             await vscode.window.showTextDocument(document);
         } catch (error) {
-            await errorHandling(error, session, error.message);
+            errorHandling(error, session, error.message);
         }
     }
 }
@@ -119,7 +119,7 @@ export async function downloadJcl(job: Job) {
         const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        errorHandling(error, null, error.message);
     }
 }
 
@@ -136,7 +136,7 @@ export async function modifyCommand(job: Job) {
             vscode.window.showInformationMessage(localize("modifyCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        errorHandling(error, null, error.message);
     }
 }
 
@@ -150,7 +150,7 @@ export async function stopCommand(job: Job) {
         const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
         vscode.window.showInformationMessage(localize("stopCommand.response", "Command response: ") + response.commandResponse);
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        errorHandling(error, null, error.message);
     }
 }
 

@@ -64,7 +64,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
     } catch (err) {
-        await errorHandling(err, null, err.message);
+        errorHandling(err, null, err.message);
     }
 
     let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
@@ -106,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Initialize Jobs provider with the created session and the selected pattern
         jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
-        await errorHandling(err, null, (localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
+        errorHandling(err, null, (localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         globals.LOG.error(localize("initialize.log.error",
                                            "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
     }
@@ -440,12 +440,12 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
             newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
-        } catch (error) { await errorHandling(error, chosenProfile, error.message); }
+        } catch (error) { errorHandling(error, chosenProfile, error.message); }
         if (newprofile) {
             try {
                 await Profiles.getInstance().refresh();
             } catch (error) {
-                await errorHandling(error, newprofile, error.message);
+                errorHandling(error, newprofile, error.message);
             }
             await zoweFileProvider.addSession(newprofile);
             await zoweFileProvider.refresh();

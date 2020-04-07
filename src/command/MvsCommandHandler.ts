@@ -197,7 +197,7 @@ export class MvsCommandHandler {
                 }
             }
         } catch (error) {
-            await errorHandling(error, null, error.message);
+            errorHandling(error, null, error.message);
         }
         this.history.addHistory(command);
     }

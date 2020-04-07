@@ -318,7 +318,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             await vscode.window.activeTextEditor.document.save();
         } else {
             globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
-            await errorHandling(err, sesName, err.message);
+            errorHandling(err, sesName, err.message);
         }
     }
 }

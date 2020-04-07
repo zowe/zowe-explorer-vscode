@@ -200,7 +200,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, {attributes: true}));
             }
         } catch (err) {
-            await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
         }
         return responses;
     }
