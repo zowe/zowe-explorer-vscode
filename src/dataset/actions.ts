@@ -351,60 +351,6 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
 }
 
 /**
- * Rename data sets
- *
- * @export
- * @param {IZoweDatasetTreeNode} node - The node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    let beforeDataSetName = node.label.trim();
-    let favPrefix = "";
-    let isFavourite;
-
-    if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-        isFavourite = true;
-        favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
-        beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
-    }
-    const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
-    const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
-    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
-
-    globals.LOG.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
-    if (afterDataSetName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
-
-            if (isFavourite) {
-                const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-                datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
-            } else {
-                const temp = node.label;
-                node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-                datasetProvider.renameFavorite(node, afterDataSetName);
-                node.label = temp;
-            }
-            datasetProvider.refreshElement(node);
-            datasetProvider.updateFavorites();
-
-            if (fs.existsSync(beforeFullPath)) {
-              fs.unlinkSync(beforeFullPath);
-            }
-
-            if (closedOpenedInstance) {
-                vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
-            }
-        } catch (err) {
-            globals.LOG.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
-        }
-    }
-}
-
-/**
  * Submit the contents of the editor as JCL.
  *
  * @export
