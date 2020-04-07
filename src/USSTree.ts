@@ -431,7 +431,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public async initialize(log: Logger) {
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
-        const favoriteSearchPattern = /^\[.+\]\:\s.*\{uss_session\}$/;
+        const favoriteSearchPattern = /^\[.+\]\:\s.*\{ussSession\}$/;
         const directorySearchPattern = /^\[.+\]\:\s.*\{directory\}$/;
         const lines: string[] = this.mHistory.readFavorites();
         lines.forEach((line) => {

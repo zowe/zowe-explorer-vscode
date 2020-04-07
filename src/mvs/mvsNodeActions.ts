@@ -41,7 +41,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
         // refresh Tree View & favorites
         datasetProvider.refreshElement(node);
-        if (contextually.isFavorite(node) || contextually.isFavoriteContext(node)) {
+        if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node);
             if (nonFavNode) {
                 datasetProvider.refreshElement(nonFavNode);

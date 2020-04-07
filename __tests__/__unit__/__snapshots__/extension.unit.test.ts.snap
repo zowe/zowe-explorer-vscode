@@ -25,22 +25,22 @@ Array [
   Object {
     "command": "zowe.uss.refreshUSS",
     "group": "inline",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|uss_session|favorite))/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite))/",
   },
   Object {
     "command": "zowe.uss.refreshUSS",
     "group": "0_mainframeInteraction",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|uss_session|favorite))/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite))/",
   },
   Object {
     "command": "zowe.uss.deleteNode",
     "group": "6_modification@2",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(uss_session|favorite|.*_fav))/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|.*_fav))/",
   },
   Object {
     "command": "zowe.uss.copyPath",
     "group": "5_copyPath",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(uss_session|favorite))/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite))/",
   },
   Object {
     "command": "zowe.uss.editFile",
@@ -50,7 +50,7 @@ Array [
   Object {
     "command": "zowe.uss.renameNode",
     "group": "6_modification@1",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(uss_session|favorite))/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite))/",
   },
   Object {
     "command": "zowe.uss.binary",
@@ -60,12 +60,12 @@ Array [
   Object {
     "command": "zowe.uss.removeFavorite",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!uss_session.*).*_fav.*/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
   },
   Object {
     "command": "zowe.uss.removeSavedSearch",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^uss_session.*_fav.*/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*_fav.*/",
   },
   Object {
     "command": "zowe.uss.text",
@@ -213,26 +213,26 @@ Array [
   Object {
     "command": "zowe.uss.fullPath",
     "group": "inline",
-    "when": "viewItem =~ /^uss_session.*/",
+    "when": "viewItem =~ /^ussSession.*/",
   },
   Object {
     "command": "zowe.uss.createNode",
     "group": "inline",
-    "when": "viewItem =~ /^uss_session.*/",
+    "when": "viewItem =~ /^ussSession.*/",
   },
   Object {
     "command": "zowe.uss.removeSession",
-    "when": "viewItem =~ /^(?!.*_fav.*)uss_session.*/",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.uss.saveSearch",
     "group": "4_workspace",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)uss_session.*/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.issueMvsCmd",
     "group": "3_systemSpecific",
-    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)uss_session.*/",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.refreshJobsServer",
