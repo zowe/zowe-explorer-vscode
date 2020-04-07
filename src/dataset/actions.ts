@@ -466,64 +466,6 @@ export async function submitMember(node: IZoweTreeNode) {
 }
 
 /**
- * Rename data set members
- *
- * @export
- * @param {IZoweTreeNode} node - The node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const beforeMemberName = node.label.trim();
-    let dataSetName;
-    let profileLabel;
-
-    if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
-        profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
-        dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
-    } else {
-        dataSetName = node.getParent().getLabel();
-    }
-    const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
-    const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
-    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
-
-    globals.LOG.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
-    if (afterMemberName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = afterMemberName;
-        } catch (err) {
-            globals.LOG.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
-        }
-        let otherParent;
-
-        if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
-            otherParent = datasetProvider.findNonFavoritedNode(node.getParent());
-        } else {
-            otherParent = datasetProvider.findFavoritedNode(node.getParent());
-        }
-        if (otherParent) {
-            const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
-            if (otherMember) {
-                otherMember.label = afterMemberName;
-                datasetProvider.refreshElement(otherMember);
-            }
-        }
-        datasetProvider.refreshElement(node);
-
-        if (fs.existsSync(beforeFullPath)) {
-            fs.unlinkSync(beforeFullPath);
-        }
-
-        if (closedOpenedInstance) {
-            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
-        }
-    }
-}
-
-/**
  * Deletes a dataset
  *
  * @export
