@@ -600,7 +600,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // update the treeview with the new pattern
             node.label = node.label.trim() + " ";
-            node.label.trim();
             node.tooltip = node.pattern = pattern.toUpperCase();
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;
