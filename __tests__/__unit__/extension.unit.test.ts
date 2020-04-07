@@ -504,21 +504,22 @@ describe("Extension Unit Tests", () => {
 
     const createQuickPickMock = (qpItem, entered) => {
         createQuickPick.mockReturnValue({
-        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-        activeItems: [qpItem],
-        ignoreFocusOut: true,
-        items: [qpItem],
-        value: entered,
-        show: jest.fn(()=>{
-            return {};
-        }),
-        hide: jest.fn(()=>{
-            return {};
-        }),
-        onDidAccept: jest.fn(()=>{
-            return {};
-        })
-    });
+            placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+    };
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
