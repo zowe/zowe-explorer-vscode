@@ -19,7 +19,6 @@ import * as ussActions from "./uss/actions";
 import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as sharedActions from "./shared/actions";
-import { moveSync } from "fs-extra";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { CredentialManagerFactory, ImperativeError, CliProfileManager } from "@zowe/imperative";
@@ -28,7 +27,7 @@ import { createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import { Profiles } from "./Profiles";
-import { errorHandling, getZoweDir, cleanTempDir, addZoweSession } from "./utils";
+import { errorHandling, getZoweDir, cleanTempDir, addZoweSession, moveTempFolder } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
@@ -294,53 +293,6 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
             "Credentials not managed, unable to load security file: ") + moduleName);
     }
     return undefined;
-}
-
-/**
- * Moves temp folder to user defined location in preferences
- * @param previousTempPath temp path settings value before updated by user
- * @param currentTempPath temp path settings value after updated by user
- */
-export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
-    // Re-define globals with updated path
-    globals.defineGlobals(currentTempPath);
-
-    if (previousTempPath === "") {
-        previousTempPath = path.join(__dirname, "..", "..", "resources");
-    }
-
-    // Make certain that "temp" folder is cleared
-    cleanTempDir();
-
-    try {
-        fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        fs.mkdirSync(globals.USS_DIR);
-        fs.mkdirSync(globals.DS_DIR);
-    } catch (err) {
-        globals.LOG.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
-        errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
-    }
-    const previousTemp = path.join(previousTempPath, "temp");
-    try {
-        // If source and destination path are same, exit
-        if (previousTemp === globals.ZOWETEMPFOLDER) {
-            return;
-        }
-
-        // TODO: Possibly remove when supporting "Multiple Instances"
-        // If a second instance has already moved the temp folder, exit
-        // Ideally, `moveSync()` would alert user if path doesn't exist.
-        // However when supporting "Multiple Instances", might not be possible.
-        if (!fs.existsSync(previousTemp)) {
-            return;
-        }
-
-        moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
-    } catch (err) {
-        globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-    }
 }
 
 /**

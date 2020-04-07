@@ -3925,7 +3925,7 @@ describe("Extension Unit Tests", () => {
         const updatedPreferencePath = "/testing";
         const defaultPreference = globals.ZOWETEMPFOLDER;
 
-        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        utils.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
         expect(mkdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
@@ -3943,7 +3943,7 @@ describe("Extension Unit Tests", () => {
         const originalPreferencePath = "/test/path";
         const updatedPreferencePath = "/new/test/path";
 
-        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        utils.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
         expect(mkdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
@@ -3964,7 +3964,7 @@ describe("Extension Unit Tests", () => {
         mkdirSync.mockImplementationOnce(() => {
             throw (Error("testAsError 1"));
         });
-        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        utils.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Error encountered when creating temporary folder! testAsError 1 Error: testAsError 1");
     });
@@ -3983,7 +3983,7 @@ describe("Extension Unit Tests", () => {
         moveSync.mockImplementationOnce(() => {
             throw (Error("testAsError 2"));
         });
-        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        utils.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("testAsError 2");
     });
@@ -3995,7 +3995,7 @@ describe("Extension Unit Tests", () => {
         const originalPreferencePath = "/test/path";
         const updatedPreferencePath = "/test/path";
 
-        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        utils.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
         expect(mkdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
@@ -4016,7 +4016,7 @@ describe("Extension Unit Tests", () => {
         const originalPreferencePath = "/invalid/path";
         const updatedPreferencePath = "/test/path";
 
-        extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
+        utils.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
         expect(moveSync.mock.calls.length).toBe(0);

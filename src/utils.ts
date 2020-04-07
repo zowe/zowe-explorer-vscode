@@ -14,6 +14,7 @@ import * as globals from "./globals";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { moveSync } from "fs-extra";
 import { Profiles } from "./Profiles";
 import { ImperativeConfig } from "@zowe/imperative";
 import { DatasetTree } from "./dataset/DatasetTree";
@@ -289,4 +290,51 @@ async function createProfile(zoweNodeProvider: IZoweTree<IZoweDatasetTreeNode|IZ
       await zoweNodeProvider.addSession(newprofile);
       await zoweNodeProvider.refresh();
   }
+}
+
+/**
+ * Moves temp folder to user defined location in preferences
+ * @param previousTempPath temp path settings value before updated by user
+ * @param currentTempPath temp path settings value after updated by user
+ */
+export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
+    // Re-define globals with updated path
+    globals.defineGlobals(currentTempPath);
+
+    if (previousTempPath === "") {
+        previousTempPath = path.join(__dirname, "..", "..", "resources");
+    }
+
+    // Make certain that "temp" folder is cleared
+    cleanTempDir();
+
+    try {
+        fs.mkdirSync(globals.ZOWETEMPFOLDER);
+        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+        fs.mkdirSync(globals.USS_DIR);
+        fs.mkdirSync(globals.DS_DIR);
+    } catch (err) {
+        globals.LOG.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
+        errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
+    }
+    const previousTemp = path.join(previousTempPath, "temp");
+    try {
+        // If source and destination path are same, exit
+        if (previousTemp === globals.ZOWETEMPFOLDER) {
+            return;
+        }
+
+        // TODO: Possibly remove when supporting "Multiple Instances"
+        // If a second instance has already moved the temp folder, exit
+        // Ideally, `moveSync()` would alert user if path doesn't exist.
+        // However when supporting "Multiple Instances", might not be possible.
+        if (!fs.existsSync(previousTemp)) {
+            return;
+        }
+
+        moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
+    } catch (err) {
+        globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
+        vscode.window.showErrorMessage(err.message);
+    }
 }
