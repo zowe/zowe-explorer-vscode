@@ -1075,7 +1075,7 @@ describe("Extension Unit Tests", () => {
 
             showInputBox.mockReturnValueOnce("fake");
             await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addSession).toHaveBeenCalled();
 
         });
 
@@ -1091,7 +1091,7 @@ describe("Extension Unit Tests", () => {
             );
 
             await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addSession).toHaveBeenCalled();
         });
 
         it("Testing that addSession with supplied resolveQuickPickHelper", async () => {
@@ -1102,7 +1102,7 @@ describe("Extension Unit Tests", () => {
             createQuickPickMock(qpItem, entered);
 
             await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addSession).toHaveBeenCalled();
 
         });
 
@@ -1118,7 +1118,7 @@ describe("Extension Unit Tests", () => {
             );
 
             await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addSession).toHaveBeenCalled();
 
         });
 
@@ -1144,7 +1144,7 @@ describe("Extension Unit Tests", () => {
             createQuickPickMock(qpItem, entered);
 
             await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addSession).toHaveBeenCalled();
 
         });
 
@@ -1169,7 +1169,7 @@ describe("Extension Unit Tests", () => {
             createQuickPickMock(qpItem, entered);
 
             await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addSession).toHaveBeenCalled();
 
         });
     });
