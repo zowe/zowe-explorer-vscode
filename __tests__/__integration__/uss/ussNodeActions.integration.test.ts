@@ -19,7 +19,7 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import * as globals from "../../../src/globals";
+import { DS_SESSION_CONTEXT } from "../../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -40,7 +40,7 @@ describe("ussNodeActions integration test", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
         null, session, null, false, testProfile.name);
-    sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
+    sessionNode.contextValue = DS_SESSION_CONTEXT;
     const testTree = new USSTree();
     testTree.mSessionNodes.push(sessionNode);
 

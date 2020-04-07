@@ -17,10 +17,10 @@ import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
 import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
-import * as globals from "../../../src/globals";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as jobActions from "../../../src/job/actions";
 import { Job } from "../../../src/job/ZoweJobNode";
+import { JOBS_SESSION_CONTEXT } from "../../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -41,7 +41,7 @@ describe("jobNodeActions integration test", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new Job(testConst.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null,
         session, null, null);
-    sessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+    sessionNode.contextValue = JOBS_SESSION_CONTEXT;
     const testTree = new ZosJobsProvider();
     testTree.mSessionNodes.push(sessionNode);
 

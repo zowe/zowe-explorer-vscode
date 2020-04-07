@@ -19,7 +19,6 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
-import * as utils from "../../src/utils";
 import * as chaiAsPromised from "chai-as-promised";
 import { DS_SESSION_CONTEXT } from "../../src/globals";
 

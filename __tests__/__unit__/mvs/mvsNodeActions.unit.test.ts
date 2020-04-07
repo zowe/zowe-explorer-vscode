@@ -13,8 +13,8 @@ import * as vscode from "vscode";
 import * as dsUtils from "../../../src/dataset/utils";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import * as globals from "../../../src/globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
+import { PDS_FAV_CONTEXT, FAVORITE_CONTEXT } from "../../../src/globals";
 
 const mockRefresh = jest.fn();
 const showOpenDialog = jest.fn();
@@ -58,7 +58,7 @@ describe("mvsNodeActions", () => {
     it("should call upload dialog and upload file", async () => {
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
         const nodeAsFavorite = new ZoweDatasetNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode, null, null, globals.PDS_FAV_CONTEXT, profileOne);
+            sessNode, null, null, PDS_FAV_CONTEXT, profileOne);
         testTree.mFavorites.push(nodeAsFavorite);
         const fileUri = { fsPath: "/tmp/foo" };
 
@@ -76,7 +76,7 @@ describe("mvsNodeActions", () => {
     it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
         const nodeAsFavorite = new ZoweDatasetNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode, null, null, globals.PDS_FAV_CONTEXT, profileOne);
+            sessNode, null, null, PDS_FAV_CONTEXT, profileOne);
         testTree.mFavorites.push(nodeAsFavorite);
 
         showOpenDialog.mockReturnValue(undefined);
@@ -91,7 +91,7 @@ describe("mvsNodeActions", () => {
     it("should call upload dialog and upload file (from favorites)", async () => {
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
         const nodeAsFavorite = new ZoweDatasetNode("[sestest]: node", vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode, null, globals.PDS_FAV_CONTEXT);
+            sessNode, null, PDS_FAV_CONTEXT);
         testTree.mFavorites.push(nodeAsFavorite);
         const fileUri = { fsPath: "/tmp/foo" };
 
@@ -120,7 +120,7 @@ describe("mvsNodeActions", () => {
             const labelNameWithProfile = "[myProfile123]: dataset.test";
             const labelName = "dataset.test";
             const parentNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null);
-            parentNode.contextValue = globals.FAVORITE_CONTEXT;
+            parentNode.contextValue = FAVORITE_CONTEXT;
             const node = new ZoweDatasetNode(labelNameWithProfile, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null);
             const label = dsUtils.getDatasetLabel(node);
             expect(label).toEqual(labelName);

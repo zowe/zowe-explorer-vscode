@@ -9,7 +9,6 @@
 *                                                                                 *
 */
 
-import * as utils from "../utils";
 import * as globals from "../globals";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";

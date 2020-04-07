@@ -28,7 +28,6 @@ import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
-import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import * as fs from "fs";
 
 describe("DatasetTree Unit Tests", () => {

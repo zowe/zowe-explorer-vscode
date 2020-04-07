@@ -16,8 +16,8 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as brtimperative from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as dsNodeActions from "../../../src/dataset/actions";
-import * as globals from "../../../src/globals";
 import { Profiles } from "../../../src/Profiles";
+import { FAVORITE_CONTEXT, DS_SESSION_CONTEXT, FAV_SUFFIX } from "../../../src/globals";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -68,7 +68,7 @@ const profileOne: brtimperative.IProfileLoaded = {
 function getDSNode() {
     const mParent = new ZoweDatasetNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
     const dsNode = new ZoweDatasetNode("sesstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, undefined, undefined, profileOne);
-    dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+    dsNode.contextValue = DS_SESSION_CONTEXT;
     dsNode.pattern = "test hlq";
     return dsNode;
 }
@@ -77,8 +77,8 @@ function getFavoriteDSNode() {
     const mParent = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
     const dsNodeF = new ZoweDatasetNode("[profile]:sesstest", vscode.TreeItemCollapsibleState.Expanded,
             mParent, session, undefined, undefined, profileOne);
-    mParent.contextValue = globals.FAVORITE_CONTEXT;
-    dsNodeF.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+    mParent.contextValue = FAVORITE_CONTEXT;
+    dsNodeF.contextValue = DS_SESSION_CONTEXT + FAV_SUFFIX;
     return dsNodeF;
 }
 
