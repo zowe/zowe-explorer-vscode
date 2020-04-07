@@ -132,16 +132,7 @@ export class Profiles {
         });
     }
 
-    public async createNewConnection(profileName: string): Promise<string | undefined> {
-        let profileType: string;
-        let userName: string;
-        let passWord: string;
-        let zosURL: string;
-        let rejectUnauthorize: boolean;
-        let options: vscode.InputBoxOptions;
-        let isTrue: boolean;
-
-        // get registered api types and create a quick pick array
+    public async getProfileType(): Promise<string> {
         const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
         const typeOptions = Array.from(profTypes);
         const quickPickTypeOptions: vscode.QuickPickOptions = {
@@ -149,9 +140,11 @@ export class Profiles {
             ignoreFocusOut: true,
             canPickMany: false
         };
+        const profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+        return profileType;
+    }
 
-        profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
-
+    public async getSchema(profileType: string): Promise<{}> {
         const profileManager = await this.getCliProfileManager(profileType);
 
         const configOptions = Array.from(profileManager.configurations);
@@ -161,6 +154,30 @@ export class Profiles {
                 schema = val.schema.properties;
             }
         }
+        return schema;
+    }
+
+    public async createNewConnection(profileName: string): Promise<string | undefined> {
+        let profileType: string;
+        let userName: string;
+        let passWord: string;
+        let zosURL: string;
+        let rejectUnauthorize: boolean;
+        let options: vscode.InputBoxOptions;
+        let isTrue: boolean;
+
+        profileType = await this.getProfileType();
+        // const profileManager = await this.getCliProfileManager(profileType);
+
+        // const configOptions = Array.from(profileManager.configurations);
+        // let schema: {};
+        // for (const val of configOptions) {
+        //     if (val.type === profileType) {
+        //         schema = val.schema.properties;
+        //     }
+        // }
+
+        const schema: {} = await this.getSchema(profileType);
         const schemaArray = Object.keys(schema);
 
         let zosUrlParsed: any;
@@ -279,8 +296,6 @@ export class Profiles {
                         };
                         const enteredValue = await vscode.window.showInputBox(options);
                         const numValue = Number(enteredValue);
-                        // tslint:disable-next-line:no-console
-                        console.log(numValue);
                         if (Number.isNaN(numValue) === false) {
                             schemaValues[value] = Number(enteredValue);
                         } else {
@@ -318,8 +333,6 @@ export class Profiles {
             }
         }
 
-        // tslint:disable-next-line:no-console
-        console.log(schemaValues);
         let newProfile: IProfile;
 
         try {
@@ -327,7 +340,6 @@ export class Profiles {
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        await zowe.ZosmfSession.createBasicZosmfSession(newProfile);
         vscode.window.showInformationMessage("Profile " + profileName + " was created.");
         return profileName;
     }

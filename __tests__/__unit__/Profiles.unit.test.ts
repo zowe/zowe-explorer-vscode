@@ -46,12 +46,22 @@ describe("Profile class unit tests", () => {
         prompt: undefined,
         validationMessage: undefined
     };
+    const schema: {} = {
+        host:{type:"string",optionDefinition:{name:"host",aliases:["H"],description:"The z/OSMF server host name.",type:"string",required:true,group:"Zosmf Connection Options"}},
+        port:{type:"number",optionDefinition:{name:"port",aliases:["P"],description:"The z/OSMF server port.",type:"number",defaultValue:443,group:"Zosmf Connection Options"}},
+        user:{type:"string",secure:true,optionDefinition:{name:"user",aliases:["u"],description:"Mainframe (z/OSMF) user name, which can be the same as your TSO login.",type:"string",required:true,group:"Zosmf Connection Options"}},
+        password:{type:"string",secure:true,optionDefinition:{name:"password",aliases:["pass","pw"],description:"Mainframe (z/OSMF) password, which can be the same as your TSO password.",type:"string",group:"Zosmf Connection Options",required:true}},
+        // tslint:disable-next-line:max-line-length
+        rejectUnauthorized:{type:"boolean",optionDefinition:{name:"reject-unauthorized",aliases:["ru"],description:"Reject self-signed certificates.",type:"boolean",defaultValue:true,group:"Zosmf Connection Options"}},
+        basePath:{type:"string",optionDefinition:{name:"base-path",aliases:["bp"],description:"The base path for your API mediation layer instance. Specify this option to prepend the base path to all z/OSMF resources when making REST requests. Do not specify this option if you are not using an API mediation layer.",type:"string",group:"Zosmf Connection Options"}}
+    };
 
     const homedir = path.join(os.homedir(), ".zowe");
     const mockJSONParse = jest.spyOn(JSON, "parse");
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
     const createInputBox = jest.fn();
+    const showQuickTypePick = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
 
@@ -60,6 +70,7 @@ describe("Profile class unit tests", () => {
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "showQuickTypePick", { value: showQuickTypePick });
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -143,23 +154,29 @@ describe("Profile class unit tests", () => {
         afterEach(() => {
             showInputBox.mockReset();
             showQuickPick.mockReset();
+            showQuickTypePick.mockReset();
             createInputBox.mockReset();
             showInformationMessage.mockReset();
             showErrorMessage.mockReset();
         });
 
-        it("should indicate missing property: zosmf url", async () => {
+        it("should indicate missing property: zos url", async () => {
             // No valid zosmf value
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
         });
 
         it("should indicate missing property: username", async () => {
             // Enter z/OS password
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
+            showInputBox.mockResolvedValueOnce("zosmf");
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
@@ -169,6 +186,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: password", async () => {
             // Enter z/OS password
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -180,6 +199,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: rejectUnauthorized", async () => {
             // Operation cancelled
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -191,6 +212,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should validate that profile name already exists", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -203,6 +226,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create new profile", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -215,6 +240,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create profile with optional credentials", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("");
@@ -227,6 +254,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create profile https+443", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -239,6 +268,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create 2 consecutive profiles", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake1");
@@ -252,6 +283,8 @@ describe("Profile class unit tests", () => {
             showInputBox.mockReset();
             showInformationMessage.mockReset();
 
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             showInputBox.mockResolvedValueOnce("fake2");
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake2");
@@ -359,26 +392,26 @@ describe("Profile class unit tests", () => {
             // tslint:disable-next-line
             expect(res.port).toBe(443);
         });
-
-        it("should reject http:<no_port> url", async () => {
-            const res = await profiles.validateAndParseUrl("http://10.142.0.23/some/path");
-            expect(res.valid).toBe(false);
-        });
+        // now allow http protocol
+        // it("should reject http:<no_port> url", async () => {
+        //     const res = await profiles.validateAndParseUrl("http://10.142.0.23/some/path");
+        //     expect(res.valid).toBe(false);
+        // });
 
         it("should reject out of range port url", async () => {
             const res = await profiles.validateAndParseUrl("http://10.142.0.23:9999999999/some/path");
             expect(res.valid).toBe(false);
         });
-
-        it("should reject http:80 url", async () => {
-            const res = await profiles.validateAndParseUrl("http://fake:80");
-            expect(res.valid).toBe(false);
-        });
-
-        it("should reject ftp protocol url", async () => {
-            const res = await profiles.validateAndParseUrl("ftp://fake:80");
-            expect(res.valid).toBe(false);
-        });
+        // now allow http protocol
+        // it("should reject http:80 url", async () => {
+        //     const res = await profiles.validateAndParseUrl("http://fake:80");
+        //     expect(res.valid).toBe(false);
+        // });
+        // now allow ftp protocol
+        // it("should reject ftp protocol url", async () => {
+        //     const res = await profiles.validateAndParseUrl("ftp://fake:80");
+        //     expect(res.valid).toBe(false);
+        // });
 
         it("should reject invalid url syntax", async () => {
             const res = await profiles.validateAndParseUrl("https://fake::80");
