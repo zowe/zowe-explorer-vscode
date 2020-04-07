@@ -147,7 +147,7 @@ export async function cleanTempDir() {
  * @param {USSTree} zoweNodeProvider - either the USS, MVS, JES tree
  */
 export async function addZoweSession(zoweNodeProvider: IZoweTree<IZoweDatasetTreeNode|IZoweUSSTreeNode|IZoweJobTreeNode>) {
-  const allProfiles = (await Profiles.getInstance()).allProfiles;
+  const allProfiles = Profiles.getInstance().allProfiles;
 
   // Get all profiles
   let profileNamesList = allProfiles.map((profile) => {
@@ -288,7 +288,7 @@ async function createProfile(zoweNodeProvider: IZoweTree<IZoweDatasetTreeNode|IZ
           errorHandling(error, newprofile, error.message);
       }
       await zoweNodeProvider.addSession(newprofile);
-      await zoweNodeProvider.refresh();
+      zoweNodeProvider.refresh();
   }
 }
 
