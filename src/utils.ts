@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "./globals";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { Profiles } from "./Profiles";
@@ -90,4 +91,42 @@ export function getZoweDir(): string {
         envVariablePrefix: "ZOWE"
     };
     return ImperativeConfig.instance.cliHome;
+}
+
+/**
+ * Recursively deletes directory
+ *
+ * @param directory path to directory to be deleted
+ */
+export function cleanDir(directory) {
+  if (!fs.existsSync(directory)) {
+      return;
+  }
+  fs.readdirSync(directory).forEach((file) => {
+      const fullpath = path.join(directory, file);
+      const lstat = fs.lstatSync(fullpath);
+      if (lstat.isFile()) {
+          fs.unlinkSync(fullpath);
+      } else {
+          cleanDir(fullpath);
+      }
+  });
+  fs.rmdirSync(directory);
+}
+
+/**
+ * Cleans up local temp directory
+ *
+ * @export
+ */
+export async function cleanTempDir() {
+  // logger hasn't necessarily been initialized yet, don't use the `log` in this function
+  if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+      return;
+  }
+  try {
+      cleanDir(globals.ZOWETEMPFOLDER);
+  } catch (err) {
+      vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
+  }
 }

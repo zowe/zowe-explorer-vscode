@@ -28,7 +28,7 @@ import { ZosJobsProvider, createJobsTree } from "./job/ZosJobsProvider";
 import { createUSSTree, USSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import { Profiles } from "./Profiles";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir } from "./utils";
+import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir, cleanTempDir } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
@@ -455,44 +455,6 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         await zoweFileProvider.addSession(chosenProfile);
     } else {
         globals.LOG.debug(localize("addZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
-    }
-}
-
-/**
- * Recursively deletes directory
- *
- * @param directory path to directory to be deleted
- */
-export function cleanDir(directory) {
-    if (!fs.existsSync(directory)) {
-        return;
-    }
-    fs.readdirSync(directory).forEach((file) => {
-        const fullpath = path.join(directory, file);
-        const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
-            fs.unlinkSync(fullpath);
-        } else {
-            cleanDir(fullpath);
-        }
-    });
-    fs.rmdirSync(directory);
-}
-
-/**
- * Cleans up local temp directory
- *
- * @export
- */
-export async function cleanTempDir() {
-    // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-        return;
-    }
-    try {
-        cleanDir(globals.ZOWETEMPFOLDER);
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
 
