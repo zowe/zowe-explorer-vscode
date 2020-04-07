@@ -575,6 +575,7 @@ describe("Extension Unit Tests", () => {
             })
         });
 
+        const mockThisThreeTimes = 3;
         mockConfiguration({
             persistence: true,
             get: (setting: string) => [
@@ -586,8 +587,9 @@ describe("Extension Unit Tests", () => {
             update: jest.fn(()=>{
                 return {};
             })
-        }, 3);
+        }, mockThisThreeTimes);
 
+        const mockThisTwoTimes = 2;
         mockConfiguration({
             persistence: true,
             get: (setting: string) => [
@@ -599,7 +601,7 @@ describe("Extension Unit Tests", () => {
             update: jest.fn(()=>{
                 return {};
             })
-        }, 2);
+        }, mockThisTwoTimes);
 
         const enums = jest.fn().mockImplementation(() => {
             return {
