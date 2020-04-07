@@ -248,7 +248,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async editSession(node: IZoweDatasetTreeNode) {
         const profile = node.getProfile();
-        Profiles.getInstance().editSession(profile);
+        const profileName = node.getProfileName();
+        Profiles.getInstance().editSession(profile, profileName);
     }
 
     /**

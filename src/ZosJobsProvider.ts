@@ -466,7 +466,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public async editSession(node: IZoweJobTreeNode) {
         const profile = node.getProfile();
-        Profiles.getInstance().editSession(profile);
+        const profilename = node.getProfileName();
+        Profiles.getInstance().editSession(profile, profilename);
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
