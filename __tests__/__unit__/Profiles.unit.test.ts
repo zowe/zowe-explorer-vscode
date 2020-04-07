@@ -61,7 +61,6 @@ describe("Profile class unit tests", () => {
     const showInformationMessage = jest.fn();
     const showInputBox = jest.fn();
     const createInputBox = jest.fn();
-    const showQuickTypePick = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
 
@@ -70,7 +69,6 @@ describe("Profile class unit tests", () => {
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-    Object.defineProperty(vscode.window, "showQuickTypePick", { value: showQuickTypePick });
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -154,7 +152,6 @@ describe("Profile class unit tests", () => {
         afterEach(() => {
             showInputBox.mockReset();
             showQuickPick.mockReset();
-            showQuickTypePick.mockReset();
             createInputBox.mockReset();
             showInformationMessage.mockReset();
             showErrorMessage.mockReset();
