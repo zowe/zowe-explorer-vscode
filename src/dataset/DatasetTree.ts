@@ -123,10 +123,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (element.contextValue === globals.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
+            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
     }
+
 
     /**
      * Initializes the tree based on favorites held in persistent store
@@ -598,7 +600,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // update the treeview with the new pattern
             node.label = node.label.trim() + " ";
-            node.label = node.label.trim();
+            node.label.trim();
             node.tooltip = node.pattern = pattern.toUpperCase();
             node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             node.dirty = true;

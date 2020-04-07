@@ -82,52 +82,12 @@ export class ZoweTreeProvider {
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
-
-        if (element.label !== "Favorites") {
-            let usrNme: string;
-            let passWrd: string;
-            let baseEncd: string;
-            let sesNamePrompt: string;
-            if (element.contextValue.endsWith(globals.FAV_SUFFIX)) {
-                sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
-            } else {
-                sesNamePrompt = element.label;
-            }
-            if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
-                try {
-                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
-                    if (values !== undefined) {
-                        usrNme = values [0];
-                        passWrd = values [1];
-                        baseEncd = values [2];
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
-                }
-                if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                    element.getSession().ISession.user = usrNme;
-                    element.getSession().ISession.password = passWrd;
-                    element.getSession().ISession.base64EncodedAuth = baseEncd;
-                    this.validProfile = 1;
-                } else {
-                    return;
-                }
-                await this.refreshElement(element);
-                await this.refresh();
-            } else {
-                this.validProfile = 1;
-            }
-        } else {
-            this.validProfile = 1;
+        const icon = getIconByNode(element);
+        if (icon) {
+            element.iconPath = icon.path;
         }
-        if (this.validProfile === 1) {
-            const icon = getIconByNode(element);
-            if (icon) {
-                element.iconPath = icon.path;
-            }
-            element.dirty = true;
-            this.mOnDidChangeTreeData.fire(element);
-        }
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {

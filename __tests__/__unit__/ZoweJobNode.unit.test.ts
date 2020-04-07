@@ -484,7 +484,7 @@ describe("Zos Jobs Unit Tests", () => {
             newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             newjobNode.getSession().ISession.user = "";
             newjobNode.getSession().ISession.password = "";
-            newjobNode.getSession().ISession.base64EncodedAuth = "";
+            newjobNode.getSession().ISession.base64EncodedAuth = "fakeEncoding";
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const qpItem: vscode.QuickPickItem = testJobsProvider.createOwner;
             const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
@@ -520,10 +520,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             showInputBox.mockReturnValueOnce("");
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(newjobNode.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
-            expect(newjobNode.owner).toEqual("fakeUser");
-            expect(newjobNode.prefix).toEqual("*");
-            expect(newjobNode.searchId).toEqual("");
+            expect(profileLoader.Profiles.getInstance().validProfile).toBe(0);
         });
 
         it("Testing the jobs prompt credentials error", async () => {

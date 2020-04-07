@@ -254,8 +254,8 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {
-        theTreeView.onDidCollapseElement(async (e) => { theProvider.flipState(e.element, false); });
-        theTreeView.onDidExpandElement(async (e) => { theProvider.flipState(e.element, true); });
+        theTreeView.onDidCollapseElement(async (e) => { await theProvider.flipState(e.element, false); });
+        theTreeView.onDidExpandElement(async (e) => { await theProvider.flipState(e.element, true); });
     }
 }
 

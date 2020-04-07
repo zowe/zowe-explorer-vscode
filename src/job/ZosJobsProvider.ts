@@ -135,6 +135,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (element.contextValue === globals.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
+            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
