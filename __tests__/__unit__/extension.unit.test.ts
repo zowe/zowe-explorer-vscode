@@ -1024,7 +1024,7 @@ describe("Extension Unit Tests", () => {
                     };
                 })
             });
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(qpItem)
             );
         });
@@ -1112,7 +1112,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
@@ -1170,7 +1170,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
@@ -2133,7 +2133,7 @@ describe("Extension Unit Tests", () => {
         testTree.mSessionNodes.push(sessNode2);
 
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
         createQuickPick.mockReturnValue({
@@ -2176,7 +2176,7 @@ describe("Extension Unit Tests", () => {
         testTree.mSessionNodes.push(sessNode2);
 
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
         createQuickPick.mockReturnValue({
@@ -2219,7 +2219,7 @@ describe("Extension Unit Tests", () => {
         testUSSTree.mSessionNodes.push(sessNode2);
 
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-        const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
             () => Promise.resolve(qpItem)
         );
         createQuickPick.mockReturnValue({
@@ -2522,17 +2522,17 @@ describe("Extension Unit Tests", () => {
                 new utils.FilterItem("[sestest]: /test/tree/abc"),
             ];
 
-            let filteredValues = await sharedUtils.filterTreeByString("testmemb", qpItems);
+            let filteredValues = sharedUtils.filterTreeByString("testmemb", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[1]]);
-            filteredValues = await sharedUtils.filterTreeByString("sestest", qpItems);
+            filteredValues = sharedUtils.filterTreeByString("sestest", qpItems);
             expect(filteredValues).toStrictEqual(qpItems);
-            filteredValues = await sharedUtils.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
+            filteredValues = sharedUtils.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[0]]);
-            filteredValues = await sharedUtils.filterTreeByString("HLQ.*.STUFF*", qpItems);
+            filteredValues = sharedUtils.filterTreeByString("HLQ.*.STUFF*", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
-            filteredValues = await sharedUtils.filterTreeByString("/test/tree/abc", qpItems);
+            filteredValues = sharedUtils.filterTreeByString("/test/tree/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
-            filteredValues = await sharedUtils.filterTreeByString("*/abc", qpItems);
+            filteredValues = sharedUtils.filterTreeByString("*/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
         });
 
@@ -2750,7 +2750,7 @@ describe("Extension Unit Tests", () => {
                     };
                 })
             });
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(qpItem)
             );
         });
@@ -2812,7 +2812,7 @@ describe("Extension Unit Tests", () => {
 
             showInputBox.mockReturnValueOnce("fake");
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
 
         });
 
@@ -2840,12 +2840,12 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
 
             Object.defineProperty(globals, "ISTHEIA", { get: () => false });
         });
@@ -2874,12 +2874,12 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
             expect(showInformationMessage).toHaveBeenCalled();
 
             Object.defineProperty(globals, "ISTHEIA", { get: () => false });
@@ -2908,12 +2908,12 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
         });
 
         it("Testing that addZoweSession with supplied resolveQuickPickHelper", async () => {
@@ -2939,7 +2939,7 @@ describe("Extension Unit Tests", () => {
             });
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
 
         });
 
@@ -2966,12 +2966,12 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
 
         });
 
@@ -3012,7 +3012,7 @@ describe("Extension Unit Tests", () => {
             });
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
 
         });
 
@@ -3052,7 +3052,7 @@ describe("Extension Unit Tests", () => {
             });
 
             await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(addZoweSession).toHaveBeenCalled();
 
         });
     });
@@ -3555,7 +3555,7 @@ describe("Extension Unit Tests", () => {
                     };
                 })
             });
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(qpItem)
             );
         });
@@ -3793,7 +3793,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
@@ -3851,7 +3851,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
             );
 
