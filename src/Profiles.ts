@@ -402,7 +402,7 @@ export class Profiles {
         }
 
 
-        const OrigProfileInfo = this.loadedProfile.profile as ISession;
+        const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
         if (OrigProfileInfo.user) {
@@ -412,6 +412,11 @@ export class Profiles {
         if (OrigProfileInfo.password) {
             OrigProfileInfo.password = NewProfileInfo.password;
         }
+
+        OrigProfileInfo.host = NewProfileInfo.host;
+        OrigProfileInfo.port = NewProfileInfo.port;
+        OrigProfileInfo.rejectUnauthorized = NewProfileInfo.rejectUnauthorized;
+        OrigProfileInfo.base64EncodedAuth = NewProfileInfo.base64EncodedAuth;
 
         const updateParms: IUpdateProfile = {
             name: this.loadedProfile.name,
