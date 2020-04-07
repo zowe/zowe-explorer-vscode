@@ -544,14 +544,22 @@ describe("Extension Unit Tests", () => {
         readdirSync.mockReturnValue([]);
         isFile.mockReturnValueOnce(false);
         createBasicZosmfSession.mockReturnValue(session);
-        getConfiguration.mockReturnValueOnce({
+
+        const mockConfiguration = (obj: any, times: number = 1) => {
+          for(let i = 0; i < times; ++i) {
+            getConfiguration.mockReturnValueOnce(obj);
+          }
+        };
+
+        mockConfiguration({
             persistence: true,
             get: () => "folderpath",
             update: jest.fn(()=>{
                 return {};
             })
         });
-        getConfiguration.mockReturnValueOnce({
+
+        mockConfiguration({
             persistence: true,
             get: (setting: string) => "vscode",
             update: jest.fn(()=>{
@@ -559,7 +567,7 @@ describe("Extension Unit Tests", () => {
             })
         });
 
-        getConfiguration.mockReturnValueOnce({
+        mockConfiguration({
             persistence: true,
             get: () => "",
             update: jest.fn(()=>{
@@ -567,7 +575,7 @@ describe("Extension Unit Tests", () => {
             })
         });
 
-        getConfiguration.mockReturnValueOnce({
+        mockConfiguration({
             persistence: true,
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
@@ -578,32 +586,9 @@ describe("Extension Unit Tests", () => {
             update: jest.fn(()=>{
                 return {};
             })
-        });
-        getConfiguration.mockReturnValueOnce({
-            persistence: true,
-            get: (setting: string) => [
-                "[test]: brtvs99.public.test{pds}",
-                "[test]: brtvs99.test{ds}",
-                "[test]: brtvs99.fail{fail}",
-                "[test]: brtvs99.test.search{session}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
-        getConfiguration.mockReturnValueOnce({
-            persistence: true,
-            get: (setting: string) => [
-                "[test]: brtvs99.public.test{pds}",
-                "[test]: brtvs99.test{ds}",
-                "[test]: brtvs99.fail{fail}",
-                "[test]: brtvs99.test.search{session}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
-        getConfiguration.mockReturnValueOnce({
+        }, 3);
+
+        mockConfiguration({
             persistence: true,
             get: (setting: string) => [
                 "[test]: /u/myUser{directory}",
@@ -614,19 +599,8 @@ describe("Extension Unit Tests", () => {
             update: jest.fn(()=>{
                 return {};
             })
-        });
-        getConfiguration.mockReturnValue({
-            persistence: true,
-            get: (setting: string) => [
-                "[test]: /u/myUser{directory}",
-                "[test]: /u/myUser{directory}",
-                "[test]: /u/myUser/file.txt{file}",
-                "[test]: /u{session}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
+        }, 2);
+
         const enums = jest.fn().mockImplementation(() => {
             return {
                 Global: 1,
