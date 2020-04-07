@@ -1084,23 +1084,7 @@ describe("Extension Unit Tests", () => {
             const addSession = jest.spyOn(extension, "addZoweSession");
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: "firstName",
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -1127,23 +1111,7 @@ describe("Extension Unit Tests", () => {
             const addSession = jest.spyOn(extension, "addZoweSession");
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: undefined,
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -2737,23 +2705,7 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(globals, "ISTHEIA", { get: () => true });
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: "firstName",
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -2771,23 +2723,7 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(globals, "ISTHEIA", { get: () => true });
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [],
-                ignoreFocusOut: true,
-                items: [],
-                value: null,
-                label: "firstName",
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -2805,23 +2741,7 @@ describe("Extension Unit Tests", () => {
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: "firstName",
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -2848,23 +2768,7 @@ describe("Extension Unit Tests", () => {
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: undefined,
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -3615,23 +3519,7 @@ describe("Extension Unit Tests", () => {
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: "firstName",
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
@@ -3658,23 +3546,7 @@ describe("Extension Unit Tests", () => {
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
             // Assert edge condition user cancels the input path box
-            createQuickPick.mockReturnValue({
-                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-                activeItems: [qpItem],
-                ignoreFocusOut: true,
-                items: [qpItem],
-                value: entered,
-                label: undefined,
-                show: jest.fn(()=>{
-                    return {};
-                }),
-                hide: jest.fn(()=>{
-                    return {};
-                }),
-                onDidAccept: jest.fn(()=>{
-                    return {};
-                })
-            });
+            createQuickPickMock(qpItem, entered);
 
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
                 () => Promise.resolve(createQuickPick())
