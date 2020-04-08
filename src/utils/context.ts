@@ -76,7 +76,7 @@ export function isFavoritePds(node: TreeItem): boolean {
  * @param node
  * @return true if a Favorite binary or text file, false otherwise
  */
-export function isFavoriteTextorBinary(node: TreeItem): boolean {
+export function isFavoriteTextOrBinary(node: TreeItem): boolean {
     return new RegExp("^("+ extension.DS_BINARY_FILE_CONTEXT + "|" +
                     extension.DS_TEXT_FILE_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
 }

@@ -140,10 +140,10 @@ describe.only("Context helper tests", () => {
             switch (ctx) {
                 case DS_FAV_TEXT_FILE_CONTEXT:
                 case DS_FAV_BINARY_FILE_CONTEXT:
-                    expect(contextually.isFavoriteTextorBinary(treeItem)).toBe(true);
+                    expect(contextually.isFavoriteTextOrBinary(treeItem)).toBe(true);
                     break;
                 default:
-                    expect(contextually.isFavoriteTextorBinary(treeItem)).toBe(false);
+                    expect(contextually.isFavoriteTextOrBinary(treeItem)).toBe(false);
             }
         }
     });

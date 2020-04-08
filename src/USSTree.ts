@@ -208,7 +208,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             false,
             node.getSessionNode().getProfileName());
         temp.contextValue = contextually.asFavorite(temp);
-        if (contextually.isFavoriteTextorBinary(temp)) {
+        if (contextually.isFavoriteTextOrBinary(temp)) {
             temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
         }
         const icon = getIconByNode(temp);
