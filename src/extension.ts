@@ -1729,7 +1729,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
                 const memberName = memberRegexResult && memberRegexResult[0];
 
                 const hasMember = targetParentNode.children.some((memNode) => {
-                    return memNode.label === memberName.replace("(", "").replace(")", "");
+                    return memNode.label === memberName.replace(/(\()|(\))/g, "");
                 });
                 if (hasMember) {
                     targetNode = targetParentNode;
@@ -1749,7 +1749,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             const sessionName = sessionRegexResult && sessionRegexResult[0];
 
             if (sessionName) {
-                sesName = sessionName.replace("[", "").replace("]", "");
+                sesName = sessionName.replace(/(\[)|(\])/g, "");
             }
         }
     }
