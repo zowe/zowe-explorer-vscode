@@ -403,11 +403,11 @@ describe("Profile class unit tests", () => {
         //     const res = await profiles.validateAndParseUrl("http://fake:80");
         //     expect(res.valid).toBe(false);
         // });
-        // now allow ftp protocol
-        // it("should reject ftp protocol url", async () => {
-        //     const res = await profiles.validateAndParseUrl("ftp://fake:80");
-        //     expect(res.valid).toBe(false);
-        // });
+
+        it("should reject ftp protocol url", async () => {
+            const res = await profiles.validateAndParseUrl("ftp://fake:80");
+            expect(res.valid).toBe(false);
+        });
 
         it("should reject invalid url syntax", async () => {
             const res = await profiles.validateAndParseUrl("https://fake::80");
