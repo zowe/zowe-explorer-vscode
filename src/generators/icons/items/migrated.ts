@@ -14,19 +14,14 @@ import * as extension from "../../../extension";
 import { getIconPathInResources } from "../../../utils/icon";
 
 const icon: IIconItem = {
-    id: IconId.document,
+    id: IconId.migrated,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("document.svg"),
+    path: getIconPathInResources("migrated.svg"),
     check: (node) => {
         // TODO: Move contexts to constants file and do constructor as well
-        const contexts = [extension.DS_DS_CONTEXT,
-            extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_MEMBER_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.JOBS_SPOOL_CONTEXT,
-            extension.DS_BINARY_FILE_CONTEXT,
-            extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX
+        const contexts = [
+            extension.DS_MIGRATED_FILE_CONTEXT,
+            extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX
         ];
 
         return contexts.indexOf(node.contextValue) > -1;
