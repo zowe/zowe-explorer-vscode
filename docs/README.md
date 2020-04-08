@@ -6,6 +6,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 - [Install to VSC from source](#install-to-vsc-from-source)
 - [Run System Tests](#run-system-tests)
+- [Run Zowe Explorer Regression Tests for Theia](#run-zowe-explorer-regression-tests-for-theia)
 - [Localization](#localization)
 
 ## Install to VSC from source
@@ -110,6 +111,49 @@ There is no required structure for the mainframe data sets under `orPattern`.
 
   **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
+
+## Run Zowe Explorer Regression Tests for Theia
+
+Run regression tests to ensure that the latest release of Zowe Explorer is compatible with a Theia enviroment.
+
+### Set up Theia Workspace
+
+Set up your Theia workspace for development purposes.
+
+**Follow these steps**:
+
+1. Build a VSIX file with your changes.
+
+2. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
+      
+   **Note**: Ensure that your latest VSIX file is in the `plugins` folder.
+
+3. Open a web browser and navigate to <http://localhost:3000> to verify your setup.
+
+   You should see Zowe Explorer that is deployed in Theia.
+
+### Run Regression Tests
+
+Issue the following command to run the regression tests:
+
+```
+npm run test:theia
+```
+
+The regression tests output appears in your VSC debug console.
+
+### Run Tests with Firefox UI Visibility Components 
+
+Disable headless mode to see changes in Firefox while your tests are in progress.
+
+**Note**: Tests run in headless mode by default.
+
+1. Navigate to the `__tests__/__theia__/` folder.
+2. Comment out the line `firefoxOptions.headless();` in the tests.
+3. Compile the extension.
+4. Run the regression test.
+
+  The tests run and the Firefox browser is launched.
 
 ## Localization
 
