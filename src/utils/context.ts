@@ -221,7 +221,6 @@ export function isSessionNotFav(node: TreeItem): boolean {
  * @return true if a session favorite, false otherwise
  */
 export function isSessionFavorite(node: TreeItem): boolean {
-   // return isSession(node) && isFavorite(node);
    return new RegExp("^(" + extension.FAVORITE_CONTEXT + ")").test(node.contextValue);
 }
 
