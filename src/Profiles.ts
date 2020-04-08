@@ -161,7 +161,8 @@ export class Profiles {
         let profileType: string;
         let userName: string;
         let passWord: string;
-        let zosURL: string;
+        let port: number;
+        // let zosURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
         let isTrue: boolean;
@@ -171,7 +172,7 @@ export class Profiles {
         const schema: {} = await this.getSchema(profileType);
         const schemaArray = Object.keys(schema);
 
-        let zosUrlParsed: any;
+        // let zosUrlParsed: any;
 
         const schemaValues: any = {};
         schemaValues.name = profileName;
@@ -179,26 +180,41 @@ export class Profiles {
         for (const value of schemaArray) {
             switch (value) {
             case "host" :
-                const urlInputBox = vscode.window.createInputBox();
-                urlInputBox.ignoreFocusOut = true;
-                urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
-                urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-                    "Enter a z/OS URL in the format 'https://url:port'.");
-                urlInputBox.show();
-                zosURL = await this.getUrl(urlInputBox);
-                urlInputBox.dispose();
-                if (!zosURL) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.zosURL", "No valid value for z/OS URL. Operation Cancelled"));
-                    return undefined;
-                }
-                zosUrlParsed = this.validateAndParseUrl(zosURL);
-                schemaValues[value] = zosUrlParsed.host;
+                // const urlInputBox = vscode.window.createInputBox();
+                // urlInputBox.ignoreFocusOut = true;
+                // urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "host.com");
+                // urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
+                //     "Enter a z/OS URL in the format 'host.com'.");
+                // urlInputBox.show();
+
+                options = {
+                    placeHolder: localize("createNewConnection.option.prompt.host.placeholder", "host.com"),
+                    prompt: localize("createNewConnection.option.prompt.host",
+                    "Enter a z/OS URL in the format 'host.com'."),
+                    value: userName
+                };
+                const host = await vscode.window.showInputBox(options);
+                // zosURL = await this.getUrl(urlInputBox);
+                // urlInputBox.dispose();
+                // if (!zosURL) {
+                //   vscode.window.showInformationMessage(localize("createNewConnection.zosURL", "No valid value for z/OS URL. Operation Cancelled"));
+                //     return undefined;
+                // }
+                // zosUrlParsed = this.validateAndParseUrl(zosURL);
+                schemaValues[value] = host;
                 break;
             case "port":
-                schemaValues[value] = zosUrlParsed.port;
-                break;
-            case "protocol":
-                schemaValues[value] = zosUrlParsed.protocol;
+                options = {
+                    placeHolder: localize("createNewConnection.option.prompt.port.placeholder", "Port Number"),
+                    prompt: schema[value].optionDefinition.description.toString(),
+                    value: userName
+                };
+                port = Number(await vscode.window.showInputBox(options));
+                if (port === 0 && profileType === "zosmf") {
+                    schemaValues[value] = Number("443");
+                } else {
+                    schemaValues[value] = port;
+                }
                 break;
             case "user":
                 options = {
