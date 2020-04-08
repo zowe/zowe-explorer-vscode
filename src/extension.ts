@@ -19,16 +19,15 @@ import * as ussActions from "./uss/actions";
 import * as dsActions from "./dataset/actions";
 import * as jobActions from "./job/actions";
 import * as sharedActions from "./shared/actions";
-import { moveSync } from "fs-extra";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
 import { CredentialManagerFactory, ImperativeError, CliProfileManager } from "@zowe/imperative";
-import { DatasetTree, createDatasetTree } from "./dataset/DatasetTree";
-import { ZosJobsProvider, createJobsTree } from "./job/ZosJobsProvider";
-import { createUSSTree, USSTree } from "./uss/USSTree";
+import { createDatasetTree } from "./dataset/DatasetTree";
+import { createJobsTree } from "./job/ZosJobsProvider";
+import { createUSSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import { Profiles } from "./Profiles";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir } from "./utils";
+import { errorHandling, getZoweDir, cleanTempDir, addZoweSession, moveTempFolder, getSecurityModules } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
@@ -64,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
     } catch (err) {
-        await errorHandling(err, null, err.message);
+        errorHandling(err, null, err.message);
     }
 
     let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
@@ -106,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Initialize Jobs provider with the created session and the selected pattern
         jobsProvider = await createJobsTree(globals.LOG);
     } catch (err) {
-        await errorHandling(err, null, (localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
+        errorHandling(err, null, (localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         globals.LOG.error(localize("initialize.log.error",
                                            "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
     }
@@ -256,243 +255,6 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
     if (!globals.ISTHEIA) {
         theTreeView.onDidCollapseElement(async (e) => { await theProvider.flipState(e.element, false); });
         theTreeView.onDidExpandElement(async (e) => { await theProvider.flipState(e.element, true); });
-    }
-}
-
-/**
- * function to check if imperative.json contains
- * information about security or not and then
- * Imports the neccesary security modules
- */
-export function getSecurityModules(moduleName): NodeRequire | undefined {
-    let imperativeIsSecure: boolean = false;
-    try {
-        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-        let settings: any;
-        if (fs.existsSync(fileName)) {
-            settings = JSON.parse(fs.readFileSync(fileName).toString());
-        }
-        const value1 = settings?.overrides.CredentialManager;
-        const value2 = settings?.overrides["credential-manager"];
-        imperativeIsSecure = ((typeof value1 === "string") && (value1.length > 0)) ||
-            ((typeof value2 === "string") && (value2.length > 0));
-    } catch (error) {
-        globals.LOG.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-        vscode.window.showWarningMessage(error.message);
-        return undefined;
-    }
-    if (imperativeIsSecure) {
-        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-        const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
-        try {
-            return require(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) { /* Do nothing */ }
-        try {
-            return require(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) { /* Do nothing */ }
-        vscode.window.showWarningMessage(localize("initialize.module.load",
-            "Credentials not managed, unable to load security file: ") + moduleName);
-    }
-    return undefined;
-}
-
-/**
- * Moves temp folder to user defined location in preferences
- * @param previousTempPath temp path settings value before updated by user
- * @param currentTempPath temp path settings value after updated by user
- */
-export function moveTempFolder(previousTempPath: string, currentTempPath: string) {
-    // Re-define globals with updated path
-    globals.defineGlobals(currentTempPath);
-
-    if (previousTempPath === "") {
-        previousTempPath = path.join(__dirname, "..", "..", "resources");
-    }
-
-    // Make certain that "temp" folder is cleared
-    cleanTempDir();
-
-    try {
-        fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-        fs.mkdirSync(globals.USS_DIR);
-        fs.mkdirSync(globals.DS_DIR);
-    } catch (err) {
-        globals.LOG.error(localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + JSON.stringify(err));
-        errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder! ") + err.message);
-    }
-    const previousTemp = path.join(previousTempPath, "temp");
-    try {
-        // If source and destination path are same, exit
-        if (previousTemp === globals.ZOWETEMPFOLDER) {
-            return;
-        }
-
-        // TODO: Possibly remove when supporting "Multiple Instances"
-        // If a second instance has already moved the temp folder, exit
-        // Ideally, `moveSync()` would alert user if path doesn't exist.
-        // However when supporting "Multiple Instances", might not be possible.
-        if (!fs.existsSync(previousTemp)) {
-            return;
-        }
-
-        moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
-    } catch (err) {
-        globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
-        vscode.window.showErrorMessage(err.message);
-    }
-}
-
-/**
- * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
- * selecting which profile you would like to add from the drop-down that appears.
- * The profiles that are in the tree view already will not appear in the
- * drop-down.
- *
- * @export
- * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
- */
-export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const allProfiles = (await Profiles.getInstance()).allProfiles;
-    const createNewProfile = "Create a New Connection to z/OS";
-    let chosenProfile: string = "";
-
-    // Get all profiles
-    let profileNamesList = allProfiles.map((profile) => {
-        return profile.name;
-    });
-    // Filter to list of the APIs available for current tree explorer
-    profileNamesList = profileNamesList.filter((profileName) => {
-        const profile = Profiles.getInstance().loadNamedProfile(profileName);
-        if (zoweFileProvider instanceof USSTree) {
-            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-            return ussProfileTypes.includes(profile.type);
-        }
-        if (zoweFileProvider instanceof DatasetTree) {
-            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-            return mvsProfileTypes.includes(profile.type);
-        }
-        if (zoweFileProvider instanceof ZosJobsProvider) {
-            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-            return jesProfileTypes.includes(profile.type);
-        }
-    });
-    if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((profileName) =>
-            // Find all cases where a profile is not already displayed
-            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName )
-        );
-    }
-    const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
-    const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
-    const quickpick = vscode.window.createQuickPick();
-    const placeholder = localize("addSession.quickPickOption",
-        "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
-
-    if (globals.ISTHEIA) {
-        const options: vscode.QuickPickOptions = {
-            placeHolder: placeholder
-        };
-        // get user selection
-        const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        chosenProfile = choice === createPick ? "" : choice.label;
-    } else {
-        quickpick.items = [createPick, ...items];
-        quickpick.placeholder = placeholder;
-        quickpick.ignoreFocusOut = true;
-        quickpick.show();
-        const choice = await resolveQuickPickHelper(quickpick);
-        quickpick.hide();
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        if (choice instanceof FilterDescriptor) {
-            chosenProfile = "";
-        } else {
-            chosenProfile = choice.label;
-        }
-    }
-
-    if (chosenProfile === "") {
-        let newprofile: any;
-        let profileName: string;
-        if (quickpick.value) {
-            profileName = quickpick.value;
-        }
-
-        const options = {
-            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
-            value: profileName
-        };
-        profileName = await vscode.window.showInputBox(options);
-        if (!profileName) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                "Profile Name was not supplied. Operation Cancelled"));
-            return;
-        }
-        chosenProfile = profileName.trim();
-        globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        try {
-            newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
-        } catch (error) { await errorHandling(error, chosenProfile, error.message); }
-        if (newprofile) {
-            try {
-                await Profiles.getInstance().refresh();
-            } catch (error) {
-                await errorHandling(error, newprofile, error.message);
-            }
-            await zoweFileProvider.addSession(newprofile);
-            await zoweFileProvider.refresh();
-        }
-    } else if (chosenProfile) {
-        globals.LOG.debug(localize("addZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
-        await zoweFileProvider.addSession(chosenProfile);
-    } else {
-        globals.LOG.debug(localize("addZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
-    }
-}
-
-/**
- * Recursively deletes directory
- *
- * @param directory path to directory to be deleted
- */
-export function cleanDir(directory) {
-    if (!fs.existsSync(directory)) {
-        return;
-    }
-    fs.readdirSync(directory).forEach((file) => {
-        const fullpath = path.join(directory, file);
-        const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
-            fs.unlinkSync(fullpath);
-        } else {
-            cleanDir(fullpath);
-        }
-    });
-    fs.rmdirSync(directory);
-}
-
-/**
- * Cleans up local temp directory
- *
- * @export
- */
-export async function cleanTempDir() {
-    // logger hasn't necessarily been initialized yet, don't use the `log` in this function
-    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-        return;
-    }
-    try {
-        cleanDir(globals.ZOWETEMPFOLDER);
-    } catch (err) {
-        vscode.window.showErrorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
 

@@ -441,7 +441,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
-                await errorHandling(err, this.mProfileName, err.message);
+                errorHandling(err, this.mProfileName, err.message);
                 throw (err);
             }
         }
@@ -502,7 +502,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 vscode.window.showInformationMessage(localize("refreshUSS.file1", "Unable to find file: ") + label +
                     localize("refreshUSS.file2", " was probably deleted."));
             } else {
-                await errorHandling(err, this.mProfileName, err.message);
+                errorHandling(err, this.mProfileName, err.message);
             }
         }
     }
