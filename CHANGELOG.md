@@ -5,7 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `1.4.1`
 
 - Fix for USS files not saving correctly. Thanks @phaumer
-- Icon update for migrated files. Thanks @Colin-Stone
+- Icon update for migrated files only. Thanks @Colin-Stone
 
 ## `1.4.0`
 
