@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as fs from "fs";
@@ -249,7 +249,18 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async editSession(node: IZoweDatasetTreeNode) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
-        Profiles.getInstance().editSession(profile, profileName);
+        const EditSession = await Profiles.getInstance().editSession(profile, profileName);
+
+        if (EditSession) {
+            node.getProfile().profile= EditSession as IProfile;
+            node.getSession().ISession.user = EditSession.user;
+            node.getSession().ISession.password = EditSession.password;
+            node.getSession().ISession.hostname = EditSession.host;
+            node.getSession().ISession.port = EditSession.port;
+            node.getSession().ISession.base64EncodedAuth = EditSession.base64EncodedAuth;
+            node.getSession().ISession.rejectUnauthorized = EditSession.rejectUnauthorized;
+            this.refresh();
+        }
     }
 
     /**

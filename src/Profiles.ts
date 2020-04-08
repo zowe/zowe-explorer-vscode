@@ -19,6 +19,7 @@ import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
+import { errorHandling } from "./utils";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
@@ -36,11 +37,7 @@ let IConnection: {
     rejectUnauthorized: boolean;
 };
 
-let userName: string;
-let passWord: string;
-let zosmfURL: string;
-let rejectUnauthorize: boolean;
-let options: vscode.InputBoxOptions;
+let InputBoxOptions: vscode.InputBoxOptions;
 
 export class Profiles {
     // Processing stops if there are no profiles detected
@@ -146,170 +143,47 @@ export class Profiles {
         });
     }
 
-    public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<string | undefined> {
-        const Session = profileLoaded.profile;
-        const editUrl = "https://" + Session.host+ ":" + Session.port;
-        userName = Session.user;
-        passWord = Session.password;
-        rejectUnauthorize = Session.rejectUnauthorized;
+    public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
+        const editSession = profileLoaded.profile;
+        const editURL = "https://" + editSession.host+ ":" + editSession.port;
+        const editUser = editSession.user;
+        const editPass = editSession.password;
 
-        const urlInputBox = vscode.window.createInputBox();
-        urlInputBox.ignoreFocusOut = true;
-        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
-        urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-            "Enter a z/OSMF URL in the format 'https://url:port'.");
-        urlInputBox.value = editUrl;
-
-        urlInputBox.show();
-        zosmfURL = await this.getUrl(urlInputBox);
-        urlInputBox.dispose();
-
-        if (!zosmfURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                "No valid value for z/OSMF URL. Operation Cancelled"));
-            return undefined;
-        }
-
-        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
-            value: userName
-        };
-        userName = await vscode.window.showInputBox(options);
-
-        if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
-                "Operation Cancelled"));
-            return;
-        }
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
-            password: true,
-            value: passWord
-        };
-        passWord = await vscode.window.showInputBox(options);
-
-        if (passWord === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
-                "Operation Cancelled"));
-            return;
-        }
-
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-
-        const selectRU = ["True - Reject connections with self-signed certificates",
-            "False - Accept connections with self-signed certificates"];
-
-        const ruOptions = Array.from(selectRU);
-
-        const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
-
-        if (chosenRU === ruOptions[0]) {
-            rejectUnauthorize = true;
-        } else if (chosenRU === ruOptions[1]) {
-            rejectUnauthorize = false;
-        } else {
-            vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                "Operation Cancelled"));
-            return undefined;
-        }
-
+        const updUrl = await this.urlInfo(editURL);
+        const updUser = await this.userInfo(editUser);
+        const updPass = await this.passwordInfo(editPass);
+        const updRU = await this.ruInfo();
 
         const updProfile = {
-            host: zosmfUrlParsed.host,
-            port: zosmfUrlParsed.port,
-            user: userName,
-            password: passWord,
-            rejectUnauthorized: rejectUnauthorize
+            host: updUrl.host,
+            port: updUrl.port,
+            user: updUser,
+            password: updPass,
+            rejectUnauthorized: updRU,
+            base64EncodedAuth: null
         };
 
         try {
+            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
+            updProfile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updProfile, name: profileName});
-            vscode.window.showInformationMessage(localize("editConnection.success",
-                    "Profile updated"));
+            vscode.window.showInformationMessage(localize("editConnection.success", "Profile " + profileName + " was updated"));
+
+            return updProfile;
+
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await errorHandling(error.message);
         }
-        await zowe.ZosmfSession.createBasicZosmfSession(IConnection as IProfile);
 
     }
 
     public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
-        const urlInputBox = vscode.window.createInputBox();
-        urlInputBox.ignoreFocusOut = true;
-        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
-        urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-            "Enter a z/OSMF URL in the format 'https://url:port'.");
 
-        urlInputBox.show();
-        zosmfURL = await this.getUrl(urlInputBox);
-        urlInputBox.dispose();
+        const newUrl = await this.urlInfo();
+        const newUser = await this.userInfo();
+        const newPass = await this.passwordInfo();
+        const newRU = await this.ruInfo();
 
-        if (!zosmfURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                "No valid value for z/OSMF URL. Operation Cancelled"));
-            return undefined;
-        }
-
-        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
-            value: userName
-        };
-        userName = await vscode.window.showInputBox(options);
-
-        if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
-                "Operation Cancelled"));
-            return;
-        }
-
-        options = {
-            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
-            password: true,
-            value: passWord
-        };
-        passWord = await vscode.window.showInputBox(options);
-
-        if (passWord === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
-                "Operation Cancelled"));
-            return;
-        }
-
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-
-        const selectRU = ["True - Reject connections with self-signed certificates",
-            "False - Accept connections with self-signed certificates"];
-
-        const ruOptions = Array.from(selectRU);
-
-        const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
-
-        if (chosenRU === ruOptions[0]) {
-            rejectUnauthorize = true;
-        } else if (chosenRU === ruOptions[1]) {
-            rejectUnauthorize = false;
-        } else {
-            vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                "Operation Cancelled"));
-            return undefined;
-        }
 
         for (const profile of this.allProfiles) {
             if (profile.name === profileName) {
@@ -321,78 +195,171 @@ export class Profiles {
 
         IConnection = {
             name: profileName,
-            host: zosmfUrlParsed.host,
-            port: zosmfUrlParsed.port,
-            user: userName,
-            password: passWord,
-            rejectUnauthorized: rejectUnauthorize
+            host: newUrl.host,
+            port: newUrl.port,
+            user: newUser,
+            password: newPass,
+            rejectUnauthorized: newRU
         };
 
-        let newProfile: IProfile;
-
         try {
-            newProfile = await this.saveProfile(IConnection, IConnection.name, profileType);
+            await zowe.ZosmfSession.createBasicZosmfSession(IConnection);
+            await this.saveProfile(IConnection, IConnection.name, profileType);
+            vscode.window.showInformationMessage("Profile " + profileName + " was created.");
+            return profileName;
         } catch (error) {
-            vscode.window.showErrorMessage(error.message);
+            await errorHandling(error.message);
         }
-        await zowe.ZosmfSession.createBasicZosmfSession(newProfile);
-        vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-        return profileName;
+
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
 
         const loadProfile = this.loadNamedProfile(sessName.trim());
         const loadSession = loadProfile.profile as ISession;
+        let repromptUser: any;
+        let repromptPass: any;
 
         if (rePrompt) {
-            userName = loadSession.user;
-            passWord = loadSession.password;
+            repromptUser = loadSession.user;
+            repromptPass = loadSession.password;
         }
 
         if (!loadSession.user || rePrompt) {
 
-            options = {
-                placeHolder: localize("promptcredentials.option.prompt.username.placeholder", "User Name"),
-                prompt: localize("promptcredentials.option.prompt.username", "Enter the user name for the connection"),
-                value: userName
-            };
-            userName = await vscode.window.showInputBox(options);
+            const newUser = await this.userInfo(repromptUser);
 
-            if (!userName) {
-                vscode.window.showErrorMessage(localize("promptcredentials.invalidusername",
-                        "Please enter your z/OS username. Operation Cancelled"));
-                return;
-            } else {
-                loadSession.user = loadProfile.profile.user = userName;
-            }
+            loadSession.user = loadProfile.profile.user = newUser;
         }
 
         if (!loadSession.password || rePrompt) {
-            passWord = loadSession.password;
 
-            options = {
-                placeHolder: localize("promptcredentials.option.prompt.password.placeholder", "Password"),
-                prompt: localize("promptcredentials.option.prompt.password", "Enter a password for the connection"),
-                password: true,
-                value: passWord
-            };
-            passWord = await vscode.window.showInputBox(options);
+            const newPass = await this.passwordInfo(repromptPass);
 
-            if (!passWord) {
-                vscode.window.showErrorMessage(localize("promptcredentials.invalidpassword",
-                        "Please enter your z/OS password. Operation Cancelled"));
-                return;
-            } else {
-                loadSession.password = loadProfile.profile.password = passWord.trim();
+            loadSession.password = loadProfile.profile.password = newPass.trim();
+
+        }
+
+        try {
+            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+            if (rePrompt) {
+                await this.updateProfile(loadProfile);
             }
+            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+        } catch (error) {
+            await errorHandling(error.message);
         }
-        const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
-        if (rePrompt) {
-            await this.updateProfile(loadProfile);
-        }
-        return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
+
+    // ** Functions for handling Profile Information */
+
+    private async urlInfo(input?) {
+
+        let zosmfURL: string;
+
+        const urlInputBox = vscode.window.createInputBox();
+        if (input) {
+            urlInputBox.value = input;
+        }
+        urlInputBox.ignoreFocusOut = true;
+        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
+        urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
+            "Enter a z/OSMF URL in the format 'https://url:port'.");
+
+        urlInputBox.show();
+        zosmfURL = await this.getUrl(urlInputBox);
+        urlInputBox.dispose();
+
+        if (!zosmfURL) {
+            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
+                "No valid value for z/OSMF URL. Operation Cancelled"));
+            return undefined;
+        }
+
+        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
+
+        return zosmfUrlParsed;
+    }
+
+    private async userInfo(input?) {
+
+        let userName: string;
+
+        if (input) {
+            userName = input;
+        }
+        InputBoxOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
+            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
+            value: userName
+        };
+        userName = await vscode.window.showInputBox(InputBoxOptions);
+
+        if (userName === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                "Operation Cancelled"));
+            return;
+        }
+
+        return userName;
+    }
+
+    private async passwordInfo(input?) {
+
+        let passWord: string;
+
+        if (input) {
+            passWord = input;
+        }
+
+        InputBoxOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
+            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
+            password: true,
+            value: passWord
+        };
+        passWord = await vscode.window.showInputBox(InputBoxOptions);
+
+        if (passWord === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
+                "Operation Cancelled"));
+            return;
+        }
+
+        return passWord;
+    }
+
+    private async ruInfo() {
+
+        let rejectUnauthorize: boolean;
+
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+
+        const selectRU = ["True - Reject connections with self-signed certificates",
+            "False - Accept connections with self-signed certificates"];
+
+        const ruOptions = Array.from(selectRU);
+
+        const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
+
+        if (chosenRU === ruOptions[0]) {
+            rejectUnauthorize = true;
+        } else if (chosenRU === ruOptions[1]) {
+            rejectUnauthorize = false;
+        } else {
+            vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
+                "Operation Cancelled"));
+            return undefined;
+        }
+
+        return rejectUnauthorize;
+    }
+
+    // ** Functions that Calls Get CLI Profile Manager  */
 
     private async updateProfile(ProfileInfo) {
 
