@@ -239,7 +239,7 @@ describe("Unit Tests (Jest)", () => {
             "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, profileOne.name, undefined);
 
         child.setBinary(true);
-        expect(child.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX);
+        expect(child.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT);
         expect(JSON.stringify(child.iconPath)).toContain("document-binary.svg");
         child.setBinary(false);
         expect(child.contextValue).toEqual(extension.DS_TEXT_FILE_CONTEXT);

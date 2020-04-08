@@ -57,7 +57,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     constructor() {
         super(DatasetTree.persistenceSchema, new ZoweDatasetNode(localize("Favorites", "Favorites"),
-            vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
+              vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
         this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
         const icon = getIconByNode(this.mFavoriteSession);
         if (icon) {
@@ -407,6 +407,104 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.getHistory();
     }
 
+    public async addRecall(criteria: string) {
+        this.mHistory.addRecall(criteria);
+        this.refresh();
+    }
+
+    public getRecall(): string[] {
+        return this.mHistory.getRecall();
+    }
+
+    public removeRecall(name: string) {
+        this.mHistory.removeRecall(name);
+    }
+
+    public async createFilterString(newFilter: string, node: IZoweDatasetTreeNode) {
+        // Store previous filters (before refreshing)
+        let theFilter = this.getHistory()[0] || null;
+
+        // Check if filter is currently applied
+        if (node.pattern !== "" && theFilter) {
+            const currentFilters = node.pattern.split(",");
+
+            // Check if current filter includes the new node
+            const matchedFilters = currentFilters.filter((filter) => {
+                const regex = new RegExp(filter.trim().replace(`*`, "") + "$");
+                return regex.test(newFilter);
+            });
+
+            if (matchedFilters.length === 0) {
+                // remove the last segement with a dot of the name for the new filter
+                theFilter = `${node.pattern},${newFilter}`;
+            } else { theFilter = node.pattern; }
+        } else {
+            // No filter is currently applied
+            theFilter = newFilter;
+        }
+        return theFilter;
+    }
+
+    /**
+     * Opens a data set & reveals it in the tree
+     *
+     */
+    public async openItemFromPath(itemPath: string, sessionNode: IZoweDatasetTreeNode) {
+        let parentNode: IZoweDatasetTreeNode = null;
+        let memberNode: IZoweDatasetTreeNode;
+        let parentName = null;
+        let memberName = null;
+
+        // Get node names from path
+        if (itemPath.indexOf("(") > -1) {
+            parentName = itemPath.substring(itemPath.indexOf(" ") + 1, itemPath.indexOf("(")).trim();
+            memberName = itemPath.substring(itemPath.indexOf("(") + 1, itemPath.indexOf(")"));
+        } else {
+            parentName = itemPath.substring(itemPath.indexOf(" ") + 1);
+        }
+
+        // Update tree filter to include selected node, and expand session node in tree
+        sessionNode.tooltip = sessionNode.pattern = await this.createFilterString(parentName, sessionNode);
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        sessionNode.label = sessionNode.label.trim() + " ";
+        sessionNode.label.trim();
+        sessionNode.dirty = true;
+        await this.refresh();
+        let children = await sessionNode.getChildren();
+
+        // Find parent node in tree
+        parentNode = children.find((child) => child.label.trim() === parentName);
+        if (parentNode) {
+            parentNode.label = parentNode.tooltip = parentNode.pattern = parentName;
+            parentNode.dirty = true;
+        } else {
+            vscode.window.showInformationMessage(localize("findParentNode.unsuccessful", "Node does not exist. It may have been deleted."));
+            this.removeRecall(itemPath);
+            return;
+        }
+
+        // If parent node has a child, expand parent node, and find child in tree
+        if (itemPath.indexOf("(") > -1) {
+            parentNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            children = await parentNode.getChildren();
+            memberNode = children.find((child) => child.label.trim() === memberName);
+            if (!memberNode) {
+                vscode.window.showInformationMessage(localize("findParentNode.unsuccessful", "Node does not exist. It may have been deleted."));
+                this.removeRecall(itemPath);
+                return;
+            } else {
+                memberNode.getParent().label = memberNode.getParent().label.trim() + " ";
+                memberNode.getParent().label.trim();
+                memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                this.addHistory(`${parentName}(${memberName})`);
+                extension.openPS(memberNode, true, this);
+            }
+        } else {
+            this.addHistory(parentName);
+            extension.openPS(parentNode, true, this);
+        }
+    }
+
     public async searchInLoadedItems() {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedItems: IZoweDatasetTreeNode[] = [];
@@ -448,9 +546,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
                 if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
+                    usrNme = values[0];
+                    passWrd = values[1];
+                    baseEncd = values[2];
                 }
             } catch (error) {
                 await errorHandling(error, node.getProfileName(),

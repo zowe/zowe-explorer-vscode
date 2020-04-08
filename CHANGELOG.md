@@ -2,6 +2,31 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.4.0`
+
+- Added support for large datasets and PDS members. Thanks @jellypuno
+- Fixed inconsistent behavior when renaming USS file and directories. Thanks @stepanzharychevbroadcom
+- Fixed deleting a USS file. Thanks @Colin-Stone
+- Fixed profiles not automatically updating values when changed externally. Thanks @jellypuno
+- Fixed load error when file names had special characters. Thanks @jellypuno
+- Fixed load os USS file list. Thanks @jellypuno
+- Improved user experience of USS file navigation #461. Thanks @stepanzharychevbroadcom
+- Fixed tab name when renaming dataset. Thanks @stepanzharychevbroadcom
+- Improved performance when renaming datasets and members. Thanks @CForrest97
+- Added prompting of credentials if previous credentials where entered incorrectly. Thanks @jellypuno
+- Added support for VSCode Quick Open shortcut. Thanks @katelynienaber
+- Added support for VSCode Open Recent Files shortcut. Thanks @katelynienaber
+- Fixed USS Favorites not being remembered. Thanks @Colin-Stone
+- Setup automated regression testing on a Theia environment. Thanks @crawr
+- Fixed copying dataset on temporary folder #635. Thanks @Colin-Stone
+- Made dataset terminology more consistent. Thanks @stepanzharychevbroadcom
+- Fixed uploading files to USS. Thanks @stepanzharychevbroadcom
+- Fixed searching/filtering data. Thanks @Colin-Stone
+- Refactored code to include interfaces and abstract classes. Thanks @Colin-Stone
+- Refactored icon retrieval process. Thanks @stepanzharychevbroadcom
+- Updated Zowe Explorer video. Thanks @IgorCATech
+- Revised pipeline to use shared libraries. Thanks @zFernand0
+
 ## `1.3.1`
 
 - Updated Zowe Icon. Thanks @stepanzharychevbroadcom
@@ -16,7 +41,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `1.3.0`
 
 - Dependency on ~/.zowe folder existing removed. Thanks @tjohnsonBCM
-- Label changes for specific datset functionality. Thanks @CForrest97
+- Label changes for specific dataset functionality. Thanks @CForrest97
 - Zowe Explorer to incorporate @zowe CLI implementation. Thanks @zFernand0
 - Profiles manage other profile types apart from zosmf. Thanks @Colin-Stone
 - Exploit imperative bundled keytar for secure credentials when standalone. Thanks @Colin-Stone
@@ -49,7 +74,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Automatically use Changelog contents in pipeline as release description. Thanks @awharn
 - Provision of warning message after two failed login attempts. Thanks @jellypuno
 - Consistency, added filter tip to convey ability to add multiple filters entries. Thanks @katelynienaber
-- Tree view refresh when dataset memberadded or deleted. Thanks @katelynienaber
+- Tree view refresh when dataset member added or deleted. Thanks @katelynienaber
 - Code improvement - Centralized error handling. Thanks @crawr
 - Integration Script updates. Thanks @zFernand0
 - Keytar (Secure credentials) compatibility support. Thanks @Colin-Stone
@@ -68,7 +93,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Enhancements to profile creation. Thanks @jellypuno
 - Theia specific QuickPick modifications. Thanks @phaumer
 - Update incorrect profile message. Thanks @lauren-li
-- Fix Copy and paste dateset menu duplication. Thanks @lauren-li
+- Fix Copy and paste dataset menu duplication. Thanks @lauren-li
 
 ## `1.0.1`
 
