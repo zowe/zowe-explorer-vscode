@@ -190,7 +190,7 @@ export class Profiles {
                 options = {
                     placeHolder: localize("createNewConnection.option.prompt.host.placeholder", "host.com"),
                     prompt: localize("createNewConnection.option.prompt.host",
-                    "Enter a z/OS URL in the format 'host.com'."),
+                    "Enter a z/OS Host in the format 'host.com'."),
                     value: userName
                 };
                 const host = await vscode.window.showInputBox(options);
