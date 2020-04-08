@@ -167,15 +167,6 @@ export class Profiles {
         let isTrue: boolean;
 
         profileType = await this.getProfileType();
-        // const profileManager = await this.getCliProfileManager(profileType);
-
-        // const configOptions = Array.from(profileManager.configurations);
-        // let schema: {};
-        // for (const val of configOptions) {
-        //     if (val.type === profileType) {
-        //         schema = val.schema.properties;
-        //     }
-        // }
 
         const schema: {} = await this.getSchema(profileType);
         const schemaArray = Object.keys(schema);

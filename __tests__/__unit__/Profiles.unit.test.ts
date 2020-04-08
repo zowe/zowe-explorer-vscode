@@ -47,13 +47,12 @@ describe("Profile class unit tests", () => {
         validationMessage: undefined
     };
     const schema: {} = {
-        host:{type:"string",optionDefinition:{name:"host",aliases:["H"],description:"The z/OSMF server host name.",type:"string",required:true,group:"Zosmf Connection Options"}},
-        port:{type:"number",optionDefinition:{name:"port",aliases:["P"],description:"The z/OSMF server port.",type:"number",defaultValue:443,group:"Zosmf Connection Options"}},
-        user:{type:"string",secure:true,optionDefinition:{name:"user",aliases:["u"],description:"Mainframe (z/OSMF) user name, which can be the same as your TSO login.",type:"string",required:true,group:"Zosmf Connection Options"}},
-        password:{type:"string",secure:true,optionDefinition:{name:"password",aliases:["pass","pw"],description:"Mainframe (z/OSMF) password, which can be the same as your TSO password.",type:"string",group:"Zosmf Connection Options",required:true}},
-        // tslint:disable-next-line:max-line-length
-        rejectUnauthorized:{type:"boolean",optionDefinition:{name:"reject-unauthorized",aliases:["ru"],description:"Reject self-signed certificates.",type:"boolean",defaultValue:true,group:"Zosmf Connection Options"}},
-        basePath:{type:"string",optionDefinition:{name:"base-path",aliases:["bp"],description:"The base path for your API mediation layer instance. Specify this option to prepend the base path to all z/OSMF resources when making REST requests. Do not specify this option if you are not using an API mediation layer.",type:"string",group:"Zosmf Connection Options"}}
+        host:{type:"string",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description"}},
+        user:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        password:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        rejectUnauthorized:{type:"boolean",optionDefinition:{description:"description"}},
+        basePath:{type:"string",optionDefinition:{description:"description"}}
     };
 
     const homedir = path.join(os.homedir(), ".zowe");
