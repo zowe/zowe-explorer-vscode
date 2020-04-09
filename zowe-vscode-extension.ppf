@@ -14,6 +14,5 @@
 	<Source exclude="false" path="./resources" web="false"/>
 	<Source exclude="false" path="./scripts" web="false"/>
 	<Source exclude="false" path="./src" web="false"/>
-	<Source exclude="false" path="./stringUpdateScript.js" web="false"/>
 	<ProjectScanSettings/>
 </Project>
