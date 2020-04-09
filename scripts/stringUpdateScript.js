@@ -10,12 +10,12 @@
 */
 
 // This script creates the i18n/sample template used for adding/updating i18n files
-import * as fs from "fs";
+const fse = require("fs-extra");
+const path = require("path");
 
 for (const metadataJson of require("glob").sync("./out/src/**/*.nls.metadata.json")) {
     // Read localization metadata files
-    // Consider adding support for creating directories in the filepath if they don't exist yet
-    const parsedData = JSON.parse(fs.readFileSync(metadataJson).toString());
+    const parsedData = JSON.parse(fse.readFileSync(metadataJson).toString());
     const keysPairsData = {};
 
     // Extract localization key/value pairs from metadata files
@@ -23,8 +23,9 @@ for (const metadataJson of require("glob").sync("./out/src/**/*.nls.metadata.jso
 
     // Write to i18n sample folder to create template for new languages
     const i18nJson = metadataJson.replace("./out/", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
-    fs.writeFileSync(i18nJson, JSON.stringify(keysPairsData, null, 4));
+    fse.ensureDirSync(path.dirname(i18nJson));
+    fse.writeFileSync(i18nJson, JSON.stringify(keysPairsData, null, 4));
 }
 
-const keysPairsPackage = JSON.parse(fs.readFileSync("./package.nls.json").toString());
-fs.writeFileSync("./i18n/sample/package.i18n.json", JSON.stringify(keysPairsPackage, null, 4));
+const keysPairsPackage = JSON.parse(fse.readFileSync("./package.nls.json").toString());
+fse.writeFileSync("./i18n/sample/package.i18n.json", JSON.stringify(keysPairsPackage, null, 4));
