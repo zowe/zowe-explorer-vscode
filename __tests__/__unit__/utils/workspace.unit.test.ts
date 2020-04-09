@@ -10,6 +10,7 @@
 */
 
 import * as vscode from "vscode";
+import { closeOpenedTextFile } from "../../../src/dataset/actions";
 
 jest.mock("vscode");
 
@@ -202,29 +203,4 @@ function openNextTab(delay: number) {
         vscode.commands.executeCommand("workbench.action.nextEditor");
         setTimeout(() => resolve(), delay);
     });
-}
-
-/**
- * Closes opened file tab using iteration through the tabs
- * This kind of method is caused by incompleteness of VSCode API, which allows to close only currently selected editor
- * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
- */
-export async function closeOpenedTextFile(path: string) {
-    const tabSwitchDelay = 200;
-    const openedWindows = [] as IExtTextEditor[];
-
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    while (selectedEditor && !openedWindows.some((window) => window.id === selectedEditor.id)) {
-        openedWindows.push(selectedEditor);
-
-        await openNextTab(tabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-
-        if (selectedEditor && selectedEditor.document.fileName === path) {
-            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            return true;
-        }
-    }
-
-    return false;
 }

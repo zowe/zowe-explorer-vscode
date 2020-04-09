@@ -22,7 +22,7 @@ import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import { getIconByNode } from "../generators/icons/index";
 import { injectAdditionalDataToTooltip } from "../uss/utils";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 
 import * as nls from "vscode-nls";
@@ -391,7 +391,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(download = false, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
         await ussFileProvider.checkCurrentProfile(this);
-        if (Profiles.getInstance().validProfile === 0) {
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             try {
                 let label: string;
                 switch (this.getParent().contextValue) {

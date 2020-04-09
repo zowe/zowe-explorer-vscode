@@ -21,7 +21,7 @@ import * as vscode from "vscode";
 import * as testConst from "../../resources/testProfileData";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as globals from "../../src/globals";
+import { USS_SESSION_CONTEXT } from "../../src/globals";
 
 declare var it: any;
 
@@ -41,7 +41,7 @@ describe("USSTree Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
          null, session, "", false, testProfile.name);
-    sessNode.contextValue = globals.USS_SESSION_CONTEXT;
+    sessNode.contextValue = USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
     const testTree = new USSTree();

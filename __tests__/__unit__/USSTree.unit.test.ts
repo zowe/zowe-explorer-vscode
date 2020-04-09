@@ -24,7 +24,7 @@ import { USSTree, createUSSTree } from "../../src/uss/USSTree";
 import * as utils from "../../src/utils";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as globals from "../../src/globals";
-import { Profiles } from "../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { IZoweTree } from "../../src/api/IZoweTree";
 import { IZoweUSSTreeNode } from "../../src/api/IZoweTreeNode";
 
@@ -131,7 +131,7 @@ describe("Unit Tests (Jest)", () => {
             return {
                 allProfiles: [profileOne, {name: "secondName"}],
                 getDefaultProfile: mockDefaultProfile,
-                validProfile: 0,
+                validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(),
                 loadNamedProfile: mockLoadNamedProfile
             };
@@ -533,7 +533,7 @@ describe("Unit Tests (Jest)", () => {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     getDefaultProfile: mockDefaultProfile,
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                 };
             })
@@ -752,7 +752,7 @@ describe("Unit Tests (Jest)", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
@@ -792,7 +792,7 @@ describe("Unit Tests (Jest)", () => {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
@@ -871,7 +871,7 @@ describe("Unit Tests (Jest)", () => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
@@ -924,7 +924,7 @@ describe("Unit Tests (Jest)", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn()
                 };
             })

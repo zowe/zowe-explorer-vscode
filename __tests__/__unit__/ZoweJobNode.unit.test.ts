@@ -202,7 +202,7 @@ describe("Zos Jobs Unit Tests", () => {
                         allProfiles: [{name: "firstProfileName", type:"zosmf"}, {name: "fake", type:"zosmf"}],
                         getDefaultProfile: mockLoadDefaultProfile,
                         loadNamedProfile: mockLoadNamedProfile,
-                        validProfile: 0,
+                        validProfile: profileLoader.ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fakeUser","","fakeEncoding"];
@@ -520,7 +520,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             showInputBox.mockReturnValueOnce("");
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(profileLoader.Profiles.getInstance().validProfile).toBe(0);
+            expect(profileLoader.Profiles.getInstance().validProfile).toBe(profileLoader.ValidProfileEnum.VALID);
         });
 
         it("Testing the jobs prompt credentials error", async () => {
@@ -529,7 +529,7 @@ describe("Zos Jobs Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         getDefaultProfile: () => ({name: "firstName"}),
-                        validProfile: -1,
+                        validProfile: profileLoader.ValidProfileEnum.INVALID,
                         checkCurrentProfile: jest.fn()
                     };
                 })
@@ -542,7 +542,7 @@ describe("Zos Jobs Unit Tests", () => {
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             testJobsProvider.initializeJobsTree(Logger.getAppLogger());
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(profileLoader.Profiles.getInstance().validProfile).toBe(-1);
+            expect(profileLoader.Profiles.getInstance().validProfile).toBe(profileLoader.ValidProfileEnum.INVALID);
         });
 
         it("Testing that user filter prompts are executed successfully theia specific route", async () => {

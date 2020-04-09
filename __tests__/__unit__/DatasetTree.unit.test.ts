@@ -26,7 +26,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
-import { Profiles } from "../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import * as globals from "../../src/globals";
 import * as fs from "fs";
 
@@ -162,7 +162,7 @@ describe("DatasetTree Unit Tests", () => {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(),
                     updateProfile: jest.fn()
@@ -864,7 +864,7 @@ describe("DatasetTree Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
@@ -908,7 +908,7 @@ describe("DatasetTree Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["", "", ""];
@@ -970,7 +970,7 @@ describe("DatasetTree Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     loadNamedProfile: jest.fn(()=> {
                         return null;
@@ -1019,7 +1019,7 @@ describe("DatasetTree Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(),
                 };
             })

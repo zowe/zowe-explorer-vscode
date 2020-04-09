@@ -24,7 +24,7 @@ import * as jobActions from "../../src/job/actions";
 import * as ussActions from "../../src/uss/actions";
 import * as sharedActions from "../../src/shared/actions";
 import * as sharedUtils from "../../src/shared/utils";
-import * as profileLoader from "../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import * as treeMock from "../../src/__mocks__/DatasetTree";
 import * as treeUSSMock from "../../src/__mocks__/USSTree";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
@@ -122,16 +122,16 @@ describe("Extension Unit Tests", () => {
         defaultProfile: {name: "firstName"},
         getDefaultProfile: mockLoadNamedProfile,
         loadNamedProfile: mockLoadNamedProfile,
-        validProfile: 0,
+        validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(),
         usesSecurity: jest.fn().mockReturnValue(true)
     };
-    Object.defineProperty(profileLoader.Profiles, "createInstance", {
+    Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => {
             return profileOps;
         })
     });
-    Object.defineProperty(profileLoader.Profiles, "getInstance", {
+    Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return profileOps;
         })
@@ -505,12 +505,12 @@ describe("Extension Unit Tests", () => {
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     getDefaultProfile: mockLoadNamedProfile,
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(),
@@ -1031,12 +1031,12 @@ describe("Extension Unit Tests", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
         beforeEach(() => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [profileOne, {name: "secondName"}],
                         defaultProfile: profileOne,
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         createNewConnection: jest.fn(()=>{
                             return {newprofile: "fake"};
@@ -1208,7 +1208,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -1248,7 +1248,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -1408,12 +1408,12 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests the createFile for prompt credentials", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
@@ -1496,12 +1496,12 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests the createFile for prompt credentials, favorite route", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
@@ -1579,13 +1579,13 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests the createFile for prompt credentials error", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                 };
             })
@@ -1885,7 +1885,7 @@ describe("Extension Unit Tests", () => {
         expect(getSessionSpy.mock.results[0].value).toEqual(sessionwocred);
 
         // testing if no documentSession is found (no session + no profile)
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -1903,7 +1903,7 @@ describe("Extension Unit Tests", () => {
 
         testTree.getChildren.mockReset();
         createBasicZosmfSession.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
@@ -2293,7 +2293,7 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -2302,7 +2302,7 @@ describe("Extension Unit Tests", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     getProfiles: jest.fn(),
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
@@ -2332,7 +2332,7 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -2341,7 +2341,7 @@ describe("Extension Unit Tests", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                 };
             })
@@ -2370,12 +2370,12 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
@@ -2383,7 +2383,7 @@ describe("Extension Unit Tests", () => {
         });
 
         await dsActions.openPS(dsNode, true, testTree);
-        expect(profileLoader.Profiles.getInstance().validProfile).toBe(-1);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showInformationMessage.mockReset();
@@ -2405,12 +2405,12 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
         dsNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
@@ -2759,7 +2759,7 @@ describe("Extension Unit Tests", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
         beforeEach(() => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3004,7 +3004,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3044,7 +3044,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3090,7 +3090,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3101,7 +3101,7 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
@@ -3205,7 +3205,7 @@ describe("Extension Unit Tests", () => {
 
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3216,7 +3216,7 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
@@ -3259,7 +3259,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3270,7 +3270,7 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
@@ -3326,7 +3326,7 @@ describe("Extension Unit Tests", () => {
         ussFile.mockReturnValueOnce(fileResponse);
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
         dsNode.contextValue = globals.USS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -3335,7 +3335,7 @@ describe("Extension Unit Tests", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                 };
             })
@@ -3364,7 +3364,7 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
         dsNode.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -3373,7 +3373,7 @@ describe("Extension Unit Tests", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                 };
             })
@@ -3404,12 +3404,12 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
         dsNode.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
@@ -3423,7 +3423,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         const spyopenUSS = jest.spyOn(dsNode, "openUSS");
         await dsNode.openUSS(false, true, testUSSTree);
-        expect(profileLoader.Profiles.getInstance().validProfile).toBe(-1);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
     });
 
     it("Testing that that openUSS credentials prompt ends in error", async () => {
@@ -3441,12 +3441,12 @@ describe("Extension Unit Tests", () => {
         });
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
         dsNode.contextValue = globals.USS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
@@ -3454,7 +3454,7 @@ describe("Extension Unit Tests", () => {
         });
 
         await dsNode.openUSS(false, true, testUSSTree);
-        expect(profileLoader.Profiles.getInstance().validProfile).toBe(-1);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showInformationMessage.mockReset();
@@ -3564,7 +3564,7 @@ describe("Extension Unit Tests", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
         beforeEach(() => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3594,12 +3594,12 @@ describe("Extension Unit Tests", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
@@ -3626,12 +3626,12 @@ describe("Extension Unit Tests", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
@@ -3657,12 +3657,12 @@ describe("Extension Unit Tests", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
@@ -3689,12 +3689,12 @@ describe("Extension Unit Tests", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
@@ -3715,12 +3715,12 @@ describe("Extension Unit Tests", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                     };
                 })
@@ -3889,7 +3889,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addJobsSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3929,7 +3929,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addJobsSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3999,10 +3999,10 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the spool content is opened in a new document", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     loadNamedProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(),
                 };
@@ -4015,13 +4015,13 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the spool content is not opened in a new document", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
@@ -4050,11 +4050,11 @@ describe("Extension Unit Tests", () => {
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
         newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: 0,
+                    validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
@@ -4084,12 +4084,12 @@ describe("Extension Unit Tests", () => {
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
         newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: -1,
+                    validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
@@ -4097,7 +4097,7 @@ describe("Extension Unit Tests", () => {
         });
 
         await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
-        expect(profileLoader.Profiles.getInstance().validProfile).toBe(-1);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showErrorMessage.mockReset();
     });
 

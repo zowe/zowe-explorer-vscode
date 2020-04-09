@@ -14,7 +14,7 @@ import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { ZosmfSession, IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger } from "@zowe/imperative";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { Job } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, labelHack } from "../shared/utils";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling, } from "../utils";
@@ -302,7 +302,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             sesNamePrompt = node.label;
         }
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === 0) {
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (node.contextValue === globals.JOBS_SESSION_CONTEXT) { // This is the profile object context
                 if (hasHistory) { // Check if user has created some history
                     const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
