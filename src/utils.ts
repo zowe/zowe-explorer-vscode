@@ -11,7 +11,7 @@
 
 import { TreeItem, QuickPickItem, QuickPick, window, TreeItemCollapsibleState } from "vscode";
 import * as path from "path";
-import { ISession } from "@zowe/imperative";
+import { ISession, IProfile } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
 import * as extension from "../src/extension";
 import * as nls from "vscode-nls";
@@ -149,17 +149,25 @@ export function refreshTree(sessNode: IZoweTreeNode) {
     const allProf = Profiles.getInstance().getProfiles();
     for (const profNode of allProf) {
         if (sessNode.getProfileName() === profNode.name) {
-            sessNode.getProfile().profile = profNode.profile;
+            setProfile(sessNode, profNode.profile);
             const SessionProfile = profNode.profile as ISession;
             if (sessNode.getSession().ISession !== SessionProfile) {
-                sessNode.getSession().ISession.user = SessionProfile.user;
-                sessNode.getSession().ISession.password = SessionProfile.password;
-                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                sessNode.getSession().ISession.port = SessionProfile.port;
-                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+                setSession(sessNode, SessionProfile);
             }
         }
     }
     sessNode.collapsibleState = TreeItemCollapsibleState.Collapsed;
+}
+
+export async function setProfile(node: IZoweTreeNode, profile: IProfile) {
+    node.getProfile().profile= profile;
+}
+
+export async function setSession(node: IZoweTreeNode, session: ISession) {
+    node.getSession().ISession.user = session.user;
+    node.getSession().ISession.password = session.password;
+    node.getSession().ISession.hostname = session.hostname;
+    node.getSession().ISession.port = session.port;
+    node.getSession().ISession.base64EncodedAuth = session.base64EncodedAuth;
+    node.getSession().ISession.rejectUnauthorized = session.rejectUnauthorized;
 }

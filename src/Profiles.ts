@@ -423,50 +423,5 @@ export class Profiles {
         }
         return profileManager;
     }
-
-    /* function for Input Box. This will be called by Profile Functions Add, Edit, Prompt and Delete? No idea.*/
-
-    private async showInputBox({title, placeholder, prompt, value, step, totalSteps, ignoreFocusOut, previousStep}) {
-
-        const input = vscode.window.createInputBox();
-
-        input.title = title;
-        input.placeholder = placeholder;
-        input.prompt = prompt;
-        input.ignoreFocusOut = ignoreFocusOut;
-        input.value = value;
-        input.step = step;
-        input.totalSteps = totalSteps;
-        if (input.step > 1) {
-            input.buttons = [vscode.QuickInputButtons.Back];
-        }
-
-        input.show();
-        value = await this.validateInput(input, previousStep);
-        input.dispose();
-
-        return value;
-
-    }
-
-    private async validateInput(input, prev?): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve) => {
-
-            input.onDidTriggerButton((item) => {
-                if (item === vscode.QuickInputButtons.Back) {
-                    resolve(this.showInputBox(prev)); // Back is working but it doesn't continue :(
-                }
-            });
-            input.onDidHide(() => { resolve(input.value); });
-            input.onDidAccept(() => {
-                if (input.value) {
-                    resolve(input.value);
-                } else {
-                    input.validationMessage = localize("createNewConnection.invalidzosmfURL",
-                        "Please enter a User Name");
-                }
-            });
-        });
-    }
 }
 

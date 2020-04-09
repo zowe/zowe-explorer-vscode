@@ -9,8 +9,17 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger } from "@zowe/imperative";
-import { FilterItem, FilterDescriptor, getAppName, resolveQuickPickHelper, sortTreeItems, errorHandling } from "./utils";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import {
+    FilterItem,
+    FilterDescriptor,
+    getAppName,
+    resolveQuickPickHelper,
+    sortTreeItems,
+    errorHandling,
+    setProfile,
+    setSession
+ } from "./utils";
 import * as path from "path";
 import * as vscode from "vscode";
 import { IZoweTree } from "./api/IZoweTree";
@@ -529,7 +538,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public async editSession(node: IZoweUSSTreeNode) {
         const profile = node.getProfile();
         const profilename = node.getProfileName();
-        Profiles.getInstance().editSession(profile, profilename);
+        const EditSession = await Profiles.getInstance().editSession(profile, profilename);
+
+        if (EditSession) {
+            node.getProfile().profile= EditSession as IProfile;
+            setProfile(node, EditSession as IProfile);
+            setSession(node, EditSession as ISession);
+            this.refresh();
+        }
     }
 
     /**

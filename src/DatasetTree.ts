@@ -9,20 +9,30 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, IProfile } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as fs from "fs";
 import * as extension from "../src/extension";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { sortTreeItems, FilterDescriptor, FilterItem, getAppName, resolveQuickPickHelper, errorHandling } from "./utils";
+import {
+    sortTreeItems,
+    FilterDescriptor,
+    FilterItem,
+    getAppName,
+    resolveQuickPickHelper,
+    errorHandling,
+    setProfile,
+    setSession
+ } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweDatasetTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconByNode } from "./generators/icons";
 import { closeOpenedTextFile } from "./utils/workspace";
+
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -253,12 +263,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
         if (EditSession) {
             node.getProfile().profile= EditSession as IProfile;
-            node.getSession().ISession.user = EditSession.user;
-            node.getSession().ISession.password = EditSession.password;
-            node.getSession().ISession.hostname = EditSession.host;
-            node.getSession().ISession.port = EditSession.port;
-            node.getSession().ISession.base64EncodedAuth = EditSession.base64EncodedAuth;
-            node.getSession().ISession.rejectUnauthorized = EditSession.rejectUnauthorized;
+            setProfile(node, EditSession as IProfile);
+            setSession(node, EditSession as ISession);
             this.refresh();
         }
     }

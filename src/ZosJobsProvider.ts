@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { ZosmfSession, IJob } from "@zowe/cli";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
 import { Job } from "./ZoweJobNode";
 import {
@@ -23,7 +23,9 @@ import {
     resolveQuickPickHelper,
     sortTreeItems,
     errorHandling,
-    labelHack
+    labelHack,
+    setProfile,
+    setSession
 } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweJobTreeNode } from "./api/IZoweTreeNode";
@@ -467,7 +469,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async editSession(node: IZoweJobTreeNode) {
         const profile = node.getProfile();
         const profilename = node.getProfileName();
-        Profiles.getInstance().editSession(profile, profilename);
+        const EditSession = await Profiles.getInstance().editSession(profile, profilename);
+
+        if (EditSession) {
+            node.getProfile().profile= EditSession as IProfile;
+            setProfile(node, EditSession as IProfile);
+            setSession(node, EditSession as ISession);
+            this.refresh();
+        }
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
