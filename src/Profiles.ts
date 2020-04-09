@@ -133,14 +133,19 @@ export class Profiles {
     }
 
     public async getProfileType(): Promise<string> {
+        let profileType: string;
         const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
         const typeOptions = Array.from(profTypes);
-        const quickPickTypeOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type"),
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-        const profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+        if (typeOptions.length === 1 && typeOptions[0] === "zosmf") {
+            profileType = typeOptions[0];
+        } else {
+            const quickPickTypeOptions: vscode.QuickPickOptions = {
+                placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type"),
+                ignoreFocusOut: true,
+                canPickMany: false
+            };
+            profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+        }
         return profileType;
     }
 
