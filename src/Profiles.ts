@@ -34,6 +34,11 @@ let IConnection: {
     rejectUnauthorized: boolean;
 };
 
+export enum ValidProfileEnum {
+    VALID = 0,
+    INVALID = -1
+}
+
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
@@ -50,7 +55,7 @@ export class Profiles {
 
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
-    public validProfile: number = -1;
+    public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -78,12 +83,12 @@ export class Profiles {
                 theProfile.profile.user = this.usrNme;
                 theProfile.profile.password = this.passWrd;
                 theProfile.profile.base64EncodedAuth = this.baseEncd;
-                this.validProfile = 0;
+                this.validProfile = ValidProfileEnum.VALID;
             } else {
                 return;
             }
         } else {
-            this.validProfile = 0;
+            this.validProfile = ValidProfileEnum.VALID;
         }
     }
 

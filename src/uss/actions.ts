@@ -17,7 +17,7 @@ import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { labelHack, refreshTree, concatChildNodes } from "../shared/utils";
 import { errorHandling } from "../utils";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
@@ -62,7 +62,7 @@ export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: 
 
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await ussFileProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === 0) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: `What would you like to create at ${node.fullPath}?`,
             ignoreFocusOut: true,

@@ -18,7 +18,7 @@ import { sortTreeItems, getAppName } from "../shared/utils";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -322,7 +322,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let sessionNode = node.getSessionNode();
         let remotepath: string;
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === 0) {
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (node.contextValue === globals.USS_SESSION_CONTEXT) {
                 if (this.mHistory.getHistory().length > 0) {
 

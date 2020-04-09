@@ -20,7 +20,7 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -134,7 +134,7 @@ describe("ussNodeActions", () => {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
-                validProfile: 0,
+                validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(),
                 loadNamedProfile: mockLoadNamedProfile
             };
@@ -258,7 +258,7 @@ describe("ussNodeActions", () => {
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
@@ -292,7 +292,7 @@ describe("ussNodeActions", () => {
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
@@ -319,7 +319,7 @@ describe("ussNodeActions", () => {
                             profile: {user: undefined, password: undefined}
                         }, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
-                        validProfile: 0,
+                        validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                     };
                 })

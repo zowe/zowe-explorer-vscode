@@ -17,7 +17,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { errorHandling } from "../utils";
 import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix } from "../shared/utils";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
 import { TextUtils, IProfileLoaded, Session } from "@zowe/imperative";
@@ -137,7 +137,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
     //     sesNamePrompt = node.getLabel();
     // }
     if (datasetProvider) { await datasetProvider.checkCurrentProfile(node); }
-    if (Profiles.getInstance().validProfile === 0) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         try {
             let label: string;
             switch (node.getParent().contextValue) {
@@ -216,7 +216,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
     // }
 
     datasetProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === 0) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         // get data set type
         const type = await vscode.window.showQuickPick(types, quickPickOptions);
         if (type == null) {

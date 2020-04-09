@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils";
 import { labelHack, refreshTree } from "../shared/utils";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
@@ -78,7 +78,7 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
     await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
-    if (Profiles.getInstance().validProfile === 0) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         try {
             const uri = encodeJobFile(session, spool);
             const document = await vscode.workspace.openTextDocument(uri);
@@ -103,7 +103,7 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
         sesNamePrompt = node.label;
     }
     jobsProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === 0) {
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         await jobsProvider.refreshElement(node);
     }
 }
