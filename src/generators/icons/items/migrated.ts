@@ -11,13 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../utils/icon";
-import { isSessionFavorite } from "../../../utils/context";
+import { isMigrated } from "../../../utils/context";
 
-const icon: IIconItem = {
-    id: IconId.sessionFavourite,
+const migrated: IIconItem = {
+    id: IconId.migrated,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("folder-root-favorite-closed.svg"),
-    check: (node) =>  isSessionFavorite(node)
+    path: getIconPathInResources("migrated.svg"),
+    check: (node) => isMigrated(node)
 };
 
-export default icon;
+export default migrated;
