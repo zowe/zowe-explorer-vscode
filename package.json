@@ -996,7 +996,7 @@
     "test": "npm run test:unit",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
-    "update": "node stringUpdateScript.js",
+    "update": "node scripts/stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
     "watch": "tsc -b --watch --pretty",
