@@ -39,6 +39,7 @@ import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { getIconByNode } from "./generators/icons";
 import { getMessageByNode, MessageContentType } from "./generators/messages";
 import * as contextually from "./utils/context";
+import { linkProfileDialog } from "./utils/links";
 
 // Localization support
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -64,7 +65,7 @@ export const DS_TEXT_FILE_CONTEXT = "textFile";
 export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
 export const DS_BINARY_FILE_CONTEXT = "binaryFile";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
-export const USS_SESSION_CONTEXT = "uss_session";
+export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
 export const JOBS_SESSION_CONTEXT = "server";
@@ -72,6 +73,7 @@ export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
+export const VSAM_CONTEXT = "vsam";
 
 let usrNme: string;
 let passWrd: string;
@@ -200,6 +202,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         });
         vscode.commands.registerCommand("zowe.createDataset", (node) => createFile(node, datasetProvider));
+        vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile(), log));
         vscode.commands.registerCommand("zowe.createMember", (node) => createMember(node, datasetProvider));
         vscode.commands.registerCommand("zowe.deleteDataset", (node) => deleteDataset(node, datasetProvider));
         vscode.commands.registerCommand("zowe.deletePDS", (node) => deleteDataset(node, datasetProvider));

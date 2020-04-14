@@ -114,6 +114,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
+        const vsamCluster: Map<string, boolean>= new Map();
+        const vsamReferences: Map<string, boolean> = new Map();
         responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
@@ -134,6 +136,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
                                                      this, null, extension.DS_MIGRATED_FILE_CONTEXT,
                         undefined, this.getProfile());
+                    elementChildren[temp.label] = temp;
+                // Creates a ZoweDatasetNode for a VSAM file
+                } else if (item.dsorg === "VS") {
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
+                                                    this, null, extension.VSAM_CONTEXT, undefined, this.getProfile());
+                    // if (item.vol === "*VSAM*") {
+                    //     vsamCluster[temp.label] = temp;
+                    // } else {
+                    //     vsamReferences[temp.label] = temp;
+                    // }
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweDatasetNode for a PS
@@ -156,6 +168,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return this.children = [new ZoweDatasetNode(localize("getChildren.noDataset", "No datasets found"),
             vscode.TreeItemCollapsibleState.None, this, null, extension.INFORMATION_CONTEXT)];
         } else {
+            // vsamReferences.forEach((value: boolean, key: string) => {
+            //     console.log(key, value);
+            // });
             return this.children = Object.keys(elementChildren).sort().map((labels) => elementChildren[labels]);
         }
     }

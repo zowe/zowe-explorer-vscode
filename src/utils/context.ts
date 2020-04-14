@@ -98,7 +98,16 @@ export function isBinary(node: TreeItem): boolean {
 export function isDocument(node: TreeItem): boolean {
     return new RegExp("^(" + extension.DS_DS_CONTEXT + "|" + extension.DS_MEMBER_CONTEXT + "|"
                           + extension.DS_TEXT_FILE_CONTEXT + "|" + extension.JOBS_SPOOL_CONTEXT + "|"
-                        + extension.DS_MIGRATED_FILE_CONTEXT + "|" + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+                        + "|" + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is migrated
+ * @param node
+ * @return true if a migrated dataset, false otherwise
+ */
+export function isMigrated(node: TreeItem): boolean {
+    return new RegExp("^(" + extension.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -212,9 +221,17 @@ export function isSessionNotFav(node: TreeItem): boolean {
  * @return true if a session favorite, false otherwise
  */
 export function isSessionFavorite(node: TreeItem): boolean {
-   // return isSession(node) && isFavorite(node);
    return new RegExp("^(" + extension.FAVORITE_CONTEXT + ")").test(node.contextValue);
 }
+
+/**
+ * Helper function which identifies if the node is Vsam
+ * @param node
+ * @return true if a vsam file, false otherwise
+ */
+export function isVsam(node: TreeItem): boolean {
+    return new RegExp("^(" + extension.VSAM_CONTEXT + ")").test(node.contextValue);
+ }
 
 /**
  * Helper function create the favorite version of a node

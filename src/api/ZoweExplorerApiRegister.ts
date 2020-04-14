@@ -13,6 +13,7 @@ import { IProfileLoaded } from "@zowe/imperative";
 
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -61,6 +62,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     public static getJesApi(profile: IProfileLoaded): ZoweExplorerApi.IJes {
         return ZoweExplorerApiRegister.getInstance().getJesApi(profile);
+    }
+
+    /**
+     * Static lookup of generic extender API implementation.
+     * @private
+     * @returns an instance of the API
+     */
+    public static getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
+        return ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
     }
 
     /**
@@ -216,5 +226,14 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             throw new Error(
                 localize("getJesApi.error", "Internal error: Tried to call a non-existing JES API in API register: ") + profile.type);
         }
+    }
+
+    /**
+     * Lookup of an API implementation for JES for a given profile.
+     * @param {IProfileLoaded} profile
+     * @returns an instance of the API for the profile provided
+     */
+    public getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
+        return ZoweExplorerExtender.getInstance();
     }
 }
