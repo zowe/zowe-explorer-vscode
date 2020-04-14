@@ -2022,12 +2022,7 @@ describe("Extension Unit Tests", () => {
         };
         dataSet.mockResolvedValue(downloadResponse);
 
-        try {
-            
-            await extension.saveFile(testDoc, testTree);
-        } catch (error) {
-            console.log(error)
-        }
+        await extension.saveFile(testDoc, testTree);
         expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
         expect(concatChildNodes.mock.calls.length).toBe(1);
     });
