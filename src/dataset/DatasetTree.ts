@@ -22,6 +22,7 @@ import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconByNode } from "../generators/icons";
+import * as contextually from "../shared/context";
 import * as fs from "fs";
 
 import * as nls from "vscode-nls";
@@ -160,7 +161,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             this.mFavoriteSession, session, undefined, undefined, profile);
                         node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
                     }
-                    node.contextValue += globals.FAV_SUFFIX;
+                    node.contextValue = contextually.asFavorite(node);
                     const icon = getIconByNode(node);
                     if (icon) {
                         node.iconPath = icon.path;
@@ -271,14 +272,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async addFavorite(node: IZoweDatasetTreeNode) {
         let temp: ZoweDatasetNode;
-        if (node.contextValue === globals.DS_MEMBER_CONTEXT) {
-            if (node.getParent().contextValue === globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX) {
+        if (contextually.isDsMember(node)) {
+            if (contextually.isFavoritePds(node.getParent())) {
                 vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
             this.addFavorite(node.getParent());
             return;
-        } else if (node.contextValue === globals.DS_SESSION_CONTEXT) {
+        } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
             temp.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
@@ -291,8 +292,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
-            temp.contextValue += globals.FAV_SUFFIX;
-            if (temp.contextValue === globals.DS_DS_CONTEXT + globals.FAV_SUFFIX) {
+            temp.contextValue = contextually.asFavorite(temp);
+            if (contextually.isFavoriteDs(temp)) {
                 temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
             }
 
@@ -385,7 +386,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async updateFavorites() {
         const settings = this.mFavorites.map((fav) =>
-            fav.label + "{" + fav.contextValue.substring(0, fav.contextValue.indexOf(globals.FAV_SUFFIX)) + "}"
+            fav.label + "{" + contextually.getBaseContext(fav) + "}"
         );
         this.mHistory.updateFavorites(settings);
     }
@@ -539,7 +540,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let pattern: string;
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            if (node.contextValue === globals.DS_SESSION_CONTEXT) {
+            if (contextually.isDsSession(node)) {
                 if (this.mHistory.getHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
@@ -629,7 +630,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let dataSetName;
         let profileLabel;
 
-        if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
+        if (contextually.isFavorite(node.getParent())) {
             profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
             dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
         } else {
@@ -650,7 +651,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 throw err;
             }
             let otherParent;
-            if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
+            if (contextually.isFavorite(node)) {
                 otherParent = this.findNonFavoritedNode(node.getParent());
             } else {
                 otherParent = this.findFavoritedNode(node.getParent());
@@ -683,7 +684,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let favPrefix = "";
         let isFavourite;
 
-        if (node.contextValue.includes(globals.FAV_SUFFIX)) {
+        if (contextually.isFavorite(node)) {
             isFavourite = true;
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);

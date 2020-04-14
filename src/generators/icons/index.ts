@@ -24,7 +24,8 @@ export enum IconId {
     "sessionFavourite" = "sessionFavourite",
     "sessionFavouriteOpen" = "sessionFavouriteOpen",
     "folder" = "folder",
-    "folderOpen" = "folderOpen"
+    "folderOpen" = "folderOpen",
+    "migrated" = "migrated"
 }
 export enum IconHierarchyType {
     "base" = "base",
@@ -50,7 +51,8 @@ const items = [
     require("./items/sessionFavourite"),
     require("./items/sessionFavouriteOpen"),
     require("./items/folder"),
-    require("./items/folderOpen")
+    require("./items/folderOpen"),
+    require("./items/migrated")
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {

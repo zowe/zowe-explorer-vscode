@@ -756,7 +756,7 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems",
+            "zowe.searchInAllLoadedItems"
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);

@@ -14,6 +14,7 @@ import * as globals from "../globals";
 import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils";
 import { labelHack, refreshTree } from "../shared/utils";
+import * as contextually from "../shared/context";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
@@ -96,12 +97,12 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
  * @param jobsProvider The tree to which the refreshed node belongs
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    let sesNamePrompt: string;
-    if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-        sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-    } else {
-        sesNamePrompt = node.label;
-    }
+    // let sesNamePrompt: string;
+    // if (contextually.isFavorite(node)) {
+    //     sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
+    // } else {
+    //     sesNamePrompt = node.label;
+    // }
     jobsProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         await jobsProvider.refreshElement(node);

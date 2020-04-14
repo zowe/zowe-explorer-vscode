@@ -11,13 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import { isDocument } from "../../../shared/context";
+import { isMigrated } from "../../../shared/context";
 
-const icon: IIconItem = {
-    id: IconId.document,
+const migrated: IIconItem = {
+    id: IconId.migrated,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("document.svg"),
-    check: (node) => isDocument(node)
+    path: getIconPathInResources("migrated.svg"),
+    check: (node) => isMigrated(node)
 };
 
-export default icon;
+export default migrated;
