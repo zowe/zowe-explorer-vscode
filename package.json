@@ -533,7 +533,7 @@
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.deleteDataset",
           "group": "6_modification@2"
-        },        
+        },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
@@ -712,7 +712,7 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.addFavorite",
           "group": "4_workspace"
-        },    
+        },
         {
           "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
@@ -1044,6 +1044,7 @@
     "jsdom": "^16.0.0",
     "keytar": "^5.0.0",
     "log4js": "3.0.5",
+    "madge": "^3.8.0",
     "markdownlint-cli": "^0.16.0",
     "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
