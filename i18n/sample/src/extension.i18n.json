@@ -90,7 +90,6 @@
     "saveFile.log.debug.sessionNode": "couldn't find session node, loading profile with CLI profile manager",
     "saveFile.log.debug.saving": "Saving file ",
     "saveFile.error.saveFailed": "Data set failed to save. Data set may have been deleted on mainframe.",
-    "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
     "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",
     "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",
     "saveUSSFile.response.title": "Saving file...",
