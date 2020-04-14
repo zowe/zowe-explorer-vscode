@@ -14,6 +14,7 @@ import * as zowe from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
+import * as contextually from "../shared/context";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { labelHack, refreshTree, concatChildNodes } from "../shared/utils";
 import { errorHandling } from "../utils";
@@ -82,7 +83,7 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await Profiles.getInstance().refresh();
     ussFileProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === globals.USS_SESSION_CONTEXT) {
+        if (contextually.isUssSession(sessNode)) {
             labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
@@ -101,7 +102,7 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
  */
 export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
     // Could be a favorite or regular entry always deal with the regular entry
-    const isFav = originalNode.contextValue.endsWith(globals.FAV_SUFFIX);
+    const isFav = contextually.isFavorite(originalNode);
     const oldLabel = originalNode.label;
     const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
     // Check if an old favorite exists for this node

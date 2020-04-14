@@ -730,7 +730,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
         if (memberName) {
             datasetProvider.refreshElement(node);
             let node2;
-            if (node.contextValue.includes(globals.FAV_SUFFIX)) {
+            if (contextually.isFavorite(node)) {
                 node2 = datasetProvider.findNonFavoritedNode(node);
             } else {
                 node2 = datasetProvider.findFavoritedNode(node);
