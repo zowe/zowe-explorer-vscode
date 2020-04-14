@@ -14,9 +14,16 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as globals from "./globals";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
+import { DatasetTree } from "./dataset/DatasetTree";
+import { ZosJobsProvider } from "./job/ZosJobsProvider";
+import { USSTree } from "./uss/USSTree";
+import { IZoweTree } from "./api/IZoweTree";
+import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode } from "./api/IZoweTreeNode";
+
 import * as nls from "vscode-nls";
-import { errorHandling, getZoweDir } from "./utils";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
@@ -335,6 +342,160 @@ export class Profiles {
             await this.updateProfile(loadProfile);
         }
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+    }
+
+    /**
+     * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
+     * selecting which profile you would like to add from the drop-down that appears.
+     * The profiles that are in the tree view already will not appear in the drop-down.
+     *
+     * @export
+     * @param {USSTree} zoweNodeProvider - either the USS, MVS, JES tree
+     */
+    public async addZoweSession(zoweNodeProvider: IZoweTree<IZoweDatasetTreeNode|IZoweUSSTreeNode|IZoweJobTreeNode>) {
+        const allProfiles = Profiles.getInstance().allProfiles;
+
+        // Get all profiles
+        let profileNamesList = allProfiles.map((profile) => {
+            return profile.name;
+        });
+
+        // Filter to list of the APIs available for current tree explorer
+        profileNamesList = this.filterProfileNames(zoweNodeProvider, profileNamesList);
+
+        // Select a profile regardless of whether we are in Theia or not
+        // IFF this function is made into a class, sharing information would be simpler between functions. Also functions will be properly protected
+        const { chosenProfile, quickpickValue } = await this.selectProfile(profileNamesList);
+
+        if (chosenProfile === "") {
+          // Create profile
+          await this.createProfile(zoweNodeProvider, quickpickValue);
+        } else if (chosenProfile) {
+            globals.LOG.debug(localize("addZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
+            await zoweNodeProvider.addSession(chosenProfile);
+        } else {
+            globals.LOG.debug(localize("addZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+        }
+    }
+
+    /**
+     * Filter the list of profile names based on APIs available for current tree explorer
+     *
+     * @param zoweNodeProvider - either the USS, MVS, JES tree
+     * @param profileNamesList - List of all profile names
+     */
+    private filterProfileNames(zoweNodeProvider: IZoweTree<IZoweDatasetTreeNode|IZoweUSSTreeNode|IZoweJobTreeNode>, profileNamesList: string[]) {
+        // Filter to list of the APIs available for current tree explorer
+        let returnList = profileNamesList.filter((profileName) => {
+            const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (zoweNodeProvider instanceof USSTree) {
+                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                return ussProfileTypes.includes(profile.type);
+            }
+            if (zoweNodeProvider instanceof DatasetTree) {
+                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                return mvsProfileTypes.includes(profile.type);
+            }
+            if (zoweNodeProvider instanceof ZosJobsProvider) {
+                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                return jesProfileTypes.includes(profile.type);
+            }
+        });
+
+        if (returnList) {
+            returnList = returnList.filter((profileName) =>
+                // Find all cases where a profile is not already displayed
+                !zoweNodeProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName )
+            );
+        }
+        return returnList;
+    }
+
+    /**
+     * Select a profile regardless of whether we are in Thei or not
+     *
+     * @param profileNamesList - List of filtered profile names
+     */
+    private async selectProfile(profileNamesList: string[]) {
+        const createNewProfile = "Create a New Connection to z/OS";
+
+        let chosenProfile = "";
+        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
+        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const quickpick = vscode.window.createQuickPick();
+        const placeholder = localize("addSession.quickPickOption",
+            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
+
+        if (globals.ISTHEIA) {
+            const options: vscode.QuickPickOptions = {
+                placeHolder: placeholder
+            };
+            // get user selection
+            const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            chosenProfile = choice === createPick ? "" : choice.label;
+        } else {
+            quickpick.items = [createPick, ...items];
+            quickpick.placeholder = placeholder;
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                chosenProfile = "";
+            } else {
+                chosenProfile = choice.label;
+            }
+        }
+
+        const quickpickValue = quickpick.value ? quickpick.value : "";
+        return { chosenProfile, quickpickValue };
+    }
+
+    /**
+     * Create a user connection/profile based on the information entered by the user
+     *
+     * @param zoweNodeProvider - either the USS, MVS, JES tree
+     * @param quickpickValue - Name entered by the user
+     */
+    private async createProfile(zoweNodeProvider: IZoweTree<IZoweDatasetTreeNode|IZoweUSSTreeNode|IZoweJobTreeNode>, quickpickValue: string) {
+        let newprofile: any;
+        let profileName: string;
+        if (quickpickValue) {
+            profileName = quickpickValue;
+        }
+
+        const options = {
+            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+            value: profileName
+        };
+        profileName = await vscode.window.showInputBox(options);
+        if (!profileName) {
+            vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                "Profile Name was not supplied. Operation Cancelled"));
+            return;
+        }
+        globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+        try {
+            newprofile = await Profiles.getInstance().createNewConnection(profileName.trim());
+        } catch (error) { errorHandling(error, profileName.trim(), error.message); }
+        if (newprofile) {
+            try {
+                await Profiles.getInstance().refresh();
+            } catch (error) {
+                errorHandling(error, newprofile, error.message);
+            }
+            await zoweNodeProvider.addSession(newprofile);
+            zoweNodeProvider.refresh();
+        }
     }
 
     private async updateProfile(ProfileInfo) {

@@ -32,6 +32,7 @@ import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { IZoweTreeNode } from "../../src/api/IZoweTreeNode";
 import { USS_DIR, DS_SESSION_CONTEXT, DS_DIR, ZOWETEMPFOLDER, FAV_SUFFIX, DS_PDS_CONTEXT,
     DS_MEMBER_CONTEXT, DS_DS_CONTEXT, USS_SESSION_CONTEXT, FAVORITE_CONTEXT } from "../../src/globals";
+import { Profiles } from "../../src/Profiles";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -110,7 +111,7 @@ describe("Extension Integration Tests", () => {
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
-            await utils.addZoweSession(testTree);
+            await Profiles.getInstance().addZoweSession(testTree);
             expect(testTree.mSessionNodes[testTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });
@@ -876,7 +877,7 @@ describe("Extension Integration Tests - USS", () => {
             const stubresolve = sandbox.stub(utils, "resolveQuickPickHelper");
             stubresolve.returns(new utils.FilterItem(profileNamesList[0]));
 
-            await utils.addZoweSession(ussTestTree);
+            await Profiles.getInstance().addZoweSession(ussTestTree);
             expect(ussTestTree.mSessionNodes[ussTestTree.mSessionNodes.length - 1].label).to.equal(profileNamesList[0]);
         }).timeout(TIMEOUT);
     });
