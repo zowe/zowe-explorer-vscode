@@ -388,6 +388,11 @@ Array [
     "when": "view == zowe.explorer && viewItem == session",
   },
   Object {
+    "command": "zowe.editSession",
+    "group": "inline",
+    "when": "view == zowe.explorer && viewItem == session",
+  },
+  Object {
     "command": "zowe.removeSession",
     "when": "view == zowe.explorer && viewItem == session",
   },
@@ -416,6 +421,11 @@ Array [
     "when": "viewItem == uss_session",
   },
   Object {
+    "command": "zowe.uss.editSession",
+    "group": "inline",
+    "when": "viewItem == uss_session",
+  },
+  Object {
     "command": "zowe.uss.removeSession",
     "when": "viewItem == uss_session",
   },
@@ -436,6 +446,11 @@ Array [
   },
   Object {
     "command": "zowe.jobs.search",
+    "group": "inline",
+    "when": "view == zowe.jobs && viewItem == server",
+  },
+  Object {
+    "command": "zowe.jobs.editSession",
     "group": "inline",
     "when": "view == zowe.jobs && viewItem == server",
   },

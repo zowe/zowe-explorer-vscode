@@ -135,6 +135,18 @@ describe("Profile class unit tests", () => {
                         updateProfile: jest.fn(()=>{
                             return {};
                         }),
+                        urlInfo: jest.fn(()=>{
+                            return{};
+                        }),
+                        userInfo: jest.fn(()=>{
+                            return{};
+                        }),
+                        passwordInfo: jest.fn(()=>{
+                            return{};
+                        }),
+                        ruInfo: jest.fn(()=>{
+                            return{};
+                        }),
                     };
                 })
             });
@@ -153,7 +165,6 @@ describe("Profile class unit tests", () => {
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
             await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
         });
 
@@ -163,7 +174,6 @@ describe("Profile class unit tests", () => {
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
 
@@ -174,7 +184,6 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
 
@@ -186,7 +195,6 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
 
@@ -210,7 +218,6 @@ describe("Profile class unit tests", () => {
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
             await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
         });
 
@@ -309,8 +316,6 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce(undefined);
             const res = await profiles.promptCredentials(promptProfile.name);
             expect(res).toBeUndefined();
-            expect(showErrorMessage.mock.calls.length).toBe(1);
-            expect(showErrorMessage.mock.calls[0][0]).toBe("Please enter your z/OS username. Operation Cancelled");
             (profiles.loadNamedProfile as any).mockReset();
         });
 
@@ -323,8 +328,6 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce(undefined);
             const res = await profiles.promptCredentials(promptProfile.name);
             expect(res).toBeUndefined();
-            expect(showErrorMessage.mock.calls.length).toBe(1);
-            expect(showErrorMessage.mock.calls[0][0]).toBe("Please enter your z/OS password. Operation Cancelled");
             (profiles.loadNamedProfile as any).mockReset();
         });
 

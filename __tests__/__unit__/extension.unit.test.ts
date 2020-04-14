@@ -664,7 +664,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(68);
+        expect(registerCommand.mock.calls.length).toBe(71);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -678,6 +678,7 @@ describe("Extension Unit Tests", () => {
             "zowe.refreshAll",
             "zowe.refreshNode",
             "zowe.pattern",
+            "zowe.editSession",
             "zowe.ZoweNode.openPS",
             "zowe.createDataset",
             "zowe.createMember",
@@ -705,6 +706,7 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
             "zowe.uss.fullPath",
+            "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
             "zowe.uss.createFile",
@@ -733,6 +735,7 @@ describe("Extension Unit Tests", () => {
             "zowe.getJobJcl",
             "zowe.setJobSpool",
             "zowe.jobs.search",
+            "zowe.jobs.editSession",
             "zowe.issueTsoCmd",
             "zowe.issueMvsCmd",
             "zowe.jobs.addFavorite",
