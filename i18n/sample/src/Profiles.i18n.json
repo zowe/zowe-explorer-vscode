@@ -19,5 +19,12 @@
     "promptcredentials.invalidusername": "Please enter your z/OS username. Operation Cancelled",
     "promptcredentials.option.prompt.password.placeholder": "Password",
     "promptcredentials.option.prompt.password": "Enter a password for the connection",
-    "promptcredentials.invalidpassword": "Please enter your z/OS password. Operation Cancelled"
+    "promptcredentials.invalidpassword": "Please enter your z/OS password. Operation Cancelled",
+    "deleteProfile.quickPickOption": "Are you sure you want to permanently delete ",
+    "deleteProfile.noProfilesLoaded": "No profiles available",
+    "deleteProfile.log.debug": "Deleting profile ",
+    "deleteProfile.showQuickPick.yes": "Yes",
+    "deleteProfile.showQuickPick.no": "No",
+    "deleteProfile.showQuickPick.log.debug": "User picked no. Cancelling delete of profile",
+    "deleteProfile.delete.log.error": "Error encountered when deleting profile! "
 }

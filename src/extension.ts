@@ -216,6 +216,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
         vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
         vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => hMigrateDataSet(node));
+        vscode.commands.registerCommand("zowe.deleteProfile", async (node) => datasetProvider.deleteProfile(node));
+        vscode.commands.registerCommand("zowe.cmd.deleteProfile", async (node) =>
+        Profiles.getInstance().deleteProfileCommand());
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -268,6 +271,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
         vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
+        vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) => ussFileProvider.deleteProfile(node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             ussFileProvider.onDidChangeConfiguration(e);
         });
@@ -331,6 +335,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
         vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
+        vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) => jobsProvider.deleteProfile(node));
         const theTreeView = jobsProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         if (!ISTHEIA) {

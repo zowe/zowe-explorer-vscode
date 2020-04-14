@@ -68,6 +68,8 @@
     "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
     "issueMvsCmd": "Zowe: Issue MVS Command...",
+    "deleteProfile": "Delete Profile",
+    "cmd.deleteProfile": "Zowe: Delete a Profile Permanently...",
     "rename": "Rename",
     "copy": "Copy",
     "paste": "Paste",

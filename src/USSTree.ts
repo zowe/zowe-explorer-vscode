@@ -192,6 +192,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
+    /**
+     * Deletes a profile from the zowe folder
+     *
+     * @param node
+     */
+    public async deleteProfile(node: IZoweUSSTreeNode) {
+        await Profiles.getInstance().deleteProfile(node);
+        await this.deleteSession(node);
+    }
 
     /**
      * Adds a node to the USS favorites list

@@ -262,6 +262,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
+     * Deletes a profile from the zowe folder
+     *
+     * @param node
+     */
+    public async deleteProfile(node: IZoweDatasetTreeNode) {
+        await Profiles.getInstance().deleteProfile(node);
+        await this.deleteSession(node);
+    }
+
+    /**
      * Adds a node to the favorites list
      *
      * @param  node

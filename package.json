@@ -108,6 +108,14 @@
         }
       },
       {
+        "command": "zowe.deleteProfile",
+        "title": "%deleteProfile%"
+      },
+      {
+        "command": "zowe.cmd.deleteProfile",
+        "title": "%cmd.deleteProfile%"
+      },
+      {
         "command": "zowe.createDataset",
         "title": "%createDataset%",
         "icon": {
@@ -228,6 +236,10 @@
         }
       },
       {
+        "command": "zowe.uss.deleteProfile",
+        "title": "%deleteProfile%"
+      },
+      {
         "command": "zowe.uss.createDirectory",
         "title": "%uss.createDirectory%",
         "icon": {
@@ -346,6 +358,10 @@
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "zowe.jobs.deleteProfile",
+        "title": "%deleteProfile%"
       },
       {
         "command": "zowe.refreshAllJobs",
@@ -821,6 +837,10 @@
         },
         {
           "when": "view == zowe.explorer && viewItem == session",
+          "command": "zowe.deleteProfile"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem == session",
           "command": "zowe.removeSession"
         },
         {
@@ -849,6 +869,10 @@
         },
         {
           "when": "viewItem == uss_session",
+          "command": "zowe.uss.deleteProfile"
+        },
+        {
+          "when": "viewItem == uss_session",
           "command": "zowe.uss.removeSession"
         },
         {
@@ -870,6 +894,10 @@
           "when": "view == zowe.jobs && viewItem == server",
           "command": "zowe.jobs.search",
           "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem == server",
+          "command": "zowe.jobs.deleteProfile"
         },
         {
           "when": "view == zowe.jobs && viewItem == server",
@@ -972,6 +1000,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
           "command": "zowe.saveSearch",
           "when": "never"
         },
@@ -993,6 +1025,10 @@
         },
         {
           "command": "zowe.uss.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.deleteProfile",
           "when": "never"
         },
         {
@@ -1033,6 +1069,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.deleteProfile",
           "when": "never"
         },
         {
