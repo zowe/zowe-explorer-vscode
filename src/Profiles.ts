@@ -320,9 +320,9 @@ export class Profiles {
                 vscode.window.showInformationMessage(localize("deleteProfile.undefined.profilename",
                     "Operation Cancelled"));
                 return;
+            } else {
+                zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
             }
-
-            zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
         } else {
             vscode.window.showInformationMessage(localize("deleteProfile.noProfilesLoaded", "No profiles available"));
             return;
@@ -378,12 +378,19 @@ export class Profiles {
             let deletedProfile: IProfileLoaded;
             if (!node){
                 deletedProfile = await this.getDeleteProfile();
-                deleteLabel = deletedProfile.name;
+                if (!deletedProfile) {
+                    return;
+                } else {
+                    deleteLabel = deletedProfile.name;
+                }
             } else {
                 deletedProfile = node.getProfile();
                 deleteLabel = node.getProfileName();
             }
-            await this.deletePrompt(deletedProfile);
+            const deleteSuccess = await this.deletePrompt(deletedProfile);
+            if (!deleteSuccess){
+                return;
+            }
 
             // Delete from Data Set Tree
             datasetTree.mSessionNodes.forEach((sessNode) => {
@@ -432,6 +439,12 @@ export class Profiles {
                 }
             });
             await jobsProvider.refresh();
+
+            // Remove from list of all profiles
+            const index = this.allProfiles.findIndex((deleteItem) => {
+                return deleteItem === deletedProfile;
+            });
+            if (index >= 0) { this.allProfiles.splice(index, 1); }
     }
 
 
