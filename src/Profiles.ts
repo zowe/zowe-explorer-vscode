@@ -50,6 +50,7 @@ export class Profiles {
 
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
+    private allTypes: string[];
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -76,6 +77,7 @@ export class Profiles {
 
     public async refresh(): Promise<void> {
         this.allProfiles = [];
+        this.allTypes = [];
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
@@ -85,6 +87,11 @@ export class Profiles {
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
                 this.defaultProfileByType.set(type, (await profileManager.load({ loadDefault: true })));
+            }
+            if (profileManager.configurations && this.allTypes.length === 0) {
+                for (const element of profileManager.configurations) {
+                    this.allTypes.push(element.type);
+                }
             }
         }
     }
@@ -297,6 +304,32 @@ export class Profiles {
             await this.updateProfile(loadProfile);
         }
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+    }
+
+    public getAllTypes() {
+        return this.allTypes;
+    }
+
+    public async getNamesForType(type: string) {
+        const profileManager = await this.getCliProfileManager(type);
+        const profilesForType = (await profileManager.loadAll()).filter((profile) => {
+            return profile.type === type;
+        });
+        return profilesForType.map((profile)=> {
+            return profile.name;
+        });
+    }
+
+    public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
+        let directProfile: IProfileLoaded;
+        const profileManager = await new CliProfileManager({
+            profileRootDirectory: path.join(getZoweDir(), "profiles"),
+            type
+        });
+        if (profileManager) {
+            directProfile = await profileManager.load({ name });
+        }
+        return directProfile;
     }
 
     private async updateProfile(ProfileInfo) {

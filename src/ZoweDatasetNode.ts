@@ -90,6 +90,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (this.contextValue === extension.DS_DS_CONTEXT ||
             this.contextValue === extension.DS_MEMBER_CONTEXT ||
+            this.contextValue === extension.VSAM_CONTEXT ||
             this.contextValue === extension.INFORMATION_CONTEXT) {
             return [];
         }
@@ -134,6 +135,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
                                                      this, null, extension.DS_MIGRATED_FILE_CONTEXT,
                         undefined, this.getProfile());
+                    elementChildren[temp.label] = temp;
+                // Creates a ZoweDatasetNode for a VSAM file
+                } else if (item.dsorg === "VS") {
+                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
+                                                    this, null, extension.VSAM_CONTEXT, undefined, this.getProfile());
                     elementChildren[temp.label] = temp;
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweDatasetNode for a PS

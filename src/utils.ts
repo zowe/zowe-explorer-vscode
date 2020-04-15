@@ -10,7 +10,6 @@
 */
 
 import { TreeItem, QuickPickItem, QuickPick, window, TreeItemCollapsibleState } from "vscode";
-import * as path from "path";
 import { ISession } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
 import * as extension from "../src/extension";

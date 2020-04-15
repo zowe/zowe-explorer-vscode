@@ -11,12 +11,12 @@
 
 import * as vscode from "vscode";
 import { Logger } from "@zowe/imperative";
-import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../utils/context";
+import { Profiles } from "../Profiles";
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {

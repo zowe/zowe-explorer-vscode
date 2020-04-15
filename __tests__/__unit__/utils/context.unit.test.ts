@@ -131,7 +131,13 @@ describe.only("Context helper tests", () => {
     it("Test Favorite PDS", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            expect(contextually.isFavoritePds(treeItem)).toBe(treeItem.contextValue === PDS_FAV_CONTEXT);
+            switch (ctx) {
+                case PDS_FAV_CONTEXT:
+                    expect(contextually.isFavoritePds(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isFavoritePds(treeItem)).toBe(false);
+            }
         }
     });
     it("Test Favorite text or Binary", async () => {
@@ -169,7 +175,7 @@ describe.only("Context helper tests", () => {
                 case DS_TEXT_FILE_CONTEXT:
                 case DS_FAV_TEXT_FILE_CONTEXT:
                 case JOBS_SPOOL_CONTEXT:
-                case DS_BINARY_FILE_CONTEXT:
+                case DS_MIGRATED_FILE_CONTEXT:
                 case DS_FAV_CONTEXT:
                     expect(contextually.isDocument(treeItem)).toBe(true);
                     break;
@@ -178,14 +184,26 @@ describe.only("Context helper tests", () => {
             }
         }
     });
-    it("Test is a migrated dataset", async () => {
+    it("Test is Favorite", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            expect(contextually.isMigrated(treeItem)).toBe(treeItem.contextValue === DS_MIGRATED_FILE_CONTEXT);
+            switch (ctx) {
+                case PDS_FAV_CONTEXT:
+                case DS_FAV_CONTEXT:
+                case DS_FAV_TEXT_FILE_CONTEXT:
+                case DS_FAV_BINARY_FILE_CONTEXT:
+                case USS_FAV_DIR_CONTEXT:
+                case JOBS_JOB_FAVORITE1:
+                case JOBS_JOB_FAVORITE2:
+                case JOBS_JOB_FAVORITE3:
+                    expect(contextually.isFavorite(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isFavorite(treeItem)).toBe(false);
+            }
         }
     });
-
-    it("Test is Favorite", async () => {
+    it("Test is Favorite search", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
             switch (ctx) {
@@ -236,7 +254,13 @@ describe.only("Context helper tests", () => {
     it("Test is a session search", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            expect(contextually.isSessionFavorite(treeItem)).toBe(treeItem.contextValue === FAVORITE_CONTEXT);
+            switch (ctx) {
+                case FAVORITE_CONTEXT:
+                    expect(contextually.isSessionFavorite(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isSessionFavorite(treeItem)).toBe(false);
+            }
         }
     });
     it("Test is a session (Not favorite)", async () => {
