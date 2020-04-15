@@ -1715,7 +1715,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     let sesName = ending.substring(0, ending.indexOf(path.sep));
 
     // Added special handling for attempt to save favourite node
-    if (sesName === "Favorites") {
+    if (sesName === localize("sessions.favorites.name", "Favorites")) {
         const datasetName = ending.split(path.sep).pop();
         const memberRegex = /\(.+\)$/;
         let targetNode;
