@@ -303,6 +303,7 @@ export class Profiles {
 
     public async deleteProfileCommand() {
         let zosmfProfile: IProfileLoaded;
+        let session: Session;
         const allProfiles: IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
@@ -314,9 +315,16 @@ export class Profiles {
                 canPickMany: false
             };
             const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickList);
+
+            if (sesName === undefined) {
+                vscode.window.showInformationMessage(localize("deleteProfile.undefined.profilename",
+                    "Operation Cancelled"));
+                return;
+            }
+
             zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
             const delProfile = zosmfProfile.profile as ISession;
-            const session = zowe.ZosmfSession.createBasicZosmfSession(delProfile as IProfile);
+            session = zowe.ZosmfSession.createBasicZosmfSession(delProfile as IProfile);
         } else {
             vscode.window.showInformationMessage(localize("deleteProfile.noProfilesLoaded", "No profiles available"));
             return;
@@ -342,7 +350,10 @@ export class Profiles {
             await errorHandling(error, zosmfProfile.name, error.message);
             throw error;
         }
+
         vscode.window.showInformationMessage("Profile " + zosmfProfile.name + " was deleted.");
+
+        return zosmfProfile.name;
     }
     public async deleteProfile(node: IZoweNodeType) {
         const profileName = node.getProfileName();
