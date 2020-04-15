@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, Session, IUpdateProfile } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfile } from "@zowe/imperative";
 import * as nls from "vscode-nls";
 import * as path from "path";
 import { URL } from "url";
@@ -17,8 +17,9 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
-import { IZoweNodeType } from "./api/IZoweTreeNode";
 import { errorHandling } from "./utils";
+import { IZoweTree } from "./api/IZoweTree";
+import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode } from "./api/IZoweTreeNode";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 interface IUrlValidator {
@@ -301,7 +302,7 @@ export class Profiles {
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
 
-    public async deleteProfileCommand() {
+    public async getDeleteProfile() {
         let zosmfProfile: IProfileLoaded;
         const allProfiles: IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
@@ -330,7 +331,7 @@ export class Profiles {
         return zosmfProfile;
     }
 
-    public async deleteProfile(deletedProfile: IProfileLoaded) {
+    public async deletePrompt(deletedProfile: IProfileLoaded) {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
@@ -367,6 +368,70 @@ export class Profiles {
             vscode.window.showErrorMessage(error.message);
         }
         return zosmfProfile.profile;
+    }
+
+    public async deleteProfile(
+        datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
+        jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
+
+            let deleteLabel: string;
+            let deletedProfile: IProfileLoaded;
+            if (!node){
+                deletedProfile = await this.getDeleteProfile();
+                deleteLabel = deletedProfile.name;
+            } else {
+                deletedProfile = node.getProfile();
+                deleteLabel = node.getProfileName();
+            }
+            await this.deletePrompt(deletedProfile);
+
+            // Delete from Data Set Tree
+            datasetTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === deleteLabel) {
+                    datasetTree.deleteSession(sessNode);
+                }
+            });
+
+            // Delete from Data Set Favorites
+            datasetTree.mFavorites.forEach((ses) => {
+                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+                if (findNode === deleteLabel) {
+                    datasetTree.removeFavorite(ses);
+                }
+            });
+            await datasetTree.refresh();
+
+            // Delete from USS Tree
+            ussTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === deleteLabel) {
+                    ussTree.deleteSession(sessNode);
+                }
+            });
+
+            // Delete from USS Favorites
+            ussTree.mFavorites.forEach((ses) => {
+                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+                if (findNode === deleteLabel) {
+                    ussTree.removeFavorite(ses);
+                }
+            });
+            await ussTree.refresh();
+
+            // Delete from Jobs Tree
+            jobsProvider.mSessionNodes.forEach((jobNode) => {
+                if (jobNode.getProfileName() === deleteLabel) {
+                    jobsProvider.deleteSession(jobNode);
+                }
+            });
+
+            // Delete from Jobs Favorites
+            jobsProvider.mFavorites.forEach((ses) => {
+                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+                if (findNode === deleteLabel) {
+                    jobsProvider.removeFavorite(ses);
+                }
+            });
+            await jobsProvider.refresh();
     }
 
 
