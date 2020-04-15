@@ -216,9 +216,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.pasteDataSet", (node) => pasteDataSet(node, datasetProvider));
         vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
         vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => hMigrateDataSet(node));
-        vscode.commands.registerCommand("zowe.deleteProfile", async (node) => deleteProfile(node, datasetProvider, ussFileProvider, jobsProvider));
+        vscode.commands.registerCommand("zowe.deleteProfile", async (node) => deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
         vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () =>
-        deleteProfileCommand(datasetProvider, ussFileProvider, jobsProvider));
+        deleteProfile(datasetProvider, ussFileProvider, jobsProvider));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             datasetProvider.onDidChangeConfiguration(e);
         });
@@ -272,7 +272,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
         vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) =>
-            deleteProfile(node, datasetProvider, ussFileProvider, jobsProvider));
+            deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             ussFileProvider.onDidChangeConfiguration(e);
         });
@@ -337,7 +337,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
         vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
-            deleteProfile(node, datasetProvider, ussFileProvider, jobsProvider));
+            deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
         const theTreeView = jobsProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         if (!ISTHEIA) {
@@ -1483,20 +1483,22 @@ export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
 }
 
 export async function deleteProfile(
-    node: IZoweNodeType, datasetTree: IZoweTree<IZoweDatasetTreeNode>,
-    ussTree: IZoweTree<IZoweUSSTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-        await Profiles.getInstance().deleteProfile(node);
+    datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
+    jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
 
-        const deleteLabel = node.getProfileName();
+        let deleteLabel: string;
+        let deletedProfile: IProfileLoaded;
+        if (!node){
+            deletedProfile = await Profiles.getInstance().deleteProfileCommand();
+            deleteLabel = deletedProfile.name;
+        } else {
+            deletedProfile = node.getProfile();
+            deleteLabel = node.getProfileName();
+        }
+        await Profiles.getInstance().deleteProfile(deletedProfile);
 
         // Delete from Data Set Tree
         datasetTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.contextValue === DS_SESSION_CONTEXT) {
-                utils.labelHack(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                utils.refreshTree(sessNode);
-            }
             if (sessNode.getProfileName() === deleteLabel) {
                 datasetTree.deleteSession(sessNode);
             }
@@ -1513,12 +1515,6 @@ export async function deleteProfile(
 
         // Delete from USS Tree
         ussTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.contextValue === USS_SESSION_CONTEXT) {
-                utils.labelHack(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                utils.refreshTree(sessNode);
-            }
             if (sessNode.getProfileName() === deleteLabel) {
                 ussTree.deleteSession(sessNode);
             }
@@ -1535,12 +1531,6 @@ export async function deleteProfile(
 
         // Delete from Jobs Tree
         jobsProvider.mSessionNodes.forEach((jobNode) => {
-            if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
-                utils.labelHack(jobNode);
-                jobNode.children = [];
-                jobNode.dirty = true;
-                utils.refreshTree(jobNode);
-            }
             if (jobNode.getProfileName() === deleteLabel) {
                 jobsProvider.deleteSession(jobNode);
             }
@@ -1556,74 +1546,74 @@ export async function deleteProfile(
         await jobsProvider.refresh();
 }
 
-export async function deleteProfileCommand(
-    datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-        const sessionName = await Profiles.getInstance().deleteProfileCommand();
+// export async function deleteProfileCommand(
+//     datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+//         const sessionName = await Profiles.getInstance().deleteProfileCommand();
 
-        const datasetNode = await datasetTree.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
-        if (datasetNode) {
-            datasetTree.deleteSession(datasetNode);
-        }
-        datasetTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.contextValue === DS_SESSION_CONTEXT) {
-                utils.labelHack(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                utils.refreshTree(sessNode);
-            }
-        });
+//         const datasetNode = await datasetTree.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
+//         if (datasetNode) {
+//             datasetTree.deleteSession(datasetNode);
+//         }
+//         datasetTree.mSessionNodes.forEach((sessNode) => {
+//             if (sessNode.contextValue === DS_SESSION_CONTEXT) {
+//                 utils.labelHack(sessNode);
+//                 sessNode.children = [];
+//                 sessNode.dirty = true;
+//                 utils.refreshTree(sessNode);
+//             }
+//         });
 
-        // Delete from Data Set Favorites
-        datasetTree.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
-            if (findNode === datasetNode.label) {
-                datasetTree.removeFavorite(ses);
-            }
-        });
-        await datasetTree.refresh();
+//         // Delete from Data Set Favorites
+//         datasetTree.mFavorites.forEach((ses) => {
+//             const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+//             if (findNode === datasetNode.label) {
+//                 datasetTree.removeFavorite(ses);
+//             }
+//         });
+//         await datasetTree.refresh();
 
-        const ussNode = await ussTree.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
-        if (ussNode) {
-            ussTree.deleteSession(ussNode);
-        }
-        ussTree.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.contextValue === USS_SESSION_CONTEXT) {
-                utils.labelHack(sessNode);
-                sessNode.children = [];
-                sessNode.dirty = true;
-                utils.refreshTree(sessNode);
-            }
-        });
-        // Delete from USS Favorites
-        ussTree.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
-            if (findNode === ussNode.getProfileName()) {
-                ussTree.removeFavorite(ses);
-            }
-        });
-        await ussTree.refresh();
+//         const ussNode = await ussTree.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
+//         if (ussNode) {
+//             ussTree.deleteSession(ussNode);
+//         }
+//         ussTree.mSessionNodes.forEach((sessNode) => {
+//             if (sessNode.contextValue === USS_SESSION_CONTEXT) {
+//                 utils.labelHack(sessNode);
+//                 sessNode.children = [];
+//                 sessNode.dirty = true;
+//                 utils.refreshTree(sessNode);
+//             }
+//         });
+//         // Delete from USS Favorites
+//         ussTree.mFavorites.forEach((ses) => {
+//             const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+//             if (findNode === ussNode.getProfileName()) {
+//                 ussTree.removeFavorite(ses);
+//             }
+//         });
+//         await ussTree.refresh();
 
-        const jobsNode = await jobsProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
-        if (jobsNode) {
-            jobsProvider.deleteSession(jobsNode);
-        }
-        jobsProvider.mSessionNodes.forEach((jobNode) => {
-            if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
-                utils.labelHack(jobNode);
-                jobNode.children = [];
-                jobNode.dirty = true;
-                utils.refreshTree(jobNode);
-            }
-        });
-        // Delete from Jobs Favorites
-        jobsProvider.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
-            if (findNode === jobsNode.getProfileName()) {
-                jobsProvider.removeFavorite(ses);
-            }
-        });
-        await jobsProvider.refresh();
-}
+//         const jobsNode = await jobsProvider.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
+//         if (jobsNode) {
+//             jobsProvider.deleteSession(jobsNode);
+//         }
+//         jobsProvider.mSessionNodes.forEach((jobNode) => {
+//             if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
+//                 utils.labelHack(jobNode);
+//                 jobNode.children = [];
+//                 jobNode.dirty = true;
+//                 utils.refreshTree(jobNode);
+//             }
+//         });
+//         // Delete from Jobs Favorites
+//         jobsProvider.mFavorites.forEach((ses) => {
+//             const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+//             if (findNode === jobsNode.getProfileName()) {
+//                 jobsProvider.removeFavorite(ses);
+//             }
+//         });
+//         await jobsProvider.refresh();
+// }
 
 export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>) {
     if (log) {

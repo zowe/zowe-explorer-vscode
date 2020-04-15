@@ -99,11 +99,6 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     delete(node: IZoweNodeType);
     /**
-     * Deletes a profile
-     * @param node: the node containing the profile to be deleted
-     */
-    deleteProfile(node: IZoweNodeType);
-    /**
      * Reveals and selects a node within the tree.
      * @param treeView: the vscode tree container
      * @param node: the node to be selected

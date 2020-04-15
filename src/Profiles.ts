@@ -303,7 +303,6 @@ export class Profiles {
 
     public async deleteProfileCommand() {
         let zosmfProfile: IProfileLoaded;
-        let session: Session;
         const allProfiles: IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
@@ -323,40 +322,16 @@ export class Profiles {
             }
 
             zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-            const delProfile = zosmfProfile.profile as ISession;
-            session = zowe.ZosmfSession.createBasicZosmfSession(delProfile as IProfile);
         } else {
             vscode.window.showInformationMessage(localize("deleteProfile.noProfilesLoaded", "No profiles available"));
             return;
         }
 
-        this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + zosmfProfile.name);
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("deleteProfile.quickPickOption", "Are you sure you want to permanently delete ") + zosmfProfile.name,
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-        // confirm that the user really wants to delete
-        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.yes", "Yes"),
-            localize("deleteProfile.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteProfile.showQuickPick.yes", "Yes")) {
-            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked no. Cancelling delete of profile"));
-            return;
-        }
-
-        try {
-            this.deleteProf(zosmfProfile, zosmfProfile.name, zosmfProfile.type);
-        } catch (error) {
-            this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
-            await errorHandling(error, zosmfProfile.name, error.message);
-            throw error;
-        }
-
-        vscode.window.showInformationMessage("Profile " + zosmfProfile.name + " was deleted.");
-
-        return zosmfProfile.name;
+        return zosmfProfile;
     }
-    public async deleteProfile(node: IZoweNodeType) {
-        const profileName = node.getProfileName();
+
+    public async deleteProfile(deletedProfile: IProfileLoaded) {
+        const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("deleteProfile.quickPickOption", "Are you sure you want to permanently delete ") + profileName,
@@ -370,10 +345,9 @@ export class Profiles {
             return;
         }
 
-        const profile = node.getProfile();
-        const profileType = ZoweExplorerApiRegister.getMvsApi(profile).getProfileTypeName();
+        const profileType = ZoweExplorerApiRegister.getMvsApi(deletedProfile).getProfileTypeName();
         try {
-            this.deleteProf(profile, profileName, profileType);
+            this.deleteProf(deletedProfile, profileName, profileType);
         } catch (error) {
             this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
@@ -381,6 +355,7 @@ export class Profiles {
         }
 
         vscode.window.showInformationMessage("Profile " + profileName + " was deleted.");
+        return profileName;
     }
 
     public async deleteProf(ProfileInfo, ProfileName, ProfileType) {

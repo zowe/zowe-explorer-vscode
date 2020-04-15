@@ -479,15 +479,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
         this.deleteSessionByLabel(node.getLabel());
     }
-    /**
-     * Deletes a profile from the zowe folder
-     *
-     * @param node
-     */
-    public async deleteProfile(node: IZoweJobTreeNode) {
-        await Profiles.getInstance().deleteProfile(node);
-        await this.deleteSession(node);
-    }
 
     /**
      * Creates a display string to represent a search
