@@ -15,8 +15,8 @@ import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
-import * as extension from "../extension";
 import { getIconByNode } from "../generators/icons";
+import * as contextually from "../utils/context";
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -88,7 +88,7 @@ export class ZoweTreeProvider {
             let passWrd: string;
             let baseEncd: string;
             let sesNamePrompt: string;
-            if (element.contextValue.endsWith(extension.FAV_SUFFIX)) {
+            if (contextually.isFavorite(element)) {
                 sesNamePrompt = element.label.substring(1, element.label.indexOf("]"));
             } else {
                 sesNamePrompt = element.label;

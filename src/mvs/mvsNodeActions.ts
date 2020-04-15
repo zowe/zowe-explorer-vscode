@@ -17,6 +17,7 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
+import * as contextually from "../utils/context";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -40,7 +41,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
         // refresh Tree View & favorites
         datasetProvider.refreshElement(node);
-        if (node.contextValue.includes(extension.FAV_SUFFIX) || node.getParent().contextValue === extension.FAVORITE_CONTEXT) {
+        if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node);
             if (nonFavNode) {
                 datasetProvider.refreshElement(nonFavNode);

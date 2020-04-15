@@ -32,7 +32,7 @@ ZoweUSSNode {
       "binaryFiles": Object {},
       "children": Array [],
       "collapsibleState": 1,
-      "contextValue": "uss_session",
+      "contextValue": "ussSession",
       "dirty": true,
       "downloadedInternal": false,
       "downloadedTime": null,
