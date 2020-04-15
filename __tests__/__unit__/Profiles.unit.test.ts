@@ -15,7 +15,7 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, ISession, CliProfileManager } from "@zowe/imperative";
+import { Logger, ISession, CliProfileManager, IProfileLoaded } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
 
@@ -45,6 +45,19 @@ describe("Profile class unit tests", () => {
         onDidTriggerButton: jest.fn(),
         prompt: undefined,
         validationMessage: undefined
+    };
+    const profileLoad: IProfileLoaded = {
+        name: "fake",
+        profile: {
+            host: "fake",
+            port: 999,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorize: false
+        },
+        type: "zosmf",
+        failNotFound: true,
+        message: "fake"
     };
 
     const homedir = path.join(os.homedir(), ".zowe");
@@ -386,6 +399,33 @@ describe("Profile class unit tests", () => {
         it("should reject invalid url syntax", async () => {
             const res = await profiles.validateAndParseUrl("https://fake::80");
             expect(res.valid).toBe(false);
+        });
+
+        it("should edit a profile", async () => {
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+                value: jest.fn(() => {
+                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
+                })
+            });
+            await profiles.editSession(profileLoad, profileLoad.name);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+        });
+
+        it("should edit a profile - with error", async () => {
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            await profiles.editSession(profileLoad, profileLoad.name);
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
         });
 
     });

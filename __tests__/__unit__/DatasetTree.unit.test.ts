@@ -41,6 +41,20 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
+    const profileLoad: IProfileLoaded = {
+        name: "fake",
+        profile: {
+            host: "fake",
+            port: 999,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorize: false
+        },
+        type: "zosmf",
+        failNotFound: true,
+        message: "fake"
+    };
+
     const Rename = jest.fn();
     const renameDataSet = jest.fn();
     const renameDataSetMember = jest.fn();
@@ -724,6 +738,24 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
+    /*************************************************************************************************************
+     * Test the editSession command
+     *************************************************************************************************************/
+    it("Test the editSession command ", async () => {
+        const editnode = new ZoweDatasetNode("EditSession", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    editSession: jest.fn(() => {
+                        return profileLoad;
+                    }),
+                };
+            })
+        });
+        testTree.editSession(editnode);
     });
 
     /*************************************************************************************************************

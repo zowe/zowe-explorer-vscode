@@ -38,6 +38,20 @@ describe("Unit Tests (Jest)", () => {
         type: "basic",
     });
 
+    const profileLoad: IProfileLoaded = {
+        name: "fake",
+        profile: {
+            host: "fake",
+            port: 999,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorize: false
+        },
+        type: "zosmf",
+        failNotFound: true,
+        message: "fake"
+    };
+
     function getUSSNode() {
         const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
         const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
@@ -924,6 +938,28 @@ describe("Unit Tests (Jest)", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
     });
+
+    /*************************************************************************************************************
+     * Test the editSession command
+     *************************************************************************************************************/
+    it("Test the editSession command ", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    editSession: jest.fn(() => {
+                        return profileLoad;
+                    }),
+                };
+            })
+        });
+        const editnode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
+        testTree.mSessionNodes[1], null, "/");
+        testTree.editSession(editnode);
+    });
+
     describe("renameUSSNode", () => {
         const executeCommand = jest.fn();
         Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});

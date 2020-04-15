@@ -99,6 +99,20 @@ describe("Zos Jobs Unit Tests", () => {
             type: "basic",
         });
 
+        const profileLoad: IProfileLoaded = {
+            name: "fake",
+            profile: {
+                host: "fake",
+                port: 999,
+                user: "fake",
+                password: "fake",
+                rejectUnauthorize: false
+            },
+            type: "zosmf",
+            failNotFound: true,
+            message: "fake"
+        };
+
         const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
         Object.defineProperty(profileLoader, "loadNamedProfile", {
             value: jest.fn((name: string) => {
@@ -830,6 +844,27 @@ describe("Zos Jobs Unit Tests", () => {
             expect(spoolFiles.length).toBe(1);
             expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
             expect(spoolFiles[0].owner).toEqual("fake");
+        });
+
+        /*************************************************************************************************************
+         * Test the editSession command
+         *************************************************************************************************************/
+        it("Test the editSession command ", async () => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        getDefaultProfile: jest.fn(),
+                        editSession: jest.fn(() => {
+                            return profileLoad;
+                        }),
+                    };
+                })
+            });
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            testJobsProvider.editSession(jobNode);
         });
     });
 
