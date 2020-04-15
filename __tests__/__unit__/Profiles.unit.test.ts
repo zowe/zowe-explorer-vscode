@@ -479,7 +479,7 @@ describe("Profile class unit tests", () => {
     });
 
     it("Tests checkCurrentProfile() with valid profile", async () => {
-        const profiles = await Profiles.createInstance(log);
+        const theProfiles = await Profiles.createInstance(log);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -505,12 +505,13 @@ describe("Profile class unit tests", () => {
             message: "",
             failNotFound: false
         };
-        profiles.checkCurrentProfile(testIProfile);
-        expect(profiles.validProfile).toBe(ValidProfileEnum.VALID);
+        theProfiles.validProfile = -1;
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
     });
 
     it("Tests checkCurrentProfile() with invalid profile", async () => {
-        const profiles = await Profiles.createInstance(log);
+        const theProfiles = await Profiles.createInstance(log);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -536,7 +537,7 @@ describe("Profile class unit tests", () => {
             message: "",
             failNotFound: false
         };
-        profiles.checkCurrentProfile(testIProfile);
-        expect(profiles.validProfile).toBe(ValidProfileEnum.INVALID);
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });
