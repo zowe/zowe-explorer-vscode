@@ -15,9 +15,17 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, ISession, CliProfileManager } from "@zowe/imperative";
+import { Logger, ISession, CliProfileManager, IProfileLoaded, Session } from "@zowe/imperative";
 import { Profiles } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
+import { ZoweUSSNode } from "../../src/ZoweUSSNode";
+import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
+import { Job } from "../../src/ZoweJobNode";
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweNodeType } from "../../src/api/IZoweTreeNode";
+import { IZoweTree } from "../../src/api/IZoweTree";
+import { DatasetTree } from "../../src/DatasetTree";
+import { USSTree } from "../../src/USSTree";
+import { ZosJobsProvider } from "../../src/ZosJobsProvider";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -25,6 +33,25 @@ describe("Profile class unit tests", () => {
 
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
+    const profileThree: IProfileLoaded = {
+        name: "sestest",
+        profile: {
+            user: undefined,
+            password: undefined
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        protocol: "https",
+        type: "basic",
+    });
+
     const inputBox: vscode.InputBox = {
         value: "input",
         title: null,
@@ -54,12 +81,18 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
+    const createTreeView = jest.fn();
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
+
+    const sessNode: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
+    const ussNode: IZoweTree<IZoweUSSTreeNode> = new USSTree();
+    const jobNode: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -135,6 +168,12 @@ describe("Profile class unit tests", () => {
                         updateProfile: jest.fn(()=>{
                             return {};
                         }),
+                        getDeleteProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        deletePrompt: jest.fn(()=>{
+                            return {};
+                        })
                     };
                 })
             });
@@ -263,6 +302,15 @@ describe("Profile class unit tests", () => {
             await profiles.createNewConnection("fake2");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
+        });
+
+        it("should delete profile", async () => {
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessNode, jobNode, ussNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
         });
 
         it("should prompt credentials", async () => {

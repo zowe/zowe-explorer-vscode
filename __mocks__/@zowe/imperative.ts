@@ -68,6 +68,9 @@ export class CliProfileManager {
     public getAllProfileNames(){
         return ["name1", "name2"];
     }
+    public delete(){
+        return { name: "profile1", profile: {}, type: "zosmf" };
+    }
 }
 
 // tslint:disable-next-line:max-classes-per-file
