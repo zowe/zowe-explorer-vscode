@@ -138,13 +138,23 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label] = temp;
                 // Creates a ZoweDatasetNode for a VSAM file
                 } else if (item.dsorg === "VS") {
-                    const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
-                                                    this, null, extension.VSAM_CONTEXT, undefined, this.getProfile());
-                    elementChildren[temp.label] = temp;
+                    let altLabel = item.dsname;
+                    let endPoint = altLabel.indexOf(".DATA");
+                    if (endPoint === -1) {
+                        endPoint = altLabel.indexOf(".INDEX");
+                    }
+                    if (endPoint > -1) {
+                        altLabel = altLabel.substring(0, endPoint);
+                    }
+                    if (!elementChildren[altLabel]) {
+                        const temp = new ZoweDatasetNode(altLabel, vscode.TreeItemCollapsibleState.None,
+                                                        this, null, extension.VSAM_CONTEXT, undefined, this.getProfile());
+                        elementChildren[altLabel] = temp;
+                    }
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweDatasetNode for a PS
                     const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
-                                                     this, null, undefined, undefined, this.getProfile());
+                                                    this, null, undefined, undefined, this.getProfile());
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 } else {
