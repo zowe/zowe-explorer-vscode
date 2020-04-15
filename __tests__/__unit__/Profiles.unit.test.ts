@@ -15,8 +15,9 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger } from "@zowe/imperative";
-import { Profiles } from "../../src/Profiles";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
+import * as testConst from "../../resources/testProfileData";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
 
 describe("Profile class unit tests", () => {
@@ -475,5 +476,55 @@ describe("Profile class unit tests", () => {
         mockJSONParse.mockReturnValueOnce(profileOne);
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+    });
+
+    it("Tests checkCurrentProfile() with valid profile", async () => {
+        const profiles = await Profiles.createInstance(log);
+        const testProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: {
+                type : "zosmf",
+                host: "testHost.net",
+                port: 1443,
+                user: "testUser",
+                password: "testPass",
+                rejectUnauthorized: false,
+                name: "testName"
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        try {
+            profiles.checkCurrentProfile(testProfile);
+            expect(profiles.validProfile).toBe(ValidProfileEnum.VALID);
+        } catch (error) {
+            expect(error.message).toEqual("Could not find profile named: profile3.");
+        }
+    });
+
+    it("Tests checkCurrentProfile() with invalid profile", async () => {
+        const profiles = await Profiles.createInstance(log);
+        const testProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: {
+                type : "zosmf",
+                host: null,
+                port: 1443,
+                user: null,
+                password: null,
+                rejectUnauthorized: false,
+                name: "testName"
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        try {
+            profiles.checkCurrentProfile(testProfile);
+            expect(profiles.validProfile).toBe(ValidProfileEnum.INVALID);
+        } catch (error) {
+            expect(error.message).toEqual("Could not find profile named: profile3.");
+        }
     });
 });
