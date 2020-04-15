@@ -3966,38 +3966,6 @@ describe("Extension Unit Tests", () => {
         });
     });
 
-    it("tests that the prefix is set correctly on the job", async () => {
-        showInformationMessage.mockReset();
-        showInputBox.mockReset();
-
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, null, null);
-
-        showInputBox.mockReturnValueOnce("*");
-        await jobActions.setPrefix(node, testJobsTree);
-
-        expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInputBox.mock.calls[0][0]).toEqual({
-            prompt: "Prefix"
-        });
-        expect(showInformationMessage.mock.calls.length).toBe(0);
-    });
-
-    it("tests that the owner is set correctly on the job", async () => {
-        showInformationMessage.mockReset();
-        showInputBox.mockReset();
-
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, iJob, profileOne);
-
-        showInputBox.mockReturnValueOnce("OWNER");
-        await jobActions.setOwner(node, testJobsTree);
-
-        expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInputBox.mock.calls[0][0]).toEqual({
-            prompt: "Owner",
-        });
-        expect(showInformationMessage.mock.calls.length).toBe(0);
-    });
-
     it("tests that the spool content is opened in a new document", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -4099,23 +4067,6 @@ describe("Extension Unit Tests", () => {
         await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
         expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showErrorMessage.mockReset();
-    });
-
-    it("tests that a stop command is issued", async () => {
-        showInformationMessage.mockReset();
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await jobActions.stopCommand(jobNode);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            "Command response: fake response"
-        );
-    });
-
-    it("tests that a stop command is not issued", async () => {
-        showInformationMessage.mockReset();
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await jobActions.stopCommand(undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests that a modify command is issued", async () => {
