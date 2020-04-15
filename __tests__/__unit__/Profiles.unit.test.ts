@@ -505,10 +505,8 @@ describe("Profile class unit tests", () => {
             message: "",
             failNotFound: false
         };
-        try {
-            profiles.checkCurrentProfile(testIProfile);
-            expect(profiles.validProfile).toBe(ValidProfileEnum.VALID);
-        } catch (error) { }
+        profiles.checkCurrentProfile(testIProfile);
+        expect(profiles.validProfile).toBe(ValidProfileEnum.VALID);
     });
 
     it("Tests checkCurrentProfile() with invalid profile", async () => {
@@ -538,9 +536,7 @@ describe("Profile class unit tests", () => {
             message: "",
             failNotFound: false
         };
-        try {
-            profiles.checkCurrentProfile(testIProfile);
-            expect(profiles.validProfile).toBe(ValidProfileEnum.INVALID);
-        } catch (error) { }
+        profiles.checkCurrentProfile(testIProfile);
+        expect(profiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });
