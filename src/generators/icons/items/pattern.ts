@@ -11,21 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import * as globals from "../../../globals";
+import { isFavoriteSearch } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.pattern,
     type: IconHierarchyType.base,
     path: getIconPathInResources("pattern.svg"),
-    check: (node) => {
-        const contexts = [
-            globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX,
-            globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX,
-            globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX
-        ];
-
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    check: (node) => isFavoriteSearch(node)
 };
 
 export default icon;

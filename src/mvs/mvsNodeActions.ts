@@ -16,7 +16,7 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { FAVORITE_CONTEXT, FAV_SUFFIX } from "../../src/globals";
+import * as contextually from "../shared/context";
 
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -40,7 +40,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
         // refresh Tree View & favorites
         datasetProvider.refreshElement(node);
-        if (node.contextValue.includes(FAV_SUFFIX) || node.getParent().contextValue === FAVORITE_CONTEXT) {
+        if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node);
             if (nonFavNode) {
                 datasetProvider.refreshElement(nonFavNode);
@@ -57,7 +57,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 }
 
 export function getDatasetLabel(node: ZoweDatasetNode) {
-    if (node.getParent() && node.getParent().contextValue === FAVORITE_CONTEXT) {
+    if (node.getParent() && contextually.isFavoriteContext(node.getParent())) {
         const profileEnd = "]: ";
         const profileIndex = node.label.indexOf(profileEnd);
         return node.label.substr(profileIndex + profileEnd.length, node.label.length);

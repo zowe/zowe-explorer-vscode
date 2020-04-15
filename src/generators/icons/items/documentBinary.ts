@@ -10,20 +10,14 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import * as globals from "../../../globals";
 import { getIconPathInResources } from "../../../shared/utils";
+import { isBinary } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.documentBinary,
     type: IconHierarchyType.base,
     path: getIconPathInResources("document-binary.svg"),
-    check: (node) => {
-        // TODO: Move contexts to constants file and do constructor as well
-        const contexts = [globals.DS_BINARY_FILE_CONTEXT,
-            globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX];
-
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    check: (node) => isBinary(node)
 };
 
 export default icon;

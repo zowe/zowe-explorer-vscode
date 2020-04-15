@@ -11,19 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import * as globals from "../../../globals";
+import { isSessionNotFav } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.session,
     type: IconHierarchyType.base,
     path: getIconPathInResources("folder-root-default-closed.svg"),
-    check: (node) => {
-        const contexts = [
-            globals.DS_SESSION_CONTEXT,
-            globals.USS_SESSION_CONTEXT,
-            globals.JOBS_SESSION_CONTEXT];
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    check: (node) => isSessionNotFav(node)
 };
 
 export default icon;

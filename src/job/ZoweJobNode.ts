@@ -18,6 +18,7 @@ import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { errorHandling } from "../utils";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
+import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -64,7 +65,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (this.dirty) {
             let spools: zowe.IJobFile[] = [];
             const elementChildren = [];
-            if (this.contextValue === globals.JOBS_JOB_CONTEXT || this.contextValue === globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX) {
+            if (contextually.isJob(this)) {
                 spools = await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: localize("ZoweJobNode.getJobs.spoolfiles", "Get Job Spool files command submitted.")
@@ -80,7 +81,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         if (prefix === undefined) {
                             prefix = spool.procstep;
                         }
-                        const sessionName = this.contextValue === globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX ?
+                        const sessionName = contextually.isFavorite(this) ?
                             this.label.substring(1, this.label.lastIndexOf("]")).trim() :
                             this.getProfileName();
                         const spoolNode = new Spool(`${spool.stepname}:${spool.ddname}(${spool.id})`,
@@ -114,6 +115,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
                         jobNode.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [jobNode] };
                         jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
+                        if (job.retcode) {
+                            jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
+                        }
                         if (!jobNode.iconPath) {
                             const icon = getIconByNode(jobNode);
                             if (icon) {

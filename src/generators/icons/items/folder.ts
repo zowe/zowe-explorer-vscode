@@ -11,22 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import * as globals from "../../../globals";
+import { isFolder } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.folder,
     type: IconHierarchyType.base,
     path: getIconPathInResources("folder-closed.svg"),
-    check: (node) => {
-        const contexts = [
-            globals.DS_PDS_CONTEXT,
-            globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX,
-            globals.USS_DIR_CONTEXT,
-            globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX,
-            globals.JOBS_JOB_CONTEXT,
-            globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX];
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    check: (node) => isFolder(node)
 };
 
 export default icon;
