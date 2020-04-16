@@ -15,6 +15,8 @@ import * as globals from "../../../src/globals";
 import { generateDatasetSessionNode, generateDatasetTree } from "../../../__mocks__/generators/datasets";
 import { Profiles } from "../../../src/Profiles";
 
+const activeTextEditorDocument = jest.fn();
+
 Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn() });
 Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn() });
 Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn() });
@@ -29,7 +31,7 @@ Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn() });
 Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: jest.fn() });
 Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn() });
 Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn() });
-Object.defineProperty(vscode.window.activeTextEditor, "document", { value: jest.fn() });
+Object.defineProperty(vscode.window.activeTextEditor, "document", { get: activeTextEditorDocument });
 Object.defineProperty(globals, "LOG", { value: jest.fn() });
 Object.defineProperty(globals.LOG, "debug", { value: jest.fn() });
 Object.defineProperty(globals.LOG, "error", { value: jest.fn() });
@@ -253,7 +255,7 @@ describe("Job JCL Download Command", () => {
     });
     it("Checking failed attempt to download Job JCL", async () => {
         await jobActions.downloadJcl(undefined);
-        expect(mocked(vscode.window.showErrorMessage).mock.calls.length).toBe(1);
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
     });
 });
 
@@ -286,9 +288,11 @@ describe("Submit JCL from editor", () => {
         // Reset global module mocks
         mocked(vscode.window.showInformationMessage).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
+        mocked(vscode.window.showQuickPick).mockReset();
         mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReset();
-        mocked(vscode.window.activeTextEditor.document).mockReset();
+        activeTextEditorDocument.mockReset();
         mocked(Profiles.getInstance).mockReset();
+        mocked(globals.LOG.error).mockReset();
     });
 
     it("Checking submit of active text editor content as JCL", async () => {
@@ -296,17 +300,43 @@ describe("Submit JCL from editor", () => {
 
         mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(environmentalMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(environmentalMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(environmentalMocks.datasetSessionNode.label);
+        environmentalMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, environmentalMocks.datasetSessionNode, null),
+            environmentalMocks.datasetSessionNode
+        ]);
+        activeTextEditorDocument.mockReturnValue(environmentalMocks.textDocument);
         const submitJclSpy = jest.spyOn(environmentalMocks.jesApi, "submitJcl");
         submitJclSpy.mockResolvedValueOnce(environmentalMocks.iJob);
-        environmentalMocks.testDatasetTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node",
-            vscode.TreeItemCollapsibleState.None, environmentalMocks.datasetSessionNode, null), environmentalMocks.datasetSessionNode]);
-        mocked(vscode.window.activeTextEditor.document).mockReturnValue(environmentalMocks.textDocument);
         await dsActions.submitJcl(environmentalMocks.testDatasetTree);
 
         expect(submitJclSpy).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5Bnull%2C%22JOB1234%22%5D)");
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
+
+        // Reset for spied properties
+        submitJclSpy.mockReset();
+    });
+
+    it("Checking failed attempt to submit of active text editor content as JCL", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+
+        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(environmentalMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(environmentalMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(null); // Here we imitate the case when no profile was selected
+        environmentalMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, environmentalMocks.datasetSessionNode, null),
+            environmentalMocks.datasetSessionNode
+        ]);
+        activeTextEditorDocument.mockReturnValue(environmentalMocks.textDocument);
+        const submitJclSpy = jest.spyOn(environmentalMocks.jesApi, "submitJcl");
+        submitJclSpy.mockResolvedValueOnce(environmentalMocks.iJob);
+
+        await dsActions.submitJcl(environmentalMocks.testDatasetTree);
+
+        expect(submitJclSpy).not.toBeCalled();
+        expect(mocked(globals.LOG.error)).toBeCalled();
     });
 });
 describe("Job Spool Download Command", () => {

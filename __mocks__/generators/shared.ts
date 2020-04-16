@@ -66,7 +66,7 @@ export function generateTextDocument(sessionNode: ZoweDatasetNode | ZoweUSSNode,
         lineAt: null,
         offsetAt: null,
         positionAt: null,
-        getText: null,
+        getText: jest.fn(),
         getWordRangeAtPosition: null,
         validateRange: null,
         validatePosition: null

@@ -4069,18 +4069,6 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
     });
 
-    it("tests that the jcl is submitted", async () => {
-        showInformationMessage.mockReset();
-        createBasicZosmfSession.mockReturnValue(session);
-        submitJcl.mockReturnValue(iJob);
-        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
-        await dsActions.submitJcl(testTree);
-        expect(submitJcl).toBeCalled();
-        expect(showInformationMessage).toBeCalled();
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5Bnull%2C%22JOB1234%22%5D)");
-    });
-
     it("tests that a pds member is submitted", async () => {
         showErrorMessage.mockReset();
         const rootNode = new ZoweDatasetNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
