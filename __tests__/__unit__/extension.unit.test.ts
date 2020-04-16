@@ -4069,68 +4069,6 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
     });
 
-    it("tests that a modify command is issued", async () => {
-        showInformationMessage.mockReset();
-        showInputBox.mockReset();
-        showInputBox.mockReturnValue("modify");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await jobActions.modifyCommand(jobNode);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual(
-            "Command response: fake response"
-        );
-    });
-
-    it("tests that a modify command is not issued", async () => {
-        showInformationMessage.mockReset();
-        showInputBox.mockReset();
-        showInputBox.mockReturnValue("modify");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await jobActions.modifyCommand(undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-    });
-
-    it("tests that the spool is downloaded", async () => {
-        const fileUri = {fsPath: "/tmp/foo"};
-        showOpenDialog.mockReturnValue([fileUri]);
-        const downloadFileSpy = jest.spyOn(jesApi, "downloadSpoolContent");
-        await jobActions.downloadSpool(jobNode);
-        expect(showOpenDialog).toBeCalled();
-        expect(downloadFileSpy).toBeCalled();
-        expect(downloadFileSpy.mock.calls[0][0]).toEqual(
-            {
-                jobid: jobNode.job.jobid,
-                jobname: jobNode.job.jobname,
-                outDir: fileUri.fsPath
-            }
-        );
-    });
-
-    it("tests that the spool is not downloaded", async () => {
-        const fileUri = {fsPath: "/tmp/foo"};
-        showOpenDialog.mockReturnValue([fileUri]);
-        await jobActions.downloadSpool(undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-    });
-
-    it("tests that the jcl is downloaded", async () => {
-        getJclForJob.mockReset();
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        await jobActions.downloadJcl(jobNode);
-        expect(getJclForJob).toBeCalled();
-        expect(openTextDocument).toBeCalled();
-        expect(showTextDocument).toBeCalled();
-    });
-
-    it("tests that the jcl is not downloaded", async () => {
-        getJclForJob.mockReset();
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        await jobActions.downloadJcl(undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-    });
-
     it("tests that the jcl is submitted", async () => {
         showInformationMessage.mockReset();
         createBasicZosmfSession.mockReturnValue(session);

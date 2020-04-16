@@ -1,9 +1,25 @@
 import * as imperative from "@zowe/imperative";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as path from "path";
+import * as globals from "../../src/globals";
+import * as vscode from "vscode";
+import { ValidProfileEnum } from "../../src/Profiles";
 
 export function generateImperativeSession() {
     return new imperative.Session({
         user: "fake",
         password: "fake",
+        hostname: "fake",
+        protocol: "https",
+        type: "basic",
+    });
+}
+
+export function generateImperativeSessionWithoutCredentials() {
+    return new imperative.Session({
+        user: "",
+        password: "",
         hostname: "fake",
         protocol: "https",
         type: "basic",
@@ -32,5 +48,44 @@ export function generateTreeView() {
         onDidChangeSelection: jest.fn(),
         visible: true,
         onDidChangeVisibility: jest.fn()
+    };
+}
+
+export function generateTextDocument(sessionNode: ZoweDatasetNode | ZoweUSSNode, name: string): vscode.TextDocument {
+    return {
+        fileName: `/${sessionNode.label}/${name}`,
+        uri: null,
+        isUntitled: null,
+        languageId: null,
+        version: null,
+        isDirty: null,
+        isClosed: null,
+        save: null,
+        eol: null,
+        lineCount: null,
+        lineAt: null,
+        offsetAt: null,
+        positionAt: null,
+        getText: null,
+        getWordRangeAtPosition: null,
+        validateRange: null,
+        validatePosition: null
+    };
+}
+
+export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
+    return {
+        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+        defaultProfile: {name: "firstName"},
+        getDefaultProfile: jest.fn(),
+        promptCredentials: jest.fn(),
+        loadNamedProfile: jest.fn(),
+        usesSecurity: true,
+        validProfile: ValidProfileEnum.VALID,
+        checkCurrentProfile: jest.fn(),
+        getProfiles: jest.fn(() => {
+            return [{name: profile.name, profile}, {name: profile.name, profile}];
+        }),
+        refresh: jest.fn()
     };
 }
