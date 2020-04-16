@@ -15,8 +15,9 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger } from "@zowe/imperative";
-import { Profiles } from "../../src/Profiles";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
+import * as testConst from "../../resources/testProfileData";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
 
 describe("Profile class unit tests", () => {
@@ -475,5 +476,68 @@ describe("Profile class unit tests", () => {
         mockJSONParse.mockReturnValueOnce(profileOne);
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+    });
+
+    it("Tests checkCurrentProfile() with valid profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return ["testUser", "testPass", "fake"];
+                    })
+                };
+            })
+        });
+        const testProfile = {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        theProfiles.validProfile = -1;
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
+    });
+
+    it("Tests checkCurrentProfile() with invalid profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return undefined;
+                    })
+                };
+            })
+        });
+        const testProfile = {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });
