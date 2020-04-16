@@ -15,18 +15,18 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import * as extension from "../../src/extension";
+import * as globals from "../../src/globals";
 import { Logger, ISession, CliProfileManager, IProfileLoaded, Session } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession, IJob } from "@zowe/cli";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
-import { Job } from "../../src/ZoweJobNode";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import { Job } from "../../src/job/ZoweJobNode";
 import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweNodeType } from "../../src/api/IZoweTreeNode";
 import { IZoweTree } from "../../src/api/IZoweTree";
-import { DatasetTree } from "../../src/DatasetTree";
-import { USSTree } from "../../src/USSTree";
-import { ZosJobsProvider } from "../../src/ZosJobsProvider";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { USSTree } from "../../src/uss/USSTree";
+import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
 import * as testConst from "../../resources/testProfileData";
 
 describe("Profile class unit tests", () => {
@@ -123,7 +123,7 @@ describe("Profile class unit tests", () => {
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
-  
+
     const sessTree: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
     const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
     const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
@@ -545,8 +545,9 @@ describe("Profile class unit tests", () => {
         });
 
         it("should delete profile from context menu", async () => {
-            const dsNode = new ZoweDatasetNode("profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
-            dsNode.contextValue = extension.DS_SESSION_CONTEXT;
+            const dsNode = new ZoweDatasetNode(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
+            dsNode.contextValue = globals.DS_SESSION_CONTEXT;
             showQuickPick.mockResolvedValueOnce("Yes");
             await profiles.deleteProfile(sessTree, ussTree, jobsTree, dsNode);
             expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -556,8 +557,9 @@ describe("Profile class unit tests", () => {
         it("should delete session from Data Set tree", async () => {
             const startLength = sessTree.mSessionNodes.length;
             const favoriteLength = sessTree.mFavorites.length;
-            const dsNode = new ZoweDatasetNode("profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
-            dsNode.contextValue = extension.DS_SESSION_CONTEXT;
+            const dsNode = new ZoweDatasetNode(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
+            dsNode.contextValue = globals.DS_SESSION_CONTEXT;
             sessTree.mSessionNodes.push(dsNode);
             sessTree.addFavorite(dsNode);
             showQuickPick.mockResolvedValueOnce("Yes");
@@ -571,8 +573,11 @@ describe("Profile class unit tests", () => {
         it("should delete session from USS tree", async () => {
             const startLength = ussTree.mSessionNodes.length;
             const favoriteLength = ussTree.mFavorites.length;
-            const ussNode = new ZoweUSSNode("profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileThree.name, null, profileThree);
-            ussNode.contextValue = extension.USS_SESSION_CONTEXT;
+            const ussNode = new ZoweUSSNode(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded,
+                null, session, null, false, profileThree.name, null, profileThree);
+            ussNode.contextValue = globals.USS_SESSION_CONTEXT;
+            ussNode.profile = profileThree;
             ussTree.addSession("profile3");
             ussTree.addFavorite(ussNode);
             showQuickPick.mockResolvedValueOnce("Yes");
@@ -586,8 +591,9 @@ describe("Profile class unit tests", () => {
         it("should delete session from Jobs tree", async () => {
             const startLength = jobsTree.mSessionNodes.length;
             const favoriteLength = jobsTree.mFavorites.length;
-            const jobNode = new Job("profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileThree);
-            jobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+            const jobNode = new Job(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileThree);
+            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
             jobsTree.mSessionNodes.push(jobNode);
             jobsTree.addFavorite(jobNode);
             showQuickPick.mockResolvedValueOnce("Yes");

@@ -719,8 +719,6 @@ describe("Extension Unit Tests", () => {
             "zowe.pasteDataSet",
             "zowe.renameDataSetMember",
             "zowe.hMigrateDataSet",
-            "zowe.deleteProfile",
-            "zowe.cmd.deleteProfile",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -742,7 +740,6 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.editFile",
             "zowe.uss.saveSearch",
             "zowe.uss.removeSavedSearch",
-            "zowe.uss.deleteProfile",
             "zowe.zosJobsOpenspool",
             "zowe.deleteJob",
             "zowe.runModifyCommand",
@@ -763,9 +760,12 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.removeFavorite",
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
-            "zowe.jobs.deleteProfile",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems"
+            "zowe.searchInAllLoadedItems",
+            "zowe.deleteProfile",
+            "zowe.cmd.deleteProfile",
+            "zowe.uss.deleteProfile",
+            "zowe.jobs.deleteProfile",
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);

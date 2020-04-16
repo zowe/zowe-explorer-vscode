@@ -153,6 +153,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         });
     }
+    if (datasetProvider || ussFileProvider || jobsProvider) {
+        vscode.commands.registerCommand("zowe.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider));
+        vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+    }
 
     // return the Extension's API to other extensions that want to register their APIs.
     return ZoweExplorerApiRegister.getInstance();
@@ -184,10 +194,6 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.pasteDataSet", (node) => dsActions.pasteDataSet(node, datasetProvider));
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
-    vscode.commands.registerCommand("zowe.deleteProfile", async (node) =>
-            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
-    vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () =>
-            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider));
     vscode.workspace.onDidChangeConfiguration(async (e) => { datasetProvider.onDidChangeConfiguration(e); });
 
     initSubscribers(context, datasetProvider);
@@ -214,8 +220,6 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node));
     vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
-    vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) =>
-            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
     vscode.workspace.onDidChangeConfiguration(async (e) => { ussFileProvider.onDidChangeConfiguration(e); });
 
@@ -251,8 +255,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
-    vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
-            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     vscode.workspace.onDidChangeConfiguration(async (e) => { jobsProvider.onDidChangeConfiguration(e); });
 
     initSubscribers(context, jobsProvider);

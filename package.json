@@ -641,7 +641,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.explorer && viewItem == session",
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.deleteProfile",
           "group": "6_modification@4"
         },
@@ -675,7 +675,7 @@
           "group": "inline"
         },
         {
-          "when": "viewItem == uss_session",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.deleteProfile",
           "group": "6_modification@4"
         },
@@ -705,7 +705,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.jobs && viewItem == server",
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.deleteProfile",
           "group": "6_modification@4"
         },
