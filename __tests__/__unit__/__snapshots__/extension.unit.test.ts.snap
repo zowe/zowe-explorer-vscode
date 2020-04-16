@@ -195,7 +195,7 @@ Array [
   Object {
     "command": "zowe.editSession",
     "group": "inline",
-    "when": "view == zowe.explorer && viewItem == session",
+    "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
   },
   Object {
     "command": "zowe.removeSession",
@@ -257,7 +257,7 @@ Array [
   Object {
     "command": "zowe.jobs.editSession",
     "group": "inline",
-    "when": "view == zowe.jobs && viewItem == server",
+    "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
   },
   Object {
     "command": "zowe.setOwner",
