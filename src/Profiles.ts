@@ -389,6 +389,8 @@ export class Profiles {
             }
             const deleteSuccess = await this.deletePrompt(deletedProfile);
             if (!deleteSuccess){
+                vscode.window.showInformationMessage(localize("deleteProfile.noSelected",
+                    "Operation Cancelled"));
                 return;
             }
 

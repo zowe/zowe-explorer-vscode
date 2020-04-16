@@ -168,12 +168,6 @@ describe("Profile class unit tests", () => {
                         updateProfile: jest.fn(()=>{
                             return {};
                         }),
-                        getDeleteProfile: jest.fn(()=>{
-                            return {};
-                        }),
-                        deletePrompt: jest.fn(()=>{
-                            return {};
-                        })
                     };
                 })
             });
@@ -304,15 +298,6 @@ describe("Profile class unit tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
         });
 
-        it("should delete profile", async () => {
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("profile1");
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessNode, jobNode, ussNode);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
-        });
-
         it("should prompt credentials", async () => {
             const promptProfile = {name: "profile1", profile: {user: undefined, password: undefined}};
             profiles.loadNamedProfile = jest.fn(() => {
@@ -433,6 +418,94 @@ describe("Profile class unit tests", () => {
             expect(res.valid).toBe(false);
         });
 
+    });
+
+    describe("Deleting Profiles", () => {
+        let profiles: Profiles;
+        beforeEach(async () => {
+            profiles = await Profiles.createInstance(log);
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "profile1"}, {name: "profile2"}],
+                        defaultProfile: {name: "profile1"},
+                        loadNamedProfile: [{name: "profile1"}, {profile: {user: "fake", password: "1234"}}],
+                        promptCredentials: jest.fn(()=> {
+                            return {};
+                        }),
+                        createNewConnection: jest.fn(()=>{
+                            return {};
+                        }),
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        saveProfile: jest.fn(()=>{
+                            return {profile: {}};
+                        }),
+                        validateAndParseUrl: jest.fn(()=>{
+                            return {};
+                        }),
+                        updateProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        getDeleteProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        deletePrompt: jest.fn(()=>{
+                            return {};
+                        }),
+                        deleteProf: jest.fn(()=>{
+                            return {};
+                        })
+                    };
+                })
+            });
+        });
+
+        afterEach(() => {
+            showInputBox.mockReset();
+            showQuickPick.mockReset();
+            createInputBox.mockReset();
+            showInformationMessage.mockReset();
+            showErrorMessage.mockReset();
+        });
+
+        it("should delete profile from command palette", async () => {
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessNode, jobNode, ussNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+        });
+
+        it("should handle missing selection: profile name", async () => {
+            showQuickPick.mockResolvedValueOnce(undefined);
+            await profiles.deleteProfile(sessNode, jobNode, ussNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should handle case where user selects No", async () => {
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("No");
+            await profiles.deleteProfile(sessNode, jobNode, ussNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should handle case where there are no profiles to delete", async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: []
+                    };
+                })
+            });
+            profiles.refresh();
+            await profiles.deleteProfile(sessNode, jobNode, ussNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No profiles available");
+        });
     });
 
     it("should route through to spawn. Covers conditional test", async () => {
