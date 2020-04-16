@@ -179,38 +179,59 @@ export class Profiles {
 
     public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
 
+        let newUser: string;
+        let newPass: string;
+        let newRU: boolean;
+
         const newUrl = await this.urlInfo();
-        const newUser = await this.userInfo();
-        const newPass = await this.passwordInfo();
-        const newRU = await this.ruInfo();
 
+        if (newUrl) {
+            newUser = await this.userInfo();
+        } else {
+            return;
+        }
 
-        for (const profile of this.allProfiles) {
-            if (profile.name === profileName) {
-                vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
-                    "Profile name already exists. Please create a profile using a different name"));
-                return undefined;
+        if (newUser !== undefined) {
+            newPass = await this.passwordInfo();
+        } else {
+            return;
+        }
+
+        if (newPass !== undefined) {
+            newRU = await this.ruInfo();
+        } else {
+            return;
+        }
+
+        if (newRU !== undefined) {
+            for (const profile of this.allProfiles) {
+                if (profile.name === profileName) {
+                    vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
+                        "Profile name already exists. Please create a profile using a different name"));
+                    return undefined;
+                }
             }
+
+            IConnection = {
+                name: profileName,
+                host: newUrl.host,
+                port: newUrl.port,
+                user: newUser,
+                password: newPass,
+                rejectUnauthorized: newRU
+            };
+
+            try {
+                await zowe.ZosmfSession.createBasicZosmfSession(IConnection);
+                await this.saveProfile(IConnection, IConnection.name, profileType);
+                vscode.window.showInformationMessage("Profile " + profileName + " was created.");
+                return profileName;
+            } catch (error) {
+                await errorHandling(error.message);
+            }
+        } else {
+            return;
         }
-
-        IConnection = {
-            name: profileName,
-            host: newUrl.host,
-            port: newUrl.port,
-            user: newUser,
-            password: newPass,
-            rejectUnauthorized: newRU
-        };
-
-        try {
-            await zowe.ZosmfSession.createBasicZosmfSession(IConnection);
-            await this.saveProfile(IConnection, IConnection.name, profileType);
-            vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-            return profileName;
-        } catch (error) {
-            await errorHandling(error.message);
-        }
-
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
@@ -306,7 +327,7 @@ export class Profiles {
         if (userName === undefined) {
             vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
                 "Operation Cancelled"));
-            return;
+            return undefined;
         }
 
         return userName;
@@ -331,7 +352,7 @@ export class Profiles {
         if (passWord === undefined) {
             vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
                 "Operation Cancelled"));
-            return;
+            return undefined;
         }
 
         return passWord;
