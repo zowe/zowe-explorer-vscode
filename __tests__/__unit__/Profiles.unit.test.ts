@@ -574,12 +574,13 @@ describe("Profile class unit tests", () => {
             const startLength = ussTree.mSessionNodes.length;
             const favoriteLength = ussTree.mFavorites.length;
             const ussNode = new ZoweUSSNode(
-                "profile3", vscode.TreeItemCollapsibleState.Expanded,
+                "[profile3]: profile3", vscode.TreeItemCollapsibleState.Expanded,
                 null, session, null, false, profileThree.name, null, profileThree);
             ussNode.contextValue = globals.USS_SESSION_CONTEXT;
             ussNode.profile = profileThree;
             ussTree.addSession("profile3");
-            ussTree.addFavorite(ussNode);
+            ussTree.mSessionNodes.push(ussNode);
+            ussTree.mFavorites.push(ussNode);
             showQuickPick.mockResolvedValueOnce("Yes");
             await profiles.deleteProfile(sessTree, ussTree, jobsTree, ussNode);
             expect(showInformationMessage.mock.calls.length).toBe(1);
