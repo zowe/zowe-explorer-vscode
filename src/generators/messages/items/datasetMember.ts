@@ -10,7 +10,7 @@
 */
 
 import { IMessageItem, MessageCategoryId, MessageContentType, MessageHierarchyType } from "../index";
-import * as extension from "../../../extension";
+import * as globals from "../../../globals";
 import datasetMessage from "./dataset";
 import * as nls from "vscode-nls";
 
@@ -26,8 +26,8 @@ const message: IMessageItem = {
     },
     check: (node) => {
         const contexts = [
-            extension.DS_MEMBER_CONTEXT,
-            extension.DS_MEMBER_CONTEXT + extension.FAV_SUFFIX
+            globals.DS_MEMBER_CONTEXT,
+            globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX
         ];
 
         return contexts.indexOf(node.contextValue) > -1;

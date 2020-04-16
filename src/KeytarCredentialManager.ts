@@ -10,9 +10,8 @@
 */
 
 import { AbstractCredentialManager, ImperativeError, SecureCredential } from "@zowe/imperative";
-import * as nls from "vscode-nls";
 
-// Localization support
+import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**

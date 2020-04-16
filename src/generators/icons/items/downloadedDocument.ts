@@ -11,7 +11,7 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import documentIcon from "./document";
-import { getIconPathInResources } from "../../../utils/icon";
+import { getIconPathInResources } from "../../../shared/utils";
 
 const icon: IIconItem = {
     id: IconId.downloadedDocument,

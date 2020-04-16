@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import { isSessionNotFav } from "../../../utils/context";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isSessionNotFav } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.session,

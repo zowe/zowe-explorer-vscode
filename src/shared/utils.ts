@@ -1,0 +1,190 @@
+/*
+* This program and the accompanying materials are made available under the terms of the *
+* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+* https://www.eclipse.org/legal/epl-v20.html                                      *
+*                                                                                 *
+* SPDX-License-Identifier: EPL-2.0                                                *
+*                                                                                 *
+* Copyright Contributors to the Zowe Project.                                     *
+*                                                                                 *
+*/
+
+import * as vscode from "vscode";
+import * as path from "path";
+import * as globals from "../globals";
+import { IZoweTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
+import { Profiles } from "../Profiles";
+import { ISession } from "@zowe/imperative";
+
+export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+    const filteredArray = [];
+    value = value.toUpperCase().replace(".", "\.").replace(/\*/g, "(.*)");
+    const regex = new RegExp(value);
+    treeItems.forEach((item) => {
+        if (item.label.toUpperCase().match(regex)) {
+            filteredArray.push(item);
+        }
+    });
+    return filteredArray;
+}
+
+/**
+ * Gets path to the icon, which is located in resources folder
+ * @param iconFileName {string} Name of icon file with extension
+ * @returns {object}
+ */
+export function getIconPathInResources(iconFileName: string) {
+    return {
+        light: path.join(__dirname, "..", "..", "..", "resources", "light", iconFileName),
+        dark: path.join(__dirname, "..", "..", "..", "resources", "dark", iconFileName)
+    };
+}
+
+/*************************************************************************************************************
+* Returns array of all subnodes of given node
+*************************************************************************************************************/
+export function concatChildNodes(nodes: IZoweNodeType[]) {
+    let allNodes = new Array<IZoweNodeType>();
+
+    for (const node of nodes) {
+        allNodes = allNodes.concat(concatChildNodes(node.children));
+        allNodes.push(node);
+    }
+    return allNodes;
+}
+
+/**
+ * For no obvious reason a label change is often required to make a node repaint.
+ * This function does this by adding or removing a blank.
+ * @param {TreeItem} node - the node element
+ */
+export function labelHack( node: vscode.TreeItem ): void {
+    node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
+}
+
+/*************************************************************************************************************
+ * Refresh Profile and Session
+ * @param {sessNode} IZoweTreeNode
+ * @param {profile} IProfileLoaded
+ *************************************************************************************************************/
+export function refreshTree(sessNode: IZoweTreeNode) {
+    const allProf = Profiles.getInstance().getProfiles();
+    for (const profNode of allProf) {
+        if (sessNode.getProfileName() === profNode.name) {
+            sessNode.getProfile().profile = profNode.profile;
+            const SessionProfile = profNode.profile as ISession;
+            if (sessNode.getSession().ISession !== SessionProfile) {
+                sessNode.getSession().ISession.user = SessionProfile.user;
+                sessNode.getSession().ISession.password = SessionProfile.password;
+                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
+                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
+                sessNode.getSession().ISession.port = SessionProfile.port;
+                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
+            }
+        }
+    }
+    sessNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+}
+
+export function sortTreeItems(favorites: vscode.TreeItem[], specificContext ) {
+    favorites.sort((a, b) => {
+        if (a.contextValue === specificContext) {
+            if (b.contextValue === specificContext) {
+                return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+            } else {
+                return -1;
+            }
+        } else if (b.contextValue === specificContext) {
+            return 1;
+        }
+        return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
+    });
+}
+
+/*************************************************************************************************************
+ * Determine IDE name to display based on app environment
+ *************************************************************************************************************/
+export function getAppName(isTheia: boolean) {
+    return isTheia ? "Theia" : "VS Code";
+}
+
+/**
+ * Returns the file path for the IZoweTreeNode
+ *
+ * @export
+ * @param {string} label - If node is a member, label includes the name of the PDS
+ * @param {IZoweTreeNode} node
+ */
+export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
+    return path.join(globals.DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
+}
+
+/**
+ * Append a suffix on a ds file so it can be interpretted with syntax highlighter
+ *
+ * Rules of mapping:
+ *  1. Start with LLQ and work backwards as it is at this end usually
+ *   the language is specified
+ *  2. Dont do this for the top level HLQ
+ */
+function appendSuffix(label: string): string {
+    const limit = 5;
+    const bracket = label.indexOf("(");
+    const split = (bracket > -1) ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
+    for (let i = split.length - 1; i > 0; i--) {
+        if (["JCL", "CNTL"].includes(split[i])) {
+            return label.concat(".jcl");
+        }
+        if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
+            return label.concat(".cbl");
+        }
+        if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
+            return label.concat(".cpy");
+        }
+        if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
+            return label.concat(".inc");
+        }
+        if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
+            return label.concat(".pli");
+        }
+        if (["SH", "SHELL"].includes(split[i])) {
+            return label.concat(".sh");
+        }
+        if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
+            return label.concat(".rexx");
+        }
+        if (split[i] === "XML") {
+            return label.concat(".xml");
+        }
+        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
+            return label.concat(".asm");
+        }
+        if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
+            return label.concat(".log");
+        }
+    }
+    return label;
+}
+
+export function checkForAddedSuffix(filename: string): boolean {
+    // identify how close to the end of the string the last . is
+    const dotPos = filename.length - (1 + filename.lastIndexOf("."));
+    // tslint:disable-next-line: no-magic-numbers
+    return ((dotPos >= 2 && dotPos <= 4) && // if the last characters are 2 to 4 long and lower case it has been added
+        ((filename.substring(filename.length - dotPos) === filename.substring(filename.length - dotPos).toLowerCase())));
+}
+
+/**
+ * Returns the profile for the specified node
+ *
+ * @export
+ * @param {IZoweTreeNode} node
+ */
+export function getProfile(node: IZoweTreeNode) {
+    let profile = node.getSessionNode().label.trim();
+    // if this is a favorite node, further extraction is necessary
+    if (profile.includes("[")) {
+        profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));
+    }
+    return profile;
+}

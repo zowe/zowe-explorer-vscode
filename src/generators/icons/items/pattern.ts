@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import { isFavoriteSearch } from "../../../utils/context";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isFavoriteSearch } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.pattern,

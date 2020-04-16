@@ -12,9 +12,8 @@
 import * as zowe from "@zowe/cli";
 import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import * as nls from "vscode-nls";
 
-// Localization support
+import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // tslint:disable: max-classes-per-file

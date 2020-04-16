@@ -1,0 +1,11 @@
+{
+    "createUSSNode.name": "Name of file or directory",
+    "createUSSNode.error.create": "Unable to create node: ",
+    "renameUSSNode.error": "Unable to rename node: ",
+    "copyPath.infoMessage": "Copy Path is not yet supported in Theia.",
+    "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",
+    "saveUSSFile.response.title": "Saving file...",
+    "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
+    "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.",
+    "saveUSSFile.log.error.save": "Error encountered when saving USS file: "
+}
