@@ -10,8 +10,8 @@
 */
 
 import { TreeItem } from "vscode";
-import * as contextually from "../../../src/utils/context";
-import * as extension from "../../../src/extension";
+import * as contextually from "../../../src/shared/context";
+import * as globals from "../../../src/globals";
 
 describe.only("Context helper tests", () => {
     const INFORMATION_CONTEXT = "information";
@@ -82,11 +82,11 @@ describe.only("Context helper tests", () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
             switch (ctx) {
-                case DS_PDS_CONTEXT + extension.FAV_SUFFIX:
+                case DS_PDS_CONTEXT + globals.FAV_SUFFIX:
                     expect(contextually.isFavoritePsDs(treeItem)).toBe(true);
                     expect(contextually.isFavoriteDs(treeItem)).toBe(false);
                     break;
-                case DS_DS_CONTEXT + extension.FAV_SUFFIX:
+                case DS_DS_CONTEXT + globals.FAV_SUFFIX:
                     expect(contextually.isFavoritePsDs(treeItem)).toBe(true);
                     expect(contextually.isFavoriteDs(treeItem)).toBe(true);
                     break;
@@ -100,7 +100,7 @@ describe.only("Context helper tests", () => {
             treeItem.contextValue = ctx;
             switch (ctx) {
                 case DS_MEMBER_CONTEXT:
-                case DS_MEMBER_CONTEXT + extension.FAV_SUFFIX:
+                case DS_MEMBER_CONTEXT + globals.FAV_SUFFIX:
                     expect(contextually.isDsMember(treeItem)).toBe(true);
                     break;
                 default:
