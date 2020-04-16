@@ -9,31 +9,23 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
-import {
-    FilterItem,
-    FilterDescriptor,
-    getAppName,
-    resolveQuickPickHelper,
-    sortTreeItems,
-    errorHandling,
-    setProfile,
-    setSession
- } from "./utils";
-import * as path from "path";
 import * as vscode from "vscode";
-import { IZoweTree } from "./api/IZoweTree";
-import { IZoweUSSTreeNode } from "./api/IZoweTreeNode";
+import * as globals from "../globals";
+import * as path from "path";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling, setProfile, setSession } from "../utils";
+import { sortTreeItems, getAppName } from "../shared/utils";
+import { IZoweTree } from "../api/IZoweTree";
+import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { Profiles } from "./Profiles";
-import * as extension from "../src/extension";
-import * as nls from "vscode-nls";
-import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
-import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { getIconByNode } from "./generators/icons";
-import * as contextually from "./utils/context";
+import { Profiles, ValidProfileEnum } from "../Profiles";
+import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { getIconByNode } from "../generators/icons";
+import * as contextually from "../shared/context";
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import * as nls from "vscode-nls";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
  * Creates the USS tree that contains nodes of sessions and data sets
@@ -65,7 +57,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     constructor() {
         super(USSTree.persistenceSchema, new ZoweUSSNode(localize("Favorites", "Favorites"),
             vscode.TreeItemCollapsibleState.Collapsed, null, null, null));
-        this.mFavoriteSession.contextValue = extension.FAVORITE_CONTEXT;
+        this.mFavoriteSession.contextValue = globals.FAVORITE_CONTEXT;
         const icon = getIconByNode(this.mFavoriteSession);
         if (icon) {
             this.mFavoriteSession.iconPath = icon.path;
@@ -147,9 +139,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getChildren(element?: IZoweUSSTreeNode | undefined): Promise<IZoweUSSTreeNode[]> {
         if (element) {
-            if (element.contextValue === extension.FAVORITE_CONTEXT) {
+            if (element.contextValue === globals.FAVORITE_CONTEXT) {
                 return this.mFavorites;
             }
+            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -226,7 +219,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
-            sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
+            sortTreeItems(this.mFavorites, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -244,7 +237,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
         temp.fullPath = node.fullPath;
         temp.label = temp.tooltip = label;
-        temp.contextValue = extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        temp.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const icon = getIconByNode(temp);
         if (icon) {
             temp.iconPath = icon.path;
@@ -252,7 +245,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
             this.mFavorites.push(temp);
-            sortTreeItems(this.mFavorites, extension.USS_SESSION_CONTEXT + extension.FAV_SUFFIX);
+            sortTreeItems(this.mFavorites, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -296,7 +289,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
 
         // Add all data sets loaded in the tree to an array
         for (const session of sessions) {
-                if (!session.contextValue.includes(extension.FAVORITE_CONTEXT)) {
+                if (!session.contextValue.includes(globals.FAVORITE_CONTEXT)) {
                 const nodes = await session.getChildren();
 
                 const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
@@ -327,41 +320,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
         let sessionNode = node.getSessionNode();
         let remotepath: string;
-        let usrNme: string;
-        let passWrd: string;
-        let baseEncd: string;
-        if ((!(node.getSession().ISession.user).trim()) || (!(node.getSession().ISession.password).trim())) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(node.getProfileName());
-                if (values !== undefined) {
-                    usrNme = values [0];
-                    passWrd = values [1];
-                    baseEncd = values [2];
-                }
-            } catch (error) {
-                await errorHandling(error, node.getProfileName(),
-                    localize("ussTree.error", "Error encountered in ") + `ussFilterPrompt.optionalProfiles!`);
-            }
-            if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                node.getSession().ISession.user = usrNme;
-                node.getSession().ISession.password = passWrd;
-                node.getSession().ISession.base64EncodedAuth = baseEncd;
-                this.validProfile = 0;
-            } else {
-                return;
-            }
-            await this.refreshElement(node);
-            await this.refresh();
-        } else {
-            this.validProfile = 0;
-        }
-        if (this.validProfile === 0) {
-            if (node.contextValue === extension.USS_SESSION_CONTEXT) {
+        await this.checkCurrentProfile(node);
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            if (node.contextValue === globals.USS_SESSION_CONTEXT) {
                 if (this.mHistory.getHistory().length > 0) {
 
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
-                    if (extension.ISTHEIA) {
+                    if (globals.ISTHEIA) {
                         const options1: vscode.QuickPickOptions = {
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter")
                         };
@@ -460,7 +426,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     const label = "[" + sesName + "]: " + nodeName;
                     node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
                         this.mFavoriteSession, session, null, false, profileName);
-                    node.contextValue = extension.USS_SESSION_CONTEXT;
+                    node.contextValue = globals.USS_SESSION_CONTEXT;
                     node.fullPath = nodeName;
                     node.label = node.tooltip = label;
                     // add a command to execute the search
@@ -487,7 +453,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     ". To resolve this, you can create a profile with this name, ") +
                     localize("initializeUSSFavorites.error.profile3",
                     "or remove the favorites with this profile name from the Zowe-USS-Persistent setting, which can be found in your ") +
-                    getAppName(extension.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings.");
+                    getAppName(globals.ISTHEIA) + localize("initializeUSSFavorites.error.profile4", " user settings.");
                 errorHandling(e, null, errMessage);
                 return;
             }
@@ -547,6 +513,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
+    public async checkCurrentProfile(node: IZoweUSSTreeNode) {
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        await this.refresh();
+    }
+
     /**
      * Adds a single session to the USS tree
      *
@@ -562,7 +534,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profile.name);
-            node.contextValue = extension.USS_SESSION_CONTEXT;
+            node.contextValue = globals.USS_SESSION_CONTEXT;
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;

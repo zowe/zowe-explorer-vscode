@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import * as extension from "../extension";
+import * as globals from "../globals";
 import { TreeItem } from "vscode";
 
 /**
@@ -31,7 +31,7 @@ import { TreeItem } from "vscode";
  * @return true if a job, false otherwise
  */
 export function isJob(node: TreeItem): boolean {
-    return new RegExp("^" + extension.JOBS_JOB_CONTEXT ).test(node.contextValue);
+    return new RegExp("^" + globals.JOBS_JOB_CONTEXT ).test(node.contextValue);
 }
 
 /**
@@ -40,8 +40,8 @@ export function isJob(node: TreeItem): boolean {
  * @return true if a favorite pds, ds, false otherwise
  */
 export function isFavoritePsDs(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_PDS_CONTEXT + "|" +
-                    extension.DS_DS_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_PDS_CONTEXT + "|" +
+                    globals.DS_DS_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -50,7 +50,7 @@ export function isFavoritePsDs(node: TreeItem): boolean {
  * @return true if a favorite ds, false otherwise
  */
 export function isFavoriteDs(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_DS_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_DS_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -59,7 +59,7 @@ export function isFavoriteDs(node: TreeItem): boolean {
  * @return true if a favorite job, false otherwise
  */
 export function isFavoriteJob(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.JOBS_JOB_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.JOBS_JOB_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -68,7 +68,7 @@ export function isFavoriteJob(node: TreeItem): boolean {
  * @return true if a favorite pds, false otherwise
  */
 export function isFavoritePds(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_PDS_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_PDS_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -77,8 +77,8 @@ export function isFavoritePds(node: TreeItem): boolean {
  * @return true if a Favorite binary or text file, false otherwise
  */
 export function isFavoriteTextOrBinary(node: TreeItem): boolean {
-    return new RegExp("^("+ extension.DS_BINARY_FILE_CONTEXT + "|" +
-                    extension.DS_TEXT_FILE_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
+    return new RegExp("^("+ globals.DS_BINARY_FILE_CONTEXT + "|" +
+                    globals.DS_TEXT_FILE_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -87,7 +87,7 @@ export function isFavoriteTextOrBinary(node: TreeItem): boolean {
  * @return true if a binary file, false otherwise
  */
 export function isBinary(node: TreeItem): boolean {
-    return new RegExp("^" + extension.DS_BINARY_FILE_CONTEXT).test(node.contextValue);
+    return new RegExp("^" + globals.DS_BINARY_FILE_CONTEXT).test(node.contextValue);
 }
 
 /**
@@ -96,9 +96,9 @@ export function isBinary(node: TreeItem): boolean {
  * @return true if a document, false otherwise
  */
 export function isDocument(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_DS_CONTEXT + "|" + extension.DS_MEMBER_CONTEXT + "|"
-                        + extension.DS_TEXT_FILE_CONTEXT + "|" + extension.JOBS_SPOOL_CONTEXT + "|"
-                        + extension.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_DS_CONTEXT + "|" + globals.DS_MEMBER_CONTEXT + "|"
+                        + globals.DS_TEXT_FILE_CONTEXT + "|" + globals.JOBS_SPOOL_CONTEXT + "|"
+                        + globals.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -107,7 +107,7 @@ export function isDocument(node: TreeItem): boolean {
  * @return true if a migrated dataset, false otherwise
  */
 export function isMigrated(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -116,7 +116,7 @@ export function isMigrated(node: TreeItem): boolean {
  * @return true if a favorite, false otherwise
  */
 export function isFavorite(node: TreeItem): boolean {
-    return new RegExp(extension.FAV_SUFFIX).test(node.contextValue);
+    return new RegExp(globals.FAV_SUFFIX).test(node.contextValue);
 }
 
 /**
@@ -126,8 +126,8 @@ export function isFavorite(node: TreeItem): boolean {
  * @return true if a favorite root, false otherwise
  */
 export function isFavoriteSearch(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.JOBS_SESSION_CONTEXT + "|" + extension.USS_SESSION_CONTEXT + "|"
-                        + extension.DS_SESSION_CONTEXT + ")(.*" + extension.FAV_SUFFIX + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+                        + globals.DS_SESSION_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 
 /**
@@ -136,7 +136,7 @@ export function isFavoriteSearch(node: TreeItem): boolean {
  * @return true if a favorite context root, false otherwise
  */
 export function isFavoriteContext(node: TreeItem): boolean {
-    return new RegExp(extension.FAVORITE_CONTEXT).test(node.contextValue);
+    return new RegExp(globals.FAVORITE_CONTEXT).test(node.contextValue);
 }
 
 /**
@@ -145,7 +145,7 @@ export function isFavoriteContext(node: TreeItem): boolean {
  * @return true if a dataset member, false otherwise
  */
 export function isDsMember(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_MEMBER_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_MEMBER_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -154,7 +154,7 @@ export function isDsMember(node: TreeItem): boolean {
  * @return true if a dataset session, false otherwise
  */
 export function isDsSession(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_SESSION_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_SESSION_CONTEXT + ")").test(node.contextValue);
 }
 
 
@@ -164,7 +164,7 @@ export function isDsSession(node: TreeItem): boolean {
  * @return true if a partitioned dataset, false otherwise
  */
 export function isPds(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.DS_PDS_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.DS_PDS_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -173,7 +173,7 @@ export function isPds(node: TreeItem): boolean {
  * @return true if a USS Directory, false otherwise
  */
 export function isUssDirectory(node: TreeItem): boolean {
-    return new RegExp("^" + extension.USS_DIR_CONTEXT).test(node.contextValue);
+    return new RegExp("^" + globals.USS_DIR_CONTEXT).test(node.contextValue);
 }
 
 /**
@@ -182,7 +182,7 @@ export function isUssDirectory(node: TreeItem): boolean {
  * @return true if a USS session, false otherwise
  */
 export function isUssSession(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.USS_SESSION_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.USS_SESSION_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -191,8 +191,8 @@ export function isUssSession(node: TreeItem): boolean {
  * @return true if a folder, false otherwise
  */
 export function isFolder(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.JOBS_JOB_CONTEXT + "|" + extension.USS_DIR_CONTEXT + "|"
-                        + extension.DS_PDS_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.JOBS_JOB_CONTEXT + "|" + globals.USS_DIR_CONTEXT + "|"
+                        + globals.DS_PDS_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -201,8 +201,8 @@ export function isFolder(node: TreeItem): boolean {
  * @return true if a session, false otherwise
  */
 export function isSession(node: TreeItem): boolean {
-    return new RegExp("^(" + extension.JOBS_SESSION_CONTEXT + "|" + extension.USS_SESSION_CONTEXT + "|"
-                        + extension.DS_SESSION_CONTEXT + ")").test(node.contextValue);
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+                        + globals.DS_SESSION_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -211,8 +211,8 @@ export function isSession(node: TreeItem): boolean {
  * @return true if a session, false otherwise
  */
 export function isSessionNotFav(node: TreeItem): boolean {
-    return new RegExp("^((?!.*" + extension.FAV_SUFFIX + ")(" + extension.JOBS_SESSION_CONTEXT + "|" + extension.USS_SESSION_CONTEXT + "|"
-                        + extension.DS_SESSION_CONTEXT + "))").test(node.contextValue);
+    return new RegExp("^((?!.*" + globals.FAV_SUFFIX + ")(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+                        + globals.DS_SESSION_CONTEXT + "))").test(node.contextValue);
 }
 
 /**
@@ -221,7 +221,7 @@ export function isSessionNotFav(node: TreeItem): boolean {
  * @return true if a session favorite, false otherwise
  */
 export function isSessionFavorite(node: TreeItem): boolean {
-   return new RegExp("^(" + extension.FAVORITE_CONTEXT + ")").test(node.contextValue);
+   return new RegExp("^(" + globals.FAVORITE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -231,7 +231,7 @@ export function isSessionFavorite(node: TreeItem): boolean {
  * If the value is a favorite already that contextValue is returned.
  */
 export function asFavorite(node: TreeItem): string {
-    return isFavorite(node) ? node.contextValue : node.contextValue + extension.FAV_SUFFIX;
+    return isFavorite(node) ? node.contextValue : node.contextValue + globals.FAV_SUFFIX;
 }
 
 /**
@@ -240,7 +240,7 @@ export function asFavorite(node: TreeItem): string {
  * @return The inital element of the context.
  */
 export function getBaseContext(node: TreeItem): string {
-    return node.contextValue.indexOf(extension.CONTEXT_PREFIX) > -1 ?
-        node.contextValue.substring(0, node.contextValue.indexOf(extension.CONTEXT_PREFIX)) :
+    return node.contextValue.indexOf(globals.CONTEXT_PREFIX) > -1 ?
+        node.contextValue.substring(0, node.contextValue.indexOf(globals.CONTEXT_PREFIX)) :
         node.contextValue;
 }

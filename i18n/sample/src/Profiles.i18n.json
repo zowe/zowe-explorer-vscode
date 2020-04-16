@@ -1,4 +1,5 @@
 {
+    "ussNodeActions.error": "Error encountered in ",
     "loadNamedProfile.error.profileName": "Could not find profile named: ",
     "loadNamedProfile.error.period": ".",
     "createNewConnection.invalidzosmfURL": "Please enter a valid URL in the format https://url:port.",

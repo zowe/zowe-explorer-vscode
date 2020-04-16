@@ -12,15 +12,15 @@
 jest.mock("@zowe/imperative");
 
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
-import * as ussNodeActions from "../../../src/uss/ussNodeActions";
-import * as extension from "../../../src/extension";
+import * as ussNodeActions from "../../../src/uss/actions";
+import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 
 const Create = jest.fn();
 const Delete = jest.fn();
@@ -35,6 +35,7 @@ const mockGetUSSChildren = jest.fn();
 const mockRemoveFavorite = jest.fn();
 const mockRemoveRecall = jest.fn();
 const mockAddFavorite = jest.fn();
+const mockCheckCurrentProfile = jest.fn();
 const mockInitializeFavorites = jest.fn();
 const showInputBox = jest.fn();
 const showErrorMessage = jest.fn();
@@ -58,10 +59,32 @@ const profileOne: IProfileLoaded = {
     failNotFound: false
 };
 
+const session = new Session({
+    user: "fake",
+    password: "fake",
+    hostname: "fake",
+    protocol: "https",
+    type: "basic",
+});
+
+const sessionwocred = new Session({
+    user: "",
+    password: "",
+    hostname: "fake",
+    port: 443,
+    protocol: "https",
+    type: "basic",
+});
+
+const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
+sessNode.contextValue = globals.USS_SESSION_CONTEXT;
+const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
+dsNode.contextValue = globals.USS_SESSION_CONTEXT;
+
 function getUSSNode() {
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     const ussNode1 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
-    ussNode1.contextValue = extension.USS_SESSION_CONTEXT;
+    ussNode1.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode1.fullPath = "/u/myuser";
     return ussNode1;
 }
@@ -69,8 +92,8 @@ function getUSSNode() {
 function getFavoriteUSSNode() {
     const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
-    mParent.contextValue = extension.FAVORITE_CONTEXT;
-    ussNodeF.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+    mParent.contextValue = globals.FAVORITE_CONTEXT;
+    ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";
     return ussNodeF;
@@ -87,6 +110,7 @@ function getUSSTree() {
             refresh: mockUSSRefresh,
             refreshAll: mockUSSRefresh,
             removeRecall: mockRemoveRecall,
+            checkCurrentProfile: mockCheckCurrentProfile,
             refreshElement: mockUSSRefreshElement,
             getChildren: mockGetUSSChildren,
             addFavorite: mockAddFavorite,
@@ -100,14 +124,6 @@ function getUSSTree() {
     return testUSSTree1;
 }
 
-const session = new Session({
-    user: "fake",
-    password: "fake",
-    hostname: "fake",
-    protocol: "https",
-    type: "basic",
-});
-
 describe("ussNodeActions", () => {
 
     const mockLoadNamedProfile = jest.fn();
@@ -118,6 +134,8 @@ describe("ussNodeActions", () => {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
+                validProfile: ValidProfileEnum.VALID,
+                checkCurrentProfile: jest.fn(),
                 loadNamedProfile: mockLoadNamedProfile
             };
         })
@@ -230,14 +248,6 @@ describe("ussNodeActions", () => {
             showInformationMessage.mockReset();
             mockLoadNamedProfile.mockReturnValue(profileOne);
 
-            const sessionwocred = new Session({
-                user: "",
-                password: "",
-                hostname: "fake",
-                port: 443,
-                protocol: "https",
-                type: "basic",
-            });
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -248,22 +258,21 @@ describe("ussNodeActions", () => {
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                         }),
                     };
                 })
             });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
+            const dsNode2 = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode,
                 sessionwocred, null, false, profileOne.name);
-            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
 
             showInputBox.mockReturnValueOnce("fake");
             showInputBox.mockReturnValueOnce("fake");
             showQuickPick.mockReturnValueOnce("directory");
-            await ussNodeActions.createUSSNodeDialog(dsNode, testUSSTree);
+            await ussNodeActions.createUSSNodeDialog(dsNode2, testUSSTree);
 
             expect(testUSSTree.refresh).toHaveBeenCalled();
 
@@ -273,18 +282,6 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new Session({
-                user: "",
-                password: "",
-                hostname: "fake",
-                port: 443,
-                protocol: "https",
-                type: "basic",
-            });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -295,6 +292,8 @@ describe("ussNodeActions", () => {
                         defaultProfile: {name: "firstName"},
                         loadNamedProfile: mockLoadNamedProfile,
                         type: "zosmf",
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
@@ -312,18 +311,6 @@ describe("ussNodeActions", () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
-            const sessionwocred = new Session({
-                user: "",
-                password: "",
-                hostname: "fake",
-                port: 443,
-                protocol: "https",
-                type: "basic",
-            });
-            const sessNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null);
-            sessNode.contextValue = extension.USS_SESSION_CONTEXT;
-            const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred, null);
-            dsNode.contextValue = extension.USS_SESSION_CONTEXT;
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -331,7 +318,9 @@ describe("ussNodeActions", () => {
                             name: "firstName",
                             profile: {user: undefined, password: undefined}
                         }, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"}
+                        defaultProfile: {name: "firstName"},
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                     };
                 })
             });
@@ -468,7 +457,7 @@ describe("ussNodeActions", () => {
         });
         it("should not copy the node's full path to the system clipboard if theia", async () => {
             let theia = true;
-            Object.defineProperty(extension, "ISTHEIA", {get: () => theia});
+            Object.defineProperty(globals, "ISTHEIA", {get: () => theia});
             await ussNodeActions.copyPath(ussNode);
             expect(writeText).not.toBeCalled();
             theia = false;
