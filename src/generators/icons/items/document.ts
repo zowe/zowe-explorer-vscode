@@ -10,29 +10,14 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import * as extension from "../../../extension";
 import { getIconPathInResources } from "../../../utils/icon";
+import { isDocument } from "../../../utils/context";
 
 const icon: IIconItem = {
     id: IconId.document,
     type: IconHierarchyType.base,
     path: getIconPathInResources("document.svg"),
-    check: (node) => {
-        // TODO: Move contexts to constants file and do constructor as well
-        const contexts = [extension.DS_DS_CONTEXT,
-            extension.DS_DS_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_MEMBER_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT,
-            extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.JOBS_SPOOL_CONTEXT,
-            extension.DS_MIGRATED_FILE_CONTEXT,
-            extension.DS_MIGRATED_FILE_CONTEXT + extension.FAV_SUFFIX,
-            extension.DS_BINARY_FILE_CONTEXT,
-            extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX
-        ];
-
-        return contexts.indexOf(node.contextValue) > -1;
-    }
+    check: (node) => isDocument(node)
 };
 
 export default icon;
