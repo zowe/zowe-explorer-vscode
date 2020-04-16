@@ -44,6 +44,7 @@ export const JOBS_SPOOL_CONTEXT = "spool";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
+export const VSAM_CONTEXT = "vsam";
 
 /**
  * Defines all global variables

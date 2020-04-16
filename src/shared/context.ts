@@ -225,6 +225,15 @@ export function isSessionFavorite(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node is Vsam
+ * @param node
+ * @return true if a vsam file, false otherwise
+ */
+export function isVsam(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.VSAM_CONTEXT + ")").test(node.contextValue);
+ }
+
+/**
  * Helper function create the favorite version of a node
  * @param node
  * @return If not a favorite an extended contextValue with _fav.

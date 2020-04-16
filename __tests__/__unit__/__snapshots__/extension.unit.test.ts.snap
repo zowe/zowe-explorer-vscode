@@ -133,11 +133,6 @@ Array [
     "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
   },
   Object {
-    "command": "zowe.showDSAttributes",
-    "group": "2_information",
-    "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
-  },
-  Object {
     "command": "zowe.renameDataSet",
     "group": "6_modification@2",
     "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
@@ -160,7 +155,7 @@ Array [
   Object {
     "command": "zowe.showDSAttributes",
     "group": "2_information",
-    "when": "view == zowe.explorer && viewItem =~ /^(pds.*|migr.*)/",
+    "when": "view == zowe.explorer && viewItem =~ /^(pds|migr|ds|vsam).*/",
   },
   Object {
     "command": "zowe.deletePDS",

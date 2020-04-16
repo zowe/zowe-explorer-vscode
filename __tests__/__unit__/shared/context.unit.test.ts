@@ -41,12 +41,13 @@ describe.only("Context helper tests", () => {
     const JOBS_SESSION_CONTEXT_FAV = "server_fav";
     const USS_SESSION_CONTEXT_FAV = "uss_session_fav";
     const DS_SESSION_CONTEXT_FAV = "session_fav";
+    const VSAM_CONTEXT = "vsam";
 
     const testList: string[] = [
         INFORMATION_CONTEXT, FAVORITE_CONTEXT, DS_FAV_CONTEXT, PDS_FAV_CONTEXT, DS_SESSION_CONTEXT, DS_PDS_CONTEXT, DS_DS_CONTEXT, DS_MEMBER_CONTEXT,
         DS_TEXT_FILE_CONTEXT, DS_FAV_TEXT_FILE_CONTEXT, DS_BINARY_FILE_CONTEXT, DS_MIGRATED_FILE_CONTEXT, USS_SESSION_CONTEXT, USS_DIR_CONTEXT,
         USS_FAV_DIR_CONTEXT, JOBS_SESSION_CONTEXT, JOBS_JOB_CONTEXT, JOBS_SPOOL_CONTEXT, ICON_STATE_OPEN, ICON_STATE_CLOSED, JOBS_JOB_FAVORITE1,
-        JOBS_JOB_FAVORITE2, JOBS_JOB_FAVORITE3
+        JOBS_JOB_FAVORITE2, JOBS_JOB_FAVORITE3, VSAM_CONTEXT
     ];
 
     const testListA: string[] = [
@@ -279,6 +280,18 @@ describe.only("Context helper tests", () => {
                     break;
                 default:
                     expect(contextually.isFolder(treeItem)).toBe(false);
+            }
+        }
+    });
+    it("Test for a VSAM File", async () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case VSAM_CONTEXT:
+                    expect(contextually.isVsam(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isVsam(treeItem)).toBe(false);
             }
         }
     });
