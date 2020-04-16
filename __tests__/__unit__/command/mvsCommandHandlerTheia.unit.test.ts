@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
-import * as extension from "../../../src/extension";
+import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
 
 describe("mvsCommandActions unit testing", () => {
@@ -89,8 +89,8 @@ describe("mvsCommandActions unit testing", () => {
     const mvsActions = MvsCommandHandler.getInstance();
 
     it("tests the issueMvsCommand function - theia route", async () => {
-        const originalTheia = extension.ISTHEIA;
-        Object.defineProperty(extension, "ISTHEIA", { get: () => true });
+        const originalTheia = globals.ISTHEIA;
+        Object.defineProperty(globals, "ISTHEIA", { get: () => true });
         // First run enters a command directly
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -191,6 +191,6 @@ describe("mvsCommandActions unit testing", () => {
         showInputBox.mockReset();
         withProgress.mockReset();
 
-        Object.defineProperty(extension, "ISTHEIA", { get: () => originalTheia });
+        Object.defineProperty(globals, "ISTHEIA", { get: () => originalTheia });
     });
 });

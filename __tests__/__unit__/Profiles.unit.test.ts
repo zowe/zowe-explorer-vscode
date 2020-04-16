@@ -17,7 +17,7 @@ import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as extension from "../../src/extension";
 import { Logger, ISession, CliProfileManager, IProfileLoaded, Session } from "@zowe/imperative";
-import { Profiles } from "../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession, IJob } from "@zowe/cli";
 import { ZoweUSSNode } from "../../src/ZoweUSSNode";
 import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
@@ -27,6 +27,7 @@ import { IZoweTree } from "../../src/api/IZoweTree";
 import { DatasetTree } from "../../src/DatasetTree";
 import { USSTree } from "../../src/USSTree";
 import { ZosJobsProvider } from "../../src/ZosJobsProvider";
+import * as testConst from "../../resources/testProfileData";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -110,15 +111,19 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
+    const getConfiguration = jest.fn();
     const createTreeView = jest.fn();
+    const createBasicZosmfSession = jest.fn();
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-    Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
-
+    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+  
     const sessTree: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
     const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
     const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
@@ -180,6 +185,9 @@ describe("Profile class unit tests", () => {
                         defaultProfile: {name: "profile1"},
                         loadNamedProfile: [{name: "profile1"}, {profile: {user: "fake", password: "1234"}}],
                         promptCredentials: jest.fn(()=> {
+                            return {};
+                        }),
+                        checkCurrentProfile: jest.fn(()=> {
                             return {};
                         }),
                         createNewConnection: jest.fn(()=>{
@@ -670,5 +678,68 @@ describe("Profile class unit tests", () => {
         mockJSONParse.mockReturnValueOnce(profileOne);
         await Profiles.createInstance(log);
         expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+    });
+
+    it("Tests checkCurrentProfile() with valid profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return ["testUser", "testPass", "fake"];
+                    })
+                };
+            })
+        });
+        const testProfile = {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        theProfiles.validProfile = -1;
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
+    });
+
+    it("Tests checkCurrentProfile() with invalid profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return undefined;
+                    })
+                };
+            })
+        });
+        const testProfile = {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });

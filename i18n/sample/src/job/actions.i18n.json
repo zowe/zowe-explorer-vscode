@@ -1,0 +1,8 @@
+{
+    "downloadSpool.select": "Select",
+    "modifyCommand.command.prompt": "Modify Command",
+    "modifyCommand.response": "Command response: ",
+    "stopCommand.response": "Command response: ",
+    "setOwner.newOwner.prompt.owner": "Owner",
+    "setOwner.newOwner.prompt.prefix": "Prefix"
+}

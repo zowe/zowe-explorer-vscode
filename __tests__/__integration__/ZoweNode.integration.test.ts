@@ -16,9 +16,9 @@ import * as chaiAsPromised from "chai-as-promised";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as expect from "expect";
 import * as vscode from "vscode";
-import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
-import * as extension from "../../src/extension";
+import { DS_SESSION_CONTEXT, DS_PDS_CONTEXT } from "../../src/globals";
 
 declare var it: any;
 
@@ -38,7 +38,7 @@ describe("ZoweNode Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
                                          null, session, undefined, undefined, testProfile);
-    sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessNode.contextValue = DS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
@@ -110,8 +110,7 @@ describe("ZoweNode Integration Tests", async () => {
         chai.use(chaiAsPromised);
 
         // The method should throw an error.
-        const nullNode = new ZoweDatasetNode(null, null, null, null);
-        nullNode.contextValue = extension.DS_PDS_CONTEXT;
+        const nullNode = new ZoweDatasetNode(null, null, null, null, DS_PDS_CONTEXT);
         nullNode.dirty = true;
         await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
     }).timeout(TIMEOUT);
@@ -124,8 +123,7 @@ describe("ZoweNode Integration Tests", async () => {
         chai.use(chaiAsPromised);
 
         // The method should throw an error.
-        const undefinedNode = new ZoweDatasetNode(undefined, undefined, undefined, undefined);
-        undefinedNode.contextValue = extension.DS_PDS_CONTEXT;
+        const undefinedNode = new ZoweDatasetNode(undefined, undefined, undefined, undefined, DS_PDS_CONTEXT);
         undefinedNode.dirty = true;
         // tslint:disable-next-line:max-line-length
         await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
