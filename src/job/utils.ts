@@ -9,16 +9,23 @@
 *                                                                                 *
 */
 
-import * as path from "path";
+import { FilterDescriptor } from "../../src/utils";
 
-/**
- * Gets path to the icon, which is located in resources folder
- * @param iconFileName {string} Name of icon file with extension
- * @returns {object}
- */
-export function getIconPathInResources(iconFileName: string) {
-   return {
-       light: path.join(__dirname, "..", "..", "..", "resources", "light", iconFileName),
-       dark: path.join(__dirname, "..", "..", "..", "resources", "dark", iconFileName)
-   };
+import * as nls from "vscode-nls";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+
+// tslint:disable-next-line: max-classes-per-file
+export class JobIdFilterDescriptor extends FilterDescriptor {
+    constructor() {
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId",
+        "Job Id search"));
+    }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class OwnerFilterDescriptor extends FilterDescriptor {
+    constructor() {
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner",
+        "Owner/Prefix Job Search"));
+    }
 }

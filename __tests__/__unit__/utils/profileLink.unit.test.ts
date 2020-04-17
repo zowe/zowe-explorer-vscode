@@ -12,14 +12,14 @@
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import * as extension from "../../../src/extension";
+import * as globals from "../../../src/globals";
 import * as fs from "fs";
 import * as testConst from "../../../resources/testProfileData";
-import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
 import { IZoweDatasetTreeNode } from "../../../src/api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { linkProfileDialog, getLinkedProfile } from "../../../src/utils/profileLink";
+import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
 // jest.mock("vscode");
 // jest.mock("fs");
@@ -59,7 +59,7 @@ const testProfile: IProfileLoaded = {
 const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
 const sessionNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
     session, undefined, undefined, testProfile);
-sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
 sessionNode.pattern = "MYHLQ.TEST";
 
 const profileOne: IProfileLoaded = {

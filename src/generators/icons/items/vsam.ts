@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import { isVsam } from "../../../utils/context";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isVsam } from "../../../shared/context";
 
 const vsam: IIconItem = {
     id: IconId.vsam,

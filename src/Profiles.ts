@@ -10,14 +10,14 @@
 */
 
 import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfile } from "@zowe/imperative";
-import * as nls from "vscode-nls";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { getZoweDir } from "./extension";  // TODO: resolve cyclic dependency
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+import * as nls from "vscode-nls";
+import { errorHandling, getZoweDir } from "./utils";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
     valid: boolean;
@@ -33,6 +33,11 @@ let IConnection: {
     password: string;
     rejectUnauthorized: boolean;
 };
+
+export enum ValidProfileEnum {
+    VALID = 0,
+    INVALID = -1
+}
 
 export class Profiles {
     // Processing stops if there are no profiles detected
@@ -50,11 +55,41 @@ export class Profiles {
 
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
+    public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
     private allTypes: string[];
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
-    private constructor(private log: Logger) {
+    private usrNme: string;
+    private passWrd: string;
+    private baseEncd: string;
+    private constructor(private log: Logger) {}
+
+    public async checkCurrentProfile(theProfile: IProfileLoaded) {
+        if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
+            try {
+                const values = await Profiles.getInstance().promptCredentials(theProfile.name);
+                if (values !== undefined) {
+                    this.usrNme = values[0];
+                    this.passWrd = values[1];
+                    this.baseEncd = values[2];
+                }
+            } catch (error) {
+                errorHandling(error, theProfile.name,
+                    localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
+                return;
+            }
+            if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
+                theProfile.profile.user = this.usrNme;
+                theProfile.profile.password = this.passWrd;
+                theProfile.profile.base64EncodedAuth = this.baseEncd;
+                this.validProfile = ValidProfileEnum.VALID;
+            } else {
+                return;
+            }
+        } else {
+            this.validProfile = ValidProfileEnum.VALID;
+        }
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -172,7 +207,8 @@ export class Profiles {
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
-            prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
+            prompt: localize("createNewConnection.option.prompt.username",
+                                     "Enter the user name for the connection. Leave blank to not store."),
             value: userName
         };
         userName = await vscode.window.showInputBox(options);
@@ -185,7 +221,8 @@ export class Profiles {
 
         options = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
-            prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection. Leave blank to not store."),
+            prompt: localize("createNewConnection.option.prompt.password",
+                                     "Enter the password for the connection. Leave blank to not store."),
             password: true,
             value: passWord
         };

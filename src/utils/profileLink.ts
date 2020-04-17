@@ -18,6 +18,7 @@ import * as fs from "fs";
 import { Profiles } from "../Profiles";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
+import { getZoweDir } from "../utils";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
@@ -73,7 +74,7 @@ export async function linkProfileDialog(aProfile: IProfileLoaded) {
 async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
     let profile: IProfileLoaded;
     if (aProfile) {
-        const linkRootDirectory = path.join(extension.getZoweDir(), "links");
+        const linkRootDirectory = path.join(getZoweDir(), "links");
         if (!fs.existsSync(linkRootDirectory)) {
             fs.mkdirSync(linkRootDirectory);
         }
@@ -101,7 +102,7 @@ async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string,
         configuration: secondaryArray,
     };
     if (primary) {
-        const linkRootDirectory = path.join(extension.getZoweDir(), "links");
+        const linkRootDirectory = path.join(getZoweDir(), "links");
         if (!fs.existsSync(linkRootDirectory)) {
             fs.mkdirSync(linkRootDirectory);
         }

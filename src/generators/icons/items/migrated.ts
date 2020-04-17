@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import { isMigrated } from "../../../utils/context";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isMigrated } from "../../../shared/context";
 
 const migrated: IIconItem = {
     id: IconId.migrated,

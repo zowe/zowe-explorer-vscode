@@ -9,96 +9,19 @@
 *                                                                                 *
 */
 
-import { TreeItem, QuickPickItem, QuickPick, window, TreeItemCollapsibleState } from "vscode";
-import { ISession } from "@zowe/imperative";
+
+import * as vscode from "vscode";
+import * as globals from "./globals";
+import * as os from "os";
+import * as path from "path";
 import { Profiles } from "./Profiles";
-import * as extension from "../src/extension";
+import { ImperativeConfig } from "@zowe/imperative";
+
 import * as nls from "vscode-nls";
-import { IZoweTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
-
-export function sortTreeItems(favorites: TreeItem[], specificContext ) {
-    favorites.sort((a, b) => {
-        if (a.contextValue === specificContext) {
-            if (b.contextValue === specificContext) {
-                return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
-            } else {
-                return -1;
-            }
-        } else if (b.contextValue === specificContext) {
-            return 1;
-        }
-        return a.label.toUpperCase() > b.label.toUpperCase() ? 1 : -1;
-    });
-}
-
-/**
- * For no obvious reason a label change is often required to make a node repaint.
- * This function does this by adding or removing a blank.
- * @param {TreeItem} node - the node element
- */
-export function labelHack( node: TreeItem ): void {
-    node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
-}
-
-export async function resolveQuickPickHelper(quickpick: QuickPick<QuickPickItem>): Promise<QuickPickItem | undefined> {
-    return new Promise<QuickPickItem | undefined>(
-        (c) => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
-}
-
-// tslint:disable-next-line: max-classes-per-file
-export class FilterItem implements QuickPickItem {
-    constructor(private text: string, private desc?: string) { }
-    get label(): string { return this.text; }
-    get description(): string { if (this.desc) { return this.desc; } else { return ""; } }
-    get alwaysShow(): boolean { return false; }
-}
-
-// tslint:disable-next-line: max-classes-per-file
-export class FilterDescriptor implements QuickPickItem {
-    constructor(private text: string) { }
-    get label(): string { return this.text; }
-    get description(): string { return ""; }
-    get alwaysShow(): boolean { return true; }
-}
-
-// tslint:disable-next-line: max-classes-per-file
-export class OwnerFilterDescriptor extends FilterDescriptor {
-    constructor() {
-        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner",
-        "Owner/Prefix Job Search"));
-    }
-}
-// tslint:disable-next-line: max-classes-per-file
-export class JobIdFilterDescriptor extends FilterDescriptor {
-    constructor() {
-        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId",
-        "Job Id search"));
-    }
-}
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /*************************************************************************************************************
- * Returns array of all subnodes of given node
- *************************************************************************************************************/
-export function concatChildNodes(nodes: IZoweNodeType[]) {
-    let allNodes = new Array<IZoweNodeType>();
-
-    for (const node of nodes) {
-        allNodes = allNodes.concat(concatChildNodes(node.children));
-        allNodes.push(node);
-    }
-    return allNodes;
-}
-
-/*************************************************************************************************************
- * Determine IDE name to display based on app environment
- *************************************************************************************************************/
-export function getAppName(isTheia: boolean) {
-    return isTheia? "Theia" : "VS Code";
-}
-
-/*************************************************************************************************************
- * Error Hanndling
+ * Error Handling
  * @param {errorDetails} error.mDetails
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
@@ -114,51 +37,58 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 
     switch(httpErrCode) {
         // tslint:disable-next-line: no-magic-numbers
-        case 401 : {
+        case 401:
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" ["));
             }
 
-            if (extension.ISTHEIA) {
-                window.showErrorMessage(errMsg);
+            if (globals.ISTHEIA) {
+                vscode.window.showErrorMessage(errMsg);
                 Profiles.getInstance().promptCredentials(label.trim());
             } else {
-                window.showErrorMessage(errMsg, "Check Credentials").then((selection) => {
+                vscode.window.showErrorMessage(errMsg, "Check Credentials").then((selection) => {
                     if (selection) {
                         Profiles.getInstance().promptCredentials(label.trim(), true);
                     }
                 });
             }
             break;
-        }
-        default: {
-            window.showErrorMessage(moreInfo + " " +  errorDetails);
+        default:
+            vscode.window.showErrorMessage(moreInfo + " " +  errorDetails);
             break;
-        }
     }
     return;
 }
 
-/*************************************************************************************************************
- * Refresh Profile and Session
- * @param {sessNode} IZoweTreeNode
- * @param {profile} IProfileLoaded
- *************************************************************************************************************/
-export function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = Profiles.getInstance().getProfiles();
-    for (const profNode of allProf) {
-        if (sessNode.getProfileName() === profNode.name) {
-            sessNode.getProfile().profile = profNode.profile;
-            const SessionProfile = profNode.profile as ISession;
-            if (sessNode.getSession().ISession !== SessionProfile) {
-                sessNode.getSession().ISession.user = SessionProfile.user;
-                sessNode.getSession().ISession.password = SessionProfile.password;
-                sessNode.getSession().ISession.base64EncodedAuth = SessionProfile.base64EncodedAuth;
-                sessNode.getSession().ISession.hostname = SessionProfile.hostname;
-                sessNode.getSession().ISession.port = SessionProfile.port;
-                sessNode.getSession().ISession.rejectUnauthorized = SessionProfile.rejectUnauthorized;
-            }
-        }
-    }
-    sessNode.collapsibleState = TreeItemCollapsibleState.Collapsed;
+export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
+    return new Promise<vscode.QuickPickItem | undefined>(
+        (c) => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class FilterItem implements vscode.QuickPickItem {
+    constructor(private text: string, private desc?: string) { }
+    get label(): string { return this.text; }
+    get description(): string { if (this.desc) { return this.desc; } else { return ""; } }
+    get alwaysShow(): boolean { return false; }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class FilterDescriptor implements vscode.QuickPickItem {
+    constructor(private text: string) { }
+    get label(): string { return this.text; }
+    get description(): string { return ""; }
+    get alwaysShow(): boolean { return true; }
+}
+
+/**
+ * Function to retrieve the home directory. In the situation Imperative has
+ * not initialized it we mock a default value.
+ */
+export function getZoweDir(): string {
+    ImperativeConfig.instance.loadedConfig = {
+        defaultHome: path.join(os.homedir(), ".zowe"),
+        envVariablePrefix: "ZOWE"
+    };
+    return ImperativeConfig.instance.cliHome;
 }
