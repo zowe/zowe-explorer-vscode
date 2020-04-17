@@ -339,5 +339,136 @@ describe("Submit JCL from editor", () => {
         expect(mocked(globals.LOG.error)).toBeCalled();
     });
 });
-describe("Job Spool Download Command", () => {
+describe("Submit JCL from Dataset", () => {
+    function generateEnvironmentalMocks() {
+        const session = generateImperativeSessionWithoutCredentials();
+        const iJob = generateIJobObject();
+        const imperativeProfile = generateImperativeProfile();
+        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
+        const profileInstance = generateInstanceOfProfile(imperativeProfile);
+        const jesApi = generateJesApi(imperativeProfile);
+        bindJesApi(jesApi);
+
+        return {
+            session,
+            iJob,
+            imperativeProfile,
+            datasetSessionNode,
+            profileInstance,
+            jesApi
+        };
+    }
+
+    beforeEach(() => {
+        // Reset global module mocks
+        mocked(vscode.window.showInformationMessage).mockReset();
+        mocked(vscode.window.showErrorMessage).mockReset();
+        mocked(Profiles.getInstance).mockReset();
+    });
+
+    it("Checking Submit Job for PDS Member content", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed,
+            environmentalMocks.datasetSessionNode, null);
+        subNode.contextValue = globals.DS_PDS_CONTEXT;
+        const member = new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None, subNode, null);
+        member.contextValue = globals.DS_MEMBER_CONTEXT;
+        const submitJobSpy = jest.spyOn(environmentalMocks.jesApi, "submitJob");
+        submitJobSpy.mockResolvedValueOnce(environmentalMocks.iJob);
+
+        await dsActions.submitMember(member);
+        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
+
+        // Reset for spied properties
+        submitJobSpy.mockReset();
+    });
+    it("Checking Submit Job for PS Dataset content", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        const dataset = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.datasetSessionNode, null);
+        dataset.contextValue = globals.DS_DS_CONTEXT;
+        const submitJobSpy = jest.spyOn(environmentalMocks.jesApi, "submitJob");
+        submitJobSpy.mockResolvedValueOnce(environmentalMocks.iJob);
+
+        await dsActions.submitMember(dataset);
+        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
+
+        // Reset for spied properties
+        submitJobSpy.mockReset();
+    });
+    it("Checking Submit Job for Favourite PDS Member content", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
+            environmentalMocks.datasetSessionNode, null);
+        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
+        const favoriteSubNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed,
+            favoriteSession, null);
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        const favoriteMember = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
+            favoriteSubNode, null);
+        favoriteMember.contextValue = globals.DS_MEMBER_CONTEXT;
+        const submitJobSpy = jest.spyOn(environmentalMocks.jesApi, "submitJob");
+        submitJobSpy.mockResolvedValueOnce(environmentalMocks.iJob);
+
+        await dsActions.submitMember(favoriteMember);
+        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
+
+        // Reset for spied properties
+        submitJobSpy.mockReset();
+    });
+    it("Checking Submit Job for Favourite PS Dataset content", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        mocked(Profiles.getInstance).mockReturnValue(environmentalMocks.profileInstance);
+        const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
+            environmentalMocks.datasetSessionNode, null);
+        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
+        const favoriteDataset = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed,
+            favoriteSession, null);
+        favoriteDataset.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
+        const submitJobSpy = jest.spyOn(environmentalMocks.jesApi, "submitJob");
+        submitJobSpy.mockResolvedValueOnce(environmentalMocks.iJob);
+
+        await dsActions.submitMember(favoriteDataset);
+        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
+
+        // Reset for spied properties
+        submitJobSpy.mockReset();
+    });
+    it("Checking Submit Job for unsupported Dataset content", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        const corruptedNode = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed,
+            environmentalMocks.datasetSessionNode, null);
+        corruptedNode.contextValue = "gibberish";
+        const corruptedSubNode = new ZoweDatasetNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, corruptedNode, null);
+        const submitJobSpy = jest.spyOn(environmentalMocks.jesApi, "submitJob");
+        submitJobSpy.mockResolvedValueOnce(environmentalMocks.iJob);
+
+        try {
+            await dsActions.submitMember(corruptedSubNode);
+        } catch (e) {
+            expect(e.message).toEqual("submitMember() called from invalid node.");
+        }
+        expect(submitJobSpy).not.toBeCalled();
+        expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();
+        expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
+        expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
+
+        // Reset for spied properties
+        submitJobSpy.mockReset();
+    });
 });
