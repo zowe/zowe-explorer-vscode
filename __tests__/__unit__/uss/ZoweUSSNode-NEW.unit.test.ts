@@ -12,10 +12,9 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
-import * as globals from "../../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { FAVORITE_CONTEXT, DS_BINARY_FILE_CONTEXT, DS_TEXT_FILE_CONTEXT, FAV_SUFFIX } from "../../../src/globals";
+import { FAVORITE_CONTEXT, DS_BINARY_FILE_CONTEXT, DS_TEXT_FILE_CONTEXT, FAV_SUFFIX, USS_SESSION_CONTEXT, USS_DIR_CONTEXT } from "../../../src/globals";
 
 const ussFile = jest.fn();
 const Download = jest.fn();
@@ -28,7 +27,7 @@ const showTextDocument = jest.fn();
 const showInformationMessage = jest.fn();
 const getConfiguration = jest.fn();
 const executeCommand = jest.fn();
-let mockLoadNamedProfile = jest.fn();
+const mockLoadNamedProfile = jest.fn();
 const showQuickPick = jest.fn();
 const mockUSSRefresh = jest.fn();
 const mockAddZoweSession = jest.fn();
@@ -95,7 +94,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         }
     };
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, profileOne.name, "123");
-    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
+    ussNode.contextValue = USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
     let node;
 
@@ -107,7 +106,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         isDirtyInEditor.mockReset();
         openedDocumentInstance.mockReset();
         node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
-        node.contextValue = globals.USS_SESSION_CONTEXT;
+        node.contextValue = USS_SESSION_CONTEXT;
         node.fullPath = "/u/myuser";
         Object.defineProperty(node, "isDirtyInEditor", {
             get: isDirtyInEditor
@@ -230,13 +229,13 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     // USS node definition
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
-    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
+    ussNode.contextValue = USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
     // USS favorited node definition
     const ussNodeFav = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
-    mParent.contextValue = globals.FAVORITE_CONTEXT;
-    ussNodeFav.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+    mParent.contextValue = FAVORITE_CONTEXT;
+    ussNodeFav.contextValue = DS_TEXT_FILE_CONTEXT + FAV_SUFFIX;
     ussNodeFav.fullPath = "/u/myuser/usstest";
     ussNodeFav.tooltip = "/u/myuser/usstest";
 
@@ -266,7 +265,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         testUSSTree.refresh.mockReset();
         testUSSTree.refreshAll.mockReset();
         testUSSTree.refreshElement.mockReset();
-    })
+    });
 
     afterAll(() => {
         jest.clearAllMocks();
@@ -296,11 +295,120 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         try {
             await ussNode.deleteUSSNode(testUSSTree, "");
             // tslint:disable-next-line:no-empty
-        } catch (err) { 
-            let a = "help";
-        }
+        } catch (err) { }
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(testUSSTree.refresh).not.toHaveBeenCalled();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
+    let rootNode;
+    let childNode;
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15
+        };
+    });
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return callback();
+    });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+
+    beforeEach(() => {
+        showErrorMessage.mockReset();
+        rootNode = new ZoweUSSNode(
+            "/u", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
+        childNode = new ZoweUSSNode(
+            "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root", false, profileOne.name, undefined);
+    });
+    afterAll(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests that node.getChildren() returns the correct Thenable<ZoweUSSNode[]>", async () => {
+        rootNode.contextValue = USS_DIR_CONTEXT;
+        rootNode.dirty = true;
+
+        // Creating structure of files and directories
+        const sampleChildren: ZoweUSSNode[] = [
+            new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, session, "/u", false, profileOne.name, undefined),
+            new ZoweUSSNode("myFile.txt", vscode.TreeItemCollapsibleState.None, rootNode, session, "/u", false, profileOne.name, undefined),
+        ];
+        sampleChildren[1].command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [sampleChildren[1]] };
+
+        const rootChildren = await rootNode.getChildren();
+
+        expect(rootChildren.length).toBe(2);
+        expect(rootChildren[0].label).toBe("aDir");
+        expect(rootChildren[1].label).toBe("myFile.txt");
+    });
+
+    it("Tests that node.getChildren() returns no children if none exist", async () => {
+        const nodeNoChildren = new ZoweUSSNode(
+            "aDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, session, "/u", false, profileOne.name, undefined);
+        nodeNoChildren.dirty = false;
+
+        const rootChildren = await nodeNoChildren.getChildren();
+
+        expect(rootChildren.length).toBe(0);
+    });
+
+    it("Tests that error is thrown when node label is blank", async () => {
+        rootNode.label = "";
+        rootNode.dirty = true;
+
+        expect(rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
+    });
+
+    // CAN ANYONE EXPLAIN WHAT THIS IS SUPPOSED TO TEST???
+    // It is from ZoweUSSNode.unit.test.ts, line 150
+    //
+    // it("Tests that label is different when label contains a []", async () => {
+    //     const rootNode2 = new ZoweUSSNode(
+    //         "root[test]", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
+    //     rootNode2.dirty = true;
+    //     let rootChildren = await rootNode2.getChildren();
+    // });
+
+    it("Tests that when bright.List. causes an error on the zowe call, " +
+        "node.getChildren() throws an error and the catch block is reached", async () => {
+            childNode.contextValue = USS_SESSION_CONTEXT;
+            childNode.fullPath = "Throw Error";
+            childNode.dirty = true;
+
+            await childNode.getChildren();
+
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
+        });
+
+    it("Tests that when bright.List returns an unsuccessful response, " +
+        "node.getChildren() throws an error and the catch block is reached", async () => {
+            childNode.contextValue = USS_SESSION_CONTEXT;
+            childNode.dirty = true;
+            const subNode = new ZoweUSSNode(
+                "Response Fail", vscode.TreeItemCollapsibleState.Collapsed, childNode, null, null, false, profileOne.name, undefined);
+            subNode.fullPath = "THROW ERROR";
+            subNode.dirty = true;
+
+            await subNode.getChildren();
+
+            expect(showErrorMessage.mock.calls.length).toEqual(1);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
+        });
+
+    it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {
+        rootNode.contextValue = USS_SESSION_CONTEXT;
+        rootNode.dirty = false;
+
+        expect(await rootNode.getChildren()).toEqual([]);
+    });
+
+    it("Tests that when passing a session node with no hlq the node.getChildren() method is exited early", async () => {
+        rootNode.contextValue = USS_SESSION_CONTEXT;
+
+        expect(await rootNode.getChildren()).toEqual([]);
     });
 });
