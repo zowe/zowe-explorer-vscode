@@ -533,7 +533,7 @@
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.deleteDataset",
           "group": "6_modification@2"
-        },        
+        },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
@@ -712,7 +712,7 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.addFavorite",
           "group": "4_workspace"
-        },    
+        },
         {
           "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
