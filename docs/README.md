@@ -176,7 +176,6 @@ All localized strings must be string literals, you cannot include variables or u
             ```
 
         - Next, wrap your string with the localize function in this format: `localize('key', 'string')`. For example: `localize('addEntry','Successfully called add entry.')`
-        - If the new string is in a newly-created typescript file, update the stringUpdateScript.js file with an entry for the new typescript file.
 
 3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 

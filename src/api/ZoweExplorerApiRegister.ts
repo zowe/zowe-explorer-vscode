@@ -10,10 +10,8 @@
 */
 
 import { IProfileLoaded } from "@zowe/imperative";
-
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
-
 import * as nls from "vscode-nls";
 
 // Set up localization

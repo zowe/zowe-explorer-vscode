@@ -10,7 +10,7 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
+import { getIconPathInResources } from "../../../shared/utils";
 import sessionFavouriteIcon from "./sessionFavourite";
 import { TreeItemCollapsibleState } from "vscode";
 

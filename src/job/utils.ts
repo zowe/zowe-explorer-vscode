@@ -9,26 +9,23 @@
 *                                                                                 *
 */
 
+import { FilterDescriptor } from "../../src/utils";
 
-import * as utils from "../utils";
 import * as nls from "vscode-nls";
-
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
-import * as extension from "../../src/extension";
-import { Profiles } from "../Profiles";
-import { IZoweTree } from "../api/IZoweTree";
-import { IZoweUSSTreeNode, IZoweJobTreeNode } from "../api/IZoweTreeNode";
-import { ISession } from "@zowe/imperative";
 
-export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    await Profiles.getInstance().refresh();
-    jobsProvider.mSessionNodes.forEach((jobNode) => {
-        if (jobNode.contextValue === extension.JOBS_SESSION_CONTEXT) {
-            utils.labelHack(jobNode);
-            jobNode.children = [];
-            jobNode.dirty = true;
-            utils.refreshTree(jobNode);
-        }
-    });
-    await jobsProvider.refresh();
+// tslint:disable-next-line: max-classes-per-file
+export class JobIdFilterDescriptor extends FilterDescriptor {
+    constructor() {
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createId",
+        "Job Id search"));
+    }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class OwnerFilterDescriptor extends FilterDescriptor {
+    constructor() {
+        super("\uFF0B " + localize("zosJobsProvider.option.prompt.createOwner",
+        "Owner/Prefix Job Search"));
+    }
 }

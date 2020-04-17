@@ -14,14 +14,13 @@ import * as zowe from "@zowe/cli";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as expect from "expect";
 import * as vscode from "vscode";
-import { DatasetTree } from "../../src/DatasetTree";
-import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as testConst from "../../resources/testProfileData";
 import * as sinon from "sinon";
 import * as chai from "chai";
-import * as utils from "../../src/utils";
 import * as chaiAsPromised from "chai-as-promised";
-import * as extension from "../../src/extension";
+import { DS_SESSION_CONTEXT } from "../../src/globals";
 
 declare var it: any;
 
@@ -40,7 +39,7 @@ describe("DatasetTree Integration Tests", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
                                          null, session, undefined, undefined, testProfile);
-    sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessNode.contextValue = DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessNode.pattern = pattern + ".PUBLIC";
     const testTree = new DatasetTree();
@@ -178,7 +177,7 @@ describe("DatasetTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests the addSession() function by adding the default history, deleting, then adding a passed session then deleting", async () => {
         for (const sess of testTree.mSessionNodes) {
-            if (sess.contextValue === extension.DS_SESSION_CONTEXT) {
+            if (sess.contextValue === DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
@@ -186,7 +185,7 @@ describe("DatasetTree Integration Tests", async () => {
         await testTree.addSession();
         expect(testTree.mSessionNodes.length).toBeGreaterThan(len);
         for (const sess of testTree.mSessionNodes) {
-            if (sess.contextValue === extension.DS_SESSION_CONTEXT) {
+            if (sess.contextValue === DS_SESSION_CONTEXT) {
                 testTree.deleteSession(sess);
             }
         }
@@ -400,4 +399,3 @@ describe("DatasetTree Integration Tests", async () => {
         });
     });
 });
-

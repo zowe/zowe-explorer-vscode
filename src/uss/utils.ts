@@ -9,9 +9,9 @@
 *                                                                                 *
 */
 
-import { ZoweUSSNode } from "../ZoweUSSNode";
-// tslint:disable-next-line: no-implicit-dependencies
+// tslint:disable-next-line: no-duplicate-imports
 import * as moment from "moment";
+import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
