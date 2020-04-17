@@ -228,7 +228,7 @@ Array [
   Object {
     "command": "zowe.uss.editSession",
     "group": "inline",
-    "when": "viewItem == uss_session",
+    "when": "viewItem =~ /^ussSession.*/",
   },
   Object {
     "command": "zowe.uss.removeSession",

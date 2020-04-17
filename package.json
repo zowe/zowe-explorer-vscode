@@ -683,13 +683,12 @@
         },
         {
 
-          "when": "viewItem == uss_session",
+          "when": "viewItem =~ /^ussSession.*/",
           "command": "zowe.uss.editSession",
           "group": "inline"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-
           "command": "zowe.uss.removeSession"
         },
         {
