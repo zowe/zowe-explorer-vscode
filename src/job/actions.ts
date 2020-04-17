@@ -19,6 +19,7 @@ import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
+import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
@@ -32,7 +33,7 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     await Profiles.getInstance().refresh();
     jobsProvider.mSessionNodes.forEach((jobNode) => {
-        if (jobNode.contextValue === globals.JOBS_SESSION_CONTEXT) {
+        if (contextually.isSession(this)) {
             labelHack(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
