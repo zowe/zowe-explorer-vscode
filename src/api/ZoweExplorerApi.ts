@@ -429,11 +429,11 @@ export namespace ZoweExplorerApi {
         /*
          * @param primaryNode represents the Tree item that is being used
          */
-        getProfile(primaryNode: IZoweTreeNode): Promise<IProfileLoaded>;
+        getProfile(primaryNode: IZoweTreeNode): IProfileLoaded;
         /*
          * @param primaryNode represents the Tree item that is being used
          */
-        getRelatedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded>;
+        getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded>;
     }
 
     /**

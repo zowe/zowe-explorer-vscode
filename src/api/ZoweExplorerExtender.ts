@@ -10,7 +10,7 @@
 */
 
 import { IProfileLoaded } from "@zowe/imperative";
-import { getProfile, getLinkedProfile } from "../utils/links";
+import { getProfile, getLinkedProfile } from "../utils/profileLink";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 
 /**
@@ -43,7 +43,7 @@ export class ZoweExplorerExtender {
      * @return The requested profile
      *
      */
-    public getProfile(primaryNode: IZoweTreeNode): Promise<IProfileLoaded>  {
+    public getProfile(primaryNode: IZoweTreeNode): IProfileLoaded  {
         return getProfile(primaryNode);
     }
 
@@ -55,7 +55,7 @@ export class ZoweExplorerExtender {
      * @param primaryNode represents the Tree item that is being used
      * @return The requested profile
      */
-    public getRelatedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded> {
+    public getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded> {
         return getLinkedProfile(primaryNode, type);
     }
 

@@ -1,0 +1,217 @@
+/*
+* This program and the accompanying materials are made available under the terms of the *
+* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+* https://www.eclipse.org/legal/epl-v20.html                                      *
+*                                                                                 *
+* SPDX-License-Identifier: EPL-2.0                                                *
+*                                                                                 *
+* Copyright Contributors to the Zowe Project.                                     *
+*                                                                                 *
+*/
+
+import { IProfileLoaded, Logger } from "@zowe/imperative";
+import * as zowe from "@zowe/cli";
+import * as vscode from "vscode";
+import * as extension from "../../../src/extension";
+import * as fs from "fs";
+import * as testConst from "../../../resources/testProfileData";
+import { ZoweDatasetNode } from "../../../src/ZoweDatasetNode";
+import { IZoweDatasetTreeNode } from "../../../src/api/IZoweTreeNode";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/Profiles";
+import { linkProfileDialog, getLinkedProfile } from "../../../src/utils/profileLink";
+
+// jest.mock("vscode");
+// jest.mock("fs");
+
+const existsSync = jest.fn();
+const mkdirSync = jest.fn();
+const readFileSync = jest.fn();
+const writeFileSync = jest.fn();
+const mockdirectLoad = jest.fn();
+const mockAllTypes = jest.fn();
+const mockNamesForType = jest.fn();
+const showQuickPick = jest.fn();
+const showInformationMessage = jest.fn();
+
+Object.defineProperty(fs, "existsSync", {value: existsSync});
+Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
+Object.defineProperty(fs, "readFileSync", {value: readFileSync});
+Object.defineProperty(fs, "writeFileSync", {value: writeFileSync});
+Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+
+const testProfile: IProfileLoaded = {
+    name: "azbox",
+    profile: {
+        user: undefined,
+        password: undefined,
+        host: "azbox.com",
+        port: 32070,
+        rejectUnauthorized: false,
+        name: "azbox"
+    },
+    type: "zosmf",
+    message: "",
+    failNotFound: false
+};
+
+const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
+const sessionNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+    session, undefined, undefined, testProfile);
+sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+sessionNode.pattern = "MYHLQ.TEST";
+
+const profileOne: IProfileLoaded = {
+    name: "btso",
+    profile: {
+        user: undefined,
+        password: undefined
+    },
+    type: "tso",
+    message: "",
+    failNotFound: false
+};
+const dataSetName = "MYHLQ.TEST" + ".EXT.DATASET.TEST";
+const testNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+const aBadNode: any = {
+        dummy: test
+     };
+
+describe("Profile link unit tests", () => {
+
+    beforeEach(() => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    directLoad: mockdirectLoad,
+                    promptCredentials: jest.fn(),
+                    getAllTypes: mockAllTypes,
+                    getNamesForType: mockNamesForType,
+                    updateProfile: jest.fn()
+                };
+            })
+        });
+        mockAllTypes.mockReturnValueOnce(["tso", "zftp", "ano"]);
+        mockNamesForType.mockReturnValueOnce(["pro1", "pro2", "pro3"]);
+        existsSync.mockReturnValueOnce(false);
+        existsSync.mockReturnValueOnce(true);
+        readFileSync.mockReturnValueOnce("configuration:"+"\u000a" + "  zftp: azftp"+"\u000a" + "  tso: btso "+"\u000a");
+        showInformationMessage.mockReset();
+    });
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
+    it("Test get profile via the API", async () => {
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        expect((await extenderApi.getProfile(testNode)).name).toEqual("azbox");
+    });
+
+    it("Test get profile via the API - Bad input", async () => {
+        let success = false;
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        try {
+            await extenderApi.getProfile(aBadNode as IZoweDatasetTreeNode);
+        } catch (error) {
+            expect(error.message).toEqual("Tree Item is not a Zowe Explorer item.");
+            success = true;
+        }
+        expect(success).toBe(true);
+    });
+
+    it("Test get linked profile via the API", async () => {
+        mockdirectLoad.mockReturnValue(profileOne);
+        profileOne.name = "btso";
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        const pr1 = await extenderApi.getLinkedProfile(testNode, "tso");
+        expect(pr1.name).toEqual("btso");
+    });
+
+
+    it("Test get linked profile directly - Bad input", async () => {
+        let success = false;
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        try {
+         await getLinkedProfile(aBadNode as IZoweDatasetTreeNode, "tso", Logger.getAppLogger());
+        } catch (error) {
+            expect(error.message).toEqual("Tree Item is not a Zowe Explorer item.");
+            success = true;
+        }
+        expect(success).toBe(true);
+    });
+
+    it("Test get linked profile via the API - Bad input", async () => {
+        let success = false;
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        try {
+            await extenderApi.getLinkedProfile(aBadNode as IZoweDatasetTreeNode, "tso");
+        } catch (error) {
+            expect(error.message).toEqual("Tree Item is not a Zowe Explorer item.");
+            success = true;
+        }
+        expect(success).toBe(true);
+    });
+
+    it("Test get linked profile via the API - Bad output found", async () => {
+        let success = false;
+        mockdirectLoad.mockRejectedValue(new Error("An Error"));
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        try {
+            const pr1 = await extenderApi.getLinkedProfile(testNode, "tso");
+        } catch (error) {
+            expect(error.message).toEqual("Attempted to load a missing profile. + An Error");
+            success = true;
+        }
+        expect(success).toBe(true);
+    });
+
+    it("Test the linked profile save dialog", async () => {
+        const writeFile = jest.fn();
+        writeFile.mockReturnValueOnce(undefined);
+        showQuickPick.mockReturnValueOnce("ano");
+        showQuickPick.mockReturnValueOnce("pro2");
+        linkProfileDialog(profileOne);
+        // expect(writeFile).toBeCalledWith("btso.yaml", "configuration:"+"\u000a" + " ano: pro2 "+"\u000a", "utf8");
+        // expect(writeFile.mock.calls[0][1]).toEqual("configuration:"+"\u000a" + " ano: pro2 "+"\u000a");
+        // expect(writeFile.mock.calls[0][0]).toContain("btso.yaml");
+        // expect(showInformationMessage.mock.calls.length).toBe(1);
+        // expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+});
+
+describe("Profile link unit tests part 2", () => {
+
+    beforeEach(() => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    directLoad: mockdirectLoad,
+                    promptCredentials: jest.fn(),
+                    getAllTypes: mockAllTypes,
+                    getNamesForType: mockNamesForType,
+                    updateProfile: jest.fn()
+                };
+            })
+        });
+        readFileSync.mockReturnValueOnce("");
+        mockAllTypes.mockReturnValueOnce(["tso", "zftp", "ano"]);
+        mockNamesForType.mockReturnValueOnce(["pro1", "pro2", "pro3"]);
+        existsSync.mockReturnValueOnce(false);
+        existsSync.mockReturnValueOnce(true);
+        showQuickPick.mockReturnValueOnce("ano");
+        showQuickPick.mockReturnValueOnce("pro2");
+    });
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
+    it("Test the linked profile save dialog repeat with an empty file loaded", async () => {
+        linkProfileDialog(profileOne);
+    });
+
+});

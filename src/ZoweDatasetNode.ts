@@ -147,9 +147,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         altLabel = altLabel.substring(0, endPoint);
                     }
                     if (!elementChildren[altLabel]) {
-                        const temp = new ZoweDatasetNode(altLabel, vscode.TreeItemCollapsibleState.None,
-                                                        this, null, extension.VSAM_CONTEXT, undefined, this.getProfile());
-                        elementChildren[altLabel] = temp;
+                        elementChildren[altLabel] = new ZoweDatasetNode(altLabel, vscode.TreeItemCollapsibleState.None,
+                            this, null, extension.VSAM_CONTEXT, undefined, this.getProfile());
                     }
                 } else if (this.contextValue === extension.DS_SESSION_CONTEXT) {
                     // Creates a ZoweDatasetNode for a PS

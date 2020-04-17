@@ -18,30 +18,37 @@ import * as fs from "fs";
 import { Profiles } from "../Profiles";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
+import * as nls from "vscode-nls";
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
-export async function getLinkedProfile(node: IZoweTreeNode, type: string, aLogger?: Logger) {
-    if (node instanceof ZoweTreeNode) {
-        return findLinkedProfile(await getProfile(node, aLogger), type, aLogger);
-    } else if (aLogger) {
-        aLogger.warn("Tree Item is not a Zowe Explorer item");
+export async function getLinkedProfile(node: IZoweTreeNode, type: string, logger?: Logger) {
+    try {
+        if (node instanceof ZoweTreeNode) {
+            return findLinkedProfile(await getProfile(node), type);
+        }
+        throw new Error(localize("profileLink.notTreeItem", "Tree Item is not a Zowe Explorer item."));
+    } catch (err) {
+        if (logger) {
+            logger.warn(err.message);
+        }
+        throw (err);
     }
 }
 
-export async function getProfile(node: vscode.TreeItem, aLogger?: Logger) {
+export function getProfile(node: vscode.TreeItem) {
     if (node instanceof ZoweTreeNode) {
         return (node as ZoweTreeNode).getProfile();
-    } else if (aLogger) {
-        aLogger.warn("Tree Item is not a Zowe Explorer item");
     }
+    throw new Error(localize("profileLink.notTreeItem", "Tree Item is not a Zowe Explorer item."));
 }
 
-export async function linkProfileDialog(aProfile: IProfileLoaded, aLogger?: Logger) {
+export async function linkProfileDialog(aProfile: IProfileLoaded) {
     let chosenName;
     let chosenType;
     if (aProfile) {
         const possibles = Profiles.getInstance().getAllTypes().filter( (value) => value !== aProfile.type);
         const quickPickOptions1: vscode.QuickPickOptions = {
-            placeHolder: "Select a type of alternative profile to associate with this primary profile",
+            placeHolder: localize("profileLink.selectAltProfile", "Select a type of alternative profile to associate with this primary profile"),
             ignoreFocusOut: true,
             canPickMany: false
         };
@@ -49,20 +56,21 @@ export async function linkProfileDialog(aProfile: IProfileLoaded, aLogger?: Logg
         if (chosenType) {
             const profiles = Profiles.getInstance().getNamesForType(chosenType);
             const quickPickOptions2: vscode.QuickPickOptions = {
-                placeHolder: "Select the file name to associate with this primary profile",
+                placeHolder: localize("profileLink.selectFileName", "Select the file name to associate with this primary profile"),
                 ignoreFocusOut: true,
                 canPickMany: false
             };
             chosenName = await vscode.window.showQuickPick(profiles, quickPickOptions2);
             if (chosenName) {
                 saveLinkedProfile(aProfile, chosenType, chosenName);
-                vscode.window.showInformationMessage("Associated " + chosenType + ":" + chosenName + " with " + aProfile.type + ":"+ aProfile.name);
+                vscode.window.showInformationMessage("Associated " + chosenType + ":" + chosenName +
+                " with " + aProfile.type + ":"+ aProfile.name); // TODO
             }
         }
     }
 }
 
-async function findLinkedProfile(aProfile: IProfileLoaded, type: string, aLogger?: Logger) {
+async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
     let profile: IProfileLoaded;
     if (aProfile) {
         const linkRootDirectory = path.join(extension.getZoweDir(), "links");
@@ -78,9 +86,7 @@ async function findLinkedProfile(aProfile: IProfileLoaded, type: string, aLogger
                     try {
                         profile = await Profiles.getInstance().directLoad(type, links[type]);
                     } catch (err) {
-                        if (aLogger) {
-                            aLogger.warn("Attempting to load a missing profile");
-                        }
+                        throw new Error(localize("profileLink.missingProfile", "Attempted to load a missing profile.") + " + " + err.message);
                     }
                 }
             }
@@ -102,9 +108,6 @@ async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string,
         const file = path.join(linkRootDirectory, primary.type, primary.name + ".yaml");
         if (fs.existsSync(file)) {
             properties = await yaml.safeLoad(fs.readFileSync(file, "utf8"));
-        }
-        if (!properties.configuration) {
-            properties.configuration = secondaryArray;
         }
         properties.configuration[`${secondaryType}`] = secondaryName;
         const output = yaml.safeDump(properties);
