@@ -965,29 +965,58 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
             localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
-                file: doc.fileName,
-                returnEtag: true
-            });
-            // re-assign etag, so that it can be used with subsequent requests
-            const downloadEtag = downloadResponse.apiResponse.etag;
-            if (node && downloadEtag !== node.getEtag()) {
-                node.setEtag(downloadEtag);
-            }
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
+            if (globals.ISTHEIA) {
+                vscode.window.showWarningMessage(localize("saveFile.error.TheiaDetected", "A merge conflict have been detected. Since you are running inside a Theia editor, a merge conflict resolution is not available.\n."));
+                vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"), "Yes", "No")
+                .then((selection) => {
+                    if (selection.toLowerCase() === "yes") {
+                        vscode.window.showInformationMessage("WILL UPLOAD");
+                        uploadOptions.etag = undefined;
+                        const uploadResponse1 = vscode.window.withProgress({
+                            location: vscode.ProgressLocation.Notification,
+                            title: localize("saveFile.response.save.title", "Saving data set...")
+                        }, () => {
+                            return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
+                                label,
+                                uploadOptions);
+                        });
+                        uploadResponse1.then((response) => {
+                            if (response.success) {
+                                vscode.window.showInformationMessage(response.commandResponse);
+                                if (node) {
+                                    node.setEtag(response.apiResponse[0].etag);
+                                }
+                            }
+                        });
+                    } else {
+                        // Case if use click No. Need to mark file as dirty
+                    }
+                });
+            } else {
+                const oldDoc = doc;
+                const oldDocText = oldDoc.getText();
+                const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
+                    file: doc.fileName,
+                    returnEtag: true
+                });
+                // re-assign etag, so that it can be used with subsequent requests
+                const downloadEtag = downloadResponse.apiResponse.etag;
+                if (node && downloadEtag !== node.getEtag()) {
+                    node.setEtag(downloadEtag);
+                }
+                vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                 "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-            // Store document in a separate variable, to be used on merge conflict
-            const oldDoc = doc;
-            const oldDocText = oldDoc.getText();
-            const startPosition = new vscode.Position(0, 0);
-            const endPosition = new vscode.Position(oldDoc.lineCount, 0);
-            const deleteRange = new vscode.Range(startPosition, endPosition);
-            await vscode.window.activeTextEditor.edit((editBuilder) => {
-                // re-write the old content in the editor view
-                editBuilder.delete(deleteRange);
-                editBuilder.insert(startPosition, oldDocText);
-            });
-            await vscode.window.activeTextEditor.document.save();
+                // Store document in a separate variable, to be used on merge conflict
+                const startPosition = new vscode.Position(0, 0);
+                const endPosition = new vscode.Position(oldDoc.lineCount, 0);
+                const deleteRange = new vscode.Range(startPosition, endPosition);
+                await vscode.window.activeTextEditor.edit((editBuilder) => {
+                    // re-write the old content in the editor view
+                    editBuilder.delete(deleteRange);
+                    editBuilder.insert(startPosition, oldDocText);
+                });
+                await vscode.window.activeTextEditor.document.save();
+            }
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
