@@ -139,12 +139,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 // Creates a ZoweDatasetNode for a VSAM file
                 } else if (item.dsorg === "VS") {
                     let altLabel = item.dsname;
-                    let endPoint = altLabel.indexOf(".DATA");
-                    if (endPoint === -1) {
-                        endPoint = altLabel.indexOf(".INDEX");
-                    }
-                    if (endPoint > -1) {
-                        altLabel = altLabel.substring(0, endPoint);
+                    if (altLabel.endsWith(".DATA")) {
+                        altLabel = altLabel.substring(0, altLabel.indexOf(".DATA"));
+                    } else if (altLabel.endsWith(".INDEX")) {
+                        altLabel = altLabel.substring(0, altLabel.indexOf(".INDEX"));
                     }
                     if (!elementChildren[altLabel]) {
                         elementChildren[altLabel] = new ZoweDatasetNode(altLabel, vscode.TreeItemCollapsibleState.None,
