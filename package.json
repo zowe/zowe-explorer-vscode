@@ -1084,7 +1084,8 @@
     "isbinaryfile": "4.0.4",
     "js-yaml": "^3.13.1",
     "moment": "2.24.0",
-    "vscode-nls": "4.1.1"
+    "vscode-nls": "4.1.1",
+    "yamljs": "^0.3.0"
   },
   "jest": {
     "moduleFileExtensions": [

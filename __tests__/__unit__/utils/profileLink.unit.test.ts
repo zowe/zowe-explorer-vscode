@@ -14,6 +14,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
 import * as fs from "fs";
+import * as writeYaml from "yamljs";
 import * as testConst from "../../../resources/testProfileData";
 import { IZoweDatasetTreeNode } from "../../../src/api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
@@ -33,6 +34,7 @@ const mockAllTypes = jest.fn();
 const mockNamesForType = jest.fn();
 const showQuickPick = jest.fn();
 const showInformationMessage = jest.fn();
+const showErrorMessage = jest.fn();
 
 Object.defineProperty(fs, "existsSync", {value: existsSync});
 Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
@@ -40,6 +42,7 @@ Object.defineProperty(fs, "readFileSync", {value: readFileSync});
 Object.defineProperty(fs, "writeFileSync", {value: writeFileSync});
 Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
 Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
+Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
 
 const testProfile: IProfileLoaded = {
     name: "azbox",
@@ -72,14 +75,26 @@ const profileOne: IProfileLoaded = {
     message: "",
     failNotFound: false
 };
+
+const profileTwo: IProfileLoaded = {
+    name: "zos1",
+    profile: {
+        user: undefined,
+        password: undefined
+    },
+    type: "zosmf",
+    message: "",
+    failNotFound: false
+};
+
 const dataSetName = "MYHLQ.TEST" + ".EXT.DATASET.TEST";
 const testNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
 const aBadNode: any = {
         dummy: test
      };
 
-describe("Profile link unit tests", () => {
-
+describe("Profile link unit tests part 1", () => {
+   //  writeYaml.mockReturnValue("secondaries:"+"\u000a" + "  zftp: azftp"+"\u000a" + "  tso: btso "+"\u000a");
     beforeEach(() => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -98,8 +113,10 @@ describe("Profile link unit tests", () => {
         mockNamesForType.mockReturnValueOnce(["pro1", "pro2", "pro3"]);
         existsSync.mockReturnValueOnce(false);
         existsSync.mockReturnValueOnce(true);
-        readFileSync.mockReturnValueOnce("configuration:"+"\u000a" + "  zftp: azftp"+"\u000a" + "  tso: btso "+"\u000a");
+        readFileSync.mockReturnValue("secondaries:"+"\u000a" + "  zftp: azftp"+"\u000a" + "  tso: btso "+"\u000a");
+        writeFileSync.mockReturnValue({});
         showInformationMessage.mockReset();
+
     });
     afterEach(() => {
         jest.resetAllMocks();
@@ -129,7 +146,6 @@ describe("Profile link unit tests", () => {
         const pr1 = await extenderApi.getLinkedProfile(testNode, "tso");
         expect(pr1.name).toEqual("btso");
     });
-
 
     it("Test get linked profile directly - Bad input", async () => {
         let success = false;
@@ -169,20 +185,25 @@ describe("Profile link unit tests", () => {
     });
 
     it("Test the linked profile save dialog", async () => {
-        const writeFile = jest.fn();
-        writeFile.mockReturnValueOnce(undefined);
         showQuickPick.mockReturnValueOnce("ano");
         showQuickPick.mockReturnValueOnce("pro2");
-        linkProfileDialog(profileOne);
-        // expect(writeFile).toBeCalledWith("btso.yaml", "configuration:"+"\u000a" + " ano: pro2 "+"\u000a", "utf8");
-        // expect(writeFile.mock.calls[0][1]).toEqual("configuration:"+"\u000a" + " ano: pro2 "+"\u000a");
-        // expect(writeFile.mock.calls[0][0]).toContain("btso.yaml");
-        // expect(showInformationMessage.mock.calls.length).toBe(1);
-        // expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+        await linkProfileDialog(profileOne);
+        expect(writeFileSync.mock.calls[0][0]).toContain("btso.yaml");
+        expect(writeFileSync.mock.calls[0][1]).toContain("ano: pro2");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Associated secondary profile ano:pro2 with tso:btso primary.");
     });
+
+    it("Test the linked profile save dialog", async () => {
+        showQuickPick.mockReturnValueOnce("ano");
+        showQuickPick.mockReturnValueOnce("pro3");
+        await linkProfileDialog(profileOne);
+        expect(writeFileSync.mock.calls[0][1]).toContain("ano: pro3");
+    });
+
 });
 
-describe("Profile link unit tests part 2", () => {
+describe("Profile link unit tests part 2. No file for profile", () => {
 
     beforeEach(() => {
         Object.defineProperty(Profiles, "getInstance", {
@@ -198,20 +219,41 @@ describe("Profile link unit tests part 2", () => {
                 };
             })
         });
-        readFileSync.mockReturnValueOnce("");
         mockAllTypes.mockReturnValueOnce(["tso", "zftp", "ano"]);
         mockNamesForType.mockReturnValueOnce(["pro1", "pro2", "pro3"]);
         existsSync.mockReturnValueOnce(false);
-        existsSync.mockReturnValueOnce(true);
+        existsSync.mockReturnValueOnce(false);
+        writeFileSync.mockReturnValue({});
         showQuickPick.mockReturnValueOnce("ano");
-        showQuickPick.mockReturnValueOnce("pro2");
+        showQuickPick.mockReturnValueOnce("pro3");
+
     });
     afterEach(() => {
         jest.resetAllMocks();
     });
 
     it("Test the linked profile save dialog repeat with an empty file loaded", async () => {
-        linkProfileDialog(profileOne);
+        await linkProfileDialog(profileOne);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Associated secondary profile ano:pro3 with tso:btso primary.");
     });
 
+    it("Test the linked profile save dialog repeat with a bad file loaded", async () => {
+        readFileSync.mockReturnValue("Stuff");
+        await linkProfileDialog(profileTwo);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Associated secondary profile ano:pro3 with zosmf:zos1 primary.");
+        expect(writeFileSync.mock.calls[0][1]).toContain("ano: pro3"); // line 126
+    });
+    it("Test the linked profile save dialog repeat with an empty file loaded", async () => {
+        readFileSync.mockReturnValue("secondaries:");
+        await linkProfileDialog(profileTwo);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("Associated secondary profile ano:pro3 with zosmf:zos1 primary.");
+        expect(writeFileSync.mock.calls[0][1]).toContain("ano: pro3");
+    });
+    it("Test the linked profile save dialog error thrown", async () => {
+        readFileSync.mockImplementationOnce(() => {
+            throw (Error("Test Error 1"));
+        });
+        await linkProfileDialog(profileTwo);
+        expect(showErrorMessage.mock.calls[0][0]).toBe("Unable to save profile association. Test Error 1");
+    });
 });
