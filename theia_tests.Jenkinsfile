@@ -46,6 +46,7 @@ node('ibm-jenkins-slave-nvm') {
           pipeline.nvmShell "npm cache clean --force"
           pipeline.nvmShell "yarn cache clean"
           pipeline.nvmShell "yarn"
+        }
       }
     },
     timeout: [
