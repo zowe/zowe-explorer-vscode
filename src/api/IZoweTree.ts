@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./IZoweTreeNode";
+import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -42,6 +42,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param type e.g. zosmf
      */
     addSession(sessionName?: string, type?: string): Promise<void>;
+    /**
+     * Adds a favorite node
+     * @param favorite Adds a favorite node
+     */
+    checkCurrentProfile(node: IZoweNodeType);
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
