@@ -1,0 +1,22 @@
+{
+    "Favorites": "Favorites",
+    "initializeFavorites.log.debug": "initializing favorites",
+    "initializeFavorites.error.profile1": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ",
+    "intializeFavorites.error.profile2": ". To resolve this, you can create a profile with this name, ",
+    "initializeFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ",
+    "initializeFavorites.error.profile4": " user settings.",
+    "loadNamedProfile.error.profileName": "Initialization Error: Could not find profile named: ",
+    "loadNamedProfile.error.period": ".",
+    "initializeFavorites.fileCorrupted": "Favorites file corrupted: ",
+    "addFavorite": "PDS already in favorites",
+    "findParentNode.unsuccessful": "Node does not exist. It may have been deleted.",
+    "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",
+    "searchHistory.options.prompt": "Select a filter",
+    "enterPattern.pattern": "No selection made.",
+    "enterPattern.options.prompt": "Search data sets by entering patterns: use a comma to separate multiple patterns",
+    "datasetFilterPrompt.enterPattern": "You must enter a pattern.",
+    "renameDataSet.log.debug": "Renaming data set ",
+    "renameDataSet.log.error": "Error encountered when renaming data set! ",
+    "renameDataSet.error": "Unable to rename data set: ",
+    "defaultFilterPrompt.option.prompt.search": "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)"
+}

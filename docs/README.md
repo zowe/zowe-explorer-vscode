@@ -6,6 +6,7 @@ Developers can install the Visual Studio Code Extension for Zowe, which lets use
 
 - [Install to VSC from source](#install-to-vsc-from-source)
 - [Run System Tests](#run-system-tests)
+- [Run Zowe Explorer Regression Tests for Theia](#run-zowe-explorer-regression-tests-for-theia)
 - [Localization](#localization)
 
 ## Install to VSC from source
@@ -111,6 +112,49 @@ There is no required structure for the mainframe data sets under `orPattern`.
   **Example:** When your test properties define a profile named `test-vscode-extension`, a corresponding profile should exist in the `.zowe` profiles directory of your `zowe-cli`. The profile definitions **must** be identical to allow your tests to execute properly.
 - The tests need at least two profiles to work properly. The second profile does not require valid credentials, however, it must exist on disk.
 
+## Run Zowe Explorer Regression Tests for Theia
+
+Run regression tests to ensure that the latest release of Zowe Explorer is compatible with a Theia enviroment.
+
+### Set up Theia Workspace
+
+Set up your Theia workspace for development purposes.
+
+**Follow these steps**:
+
+1. Build a VSIX file with your changes.
+
+2. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
+      
+   **Note**: Ensure that your latest VSIX file is in the `plugins` folder.
+
+3. Open a web browser and navigate to <http://localhost:3000> to verify your setup.
+
+   You should see Zowe Explorer that is deployed in Theia.
+
+### Run Regression Tests
+
+Issue the following command to run the regression tests:
+
+```
+npm run test:theia
+```
+
+The regression tests output appears in your VSC debug console.
+
+### Run Tests with Firefox UI Visibility Components 
+
+Disable headless mode to see changes in Firefox while your tests are in progress.
+
+**Note**: Tests run in headless mode by default.
+
+1. Navigate to the `__tests__/__theia__/` folder.
+2. Comment out the line `firefoxOptions.headless();` in the tests.
+3. Compile the extension.
+4. Run the regression test.
+
+  The tests run and the Firefox browser is launched.
+
 ## Localization
 
 All localized strings must be string literals, you cannot include variables or use template literals within the argument you provide to the localize function.
@@ -123,7 +167,6 @@ All localized strings must be string literals, you cannot include variables or u
     - If you want to add a new string to the package.json file, replace the string with your key enclosed by the percent sign as such \% __key__ \% i.e. `"This is a string"` becomes `"%exampleProperty.exDescription%"`. Then go to the package.nls.json file found in the root directory of the repository and include your newly created key and string inside as a json key/value pair.
 
     - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function `const localize = nls.config({ messageFormat: nls.MessageFormat.file })();` Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
-        - If the new string is in a newly-created typescript file, update the stringUpdateScript.js file with an entry for the new typescript file.
 
 3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 

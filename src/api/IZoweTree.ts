@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./IZoweTreeNode";
+import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -42,6 +42,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param type e.g. zosmf
      */
     addSession(sessionName?: string, type?: string): Promise<void>;
+    /**
+     * Adds a favorite node
+     * @param favorite Adds a favorite node
+     */
+    checkCurrentProfile(node: IZoweNodeType);
     /**
      * Adds a favorite node
      * @param favorite Adds a favorite node
@@ -145,6 +150,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     deleteSession(node: IZoweNodeType): any;
     /**
+     * Lets the user open a dataset by filtering the currently-loaded list
+     */
+    searchInLoadedItems?(): Promise<IZoweUSSTreeNode[]>;
+    /**
      * Retrieves the vscode tree container
      */
     getTreeView(): vscode.TreeView<IZoweNodeType>;
@@ -180,9 +189,39 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Renames a node based on the profile and it's label
      * @deprecated should not be visible outside of class
      *
+     * @param {string} criteria the member name to add
+     */
+    addRecall?(criteria: string);
+    /**
+     * Returns the array of recently-opened member names
+     *
+     * @returns {string[]} the array of recently-opened member names
+     */
+    getRecall?();
+    /**
+     * Removes a member name from the recently-opened members array
+     *
+     * @param {string} name the member to remove
+     */
+    removeRecall?(name: string);
+    /**
+     * Returns a new dataset filter string, from an old filter and a new string
+     *
+     * @param {string} newFilter the new filter to add
+     * @param {IZoweDatasetTreeNode} node the node with the old filter
+     */
+    createFilterString?(newFilter: string, node: IZoweNodeType);
+    /**
      * @param {string} profileLabel
      * @param {string} beforeLabel
      * @param {string} afterLabel
      */
     renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string);
+    /**
+     * Opens an item & reveals it in the tree
+     *
+     * @param {string} path the path of the item
+     * @param {IZoweNodeType} sessionNode the session to use
+     */
+    openItemFromPath?(path: string, sessionNode: IZoweNodeType);
 }

@@ -1,7 +1,0 @@
-{
-    "createUSSNode.name": "Name of file or directory",
-    "createUSSNode.error.create": "Unable to create node: ",
-    "ussNodeActions.error": "Error encountered in ",
-    "renameUSSNode.error": "Unable to rename node: ",
-    "copyPath.infoMessage": "Copy Path is not yet supported in Theia."
-}

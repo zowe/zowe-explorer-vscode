@@ -17,10 +17,9 @@ import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";
 import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
-import { USSTree } from "../../../src/USSTree";
-import { ZoweUSSNode } from "../../../src/ZoweUSSNode";
-import * as extension from "../../../src/extension";
-import { renameUSSNode } from "../../../src/uss/ussNodeActions";
+import { USSTree } from "../../../src/uss/USSTree";
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { DS_SESSION_CONTEXT } from "../../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -41,7 +40,7 @@ describe("ussNodeActions integration test", async () => {
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
     const sessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
         null, session, null, false, testProfile.name);
-    sessionNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessionNode.contextValue = DS_SESSION_CONTEXT;
     const testTree = new USSTree();
     testTree.mSessionNodes.push(sessionNode);
 
@@ -120,7 +119,7 @@ describe("ussNodeActions integration test", async () => {
                 const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                 inputBoxStub.returns(afterNameBase);
 
-                await renameUSSNode(testNode, testTree, testNode.getUSSDocumentFilePath());
+                await testTree.rename(testNode);
                 list = await zowe.List.fileList(sessionNode.getSession(), path);
                 list = list.apiResponse.items ? list.apiResponse.items.map((entry) => entry.name) : [];
             } catch (err) {
