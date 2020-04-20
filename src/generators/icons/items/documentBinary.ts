@@ -10,8 +10,8 @@
 */
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
-import { getIconPathInResources } from "../../../utils/icon";
-import { isBinary } from "../../../utils/context";
+import { getIconPathInResources } from "../../../shared/utils";
+import { isBinary } from "../../../shared/context";
 
 const icon: IIconItem = {
     id: IconId.documentBinary,

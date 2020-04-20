@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { ZoweDatasetNode } from "../ZoweDatasetNode";
+import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
 import { MockMethod } from "../decorators/MockMethod";
 
 /**
