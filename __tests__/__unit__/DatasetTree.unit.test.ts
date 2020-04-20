@@ -17,16 +17,18 @@ jest.mock("util");
 jest.mock("Session");
 jest.mock("@zowe/imperative");
 jest.mock("isbinaryfile");
+jest.mock("DatasetTree");
 jest.mock("../../src/Profiles");
 
 import * as vscode from "vscode";
-import { DatasetTree } from "../../src/DatasetTree";
-import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
-import { Profiles } from "../../src/Profiles";
-import * as extension from "../../src/extension";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
+import * as globals from "../../src/globals";
+import * as fs from "fs";
 
 describe("DatasetTree Unit Tests", () => {
 
@@ -39,17 +41,38 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
-    // Filter prompt
+    const Rename = jest.fn();
+    const renameDataSet = jest.fn();
+    const renameDataSetMember = jest.fn();
     const showInformationMessage = jest.fn();
     const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const filters = jest.fn();
+    const openTextDocument = jest.fn();
+    const showTextDocument = jest.fn();
     const getFilters = jest.fn();
     const createQuickPick = jest.fn();
     const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
     const ZosmfSession = jest.fn();
+    const findFavoritedNode = jest.fn();
+    const findNonFavoritedNode = jest.fn();
+    const mockRenameFavorite = jest.fn();
+    const mockUpdateFavorites = jest.fn();
+    const mockRenameNode = jest.fn();
+    const mockRemoveRecall = jest.fn();
+    const mockInitialize = jest.fn();
+    const mockPattern = jest.fn();
+    const mockCreateFilterString = jest.fn();
+    const mockRemoveFavorite = jest.fn();
+    const mockGetChildren = jest.fn();
+    const mockGetRecall = jest.fn();
+    const mockAddZoweSession = jest.fn();
+    const mockAddHistory = jest.fn();
+    const mockAddRecall = jest.fn();
+    const mockRefresh = jest.fn();
+    const mockRefreshElement = jest.fn();
     Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
         value: jest.fn(() => {
@@ -68,6 +91,9 @@ describe("DatasetTree Unit Tests", () => {
         return callback();
     });
 
+    Object.defineProperty(zowe, "Rename", {value: Rename});
+    Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
+    Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
@@ -79,11 +105,15 @@ describe("DatasetTree Unit Tests", () => {
     Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
     Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
+    Object.defineProperty(filters, "getFilters", { value: getFilters });
+    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
+    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     getFilters.mockReturnValue(["HLQ", "HLQ.PROD1"]);
     createTreeView.mockReturnValue("testTreeView");
-    const getConfiguration = jest.fn();
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    getConfiguration.mockReturnValue({
+    const getConfigurationMock = jest.fn();
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfigurationMock });
+    getConfigurationMock.mockReturnValue({
         persistence: true,
         get: (setting: string) => [
             "[test]: brtvs99.public1.test{pds}",
@@ -112,19 +142,10 @@ describe("DatasetTree Unit Tests", () => {
         failNotFound: false
     };
     mockLoadNamedProfile.mockReturnValue(profileOne);
-    Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
-                loadNamedProfile: mockLoadNamedProfile
-            };
-        })
-    });
     const testTree = new DatasetTree();
     testTree.mSessionNodes.push(new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
                                 null, session, undefined, undefined, profileOne));
-    testTree.mSessionNodes[1].contextValue = extension.DS_SESSION_CONTEXT;
+    testTree.mSessionNodes[1].contextValue = globals.DS_SESSION_CONTEXT;
     testTree.mSessionNodes[1].pattern = "test";
     const icon = getIconByNode(testTree.mSessionNodes[1]);
     if (icon) {
@@ -135,13 +156,26 @@ describe("DatasetTree Unit Tests", () => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
+                    promptCredentials: jest.fn(),
+                    updateProfile: jest.fn()
+                };
+            })
+        });
     });
 
     afterAll(() => {
         jest.restoreAllMocks();
     });
     afterEach(async () => {
-        getConfiguration.mockClear();
+        getConfigurationMock.mockClear();
     });
 
     /*************************************************************************************************************
@@ -173,8 +207,8 @@ describe("DatasetTree Unit Tests", () => {
             new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null),
             new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed, null, session),
         ];
-        sessNode[0].contextValue = extension.FAVORITE_CONTEXT;
-        sessNode[1].contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode[0].contextValue = globals.FAVORITE_CONTEXT;
+        sessNode[1].contextValue = globals.DS_SESSION_CONTEXT;
         sessNode[1].pattern = "test";
         let targetIcon = getIconByNode(sessNode[0]);
         if (targetIcon) {
@@ -237,7 +271,7 @@ describe("DatasetTree Unit Tests", () => {
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null, undefined, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.CA10", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1],
-                null, extension.DS_MIGRATED_FILE_CONTEXT, undefined, profileOne),
+                null, globals.DS_MIGRATED_FILE_CONTEXT, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
                 null, undefined, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
@@ -298,6 +332,22 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
+     * Test the addRecall/getRecall commands
+     *************************************************************************************************************/
+    it("Tests the addRecall/getRecall commands", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+
+    /*************************************************************************************************************
+     * Test the removeRecall commands
+     *************************************************************************************************************/
+    it("Tests the removeRecall command", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
+    });
+
+    /*************************************************************************************************************
      * Tests that the DatasetTree refresh function exists and doesn't error
      *************************************************************************************************************/
     it("Calling the refresh button ", async () => {
@@ -325,7 +375,7 @@ describe("DatasetTree Unit Tests", () => {
         const member = new ZoweDatasetNode("Child", vscode.TreeItemCollapsibleState.None,
             parent, null);
 
-        getConfiguration.mockReturnValue({
+        getConfigurationMock.mockReturnValue({
             persistence: true,
             get: (setting: string) => [
                 "[test]: brtvs99.public.test{pds}",
@@ -361,8 +411,8 @@ describe("DatasetTree Unit Tests", () => {
         expect(testTree.mFavorites.length).toEqual(3);
 
         // Test adding member already present
-        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        member.contextValue = extension.DS_MEMBER_CONTEXT;
+        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        member.contextValue = globals.DS_MEMBER_CONTEXT;
         await testTree.addFavorite(member);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("PDS already in favorites");
@@ -405,7 +455,7 @@ describe("DatasetTree Unit Tests", () => {
         const startLength = testTree.mSessionNodes.length;
         testTree.mSessionNodes.push(new ZoweDatasetNode("testSess2", vscode.TreeItemCollapsibleState.Collapsed, null, session));
         testTree.addSession("testSess2");
-        testTree.mSessionNodes[startLength].contextValue = extension.DS_SESSION_CONTEXT;
+        testTree.mSessionNodes[startLength].contextValue = globals.DS_SESSION_CONTEXT;
         testTree.mSessionNodes[startLength].pattern = "test";
         const targetIcon = getIconByNode(testTree.mSessionNodes[startLength]);
         if (targetIcon) {
@@ -459,7 +509,7 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -489,14 +539,14 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
         });
         const pds = new ZoweDatasetNode("[test]: BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed,
                                         testTree.mSessionNodes[1], sessionwocred);
-        pds.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        pds.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         await testTree.flipState(pds, true);
         expect(JSON.stringify(pds.iconPath)).toContain("pattern.svg");
     });
@@ -528,12 +578,12 @@ describe("DatasetTree Unit Tests", () => {
         expect(JSON.stringify(pds.iconPath)).not.toEqual("folder-open.svg");
     });
 
-     /*************************************************************************************************************
+    /*************************************************************************************************************
      * Dataset Filter prompts
      *************************************************************************************************************/
     it("Testing that user filter prompts are executed successfully, theia route", async () => {
         let theia = true;
-        Object.defineProperty(extension, "ISTHEIA", { get: () => theia });
+        Object.defineProperty(globals, "ISTHEIA", { get: () => theia });
         testTree.initialize(Logger.getAppLogger());
         showInformationMessage.mockReset();
         showQuickPick.mockReset();
@@ -543,7 +593,7 @@ describe("DatasetTree Unit Tests", () => {
 
         // Assert choosing the new filter specification followed by a path
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
 
         // Assert edge condition user cancels the input path box
@@ -575,7 +625,7 @@ describe("DatasetTree Unit Tests", () => {
         // Executing from favorites
         const favoriteSearch = new ZoweDatasetNode("[aProfile]: HLQ.PROD1.STUFF",
             vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], session, undefined, undefined, profileOne);
-        favoriteSearch.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        favoriteSearch.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const checkSession = jest.spyOn(testTree, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
         await testTree.datasetFilterPrompt(favoriteSearch);
@@ -646,7 +696,7 @@ describe("DatasetTree Unit Tests", () => {
         showInformationMessage.mockReset();
         // Assert choosing the new filter specification but fills in path in QuickPick
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(extension.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
 
         showQuickPick.mockReset();
@@ -679,10 +729,29 @@ describe("DatasetTree Unit Tests", () => {
     });
 
     /*************************************************************************************************************
+     * Testing searchInLoadedItems
+     *************************************************************************************************************/
+    it("Testing that searchInLoadedItems returns the correct array", async () => {
+        const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, testTree.mSessionNodes[1], session, globals.DS_DS_CONTEXT);
+        testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        testTree.mSessionNodes[1].children = [testNode];
+        const treeGetChildren = jest.spyOn(testTree, "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testTree.mSessionNodes[1]])
+        );
+        const sessionGetChildren = jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(
+            () => Promise.resolve([testNode])
+        );
+
+        const loadedItems = await testTree.searchInLoadedItems();
+
+        expect(loadedItems).toStrictEqual([testNode]);
+    });
+
+    /*************************************************************************************************************
      * Testing the onDidConfiguration
      *************************************************************************************************************/
     it("Testing the onDidConfiguration", async () => {
-        getConfiguration.mockReturnValue({
+        getConfigurationMock.mockReturnValue({
             get: (setting: string) => [
                 "[test]: HLQ.PROD2{directory}",
                 "[test]: HLQ.PROD2{textFile}",
@@ -700,7 +769,7 @@ describe("DatasetTree Unit Tests", () => {
         const e = new Event();
         mockAffects.mockReturnValue(true);
         await testTree.onDidChangeConfiguration(e);
-        expect(getConfiguration.mock.calls.length).toBe(2);
+        expect(getConfigurationMock.mock.calls.length).toBe(2);
     });
 
     it("Should rename a favorited node", async () => {
@@ -717,12 +786,59 @@ describe("DatasetTree Unit Tests", () => {
         expect(testTree.mFavorites[0].label).toBe(`[${sessionNode.label.trim()}]: ${newLabel}`);
     });
 
+    it("Should rename a PDS dataset", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const checkSession = jest.spyOn(testTree, "rename");
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        testTree.rename(node);
+        expect(checkSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should rename a DS and DS_FAV dataset", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const checkSession = jest.spyOn(testTree, "rename");
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        node.contextValue = "ds";
+        testTree.rename(node);
+        expect(checkSession).toHaveBeenCalledTimes(2);
+
+        node.contextValue = "ds_fav";
+        testTree.rename(node);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(checkSession).toHaveBeenCalledTimes(3);
+
+    });
+
+    it("Should rename a Member and Member_FAV dataset", async () => {
+        const sessionNode = testTree.mSessionNodes[1];
+        const newLabel = "USER.NEW.LABEL";
+        testTree.mFavorites = [];
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+        const checkSession = jest.spyOn(testTree, "rename");
+        node.label = `[${sessionNode.label.trim()}]: ${node.label}`;
+        node.contextValue = "member";
+        testTree.rename(node);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(checkSession).toHaveBeenCalledTimes(4);
+
+        node.contextValue = "member_fav";
+        testTree.rename(node);
+        // tslint:disable-next-line: no-magic-numbers
+        expect(checkSession).toHaveBeenCalledTimes(5);
+    });
+
     it("Should rename a node", async () => {
         const sessionNode = testTree.mSessionNodes[1];
         const newLabel = "USER.NEW.LABEL";
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
         sessionNode.children.push(node);
-        testTree.renameNode(sessionNode.label.trim(), "node", newLabel);
+        testTree.renameNode(sessionNode.label, "node", newLabel);
 
         expect(sessionNode.children[sessionNode.children.length-1].label).toBe(newLabel);
         sessionNode.children.pop();
@@ -740,16 +856,18 @@ describe("DatasetTree Unit Tests", () => {
             type: "basic",
         });
         const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode.contextValue = globals.DS_SESSION_CONTEXT;
         const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_SESSION_CONTEXT;
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
-                        return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
+                        return ["fake", "fake", "fake"];
                     }),
                 };
             })
@@ -777,12 +895,12 @@ describe("DatasetTree Unit Tests", () => {
             type: "basic",
         });
         const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        sessNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const dsNode = new ZoweDatasetNode("[testSess2]: node", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         testTree.mSessionNodes.push(dsNode);
         const dsNode2 = new ZoweDatasetNode("testSess2", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode2.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        dsNode2.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         testTree.mSessionNodes.push(dsNode2);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -790,6 +908,8 @@ describe("DatasetTree Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["", "", ""];
                     }),
@@ -825,14 +945,14 @@ describe("DatasetTree Unit Tests", () => {
             type: "basic",
         });
         const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        sessNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const dsNode = new ZoweDatasetNode("[testSess2]: node", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         testTree.mSessionNodes.push(dsNode);
         const dsNode2 = new ZoweDatasetNode("testSess2", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode2.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        dsNode2.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         testTree.mSessionNodes.push(dsNode2);
-        getConfiguration.mockReturnValue({
+        getConfigurationMock.mockReturnValue({
             persistence: true,
             get: (setting: string) => [
                 "[test]: brtvs99.public1.test{pds}",
@@ -850,6 +970,8 @@ describe("DatasetTree Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     loadNamedProfile: jest.fn(()=> {
                         return null;
                     }),
@@ -889,14 +1011,16 @@ describe("DatasetTree Unit Tests", () => {
             type: "basic",
         });
         const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode.contextValue = globals.DS_SESSION_CONTEXT;
         const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_SESSION_CONTEXT;
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"}
+                    defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.INVALID,
+                    checkCurrentProfile: jest.fn(),
                 };
             })
         });
@@ -904,7 +1028,6 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(dsNode);
 
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
-
     });
 
     it("Should find a favorited node", async () => {
@@ -912,7 +1035,7 @@ describe("DatasetTree Unit Tests", () => {
         const sessionNode = testTree.mSessionNodes[1];
         const nonFavoritedNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
         const favoritedNode = new ZoweDatasetNode("[testSess]: node", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
-        favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        favoritedNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         testTree.mFavorites.push(favoritedNode);
         const foundNode = testTree.findFavoritedNode(nonFavoritedNode);
@@ -938,6 +1061,7 @@ describe("DatasetTree Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showErrorMessage.mockReset();
+        showErrorMessage.mockResolvedValueOnce("Check Credentials");
 
         const label = "invalidCred";
         // tslint:disable-next-line: object-literal-key-quotes
@@ -948,5 +1072,212 @@ describe("DatasetTree Unit Tests", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
         `\n${label}\n` +
         " are valid or this may lead to a lock-out.");
+    });
+
+    it("tests utils error handling USS", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showErrorMessage.mockReset();
+        showErrorMessage.mockResolvedValueOnce("Check Credentials");
+
+        const label = "invalidCred [/tmp]";
+        // tslint:disable-next-line: object-literal-key-quotes
+        const error = {"mDetails": {"errorCode": 401}};
+        await utils.errorHandling(error, label);
+
+        expect(showErrorMessage.mock.calls.length).toEqual(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        `\n${label}\n` +
+        " are valid or this may lead to a lock-out.");
+    });
+
+    it("tests utils error handling: Theia", async () => {
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showErrorMessage.mockReset();
+
+        showErrorMessage.mockResolvedValueOnce("Check Credentials");
+
+        const theia = true;
+        Object.defineProperty(globals, "ISTHEIA", { get: () => theia });
+
+        const label = "invalidCred";
+        // tslint:disable-next-line: object-literal-key-quotes
+        const error = {"mDetails": {"errorCode": 401}};
+        await utils.errorHandling(error, label);
+
+        expect(showErrorMessage.mock.calls.length).toEqual(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
+        `\n${label}\n` +
+        " are valid or this may lead to a lock-out.");
+    });
+
+    describe("Renaming Data Sets", () => {
+        const existsSync = jest.fn();
+        Object.defineProperty(fs, "existsSync", {value: existsSync});
+        globals.defineGlobals(undefined);
+        const sessionRename = new Session({
+            user: "fake",
+            password: "fake",
+            base64EncodedAuth: "fake",
+        });
+        createBasicZosmfSession.mockReturnValue(sessionRename);
+        it("Should rename the node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            const child = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            await testTree.rename(child);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        });
+        it("Should rename a favorited node", async () => {
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            await testTree.rename(child);
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        });
+        it("Should throw an error if zowe.Rename.dataSet throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSet.mockReset();
+            renameDataSet.mockImplementation(() => { throw defaultError; });
+
+            const child = new ZoweDatasetNode("[sessNode]: HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            child.contextValue = "ds_fav";
+            showInputBox.mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            try {
+                await testTree.rename(child);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSet.mock.calls.length).toBe(1);
+            expect(renameDataSet).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+            expect(error).toBe(defaultError);
+        });
+        it("Should rename the member", async () => {
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, sessionRename);
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await testTree.rename(child);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should rename a favorited member", async () => {
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+
+            const parent = new ZoweDatasetNode("[testSess]: HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, sessionRename);
+
+            parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+            child.contextValue = globals.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            await testTree.rename(child);
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+        });
+        it("Should throw an error if zowe.Rename.dataSetMember throws", async () => {
+            let error;
+            const defaultError = new Error("Default error message");
+
+            showInputBox.mockReset();
+            renameDataSetMember.mockReset();
+            renameDataSetMember.mockImplementation(() => { throw defaultError; });
+
+            const parent = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE",
+                                vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], sessionRename);
+            const child = new ZoweDatasetNode("mem1", vscode.TreeItemCollapsibleState.None, parent, sessionRename);
+
+            child.contextValue = globals.DS_MEMBER_CONTEXT;
+
+            showInputBox.mockResolvedValueOnce("mem2");
+            try {
+                await testTree.rename(child);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(renameDataSetMember.mock.calls.length).toBe(1);
+            expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
+            expect(error).toBe(defaultError);
+        });
+    });
+});
+
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testTree = new DatasetTree();
+    const sessionNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
+                                            null, session, undefined, undefined, profileOne);
+    sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
+    sessionNode.pattern = "test";
+    const pdsNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, pdsNode, null);
+    const dsNode = new ZoweDatasetNode("TEST.DS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    dsNode.contextValue = globals.DS_DS_CONTEXT;
+
+    beforeEach(async () => {
+        pdsNode.children = [member];
+        sessionNode.children = [pdsNode, dsNode];
+        testTree.mSessionNodes = [sessionNode];
+    });
+
+    it("Should open a DS in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([dsNode]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.DS", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.DS")).toBe(true);
+    });
+
+    it("Should open a member in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([pdsNode]));
+        spyOn(pdsNode, "getChildren").and.returnValue(Promise.resolve([member]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.PDS(TESTMEMB)", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.PDS(TESTMEMB)")).toBe(true);
     });
 });

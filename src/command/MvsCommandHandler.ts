@@ -12,12 +12,13 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { IProfileLoaded, ISession, Session, IProfile } from "@zowe/imperative";
-import * as nls from "vscode-nls";
-import * as extension from "../extension";
+import * as globals from "../globals";
 import { Profiles } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+import * as nls from "vscode-nls";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -115,7 +116,7 @@ export class MvsCommandHandler {
         if (this.history.getHistory().length > 0) {
             const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history.getHistory().map((element) => new FilterItem(element));
-            if (extension.ISTHEIA) {
+            if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("issueMvsCommand.command.hostname", "Select a command to run against ") + hostname +
                                             (alwaysEdit ? localize("issueMvsCommand.command.edit", " (An option to edit will follow)"): "")
@@ -132,7 +133,8 @@ export class MvsCommandHandler {
                 quickpick.placeholder = alwaysEdit ?
                                             localize("issueMvsCommand.command.hostnameAlt", "Select a command to run against ") + hostname +
                                             localize("issueMvsCommand.command.edit", " (An option to edit will follow)"):
-                                            localize("issueMvsCommand.command.hostname", "Select a command to run immediately against ") + hostname;
+                                            localize("issueMvsCommand.command.hostname",
+                                                             "Select a command to run immediately against ") + hostname;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;

@@ -9,18 +9,12 @@
 *                                                                                 *
 */
 
-import * as utils from "../utils";
-import * as nls from "vscode-nls";
-
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
-import * as extension from "../extension";
+import * as globals from "../globals";
 import { Profiles } from "../Profiles";
-import { ISession, Logger } from "@zowe/imperative";
-import { DatasetTree } from "../DatasetTree";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
-// tslint:disable-next-line: prefer-const
-let log: Logger;
+import { labelHack, refreshTree } from "../shared/utils";
+
 /**
  * Refreshes treeView
  *
@@ -29,11 +23,11 @@ let log: Logger;
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === extension.DS_SESSION_CONTEXT) {
-            utils.labelHack(sessNode);
+        if (sessNode.contextValue === globals.DS_SESSION_CONTEXT) {
+            labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
-            utils.refreshTree(sessNode);
+            refreshTree(sessNode);
         }
     });
     await datasetProvider.refresh();

@@ -10,7 +10,7 @@
 */
 
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../ZoweUSSNode";
+import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { MockMethod } from "../decorators/MockMethod";
 
 /**

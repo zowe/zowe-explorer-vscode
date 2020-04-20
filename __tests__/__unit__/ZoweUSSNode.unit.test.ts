@@ -15,10 +15,11 @@ jest.mock("@zowe/imperative");
 jest.mock("Session");
 import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import * as utils from "../../src/utils";
-import * as extension from "../../src/extension";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as sharedUtils from "../../src/shared/utils";
 import { Profiles } from "../../src/Profiles";
+import { DS_TEXT_FILE_CONTEXT, DS_BINARY_FILE_CONTEXT, FAV_SUFFIX,
+    FAVORITE_CONTEXT, USS_SESSION_CONTEXT, USS_DIR_CONTEXT, DS_PDS_CONTEXT } from "../../src/globals";
 
 describe("Unit Tests (Jest)", () => {
     Object.defineProperty(vscode.commands, "executeCommand", {value: jest.fn()});
@@ -81,13 +82,13 @@ describe("Unit Tests (Jest)", () => {
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+        rootNode.contextValue = USS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const testDir = new ZoweUSSNode(
             "testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
         const testFile = new ZoweUSSNode(
             "testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null, false, profileOne.name, undefined);
-        testFile.contextValue = extension.DS_TEXT_FILE_CONTEXT;
+        testFile.contextValue = DS_TEXT_FILE_CONTEXT;
         expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
@@ -103,7 +104,7 @@ describe("Unit Tests (Jest)", () => {
     it("Testing that the ZoweUSSNode is defined", async () => {
         const testNode = new ZoweUSSNode(
             "/u", vscode.TreeItemCollapsibleState.None, null, session, null, false, profileOne.name, undefined);
-        testNode.contextValue = extension.USS_SESSION_CONTEXT;
+        testNode.contextValue = USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -119,7 +120,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode(
             "/u", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = extension.USS_DIR_CONTEXT;
+        rootNode.contextValue = USS_DIR_CONTEXT;
         rootNode.dirty = true;
 
         // Creating structure of files and directories
@@ -161,7 +162,7 @@ describe("Unit Tests (Jest)", () => {
             // Creating a rootNode
             const rootNode = new ZoweUSSNode(
                 "toot", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root", false, profileOne.name, undefined);
-            rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+            rootNode.contextValue = USS_SESSION_CONTEXT;
             rootNode.fullPath = "Throw Error";
             rootNode.dirty = true;
             await rootNode.getChildren();
@@ -177,7 +178,7 @@ describe("Unit Tests (Jest)", () => {
             // Creating a rootNode
             const rootNode = new ZoweUSSNode(
                 "toot", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root", false, profileOne.name, undefined);
-            rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+            rootNode.contextValue = USS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweUSSNode(
                 "Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
@@ -195,7 +196,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+        rootNode.contextValue = USS_SESSION_CONTEXT;
         rootNode.dirty = false;
         expect(await rootNode.getChildren()).toEqual([]);
     });
@@ -207,7 +208,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+        rootNode.contextValue = USS_SESSION_CONTEXT;
         expect(await rootNode.getChildren()).toEqual([]);
     });
 
@@ -218,9 +219,9 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = extension.USS_SESSION_CONTEXT;
+        rootNode.contextValue = USS_SESSION_CONTEXT;
         const subNode = new ZoweUSSNode(
-            extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
+            DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
         const child = new ZoweUSSNode(
             "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, profileOne.name, undefined);
         expect(child.getSession()).toBeDefined();
@@ -231,22 +232,22 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that set Binary works", async () => {
         const rootNode = new ZoweUSSNode(
-            extension.FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = extension.FAVORITE_CONTEXT;
+            FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
+        rootNode.contextValue = FAVORITE_CONTEXT;
         const subNode = new ZoweUSSNode(
             "binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, true, profileOne.name, undefined);
         const child = new ZoweUSSNode(
             "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, profileOne.name, undefined);
 
         child.setBinary(true);
-        expect(child.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX);
+        expect(child.contextValue).toEqual(DS_BINARY_FILE_CONTEXT);
         expect(JSON.stringify(child.iconPath)).toContain("document-binary.svg");
         child.setBinary(false);
-        expect(child.contextValue).toEqual(extension.DS_TEXT_FILE_CONTEXT);
+        expect(child.contextValue).toEqual(DS_TEXT_FILE_CONTEXT);
         subNode.setBinary(true);
-        expect(subNode.contextValue).toEqual(extension.DS_BINARY_FILE_CONTEXT + extension.FAV_SUFFIX);
+        expect(subNode.contextValue).toEqual(DS_BINARY_FILE_CONTEXT + FAV_SUFFIX);
         subNode.setBinary(false);
-        expect(subNode.contextValue).toEqual(extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX);
+        expect(subNode.contextValue).toEqual(DS_TEXT_FILE_CONTEXT + FAV_SUFFIX);
     });
 
     /*************************************************************************************************************
@@ -256,9 +257,9 @@ describe("Unit Tests (Jest)", () => {
         const rootNode = new ZoweUSSNode(
             "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
         expect(rootNode.label === "gappy");
-        utils.labelHack(rootNode);
+        sharedUtils.labelHack(rootNode);
         expect(rootNode.label === "gappy ");
-        utils.labelHack(rootNode);
+        sharedUtils.labelHack(rootNode);
         expect(rootNode.label === "gappy");
     });
 
