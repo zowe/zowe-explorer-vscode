@@ -167,7 +167,6 @@ export class Profiles {
         let userName: string;
         let passWord: string;
         let port: number;
-        // let zosURL: string;
         let rejectUnauthorize: boolean;
         let options: vscode.InputBoxOptions;
         let isTrue: boolean;
@@ -177,21 +176,12 @@ export class Profiles {
         const schema: {} = await this.getSchema(profileType);
         const schemaArray = Object.keys(schema);
 
-        // let zosUrlParsed: any;
-
         const schemaValues: any = {};
         schemaValues.name = profileName;
         // Go through array of schema for input values
         for (const value of schemaArray) {
             switch (value) {
             case "host" :
-                // const urlInputBox = vscode.window.createInputBox();
-                // urlInputBox.ignoreFocusOut = true;
-                // urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "host.com");
-                // urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-                //     "Enter a z/OS URL in the format 'host.com'.");
-                // urlInputBox.show();
-
                 options = {
                     placeHolder: localize("createNewConnection.option.prompt.host.placeholder", "host.com"),
                     prompt: localize("createNewConnection.option.prompt.host",
@@ -199,13 +189,6 @@ export class Profiles {
                     value: userName
                 };
                 const host = await vscode.window.showInputBox(options);
-                // zosURL = await this.getUrl(urlInputBox);
-                // urlInputBox.dispose();
-                // if (!zosURL) {
-                //   vscode.window.showInformationMessage(localize("createNewConnection.zosURL", "No valid value for z/OS URL. Operation Cancelled"));
-                //     return undefined;
-                // }
-                // zosUrlParsed = this.validateAndParseUrl(zosURL);
                 schemaValues[value] = host;
                 break;
             case "port":
@@ -215,8 +198,8 @@ export class Profiles {
                     value: userName
                 };
                 port = Number(await vscode.window.showInputBox(options));
-                if (port === 0 && profileType === "zosmf") {
-                    schemaValues[value] = Number("443");
+                if (port === 0 && schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                    schemaValues[value] = Number(schema[value].optionDefinition.defaultValue.toString());
                 } else {
                     schemaValues[value] = port;
                 }
@@ -273,55 +256,65 @@ export class Profiles {
                 schemaValues[value] = rejectUnauthorize;
                 break;
             default:
-                const description: string = schema[value].optionDefinition.description.toString();
-                switch (schema[value].type) {
-                    case "string":
-                        options = {
-                            placeHolder: description,
-                            prompt: description,
-                        };
-                        const profValue = await vscode.window.showInputBox(options);
-                        schemaValues[value] = profValue;
-                        break;
-                    case "boolean":
-                        const quickPickBooleanOptions: vscode.QuickPickOptions = {
-                            placeHolder: description,
-                            ignoreFocusOut: true,
-                            canPickMany: false
-                        };
-                        const selectBoolean = ["True", "False"];
-                        const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
-                        if (chosenValue === selectBoolean[0]) {
-                            isTrue = true;
-                        } else if (chosenRU === selectBoolean[1]) {
-                            isTrue = false;
-                        } else {
-                            vscode.window.showInformationMessage(localize("createNewConnection","Operation Cancelled"));
-                            return undefined;
-                        }
-                        schemaValues[value] = isTrue;
-                        break;
-                    case "number":
-                        options = {
-                            placeHolder: description,
-                            prompt: description
-                        };
-                        const enteredValue = await vscode.window.showInputBox(options);
-                        const numValue = Number(enteredValue);
-                        if (Number.isNaN(numValue) === false) {
+                let isRequired: boolean;
+                const requiredField: boolean = schema[value].optionDefinition.hasOwnProperty("required");
+                // tslint:disable-next-line:no-console
+                console.log(requiredField);
+                if (requiredField) {
+                    isRequired = Boolean(schema[value].optionDefinition.required.toString());
+                }
+                // tslint:disable-next-line:no-console
+                console.log(isRequired);
+                if (isRequired) {
+                    const description: string = schema[value].optionDefinition.description.toString();
+                    switch (schema[value].type) {
+                        case "string":
+                            options = {
+                                placeHolder: description,
+                                prompt: description,
+                            };
+                            const profValue = await vscode.window.showInputBox(options);
+                            schemaValues[value] = profValue;
+                            break;
+                        case "boolean":
+                            const quickPickBooleanOptions: vscode.QuickPickOptions = {
+                                placeHolder: description,
+                                ignoreFocusOut: true,
+                                canPickMany: false
+                            };
+                            const selectBoolean = ["True", "False"];
+                            const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
+                            if (chosenValue === selectBoolean[0]) {
+                                isTrue = true;
+                            } else if (chosenValue === selectBoolean[1]) {
+                                isTrue = false;
+                            } else {
+                                vscode.window.showInformationMessage(localize("createNewConnection","Operation Cancelled"));
+                                return undefined;
+                            }
+                            schemaValues[value] = isTrue;
+                            break;
+                        case "number":
+                            options = {
+                                placeHolder: description,
+                                prompt: description
+                            };
+                            const enteredValue = await vscode.window.showInputBox(options);
+                            const numValue = Number(enteredValue);
+                            if (Number.isNaN(numValue) === false) {
                             schemaValues[value] = Number(enteredValue);
-                        } else {
-                            // default value
-                            schemaValues[value] = null;
-                        }
-                        break;
-                    default:
-                        options = {
-                            placeHolder: description,
-                            prompt: description
-                        };
-                        const defaultValue = await vscode.window.showInputBox(options);
-                        switch (defaultValue){
+                            } else {
+                                // default value
+                                schemaValues[value] = null;
+                            }
+                            break;
+                        default:
+                            options = {
+                                placeHolder: description,
+                                prompt: description
+                            };
+                            const defaultValue = await vscode.window.showInputBox(options);
+                            switch (defaultValue){
                             case "true":
                                 schemaValues[value] = true;
                                 break;
@@ -331,8 +324,9 @@ export class Profiles {
                             default:
                                 schemaValues[value] = defaultValue;
                                 break;
-                        }
-                        break;
+                            }
+                            break;
+                    }
                 }
             }
         }
