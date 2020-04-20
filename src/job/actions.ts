@@ -33,7 +33,7 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) {
     await Profiles.getInstance().refresh();
     jobsProvider.mSessionNodes.forEach((jobNode) => {
-        if (contextually.isSession(this)) {
+        if (contextually.isSession(jobNode)) {
             labelHack(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
