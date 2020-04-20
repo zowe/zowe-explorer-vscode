@@ -1,0 +1,10 @@
+{
+    "searchHistory.options.prompt": "Enter a filter",
+    "searchInAllLoadedItems.noneLoaded": "No items are loaded in the tree.",
+    "searchInAllLoadedItems.enterPattern": "You must enter a pattern.",
+    "enterPattern.log.debug.prompt": "Prompting the user to choose a recent member for editing",
+    "memberHistory.option.prompt.open": "Select a recent member to open",
+    "memberHistory.options.prompt": "Select a recent member to open",
+    "enterPattern.pattern": "No selection made.",
+    "getRecentMembers.empty": "No recent members found."
+}
