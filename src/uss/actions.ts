@@ -307,7 +307,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     node.setEtag(downloadEtag);
                 }
                 this.downloaded = true;
-    
+
                 vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                     "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
                 const startPosition = new vscode.Position(0, 0);
