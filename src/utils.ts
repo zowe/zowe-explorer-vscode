@@ -14,9 +14,13 @@ import * as globals from "./globals";
 import * as os from "os";
 import * as path from "path";
 import { Profiles } from "./Profiles";
-import { ImperativeConfig } from "@zowe/imperative";
+import { ImperativeConfig, IProfileLoaded } from "@zowe/imperative";
 
 import * as nls from "vscode-nls";
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweNodeType } from "./api/IZoweTreeNode";
+import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { IUploadOptions } from "@zowe/cli";
+
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /*************************************************************************************************************
@@ -90,4 +94,92 @@ export function getZoweDir(): string {
         envVariablePrefix: "ZOWE"
     };
     return ImperativeConfig.instance.cliHome;
+}
+
+/**
+ * Function that rewrites the document in the active editor thus marking it dirty
+ * @param {vscode.TextDocument} doc - document to rewrite
+ * @returns void
+ */
+
+export async function markFileAsDirty(doc: vscode.TextDocument): Promise<void> {
+    const docText = doc.getText();
+    const startPosition = new vscode.Position(0, 0);
+    const endPosition = new vscode.Position(doc.lineCount, 0);
+    const deleteRange = new vscode.Range(startPosition, endPosition);
+    vscode.window.activeTextEditor.edit((editBuilder) => {
+        editBuilder.delete(deleteRange);
+        editBuilder.insert(startPosition, docText);
+    });
+}
+
+
+/**
+ * Function that will forcefully upload a file and won't check for matching Etag
+ */
+export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+                                      doc: vscode.TextDocument,
+                                      remotePath: string,
+                                      profile?: IProfileLoaded,
+                                      binary?: boolean,
+                                      returnEtag?: boolean): Promise<void> {
+        // Upload without passing the etag to force upload
+        const uploadOptions: IUploadOptions = {
+            returnEtag: true
+        };
+
+        // setup to handle both cases (dataset & USS)
+        let title: string;
+        if (isZoweDatasetTreeNode(node)) {
+            title = localize("saveFile.response.save.title", "Saving data set...");
+        } else {
+            title = localize("saveUSSFile.response.title", "Saving file...");
+        }
+
+        vscode.window.showWarningMessage(localize("saveFile.error.theiaDetected", "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."));
+        vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"),
+        localize("saveFile.overwriteConfirmation.yes", "Yes"),
+        localize("saveFile.overwriteConfirmation.no", "No"))
+        .then(async (selection) => {
+            if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
+                const uploadResponse = vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title
+                }, () => {
+                    if (isZoweDatasetTreeNode(node)) {
+                        return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
+                            remotePath,
+                            uploadOptions);
+                        } else {
+                            return ZoweExplorerApiRegister.getUssApi(profile).putContents(
+                                doc.fileName, remotePath, binary, null, null, returnEtag);
+                            }
+                        });
+                uploadResponse.then((response) => {
+                            if (response.success) {
+                                vscode.window.showInformationMessage(response.commandResponse);
+                                if (node) {
+                        node.setEtag(response.apiResponse[0].etag);
+                    }
+                }
+            });
+        } else {
+            vscode.window.showInformationMessage("Upload cancelled.");
+            await markFileAsDirty(doc);
+        }
+    });
+}
+
+// Type guarding for current IZoweNodeType.
+// Makes it possible to have multiple types in a function signature, but still be able to use type specific code inside the function definition
+function isZoweDatasetTreeNode(node: IZoweNodeType): node is IZoweDatasetTreeNode {
+    return (node as IZoweDatasetTreeNode).pattern !== undefined;
+}
+
+function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweUSSTreeNode {
+    return (node as IZoweUSSTreeNode).shortLabel !== undefined;
+}
+
+function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
+    return (node as IZoweJobTreeNode).job !== undefined;
 }

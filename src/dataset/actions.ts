@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
-import { errorHandling } from "../utils";
+import { errorHandling, willForceUpload } from "../utils";
 import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
@@ -966,32 +966,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
             localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
             if (globals.ISTHEIA) {
-                vscode.window.showWarningMessage(localize("saveFile.error.TheiaDetected", "A merge conflict have been detected. Since you are running inside a Theia editor, a merge conflict resolution is not available.\n."));
-                vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"), "Yes", "No")
-                .then((selection) => {
-                    if (selection.toLowerCase() === "yes") {
-                        vscode.window.showInformationMessage("WILL UPLOAD");
-                        uploadOptions.etag = undefined;
-                        const uploadResponse1 = vscode.window.withProgress({
-                            location: vscode.ProgressLocation.Notification,
-                            title: localize("saveFile.response.save.title", "Saving data set...")
-                        }, () => {
-                            return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
-                                label,
-                                uploadOptions);
-                        });
-                        uploadResponse1.then((response) => {
-                            if (response.success) {
-                                vscode.window.showInformationMessage(response.commandResponse);
-                                if (node) {
-                                    node.setEtag(response.apiResponse[0].etag);
-                                }
-                            }
-                        });
-                    } else {
-                        // Case if use click No. Need to mark file as dirty
-                    }
-                });
+                await willForceUpload(node, doc, label, node ? node.getProfile(): profile);
             } else {
                 const oldDoc = doc;
                 const oldDocText = oldDoc.getText();
