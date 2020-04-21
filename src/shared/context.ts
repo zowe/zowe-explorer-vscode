@@ -26,6 +26,15 @@ import { TreeItem } from "vscode";
  */
 
 /**
+ * Helper function which identifies if the node is a ds
+ * @param node
+ * @return true if a ds, false otherwise
+ */
+export function isDs(node: TreeItem): boolean {
+    return new RegExp("^" + globals.DS_DS_CONTEXT ).test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a job
  * @param node
  * @return true if a job, false otherwise
@@ -91,6 +100,15 @@ export function isBinary(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node is a text file
+ * @param node
+ * @return true if a text file, false otherwise
+ */
+export function isText(node: TreeItem): boolean {
+    return new RegExp("^" + globals.DS_TEXT_FILE_CONTEXT).test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a document
  * @param node
  * @return true if a document, false otherwise
@@ -99,6 +117,15 @@ export function isDocument(node: TreeItem): boolean {
     return new RegExp("^(" + globals.DS_DS_CONTEXT + "|" + globals.DS_MEMBER_CONTEXT + "|"
                           + globals.DS_TEXT_FILE_CONTEXT + "|" + globals.JOBS_SPOOL_CONTEXT + "|"
                          + globals.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is a informational only
+ * @param node
+ * @return true if a informational, false otherwise
+ */
+export function isInformation(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.INFORMATION_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -163,8 +190,8 @@ export function isDsSession(node: TreeItem): boolean {
  * @param node
  * @return true if a partitioned dataset, false otherwise
  */
-export function isPds(node: TreeItem): boolean {
-    return new RegExp("^(" + globals.DS_PDS_CONTEXT + ")").test(node.contextValue);
+export function isPdsNotFav(node: TreeItem): boolean {
+    return new RegExp("^(?!.*" + globals.FAV_SUFFIX + ")" + globals.DS_PDS_CONTEXT).test(node.contextValue);
 }
 
 /**
