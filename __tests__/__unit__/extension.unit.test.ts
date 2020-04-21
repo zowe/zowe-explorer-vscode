@@ -169,7 +169,6 @@ describe("Extension Unit Tests", () => {
     const mockReveal = jest.fn();
     const createWebviewPanel = jest.fn();
     const createTreeView = jest.fn();
-    const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
     const onDidChangeSelection = jest.fn();
@@ -254,7 +253,6 @@ describe("Extension Unit Tests", () => {
     const mockCreateFilterString = jest.fn();
     const withProgress = jest.fn();
     const downloadDataset = jest.fn();
-    const downloadUSSFile = jest.fn();
     const mockInitialize = jest.fn();
     const mockInitializeUSS = jest.fn();
     const mockOpenItemFromPath = jest.fn();
@@ -2968,105 +2966,6 @@ describe("Extension Unit Tests", () => {
             expect(extension.addZoweSession).toHaveBeenCalled();
 
         });
-    });
-
-    it("Testing that saveUSSFile is executed successfully", async () => {
-        withProgress.mockReset();
-
-        const testDoc: vscode.TextDocument = {
-            fileName: path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        const testResponse = {
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                items: []
-            }
-        };
-
-        fileList.mockResolvedValueOnce(testResponse);
-        ussNode.mProfileName = "usstest";
-        ussNode.dirty = true;
-        const node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
-        ussNode.children.push(node);
-        testUSSTree.getChildren.mockReturnValueOnce([
-            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, ussNode, null, "/"), sessNode]);
-        testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
-        fileToUSSFile.mockReset();
-        showErrorMessage.mockReset();
-        concatChildNodes.mockReset();
-        const mockGetEtag = jest.spyOn(node, "getEtag").mockImplementation(() => "123");
-        testResponse.success = true;
-        fileToUSSFile.mockResolvedValue(testResponse);
-        withProgress.mockReturnValueOnce(testResponse);
-        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
-        await ussActions.saveUSSFile(testDoc, testUSSTree);
-
-        expect(concatChildNodes.mock.calls.length).toBe(1);
-        expect(mockGetEtag).toBeCalledTimes(1);
-        expect(mockGetEtag).toReturnWith("123");
-
-        concatChildNodes.mockReset();
-        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
-        testResponse.success = false;
-        testResponse.commandResponse = "Save failed";
-        fileToUSSFile.mockResolvedValueOnce(testResponse);
-        withProgress.mockReturnValueOnce(testResponse);
-
-        await ussActions.saveUSSFile(testDoc, testUSSTree);
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Save failed");
-
-        concatChildNodes.mockReset();
-        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
-        showErrorMessage.mockReset();
-        withProgress.mockRejectedValueOnce(Error("Test Error"));
-
-        await ussActions.saveUSSFile(testDoc, testUSSTree);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
-
-        concatChildNodes.mockReset();
-        concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
-        showWarningMessage.mockReset();
-        testResponse.success = false;
-        testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
-        testDoc.getText = jest.fn();
-        ussFile.mockReset();
-        withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
-        const downloadResponse = {
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                etag: ""
-            }
-        };
-        ussFile.mockResolvedValueOnce(downloadResponse);
-        try {
-            await ussActions.saveUSSFile(testDoc, testUSSTree);
-        } catch (e) {
-            // this is OK. We are interested in the next expect (showWarninMessage) to fullfil
-            expect(e.message).toBe("vscode.Position is not a constructor");
-        }
-        expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
     });
 
     describe("Add Jobs Session Unit Test", () => {

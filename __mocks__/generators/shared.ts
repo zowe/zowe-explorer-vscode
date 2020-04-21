@@ -10,10 +10,14 @@
 */
 
 import * as imperative from "@zowe/imperative";
-import * as zowe from "@zowe/cli";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as path from "path";
+import * as globals from "../../src/globals";
+import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 
-export function generateSession() {
+export function generateISession() {
     return new imperative.Session({
         user: "fake",
         password: "fake",
@@ -23,18 +27,17 @@ export function generateSession() {
     });
 }
 
-export function generateSessionNoCredentials() {
+export function generateISessionWithoutCredentials() {
     return new imperative.Session({
         user: "",
         password: "",
         hostname: "fake",
-        port: 443,
         protocol: "https",
         type: "basic",
     });
 }
 
-export function generateProfile(): imperative.IProfileLoaded {
+export function generateIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
@@ -47,16 +50,6 @@ export function generateProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function generateFileResponse(): zowe.IZosFilesResponse {
-    return {
-        success: true,
-        commandResponse: null,
-        apiResponse: {
-            etag: "123"
-        }
-    };
-};
-
 export function generateTreeView() {
     return {
         reveal: jest.fn(),
@@ -66,6 +59,28 @@ export function generateTreeView() {
         onDidChangeSelection: jest.fn(),
         visible: true,
         onDidChangeVisibility: jest.fn()
+    };
+}
+
+export function generateTextDocument(fileName: string): vscode.TextDocument {
+    return {
+        fileName: fileName,
+        uri: null,
+        isUntitled: null,
+        languageId: null,
+        version: null,
+        isDirty: null,
+        isClosed: null,
+        save: null,
+        eol: null,
+        lineCount: null,
+        lineAt: null,
+        offsetAt: null,
+        positionAt: null,
+        getText: jest.fn(),
+        getWordRangeAtPosition: null,
+        validateRange: null,
+        validatePosition: null
     };
 }
 
@@ -83,5 +98,13 @@ export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{name: profile.name, profile}, {name: profile.name, profile}];
         }),
         refresh: jest.fn()
+    };
+}
+
+export function generateFileResponse(theResponse) {
+    return {
+        success: true,
+        commandResponse: "",
+        apiResponse: theResponse
     };
 }

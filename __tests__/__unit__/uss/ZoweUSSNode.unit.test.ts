@@ -14,7 +14,8 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { generateSession, generateSessionNoCredentials, generateProfile, generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/generators/shared";
+import { generateISession, generateISessionWithoutCredentials, generateIProfile,
+    generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/generators/shared";
 import { generateUSSTree } from "../../../__mocks__/generators/uss";
 import * as fs from "fs";
 import * as path from "path";
@@ -82,11 +83,11 @@ const ProgressLocation = jest.fn().mockImplementation(() => {
 Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
 Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
 
-const session = generateSession();
-const profileOne: imperative.IProfileLoaded = generateProfile();
+const session = generateISession();
+const profileOne: imperative.IProfileLoaded = generateIProfile();
 mockLoadNamedProfile.mockReturnValue(profileOne);
 const profileOps = generateInstanceOfProfile(profileOne);
-const response: zowe.IZosFilesResponse = generateFileResponse();
+const response: zowe.IZosFilesResponse = generateFileResponse({ items: [] });
 const ussApi = ZoweExplorerApiRegister.getUssApi(profileOne);
 getUssApiMock.mockReturnValue(ussApi);
 ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
@@ -97,7 +98,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             return callback();
         });
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -134,7 +135,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -189,7 +190,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         });
     });
 
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -247,7 +248,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -259,7 +260,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -273,7 +274,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -316,7 +317,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
             return callback();
         });
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -362,7 +363,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         childNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root", false, profileOne.name, undefined);
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -497,9 +498,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         showInputBox.mockReturnValue("fake");
 
         ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, profileOne.name, "123");
-        dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, generateSessionNoCredentials(), null);
+        dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, generateISessionWithoutCredentials(), null);
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
