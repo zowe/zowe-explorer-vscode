@@ -533,7 +533,7 @@
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.deleteDataset",
           "group": "6_modification@2"
-        },        
+        },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
@@ -712,7 +712,7 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.addFavorite",
           "group": "4_workspace"
-        },    
+        },
         {
           "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
@@ -1050,11 +1050,14 @@
     "selenium-webdriver": "^3.4.0",
     "sinon": "^6.1.0",
     "ts-jest": "^25.3.0",
+    "ts-loader": "^7.0.1",
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
     "vscode": "^1.1.36",
-    "vscode-nls-dev": "^3.2.6"
+    "vscode-nls-dev": "^3.2.6",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "@zowe/cli": "6.10.1",
