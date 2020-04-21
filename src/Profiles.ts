@@ -117,7 +117,7 @@ export class Profiles {
 
     public validateAndParseUrl(newUrl: string): IUrlValidator {
         let url: URL;
-        const validProtocols: string[] = ["https","http"];
+        // const validProtocols: string[] = ["https","http"];
         const DEFAULT_HTTPS_PORT: number = 443;
 
         const validationResult: IUrlValidator = {
@@ -134,9 +134,9 @@ export class Profiles {
         }
 
         // overkill with only one valid protocol, but we may expand profile types and protocols in the future?
-        if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
-            return validationResult;
-        }
+        // if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
+        //     return validationResult;
+        // }
 
         // if port is empty, set https defaults
         if (!url.port.trim()) {
@@ -220,9 +220,12 @@ export class Profiles {
                     placeHolder: localize("createNewConnection.option.prompt.host.placeholder", "host.com"),
                     prompt: localize("createNewConnection.option.prompt.host",
                     "Enter a z/OS Host in the format 'host.com'."),
-                    value: userName
                 };
-                const host = await vscode.window.showInputBox(options);
+                let host = await vscode.window.showInputBox(options);
+                if (host.includes("/") || host.includes(":")) {
+                    const result = this.validateAndParseUrl(host);
+                    host = result.host;
+                }
                 schemaValues[value] = host;
                 break;
             case "port":
@@ -309,10 +312,17 @@ export class Profiles {
                     const description: string = schema[value].optionDefinition.description.toString();
                     switch (schema[value].type) {
                         case "string":
-                            options = {
-                                placeHolder: description,
-                                prompt: description,
-                            };
+                            if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                                options = {
+                                    prompt: description,
+                                    value: schema[value].optionDefinition.defaultValue
+                                };
+                            } else {
+                                options = {
+                                    placeHolder: description,
+                                    prompt: description,
+                                };
+                            }
                             const profValue = await vscode.window.showInputBox(options);
                             schemaValues[value] = profValue;
                             break;
@@ -335,10 +345,17 @@ export class Profiles {
                             schemaValues[value] = isTrue;
                             break;
                         case "number":
-                            options = {
-                                placeHolder: description,
-                                prompt: description
-                            };
+                            if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                                options = {
+                                    prompt: description,
+                                    value: schema[value].optionDefinition.defaultValue
+                                };
+                            } else {
+                                options = {
+                                    placeHolder: description,
+                                    prompt: description
+                                };
+                            }
                             const enteredValue = await vscode.window.showInputBox(options);
                             const numValue = Number(enteredValue);
                             if (Number.isNaN(numValue) === false) {
@@ -349,10 +366,17 @@ export class Profiles {
                             }
                             break;
                         default:
-                            options = {
-                                placeHolder: description,
-                                prompt: description
-                            };
+                            if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                                options = {
+                                    prompt: description,
+                                    value: schema[value].optionDefinition.defaultValue
+                                };
+                            } else {
+                                options = {
+                                    placeHolder: description,
+                                    prompt: description
+                                };
+                            }
                             const defaultValue = await vscode.window.showInputBox(options);
                             switch (defaultValue){
                             case "true":
@@ -379,10 +403,8 @@ export class Profiles {
             }
         }
 
-        let newProfile: IProfile;
-
         try {
-            newProfile = await this.saveProfile(schemaValues, schemaValues.name, profileType);
+            const newProfile: IProfile = await this.saveProfile(schemaValues, schemaValues.name, profileType);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
