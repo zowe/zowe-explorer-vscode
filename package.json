@@ -989,7 +989,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build && npm run lint && npm run update",
-    "build": "gulp build && npm run license && tsc --build --pretty",
+    "build": "gulp build && npm run license && webpack --mode development --vscode-nls && npm run update",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",

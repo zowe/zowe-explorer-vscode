@@ -5,7 +5,7 @@
         "outDir": "out",
         "jsx": "react",
         "lib": [
-            "es6"
+            "es6", "dom"
         ],
         "skipLibCheck": true,
         "sourceMap": true,
@@ -16,16 +16,17 @@
         // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
         // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
         // "noUnusedParameters": true,  /* Report errors on unused parameters. */
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "removeComments": true,
+        "rootDir": "."
     },
     "exclude": [
         "node_modules",
         ".vscode-test"
     ],
     "include": [
-        "src",
-        "__tests__",
-        "resources/testProfileData.example.ts",
-        "resources/testProfileData.ts"
+        "src/**/*.ts",
+        "./node_modules/vscode/vscode.d.ts",
+        "./node_modules/vscode/lib/*"
     ]
 }
