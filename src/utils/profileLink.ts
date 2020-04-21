@@ -118,7 +118,7 @@ async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string,
             fs.mkdirSync(targetfile);
         }
         targetfile = path.join(targetfile, primary.name + FILE_SUFFIX);
-        if (fs.existsSync(targetfile)) {  
+        if (fs.existsSync(targetfile)) {
             content = readYaml.safeLoad(fs.readFileSync(targetfile));
         }
         if (!content || !(content instanceof Object)) {
