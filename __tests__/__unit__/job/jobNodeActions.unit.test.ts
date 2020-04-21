@@ -12,13 +12,12 @@
 jest.mock("@zowe/imperative");
 jest.mock("@zowe/cli");
 import * as vscode from "vscode";
-import { Job } from "../../../src/ZoweJobNode";
+import { Job } from "../../../src/job/ZoweJobNode";
 import * as brtimperative from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
-import * as jobNodeActions from "../../../src/job/jobNodeActions";
-import * as extension from "../../../src/extension";
+import * as jobNodeActions from "../../../src/job/actions";
 import { Profiles } from "../../../src/Profiles";
-import * as utils from "../../../src/utils";
+import { JOBS_SESSION_CONTEXT, FAV_SUFFIX, FAVORITE_CONTEXT } from "../../../src/globals";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -84,15 +83,15 @@ const iJob: zowe.IJob = {
 function getJobNode() {
     const mParent = new Job("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, iJob, profileOne);
-    jobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+    jobNode.contextValue = JOBS_SESSION_CONTEXT;
     return jobNode;
 }
 
 function getFavoriteJobNode() {
     const mParent = new Job("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
     const jobNodeF = new Job("[profile]:sesstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, iJob, profileOne);
-    mParent.contextValue = extension.FAVORITE_CONTEXT;
-    jobNodeF.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+    mParent.contextValue = FAVORITE_CONTEXT;
+    jobNodeF.contextValue = JOBS_SESSION_CONTEXT + FAV_SUFFIX;
     return jobNodeF;
 }
 

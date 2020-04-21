@@ -9,11 +9,11 @@
 *                                                                                 *
 */
 
-import * as utils from "../utils";
-import * as extension from "../extension";
+import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
+import { labelHack, refreshTree } from "../shared/utils";
 
 /**
  * Refreshes treeView
@@ -23,11 +23,11 @@ import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === extension.DS_SESSION_CONTEXT) {
-            utils.labelHack(sessNode);
+        if (contextually.isSessionNotFav(sessNode)) {
+            labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
-            utils.refreshTree(sessNode);
+            refreshTree(sessNode);
         }
     });
     await datasetProvider.refresh();

@@ -14,7 +14,6 @@ import * as sinon from "sinon";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as testConst from "../../../resources/testProfileData";
-import * as vscode from "vscode";
 
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 

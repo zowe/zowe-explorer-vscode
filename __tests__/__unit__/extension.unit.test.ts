@@ -10,23 +10,28 @@
 */
 
 import * as vscode from "vscode";
-import * as treeMock from "../../src/DatasetTree";
-import * as treeUSSMock from "../../src/USSTree";
-import { ZoweUSSNode } from "../../src/ZoweUSSNode";
-import { ZoweDatasetNode } from "../../src/ZoweDatasetNode";
-import * as imperative from "@zowe/imperative";
-import * as extension from "../../src/extension";
+import * as utils from "../../src/utils";
 import * as path from "path";
 import * as zowe from "@zowe/cli";
 import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
-import * as profileLoader from "../../src/Profiles";
-import { Job } from "../../src/ZoweJobNode";
-import * as utils from "../../src/utils";
+import * as imperative from "@zowe/imperative";
+import * as extension from "../../src/extension";
+import * as globals from "../../src/globals";
+import * as dsActions from "../../src/dataset/actions";
+import * as jobActions from "../../src/job/actions";
+import * as ussActions from "../../src/uss/actions";
+import * as sharedActions from "../../src/shared/actions";
+import * as sharedUtils from "../../src/shared/utils";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
+import * as treeMock from "../../src/__mocks__/DatasetTree";
+import * as treeUSSMock from "../../src/__mocks__/USSTree";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../../src/generators/icons";
-import * as workspaceUtils from "../../src/utils/workspace";
+import { Job } from "../../src/job/ZoweJobNode";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -48,6 +53,14 @@ describe("Extension Unit Tests", () => {
         protocol: "https",
         type: "basic",
     });
+
+    const defaultUploadResponse: zowe.IZosFilesResponse = {
+        success: true,
+        commandResponse: "success",
+        apiResponse: {
+            items: []
+        }
+    };
 
     const iJob: zowe.IJob = {
         "jobid": "JOB1234",
@@ -109,14 +122,16 @@ describe("Extension Unit Tests", () => {
         defaultProfile: {name: "firstName"},
         getDefaultProfile: mockLoadNamedProfile,
         loadNamedProfile: mockLoadNamedProfile,
+        validProfile: ValidProfileEnum.VALID,
+        checkCurrentProfile: jest.fn(),
         usesSecurity: jest.fn().mockReturnValue(true)
     };
-    Object.defineProperty(profileLoader.Profiles, "createInstance", {
+    Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => {
             return profileOps;
         })
     });
-    Object.defineProperty(profileLoader.Profiles, "getInstance", {
+    Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return profileOps;
         })
@@ -138,15 +153,15 @@ describe("Extension Unit Tests", () => {
     ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
 
     const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    sessNode.contextValue = extension.DS_SESSION_CONTEXT;
+    sessNode.contextValue = globals.DS_SESSION_CONTEXT;
     sessNode.pattern = "test hlq";
 
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, profileOne.name, "123");
-    ussNode.contextValue = extension.USS_SESSION_CONTEXT;
+    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
 
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
-    jobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
+    jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
     const mkdirSync = jest.fn();
     const moveSync = jest.fn();
@@ -197,6 +212,7 @@ describe("Extension Unit Tests", () => {
     const showTextDocument = jest.fn();
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
+    const mockCheckCurrentProfile = jest.fn();
     const createQuickPick = jest.fn();
     const mockAddZoweSession = jest.fn();
     const mockAddHistory = jest.fn();
@@ -311,6 +327,7 @@ describe("Extension Unit Tests", () => {
             getRecall: mockGetRecall,
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
+            checkCurrentProfile: mockCheckCurrentProfile,
             getChildren: mockGetChildren,
             createFilterString: mockCreateFilterString,
             setItem: jest.fn(),
@@ -340,6 +357,7 @@ describe("Extension Unit Tests", () => {
             getHistory: mockGetHistory,
             addRecall: mockAddRecall,
             getRecall: mockUSSGetRecall,
+            checkCurrentProfile: mockCheckCurrentProfile,
             removeRecall: mockRemoveUSSRecall,
             openItemFromPath: mockUSSOpenItemFromPath,
             searchInLoadedItems: jest.fn(),
@@ -364,6 +382,7 @@ describe("Extension Unit Tests", () => {
             refresh: jest.fn(),
             getTreeView,
             treeView: new TreeView(),
+            checkCurrentProfile: mockCheckCurrentProfile,
             refreshElement: jest.fn(),
             getProfiles: jest.fn(),
             getProfileName: jest.fn(),
@@ -395,7 +414,7 @@ describe("Extension Unit Tests", () => {
     testJobsTree.mSessionNodes.push(jobNode);
 
     mockLoadNamedProfile = jest.fn();
-    Object.defineProperty(utils, "concatChildNodes", {value: concatChildNodes});
+    Object.defineProperty(sharedUtils, "concatChildNodes", {value: concatChildNodes});
     Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
     Object.defineProperty(imperative, "CliProfileManager", {value: CliProfileManager});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
@@ -481,21 +500,23 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { get: cliHome });
-    Object.defineProperty(workspaceUtils, "closeOpenedTextFile", {value: closeOpenedTextFile});
+    Object.defineProperty(utils, "closeOpenedTextFile", {value: closeOpenedTextFile});
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.VALID,
                     getDefaultProfile: mockLoadNamedProfile,
                     loadNamedProfile: mockLoadNamedProfile,
                     promptCredentials: jest.fn(),
                     usesSecurity: true,
                     getProfiles: jest.fn(),
+                    checkCurrentProfile: jest.fn(),
                     refresh: jest.fn(),
                 };
             })
@@ -632,9 +653,9 @@ describe("Extension Unit Tests", () => {
             new ZoweDatasetNode("[test]: brtvs99.test.search", vscode.TreeItemCollapsibleState.None,
                 undefined, null, undefined, undefined, profileOne)
         ];
-        sampleFavorites[0].contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        sampleFavorites[1].contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        sampleFavorites[2].contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        sampleFavorites[0].contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        sampleFavorites[1].contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        sampleFavorites[2].contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         sampleFavorites[1].command = {
             command: "zowe.ZoweNode.openPS",
             title: "",
@@ -740,20 +761,20 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems",
+            "zowe.searchInAllLoadedItems"
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
         // tslint:disable-next-line: no-magic-numbers
         expect(existsSync.mock.calls.length).toBe(4);
-        expect(existsSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(existsSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
         expect(readdirSync.mock.calls.length).toBe(1);
-        expect(readdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(readdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
         expect(unlinkSync.mock.calls.length).toBe(2);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.ZOWETEMPFOLDER + "/firstFile.txt"));
-        expect(unlinkSync.mock.calls[1][0]).toBe(path.join(extension.ZOWETEMPFOLDER + "/secondFile.txt"));
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/firstFile.txt"));
+        expect(unlinkSync.mock.calls[1][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/secondFile.txt"));
         expect(rmdirSync.mock.calls.length).toBe(1);
-        expect(rmdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(rmdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
         expect(initialize.mock.calls.length).toBe(1);
         expect(initialize.mock.calls[0][0]).toStrictEqual({
             configuration: [],
@@ -841,17 +862,24 @@ describe("Extension Unit Tests", () => {
         await extension.activate(mock);
     });
 
-    it("should not change the existing context menus", async () => {
-        const packageJsonContent = require("../../package.json");
-        expect(packageJsonContent.contributes.menus["view/item/context"]).toMatchSnapshot();
-    });
-
     it("Testing that createMember correctly executes", async () => {
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
+        const uploadResponse: zowe.IZosFilesResponse = {
+            success: true,
+            commandResponse: "success",
+            apiResponse: [{
+                etag: "123"
+            }]
+        };
 
         showInputBox.mockResolvedValue("testMember");
 
-        await extension.createMember(parent, testTree);
+        jest.spyOn(mvsApi, "getContents").mockResolvedValueOnce(Promise.resolve(uploadResponse));
+        withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+
+        await dsActions.createMember(parent, testTree);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls[0][0]).toEqual({placeHolder: "Name of Member"});
@@ -863,7 +891,7 @@ describe("Extension Unit Tests", () => {
         bufferToDataSet.mockRejectedValueOnce(Error("test"));
         showErrorMessage.mockReset();
         try {
-            await extension.createMember(parent, testTree);
+            await dsActions.createMember(parent, testTree);
             // tslint:disable-next-line:no-empty
         } catch (err) {
         }
@@ -873,15 +901,19 @@ describe("Extension Unit Tests", () => {
 
         bufferToDataSet.mockReset();
 
-
         showInputBox.mockResolvedValue("");
 
-        await extension.createMember(parent, testTree);
+        await dsActions.createMember(parent, testTree);
 
         expect(bufferToDataSet.mock.calls.length).toBe(0);
 
-        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.createMember(parent, testTree);
+        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.createMember(parent, testTree);
+    });
+
+    it("should not change the existing context menus", async () => {
+        const packageJsonContent = require("../../package.json");
+        expect(packageJsonContent.contributes.menus["view/item/context"]).toMatchSnapshot();
     });
 
     it("Testing that refreshPS correctly executes with and without error", async () => {
@@ -896,17 +928,17 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockReset();
 
         dataSet.mockReturnValueOnce(fileResponse);
-        await extension.refreshPS(node);
+        await dsActions.refreshPS(node);
 
         expect(dataSet.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSet.mock.calls[0][1]).toBe(node.label);
         expect(dataSet.mock.calls[0][2]).toEqual({
-            file: path.join(extension.DS_DIR, node.getSessionNode().label, node.label),
+            file: path.join(globals.DS_DIR, node.getSessionNode().label, node.label),
             returnEtag: true
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             node.getSessionNode().label, node.label ));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
@@ -916,14 +948,14 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockResolvedValueOnce({isDirty: false});
         executeCommand.mockReset();
 
-        await extension.refreshPS(node);
+        await dsActions.refreshPS(node);
 
         expect(executeCommand.mock.calls.length).toBe(0);
 
         dataSet.mockRejectedValueOnce(Error("not found"));
         showInformationMessage.mockReset();
 
-        await extension.refreshPS(node);
+        await dsActions.refreshPS(node);
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably deleted.");
@@ -932,7 +964,7 @@ describe("Extension Unit Tests", () => {
         dataSet.mockReset();
         dataSet.mockRejectedValueOnce(Error(""));
 
-        await extension.refreshPS(child);
+        await dsActions.refreshPS(child);
 
         expect(dataSet.mock.calls[0][1]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -946,8 +978,8 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockReset();
         dataSet.mockReturnValueOnce(fileResponse);
 
-        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.refreshPS(node);
+        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.refreshPS(node);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
 
@@ -955,8 +987,8 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         dataSet.mockReturnValueOnce(fileResponse);
 
-        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.refreshPS(child);
+        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.refreshPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
 
@@ -964,8 +996,8 @@ describe("Extension Unit Tests", () => {
         openTextDocument.mockReset();
         dataSet.mockReturnValueOnce(fileResponse);
 
-        parent.contextValue = extension.FAVORITE_CONTEXT;
-        await extension.refreshPS(child);
+        parent.contextValue = globals.FAVORITE_CONTEXT;
+        await dsActions.refreshPS(child);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(dataSet.mock.calls.length).toBe(1);
 
@@ -985,13 +1017,13 @@ describe("Extension Unit Tests", () => {
             }
         };
         ussFile.mockResolvedValueOnce(response);
-        const res = extension.changeFileType(node, false, testUSSTree);
+        const res = ussActions.changeFileType(node, false, testUSSTree);
         expect(res).not.toBeUndefined();
     });
 
     it("Test Get Profile", async () => {
         const ProfNode = new ZoweDatasetNode("[sestest1,sestest2]", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        await extension.getProfile(ProfNode);
+        await ProfNode.getProfile();
         expect(ProfNode).not.toBeUndefined();
     });
 
@@ -999,11 +1031,13 @@ describe("Extension Unit Tests", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
         beforeEach(() => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [profileOne, {name: "secondName"}],
                         defaultProfile: profileOne,
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         createNewConnection: jest.fn(()=>{
                             return {newprofile: "fake"};
                         }),
@@ -1027,6 +1061,7 @@ describe("Extension Unit Tests", () => {
 
         it("Testing that addSession will cancel if there is no profile name", async () => {
             const entered = undefined;
+            showInputBox.mockResolvedValueOnce(entered);
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -1173,7 +1208,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -1213,7 +1248,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -1252,7 +1287,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that createFile is executed successfully", async () => {
         const sessNode2 = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-        sessNode2.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode2.contextValue = globals.DS_SESSION_CONTEXT;
         sessNode2.pattern = "test hlq";
         const childNode = new ZoweDatasetNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null, undefined, undefined, profileOne);
         sessNode2.children.push(childNode);
@@ -1283,15 +1318,15 @@ describe("Extension Unit Tests", () => {
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set C");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
 
         // tslint:disable-next-line: no-magic-numbers
         expect(showQuickPick.mock.calls.length).toBe(5);
@@ -1314,12 +1349,12 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
 
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
 
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         dataSetCreate.mockRejectedValueOnce(Error("Generic Error"));
         try {
-            await extension.createFile(sessNode2, testTree);
+            await dsActions.createFile(sessNode2, testTree);
         } catch (err) {
             // do nothing
         }
@@ -1331,7 +1366,7 @@ describe("Extension Unit Tests", () => {
 
         showQuickPick.mockReturnValueOnce(undefined);
         try {
-            await extension.createFile(sessNode, testTree);
+            await dsActions.createFile(sessNode, testTree);
             // tslint:disable-next-line:no-empty
         } catch (err) {
         }
@@ -1347,7 +1382,7 @@ describe("Extension Unit Tests", () => {
         // Testing the addition of new node to tree view
         mockGetHistory.mockReturnValueOnce(["NODE1"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
         expect(testTree.treeView.reveal.mock.calls.length).toBe(1);
 
@@ -1355,7 +1390,7 @@ describe("Extension Unit Tests", () => {
 
         mockGetHistory.mockReturnValueOnce(["NODE"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         expect(testTree.addHistory.mock.calls.length).toBe(1);
 
         mockCreateFilterString.mockReset();
@@ -1363,7 +1398,7 @@ describe("Extension Unit Tests", () => {
         mockGetHistory.mockReturnValueOnce([null]);
         mockCreateFilterString.mockReturnValueOnce("NODE");
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(sessNode2, testTree);
+        await dsActions.createFile(sessNode2, testTree);
         expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
 
         allMembers.mockReset();
@@ -1373,11 +1408,13 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests the createFile for prompt credentials", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -1404,7 +1441,7 @@ describe("Extension Unit Tests", () => {
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
                                                 null, sessionwocred, undefined, undefined, profileOne);
-        newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        newsessNode.contextValue = globals.DS_SESSION_CONTEXT;
 
         showQuickPick.mockReset();
         getConfiguration.mockReset();
@@ -1424,15 +1461,15 @@ describe("Extension Unit Tests", () => {
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set C");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
 
         // tslint:disable-next-line: no-magic-numbers
         expect(showQuickPick.mock.calls.length).toBe(5);
@@ -1459,11 +1496,13 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests the createFile for prompt credentials, favorite route", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -1478,18 +1517,11 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: {
-                items: []
-            }
-        };
 
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
                                                 null, sessionwocred, undefined, undefined, profileOne);
-        newsessNode.contextValue = extension.DS_SESSION_CONTEXT + extension.FAV_SUFFIX;
+        newsessNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
         showQuickPick.mockReset();
         getConfiguration.mockReset();
@@ -1506,21 +1538,21 @@ describe("Extension Unit Tests", () => {
         createTreeView.mockReturnValue(new TreeView());
         testTree.getChildren.mockReturnValue([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode,
                                                                   null, undefined, undefined, profileOne), sessNode]);
-        allMembers.mockReturnValue(uploadResponse);
-        dataSet.mockReturnValue(uploadResponse);
+        allMembers.mockReturnValue(defaultUploadResponse);
+        dataSet.mockReturnValue(defaultUploadResponse);
         mockGetHistory.mockReturnValue(["mockHistory1"]);
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set C");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await extension.createFile(newsessNode, testTree);
+        await dsActions.createFile(newsessNode, testTree);
 
         // tslint:disable-next-line: no-magic-numbers
         expect(showQuickPick.mock.calls.length).toBe(5);
@@ -1547,23 +1579,17 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests the createFile for prompt credentials error", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                 };
             })
         });
-
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: {
-                items: []
-            }
-        };
         const sessionwocred = new imperative.Session({
             user: "",
             password: "",
@@ -1571,11 +1597,11 @@ describe("Extension Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
-        const createFile = jest.spyOn(extension, "createFile");
+        const createFileSpy = jest.spyOn(dsActions, "createFile");
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
                                                 null, sessionwocred, undefined, undefined, profileOne);
-        newsessNode.contextValue = extension.DS_SESSION_CONTEXT;
+        newsessNode.contextValue = globals.DS_SESSION_CONTEXT;
         newsessNode.pattern = "sestest";
 
         showQuickPick.mockReset();
@@ -1590,13 +1616,13 @@ describe("Extension Unit Tests", () => {
         mockCreateFilterString.mockReturnValue("NODE");
         showInputBox.mockReturnValueOnce("sestest");
         mockGetHistory.mockReturnValueOnce(["mockHistory"]);
-        allMembers.mockReturnValueOnce(uploadResponse);
-        dataSetList.mockReturnValue(uploadResponse);
+        allMembers.mockReturnValueOnce(defaultUploadResponse);
+        dataSetList.mockReturnValue(defaultUploadResponse);
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await extension.createFile(newsessNode, testTree);
-        expect(extension.createFile).toHaveBeenCalled();
+        await dsActions.createFile(newsessNode, testTree);
+        expect(createFileSpy).toHaveBeenCalled();
 
         dataSetList.mockReset();
     });
@@ -1612,27 +1638,27 @@ describe("Extension Unit Tests", () => {
         let child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, profileOne);
         const parentAsFavorite = new ZoweDatasetNode("[sestest]: parent", vscode.TreeItemCollapsibleState.Collapsed,
                                                      sessNode, null, undefined, undefined, profileOne);
-        parentAsFavorite.contextValue = extension.PDS_FAV_CONTEXT;
+        parentAsFavorite.contextValue = globals.PDS_FAV_CONTEXT;
         testTree.mFavorites.push(parentAsFavorite);
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
         findFavoritedNode.mockReturnValue(parentAsFavorite);
-        await extension.deleteDataset(node, testTree);
+        await dsActions.deleteDataset(node, testTree);
         expect(deleteSpy.mock.calls.length).toBe(1);
         expect(deleteSpy.mock.calls[0][0]).toBe(node.label);
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             node.getSessionNode().label, node.label ));
         expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             node.getSessionNode().label, node.label ));
 
         unlinkSync.mockReset();
         deleteSpy.mockReset();
         existsSync.mockReturnValueOnce(false);
         showQuickPick.mockResolvedValueOnce("Yes");
-        await extension.deleteDataset(child, testTree);
+        await dsActions.deleteDataset(child, testTree);
 
         expect(unlinkSync.mock.calls.length).toBe(0);
         expect(deleteSpy.mock.calls[0][0]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
@@ -1641,7 +1667,7 @@ describe("Extension Unit Tests", () => {
         deleteSpy.mockRejectedValueOnce(Error("not found"));
         showQuickPick.mockResolvedValueOnce("Yes");
 
-        await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error("not found"));
+        await expect(dsActions.deleteDataset(node, testTree)).rejects.toEqual(Error("not found"));
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably already deleted.");
@@ -1651,24 +1677,24 @@ describe("Extension Unit Tests", () => {
         deleteSpy.mockRejectedValueOnce(Error(""));
         showQuickPick.mockResolvedValueOnce("Yes");
 
-        await expect(extension.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
+        await expect(dsActions.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
 
         showQuickPick.mockResolvedValueOnce("No");
 
-        await extension.deleteDataset(child, testTree);
+        await dsActions.deleteDataset(child, testTree);
 
         existsSync.mockReturnValueOnce(true);
         node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne);
-        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.deleteDataset(node, testTree);
+        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.deleteDataset(node, testTree);
 
         existsSync.mockReturnValueOnce(true);
-        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node, null, undefined, undefined, profileOne);
-        await extension.deleteDataset(child, testTree);
+        await dsActions.deleteDataset(child, testTree);
         expect(mockRefreshElement).toHaveBeenCalledWith(parent);
         expect(mockRefreshElement).toHaveBeenCalledWith(parentAsFavorite);
     });
@@ -1682,9 +1708,9 @@ describe("Extension Unit Tests", () => {
 
         const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = extension.FAVORITE_CONTEXT;
+        node.contextValue = globals.FAVORITE_CONTEXT;
         const nodeAsFavorite = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        nodeAsFavorite.contextValue = extension.FAVORITE_CONTEXT;
+        nodeAsFavorite.contextValue = globals.FAVORITE_CONTEXT;
         sessNode.children.push(node, nodeAsFavorite, child);
         testTree.mFavorites.push(nodeAsFavorite);
 
@@ -1692,17 +1718,17 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockResolvedValueOnce("Yes");
         findNonFavoritedNode.mockReturnValue(node);
 
-        await extension.deleteDataset(child, testTree);
+        await dsActions.deleteDataset(child, testTree);
 
         expect(deleteSpy.mock.calls.length).toBe(1);
         expect(deleteSpy.mock.calls[0][0]).toBe("HLQ.TEST.DELETE.NODE");
         expect(mockRemoveFavorite.mock.calls.length).toBe(1);
         expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.NODE" );
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
         expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
         expect(findNonFavoritedNode).toBeCalledWith(nodeAsFavorite);
 
@@ -1718,21 +1744,21 @@ describe("Extension Unit Tests", () => {
 
         const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
         const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
-        await extension.deleteDataset(child, testTree);
+        await dsActions.deleteDataset(child, testTree);
 
         expect(deleteSpy.mock.calls.length).toBe(1);
         expect(deleteSpy.mock.calls[0][0]).toBe("HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))");
         expect(mockRemoveFavorite.mock.calls.length).toBe(1);
         expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)" );
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))" ));
         expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))" ));
     });
 
@@ -1751,7 +1777,7 @@ describe("Extension Unit Tests", () => {
 
         existsSync.mockReturnValueOnce(true);
         showQuickPick.mockResolvedValueOnce("Yes");
-        await expect(extension.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
+        await expect(dsActions.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
     });
 
     it("Testing that enterPattern is executed successfully", async () => {
@@ -1760,10 +1786,10 @@ describe("Extension Unit Tests", () => {
 
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
         node.pattern = "TEST";
-        node.contextValue = extension.DS_SESSION_CONTEXT;
+        node.contextValue = globals.DS_SESSION_CONTEXT;
 
         showInputBox.mockReturnValueOnce("test");
-        await extension.enterPattern(node, testTree);
+        await dsActions.enterPattern(node, testTree);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls[0][0]).toEqual({
@@ -1775,7 +1801,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("");
         showInputBox.mockReset();
         showInformationMessage.mockReset();
-        await extension.enterPattern(node, testTree);
+        await dsActions.enterPattern(node, testTree);
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
@@ -1785,7 +1811,7 @@ describe("Extension Unit Tests", () => {
         mockAddZoweSession.mockReset();
         const favoriteSample = new ZoweDatasetNode("[sestest]: HLQ.TEST", vscode.TreeItemCollapsibleState.None, undefined, null);
 
-        await extension.enterPattern(favoriteSample, testTree);
+        await dsActions.enterPattern(favoriteSample, testTree);
 
         expect(mockAddZoweSession.mock.calls.length).toBe(1);
         expect(mockAddZoweSession.mock.calls[0][0]).toEqual("sestest");
@@ -1793,7 +1819,7 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that saveFile is executed successfully", async () => {
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE"),
+            fileName: path.join(globals.DS_DIR, "/sestest/HLQ.TEST.AFILE"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1812,7 +1838,27 @@ describe("Extension Unit Tests", () => {
             validatePosition: null
         };
         const testDoc0: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "HLQ.TEST.AFILE"),
+            fileName: path.join(globals.DS_DIR, "HLQ.TEST.AFILE"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
+
+        const testDocLowercase: vscode.TextDocument = {
+            fileName: path.join(globals.DS_DIR, "/sestest/hlq.test.lowercase"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1853,13 +1899,13 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
         concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
         const getSessionSpy = jest.spyOn(mvsApi, "getSession").mockReturnValueOnce(sessionwocred);
-        await extension.saveFile(testDoc0, testTree);
+        await dsActions.saveFile(testDoc0, testTree);
         // tslint:disable-next-line: no-magic-numbers
         expect(getSessionSpy.mock.calls.length).toBe(3);
         expect(getSessionSpy.mock.results[0].value).toEqual(sessionwocred);
 
         // testing if no documentSession is found (no session + no profile)
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -1871,13 +1917,13 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReset();
         showErrorMessage.mockReset();
         testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
-        await extension.saveFile(testDoc0, testTree);
+        await dsActions.saveFile(testDoc0, testTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Couldn't locate session when saving data set!");
 
         testTree.getChildren.mockReset();
         createBasicZosmfSession.mockReset();
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
@@ -1891,7 +1937,7 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
         const dataSetSpy = jest.spyOn(mvsApi, "dataSet").mockImplementationOnce(
             async () => testResponse as zowe.IZosFilesResponse);
-        await extension.saveFile(testDoc, testTree);
+        await dsActions.saveFile(testDoc, testTree);
         expect(dataSetSpy.mock.calls.length).toBe(1);
         expect(dataSetSpy.mock.calls[0][0]).toBe("HLQ.TEST.AFILE");
         expect(showErrorMessage.mock.calls.length).toBe(1);
@@ -1921,13 +1967,33 @@ describe("Extension Unit Tests", () => {
         testResponse.success = true;
         pathToDataSet.mockResolvedValueOnce(testResponse);
 
-        await extension.saveFile(testDoc, testTree);
+        await dsActions.saveFile(testDoc, testTree);
 
         expect(concatChildNodes.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("success");
         expect(mockSetEtag).toHaveBeenCalledTimes(1);
         expect(mockSetEtag).toHaveBeenCalledWith("123");
+
+        dataSetList.mockReset();
+        pathToDataSet.mockReset();
+        showInformationMessage.mockReset();
+        showErrorMessage.mockReset();
+        concatChildNodes.mockReset();
+        mockSetEtag.mockReset();
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
+        testTree.getChildren.mockReturnValueOnce([sessNode]);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        withProgress.mockResolvedValueOnce(uploadResponse);
+        testResponse.success = true;
+        pathToDataSet.mockResolvedValueOnce(testResponse);
+
+        // Test if saveFile can handle a lowercase fileName
+        await dsActions.saveFile(testDocLowercase, testTree);
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
 
         concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
@@ -1936,7 +2002,7 @@ describe("Extension Unit Tests", () => {
         testResponse.commandResponse = "Save failed";
         pathToDataSet.mockResolvedValueOnce(testResponse);
 
-        await extension.saveFile(testDoc, testTree);
+        await dsActions.saveFile(testDoc, testTree);
 
         const testDoc2: vscode.TextDocument = {
             fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
@@ -1961,12 +2027,12 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockReset();
 
-        await extension.saveFile(testDoc2, testTree);
+        await dsActions.saveFile(testDoc2, testTree);
 
         expect(dataSetList.mock.calls.length).toBe(0);
 
         const testDoc3: vscode.TextDocument = {
-            fileName: path.join(extension.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
+            fileName: path.join(globals.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -1996,7 +2062,7 @@ describe("Extension Unit Tests", () => {
         concatChildNodes.mockReset();
         concatChildNodes.mockReturnValueOnce(sessNode.children);
 
-        await extension.saveFile(testDoc3, testTree);
+        await dsActions.saveFile(testDoc3, testTree);
         expect(concatChildNodes.mock.calls.length).toBe(1);
 
         testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null,
@@ -2021,7 +2087,7 @@ describe("Extension Unit Tests", () => {
         };
         dataSet.mockResolvedValue(downloadResponse);
 
-        await extension.saveFile(testDoc, testTree);
+        await dsActions.saveFile(testDoc, testTree);
         expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
         expect(concatChildNodes.mock.calls.length).toBe(1);
     });
@@ -2043,15 +2109,15 @@ describe("Extension Unit Tests", () => {
         withProgress.mockReturnValue(fileResponse);
         openTextDocument.mockResolvedValueOnce("test doc");
 
-        await extension.openPS(node, true, testTree);
+        await dsActions.openPS(node, true, testTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.DS_DIR,
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
             node.getSessionNode().label.trim(), node.label));
         expect(withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: "Opening dataset..."
+                title: "Opening data set..."
             }, expect.any(Function)
         );
         withProgress(downloadDataset);
@@ -2059,16 +2125,16 @@ describe("Extension Unit Tests", () => {
         // expect(dataSet.mock.calls.length).toBe(1);
         // expect(dataSet.mock.calls[0][0]).toBe(session);
         // expect(dataSet.mock.calls[0][1]).toBe(node.label);
-        // expect(dataSet.mock.calls[0][2]).toEqual({file: extension.getDocumentFilePath(node.label, node)});
+        // expect(dataSet.mock.calls[0][2]).toEqual({file: sharedUtils.getDocumentFilePath(node.label, node)});
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(extension.getDocumentFilePath(node.label, node));
+        expect(openTextDocument.mock.calls[0][0]).toBe(sharedUtils.getDocumentFilePath(node.label, node));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test doc");
 
         openTextDocument.mockResolvedValueOnce("test doc");
         const node2 = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
 
-        await extension.openPS(node2, true, testTree);
+        await dsActions.openPS(node2, true, testTree);
 
         dataSet.mockReset();
         openTextDocument.mockReset();
@@ -2079,37 +2145,37 @@ describe("Extension Unit Tests", () => {
         showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
-            await extension.openPS(child, true, testTree);
+            await dsActions.openPS(child, true);
         } catch (err) {
             // do nothing
         }
 
         expect(dataSet.mock.calls.length).toBe(0);
         expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(extension.getDocumentFilePath(parent.label + "(" + child.label + ")", node));
+        expect(openTextDocument.mock.calls[0][0]).toBe(sharedUtils.getDocumentFilePath(parent.label + "(" + child.label + ")", node));
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
 
         const child2 = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
         try {
-            await extension.openPS(child2, true, testTree);
+            await dsActions.openPS(child2, true, testTree);
         } catch (err) {
             // do nothing
         }
 
         openTextDocument.mockReset();
         showTextDocument.mockReset();
-        parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.openPS(child, true, testTree);
+        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.openPS(child, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
         showTextDocument.mockReset();
         openTextDocument.mockReset();
 
-        parent.contextValue = extension.FAVORITE_CONTEXT;
-        await extension.openPS(child, true, testTree);
+        parent.contextValue = globals.FAVORITE_CONTEXT;
+        await dsActions.openPS(child, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
 
@@ -2121,11 +2187,11 @@ describe("Extension Unit Tests", () => {
      *************************************************************************************************************/
     it("Testing that openRecentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
         const sessNode2 = new ZoweDatasetNode("sessNode2", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode2.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode2.contextValue = globals.DS_SESSION_CONTEXT;
         sessNode2.pattern = "node";
         const parent = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode2, null);
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, session);
-        child.contextValue = extension.DS_MEMBER_CONTEXT;
+        child.contextValue = globals.DS_MEMBER_CONTEXT;
         child.pattern = child.label;
         sessNode2.children.push(parent);
         testTree.mSessionNodes.push(sessNode2);
@@ -2156,7 +2222,7 @@ describe("Extension Unit Tests", () => {
         mockGetRecall.mockReturnValueOnce([`[sessNode]: node(child)`]);
         mockUSSGetRecall.mockReturnValueOnce([]);
 
-        await extension.openRecentMemberPrompt(testTree, testUSSTree);
+        await sharedActions.openRecentMemberPrompt(testTree, testUSSTree);
         expect(testTree.openItemFromPath).toBeCalledWith(`[sessNode2]: node(child)`, sessNode2);
 
         testTree.mSessionNodes.pop();
@@ -2166,10 +2232,10 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that openRecentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
         const sessNode2 = new ZoweDatasetNode("sessNode2", vscode.TreeItemCollapsibleState.Expanded, null, session);
-        sessNode2.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode2.contextValue = globals.DS_SESSION_CONTEXT;
         sessNode2.pattern = "node";
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode2, null);
-        node.contextValue = extension.DS_DS_CONTEXT;
+        node.contextValue = globals.DS_DS_CONTEXT;
         sessNode2.children.push(node);
         testTree.mSessionNodes.push(sessNode2);
 
@@ -2199,7 +2265,7 @@ describe("Extension Unit Tests", () => {
         mockGetRecall.mockReturnValueOnce([`[sessNode2]: node`]);
         mockUSSGetRecall.mockReturnValueOnce([]);
 
-        await extension.openRecentMemberPrompt(testTree, testUSSTree);
+        await sharedActions.openRecentMemberPrompt(testTree, testUSSTree);
         expect(testTree.openItemFromPath).toBeCalledWith(`[sessNode2]: node`, sessNode2);
 
         testTree.mSessionNodes.pop();
@@ -2209,10 +2275,10 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that openRecentMemberPrompt (opening a recent member) is executed successfully on a USS file", async () => {
         const sessNode2 = new ZoweUSSNode("sessNode2", vscode.TreeItemCollapsibleState.Expanded, null, session, "", false, "testProf");
-        sessNode2.contextValue = extension.DS_SESSION_CONTEXT;
+        sessNode2.contextValue = globals.DS_SESSION_CONTEXT;
         sessNode2.fullPath = "";
         const node = new ZoweUSSNode("node3.txt", vscode.TreeItemCollapsibleState.None, sessNode2, null, "/node1/node2");
-        node.contextValue = extension.DS_DS_CONTEXT;
+        node.contextValue = globals.DS_DS_CONTEXT;
         sessNode2.children.push(node);
         testUSSTree.mSessionNodes.push(sessNode2);
 
@@ -2242,7 +2308,7 @@ describe("Extension Unit Tests", () => {
         mockGetRecall.mockReturnValueOnce([]);
         mockUSSGetRecall.mockReturnValueOnce([`[testProf]: /node1/node2/node3.txt`]);
 
-        await extension.openRecentMemberPrompt(testTree, testUSSTree);
+        await sharedActions.openRecentMemberPrompt(testTree, testUSSTree);
         expect(testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, sessNode2);
 
         testTree.mSessionNodes.pop();
@@ -2266,8 +2332,8 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -2276,6 +2342,8 @@ describe("Extension Unit Tests", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     getProfiles: jest.fn(),
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
@@ -2284,7 +2352,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.openPS(dsNode, true, testTree);
+        await dsActions.openPS(dsNode, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
@@ -2303,8 +2371,8 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -2312,7 +2380,9 @@ describe("Extension Unit Tests", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                 };
             })
         });
@@ -2320,7 +2390,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.openPS(dsNode, true, testTree);
+        await dsActions.openPS(dsNode, true, testTree);
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
@@ -2339,19 +2409,21 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.INVALID,
+                    checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
         });
 
-        await extension.openPS(dsNode, true, testTree);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        await dsActions.openPS(dsNode, true, testTree);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showInformationMessage.mockReset();
@@ -2372,12 +2444,14 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
                     }),
@@ -2388,10 +2462,9 @@ describe("Extension Unit Tests", () => {
 
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
-        const spyopenPS = jest.spyOn(extension, "openPS");
-        await extension.openPS(dsNode, true, testTree);
-        expect(extension.openPS).toHaveBeenCalled();
-
+        const spyopenPS = jest.spyOn(dsActions, "openPS");
+        await dsActions.openPS(dsNode, true, testTree);
+        expect(spyopenPS).toHaveBeenCalled();
     });
 
     describe("refresh USS checking", () => {
@@ -2406,7 +2479,7 @@ describe("Extension Unit Tests", () => {
                 get: openedDocumentInstance
             });
 
-            node.contextValue = extension.USS_SESSION_CONTEXT;
+            node.contextValue = globals.USS_SESSION_CONTEXT;
             node.fullPath = "/u/myuser";
         };
         const resetMocks = () => {
@@ -2513,17 +2586,17 @@ describe("Extension Unit Tests", () => {
                 new utils.FilterItem("[sestest]: /test/tree/abc"),
             ];
 
-            let filteredValues = await extension.filterTreeByString("testmemb", qpItems);
+            let filteredValues = await sharedUtils.filterTreeByString("testmemb", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[1]]);
-            filteredValues = await extension.filterTreeByString("sestest", qpItems);
+            filteredValues = await sharedUtils.filterTreeByString("sestest", qpItems);
             expect(filteredValues).toStrictEqual(qpItems);
-            filteredValues = await extension.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
+            filteredValues = await sharedUtils.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[0]]);
-            filteredValues = await extension.filterTreeByString("HLQ.*.STUFF*", qpItems);
+            filteredValues = await sharedUtils.filterTreeByString("HLQ.*.STUFF*", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
-            filteredValues = await extension.filterTreeByString("/test/tree/abc", qpItems);
+            filteredValues = await sharedUtils.filterTreeByString("/test/tree/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
-            filteredValues = await extension.filterTreeByString("*/abc", qpItems);
+            filteredValues = await sharedUtils.filterTreeByString("*/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
         });
 
@@ -2532,7 +2605,7 @@ describe("Extension Unit Tests", () => {
             testTree.getChildren.mockReset();
             mockAddHistory.mockReset();
 
-            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_PDS_CONTEXT);
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_PDS_CONTEXT);
             testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             testTree.getChildren.mockReturnValue([sessNode]);
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
@@ -2564,7 +2637,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
             expect(mockAddHistory).toBeCalledTimes(0);
         });
@@ -2574,13 +2647,14 @@ describe("Extension Unit Tests", () => {
             testTree.getChildren.mockReset();
             mockAddHistory.mockReset();
 
-            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, extension.DS_DS_CONTEXT);
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_DS_CONTEXT);
             testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-            const testMember = new ZoweDatasetNode("TESTMEMB", null, testNode, session, extension.DS_MEMBER_CONTEXT);
+            const testMember = new ZoweDatasetNode("TESTMEMB", null, testNode, session, globals.DS_MEMBER_CONTEXT);
             testMember.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             testNode.children.push(testMember);
             testTree.getChildren.mockReturnValue([sessNode]);
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(dsActions, "openPS").mockImplementationOnce(() => Promise.resolve(null));
             jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testMember]));
             jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
             jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
@@ -2610,7 +2684,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
             expect(mockAddHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
         });
@@ -2645,7 +2719,7 @@ describe("Extension Unit Tests", () => {
             });
 
             const openNode = jest.spyOn(folder, "openUSS");
-            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
             expect(openNode).toHaveBeenCalledTimes(0);
         });
@@ -2681,7 +2755,7 @@ describe("Extension Unit Tests", () => {
             });
 
             const openNode = jest.spyOn(file, "openUSS");
-            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
             expect(mockAddHistory).toBeCalledWith("/folder/file");
             expect(openNode).toHaveBeenCalledWith(false, true, testUSSTree);
@@ -2711,7 +2785,7 @@ describe("Extension Unit Tests", () => {
                 })
             });
 
-            await extension.searchInAllLoadedItems(testTree, testUSSTree);
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
             expect(mockAddHistory).toBeCalledTimes(0);
             mockAddHistory.mockReset();
@@ -2725,7 +2799,7 @@ describe("Extension Unit Tests", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
         beforeEach(() => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -2804,6 +2878,75 @@ describe("Extension Unit Tests", () => {
             await extension.addZoweSession(testUSSTree);
             expect(extension.addZoweSession).toHaveBeenCalled();
 
+        });
+
+        it("Testing that addZoweSession with theia", async () => {
+            const entered = "";
+            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            Object.defineProperty(globals, "ISTHEIA", { get: () => true });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addZoweSession(testUSSTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+            Object.defineProperty(globals, "ISTHEIA", { get: () => false });
+        });
+
+        it("Testing that addZoweSession with theia fails if no choice", async () => {
+            const entered = null;
+            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            Object.defineProperty(globals, "ISTHEIA", { get: () => true });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [],
+                ignoreFocusOut: true,
+                items: [],
+                value: null,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addZoweSession(testUSSTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+            expect(showInformationMessage).toHaveBeenCalled();
+
+            Object.defineProperty(globals, "ISTHEIA", { get: () => false });
         });
 
         it("Testing that addZoweSession with existing profile", async () => {
@@ -2901,7 +3044,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -2941,7 +3084,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addZoweSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -2987,7 +3130,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -2998,6 +3141,8 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
                     }),
@@ -3020,7 +3165,7 @@ describe("Extension Unit Tests", () => {
         await node.openUSS(false, true, testUSSTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + extension.getUSSProfile(node) + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
         expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
         expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
@@ -3100,7 +3245,7 @@ describe("Extension Unit Tests", () => {
 
         openTextDocument.mockResolvedValueOnce("test.doc");
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3111,6 +3256,8 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
                     }),
@@ -3121,17 +3268,17 @@ describe("Extension Unit Tests", () => {
 
         // Set up mock favorite session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name);
-        favoriteSession.contextValue = extension.FAVORITE_CONTEXT;
+        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
 
         // Set up favorited nodes (directly under Favorites)
         const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, session, "/", false, profileOne.name);
-        favoriteFile.contextValue = extension.DS_TEXT_FILE_CONTEXT + extension.FAV_SUFFIX;
+        favoriteFile.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/",
             false, profileOne.name);
-        favoriteParent.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
+        favoriteParent.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
         // Set up child of favoriteDir - make sure we can open the child of a favored directory
         const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir", false, profileOne.name);
-        child.contextValue = extension.DS_TEXT_FILE_CONTEXT;
+        child.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
         // For each node, make sure that code below the log.debug statement is execute
         await favoriteFile.openUSS(false, true, testUSSTree);
@@ -3152,7 +3299,7 @@ describe("Extension Unit Tests", () => {
         existsSync.mockReset();
         withProgress.mockReset();
 
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3163,6 +3310,8 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     usesSecurity: true,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
                     }),
@@ -3184,7 +3333,7 @@ describe("Extension Unit Tests", () => {
         await node.openUSS(false, true, testUSSTree);
 
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(extension.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
         expect(withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -3216,8 +3365,8 @@ describe("Extension Unit Tests", () => {
 
         ussFile.mockReturnValueOnce(fileResponse);
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
-        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -3225,7 +3374,9 @@ describe("Extension Unit Tests", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                 };
             })
         });
@@ -3252,8 +3403,8 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
-        dsNode.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
@@ -3261,7 +3412,9 @@ describe("Extension Unit Tests", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                 };
             })
         });
@@ -3290,12 +3443,14 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
-        dsNode.contextValue = extension.USS_DIR_CONTEXT + extension.FAV_SUFFIX;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.INVALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
                     }),
@@ -3308,7 +3463,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         const spyopenUSS = jest.spyOn(dsNode, "openUSS");
         await dsNode.openUSS(false, true, testUSSTree);
-        expect(dsNode.openUSS).toHaveBeenCalled();
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
     });
 
     it("Testing that that openUSS credentials prompt ends in error", async () => {
@@ -3325,31 +3480,32 @@ describe("Extension Unit Tests", () => {
             type: "basic",
         });
         const dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, sessionwocred, null);
-        dsNode.contextValue = extension.USS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        dsNode.contextValue = globals.USS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.INVALID,
+                    checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
         });
 
         await dsNode.openUSS(false, true, testUSSTree);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showQuickPick.mockReset();
         showInputBox.mockReset();
         showInformationMessage.mockReset();
         showErrorMessage.mockReset();
     });
 
-
     it("Testing that saveUSSFile is executed successfully", async () => {
         withProgress.mockReset();
 
         const testDoc: vscode.TextDocument = {
-            fileName: path.join(extension.USS_DIR, "usstest", "/u/myuser/testFile"),
+            fileName: path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile"),
             uri: null,
             isUntitled: null,
             languageId: null,
@@ -3392,7 +3548,7 @@ describe("Extension Unit Tests", () => {
         fileToUSSFile.mockResolvedValue(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
         concatChildNodes.mockReturnValueOnce([ussNode.children[0]]);
-        await extension.saveUSSFile(testDoc, testUSSTree);
+        await ussActions.saveUSSFile(testDoc, testUSSTree);
 
         expect(concatChildNodes.mock.calls.length).toBe(1);
         expect(mockGetEtag).toBeCalledTimes(1);
@@ -3405,7 +3561,7 @@ describe("Extension Unit Tests", () => {
         fileToUSSFile.mockResolvedValueOnce(testResponse);
         withProgress.mockReturnValueOnce(testResponse);
 
-        await extension.saveUSSFile(testDoc, testUSSTree);
+        await ussActions.saveUSSFile(testDoc, testUSSTree);
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Save failed");
@@ -3415,7 +3571,7 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
         withProgress.mockRejectedValueOnce(Error("Test Error"));
 
-        await extension.saveUSSFile(testDoc, testUSSTree);
+        await ussActions.saveUSSFile(testDoc, testUSSTree);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
 
@@ -3436,7 +3592,7 @@ describe("Extension Unit Tests", () => {
         };
         ussFile.mockResolvedValueOnce(downloadResponse);
         try {
-            await extension.saveUSSFile(testDoc, testUSSTree);
+            await ussActions.saveUSSFile(testDoc, testUSSTree);
         } catch (e) {
             // this is OK. We are interested in the next expect (showWarninMessage) to fullfil
             expect(e.message).toBe("vscode.Position is not a constructor");
@@ -3448,7 +3604,7 @@ describe("Extension Unit Tests", () => {
         const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 
         beforeEach(() => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3477,12 +3633,14 @@ describe("Extension Unit Tests", () => {
         it("tests the refresh Jobs Server for prompt credentials", async () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
-            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
@@ -3500,19 +3658,21 @@ describe("Extension Unit Tests", () => {
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
-            await extension.refreshJobsServer(newjobNode, testJobsTree);
-            expect(extension.refreshJobsServer).toHaveBeenCalled();
+            await jobActions.refreshJobsServer(newjobNode, testJobsTree);
+            expect(jobActions.refreshJobsServer).toHaveBeenCalled();
         });
 
         it("tests the refresh Jobs Server for prompt credentials, favorites route", async () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
-            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
@@ -3528,20 +3688,22 @@ describe("Extension Unit Tests", () => {
             });
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
-            newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            await extension.refreshJobsServer(newjobNode, testJobsTree);
-            expect(extension.refreshJobsServer).toHaveBeenCalled();
+            newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+            await jobActions.refreshJobsServer(newjobNode, testJobsTree);
+            expect(jobActions.refreshJobsServer).toHaveBeenCalled();
         });
 
         it("tests the refresh Jobs Server for prompt credentials with favorites that ends in error", async () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
-            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
@@ -3557,21 +3719,23 @@ describe("Extension Unit Tests", () => {
             });
             createBasicZosmfSession.mockReturnValue(sessionwocred);
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
-            newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT + extension.FAV_SUFFIX;
-            const spyopenPS = jest.spyOn(extension, "refreshJobsServer");
-            await extension.refreshJobsServer(newjobNode, testJobsTree);
-            expect(extension.refreshJobsServer).toHaveBeenCalled();
+            newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+            const spyopenPS = jest.spyOn(jobActions, "refreshJobsServer");
+            await jobActions.refreshJobsServer(newjobNode, testJobsTree);
+            expect(jobActions.refreshJobsServer).toHaveBeenCalled();
         });
 
         it("tests the refresh Jobs Server", async () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
-            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
@@ -3583,19 +3747,21 @@ describe("Extension Unit Tests", () => {
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, session, iJob, jobNode.getProfile());
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
-            await extension.refreshJobsServer(newjobNode, testJobsTree);
-            expect(extension.refreshJobsServer).toHaveBeenCalled();
+            await jobActions.refreshJobsServer(newjobNode, testJobsTree);
+            expect(jobActions.refreshJobsServer).toHaveBeenCalled();
         });
 
         it("tests the refresh Jobs Server with invalid prompt credentials", async () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
-            const addJobsSession = jest.spyOn(extension, "refreshJobsServer");
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            const addJobsSession = jest.spyOn(jobActions, "refreshJobsServer");
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
                     };
                 })
             });
@@ -3611,8 +3777,8 @@ describe("Extension Unit Tests", () => {
             const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
             newjobNode.contextValue = "server";
             newjobNode.contextValue = "server";
-            await extension.refreshJobsServer(newjobNode, testJobsTree);
-            expect(extension.refreshJobsServer).toHaveBeenCalled();
+            await jobActions.refreshJobsServer(newjobNode, testJobsTree);
+            expect(jobActions.refreshJobsServer).toHaveBeenCalled();
         });
 
         it("Testing that addJobsSession will cancel if there is no profile name", async () => {
@@ -3763,7 +3929,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addJobsSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3803,7 +3969,7 @@ describe("Extension Unit Tests", () => {
             const entered = "fake";
             const addJobsSession = jest.spyOn(extension, "addZoweSession");
 
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -3847,7 +4013,7 @@ describe("Extension Unit Tests", () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, null, null);
 
         showInputBox.mockReturnValueOnce("*");
-        await extension.setPrefix(node, testJobsTree);
+        await jobActions.setPrefix(node, testJobsTree);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls[0][0]).toEqual({
@@ -3863,7 +4029,7 @@ describe("Extension Unit Tests", () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, iJob, profileOne);
 
         showInputBox.mockReturnValueOnce("OWNER");
-        await extension.setOwner(node, testJobsTree);
+        await jobActions.setOwner(node, testJobsTree);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls[0][0]).toEqual({
@@ -3873,19 +4039,30 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the spool content is opened in a new document", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    validProfile: ValidProfileEnum.VALID,
+                    loadNamedProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(),
+                };
+            })
+        });
         showTextDocument.mockReset();
         openTextDocument.mockReset();
-        await extension.getSpoolContent("sessionName", iJobFile);
+        await jobActions.getSpoolContent(testJobsTree, "sessionName", iJobFile);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
 
     it("tests that the spool content is not opened in a new document", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -3895,7 +4072,7 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
         showTextDocument.mockReset();
         openTextDocument.mockReset();
-        await extension.getSpoolContent(undefined, undefined);
+        await jobActions.getSpoolContent(testJobsTree, undefined, undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
@@ -3912,13 +4089,13 @@ describe("Extension Unit Tests", () => {
         });
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
-        newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -3929,7 +4106,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
 
-        await extension.getSpoolContent(newjobNode.label, iJobFile);
+        await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
         expect(showTextDocument.mock.calls.length).toBe(1);
     });
 
@@ -3946,26 +4123,28 @@ describe("Extension Unit Tests", () => {
         });
         createBasicZosmfSession.mockReturnValue(sessionwocred);
         const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
-        newjobNode.contextValue = extension.JOBS_SESSION_CONTEXT;
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+        newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+        Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: ValidProfileEnum.INVALID,
+                    checkCurrentProfile: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
         });
 
-        await extension.getSpoolContent(newjobNode.label, iJobFile);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
+        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showErrorMessage.mockReset();
     });
 
     it("tests that a stop command is issued", async () => {
         showInformationMessage.mockReset();
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await extension.stopCommand(jobNode);
+        await jobActions.stopCommand(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
             "Command response: fake response"
@@ -3975,7 +4154,7 @@ describe("Extension Unit Tests", () => {
     it("tests that a stop command is not issued", async () => {
         showInformationMessage.mockReset();
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await extension.stopCommand(undefined);
+        await jobActions.stopCommand(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
@@ -3984,7 +4163,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         showInputBox.mockReturnValue("modify");
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await extension.modifyCommand(jobNode);
+        await jobActions.modifyCommand(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
             "Command response: fake response"
@@ -3996,7 +4175,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         showInputBox.mockReturnValue("modify");
         issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        await extension.modifyCommand(undefined);
+        await jobActions.modifyCommand(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
@@ -4004,7 +4183,7 @@ describe("Extension Unit Tests", () => {
         const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
         const downloadFileSpy = jest.spyOn(jesApi, "downloadSpoolContent");
-        await extension.downloadSpool(jobNode);
+        await jobActions.downloadSpool(jobNode);
         expect(showOpenDialog).toBeCalled();
         expect(downloadFileSpy).toBeCalled();
         expect(downloadFileSpy.mock.calls[0][0]).toEqual(
@@ -4019,7 +4198,7 @@ describe("Extension Unit Tests", () => {
     it("tests that the spool is not downloaded", async () => {
         const fileUri = {fsPath: "/tmp/foo"};
         showOpenDialog.mockReturnValue([fileUri]);
-        await extension.downloadSpool(undefined);
+        await jobActions.downloadSpool(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
@@ -4027,7 +4206,7 @@ describe("Extension Unit Tests", () => {
         getJclForJob.mockReset();
         openTextDocument.mockReset();
         showTextDocument.mockReset();
-        await extension.downloadJcl(jobNode);
+        await jobActions.downloadJcl(jobNode);
         expect(getJclForJob).toBeCalled();
         expect(openTextDocument).toBeCalled();
         expect(showTextDocument).toBeCalled();
@@ -4037,7 +4216,7 @@ describe("Extension Unit Tests", () => {
         getJclForJob.mockReset();
         openTextDocument.mockReset();
         showTextDocument.mockReset();
-        await extension.downloadJcl(undefined);
+        await jobActions.downloadJcl(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
@@ -4046,7 +4225,7 @@ describe("Extension Unit Tests", () => {
         createBasicZosmfSession.mockReturnValue(session);
         submitJcl.mockReturnValue(iJob);
         testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
-        await extension.submitJcl(testTree);
+        await dsActions.submitJcl(testTree);
         expect(submitJcl).toBeCalled();
         expect(showInformationMessage).toBeCalled();
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -4056,17 +4235,17 @@ describe("Extension Unit Tests", () => {
     it("tests that a pds member is submitted", async () => {
         showErrorMessage.mockReset();
         const rootNode = new ZoweDatasetNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
-        rootNode.contextValue = extension.DS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         const file = new ZoweDatasetNode("file", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         file.contextValue = "file";
-        const subNode = new ZoweDatasetNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        const member = new ZoweDatasetNode(extension.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
+        const subNode = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const member = new ZoweDatasetNode(globals.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
         const favorite = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
-        favorite.contextValue = extension.FAVORITE_CONTEXT;
+        favorite.contextValue = globals.FAVORITE_CONTEXT;
         const favoriteSubNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favorite, null);
-        favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        const favoritemember = new ZoweDatasetNode(extension.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
-        favoritemember.contextValue = extension.DS_MEMBER_CONTEXT;
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        const favoritemember = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        favoritemember.contextValue = globals.DS_MEMBER_CONTEXT;
         const gibberish = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
         gibberish.contextValue = "gibberish";
         const gibberishSubNode = new ZoweDatasetNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
@@ -4076,7 +4255,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        await extension.submitMember(member);
+        await dsActions.submitMember(member);
         expect(submitJob.mock.calls.length).toBe(1);
         expect(submitJob.mock.calls[0][1]).toEqual("pds(member)");
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -4087,7 +4266,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        await extension.submitMember(file);
+        await dsActions.submitMember(file);
         expect(submitJob.mock.calls.length).toBe(1);
         expect(submitJob.mock.calls[0][1]).toEqual("file");
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -4098,8 +4277,8 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.submitMember(favoritemember);
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.submitMember(favoritemember);
         expect(submitJob.mock.calls.length).toBe(1);
         expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL(pds)");
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -4110,8 +4289,8 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
-        favoriteSubNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.submitMember(favoriteSubNode);
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.submitMember(favoriteSubNode);
         expect(submitJob.mock.calls.length).toBe(1);
         expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL");
         expect(showInformationMessage.mock.calls.length).toBe(1);
@@ -4123,7 +4302,7 @@ describe("Extension Unit Tests", () => {
         submitJob.mockReset();
         submitJob.mockReturnValue(iJob);
         try {
-            await extension.submitMember(gibberishSubNode);
+            await dsActions.submitMember(gibberishSubNode);
         } catch (e) {
             expect(e.message).toEqual("submitMember() called from invalid node.");
         }
@@ -4141,12 +4320,12 @@ describe("Extension Unit Tests", () => {
 
         const originalPreferencePath = "";
         const updatedPreferencePath = "/testing";
-        const defaultPreference = extension.ZOWETEMPFOLDER;
+        const defaultPreference = globals.ZOWETEMPFOLDER;
 
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
-        expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(mkdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(defaultPreference);
         expect(moveSync.mock.calls[0][1]).toBe(path.join(path.sep, "testing", "temp"));
@@ -4164,7 +4343,7 @@ describe("Extension Unit Tests", () => {
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
-        expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(mkdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(1);
         expect(moveSync.mock.calls[0][0]).toBe(path.join(path.sep, "test", "path", "temp"));
         expect(moveSync.mock.calls[0][1]).toBe(path.join(path.sep, "new", "test", "path", "temp"));
@@ -4216,7 +4395,7 @@ describe("Extension Unit Tests", () => {
         extension.moveTempFolder(originalPreferencePath, updatedPreferencePath);
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
-        expect(mkdirSync.mock.calls[0][0]).toBe(extension.ZOWETEMPFOLDER);
+        expect(mkdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
         expect(moveSync.mock.calls.length).toBe(0);
     });
 
@@ -4242,67 +4421,67 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Testing that the add Suffix for datasets works", async () => {
-        extension.defineGlobals("/test/path/");
+        globals.defineGlobals("/test/path/");
         let node = new ZoweDatasetNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl"));
         node = new ZoweDatasetNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm"));
         node = new ZoweDatasetNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl"));
         node = new ZoweDatasetNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli"));
         node = new ZoweDatasetNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli"));
         node = new ZoweDatasetNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh"));
         node = new ZoweDatasetNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx"));
         node = new ZoweDatasetNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml"));
 
         node = new ZoweDatasetNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml"));
         node = new ZoweDatasetNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.TXML"));
         node = new ZoweDatasetNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml"));
         node = new ZoweDatasetNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm"));
         node = new ZoweDatasetNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER"));
         node = new ZoweDatasetNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml"));
         node = new ZoweDatasetNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "XML.AUSER.TEST(member)"));
         node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml"));
         node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm"));
         node = new ZoweDatasetNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy"));
         node = new ZoweDatasetNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc"));
         node = new ZoweDatasetNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        expect(extension.getDocumentFilePath(node.label, node)).toEqual(path.join(path.sep,
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toEqual(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log"));
     });
 
@@ -4319,7 +4498,7 @@ describe("Extension Unit Tests", () => {
                     cdate:"2019/05/08",
                     dev:"3390",
                     dsname:"AUSER.A1557332.A996850.TEST1",
-                    dsntp:extension.DS_PDS_CONTEXT,
+                    dsntp:globals.DS_PDS_CONTEXT,
                     dsorg:"PO",
                     edate:"***None***",
                     extx:"1",
@@ -4349,7 +4528,7 @@ describe("Extension Unit Tests", () => {
             }
         });
         dataSetList.mockReturnValueOnce(testResponse);
-        await extension.showDSAttributes(node, testTree);
+        await dsActions.showDSAttributes(node, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
         expect(dataSetList.mock.calls[0][0]).toBe(node.getSession());
         expect(dataSetList.mock.calls[0][1]).toBe(node.label);
@@ -4359,23 +4538,23 @@ describe("Extension Unit Tests", () => {
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
         const node1 = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node1.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.showDSAttributes(node1, testTree);
+        node1.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.showDSAttributes(node1, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
 
         // mock a classic data set favorite
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(testResponse);
         const node2 = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node2.contextValue = extension.DS_DS_CONTEXT + extension.FAV_SUFFIX;
-        await extension.showDSAttributes(node2, testTree);
+        node2.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.showDSAttributes(node2, testTree);
         expect(dataSetList.mock.calls.length).toBe(1);
 
         // mock a response and no attributes
         showErrorMessage.mockReset();
         dataSetList.mockReset();
         dataSetList.mockReturnValueOnce(emptyResponse);
-        await expect(extension.showDSAttributes(node1, testTree)).rejects.toEqual(
+        await expect(dsActions.showDSAttributes(node1, testTree)).rejects.toEqual(
             Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual(
@@ -4387,9 +4566,9 @@ describe("Extension Unit Tests", () => {
             renameDataSet.mockReset();
 
             const node = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = extension.DS_SESSION_CONTEXT;
+            node.contextValue = globals.DS_SESSION_CONTEXT;
 
-            await extension.copyDataSet(node);
+            await dsActions.copyDataSet(node);
             expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
         });
         it("Should copy the label of a favourited node to the clipboard", async () => {
@@ -4398,7 +4577,7 @@ describe("Extension Unit Tests", () => {
             const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             node.contextValue = "ds_fav";
 
-            await extension.copyDataSet(node);
+            await dsActions.copyDataSet(node);
             expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
         });
         it("Should copy the label of a member to the clipboard", async () => {
@@ -4406,9 +4585,9 @@ describe("Extension Unit Tests", () => {
 
             const parent = new ZoweDatasetNode("HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-            parent.contextValue = extension.DS_PDS_CONTEXT;
-            child.contextValue = extension.DS_MEMBER_CONTEXT;
-            await extension.copyDataSet(child);
+            parent.contextValue = globals.DS_PDS_CONTEXT;
+            child.contextValue = globals.DS_MEMBER_CONTEXT;
+            await dsActions.copyDataSet(child);
             expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
         });
         it("Should copy the label of a favourited member to the clipboard", async () => {
@@ -4416,9 +4595,9 @@ describe("Extension Unit Tests", () => {
 
             const parent = new ZoweDatasetNode("[sestest]: HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
             const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-            parent.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
-            child.contextValue = extension.DS_MEMBER_CONTEXT;
-            await extension.copyDataSet(child);
+            parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+            child.contextValue = globals.DS_MEMBER_CONTEXT;
+            await dsActions.copyDataSet(child);
             expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
         });
     });
@@ -4427,10 +4606,10 @@ describe("Extension Unit Tests", () => {
             const copySpy = jest.spyOn(mvsApi, "copyDataSetMember");
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode,
                                              null, undefined, undefined, profileOne);
-            node.contextValue = extension.DS_SESSION_CONTEXT;
+            node.contextValue = globals.DS_SESSION_CONTEXT;
 
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: profileOne.name }));
-            await extension.pasteDataSet(node, testTree);
+            await dsActions.pasteDataSet(node, testTree);
 
             expect(copySpy.mock.calls.length).toBe(1);
             expect(copySpy).toHaveBeenLastCalledWith(
@@ -4442,10 +4621,10 @@ describe("Extension Unit Tests", () => {
             let error;
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode,
                                             null, undefined, undefined, profileOne);
-            node.contextValue = extension.DS_SESSION_CONTEXT;
+            node.contextValue = globals.DS_SESSION_CONTEXT;
             clipboard.writeText("INVALID");
             try {
-                await extension.pasteDataSet(node, testTree);
+                await dsActions.pasteDataSet(node, testTree);
             } catch(err) {
                 error = err;
             }
@@ -4461,10 +4640,10 @@ describe("Extension Unit Tests", () => {
             });
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode,
                                              null, undefined, undefined, profileOne);
-            node.contextValue = extension.DS_PDS_CONTEXT;
+            node.contextValue = globals.DS_PDS_CONTEXT;
 
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await extension.pasteDataSet(node, testTree);
+            await dsActions.pasteDataSet(node, testTree);
 
             expect(copyDataSet.mock.calls.length).toBe(0);
         });
@@ -4476,11 +4655,11 @@ describe("Extension Unit Tests", () => {
 
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None,
                                              sessNode, null, undefined, undefined, profileOne);
-            node.contextValue = extension.DS_PDS_CONTEXT;
+            node.contextValue = globals.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
 
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await extension.pasteDataSet(node, testTree);
+            await dsActions.pasteDataSet(node, testTree);
 
             expect(spy2.mock.calls.length).toBe(1);
             expect(findFavoritedNode).toHaveBeenLastCalledWith(
@@ -4505,13 +4684,13 @@ describe("Extension Unit Tests", () => {
             let error;
             jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = extension.DS_PDS_CONTEXT;
+            node.contextValue = globals.DS_PDS_CONTEXT;
             showInputBox.mockResolvedValueOnce("mem1");
 
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
             try {
-                await extension.pasteDataSet(node, testTree);
+                await dsActions.pasteDataSet(node, testTree);
             } catch(err) {
                 error = err;
             }
@@ -4537,14 +4716,14 @@ describe("Extension Unit Tests", () => {
             });
             const favoritedNode = new ZoweDatasetNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null,
                 undefined, undefined, profileOne);
-            favoritedNode.contextValue = extension.DS_PDS_CONTEXT + extension.FAV_SUFFIX;
+            favoritedNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
             const nonFavoritedNode = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null,
                 undefined, undefined, profileOne);
             findNonFavoritedNode.mockImplementationOnce(() => nonFavoritedNode);
 
             showInputBox.mockResolvedValueOnce("mem1");
             clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await extension.pasteDataSet(favoritedNode, testTree);
+            await dsActions.pasteDataSet(favoritedNode, testTree);
 
             expect(copySpy.mock.calls.length).toBe(1);
             expect(findNonFavoritedNode).toHaveBeenLastCalledWith(
@@ -4563,9 +4742,9 @@ describe("Extension Unit Tests", () => {
         it("should call HMigrate.hMigrateDataSet on a sequential data set", async () => {
             const migrateSpy = jest.spyOn(mvsApi, "hMigrateDataSet");
             const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = extension.DS_DS_CONTEXT;
+            node.contextValue = globals.DS_DS_CONTEXT;
 
-            await extension.hMigrateDataSet(node);
+            await dsActions.hMigrateDataSet(node);
 
             expect(migrateSpy.mock.calls.length).toBe(1);
             expect(showInformationMessage).toHaveBeenCalled();
