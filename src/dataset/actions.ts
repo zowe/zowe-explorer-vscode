@@ -254,36 +254,38 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 
         // get name of data set
         let name = await vscode.window.showInputBox({placeHolder: localize("dataset.name", "Name of Data Set")});
-        name = name.toUpperCase();
+        if (name) {
+            name = name.trim().toUpperCase();
 
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
-            node.dirty = true;
-
-            const theFilter = await datasetProvider.createFilterString(name, node);
-            datasetProvider.addHistory(theFilter);
-            datasetProvider.refresh();
-
-            // Show newly-created data set in expanded tree view
-            if (name) {
-                node.label = `${node.label} `;
-                node.label = node.label.trim();
-                node.tooltip = node.pattern = theFilter.toUpperCase();
-                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                const icon = getIconByNode(node);
-                if (icon) {
-                    node.iconPath = icon.path;
-                }
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
                 node.dirty = true;
 
-                const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-                datasetProvider.getTreeView().reveal(newNode, {select: true});
+                const theFilter = await datasetProvider.createFilterString(name, node);
+                datasetProvider.addHistory(theFilter);
+                datasetProvider.refresh();
+
+                // Show newly-created data set in expanded tree view
+                if (name) {
+                    node.label = `${node.label} `;
+                    node.label = node.label.trim();
+                    node.tooltip = node.pattern = theFilter.toUpperCase();
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                    const icon = getIconByNode(node);
+                    if (icon) {
+                        node.iconPath = icon.path;
+                    }
+                    node.dirty = true;
+
+                    const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
+                    datasetProvider.getTreeView().reveal(newNode, { select: true });
+                }
+            } catch (err) {
+                globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+                errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
+                    err.message);
+                throw (err);
             }
-        } catch (err) {
-            globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
-                err.message);
-            throw (err);
         }
     }
 }
