@@ -17,7 +17,7 @@ import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 
-export function generateImperativeSession() {
+export function generateISession() {
     return new imperative.Session({
         user: "fake",
         password: "fake",
@@ -27,7 +27,7 @@ export function generateImperativeSession() {
     });
 }
 
-export function generateImperativeSessionWithoutCredentials() {
+export function generateISessionWithoutCredentials() {
     return new imperative.Session({
         user: "",
         password: "",
@@ -37,7 +37,7 @@ export function generateImperativeSessionWithoutCredentials() {
     });
 }
 
-export function generateImperativeProfile(): imperative.IProfileLoaded {
+export function generateIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {

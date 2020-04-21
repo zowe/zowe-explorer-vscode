@@ -13,9 +13,9 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Job } from "../../../src/job/ZoweJobNode";
 import {
-    generateImperativeSession,
-    generateImperativeProfile,
-    generateTreeView, generateImperativeSessionWithoutCredentials, generateTextDocument, generateInstanceOfProfile
+    generateISession,
+    generateIProfile,
+    generateTreeView, generateISessionWithoutCredentials, generateTextDocument, generateInstanceOfProfile
 } from "../../../__mocks__/generators/shared";
 import { generateIJobObject, generateJobsTree } from "../../../__mocks__/generators/jobs";
 import { generateJesApi, bindJesApi } from "../../../__mocks__/generators/api";
@@ -53,10 +53,10 @@ const mocked = (fn: any): jest.Mock => fn;
 
 describe("Job state operations", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSession();
+        const session = generateISession();
         const treeView = generateTreeView();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
 
         return {
             session,
@@ -67,11 +67,12 @@ describe("Job state operations", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showInformationMessage).mockReset();
         mocked(vscode.window.showInputBox).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking that the prefix is set correctly on the job", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -104,9 +105,9 @@ describe("Job state operations", () => {
 
 describe("Job Node Stop Command", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSession();
+        const session = generateISession();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
 
         return {
             session,
@@ -115,12 +116,13 @@ describe("Job Node Stop Command", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showInformationMessage).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
         mocked(zowe.IssueCommand.issueSimple).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking that stop command of Job Node is executed properly", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -143,9 +145,9 @@ describe("Job Node Stop Command", () => {
 
 describe("Job Node Modify Command", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSession();
+        const session = generateISession();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
 
         return {
             session,
@@ -154,13 +156,14 @@ describe("Job Node Modify Command", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showInformationMessage).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
         mocked(vscode.window.showInputBox).mockReset();
         mocked(zowe.IssueCommand.issueSimple).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking modification of Job Node", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -185,9 +188,9 @@ describe("Job Node Modify Command", () => {
 
 describe("Job Spool Download Command", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSession();
+        const session = generateISession();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
         const jesApi = generateJesApi(imperativeProfile);
         bindJesApi(jesApi);
 
@@ -199,11 +202,12 @@ describe("Job Spool Download Command", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showOpenDialog).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking download of Job Spool", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -234,9 +238,9 @@ describe("Job Spool Download Command", () => {
 
 describe("Job JCL Download Command", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSession();
+        const session = generateISession();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
 
         return {
             session,
@@ -245,14 +249,15 @@ describe("Job JCL Download Command", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showOpenDialog).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
         mocked(vscode.window.showTextDocument).mockReset();
         mocked(vscode.workspace.openTextDocument).mockReset();
         mocked(zowe.GetJobs.getJclForJob).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking download of Job JCL", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -272,10 +277,10 @@ describe("Job JCL Download Command", () => {
 
 describe("Submit JCL from editor", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSessionWithoutCredentials();
+        const session = generateISessionWithoutCredentials();
         const treeView = generateTreeView();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
         const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
         const textDocument = generateTextDocument(datasetSessionNode, "HLQ.TEST.AFILE(mem)");
         const profileInstance = generateInstanceOfProfile(imperativeProfile);
@@ -295,7 +300,7 @@ describe("Submit JCL from editor", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showInformationMessage).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
@@ -304,7 +309,8 @@ describe("Submit JCL from editor", () => {
         activeTextEditorDocument.mockReset();
         mocked(Profiles.getInstance).mockReset();
         mocked(globals.LOG.error).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking submit of active text editor content as JCL", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -325,9 +331,6 @@ describe("Submit JCL from editor", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls.length).toBe(1);
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
-
-        // Reset for spied properties
-        submitJclSpy.mockReset();
     });
 
     it("Checking failed attempt to submit of active text editor content as JCL", async () => {
@@ -350,11 +353,12 @@ describe("Submit JCL from editor", () => {
         expect(mocked(globals.LOG.error)).toBeCalled();
     });
 });
+
 describe("Submit JCL from Dataset", () => {
     function generateEnvironmentalMocks() {
-        const session = generateImperativeSessionWithoutCredentials();
+        const session = generateISessionWithoutCredentials();
         const iJob = generateIJobObject();
-        const imperativeProfile = generateImperativeProfile();
+        const imperativeProfile = generateIProfile();
         const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
         const profileInstance = generateInstanceOfProfile(imperativeProfile);
         const jesApi = generateJesApi(imperativeProfile);
@@ -370,12 +374,13 @@ describe("Submit JCL from Dataset", () => {
         };
     }
 
-    beforeEach(() => {
+    /* beforeEach(() => {
         // Reset global module mocks
         mocked(vscode.window.showInformationMessage).mockReset();
         mocked(vscode.window.showErrorMessage).mockReset();
         mocked(Profiles.getInstance).mockReset();
-    });
+    }); */
+    afterEach(() => jest.clearAllMocks());
 
     it("Checking Submit Job for PDS Member content", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -393,9 +398,6 @@ describe("Submit JCL from Dataset", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
-
-        // Reset for spied properties
-        submitJobSpy.mockReset();
     });
     it("Checking Submit Job for PS Dataset content", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -410,9 +412,6 @@ describe("Submit JCL from Dataset", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
-
-        // Reset for spied properties
-        submitJobSpy.mockReset();
     });
     it("Checking Submit Job for Favourite PDS Member content", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -434,9 +433,6 @@ describe("Submit JCL from Dataset", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
-
-        // Reset for spied properties
-        submitJobSpy.mockReset();
     });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -456,9 +452,6 @@ describe("Submit JCL from Dataset", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
-
-        // Reset for spied properties
-        submitJobSpy.mockReset();
     });
     it("Checking Submit Job for unsupported Dataset content", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -478,8 +471,5 @@ describe("Submit JCL from Dataset", () => {
         expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();
         expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
         expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
-
-        // Reset for spied properties
-        submitJobSpy.mockReset();
     });
 });
