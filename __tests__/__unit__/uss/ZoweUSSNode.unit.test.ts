@@ -97,7 +97,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             return callback();
         });
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -134,7 +134,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -189,7 +189,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         });
     });
 
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -247,7 +247,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -259,7 +259,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -273,7 +273,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -316,7 +316,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
             return callback();
         });
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -362,7 +362,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         childNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, "root", false, profileOne.name, undefined);
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
@@ -499,7 +499,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, profileOne.name, "123");
         dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, generateSessionNoCredentials(), null);
     });
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
