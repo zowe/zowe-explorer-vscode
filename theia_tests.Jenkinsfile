@@ -26,7 +26,7 @@ node('ibm-jenkins-slave-nvm') {
   pipeline.setup(
     packageName: 'ze-regression-test',
     nodeJsVersion: 'v10.18.1',
-    // FIXME: this line should be removed after fix the audit error	
+    // FIXME: this line should be removed after fix the audit error
     ignoreAuditFailure: true
   )
 
@@ -54,6 +54,10 @@ node('ibm-jenkins-slave-nvm') {
   pipeline.createStage(
     name: "Build vsix as plugin",
     stage: {
+      //Run build
+      sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
+      pipeline.nvmShell "npm run build"
+      
       // Gather details for build archives
       def vscodePackageJson = readJSON file: "package.json"
       def date = new Date()
@@ -80,7 +84,7 @@ node('ibm-jenkins-slave-nvm') {
         unit: 'MINUTES'
     ]
   )
-  
+
   pipeline.createStage(
     name: "Check Firefox",
     stage: {
@@ -114,10 +118,6 @@ node('ibm-jenkins-slave-nvm') {
             }
         }, "Run Mocha Test": {
             stage("Run Mocha Test") {
-              sh "pwd"
-              sh "ls"
-              sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
-              pipeline.nvmShell "npm run build"
               pipeline.nvmShell "npm run test:theia"
             }
         }
