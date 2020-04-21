@@ -9,10 +9,11 @@
 *                                                                                 *
 */
 
-import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as path from "path";
+import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
@@ -101,25 +102,6 @@ export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
         refresh: jest.fn()
-    };
-}
-
-export function generateQuickPickItem(): vscode.QuickPickItem {
-    return new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
-}
-
-export function generateQuickPickContent(entered: any, item: vscode.QuickPickItem): any {
-    return {
-        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-        activeItems: [item],
-        ignoreFocusOut: true,
-        items: [item],
-        value: entered,
-        show: jest.fn(),
-        hide: jest.fn(),
-        onDidAccept: jest.fn(),
-        onDidChangeValue: jest.fn(),
-        dispose: jest.fn()
     };
 }
 
