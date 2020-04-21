@@ -10,7 +10,6 @@
 */
 
 import * as imperative from "@zowe/imperative";
-import * as zowe from "@zowe/cli";
 import { ValidProfileEnum } from "../../src/Profiles";
 
 export function generateSession() {
@@ -47,16 +46,6 @@ export function generateProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function generateFileResponse(): zowe.IZosFilesResponse {
-    return {
-        success: true,
-        commandResponse: null,
-        apiResponse: {
-            etag: "123"
-        }
-    };
-};
-
 export function generateTreeView() {
     return {
         reveal: jest.fn(),
@@ -83,5 +72,13 @@ export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{name: profile.name, profile}, {name: profile.name, profile}];
         }),
         refresh: jest.fn()
+    };
+}
+
+export function generateFileResponse(theResponse) {
+    return {
+        success: true,
+        commandResponse: "",
+        apiResponse: theResponse
     };
 }

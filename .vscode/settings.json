@@ -14,5 +14,5 @@
    "typescript.tsc.autoDetect": "off",
    // Make sure people do not accidentally forget to sign
    "git.alwaysSignOff": true,
-   "typescript.tsdk": "node_modules/typescript/lib"
+"typescript.tsdk": "node_modules/typescript/lib"
 }
