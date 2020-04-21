@@ -223,6 +223,7 @@ describe("Profile link unit tests part 2. No file for profile", () => {
         mockNamesForType.mockReturnValueOnce(["pro1", "pro2", "pro3"]);
         existsSync.mockReturnValueOnce(false);
         existsSync.mockReturnValueOnce(false);
+        existsSync.mockReturnValueOnce(true);
         writeFileSync.mockReturnValue({});
         showQuickPick.mockReturnValueOnce("ano");
         showQuickPick.mockReturnValueOnce("pro3");
