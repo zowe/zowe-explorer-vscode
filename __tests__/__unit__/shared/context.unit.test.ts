@@ -13,7 +13,7 @@ import { TreeItem } from "vscode";
 import * as contextually from "../../../src/shared/context";
 import * as globals from "../../../src/globals";
 
-describe.only("Context helper tests", () => {
+describe("Context helper tests", () => {
     const INFORMATION_CONTEXT = "information";
     const FAVORITE_CONTEXT = "favorite";
     const DS_FAV_CONTEXT = "ds_fav";
@@ -135,6 +135,13 @@ describe.only("Context helper tests", () => {
             expect(contextually.isFavoritePds(treeItem)).toBe(treeItem.contextValue === PDS_FAV_CONTEXT);
         }
     });
+
+    it("Test Non Favorite PDS", async () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            expect(contextually.isPdsNotFav(treeItem)).toBe(treeItem.contextValue === DS_PDS_CONTEXT);
+        }
+    });
     it("Test Favorite text or Binary", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
@@ -210,13 +217,11 @@ describe.only("Context helper tests", () => {
             treeItem.contextValue = ctx;
             switch (ctx) {
                 case JOBS_SESSION_CONTEXT:
-                case JOBS_SESSION_CONTEXT_FAV:
                     expect(contextually.isSession(treeItem)).toBe(true);
                     expect(contextually.isSessionNotFav(treeItem)).toBe(true);
                     expect(contextually.isUssSession(treeItem)).toBe(false);
                     expect(contextually.isDsSession(treeItem)).toBe(false);
                     break;
-                case USS_SESSION_CONTEXT_FAV:
                 case USS_SESSION_CONTEXT:
                     expect(contextually.isSession(treeItem)).toBe(true);
                     expect(contextually.isSessionNotFav(treeItem)).toBe(true);
@@ -224,8 +229,24 @@ describe.only("Context helper tests", () => {
                     expect(contextually.isDsSession(treeItem)).toBe(false);
                     break;
                 case DS_SESSION_CONTEXT:
-                case DS_SESSION_CONTEXT_FAV:
                     expect(contextually.isSessionNotFav(treeItem)).toBe(true);
+                    expect(contextually.isDsSession(treeItem)).toBe(true);
+                    expect(contextually.isUssSession(treeItem)).toBe(false);
+                    break;
+                case JOBS_SESSION_CONTEXT_FAV:
+                    expect(contextually.isSession(treeItem)).toBe(true);
+                    expect(contextually.isSessionNotFav(treeItem)).toBe(false);
+                    expect(contextually.isUssSession(treeItem)).toBe(false);
+                    expect(contextually.isDsSession(treeItem)).toBe(false);
+                    break;
+                case USS_SESSION_CONTEXT_FAV:
+                    expect(contextually.isSession(treeItem)).toBe(true);
+                    expect(contextually.isSessionNotFav(treeItem)).toBe(false);
+                    expect(contextually.isUssSession(treeItem)).toBe(true);
+                    expect(contextually.isDsSession(treeItem)).toBe(false);
+                    break;
+                case DS_SESSION_CONTEXT_FAV:
+                    expect(contextually.isSessionNotFav(treeItem)).toBe(false);
                     expect(contextually.isDsSession(treeItem)).toBe(true);
                     expect(contextually.isUssSession(treeItem)).toBe(false);
                     break;
