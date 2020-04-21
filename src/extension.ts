@@ -308,7 +308,7 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
     globals.defineGlobals(currentTempPath);
 
     if (previousTempPath === "") {
-        previousTempPath = path.join(__dirname, "..", "..", "resources");
+        previousTempPath = path.join(__dirname, "..", "resources");
     }
 
     // Make certain that "temp" folder is cleared
