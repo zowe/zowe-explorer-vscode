@@ -24,7 +24,6 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 const LINKS_FOLDER = "profile_links";
 const FILE_SUFFIX = ".yaml";
-const FILE_DELIM: string = "/";
 
 export async function getLinkedProfile(node: IZoweTreeNode, type: string, logger?: Logger) {
     try {
@@ -84,7 +83,7 @@ async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
     if (aProfile) {
         const linkRootDirectory = path.join(getZoweDir(), LINKS_FOLDER);
         if (!fs.existsSync(linkRootDirectory)) {
-            createDirsSync(linkRootDirectory);
+            fs.mkdirSync(linkRootDirectory);
         }
         const file = path.join(linkRootDirectory, aProfile.type, aProfile.name + FILE_SUFFIX);
         if (fs.existsSync(file)) {
@@ -106,14 +105,23 @@ async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
 
 async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string, secondaryName: string) {
     const secondaryArray: { [secondaryType: string]: string } = {};
+    let content =  {
+        secondaries: secondaryArray,
+    };
     if (primary) {
-        const targetfile = path.join(path.join(getZoweDir(), LINKS_FOLDER), primary.type, primary.name + FILE_SUFFIX);
+        let targetfile = path.join(getZoweDir(), LINKS_FOLDER);
         if (!fs.existsSync(targetfile)) {
-            createDirsSync(targetfile);
+            fs.mkdirSync(targetfile);
         }
-        const input = fs.readFileSync(targetfile);
-        let content = readYaml.safeLoad(input);
-        if (!input || !content || !(content instanceof Object)) {
+        targetfile = path.join(targetfile, primary.type);
+        if (!fs.existsSync(targetfile)) {
+            fs.mkdirSync(targetfile);
+        }
+        targetfile = path.join(targetfile, primary.name + FILE_SUFFIX);
+        if (fs.existsSync(targetfile)) {  
+            content = readYaml.safeLoad(fs.readFileSync(targetfile));
+        }
+        if (!content || !(content instanceof Object)) {
             content = {
                 secondaries: secondaryArray,
             };
@@ -122,22 +130,5 @@ async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string,
         }
         content.secondaries[`${secondaryType}`] = secondaryName;
         fs.writeFileSync(targetfile, writeYaml.stringify(content));
-    }
-}
-
-/**
- * Create all needed directories for an input directory in the form of:
- * first/second/third where first will contain director second and second
- * will contain directory third
- * @static
- * @param {string} dir - directory to create all sub directories for
- * origin in IO
- */
-function createDirsSync(dir: string) {
-    const dirs = path.resolve(path.dirname(dir)).replace(/\\/g, FILE_DELIM).split(FILE_DELIM);
-    let createDir: string = "";
-    for (const crDir of dirs) {
-        createDir += (crDir + FILE_DELIM);
-        fs.mkdirSync(createDir);
     }
 }
