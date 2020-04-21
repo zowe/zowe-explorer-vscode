@@ -115,10 +115,8 @@ export class Profiles {
         }
     }
 
-    public validateAndParseUrl(newUrl: string): IUrlValidator {
+    public parseUrl(newUrl: string): IUrlValidator {
         let url: URL;
-        // const validProtocols: string[] = ["https","http"];
-        const DEFAULT_HTTPS_PORT: number = 443;
 
         const validationResult: IUrlValidator = {
             valid: false,
@@ -133,38 +131,25 @@ export class Profiles {
             return validationResult;
         }
 
-        // overkill with only one valid protocol, but we may expand profile types and protocols in the future?
-        // if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
-        //     return validationResult;
-        // }
-
-        // if port is empty, set https defaults
-        if (!url.port.trim()) {
-            validationResult.port = DEFAULT_HTTPS_PORT;
-        }
-        else {
-            validationResult.port = Number(url.port);
-        }
-
-        validationResult.protocol = url.protocol.replace(":","");
+        validationResult.protocol = url.protocol;
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
     }
 
-    public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve) => {
-            urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
-            urlInputBox.onDidAccept(() => {
-                if (this.validateAndParseUrl(urlInputBox.value).valid) {
-                    resolve(urlInputBox.value);
-                } else {
-                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosURL",
-                        "Please enter a valid URL in the format https://url:port.");
-                }
-            });
-        });
-    }
+    // public async getUrl(urlInputBox): Promise<string | undefined> {
+    //     return new Promise<string | undefined> ((resolve) => {
+    //         urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+    //         urlInputBox.onDidAccept(() => {
+    //             if (this.parseUrl(urlInputBox.value).valid) {
+    //                 resolve(urlInputBox.value);
+    //             } else {
+    //                 urlInputBox.validationMessage = localize("createNewConnection.invalidzosURL",
+    //                     "Please enter a valid URL in the format https://url:port.");
+    //             }
+    //         });
+    //     });
+    // }
 
     public async getProfileType(): Promise<string> {
         let profileType: string;
@@ -196,6 +181,23 @@ export class Profiles {
         return schema;
     }
 
+    public async optionsValue(value: string, schema: {}): Promise<vscode.InputBoxOptions> {
+        let options: vscode.InputBoxOptions;
+        const description: string = schema[value].optionDefinition.description.toString();
+        if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+            options = {
+                prompt: description,
+                value: schema[value].optionDefinition.defaultValue
+            };
+        } else {
+            options = {
+                placeHolder: description,
+                prompt: description
+            };
+        }
+        return options;
+    }
+
     public async createNewConnection(profileName: string): Promise<string | undefined> {
         let profileType: string;
         let userName: string;
@@ -222,10 +224,10 @@ export class Profiles {
                     "Enter a z/OS Host in the format 'host.com'."),
                 };
                 let host = await vscode.window.showInputBox(options);
-                if (host.includes("/") || host.includes(":")) {
-                    const result = this.validateAndParseUrl(host);
-                    host = result.host;
-                }
+                // if (host.includes("/") || host.includes(":")) {
+                const result = this.parseUrl(host);
+                host = result.host;
+                // }
                 schemaValues[value] = host;
                 break;
             case "port":
@@ -312,17 +314,7 @@ export class Profiles {
                     const description: string = schema[value].optionDefinition.description.toString();
                     switch (schema[value].type) {
                         case "string":
-                            if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
-                                options = {
-                                    prompt: description,
-                                    value: schema[value].optionDefinition.defaultValue
-                                };
-                            } else {
-                                options = {
-                                    placeHolder: description,
-                                    prompt: description,
-                                };
-                            }
+                            options = await this.optionsValue(value, schema);
                             const profValue = await vscode.window.showInputBox(options);
                             schemaValues[value] = profValue;
                             break;
@@ -345,17 +337,7 @@ export class Profiles {
                             schemaValues[value] = isTrue;
                             break;
                         case "number":
-                            if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
-                                options = {
-                                    prompt: description,
-                                    value: schema[value].optionDefinition.defaultValue
-                                };
-                            } else {
-                                options = {
-                                    placeHolder: description,
-                                    prompt: description
-                                };
-                            }
+                            options = await this.optionsValue(value, schema);
                             const enteredValue = await vscode.window.showInputBox(options);
                             const numValue = Number(enteredValue);
                             if (Number.isNaN(numValue) === false) {
@@ -366,17 +348,7 @@ export class Profiles {
                             }
                             break;
                         default:
-                            if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
-                                options = {
-                                    prompt: description,
-                                    value: schema[value].optionDefinition.defaultValue
-                                };
-                            } else {
-                                options = {
-                                    placeHolder: description,
-                                    prompt: description
-                                };
-                            }
+                            options = await this.optionsValue(value, schema);
                             const defaultValue = await vscode.window.showInputBox(options);
                             switch (defaultValue){
                             case "true":
