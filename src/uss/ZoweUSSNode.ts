@@ -85,7 +85,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (mParent && mParent.contextValue === globals.FAVORITE_CONTEXT) {
+        if (mParent && contextually.isFavoriteContext(mParent)) {
             this.profileName = "[" + mProfileName + "]: ";
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
@@ -128,9 +128,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
-        if ((!this.fullPath && contextually.isSession(this)) ||
-            (this.contextValue === globals.DS_TEXT_FILE_CONTEXT || // TODO this sequence makes no sense why text file or binary when a favorite?.
-                this.contextValue === globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX)) {
+        if ((!this.fullPath && contextually.isSession(this)) || contextually.isDocument(this)) {
             return [];
         }
 
@@ -314,8 +312,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            const isRecursive = this.contextValue === globals.USS_DIR_CONTEXT ? true : false;
-            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(this.fullPath, isRecursive);
+            await ZoweExplorerApiRegister.getUssApi(this.profile).delete(this.fullPath, contextually.isUssDirectory(this));
             this.getParent().dirty = true;
             try {
                 if (fs.existsSync(filePath)) {
