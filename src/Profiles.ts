@@ -137,20 +137,6 @@ export class Profiles {
         return validationResult;
     }
 
-    // public async getUrl(urlInputBox): Promise<string | undefined> {
-    //     return new Promise<string | undefined> ((resolve) => {
-    //         urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
-    //         urlInputBox.onDidAccept(() => {
-    //             if (this.parseUrl(urlInputBox.value).valid) {
-    //                 resolve(urlInputBox.value);
-    //             } else {
-    //                 urlInputBox.validationMessage = localize("createNewConnection.invalidzosURL",
-    //                     "Please enter a valid URL in the format https://url:port.");
-    //             }
-    //         });
-    //     });
-    // }
-
     public async getProfileType(): Promise<string> {
         let profileType: string;
         const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
@@ -224,10 +210,19 @@ export class Profiles {
                     "Enter a z/OS Host in the format 'host.com'."),
                 };
                 let host = await vscode.window.showInputBox(options);
-                // if (host.includes("/") || host.includes(":")) {
-                const result = this.parseUrl(host);
-                host = result.host;
-                // }
+                if (!host) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
+                        "No valid value for z/OSMF URL. Operation Cancelled"));
+                    return undefined;
+                }
+                try {
+                    if (host.includes("/") || host.includes(":")) {
+                        const result = this.parseUrl(host);
+                        host = result.host;
+                    }
+                }catch(error){
+                    vscode.window.showErrorMessage("Operation Cancelled");
+                }
                 schemaValues[value] = host;
                 break;
             case "port":
@@ -243,6 +238,10 @@ export class Profiles {
                     };
                 }
                 port = Number(await vscode.window.showInputBox(options));
+                if (Number.isNaN(port)) {
+                    vscode.window.showErrorMessage("Operation Cancelled");
+                    break;
+                }
                 if (port === 0 && schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
                     schemaValues[value] = Number(schema[value].optionDefinition.defaultValue.toString());
                 } else {
@@ -301,32 +300,22 @@ export class Profiles {
                 schemaValues[value] = rejectUnauthorize;
                 break;
             default:
-                // let isRequired: boolean;
-                // const requiredField: boolean = schema[value].optionDefinition.hasOwnProperty("required");
-                // tslint:disable-next-line:no-console
-                // console.log(requiredField);
-                // if (requiredField) {
-                //     isRequired = Boolean(schema[value].optionDefinition.required.toString());
-                // }
-                // tslint:disable-next-line:no-console
-                // console.log(isRequired);
-                // if (isRequired) {
-                    const description: string = schema[value].optionDefinition.description.toString();
-                    switch (schema[value].type) {
-                        case "string":
-                            options = await this.optionsValue(value, schema);
-                            const profValue = await vscode.window.showInputBox(options);
-                            schemaValues[value] = profValue;
-                            break;
-                        case "boolean":
-                            const quickPickBooleanOptions: vscode.QuickPickOptions = {
-                                placeHolder: description,
-                                ignoreFocusOut: true,
-                                canPickMany: false
-                            };
-                            const selectBoolean = ["True", "False"];
-                            const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
-                            if (chosenValue === selectBoolean[0]) {
+                const description: string = schema[value].optionDefinition.description.toString();
+                switch (schema[value].type) {
+                    case "string":
+                        options = await this.optionsValue(value, schema);
+                        const profValue = await vscode.window.showInputBox(options);
+                        schemaValues[value] = profValue;
+                        break;
+                    case "boolean":
+                        const quickPickBooleanOptions: vscode.QuickPickOptions = {
+                            placeHolder: description,
+                            ignoreFocusOut: true,
+                            canPickMany: false
+                        };
+                        const selectBoolean = ["True", "False"];
+                        const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
+                        if (chosenValue === selectBoolean[0]) {
                                 isTrue = true;
                             } else if (chosenValue === selectBoolean[1]) {
                                 isTrue = false;
@@ -334,23 +323,23 @@ export class Profiles {
                                 vscode.window.showInformationMessage(localize("createNewConnection","Operation Cancelled"));
                                 return undefined;
                             }
-                            schemaValues[value] = isTrue;
-                            break;
-                        case "number":
-                            options = await this.optionsValue(value, schema);
-                            const enteredValue = await vscode.window.showInputBox(options);
-                            const numValue = Number(enteredValue);
-                            if (Number.isNaN(numValue) === false) {
+                        schemaValues[value] = isTrue;
+                        break;
+                    case "number":
+                        options = await this.optionsValue(value, schema);
+                        const enteredValue = await vscode.window.showInputBox(options);
+                        const numValue = Number(enteredValue);
+                        if (Number.isNaN(numValue) === false) {
                             schemaValues[value] = Number(enteredValue);
                             } else {
                                 // default value
                                 schemaValues[value] = null;
                             }
-                            break;
-                        default:
-                            options = await this.optionsValue(value, schema);
-                            const defaultValue = await vscode.window.showInputBox(options);
-                            switch (defaultValue){
+                        break;
+                    default:
+                        options = await this.optionsValue(value, schema);
+                        const defaultValue = await vscode.window.showInputBox(options);
+                        switch (defaultValue){
                             case "true":
                                 schemaValues[value] = true;
                                 break;
@@ -361,9 +350,8 @@ export class Profiles {
                                 schemaValues[value] = defaultValue;
                                 break;
                             }
-                            break;
-                    }
-                // }
+                        break;
+                }
             }
         }
 

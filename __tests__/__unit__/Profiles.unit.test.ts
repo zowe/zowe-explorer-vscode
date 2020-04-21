@@ -173,7 +173,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
         });
 
         it("should indicate missing property: username", async () => {
@@ -366,9 +366,14 @@ describe("Profile class unit tests", () => {
             (profiles.loadNamedProfile as any).mockReset();
         });
 
-        it("should reject out of range port url", async () => {
-            const res = await profiles.parseUrl("http://10.142.0.23:9999999999/some/path");
-            expect(res.valid).toBe(false);
+        it("should reject out of port as Not a Number", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("9999999999/some/path"));
+            await profiles.createNewConnection(profileOne.name);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         });
     });
 
