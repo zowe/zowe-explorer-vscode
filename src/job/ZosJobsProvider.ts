@@ -132,7 +132,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (element.owner === "") {
                 return;
             }
-            if (element.contextValue === globals.FAVORITE_CONTEXT) {
+            if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -304,7 +304,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            if (node.contextValue === globals.JOBS_SESSION_CONTEXT) { // This is the profile object context
+            if (contextually.isSessionNotFav(node)) { // This is the profile object context
                 if (hasHistory) { // Check if user has created some history
                     const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
                     if (globals.ISTHEIA) { // Theia doesn't work properly when directly creating a QuickPick
