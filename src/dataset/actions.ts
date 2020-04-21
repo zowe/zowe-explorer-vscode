@@ -897,8 +897,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     }
 
     // If not a member
-    const label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
+    let label = doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1,
         checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length);
+    label = label.toUpperCase();
     globals.LOG.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
     if (!label.includes("(")) {
         try {
