@@ -15,17 +15,20 @@ import * as path from "path";
 import * as os from "os";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, IProfileLoaded } from "@zowe/imperative";
-import * as testConst from "../../resources/testProfileData";
+import { Logger, IProfileLoaded, ICommandProfileTypeConfiguration, CliProfileManager } from "@zowe/imperative";
+import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
 
-describe("Profile class unit tests", () => {
+describe.only("Profile class unit tests", () => {
     // Mocking log.debug
     const log = Logger.getAppLogger();
 
+    const profileTypeThree = "banana";
+
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
+    const profileThree = { name: "profile3", profile: {}, type: profileTypeThree };
     const inputBox: vscode.InputBox = {
         value: "input",
         title: null,
@@ -539,5 +542,29 @@ describe("Profile class unit tests", () => {
         };
         await theProfiles.checkCurrentProfile(testIProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+
+    it("Tests getAllTypes", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const types = theProfiles.getAllTypes();
+        expect(types).toEqual(["zosmf", "banana"]);
+    });
+
+    it("Tests getProfiles", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const profiles = theProfiles.getProfiles();
+        expect(profiles[1].name).toEqual("profile2");
+    });
+
+    it("Tests getNamesForType", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const profiles = theProfiles.getProfiles();
+        expect((await theProfiles.getNamesForType("zosmf"))[1]).toEqual("profile2");
+    });
+
+    it("Tests directLoad", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const profile = await theProfiles.directLoad("zosmf","profile1");
+        expect(profile.name).toEqual("profile1");
     });
 });

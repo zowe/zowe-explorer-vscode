@@ -123,6 +123,7 @@ export class Profiles {
                 this.profilesByType.set(type, profilesForType);
                 this.defaultProfileByType.set(type, (await profileManager.load({ loadDefault: true })));
             }
+            // This is in the loop because I need an instantiated profile manager config
             if (profileManager.configurations && this.allTypes.length === 0) {
                 for (const element of profileManager.configurations) {
                     this.allTypes.push(element.type);
