@@ -13,7 +13,6 @@ import * as readYaml from "js-yaml";
 import * as writeYaml from "yamljs";
 import * as vscode from "vscode";
 import { IProfileLoaded, Logger } from "@zowe/imperative";
-import * as extension from "../extension";
 import * as path from "path";
 import * as fs from "fs";
 import { Profiles } from "../Profiles";
@@ -22,6 +21,10 @@ import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import { getZoweDir } from "../utils";
 import * as nls from "vscode-nls";
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+const LINKS_FOLDER = "profile_links";
+const FILE_SUFFIX = ".yaml";
+const FILE_DELIM: string = "/";
 
 export async function getLinkedProfile(node: IZoweTreeNode, type: string, logger?: Logger) {
     try {
@@ -69,7 +72,7 @@ export async function linkProfileDialog(aProfile: IProfileLoaded) {
                     vscode.window.showInformationMessage(localize("profileLink.associated", "Associated secondary profile {0}:{1} with {2}:{3} primary.",
                                      chosenType,chosenName,aProfile.type,aProfile.name));
                 } catch (err) {
-                    vscode.window.showErrorMessage("Unable to save profile association. " + err.message);
+                    vscode.window.showErrorMessage(localize("profileLink.unableToSave", "Unable to save profile association. ") + err.message);
                 }
             }
         }
@@ -79,11 +82,11 @@ export async function linkProfileDialog(aProfile: IProfileLoaded) {
 async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
     let profile: IProfileLoaded;
     if (aProfile) {
-        const linkRootDirectory = path.join(getZoweDir(), "links");
+        const linkRootDirectory = path.join(getZoweDir(), LINKS_FOLDER);
         if (!fs.existsSync(linkRootDirectory)) {
             createDirsSync(linkRootDirectory);
         }
-        const file = path.join(linkRootDirectory, aProfile.type, aProfile.name + ".yaml");
+        const file = path.join(linkRootDirectory, aProfile.type, aProfile.name + FILE_SUFFIX);
         if (fs.existsSync(file)) {
             const properties = readYaml.safeLoad(fs.readFileSync(file));
             const links = properties.secondaries;
@@ -104,7 +107,7 @@ async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
 async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string, secondaryName: string) {
     const secondaryArray: { [secondaryType: string]: string } = {};
     if (primary) {
-        const targetfile = path.join(path.join(getZoweDir(), "links"), primary.type, primary.name + ".yaml");
+        const targetfile = path.join(path.join(getZoweDir(), LINKS_FOLDER), primary.type, primary.name + FILE_SUFFIX);
         if (!fs.existsSync(targetfile)) {
             createDirsSync(targetfile);
         }
@@ -131,7 +134,6 @@ async function saveLinkedProfile(primary: IProfileLoaded, secondaryType: string,
  * origin in IO
  */
 function createDirsSync(dir: string) {
-    const FILE_DELIM: string = "/";
     const dirs = path.resolve(path.dirname(dir)).replace(/\\/g, FILE_DELIM).split(FILE_DELIM);
     let createDir: string = "";
     for (const crDir of dirs) {
