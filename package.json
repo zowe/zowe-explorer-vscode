@@ -31,7 +31,7 @@
   "activationEvents": [
     "*"
   ],
-  "main": "./out/src/extension",
+  "main": "./dist/extension",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -999,7 +999,7 @@
     "update": "node scripts/stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "watch": "tsc -b --watch --pretty",
+    "watch": "webpack --mode development --vscode-nls --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",

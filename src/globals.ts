@@ -57,7 +57,7 @@ export function defineGlobals(tempPath: string | undefined) {
     // Set temp path & folder paths
     tempPath !== "" && tempPath !== undefined ?
         ZOWETEMPFOLDER = path.join(tempPath, "temp") :
-        ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
+        ZOWETEMPFOLDER = path.join(__dirname, "..", "resources", "temp");
 
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
@@ -69,7 +69,7 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
+    const loggerConfig = require("../log4jsconfig.json");
     loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
     loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
     loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");

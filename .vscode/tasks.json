@@ -15,6 +15,16 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "npm",
+            "script": "build",
+            "group": "build",
+            "presentation": {
+                "panel": "dedicated",
+                "reveal": "never"
+            }, 
+            "problemMatcher":["$tsc"]
         }
     ]
 }
