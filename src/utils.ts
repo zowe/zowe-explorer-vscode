@@ -89,6 +89,7 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 export function getZoweDir(): string {
     ImperativeConfig.instance.loadedConfig = {
         defaultHome: path.join(os.homedir(), ".zowe"),
+        envVariablePrefix: "ZOWE"
     };
     return ImperativeConfig.instance.cliHome;
 }
