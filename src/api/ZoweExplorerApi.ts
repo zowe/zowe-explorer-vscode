@@ -426,12 +426,22 @@ export namespace ZoweExplorerApi {
      *
      */
     export interface IApiExplorerExtender {
-        /*
+        /**
+         * Used by other VS Code Extensions to access the primary profile.
+         *
          * @param primaryNode represents the Tree item that is being used
+         * @return The requested profile
+         *
          */
         getProfile(primaryNode: IZoweTreeNode): IProfileLoaded;
-        /*
+
+        /**
+         * Used by other VS Code Extensions to access an alternative
+         * profile types that can be employed in conjunction with the primary
+         * profile to provide alternative support.
+         *
          * @param primaryNode represents the Tree item that is being used
+         * @return The requested profile
          */
         getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded>;
     }
