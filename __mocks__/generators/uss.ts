@@ -14,38 +14,25 @@ import * as vscode from "vscode";
 import { USS_SESSION_CONTEXT, FAVORITE_CONTEXT, DS_TEXT_FILE_CONTEXT, FAV_SUFFIX } from "../../src/globals";
 
 const mockUSSRefresh = jest.fn();
-const mockAddZoweSession = jest.fn();
-const mockAddRecall = jest.fn();
-const mockRemoveRecall = jest.fn();
-const mockCheckCurrentProfile = jest.fn();
-const mockUSSRefreshElement = jest.fn();
-const mockGetUSSChildren = jest.fn();
-const mockAddFavorite = jest.fn();
-const mockRemoveFavorite = jest.fn();
-const mockInitializeFavorites = jest.fn();
-const mockGetTreeView = jest.fn();
 
 export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView: any): any {
-    const testUSSTree = {
-            mSessionNodes: [],
-            mFavorites: favoriteNodes,
-            addSession: mockAddZoweSession,
-            refresh: mockUSSRefresh,
-            refreshAll: mockUSSRefresh,
-            removeRecall: mockRemoveRecall,
-            addRecall: mockAddRecall,
-            getTreeView: mockGetTreeView,
-            treeView: treeView,
-            checkCurrentProfile: mockCheckCurrentProfile,
-            refreshElement: mockUSSRefreshElement,
-            getChildren: mockGetUSSChildren,
-            addFavorite: mockAddFavorite,
-            removeFavorite: mockRemoveFavorite,
-            initializeUSSFavorites: mockInitializeFavorites
-        };
-    testUSSTree.mSessionNodes = [];
-    sessionNodes.forEach((theNode) => testUSSTree.mSessionNodes.push(theNode));
-    return testUSSTree;
+    return {
+        mSessionNodes: [...sessionNodes],
+        mFavorites: favoriteNodes,
+        addSession: jest.fn(),
+        refresh: mockUSSRefresh,
+        refreshAll: mockUSSRefresh,
+        removeRecall: jest.fn(),
+        addRecall: jest.fn(),
+        getTreeView: jest.fn(),
+        treeView,
+        checkCurrentProfile: jest.fn(),
+        refreshElement: jest.fn(),
+        getChildren: jest.fn(),
+        addFavorite: jest.fn(),
+        removeFavorite: jest.fn(),
+        initializeUSSFavorites: jest.fn()
+    };
 }
 
 export function generateUSSNode(session, profile) {
