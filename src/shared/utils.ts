@@ -224,43 +224,43 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                                       profile?: IProfileLoaded,
                                       binary?: boolean,
                                       returnEtag?: boolean): Promise<void> {
-        // Upload without passing the etag to force upload
-        const uploadOptions: IUploadOptions = {
-            returnEtag: true
-        };
+    // Upload without passing the etag to force upload
+    const uploadOptions: IUploadOptions = {
+        returnEtag: true
+    };
 
-        // setup to handle both cases (dataset & USS)
-        let title: string;
-        if (isZoweDatasetTreeNode(node)) {
-            title = localize("saveFile.response.save.title", "Saving data set...");
-        } else {
-            title = localize("saveUSSFile.response.title", "Saving file...");
-        }
-        if (globals.ISTHEIA) {
-            vscode.window.showWarningMessage(localize("saveFile.error.theiaDetected", "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."));
-        }
-        vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"),
-        localize("saveFile.overwriteConfirmation.yes", "Yes"),
-        localize("saveFile.overwriteConfirmation.no", "No"))
-        .then(async (selection) => {
-            if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-                const uploadResponse = vscode.window.withProgress({
-                    location: vscode.ProgressLocation.Notification,
-                    title
-                }, () => {
-                    if (isZoweDatasetTreeNode(node)) {
-                        return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
-                            remotePath,
-                            uploadOptions);
-                        } else {
-                            return ZoweExplorerApiRegister.getUssApi(profile).putContents(
-                                doc.fileName, remotePath, binary, null, null, returnEtag);
-                            }
-                        });
-                uploadResponse.then((response) => {
-                            if (response.success) {
-                                vscode.window.showInformationMessage(response.commandResponse);
-                                if (node) {
+    // setup to handle both cases (dataset & USS)
+    let title: string;
+    if (isZoweDatasetTreeNode(node)) {
+        title = localize("saveFile.response.save.title", "Saving data set...");
+    } else {
+        title = localize("saveUSSFile.response.title", "Saving file...");
+    }
+    if (globals.ISTHEIA) {
+        vscode.window.showWarningMessage(localize("saveFile.error.theiaDetected", "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."));
+    }
+    vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"),
+    localize("saveFile.overwriteConfirmation.yes", "Yes"),
+    localize("saveFile.overwriteConfirmation.no", "No"))
+    .then(async (selection) => {
+        if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
+            const uploadResponse = vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title
+            }, () => {
+                if (isZoweDatasetTreeNode(node)) {
+                    return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
+                        remotePath,
+                        uploadOptions);
+                } else {
+                    return ZoweExplorerApiRegister.getUssApi(profile).putContents(
+                        doc.fileName, remotePath, binary, null, null, returnEtag);
+                    }
+            });
+            uploadResponse.then((response) => {
+                if (response.success) {
+                    vscode.window.showInformationMessage(response.commandResponse);
+                    if (node) {
                         node.setEtag(response.apiResponse[0].etag);
                     }
                 }
