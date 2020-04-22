@@ -436,6 +436,7 @@ export class Profiles {
                     datasetTree.deleteSession(sessNode);
                 }
             });
+            await datasetTree.refresh();
 
             // Delete from Data Set Favorites
             datasetTree.mFavorites.forEach((ses) => {
@@ -444,6 +445,17 @@ export class Profiles {
                     datasetTree.removeFavorite(ses);
                 }
             });
+            await datasetTree.refresh();
+
+            // Delete from Data Set Recall
+            const recallDs: string[] = datasetTree.getRecall();
+            for (let i = recallDs.length - 1; i >= 0; i--) {
+                const findNode = recallDs[i].substring(1, recallDs[i].indexOf("]")).trim();
+                if (findNode === deleteLabel) {
+                    datasetTree.removeRecall(recallDs[i]);
+                }
+            }
+
             await datasetTree.refresh();
 
             // Delete from USS Tree
@@ -462,12 +474,24 @@ export class Profiles {
             });
             await ussTree.refresh();
 
+            // Delete from USS Recall
+            const recallUSS: string[] = ussTree.getRecall();
+            for (let i = recallUSS.length - 1; i >= 0; i--) {
+                const findNode = recallUSS[i].substring(1, recallUSS[i].indexOf("]")).trim();
+                if (findNode === deleteLabel) {
+                    ussTree.removeRecall(recallUSS[i]);
+                }
+            }
+
+            await ussTree.refresh();
+
             // Delete from Jobs Tree
             jobsProvider.mSessionNodes.forEach((jobNode) => {
                 if (jobNode.getProfileName() === deleteLabel) {
                     jobsProvider.deleteSession(jobNode);
                 }
             });
+            await jobsProvider.refresh();
 
             // Delete from Jobs Favorites
             jobsProvider.mFavorites.forEach((ses) => {

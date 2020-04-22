@@ -132,6 +132,7 @@ export class PersistentFilters {
             return recallItem.includes(name);
         });
         if (index >= 0) { this.mRecall.splice(index, 1); }
+        this.updateRecall();
     }
 
     public async resetHistory() {
