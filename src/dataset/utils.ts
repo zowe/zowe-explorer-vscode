@@ -12,6 +12,7 @@
 import * as globals from "../globals";
 import { IZoweNodeType } from "../api/IZoweTreeNode";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
+import * as contextually from "../shared/context";
 
 // tslint:disable-next-line: no-duplicate-imports
 
@@ -38,7 +39,7 @@ export function getNodeLabels(node: IZoweNodeType) {
 }
 
 export function getDatasetLabel(node: ZoweDatasetNode) {
-    if (node.getParent() && node.getParent().contextValue === globals.FAVORITE_CONTEXT) {
+    if (node.getParent() && contextually.isFavoriteContext(node.getParent())) {
         const profileEnd = "]: ";
         const profileIndex = node.label.indexOf(profileEnd);
         return node.label.substr(profileIndex + profileEnd.length, node.label.length);

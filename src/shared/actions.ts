@@ -17,7 +17,7 @@ import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "../api/IZ
 import { IZoweTree } from "../api/IZoweTree";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
-
+import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -56,7 +56,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     let qpItem: vscode.QuickPickItem;
     for (const item of items) {
         if (item.constructor.name === "ZoweDatasetNode") {
-            if (item.contextValue === globals.DS_MEMBER_CONTEXT) {
+            if (contextually.isDsMember(item)) {
                 qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`, "Data Set Member");
             } else {
                 qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
@@ -125,7 +125,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
                 await datasetProvider.getTreeView().reveal(node, {select: true, focus: true, expand: false});
 
                 // If selected node was SDS, open it in workspace
-                if (node.contextValue === globals.DS_DS_CONTEXT) {
+                if (contextually.isDs(node)) {
                     datasetProvider.addHistory(nodeName);
                     openPS(node, true, datasetProvider);
                 }
