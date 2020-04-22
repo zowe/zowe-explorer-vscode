@@ -1,0 +1,4 @@
+{
+    "zosJobsProvider.option.prompt.createId": "Job Id search",
+    "zosJobsProvider.option.prompt.createOwner": "Owner/Prefix Job Search"
+}
