@@ -10,38 +10,59 @@
 */
 
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as vscode from "vscode";
+import * as globals from "../../src/globals";
+import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
+import { USSTree } from "../../src/__mocks__/USSTree";
+import { getIconByNode } from "../../src/generators/icons";
 
-const mockUSSRefresh = jest.fn();
-const mockAddZoweSession = jest.fn();
-const mockAddRecall = jest.fn();
-const mockRemoveRecall = jest.fn();
-const mockCheckCurrentProfile = jest.fn();
-const mockUSSRefreshElement = jest.fn();
-const mockGetUSSChildren = jest.fn();
-const mockAddFavorite = jest.fn();
-const mockRemoveFavorite = jest.fn();
-const mockInitializeFavorites = jest.fn();
-const mockGetTreeView = jest.fn();
+export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
+    let newTree = new USSTree();
+    newTree.mSessionNodes = [...sessionNodes];
+    newTree.mFavorites = favoriteNodes;
+    newTree.addSession = jest.fn();
+    newTree.refresh = jest.fn();
+    newTree.removeRecall = jest.fn();
+    newTree.addRecall = jest.fn();
+    newTree.checkCurrentProfile = jest.fn();
+    newTree.refreshElement = jest.fn();
+    newTree.getChildren = jest.fn();
+    newTree.addFavorite = jest.fn();
+    newTree.removeFavorite = jest.fn();
+    newTree.searchInLoadedItems = jest.fn();
+    newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
+    newTree.setItem = jest.fn();
+    newTree.addHistory = jest.fn();
+    return newTree;
+}
 
-export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView: any): any {
-    const testUSSTree = {
-            mSessionNodes: [],
-            mFavorites: favoriteNodes,
-            addSession: mockAddZoweSession,
-            refresh: mockUSSRefresh,
-            refreshAll: mockUSSRefresh,
-            removeRecall: mockRemoveRecall,
-            addRecall: mockAddRecall,
-            getTreeView: mockGetTreeView,
-            treeView: treeView,
-            checkCurrentProfile: mockCheckCurrentProfile,
-            refreshElement: mockUSSRefreshElement,
-            getChildren: mockGetUSSChildren,
-            addFavorite: mockAddFavorite,
-            removeFavorite: mockRemoveFavorite,
-            initializeUSSFavorites: mockInitializeFavorites
-        };
-    testUSSTree.mSessionNodes = [];
-    sessionNodes.forEach((theNode) => testUSSTree.mSessionNodes.push(theNode));
-    return testUSSTree;
+export function createUSSNode(session, profile) {
+    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profile.name);
+    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
+    ussNode.fullPath = "/u/myuser";
+    return ussNode;
+}
+
+export function createFavoriteUSSNode(session, profile) {
+    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    mParent.contextValue = globals.FAVORITE_CONTEXT;
+    ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+    ussNodeF.fullPath = "/u/myuser/usstest";
+    ussNodeF.tooltip = "/u/myuser/usstest";
+    return ussNodeF;
+}
+
+export function addSessionNode(theTree, theSession, theProfile) {
+    const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name);
+    theTree.mSessionNodes.push(newSessNode);
+    const sessionIndex = theTree.mSessionNodes.length - 1;
+    theTree.mSessionNodes[sessionIndex].contextValue = globals.USS_SESSION_CONTEXT;
+    theTree.mSessionNodes[sessionIndex].fullPath = "test";
+    const targetIcon = getIconByNode(theTree.mSessionNodes[sessionIndex]);
+    if (targetIcon) {
+        theTree.mSessionNodes[1].iconPath = targetIcon.path;
+    }
+    return theTree;
 }
