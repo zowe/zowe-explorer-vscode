@@ -1861,6 +1861,26 @@ describe("Extension Unit Tests", () => {
             validatePosition: null
         };
 
+        const testDocLowercase: vscode.TextDocument = {
+            fileName: path.join(globals.DS_DIR, "/sestest/hlq.test.lowercase"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
+
         const testResponse = {
             success: true,
             commandResponse: "",
@@ -1958,6 +1978,26 @@ describe("Extension Unit Tests", () => {
         expect(showInformationMessage.mock.calls[0][0]).toBe("success");
         expect(mockSetEtag).toHaveBeenCalledTimes(1);
         expect(mockSetEtag).toHaveBeenCalledWith("123");
+
+        dataSetList.mockReset();
+        pathToDataSet.mockReset();
+        showInformationMessage.mockReset();
+        showErrorMessage.mockReset();
+        concatChildNodes.mockReset();
+        mockSetEtag.mockReset();
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
+        testTree.getChildren.mockReturnValueOnce([sessNode]);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        withProgress.mockResolvedValueOnce(uploadResponse);
+        testResponse.success = true;
+        pathToDataSet.mockResolvedValueOnce(testResponse);
+
+        // Test if saveFile can handle a lowercase fileName
+        await dsActions.saveFile(testDocLowercase, testTree);
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
 
         concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
