@@ -454,12 +454,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             case (contextually.isUssDirectory(this.getParent())):
                 label = this.fullPath;
                 break;
+            case (contextually.isFavoriteContext(this.getParent())):
             case (contextually.isUssSession(this.getParent())):
                 label = this.label;
                 break;
             default:
                 vscode.window.showErrorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
-                throw Error(localize("refreshUSS.error.invalidNode", "refreshPS() called from invalid node."));
+                throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
         }
         try {
             const ussDocumentFilePath = this.getUSSDocumentFilePath();
