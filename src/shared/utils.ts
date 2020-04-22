@@ -236,8 +236,9 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
         } else {
             title = localize("saveUSSFile.response.title", "Saving file...");
         }
-
-        vscode.window.showWarningMessage(localize("saveFile.error.theiaDetected", "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."));
+        if (globals.ISTHEIA) {
+            vscode.window.showWarningMessage(localize("saveFile.error.theiaDetected", "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."));
+        }
         vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"),
         localize("saveFile.overwriteConfirmation.yes", "Yes"),
         localize("saveFile.overwriteConfirmation.no", "No"))
@@ -273,14 +274,14 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
 
 // Type guarding for current IZoweNodeType.
 // Makes it possible to have multiple types in a function signature, but still be able to use type specific code inside the function definition
-function isZoweDatasetTreeNode(node: IZoweNodeType): node is IZoweDatasetTreeNode {
+export function isZoweDatasetTreeNode(node: IZoweNodeType): node is IZoweDatasetTreeNode {
     return (node as IZoweDatasetTreeNode).pattern !== undefined;
 }
 
-function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweUSSTreeNode {
-    return (node as IZoweUSSTreeNode).shortLabel !== undefined;
+export function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweUSSTreeNode {
+    return (node as IZoweUSSTreeNode).openUSS !== undefined;
 }
 
-function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
+export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
     return (node as IZoweJobTreeNode).job !== undefined;
 }
