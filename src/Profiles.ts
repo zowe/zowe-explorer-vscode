@@ -184,6 +184,20 @@ export class Profiles {
         return options;
     }
 
+    public async getUrl(urlInputBox): Promise<string | undefined> {
+        return new Promise<string | undefined> ((resolve) => {
+            urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+            urlInputBox.onDidAccept(() => {
+                if (this.parseUrl(urlInputBox.value).valid) {
+                    resolve(urlInputBox.value);
+                } else {
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
+                        "Please enter a valid URL in the format https://url:port.");
+                }
+            });
+        });
+    }
+
     public async createNewConnection(profileName: string): Promise<string | undefined> {
         let profileType: string;
         let userName: string;
@@ -212,7 +226,7 @@ export class Profiles {
                 let host = await vscode.window.showInputBox(options);
                 if (!host) {
                     vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                        "No valid value for z/OSMF URL. Operation Cancelled"));
+                        "No valid value for z/OS URL. Operation Cancelled"));
                     return undefined;
                 }
                 try {

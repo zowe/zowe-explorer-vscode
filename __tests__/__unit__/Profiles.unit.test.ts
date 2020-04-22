@@ -173,7 +173,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
         });
 
         it("should indicate missing property: username", async () => {
@@ -266,6 +266,21 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("should create new profile with basepath", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            showInputBox.mockResolvedValueOnce("fake");
             await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
@@ -366,7 +381,7 @@ describe("Profile class unit tests", () => {
             (profiles.loadNamedProfile as any).mockReset();
         });
 
-        it("should reject out of port as Not a Number", async () => {
+        it("should reject port as Not a Number", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             showInputBox.mockResolvedValueOnce("fake");
