@@ -67,11 +67,7 @@ describe("Job state operations", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showInformationMessage).mockReset();
-        mocked(vscode.window.showInputBox).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showInformationMessage, vscode.window.showInputBox
     afterEach(() => jest.clearAllMocks());
 
     it("Checking that the prefix is set correctly on the job", async () => {
@@ -116,12 +112,7 @@ describe("Job Node Stop Command", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showInformationMessage).mockReset();
-        mocked(vscode.window.showErrorMessage).mockReset();
-        mocked(zowe.IssueCommand.issueSimple).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showInformationMessage, vscode.window.showErrorMessage, zowe.IssueCommand.issueSimple
     afterEach(() => jest.clearAllMocks());
 
     it("Checking that stop command of Job Node is executed properly", async () => {
@@ -156,13 +147,7 @@ describe("Job Node Modify Command", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showInformationMessage).mockReset();
-        mocked(vscode.window.showErrorMessage).mockReset();
-        mocked(vscode.window.showInputBox).mockReset();
-        mocked(zowe.IssueCommand.issueSimple).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showInformationMessage, vscode.window.showErrorMessage, vscode.window.showInputBox, zowe.IssueCommand.issueSimple
     afterEach(() => jest.clearAllMocks());
 
     it("Checking modification of Job Node", async () => {
@@ -202,11 +187,7 @@ describe("Job Spool Download Command", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showOpenDialog).mockReset();
-        mocked(vscode.window.showErrorMessage).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showOpenDialog, vscode.window.showErrorMessage
     afterEach(() => jest.clearAllMocks());
 
     it("Checking download of Job Spool", async () => {
@@ -249,14 +230,8 @@ describe("Job JCL Download Command", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showOpenDialog).mockReset();
-        mocked(vscode.window.showErrorMessage).mockReset();
-        mocked(vscode.window.showTextDocument).mockReset();
-        mocked(vscode.workspace.openTextDocument).mockReset();
-        mocked(zowe.GetJobs.getJclForJob).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showOpenDialog, vscode.window.showErrorMessage, vscode.window.showTextDocument,
+    // vscode.workspace.openTextDocument, zowe.GetJobs.getJclForJob
     afterEach(() => jest.clearAllMocks());
 
     it("Checking download of Job JCL", async () => {
@@ -300,16 +275,8 @@ describe("Submit JCL from editor", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showInformationMessage).mockReset();
-        mocked(vscode.window.showErrorMessage).mockReset();
-        mocked(vscode.window.showQuickPick).mockReset();
-        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReset();
-        activeTextEditorDocument.mockReset();
-        mocked(Profiles.getInstance).mockReset();
-        mocked(globals.LOG.error).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showInformationMessage, vscode.window.showErrorMessage, vscode.window.showQuickPick,
+    // zowe.ZosmfSession.createBasicZosmfSession, Profiles.getInstance, globals.LOG.error, activeTextEditorDocument
     afterEach(() => jest.clearAllMocks());
 
     it("Checking submit of active text editor content as JCL", async () => {
@@ -374,12 +341,7 @@ describe("Submit JCL from Dataset", () => {
         };
     }
 
-    /* beforeEach(() => {
-        // Reset global module mocks
-        mocked(vscode.window.showInformationMessage).mockReset();
-        mocked(vscode.window.showErrorMessage).mockReset();
-        mocked(Profiles.getInstance).mockReset();
-    }); */
+    // Resets Globals: vscode.window.showInformationMessage, vscode.window.showErrorMessage, Profiles.getInstance
     afterEach(() => jest.clearAllMocks());
 
     it("Checking Submit Job for PDS Member content", async () => {
