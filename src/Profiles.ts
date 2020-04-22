@@ -96,7 +96,7 @@ export class Profiles {
         return this.defaultProfileByType.get(type);
     }
 
-    public getProfiles(type?: string): IProfileLoaded[] {
+    public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
         return this.profilesByType.get(type);
     }
 
@@ -183,20 +183,6 @@ export class Profiles {
         }
         return options;
     }
-
-    // public async getUrl(urlInputBox): Promise<string | undefined> {
-    //     return new Promise<string | undefined> ((resolve) => {
-    //         urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
-    //         urlInputBox.onDidAccept(() => {
-    //             if (this.parseUrl(urlInputBox.value).valid) {
-    //                 resolve(urlInputBox.value);
-    //             } else {
-    //                 urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
-    //                     "Please enter a valid URL in the format https://url:port.");
-    //             }
-    //         });
-    //     });
-    // }
 
     public async createNewConnection(profileName: string): Promise<string | undefined> {
         let profileType: string;
