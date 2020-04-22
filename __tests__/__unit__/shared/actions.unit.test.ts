@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
 import {
     generateInstanceOfProfile,
     generateIProfile,
@@ -10,7 +9,6 @@ import { generateDatasetSessionNode, generateDatasetTree } from "../../../__mock
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils";
 import * as globals from "../../../src/globals";
-import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as sharedActions from "../../../src/shared/actions";
 import { generateUSSSessionNode, generateUSSTree } from "../../../__mocks__/generators/uss";
