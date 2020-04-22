@@ -139,7 +139,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getChildren(element?: IZoweUSSTreeNode | undefined): Promise<IZoweUSSTreeNode[]> {
         if (element) {
-            if (element.contextValue === globals.FAVORITE_CONTEXT) {
+            if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -322,7 +322,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let remotepath: string;
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            if (node.contextValue === globals.USS_SESSION_CONTEXT) {
+            if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getHistory().length > 0) {
 
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
