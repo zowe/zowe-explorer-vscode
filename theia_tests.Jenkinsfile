@@ -118,6 +118,8 @@ node('ibm-jenkins-slave-nvm') {
             }
         }, "Run Mocha Test": {
             stage("Run Mocha Test") {
+              // give it a little time to start the server
+              sleep time: 2, unit: 'MINUTES'
               pipeline.nvmShell "npm run test:theia"
             }
         }
