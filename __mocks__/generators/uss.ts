@@ -10,17 +10,8 @@
 */
 
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
-
-export function generateUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const zoweUSSNode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null,
-        session, "/", false, profile.name, undefined, profile);
-    zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
-
-    return zoweUSSNode;
-}
 
 const mockUSSRefresh = jest.fn();
 export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView: any): any {
