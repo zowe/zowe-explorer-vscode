@@ -184,19 +184,19 @@ export class Profiles {
         return options;
     }
 
-    public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve) => {
-            urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
-            urlInputBox.onDidAccept(() => {
-                if (this.parseUrl(urlInputBox.value).valid) {
-                    resolve(urlInputBox.value);
-                } else {
-                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
-                        "Please enter a valid URL in the format https://url:port.");
-                }
-            });
-        });
-    }
+    // public async getUrl(urlInputBox): Promise<string | undefined> {
+    //     return new Promise<string | undefined> ((resolve) => {
+    //         urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+    //         urlInputBox.onDidAccept(() => {
+    //             if (this.parseUrl(urlInputBox.value).valid) {
+    //                 resolve(urlInputBox.value);
+    //             } else {
+    //                 urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
+    //                     "Please enter a valid URL in the format https://url:port.");
+    //             }
+    //         });
+    //     });
+    // }
 
     public async createNewConnection(profileName: string): Promise<string | undefined> {
         let profileType: string;
@@ -342,22 +342,24 @@ export class Profiles {
                     case "number":
                         options = await this.optionsValue(value, schema);
                         const enteredValue = await vscode.window.showInputBox(options);
-                        const numValue = Number(enteredValue);
-                        if (Number.isNaN(numValue) === false) {
+                        if (!Number.isNaN(Number(enteredValue))) {
                             schemaValues[value] = Number(enteredValue);
                             } else {
-                                // default value
-                                schemaValues[value] = null;
+                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                } else {
+                                    schemaValues[value] = undefined;
+                                }
                             }
                         break;
                     default:
                         options = await this.optionsValue(value, schema);
                         const defaultValue = await vscode.window.showInputBox(options);
                         switch (defaultValue){
-                            case "true":
+                            case "True" || "true":
                                 schemaValues[value] = true;
                                 break;
-                            case "false":
+                            case "False" || "false":
                                 schemaValues[value] = false;
                                 break;
                             default:
@@ -378,7 +380,7 @@ export class Profiles {
         }
 
         try {
-            const newProfile: IProfile = await this.saveProfile(schemaValues, schemaValues.name, profileType);
+            await this.saveProfile(schemaValues, schemaValues.name, profileType);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -449,15 +451,11 @@ export class Profiles {
             const profileManager = await this.getCliProfileManager(type);
             this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
         }
-
-
         const OrigProfileInfo = this.loadedProfile.profile as ISession;
         const NewProfileInfo = ProfileInfo.profile;
-
         if (OrigProfileInfo.user) {
             OrigProfileInfo.user = NewProfileInfo.user;
         }
-
         if (OrigProfileInfo.password) {
             OrigProfileInfo.password = NewProfileInfo.password;
         }
@@ -467,7 +465,6 @@ export class Profiles {
             merge: true,
             profile: OrigProfileInfo as IProfile
         };
-
         try {
             (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
         } catch (error) {

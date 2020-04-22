@@ -49,12 +49,30 @@ describe("Profile class unit tests", () => {
     };
     const schema: {} = {
         host:{type:"string",optionDefinition:{description:"description"}},
-        port:{type:"number",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description", defaultValue: 443}},
         user:{type:"string",secure:true,optionDefinition:{description:"description"}},
         password:{type:"string",secure:true,optionDefinition:{description:"description"}},
         rejectUnauthorized:{type:"boolean",optionDefinition:{description:"description"}},
         basePath:{type:"string",optionDefinition:{description:"description"}}
     };
+
+    const schema2: {} = {
+        host:{type:"string",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description",defaultValue: 123}},
+        user:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        password:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        basePath:{type:"string",optionDefinition:{description:"description"}},
+        aBoolean:{type:"boolean",optionDefinition:{description:"description"}},
+        aNumber:{type:"number",optionDefinition:{description:"description",defaultValue: 123}},
+        aOther:{type:"string" && null, optionDefinition:{description:"description"}}
+    };
+
+    const schema3: {} = {
+        host:{type:"string",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description"}},
+        aNumber:{type:"number",optionDefinition:{description:"description"}}
+    };
+
 
     const homedir = path.join(os.homedir(), ".zowe");
     const mockJSONParse = jest.spyOn(JSON, "parse");
@@ -243,6 +261,83 @@ describe("Profile class unit tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
         });
 
+        it("should create new alternative profile", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False");
+            showInputBox.mockResolvedValueOnce("123");
+            showInputBox.mockResolvedValueOnce("True");
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("should create alternate profile type with default aNumber", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("False");
+            showInputBox.mockResolvedValueOnce(undefined);
+            showInputBox.mockResolvedValueOnce("False");
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("should indicate missing property: aNumber", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should create alternate profile type with aOther string value", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("True");
+            showInputBox.mockResolvedValueOnce(undefined);
+            showInputBox.mockResolvedValueOnce("fake");
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("should indicate missing property: aBoolean", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce(undefined);
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
         it("should create profile with optional credentials", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
@@ -381,11 +476,31 @@ describe("Profile class unit tests", () => {
             (profiles.loadNamedProfile as any).mockReset();
         });
 
-        it("should reject port as Not a Number", async () => {
+        it("should reject port if Not a Number", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(Number("9999999999/some/path"));
+            await profiles.createNewConnection(profileOne.name);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should create new alternative profile without a default port", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema3); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("should use default zosmf port", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("0"));
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
