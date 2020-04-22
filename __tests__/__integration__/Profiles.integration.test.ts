@@ -52,11 +52,15 @@ describe("Create profiles integration tests", async () => {
     });
 
     it ("Tests if profile is created successfully", async () => {
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        // const getUrlStub = sandbox.stub(profiles, "getUrl");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        // getUrlStub.returns("https://testurl.com:1001");
+        getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("testUser");
-        showInputStub.onCall(1).returns("testPass");
+        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(1).returns("443");
+        showInputStub.onCall(2).returns("testUser");
+        showInputStub.onCall(Number("3")).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
         const saveProfileStub = sandbox.stub(profiles, "saveProfile");
@@ -68,20 +72,28 @@ describe("Create profiles integration tests", async () => {
 
     it ("Tests if operation is cancelled when URL input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns(undefined);
-
+        // const getUrlStub = sandbox.stub(profiles, "getUrl");
+        // getUrlStub.returns(undefined);
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
+        const showInputStub = sandbox.stub(vscode.window, "showInputBox");
+        showInputStub.onCall(0).returns(undefined);
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
-        const messageSent = showInfoSpy.calledWith("No valid value for z/OSMF URL. Operation Cancelled");
+        const messageSent = showInfoSpy.calledWith("No valid value for z/OS URL. Operation Cancelled");
         expect(messageSent).to.equal(true);
     }).timeout(TIMEOUT);
 
     it ("Tests if operation is cancelled when username input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        // const getUrlStub = sandbox.stub(profiles, "getUrl");
+        // getUrlStub.returns("https://testurl.com:1001");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
+        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(1).returns("443");
+        // const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.returns(undefined);
 
         const response = await profiles.createNewConnection("testProfileIntegration");
@@ -92,11 +104,15 @@ describe("Create profiles integration tests", async () => {
 
     it ("Tests if operation is cancelled when password input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        // const getUrlStub = sandbox.stub(profiles, "getUrl");
+        // getUrlStub.returns("https://testurl.com:1001");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("testUser");
-        showInputStub.onCall(1).returns(undefined);
+        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(1).returns("443");
+        showInputStub.onCall(2).returns("testUser");
+        showInputStub.onCall(Number("3")).returns(undefined);
 
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
@@ -106,11 +122,15 @@ describe("Create profiles integration tests", async () => {
 
     it ("Tests if operation is cancelled when rejectUnauthorized input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        // const getUrlStub = sandbox.stub(profiles, "getUrl");
+        // getUrlStub.returns("https://testurl.com:1001");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("testUser");
-        showInputStub.onCall(1).returns("testPass");
+        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(1).returns("1001");
+        showInputStub.onCall(2).returns("testUser");
+        showInputStub.onCall(Number("3")).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns(undefined);
 
@@ -123,11 +143,15 @@ describe("Create profiles integration tests", async () => {
     it ("Tests if operation is cancelled when username is already taken", async () => {
         const showErrorSpy = sandbox.spy(vscode.window, "showErrorMessage");
         profiles.allProfiles.push(testProfileLoaded);
-        const getUrlStub = sandbox.stub(profiles, "getUrl");
-        getUrlStub.returns("https://testurl.com:1001");
+        // const getUrlStub = sandbox.stub(profiles, "getUrl");
+        // getUrlStub.returns("https://testurl.com:1001");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("testUser");
-        showInputStub.onCall(1).returns("testPass");
+        showInputStub.onCall(0).returns("https://testurl.com");
+        showInputStub.onCall(1).returns("443");
+        showInputStub.onCall(2).returns("testUser");
+        showInputStub.onCall(Number("3")).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
 
