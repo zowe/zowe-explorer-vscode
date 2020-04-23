@@ -26,7 +26,7 @@ import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { IZoweTree } from "../../src/api/IZoweTree";
 import { IZoweUSSTreeNode } from "../../src/api/IZoweTreeNode";
-import { generateFileResponse } from "../../__mocks__/generators/shared";
+import { createFileResponse } from "../../__mocks__/mockCreators/shared";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -60,7 +60,7 @@ describe("Unit Tests (Jest)", () => {
             title: "Saving file..."
         };
     });
-    const testResponse = generateFileResponse([]);
+    const testResponse = createFileResponse([]);
     withProgress.mockReturnValue(testResponse);
 
     const showErrorMessage = jest.fn();

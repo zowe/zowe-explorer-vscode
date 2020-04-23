@@ -14,14 +14,14 @@ import { createUSSTree, USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Logger } from "@zowe/imperative";
 import * as utils from "../../../src/utils";
-import { generateIProfile, generateISession, generateISessionWithoutCredentials, generateFileResponse } from "../../../__mocks__/generators/shared";
+import { createIProfile, createISession, createISessionWithoutCredentials, createFileResponse } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { generateUSSNode, generateFavoriteUSSNode, addSessionNode } from "../../../__mocks__/generators/uss";
+import { createUSSNode, createFavoriteUSSNode, addSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
 
-async function generateEnvironmentalMocks() {
+async function createEnvironmentalMocks() {
     const environmentalMocks = {
         mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
@@ -45,14 +45,14 @@ async function generateEnvironmentalMocks() {
                 Notification: 15
             };
         }),
-        testProfile: generateIProfile(),
-        testSession: generateISession(),
-        testResponse: generateFileResponse({items: []}),
+        testProfile: createIProfile(),
+        testSession: createISession(),
+        testResponse: createFileResponse({items: []}),
         testUSSNode: null,
         testTree: null
     };
 
-    environmentalMocks.testUSSNode = generateUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile);
+    environmentalMocks.testUSSNode = createUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile);
     environmentalMocks.testTree = addSessionNode(new USSTree(), environmentalMocks.testSession, environmentalMocks.testProfile);
     environmentalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     environmentalMocks.withProgress.mockReturnValue(environmentalMocks.testResponse);
@@ -104,7 +104,7 @@ describe("USSTree Unit Tests - Function USSTree.initialize()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that initialize() is executed successfully", async () => {
@@ -134,7 +134,7 @@ describe("USSTree Unit Tests - Function initializeUSSTree()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests if initializeUSSTree() is executed successfully", async () => {
@@ -163,7 +163,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
         environmentalMocks.testUSSNode.label = "";
         environmentalMocks.testUSSNode.shortLabel = "";
     });
@@ -198,7 +198,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     });
 
     it("Tests that USSTree.rename() is executed successfully for a favorited USS file", async () => {
-        const ussFavNode = generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile);
+        const ussFavNode = createFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile);
         environmentalMocks.testTree.mFavorites.push(ussFavNode);
         const removeFavorite = jest.spyOn(environmentalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(environmentalMocks.testTree, "addFavorite");
@@ -216,7 +216,7 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that addRecall() & getRecall() are executed successfully", async () => {
@@ -229,7 +229,7 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that removeRecall() is executed successfully", async () => {
@@ -243,11 +243,11 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             childFile: null,
             parentDir: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[1], null, "/")
@@ -281,11 +281,11 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             testDir: new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed,
                                      environmentalMocks.testTree.mSessionNodes[1], null, "/")
@@ -308,7 +308,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
         environmentalMocks.withProgress.mockReturnValue(environmentalMocks.testResponse);
     });
 
@@ -333,7 +333,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests if addSession works properly", async () => {
@@ -352,11 +352,11 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             testTree2: addSessionNode(new USSTree(), environmentalMocks.testSession, environmentalMocks.testProfile),
             testSessionNode: new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
@@ -383,11 +383,11 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             theia: false,
             qpItem: new utils.FilterDescriptor("\uFF0B " + "Create a new filter"),
@@ -484,7 +484,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
     });
 
     it("Tests that filter() works correctly for favorites", async () => {
-        const sessionNoCred = generateISessionWithoutCredentials();
+        const sessionNoCred = createISessionWithoutCredentials();
         environmentalMocks.createBasicZosmfSession.mockReturnValue(sessionNoCred);
         const dsNode = new ZoweUSSNode(
             "[ussTestSess2]: /u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionNoCred, null, false, "ussTestSess2");
@@ -506,7 +506,7 @@ describe("USSTree Unit Tests - Function USSTree.searchInLoadedItems()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Testing that searchInLoadedItems() returns the correct array", async () => {
@@ -532,11 +532,11 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             folder: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[1], null, "/"),
             file: null,
@@ -584,7 +584,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
@@ -609,7 +609,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     });
 
     it("Tests that USSTree.rename() is executed successfully for a favorited USS file", async () => {
-        const ussFavNode = generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile);
+        const ussFavNode = createFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile);
         const removeFavorite = jest.spyOn(environmentalMocks.testTree, "removeFavorite");
         const addFavorite = jest.spyOn(environmentalMocks.testTree, "addFavorite");
         environmentalMocks.showInputBox.mockReturnValueOnce("new name");
@@ -626,7 +626,7 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that addRecall() & getRecall() are executed successfully", async () => {
@@ -639,7 +639,7 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that removeRecall() is executed successfully", async () => {
@@ -653,11 +653,11 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             parentDir: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[1], null, "/"),
             childFile: null,
@@ -691,11 +691,11 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     let blockMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
+        environmentalMocks = await createEnvironmentalMocks();
+        blockMocks = await createBlockMocks();
     });
 
-    async function generateBlockMocks() {
+    async function createBlockMocks() {
         const newMocks = {
             testDir: new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[1], null, "/"),
         };
@@ -718,7 +718,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
@@ -742,7 +742,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests if addSession works properly", async () => {
@@ -760,7 +760,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
     let environmentalMocks;
 
     beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
+        environmentalMocks = await createEnvironmentalMocks();
     });
 
     it("Tests that getChildren() returns valid list of elements", async () => {
@@ -800,7 +800,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
                 name: "testDir"
             }]
         };
-        const mockApiResponseWithItems = generateFileResponse(mockApiResponseItems);
+        const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
         environmentalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
         const sessChildren = await environmentalMocks.testTree.getChildren(environmentalMocks.testTree.mSessionNodes[1]);
         const sampleChildren: ZoweUSSNode[] = [testDir];
@@ -833,7 +833,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
                 name: "myFile.txt"
             }]
         };
-        const mockApiResponseWithItems = generateFileResponse(mockApiResponseItems);
+        const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
         environmentalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
 
         const dirChildren = await environmentalMocks.testTree.getChildren(directory);
