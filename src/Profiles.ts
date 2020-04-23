@@ -200,6 +200,7 @@ export class Profiles {
 
         const schemaValues: any = {};
         schemaValues.name = profileName;
+
         // Go through array of schema for input values
         for (const value of schemaArray) {
             switch (value) {
@@ -212,7 +213,7 @@ export class Profiles {
                 let host = await vscode.window.showInputBox(options);
                 if (!host) {
                     vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                        "No valid value for z/OS URL. Operation Cancelled"));
+                        "No valid value for z/OS Host. Operation Cancelled"));
                     return undefined;
                 }
                 try {
@@ -229,7 +230,7 @@ export class Profiles {
                 if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
                     options = {
                         prompt: schema[value].optionDefinition.description.toString(),
-                        value: schema[value].optionDefinition.defaultValue
+                        value: schema[value].optionDefinition.defaultValue.toString()
                     };
                 } else {
                     options = {
@@ -239,8 +240,9 @@ export class Profiles {
                 }
                 port = Number(await vscode.window.showInputBox(options));
                 if (Number.isNaN(port)) {
-                    vscode.window.showErrorMessage("Operation Cancelled");
-                    break;
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
+                    "Invalid Port number provided or operation was cancelled"));
+                    return undefined;
                 }
                 if (port === 0 && schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
                     schemaValues[value] = Number(schema[value].optionDefinition.defaultValue.toString());

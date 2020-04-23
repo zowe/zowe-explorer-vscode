@@ -76,7 +76,7 @@ describe("Create profiles integration tests", async () => {
         showInputStub.onCall(0).returns(undefined);
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
-        const messageSent = showInfoSpy.calledWith("No valid value for z/OS URL. Operation Cancelled");
+        const messageSent = showInfoSpy.calledWith("No valid value for z/OS Host. Operation Cancelled");
         expect(messageSent).to.equal(true);
     }).timeout(TIMEOUT);
 
