@@ -9,6 +9,7 @@
 *                                                                                 *
 */
 
+<<<<<<< HEAD
 import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import { createUSSTree, USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -653,12 +654,18 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
 
     beforeEach(() => {
         testTree.mFavorites = [];
+=======
+describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
+
+    beforeEach(() => {
+>>>>>>> WIP
     });
 
     afterEach(() => {
         jest.clearAllMocks();
     });
 
+<<<<<<< HEAD
     afterAll(() => {
         testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
@@ -844,3 +851,9 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         expect(dirChildren[0].label).toEqual(sampleChildren[0].label);
     });
 });
+=======
+    it("Tests if deleteSession is executed successfully", async () => {
+
+    });
+});
+>>>>>>> WIP
