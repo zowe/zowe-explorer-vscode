@@ -9,7 +9,6 @@
 *                                                                                 *
 */
 
-
 import * as vscode from "vscode";
 import * as globals from "./globals";
 import * as os from "os";
