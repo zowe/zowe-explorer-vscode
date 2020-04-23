@@ -292,6 +292,8 @@ export class Profiles {
         let repromptPass: any;
         let loadProfile: any;
         let loadSession: any;
+        let newUser: any;
+        let newPass: any;
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
@@ -308,27 +310,32 @@ export class Profiles {
 
         if (!loadSession.user || rePrompt) {
 
-            const newUser = await this.userInfo(repromptUser);
+            newUser = await this.userInfo(repromptUser);
 
             loadSession.user = loadProfile.profile.user = newUser;
         }
 
-        if (!loadSession.password || rePrompt) {
-
-            const newPass = await this.passwordInfo(repromptPass);
-
-            loadSession.password = loadProfile.profile.password = newPass;
-
+        if (newUser === undefined) {
+            return;
+        } else {
+            if (!loadSession.password || rePrompt) {
+                newPass = await this.passwordInfo(repromptPass);
+                loadSession.password = loadProfile.profile.password = newPass;
+            }
         }
 
-        try {
-            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
-            if (rePrompt) {
-                await this.updateProfile(loadProfile, rePrompt);
+        if (newPass === undefined) {
+            return;
+        } else {
+            try {
+                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+                if (rePrompt) {
+                    await this.updateProfile(loadProfile, rePrompt);
+                }
+                return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+            } catch (error) {
+                await errorHandling(error.message);
             }
-            return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
-        } catch (error) {
-            await errorHandling(error.message);
         }
     }
 
@@ -416,7 +423,7 @@ export class Profiles {
 
         let rejectUnauthorize: boolean;
 
-        if (input) {
+        if (input !== undefined) {
             rejectUnauthorize = input;
         }
 

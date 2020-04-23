@@ -54,7 +54,7 @@ describe("Profile class unit tests", () => {
             port: 999,
             user: "fake",
             password: "fake",
-            rejectUnauthorize: false
+            rejectUnauthorized: false
         },
         type: "zosmf",
         failNotFound: true,
