@@ -20,7 +20,7 @@ import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
 
-describe.only("Profile class unit tests", () => {
+describe("Profile class unit tests", () => {
     // Mocking log.debug
     const log = Logger.getAppLogger();
 
@@ -28,7 +28,6 @@ describe.only("Profile class unit tests", () => {
 
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
-    const profileThree = { name: "profile3", profile: {}, type: profileTypeThree };
     const inputBox: vscode.InputBox = {
         value: "input",
         title: null,
