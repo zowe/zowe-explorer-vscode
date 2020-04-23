@@ -48,4 +48,4 @@ export function rmdirSync(path: string): void {}
 
 export function unlinkSync(path: string): void {}
 
-export function writeFileSync(path: string, data: any): void {}
+export function writeFileSync(path: string, data: string): void {}
