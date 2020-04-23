@@ -30,10 +30,8 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { IZoweTreeNode } from "../../src/api/IZoweTreeNode";
-import {
-    USS_DIR, DS_SESSION_CONTEXT, DS_DIR, ZOWETEMPFOLDER, FAV_SUFFIX, DS_PDS_CONTEXT,
-    DS_MEMBER_CONTEXT, DS_DS_CONTEXT, USS_SESSION_CONTEXT, FAVORITE_CONTEXT
-} from "../../src/globals";
+import { USS_DIR, DS_SESSION_CONTEXT, DS_DIR, ZOWETEMPFOLDER, FAV_SUFFIX, DS_PDS_CONTEXT,
+    DS_MEMBER_CONTEXT, DS_DS_CONTEXT, USS_SESSION_CONTEXT, FAVORITE_CONTEXT } from "../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
