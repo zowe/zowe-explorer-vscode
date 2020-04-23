@@ -446,6 +446,44 @@ describe("Profile class unit tests", () => {
             expect(showErrorMessage.mock.calls.length).toEqual(1);
         });
 
+        it("should indicate invalid property: zosmf url", async () => {
+            // No valid zosmf value
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
+            await profiles.editSession(profileLoad, profileLoad.name);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
+        });
+
+        it("should indicate invalid property: username", async () => {
+            // Enter z/OS password
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.editSession(profileLoad, profileLoad.name);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should indicate invalid property: password", async () => {
+            // Enter z/OS password
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.editSession(profileLoad, profileLoad.name);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should indicate invalid property: rejectUnauthorized", async () => {
+            // Operation cancelled
+            createInputBox.mockReturnValue(inputBox);
+            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(undefined);
+            await profiles.editSession(profileLoad, profileLoad.name);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
     });
 
     it("should route through to spawn. Covers conditional test", async () => {

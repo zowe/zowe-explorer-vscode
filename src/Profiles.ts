@@ -179,31 +179,52 @@ export class Profiles {
         const editURL = "https://" + editSession.host+ ":" + editSession.port;
         const editUser = editSession.user;
         const editPass = editSession.password;
+        const editrej = editSession.rejectUnauthorized;
+        let updUser: string;
+        let updPass: string;
+        let updRU: boolean;
 
         const updUrl = await this.urlInfo(editURL);
-        const updUser = await this.userInfo(editUser);
-        const updPass = await this.passwordInfo(editPass);
-        const updRU = await this.ruInfo();
 
-        const updProfile = {
-            host: updUrl.host,
-            port: updUrl.port,
-            user: updUser,
-            password: updPass,
-            rejectUnauthorized: updRU,
-            base64EncodedAuth: null
-        };
+        if (updUrl) {
+            updUser = await this.userInfo(editUser);
+        } else {
+            return;
+        }
 
-        try {
-            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
-            updProfile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-            await this.updateProfile({profile: updProfile, name: profileName});
-            vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
+        if (updUser !== undefined) {
+            updPass = await this.passwordInfo(editPass);
+        } else {
+            return;
+        }
 
-            return updProfile;
+        if (updPass !== undefined) {
+            updRU = await this.ruInfo(editrej);
+        } else {
+            return;
+        }
 
-        } catch (error) {
-            await errorHandling(error.message);
+        if (updRU !== undefined) {
+            const updProfile = {
+                host: updUrl.host,
+                port: updUrl.port,
+                user: updUser,
+                password: updPass,
+                rejectUnauthorized: updRU,
+                base64EncodedAuth: null
+            };
+
+            try {
+                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
+                updProfile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+                await this.updateProfile({profile: updProfile, name: profileName});
+                vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
+
+                return updProfile;
+
+            } catch (error) {
+                await errorHandling(error.message);
+            }
         }
 
     }
@@ -303,7 +324,7 @@ export class Profiles {
         try {
             const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
             if (rePrompt) {
-                await this.updateProfile(loadProfile);
+                await this.updateProfile(loadProfile, rePrompt);
             }
             return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
         } catch (error) {
@@ -391,9 +412,13 @@ export class Profiles {
         return passWord;
     }
 
-    private async ruInfo() {
+    private async ruInfo(input?) {
 
         let rejectUnauthorize: boolean;
+
+        if (input) {
+            rejectUnauthorize = input;
+        }
 
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
@@ -423,7 +448,7 @@ export class Profiles {
 
     // ** Functions that Calls Get CLI Profile Manager  */
 
-    private async updateProfile(ProfileInfo) {
+    private async updateProfile(ProfileInfo, rePrompt?: boolean) {
 
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
@@ -434,11 +459,8 @@ export class Profiles {
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
-        if (OrigProfileInfo.user) {
+        if (!rePrompt) {
             OrigProfileInfo.user = NewProfileInfo.user;
-        }
-
-        if (OrigProfileInfo.password) {
             OrigProfileInfo.password = NewProfileInfo.password;
         }
 
