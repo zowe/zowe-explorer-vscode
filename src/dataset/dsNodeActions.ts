@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import * as globals from "../globals";
+import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
@@ -23,7 +23,7 @@ import { labelHack, refreshTree } from "../shared/utils";
 export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === globals.DS_SESSION_CONTEXT) {
+        if (contextually.isSessionNotFav(sessNode)) {
             labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;

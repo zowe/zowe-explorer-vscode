@@ -213,7 +213,7 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
     }
 
     public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
-        return zowe.SubmitJobs.submitJcl(this.getSession(), internalReaderRecfm, internalReaderLrecl);
+        return zowe.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl);
     }
 
     public submitJob(jobDataSet: string): Promise<zowe.IJob> {
