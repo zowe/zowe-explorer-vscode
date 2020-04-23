@@ -184,14 +184,14 @@ describe("Profile class unit tests", () => {
             showErrorMessage.mockReset();
         });
 
-        it("should indicate missing property: zos url", async () => {
-            // No valid zosmf value
+        it("should indicate missing property: zos host", async () => {
+            // No valid zos host value
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS Host. Operation Cancelled");
         });
 
         it("should indicate missing property: username", async () => {
@@ -255,7 +255,8 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
+            showInputBox.mockResolvedValueOnce("fake");
             await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
@@ -304,6 +305,28 @@ describe("Profile class unit tests", () => {
             await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should create alternate profile type with aNumber", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema3); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce(Number("321"));
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("alternate profile type with aNumber thats NaN", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema3); });
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("string");
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
         });
 
         it("should create alternate profile type with aOther string value", async () => {
@@ -360,7 +383,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
             await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
@@ -384,12 +407,13 @@ describe("Profile class unit tests", () => {
         it("should create 2 consecutive profiles", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake.com");
             showInputBox.mockResolvedValueOnce(Number("143"));
             showInputBox.mockResolvedValueOnce("fake1");
             showInputBox.mockResolvedValueOnce("fake1");
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            showInputBox.mockResolvedValueOnce("fake");
             await profiles.createNewConnection("fake1");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
@@ -399,8 +423,7 @@ describe("Profile class unit tests", () => {
 
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            showInputBox.mockResolvedValueOnce("fake2");
-            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake2.com");
             showInputBox.mockResolvedValueOnce(Number("143"));
             showInputBox.mockResolvedValueOnce("fake2");
             showInputBox.mockResolvedValueOnce("fake2");
@@ -408,6 +431,7 @@ describe("Profile class unit tests", () => {
             showQuickPick.mockReset();
 
             showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
+            showInputBox.mockResolvedValueOnce("fake");
             await profiles.createNewConnection("fake2");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
@@ -483,7 +507,7 @@ describe("Profile class unit tests", () => {
             showInputBox.mockResolvedValueOnce(Number("9999999999/some/path"));
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Invalid Port number provided or operation was cancelled");
         });
 
         it("should create new alternative profile without a default port", async () => {
