@@ -153,6 +153,11 @@ Array [
     "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
   },
   Object {
+    "command": "zowe.hRecallDataSet",
+    "group": "8_hsmcommands",
+    "when": "view == zowe.explorer && viewItem =~ /^(pds.*|migr.*)/",
+  },
+  Object {
     "command": "zowe.createMember",
     "group": "1_create",
     "when": "view == zowe.explorer && viewItem =~ /^pds.*/",

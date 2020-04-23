@@ -796,6 +796,19 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
 }
 
 /**
+ * Recall data sets
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node to paste to
+ */
+export async function hRecallDataSet(node: ZoweDatasetNode) {
+    const { dataSetName } = dsUtils.getNodeLabels(node);
+    vscode.window.showInformationMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName +
+    localize("hRecall.requestSent2", " requested."));
+    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+}
+
+/**
  * Paste data sets
  *
  * @export

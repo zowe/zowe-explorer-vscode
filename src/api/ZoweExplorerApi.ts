@@ -293,6 +293,16 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
+         * Recalls a data set member.
+         *
+         * @param {string} dataSetName
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        hRecallDataSet(
+            dataSetName: string,
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
          * Deletes a data set or data set member.
          *
          * @param {string} dataSetName
