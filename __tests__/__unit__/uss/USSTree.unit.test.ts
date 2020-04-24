@@ -615,10 +615,12 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
 });
 
 describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall()", () => {
-    beforeEach(() => {});
-
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     it("Tests that addRecall() & getRecall() are executed successfully", async () => {
@@ -628,10 +630,12 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
 });
 
 describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
-    beforeEach(() => {});
-
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     it("Tests that removeRecall() is executed successfully", async () => {
@@ -653,6 +657,10 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
 
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     it("Tests that addFavorite() works for directories", async () => {
@@ -685,6 +693,10 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         jest.clearAllMocks();
     });
 
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
+    });
+
     it("Tests that removeFavorite() works properly", async () => {
         // Checking that favorites are set successfully before test
         expect(testTree.mFavorites[0].fullPath).toEqual(testDir.fullPath);
@@ -697,10 +709,16 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
 describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], null, "/a/b");
 
-    beforeEach(async () => {});
+    beforeEach(async () => {
+        withProgress.mockReturnValue(testResponse);
+    });
 
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
@@ -720,16 +738,17 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
 });
 
 describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
-    const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, testSession, null);
-    testTree.mSessionNodes.push(testSessionNode);
-
-    beforeEach(async () => {});
-
     afterEach(() => {
         jest.clearAllMocks();
     });
 
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
+    });
+
     it("Tests if addSession works properly", async () => {
+        const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, testSession, null);
+        testTree.mSessionNodes.push(testSessionNode);
         testTree.addSession("testSessionNode");
 
         const foundNode = testTree.mSessionNodes.includes(testSessionNode);
@@ -742,8 +761,6 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
     const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, testSession, null);
     testTree2.mSessionNodes.push(testSessionNode);
     const startLength = testTree2.mSessionNodes.length;
-
-    beforeEach(async () => {});
 
     afterEach(() => {
         jest.clearAllMocks();
