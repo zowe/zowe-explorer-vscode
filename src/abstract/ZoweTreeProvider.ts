@@ -10,11 +10,12 @@
 */
 
 import * as vscode from "vscode";
-import { Logger } from "@zowe/imperative";
+import { Logger, IProfile, ISession } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { getIconByNode } from "../generators/icons";
+import { Profiles } from "../Profiles";
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -123,11 +124,44 @@ export class ZoweTreeProvider {
     public renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string) {
         return undefined;
     }
+
+    public async editSession(node: IZoweDatasetTreeNode) {
+        const profile = node.getProfile();
+        const profileName = node.getProfileName();
+        const EditSession = await Profiles.getInstance().editSession(profile, profileName);
+
+        if (EditSession) {
+            node.getProfile().profile= EditSession as IProfile;
+            this.setProfile(node, EditSession as IProfile);
+            this.setSession(node, EditSession as ISession);
+            this.refresh();
+        }
+    }
+
     protected deleteSessionByLabel(revisedLabel: string) {
         if (revisedLabel.includes("[")) {
             revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
         }
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
+    }
+
+    /**
+     * Function to update the node profile information
+     */
+    private setProfile(node: IZoweTreeNode, profile: IProfile) {
+        node.getProfile().profile= profile;
+    }
+
+    /**
+     * Function to update the node session information
+     */
+    private setSession(node: IZoweTreeNode, session: ISession) {
+        node.getSession().ISession.user = session.user;
+        node.getSession().ISession.password = session.password;
+        node.getSession().ISession.hostname = session.hostname;
+        node.getSession().ISession.port = session.port;
+        node.getSession().ISession.base64EncodedAuth = session.base64EncodedAuth;
+        node.getSession().ISession.rejectUnauthorized = session.rejectUnauthorized;
     }
 }

@@ -111,22 +111,3 @@ export function getZoweDir(): string {
     };
     return ImperativeConfig.instance.cliHome;
 }
-
-/**
- * Function to update the node profile information
- */
-export async function setProfile(node: IZoweTreeNode, profile: IProfile) {
-    node.getProfile().profile= profile;
-}
-
-/**
- * Function to update the node session information
- */
-export async function setSession(node: IZoweTreeNode, session: ISession) {
-    node.getSession().ISession.user = session.user;
-    node.getSession().ISession.password = session.password;
-    node.getSession().ISession.hostname = session.hostname;
-    node.getSession().ISession.port = session.port;
-    node.getSession().ISession.base64EncodedAuth = session.base64EncodedAuth;
-    node.getSession().ISession.rejectUnauthorized = session.rejectUnauthorized;
-}
