@@ -19,6 +19,7 @@ import { Logger, IProfileLoaded } from "@zowe/imperative";
 import * as testConst from "../../resources/testProfileData";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZosmfSession } from "@zowe/cli";
+import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -528,6 +529,20 @@ describe("Profile class unit tests", () => {
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("Tests getProfileType() with only zosmf profile type", async () => {
+            ZoweExplorerApiRegister.getInstance().registeredApiTypes = () => (["zosmf"]);
+            const response = await profiles.getProfileType();
+            expect(response).toEqual("zosmf");
+        });
+
+        it("Tests getProfileType() with multiple profile types", async () => {
+            ZoweExplorerApiRegister.getInstance().registeredApiTypes = () => (["zosmf","alternate"]);
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("alternate");
+            const res = await profiles.getProfileType();
+            expect(res).toEqual("alternate");
         });
     });
 
