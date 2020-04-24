@@ -10,10 +10,6 @@
 */
 
 import * as imperative from "@zowe/imperative";
-import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as path from "path";
-import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
@@ -23,6 +19,7 @@ export function generateISession() {
         user: "fake",
         password: "fake",
         hostname: "fake",
+        port: 443,
         protocol: "https",
         type: "basic",
     });
