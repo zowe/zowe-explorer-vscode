@@ -15,7 +15,6 @@ import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
-import { ZoweTreeProvider } from "./abstract/ZoweTreeProvider";
 
 import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
