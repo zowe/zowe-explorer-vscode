@@ -156,8 +156,6 @@ export class Profiles {
 
     public async getSchema(profileType: string): Promise<{}> {
         const profileManager = await this.getCliProfileManager(profileType);
-        // tslint:disable-next-line:no-console
-        console.log(JSON.stringify(profileManager));
         const configOptions = Array.from(profileManager.configurations);
         let schema: {};
         for (const val of configOptions) {
