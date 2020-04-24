@@ -47,6 +47,24 @@ export function generateIProfile(): imperative.IProfileLoaded {
     };
 }
 
+export function generateInvalidIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+}
+
 export function generateTreeView() {
     return {
         reveal: jest.fn(),
@@ -92,7 +110,7 @@ export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
         validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(),
         getProfiles: jest.fn(() => {
-            return [{name: profile.name, profile}, {name: profile.name, profile}];
+            return [{name: profile.name, profile}];
         }),
         refresh: jest.fn()
     };
