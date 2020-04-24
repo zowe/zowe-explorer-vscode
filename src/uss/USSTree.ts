@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling, setProfile, setSession } from "../utils";
+import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils";
 import { sortTreeItems, getAppName } from "../shared/utils";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
@@ -497,19 +497,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         } else {
             vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
             this.removeRecall(`[${sessionNode.getProfileName()}]: ${itemPath}`);
-        }
-    }
-
-    public async editSession(node: IZoweUSSTreeNode) {
-        const profile = node.getProfile();
-        const profilename = node.getProfileName();
-        const EditSession = await Profiles.getInstance().editSession(profile, profilename);
-
-        if (EditSession) {
-            node.getProfile().profile= EditSession as IProfile;
-            setProfile(node, EditSession as IProfile);
-            setSession(node, EditSession as ISession);
-            this.refresh();
         }
     }
 

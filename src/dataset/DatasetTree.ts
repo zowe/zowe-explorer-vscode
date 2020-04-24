@@ -15,7 +15,7 @@ import * as dsActions from "./actions";
 import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
-import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling, setProfile, setSession } from "../utils";
+import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
@@ -242,19 +242,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
         }
         this.refresh();
-    }
-
-    public async editSession(node: IZoweDatasetTreeNode) {
-        const profile = node.getProfile();
-        const profileName = node.getProfileName();
-        const EditSession = await Profiles.getInstance().editSession(profile, profileName);
-
-        if (EditSession) {
-            node.getProfile().profile= EditSession as IProfile;
-            setProfile(node, EditSession as IProfile);
-            setSession(node, EditSession as ISession);
-            this.refresh();
-        }
     }
 
     /**
