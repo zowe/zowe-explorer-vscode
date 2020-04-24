@@ -488,5 +488,13 @@ export namespace ZoweExplorerApi {
          * @returns the registered API instance
          */
         getJesApi(profile: IProfileLoaded): IJes;
+
+        /**
+         * After an extenders registered all its API extensions it
+         * might want to request that profiles should get reloaded
+         * to make them automatically appears in the Explorer drop-
+         * down dialogs.
+         */
+        reloadProfiles?(): Promise<void>;
     }
 }

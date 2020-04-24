@@ -89,6 +89,11 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     // interfaces here that do not have type meta data it would require that they have type info
     // added. On the other these functions make the client code easier to read and understand.
 
+    public async reloadProfiles(): Promise<void> {
+        // reload the internal profiles cache to add the newly added profiles
+        await Profiles.getInstance().refresh();
+    }
+
     /**
      * Other VS Code extension need to call this to register their USS API implementation.
      * @param {ZoweExplorerApi.IUss} ussApi
@@ -96,8 +101,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registerUssApi(ussApi: ZoweExplorerApi.IUss): void {
         if (ussApi && ussApi.getProfileTypeName()) {
             this.ussApiImplementations.set(ussApi.getProfileTypeName(), ussApi);
-            // reload the internal profiles cache to add the newly added profiles
-            Profiles?.getInstance()?.refresh();
         } else {
             throw new Error(
                 localize("registerUssApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid USS API."));
@@ -111,8 +114,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registerMvsApi(mvsApi: ZoweExplorerApi.IMvs): void {
         if (mvsApi && mvsApi.getProfileTypeName()) {
             this.mvsApiImplementations.set(mvsApi.getProfileTypeName(), mvsApi);
-            // reload the internal profiles cache to add the newly added profiles
-            Profiles?.getInstance()?.refresh();
         } else {
             throw new Error(
                 localize("registerMvsApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API."));
@@ -126,8 +127,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registerJesApi(jesApi: ZoweExplorerApi.IJes): void {
         if (jesApi && jesApi.getProfileTypeName()) {
             this.jesApiImplementations.set(jesApi.getProfileTypeName(), jesApi);
-            // reload the internal profiles cache to add the newly added profiles
-            Profiles?.getInstance()?.refresh();
         } else {
             throw new Error(
                 localize("registerJesApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid JES API."));
