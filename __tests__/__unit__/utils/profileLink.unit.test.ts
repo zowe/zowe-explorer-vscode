@@ -128,15 +128,14 @@ describe("Profile link unit tests part 1", () => {
     });
 
     it("Test get profile via the API - Bad input", async () => {
-        let success = false;
+        let response = "";
         const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
         try {
             await extenderApi.getProfile(aBadNode as IZoweDatasetTreeNode);
         } catch (error) {
-            expect(error.message).toEqual("Tree Item is not a Zowe Explorer item.");
-            success = true;
+            response = error.message;
         }
-        expect(success).toBe(true);
+        expect(response).toEqual("Tree Item is not a Zowe Explorer item.");
     });
 
     it("Test get linked profile via the API", async () => {
@@ -148,40 +147,37 @@ describe("Profile link unit tests part 1", () => {
     });
 
     it("Test get linked profile directly - Bad input", async () => {
-        let success = false;
-        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        let response = "";
+        ZoweExplorerApiRegister.getExplorerExtenderApi();
         try {
          await getLinkedProfile(aBadNode as IZoweDatasetTreeNode, "tso", Logger.getAppLogger());
         } catch (error) {
-            expect(error.message).toEqual("Tree Item is not a Zowe Explorer item.");
-            success = true;
+            response = error.message;
         }
-        expect(success).toBe(true);
+        expect(response).toEqual("Tree Item is not a Zowe Explorer item.");
     });
 
     it("Test get linked profile via the API - Bad input", async () => {
-        let success = false;
+        let response = "";
         const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
         try {
             await extenderApi.getLinkedProfile(aBadNode as IZoweDatasetTreeNode, "tso");
         } catch (error) {
-            expect(error.message).toEqual("Tree Item is not a Zowe Explorer item.");
-            success = true;
+            response = error.message;
         }
-        expect(success).toBe(true);
+        expect(response).toEqual("Tree Item is not a Zowe Explorer item.");
     });
 
     it("Test get linked profile via the API - Bad output found", async () => {
-        let success = false;
+        let response = "";
         mockdirectLoad.mockRejectedValue(new Error("An Error"));
         const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
         try {
             const pr1 = await extenderApi.getLinkedProfile(testNode, "tso");
         } catch (error) {
-            expect(error.message).toEqual("Attempted to load a missing profile. + An Error");
-            success = true;
+            response = error.message;
         }
-        expect(success).toBe(true);
+        expect(response).toEqual("Attempted to load a missing profile. + An Error");
     });
 
     it("Test the linked profile save dialog", async () => {

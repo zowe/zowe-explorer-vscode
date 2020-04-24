@@ -228,9 +228,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
-     * Lookup of an API implementation for JES for a given profile.
-     * @param {IProfileLoaded} profile
-     * @returns an instance of the API for the profile provided
+     * Lookup of the API implementation extender implementation.
+     * @returns the instance of the API for the profile provided
      */
     public getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
         return ZoweExplorerExtender.getInstance();

@@ -360,10 +360,7 @@ export class Profiles {
 
     public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
         let directProfile: IProfileLoaded;
-        const profileManager = await new CliProfileManager({
-            profileRootDirectory: path.join(getZoweDir(), "profiles"),
-            type
-        });
+        const profileManager = await this.getCliProfileManager(type);
         if (profileManager) {
             directProfile = await profileManager.load({ name });
         }
