@@ -533,7 +533,7 @@
           "when": "view == zowe.explorer && viewItem =~ /^ds.*/",
           "command": "zowe.deleteDataset",
           "group": "6_modification@2"
-        },        
+        },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
@@ -712,7 +712,7 @@
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.addFavorite",
           "group": "4_workspace"
-        },    
+        },
         {
           "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
@@ -1021,6 +1021,7 @@
     "@types/selenium-webdriver": "^3.0.4",
     "@types/vscode": "^1.34.0",
     "@types/yargs": "^11.0.0",
+    "@types/promise-queue": "2.2.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
@@ -1061,6 +1062,7 @@
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "moment": "2.24.0",
+    "promise-queue": "2.2.5",
     "vscode-nls": "4.1.1"
   },
   "jest": {

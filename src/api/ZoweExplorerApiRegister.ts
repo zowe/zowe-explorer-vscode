@@ -9,6 +9,7 @@
 *                                                                                 *
 */
 
+import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
@@ -70,6 +71,9 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     private static register: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
 
+    // Queue of promises to process sequentially when multiple extension register in parallel
+    private static refreshProfilesQueue = new PromiseQueue(1, Infinity);
+
     // These are the different API registries currently available to extenders
     private ussApiImplementations = new Map<string, ZoweExplorerApi.IUss>();
     private mvsApiImplementations = new Map<string, ZoweExplorerApi.IMvs>();
@@ -90,8 +94,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     // added. On the other these functions make the client code easier to read and understand.
 
     public async reloadProfiles(): Promise<void> {
-        // reload the internal profiles cache to add the newly added profiles
-        await Profiles.getInstance().refresh();
+        // sequentially reload the internal profiles cache to satisfy all the newly added profile types
+        ZoweExplorerApiRegister.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
     }
 
     /**
