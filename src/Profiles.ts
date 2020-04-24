@@ -474,7 +474,6 @@ export class Profiles {
         OrigProfileInfo.host = NewProfileInfo.host;
         OrigProfileInfo.port = NewProfileInfo.port;
         OrigProfileInfo.rejectUnauthorized = NewProfileInfo.rejectUnauthorized;
-        OrigProfileInfo.base64EncodedAuth = NewProfileInfo.base64EncodedAuth;
 
         const updateParms: IUpdateProfile = {
             name: this.loadedProfile.name,
