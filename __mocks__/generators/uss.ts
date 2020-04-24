@@ -11,7 +11,11 @@
 
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
+<<<<<<< HEAD
 import * as globals from "../../src/globals";
+=======
+import { USS_SESSION_CONTEXT, FAVORITE_CONTEXT, DS_TEXT_FILE_CONTEXT, FAV_SUFFIX } from "../../src/globals";
+>>>>>>> WIP
 import { getIconByNode } from "../../src/generators/icons";
 
 const mockUSSRefresh = jest.fn();
@@ -57,10 +61,17 @@ export function generateFavoriteUSSNode(session, profile) {
 }
 
 export function addSessionNode(theTree, theSession, theProfile) {
+<<<<<<< HEAD
     const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name);
     theTree.mSessionNodes.push(newSessNode);
     const sessionIndex = theTree.mSessionNodes.length - 1;
     theTree.mSessionNodes[sessionIndex].contextValue = globals.USS_SESSION_CONTEXT;
+=======
+    const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name)
+    theTree.mSessionNodes.push(newSessNode);
+    const sessionIndex = theTree.mSessionNodes.length - 1;
+    theTree.mSessionNodes[sessionIndex].contextValue = USS_SESSION_CONTEXT;
+>>>>>>> WIP
     theTree.mSessionNodes[sessionIndex].fullPath = "test";
     const targetIcon = getIconByNode(theTree.mSessionNodes[sessionIndex]);
     if (targetIcon) {

@@ -579,6 +579,172 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
+    it("Tests that USSTree.rename() exits when blank input is provided", async () => {
+        const refreshSpy = jest.spyOn(testTree, "refreshElement");
+        showInputBox.mockReturnValueOnce("");
+
+        await testTree.rename(testUSSNode);
+        expect(showErrorMessage.mock.calls.length).toBe(0);
+        expect(renameUSSFile.mock.calls.length).toBe(0);
+        expect(refreshSpy).not.toHaveBeenCalled();
+    });
+
+    it("Tests that USSTree.rename() fails when error is thrown", async () => {
+        showInputBox.mockReturnValueOnce("new name");
+        renameUSSFile.mockRejectedValueOnce(Error("testError"));
+
+        try {
+            await testTree.rename(testUSSNode);
+            // tslint:disable-next-line:no-empty
+        } catch (err) { }
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("Tests that USSTree.rename() is executed successfully for a favorited USS file", async () => {
+        const ussFavNode = generateFavoriteUSSNode(testSession, testProfile);
+        const removeFavorite = jest.spyOn(testTree, "removeFavorite");
+        const addFavorite = jest.spyOn(testTree, "addFavorite");
+        showInputBox.mockReturnValueOnce("new name");
+
+        await testTree.rename(ussFavNode);
+        expect(showErrorMessage.mock.calls.length).toBe(0);
+        expect(renameUSSFile.mock.calls.length).toBe(1);
+        expect(removeFavorite.mock.calls.length).toBe(1);
+        expect(addFavorite.mock.calls.length).toBe(1);
+    });
+});
+
+describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall()", () => {
+    beforeEach(() => {});
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests that addRecall() & getRecall() are executed successfully", async () => {
+        testTree.addRecall("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("testHistory");
+    });
+});
+
+describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
+    beforeEach(() => {});
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests that removeRecall() is executed successfully", async () => {
+        testTree.removeRecall("testHistory");
+        expect(testTree.getRecall().includes("testHistory")).toEqual(false);
+    });
+});
+
+describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
+    const parentDir = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null, "/");
+    const childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None,
+            parentDir, null, "/parent");
+    childFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+
+    beforeEach(() => {
+        testTree.mFavorites = [];
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests that addFavorite() works for directories", async () => {
+        await testTree.addFavorite(parentDir);
+        expect(testTree.mFavorites[0].fullPath).toEqual(parentDir.fullPath);
+    });
+
+    it("Tests that addFavorite() works for files", async () => {
+        await testTree.addFavorite(childFile);
+        expect(testTree.mFavorites[0].fullPath).toEqual(childFile.fullPath);
+    });
+
+    it("Tests that addFavorite() doesn't add duplicates", async () => {
+        await testTree.addFavorite(parentDir);
+        await testTree.addFavorite(parentDir);
+        expect(testTree.mFavorites.length).toEqual(1);
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
+    const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed,
+    testTree.mSessionNodes[1], null, "/");
+
+    beforeEach(async () => {
+        testTree.mFavorites = [];
+        await testTree.addFavorite(testDir);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests that removeFavorite() works properly", async () => {
+        // Checking that favorites are set successfully before test
+        expect(testTree.mFavorites[0].fullPath).toEqual(testDir.fullPath);
+
+        await testTree.removeFavorite(testTree.mFavorites[0]);
+        expect(testTree.mFavorites).toEqual([]);
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
+    const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[0], null, "/a/b");
+
+    beforeEach(async () => {});
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests that openItemFromPath opens a USS file in the tree", async () => {
+        spyOn(testTree, "getChildren").and.returnValue(Promise.resolve([file]));
+
+        await testTree.openItemFromPath("/a/b/c.txt", testTree.mSessionNodes[1]);
+        expect(testTree.getHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
+    });
+
+    it("Tests that openItemFromPath fails when the node no longer exists", async () => {
+        spyOn(testTree, "getChildren").and.returnValue(Promise.resolve([]));
+        const recallSpy = jest.spyOn(testTree, "removeRecall");
+
+        await testTree.openItemFromPath("/d.txt", testTree.mSessionNodes[1]);
+        expect(recallSpy).toBeCalledWith("[sestest]: /d.txt");
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
+    const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, testSession, null);
+    testTree.mSessionNodes.push(testSessionNode);
+
+    beforeEach(async () => {});
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("Tests if addSession works properly", async () => {
+        testTree.addSession("testSessionNode");
+
+        const foundNode = testTree.mSessionNodes.includes(testSessionNode);
+        expect(foundNode).toEqual(true);
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
+    const testTree2 = addSessionNode(new USSTree(), testSession, testProfile);
+    const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, testSession, null);
+    testTree2.mSessionNodes.push(testSessionNode);
+    const startLength = testTree2.mSessionNodes.length;
+
+    beforeEach(async () => {});
+
     afterEach(() => {
         jest.clearAllMocks();
     });
