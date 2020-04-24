@@ -57,7 +57,11 @@ export function generateFavoriteUSSNode(session, profile) {
 }
 
 export function addSessionNode(theTree, theSession, theProfile) {
+<<<<<<< HEAD
     const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name);
+=======
+    const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name)
+>>>>>>> WIP
     theTree.mSessionNodes.push(newSessNode);
     const sessionIndex = theTree.mSessionNodes.length - 1;
     theTree.mSessionNodes[sessionIndex].contextValue = globals.USS_SESSION_CONTEXT;
