@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { USSTree } from "../../src/__mocks__/USSTree";
+import { getIconByNode } from "../../src/generators/icons";
 
 export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     let newTree = new USSTree();
@@ -51,4 +52,17 @@ export function generateFavoriteUSSNode(session, profile) {
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";
     return ussNodeF;
+}
+
+export function addSessionNode(theTree, theSession, theProfile) {
+    const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name)
+    theTree.mSessionNodes.push(newSessNode);
+    const sessionIndex = theTree.mSessionNodes.length - 1;
+    theTree.mSessionNodes[sessionIndex].contextValue = globals.USS_SESSION_CONTEXT;
+    theTree.mSessionNodes[sessionIndex].fullPath = "test";
+    const targetIcon = getIconByNode(theTree.mSessionNodes[sessionIndex]);
+    if (targetIcon) {
+        theTree.mSessionNodes[1].iconPath = targetIcon.path;
+    }
+    return theTree;
 }

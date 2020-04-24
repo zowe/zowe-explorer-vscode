@@ -19,6 +19,7 @@ export function generateISession() {
         user: "fake",
         password: "fake",
         hostname: "fake",
+        port: 443,
         protocol: "https",
         type: "basic",
     });
