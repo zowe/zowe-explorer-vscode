@@ -117,9 +117,9 @@ describe("Profile class unit tests", () => {
 
     it("should load a named profile ", async () => {
         const profiles = await Profiles.createInstance(log);
-        const getProfiles = [profileOne, profileTwo];
+        const neededProfiles = [profileOne, profileTwo];
         const loadedProfile = profiles.getProfiles("zosmf");
-        expect(loadedProfile).toEqual(getProfiles);
+        expect(loadedProfile).toEqual(neededProfiles);
     });
 
 
@@ -202,7 +202,7 @@ describe("Profile class unit tests", () => {
         it("should indicate missing property: username", async () => {
             // Enter z/OS password
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
@@ -211,7 +211,7 @@ describe("Profile class unit tests", () => {
         it("should indicate missing property: password", async () => {
             // Enter z/OS password
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.createNewConnection(profileOne.name);
@@ -221,7 +221,7 @@ describe("Profile class unit tests", () => {
         it("should indicate missing property: rejectUnauthorized", async () => {
             // Operation cancelled
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
@@ -231,7 +231,7 @@ describe("Profile class unit tests", () => {
 
         it("should validate that profile name already exists", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -243,7 +243,7 @@ describe("Profile class unit tests", () => {
 
         it("should create new profile", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -254,7 +254,7 @@ describe("Profile class unit tests", () => {
 
         it("should create profile with optional credentials", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("");
             showInputBox.mockResolvedValueOnce("");
             showQuickPick.mockReset();
@@ -266,7 +266,7 @@ describe("Profile class unit tests", () => {
 
         it("should create profile https+443", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -278,7 +278,7 @@ describe("Profile class unit tests", () => {
 
         it("should create 2 consecutive profiles", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake1");
             showInputBox.mockResolvedValueOnce("fake1");
             showQuickPick.mockReset();
@@ -291,7 +291,7 @@ describe("Profile class unit tests", () => {
             showInformationMessage.mockReset();
 
             showInputBox.mockResolvedValueOnce("fake2");
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake2");
             showInputBox.mockResolvedValueOnce("fake2");
 
@@ -421,7 +421,7 @@ describe("Profile class unit tests", () => {
 
         it("should edit a profile", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -437,7 +437,7 @@ describe("Profile class unit tests", () => {
 
         it("should edit a profile - with error", async () => {
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -457,7 +457,7 @@ describe("Profile class unit tests", () => {
         it("should indicate invalid property: username", async () => {
             // Enter z/OS password
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.editSession(profileLoad, profileLoad.name);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
@@ -466,7 +466,7 @@ describe("Profile class unit tests", () => {
         it("should indicate invalid property: password", async () => {
             // Enter z/OS password
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);
             await profiles.editSession(profileLoad, profileLoad.name);
@@ -476,7 +476,7 @@ describe("Profile class unit tests", () => {
         it("should indicate invalid property: rejectUnauthorized", async () => {
             // Operation cancelled
             createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+            profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce(undefined);

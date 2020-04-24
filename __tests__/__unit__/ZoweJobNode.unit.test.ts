@@ -866,7 +866,9 @@ describe("Zos Jobs Unit Tests", () => {
                 })
             });
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const checkSession = jest.spyOn(testJobsProvider, "editSession");
             testJobsProvider.editSession(jobNode);
+            expect(checkSession).toHaveBeenCalled();
         });
     });
 

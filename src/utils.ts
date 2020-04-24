@@ -63,7 +63,6 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 /*************************************************************************************************************
  * Refresh Profile and Session
  * @param {sessNode} IZoweTreeNode
- * @param {profile} IProfileLoaded
  *************************************************************************************************************/
 export function refreshTree(sessNode: IZoweTreeNode) {
     const allProf = Profiles.getInstance().getProfiles();
@@ -113,10 +112,16 @@ export function getZoweDir(): string {
     return ImperativeConfig.instance.cliHome;
 }
 
+/**
+ * Function to update the node profile information
+ */
 export async function setProfile(node: IZoweTreeNode, profile: IProfile) {
     node.getProfile().profile= profile;
 }
 
+/**
+ * Function to update the node session information
+ */
 export async function setSession(node: IZoweTreeNode, session: ISession) {
     node.getSession().ISession.user = session.user;
     node.getSession().ISession.password = session.password;

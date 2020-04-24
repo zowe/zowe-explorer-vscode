@@ -748,6 +748,7 @@ describe("DatasetTree Unit Tests", () => {
     it("Test the editSession command ", async () => {
         const editnode = new ZoweDatasetNode("EditSession", vscode.TreeItemCollapsibleState.Collapsed,
             testTree.mSessionNodes[1], null);
+        const checkSession = jest.spyOn(testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -758,6 +759,7 @@ describe("DatasetTree Unit Tests", () => {
             })
         });
         testTree.editSession(editnode);
+        expect(checkSession).toHaveBeenCalled();
     });
 
     /*************************************************************************************************************

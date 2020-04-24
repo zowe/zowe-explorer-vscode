@@ -965,9 +965,11 @@ describe("Unit Tests (Jest)", () => {
                 };
             })
         });
+        const checkSession = jest.spyOn(testTree, "editSession");
         const editnode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
         testTree.mSessionNodes[1], null, "/");
         testTree.editSession(editnode);
+        expect(checkSession).toHaveBeenCalled();
     });
 
     describe("renameUSSNode", () => {
