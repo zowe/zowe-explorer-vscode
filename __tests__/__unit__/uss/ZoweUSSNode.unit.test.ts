@@ -401,16 +401,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
-    // CAN ANYONE EXPLAIN WHAT THIS IS SUPPOSED TO TEST???
-    // It is from ZoweUSSNode.unit.test.ts, line 150
-    //
-    // it("Tests that label is different when label contains a []", async () => {
-    //     const rootNode2 = new ZoweUSSNode(
-    //         "root[test]", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-    //     rootNode2.dirty = true;
-    //     let rootChildren = await rootNode2.getChildren();
-    // });
-
     it("Tests that when bright.List. causes an error on the zowe call, " +
         "node.getChildren() throws an error and the catch block is reached", async () => {
             childNode.contextValue = USS_SESSION_CONTEXT;
@@ -530,24 +520,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
         expect(showTextDocument.mock.calls.length).toBe(1);
         expect(showTextDocument.mock.calls[0][0]).toBe("test.doc");
-
-        // WHY IS THIS BLOCK HERE??
-        //      No test run on this block...
-        // await node2.openUSS(false, true, testUSSTree);
-
-        // ussFile.mockReset();
-        // openTextDocument.mockReset();
-        // showTextDocument.mockReset();
-        // existsSync.mockReset();
-
-        // WHY IS THIS BLOCK HERE??
-        //      No test run on this block...
-        // const node2 = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        // const child2 = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, node2, null, null);
-        // try {
-        //     await child2.openUSS(false, true, testUSSTree);
-        // // tslint:disable-next-line: no-empty
-        // } catch (err) { }
     });
 
     it ("Tests that node.openUSS() fails when an error is thrown", async () => {
@@ -641,92 +613,4 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
         expect(showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
     });
-
-    // THE FOLLOWING TESTS SHOULD BE REMOVED
-    //     ...Because the credentials prompt has been moved into Profiles function checkCurrentProfile(),
-    //     which is tested in the Profiles.unit.test.ts folder
-
-    // it("Tests that node.openUSS() credentials prompt is executed successfully", async () => {
-    //     dsNode.contextValue = USS_SESSION_CONTEXT;
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-    //                 defaultProfile: {name: "firstName"},
-    //                 promptCredentials: jest.fn(()=> {
-    //                     return ["fake", "fake", "fake"];
-    //                 }),
-    //                 loadNamedProfile: mockLoadNamedProfile,
-    //                 validProfile: ValidProfileEnum.VALID,
-    //                 checkCurrentProfile: jest.fn(),
-    //             };
-    //         })
-    //     });
-
-    //     await dsNode.openUSS(false, true, testUSSTree);
-    //     expect(openTextDocument.mock.calls.length).toBe(1);
-    //     expect(showTextDocument.mock.calls.length).toBe(1);
-    // });
-
-    // it("Tests that node.openUSS() credentials prompt works with favorites", async () => {
-    //     dsNode.contextValue = USS_DIR_CONTEXT + FAV_SUFFIX;
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-    //                 defaultProfile: {name: "firstName"},
-    //                 promptCredentials: jest.fn(()=> {
-    //                     return ["fake", "fake", "fake"];
-    //                 }),
-    //                 loadNamedProfile: mockLoadNamedProfile,
-    //                 validProfile: ValidProfileEnum.VALID,
-    //                 checkCurrentProfile: jest.fn(),
-    //             };
-    //         })
-    //     });
-
-    //     await dsNode.openUSS(false, true, testUSSTree);
-    //     expect(openTextDocument.mock.calls.length).toBe(1);
-    //     expect(showTextDocument.mock.calls.length).toBe(1);
-    // });
-
-    // it("Tests that node.openUSS() credentials prompt for favorites ends in error", async () => {
-    //     dsNode.contextValue = USS_DIR_CONTEXT + FAV_SUFFIX;
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-    //                 defaultProfile: {name: "firstName"},
-    //                 validProfile: ValidProfileEnum.INVALID,
-    //                 checkCurrentProfile: jest.fn(),
-    //                 promptCredentials: jest.fn(()=> {
-    //                     return [undefined, undefined, undefined];
-    //                 }),
-    //                 loadNamedProfile: mockLoadNamedProfile
-    //             };
-    //         })
-    //     });
-
-    //     const spyopenUSS = jest.spyOn(dsNode, "openUSS");
-    //     await dsNode.openUSS(false, true, testUSSTree);
-    //     expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
-    // });
-
-    // it("Tests that node.openUSS() credentials prompt ends in error", async () => {
-    //     dsNode.contextValue = USS_SESSION_CONTEXT;
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-    //                 defaultProfile: {name: "firstName"},
-    //                 validProfile: ValidProfileEnum.INVALID,
-    //                 checkCurrentProfile: jest.fn(),
-    //                 loadNamedProfile: mockLoadNamedProfile
-    //             };
-    //         })
-    //     });
-
-    //     await dsNode.openUSS(false, true, testUSSTree);
-    //     expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
-    // });
 });
