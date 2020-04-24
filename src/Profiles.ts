@@ -156,7 +156,8 @@ export class Profiles {
 
     public async getSchema(profileType: string): Promise<{}> {
         const profileManager = await this.getCliProfileManager(profileType);
-
+        // tslint:disable-next-line:no-console
+        console.log(JSON.stringify(profileManager));
         const configOptions = Array.from(profileManager.configurations);
         let schema: {};
         for (const val of configOptions) {
@@ -432,6 +433,21 @@ export class Profiles {
         }
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
+    public async getCliProfileManager(type: string): Promise<CliProfileManager> {
+        let profileManager = this.profileManagerByType.get(type);
+        if (!profileManager) {
+            profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                type
+            });
+            if (profileManager) {
+                this.profileManagerByType.set(type, profileManager);
+            } else {
+                return undefined;
+            }
+        }
+        return profileManager;
+    }
 
     private async updateProfile(ProfileInfo) {
 
@@ -468,21 +484,5 @@ export class Profiles {
             vscode.window.showErrorMessage(error.message);
         }
         return newProfile.profile;
-    }
-
-    private async getCliProfileManager(type: string): Promise<CliProfileManager> {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                type
-            });
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
     }
 }
