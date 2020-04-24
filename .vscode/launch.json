@@ -10,9 +10,18 @@
             "name": "Unit Tests (Jest)",
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+<<<<<<< HEAD
             "args": [
                 "--runInBand",
             ],
+=======
+<<<<<<< HEAD
+=======
+            "args": [
+                "--runInBand"
+            ],
+>>>>>>> WIP
+>>>>>>> WIP
             "cwd": "${workspaceFolder}",
             "args": ["--runInBand"],
             "console": "integratedTerminal",
