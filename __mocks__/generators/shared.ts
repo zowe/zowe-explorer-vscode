@@ -48,6 +48,24 @@ export function generateIProfile(): imperative.IProfileLoaded {
     };
 }
 
+export function generateInvalidIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+}
+
 export function generateTreeView() {
     return {
         reveal: jest.fn(),
