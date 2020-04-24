@@ -12,6 +12,7 @@
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
+import { Profiles } from "../Profiles";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -95,6 +96,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registerUssApi(ussApi: ZoweExplorerApi.IUss): void {
         if (ussApi && ussApi.getProfileTypeName()) {
             this.ussApiImplementations.set(ussApi.getProfileTypeName(), ussApi);
+            // reload the internal profiles cache to add the newly added profiles
+            Profiles?.getInstance()?.refresh();
         } else {
             throw new Error(
                 localize("registerUssApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid USS API."));
@@ -108,6 +111,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registerMvsApi(mvsApi: ZoweExplorerApi.IMvs): void {
         if (mvsApi && mvsApi.getProfileTypeName()) {
             this.mvsApiImplementations.set(mvsApi.getProfileTypeName(), mvsApi);
+            // reload the internal profiles cache to add the newly added profiles
+            Profiles?.getInstance()?.refresh();
         } else {
             throw new Error(
                 localize("registerMvsApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API."));
@@ -121,6 +126,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registerJesApi(jesApi: ZoweExplorerApi.IJes): void {
         if (jesApi && jesApi.getProfileTypeName()) {
             this.jesApiImplementations.set(jesApi.getProfileTypeName(), jesApi);
+            // reload the internal profiles cache to add the newly added profiles
+            Profiles?.getInstance()?.refresh();
         } else {
             throw new Error(
                 localize("registerJesApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid JES API."));
