@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { USSTree } from "../../src/__mocks__/USSTree";
+import { USS_SESSION_CONTEXT, FAVORITE_CONTEXT, DS_TEXT_FILE_CONTEXT, FAV_SUFFIX } from "../../src/globals";
 import { getIconByNode } from "../../src/generators/icons";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
