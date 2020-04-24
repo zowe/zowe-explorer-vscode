@@ -137,6 +137,10 @@ describe("USSTree Unit Tests - Function initializeUSSTree()", () => {
         environmentalMocks = await createEnvironmentalMocks();
     });
 
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
+    });
+
     it("Tests if initializeUSSTree() is executed successfully", async () => {
         const expectedUSSFavorites: ZoweUSSNode[] = [
             new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, environmentalMocks.testSession, "",
@@ -166,6 +170,10 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         environmentalMocks = await createEnvironmentalMocks();
         environmentalMocks.testUSSNode.label = "";
         environmentalMocks.testUSSNode.shortLabel = "";
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     it("Tests that USSTree.rename() is executed successfully", async () => {
@@ -633,6 +641,10 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
         testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
+    });
+
     it("Tests that addRecall() & getRecall() are executed successfully", async () => {
         environmentalMocks.testTree.addRecall("testHistory");
         expect(environmentalMocks.testTree.getRecall()[0]).toEqual("testHistory");
@@ -644,6 +656,10 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
 
     beforeEach(async () => {
         environmentalMocks = await createEnvironmentalMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     afterAll(() => {
@@ -676,6 +692,10 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
 
         return newMocks;
     }
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
+    });
 
     afterAll(() => {
         testTree = addSessionNode(new USSTree(), testSession, testProfile);
@@ -721,6 +741,10 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
+    });
+
     it("Tests that removeFavorite() works properly", async () => {
         // Checking that favorites are set successfully before test
         expect(environmentalMocks.testTree.mFavorites[0].fullPath).toEqual(blockMocks.testDir.fullPath);
@@ -735,6 +759,10 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
 
     beforeEach(async () => {
         environmentalMocks = await createEnvironmentalMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     afterAll(() => {
@@ -763,6 +791,10 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
 
     beforeEach(async () => {
         environmentalMocks = await createEnvironmentalMocks();
+    });
+
+    afterAll(() => {
+        testTree = addSessionNode(new USSTree(), testSession, testProfile);
     });
 
     afterAll(() => {
