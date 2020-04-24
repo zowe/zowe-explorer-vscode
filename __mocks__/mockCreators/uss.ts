@@ -12,8 +12,11 @@
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
+<<<<<<< HEAD
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { USSTree } from "../../src/__mocks__/USSTree";
+=======
+>>>>>>> WIP
 import { getIconByNode } from "../../src/generators/icons";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
@@ -55,7 +58,11 @@ export function createFavoriteUSSNode(session, profile) {
 }
 
 export function addSessionNode(theTree, theSession, theProfile) {
+<<<<<<< HEAD
     const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name);
+=======
+    const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name)
+>>>>>>> WIP
     theTree.mSessionNodes.push(newSessNode);
     const sessionIndex = theTree.mSessionNodes.length - 1;
     theTree.mSessionNodes[sessionIndex].contextValue = globals.USS_SESSION_CONTEXT;
