@@ -111,7 +111,7 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
-    const getConfiguration = jest.fn();
+    const getConfigurationMock = jest.fn();
     const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
 
@@ -121,7 +121,8 @@ describe("Profile class unit tests", () => {
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfigurationMock });
+    Object.defineProperty(vscode, "ConfigurationTarget", { value: getConfigurationMock });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
 
     const sessTree: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
@@ -459,8 +460,12 @@ describe("Profile class unit tests", () => {
 
     describe("Deleting Profiles", () => {
         let profiles: Profiles;
+        const getRecallMockValue = jest.fn();
+        const getRecallUSSMockValue = jest.fn();
         beforeEach(async () => {
             profiles = await Profiles.createInstance(log);
+            Object.defineProperty(DatasetTree, "getRecall", { value:  getRecallMockValue });
+            Object.defineProperty(USSTree, "getRecall", { value:  getRecallUSSMockValue });
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -497,6 +502,18 @@ describe("Profile class unit tests", () => {
                     };
                 })
             });
+            getConfigurationMock.mockReturnValue({
+                persistence: true,
+                get: () => {
+                    return {
+                        sessions: ["profile1"],
+                        favorites: ["[profile1]: /u/myFile.txt{textFile"]
+                    };
+                },
+                update: jest.fn(()=>{
+                    return {};
+                })
+            });
         });
 
         afterEach(() => {
@@ -505,6 +522,7 @@ describe("Profile class unit tests", () => {
             createInputBox.mockReset();
             showInformationMessage.mockReset();
             showErrorMessage.mockReset();
+            getConfigurationMock.mockClear();
         });
 
         it("should delete profile from command palette", async () => {
@@ -604,6 +622,27 @@ describe("Profile class unit tests", () => {
             expect(jobsTree.mSessionNodes.length).toEqual(startLength);
             expect(jobsTree.mFavorites.length).toEqual(favoriteLength);
         });
+
+        it("should test deletion of recall for DS", async () => {
+            sessTree.addRecall("[profile1]: TEST.DATA");
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+            expect(sessTree.getRecall()[0]).toBeUndefined();
+        });
+
+        it("should test deletion of recall for USS", async () => {
+            ussTree.addRecall("[profile1]: /node1/node2/node3.txt");
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+            expect(ussTree.getRecall()[0]).toBeUndefined();
+        });
+
     });
 
     it("should route through to spawn. Covers conditional test", async () => {

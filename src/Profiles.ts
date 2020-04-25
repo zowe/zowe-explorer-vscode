@@ -58,6 +58,9 @@ export class Profiles {
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
+    private dsSchema: string = "Zowe-DS-Persistent";
+    private ussSchema: string = "Zowe-USS-Persistent";
+    private jobsSchema: string = "Zowe-Jobs-Persistent";
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -121,7 +124,13 @@ export class Profiles {
             if (profilesForType && profilesForType.length > 0) {
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
-                this.defaultProfileByType.set(type, (await profileManager.load({ loadDefault: true })));
+                let defaultProfile: IProfileLoaded;
+                try {
+                    defaultProfile = await profileManager.load({ loadDefault: true });
+                } catch (error) {
+                    vscode.window.showInformationMessage(error.message);
+                }
+                this.defaultProfileByType.set(type, defaultProfile);
             }
         }
     }
@@ -344,24 +353,25 @@ export class Profiles {
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
         });
-        if (profileNamesList.length) {
-            const quickPickList: vscode.QuickPickOptions = {
-                placeHolder: localize("deleteProfile.quickPickOption", "Select the profile you want to delete"),
-                ignoreFocusOut: true,
-                canPickMany: false
-            };
-            const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickList);
 
-            if (sesName === undefined) {
-                vscode.window.showInformationMessage(localize("deleteProfile.undefined.profilename",
-                    "Operation Cancelled"));
-                return;
-            } else {
-                zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-            }
-        } else {
+        if (!profileNamesList.length) {
             vscode.window.showInformationMessage(localize("deleteProfile.noProfilesLoaded", "No profiles available"));
             return;
+        }
+
+        const quickPickList: vscode.QuickPickOptions = {
+            placeHolder: localize("deleteProfile.quickPickOption", "Select the profile you want to delete"),
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickList);
+
+        if (sesName === undefined) {
+            vscode.window.showInformationMessage(localize("deleteProfile.undefined.profilename",
+                "Operation Cancelled"));
+            return;
+        } else {
+            zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
         }
 
         return zosmfProfile;
@@ -430,23 +440,6 @@ export class Profiles {
                 return;
             }
 
-            // Delete from Data Set Tree
-            datasetTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === deleteLabel) {
-                    datasetTree.deleteSession(sessNode);
-                }
-            });
-            await datasetTree.refresh();
-
-            // Delete from Data Set Favorites
-            datasetTree.mFavorites.forEach((ses) => {
-                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
-                if (findNode === deleteLabel) {
-                    datasetTree.removeFavorite(ses);
-                }
-            });
-            await datasetTree.refresh();
-
             // Delete from Data Set Recall
             const recallDs: string[] = datasetTree.getRecall();
             for (let i = recallDs.length - 1; i >= 0; i--) {
@@ -456,23 +449,25 @@ export class Profiles {
                 }
             }
 
-            await datasetTree.refresh();
-
-            // Delete from USS Tree
-            ussTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === deleteLabel) {
-                    ussTree.deleteSession(sessNode);
-                }
-            });
-
-            // Delete from USS Favorites
-            ussTree.mFavorites.forEach((ses) => {
-                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            // Delete from Data Set Favorites
+            const favoriteDs = datasetTree.mFavorites;
+            for (let i = favoriteDs.length - 1; i >= 0; i--) {
+                const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
                 if (findNode === deleteLabel) {
-                    ussTree.removeFavorite(ses);
+                    await datasetTree.removeFavorite(favoriteDs[i]);
+                    favoriteDs[i].dirty = true;
+                    datasetTree.refresh();
+                }
+            }
+
+            // Delete from Data Set Tree
+            datasetTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === deleteLabel) {
+                    datasetTree.deleteSession(sessNode);
+                    sessNode.dirty = true;
+                    datasetTree.refresh();
                 }
             });
-            await ussTree.refresh();
 
             // Delete from USS Recall
             const recallUSS: string[] = ussTree.getRecall();
@@ -483,24 +478,85 @@ export class Profiles {
                 }
             }
 
-            await ussTree.refresh();
-
-            // Delete from Jobs Tree
-            jobsProvider.mSessionNodes.forEach((jobNode) => {
-                if (jobNode.getProfileName() === deleteLabel) {
-                    jobsProvider.deleteSession(jobNode);
+            // Delete from USS Favorites
+            ussTree.mFavorites.forEach((ses) => {
+                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+                if (findNode === deleteLabel) {
+                    ussTree.removeFavorite(ses);
+                    ses.dirty = true;
+                    ussTree.refresh();
                 }
             });
-            await jobsProvider.refresh();
+
+            // Delete from USS Tree
+            ussTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === deleteLabel) {
+                    ussTree.deleteSession(sessNode);
+                    sessNode.dirty = true;
+                    ussTree.refresh();
+                }
+            });
 
             // Delete from Jobs Favorites
             jobsProvider.mFavorites.forEach((ses) => {
                 const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
                 if (findNode === deleteLabel) {
                     jobsProvider.removeFavorite(ses);
+                    ses.dirty = true;
+                    jobsProvider.refresh();
                 }
             });
-            await jobsProvider.refresh();
+
+            // Delete from Jobs Tree
+            jobsProvider.mSessionNodes.forEach((jobNode) => {
+                if (jobNode.getProfileName() === deleteLabel) {
+                    jobsProvider.deleteSession(jobNode);
+                    jobNode.dirty = true;
+                    jobsProvider.refresh();
+                }
+            });
+
+            // Delete from Data Set Sessions list
+            const dsSetting: any = {...vscode.workspace.getConfiguration().get(this.dsSchema)};
+            let sessDS: string[] = dsSetting.sessions;
+            let faveDS: string[] = dsSetting.favorites;
+            sessDS = sessDS.filter( (element) => {
+                return element.trim() !== deleteLabel;
+            });
+            faveDS = faveDS.filter( (element) => {
+                return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
+            });
+            dsSetting.sessions = sessDS;
+            dsSetting.favorites = faveDS;
+            await vscode.workspace.getConfiguration().update(this.dsSchema, dsSetting, vscode.ConfigurationTarget.Global);
+
+            // Delete from USS Sessions list
+            const ussSetting: any = {...vscode.workspace.getConfiguration().get(this.ussSchema)};
+            let sessUSS: string[] = ussSetting.sessions;
+            let faveUSS: string[] = ussSetting.favorites;
+            sessUSS = sessUSS.filter( (element) => {
+                return element.trim() !== deleteLabel;
+            });
+            faveUSS = faveUSS.filter( (element) => {
+                return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
+            });
+            ussSetting.sessions = sessUSS;
+            ussSetting.favorites = faveUSS;
+            await vscode.workspace.getConfiguration().update(this.ussSchema, ussSetting, vscode.ConfigurationTarget.Global);
+
+            // Delete from Jobs Sessions list
+            const jobsSetting: any = {...vscode.workspace.getConfiguration().get(this.jobsSchema)};
+            let sessJobs: string[] = jobsSetting.sessions;
+            let faveJobs: string[] = jobsSetting.favorites;
+            sessJobs = sessJobs.filter( (element) => {
+                return element.trim() !== deleteLabel;
+            });
+            faveJobs = faveJobs.filter( (element) => {
+                return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
+            });
+            jobsSetting.sessions = sessJobs;
+            jobsSetting.favorites = faveJobs;
+            await vscode.workspace.getConfiguration().update(this.jobsSchema, jobsSetting, vscode.ConfigurationTarget.Global);
 
             // Remove from list of all profiles
             const index = this.allProfiles.findIndex((deleteItem) => {
@@ -508,7 +564,6 @@ export class Profiles {
             });
             if (index >= 0) { this.allProfiles.splice(index, 1); }
     }
-
 
     private async updateProfile(ProfileInfo) {
 
