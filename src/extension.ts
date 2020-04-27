@@ -153,6 +153,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         });
     }
+    if (datasetProvider || ussFileProvider || jobsProvider) {
+        vscode.commands.registerCommand("zowe.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider));
+        vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+    }
 
     // return the Extension's API to other extensions that want to register their APIs.
     return ZoweExplorerApiRegister.getInstance();
