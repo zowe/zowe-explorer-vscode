@@ -1,4 +1,8 @@
 {
     "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for ",
-    "errorHandling.invalid.credentials2": " are valid or this may lead to a lock-out."
+    "errorHandling.invalid.credentials2": " are valid or this may lead to a lock-out.",
+    "saveFile.error.theiaDetected": "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
+    "saveFile.info.confirmUpload": "Would you like to overwrite the remote file?",
+    "saveFile.overwriteConfirmation.yes": "Yes",
+    "saveFile.overwriteConfirmation.no": "No"
 }
