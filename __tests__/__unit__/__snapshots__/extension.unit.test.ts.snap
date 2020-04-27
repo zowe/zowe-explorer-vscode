@@ -193,7 +193,13 @@ Array [
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
   },
   Object {
+    "command": "zowe.deleteProfile",
+    "group": "6_modification@4",
+    "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+  },
+  Object {
     "command": "zowe.removeSession",
+    "group": "6_modification@3",
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
   },
   Object {
@@ -226,7 +232,13 @@ Array [
     "when": "viewItem =~ /^ussSession.*/",
   },
   Object {
+    "command": "zowe.uss.deleteProfile",
+    "group": "6_modification@4",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+  },
+  Object {
     "command": "zowe.uss.removeSession",
+    "group": "6_modification@3",
     "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
@@ -255,6 +267,11 @@ Array [
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
   },
   Object {
+    "command": "zowe.jobs.deleteProfile",
+    "group": "6_modification@4",
+    "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+  },
+  Object {
     "command": "zowe.setOwner",
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
   },
@@ -264,6 +281,7 @@ Array [
   },
   Object {
     "command": "zowe.removeJobsSession",
+    "group": "6_modification@3",
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
   },
   Object {
