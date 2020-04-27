@@ -128,7 +128,13 @@ export class Profiles {
         try {
             url = new URL(newUrl);
         } catch (error) {
-            return validationResult;
+            if (validationResult.host === null) {
+                vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
+                        "No valid value for z/OS Host. Operation Cancelled"));
+                return undefined;
+            } else {
+                return validationResult;
+            }
         }
 
         validationResult.protocol = url.protocol;
@@ -220,19 +226,25 @@ export class Profiles {
                     if (host.includes(":")) {
                         if (host.includes("/")) {
                             const result = this.parseUrl(host);
+                            if (result === undefined) {
+                                return undefined;
+                            } else {
                             host = result.host;
-                            if (!Number.isNaN(result.port)) {
+                            if (result.port !== null) {
                                 port = result.port;
                                 schemaValues.port = port;
-                            }
+                            }}
                         } else {
                             host = "https://" + host;
                             const result = this.parseUrl(host);
+                            if (result === undefined) {
+                                return undefined;
+                            } else {
                             host = result.host;
-                            if (!Number.isNaN(result.port)) {
+                            if (result.port !== null) {
                                 port = result.port;
                                 schemaValues.port = port;
-                            }
+                            }}
                         }
                     }
                 }catch(error){
