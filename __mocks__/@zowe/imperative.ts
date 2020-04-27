@@ -74,6 +74,39 @@ export class CliProfileManager {
     public update(){
         return { name: "profile1", profile: {}, type: "zosmf" };
     }
+    public delete(){
+        return { name: "profile1", profile: {}, type: "zosmf" };
+    }
+    public get configurations() {
+        return [{
+            type: "zosmf",
+            schema: {
+                type: "object",
+                title: "test profile",
+                description: "test profile",
+                properties: {
+                    sum: {
+                        type: "number"
+                         }
+                },
+                required: ["sum"]
+            },
+        },
+        {
+            type: "banana",
+            schema: {
+                type: "object",
+                title: "test banana",
+                description: "test banana",
+                properties: {
+                    sum: {
+                        type: "number"
+                         }
+                },
+                required: ["sum"]
+            },
+        }];
+    }
 }
 
 // tslint:disable-next-line:max-classes-per-file

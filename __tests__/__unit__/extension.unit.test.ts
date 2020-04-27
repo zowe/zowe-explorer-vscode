@@ -685,7 +685,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(71);
+        expect(registerCommand.mock.calls.length).toBe(76);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -702,6 +702,7 @@ describe("Extension Unit Tests", () => {
             "zowe.editSession",
             "zowe.ZoweNode.openPS",
             "zowe.createDataset",
+            "zowe.all.profilelink",
             "zowe.createMember",
             "zowe.deleteDataset",
             "zowe.deletePDS",
@@ -764,7 +765,11 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems"
+            "zowe.searchInAllLoadedItems",
+            "zowe.deleteProfile",
+            "zowe.cmd.deleteProfile",
+            "zowe.uss.deleteProfile",
+            "zowe.jobs.deleteProfile",
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -2081,6 +2086,7 @@ describe("Extension Unit Tests", () => {
         testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
         withProgress.mockResolvedValueOnce(testResponse);
         dataSet.mockReset();
+        testDoc.getText = jest.fn();
         const downloadResponse = {
             success: true,
             commandResponse: "",

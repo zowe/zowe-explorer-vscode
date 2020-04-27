@@ -290,6 +290,8 @@ describe("DatasetTree Unit Tests", () => {
                 null, undefined, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
             null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1],
+            null, globals.VSAM_CONTEXT, undefined, profileOne)
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
