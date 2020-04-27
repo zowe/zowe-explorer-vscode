@@ -250,14 +250,14 @@ export class Profiles {
                             }}
                         }
                     }
+                    schemaValues[value] = host;
+                    if (port !== null || port !== undefined) {
+                        schemaValues.port = port;
+                    }
+                    break;
                 }catch(error){
                     vscode.window.showErrorMessage("Operation Cancelled");
                 }
-                schemaValues[value] = host;
-                if (port !== null || port !== undefined) {
-                    schemaValues.port = port;
-                }
-                break;
             case "port":
                 if (schemaValues[value] === undefined || schemaValues[value] === null){
                     if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){

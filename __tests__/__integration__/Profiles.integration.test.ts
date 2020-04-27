@@ -55,12 +55,14 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com");
-        showInputStub.onCall(1).returns("443");
+        showInputStub.onCall(0).returns("testurl.com");
+        showInputStub.onCall(1).returns("1443");
         showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(2).returns("testPass");
+        // tslint:disable-next-line:no-magic-numbers
+        showInputStub.onCall(3).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
+        showInputStub.onCall(2).returns("");
         const saveProfileStub = sandbox.stub(profiles, "saveProfile");
         saveProfileStub.returns(testProfile);
 
@@ -85,7 +87,7 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com");
+        showInputStub.onCall(0).returns("testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.returns(undefined);
 
@@ -100,7 +102,7 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com");
+        showInputStub.onCall(0).returns("testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.onCall(2).returns("testUser");
         showInputStub.onCall(2).returns(undefined);
@@ -116,7 +118,7 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com");
+        showInputStub.onCall(0).returns("testurl.com");
         showInputStub.onCall(1).returns("1001");
         showInputStub.onCall(2).returns("testUser");
         showInputStub.onCall(2).returns("testPass");
@@ -135,13 +137,14 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com");
+        showInputStub.onCall(0).returns("testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(2).returns("testPass");
+        // tslint:disable-next-line:no-magic-numbers
+        showInputStub.onCall(3).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
-
+        showInputStub.onCall(2).returns("");
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
         const messageSent = showErrorSpy.calledWith("Profile name already exists. Please create a profile using a different name");
