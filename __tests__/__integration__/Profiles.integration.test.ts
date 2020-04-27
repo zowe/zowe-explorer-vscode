@@ -55,10 +55,10 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(0).returns("https://testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(Number("3")).returns("testPass");
+        showInputStub.onCall(2).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
         const saveProfileStub = sandbox.stub(profiles, "saveProfile");
@@ -85,7 +85,7 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(0).returns("https://testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.returns(undefined);
 
@@ -100,10 +100,10 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(0).returns("https://testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(Number("3")).returns(undefined);
+        showInputStub.onCall(2).returns(undefined);
 
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
@@ -116,10 +116,10 @@ describe("Create profiles integration tests", async () => {
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(0).returns("https://testurl.com:1001");
+        showInputStub.onCall(0).returns("https://testurl.com");
         showInputStub.onCall(1).returns("1001");
         showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(Number("3")).returns("testPass");
+        showInputStub.onCall(2).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns(undefined);
 
@@ -138,7 +138,7 @@ describe("Create profiles integration tests", async () => {
         showInputStub.onCall(0).returns("https://testurl.com");
         showInputStub.onCall(1).returns("443");
         showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(Number("3")).returns("testPass");
+        showInputStub.onCall(2).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
 

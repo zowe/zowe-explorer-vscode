@@ -357,7 +357,7 @@ describe("Profile class unit tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
         });
 
-        it("should create profile and trim https+443 from host", async () => {
+        it("should create profile and trim https+143 from host and save 143 as port", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             showInputBox.mockResolvedValueOnce("https://fake:143");
