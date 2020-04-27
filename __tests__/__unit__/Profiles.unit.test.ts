@@ -13,9 +13,18 @@ jest.mock("vscode");
 jest.mock("child_process");
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, IProfileLoaded, CliProfileManager } from "@zowe/imperative";
+import * as globals from "../../src/globals";
+import { Logger, IProfileLoaded, Session, CliProfileManager } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
-import { ZosmfSession } from "@zowe/cli";
+import { ZosmfSession, IJob } from "@zowe/cli";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import { Job } from "../../src/job/ZoweJobNode";
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweNodeType } from "../../src/api/IZoweTreeNode";
+import { IZoweTree } from "../../src/api/IZoweTree";
+import { DatasetTree } from "../../src/dataset/DatasetTree";
+import { USSTree } from "../../src/uss/USSTree";
+import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 
 describe("Profile class unit tests", () => {
@@ -24,6 +33,74 @@ describe("Profile class unit tests", () => {
 
     const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
     const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
+    const mockLoadNamedProfile = jest.fn();
+    const profileThree: IProfileLoaded = {
+        name: "profile3",
+        profile: {
+            user: undefined,
+            password: undefined
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+    mockLoadNamedProfile.mockReturnValue(profileThree);
+
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        protocol: "https",
+        type: "basic",
+    });
+
+    const iJob: IJob = {
+        "jobid": "JOB1234",
+        "jobname": "TESTJOB",
+        "files-url": "fake/files",
+        "job-correlator": "correlator",
+        "phase-name": "PHASE",
+        "reason-not-running": "",
+        "step-data": [{
+            "proc-step-name": "",
+            "program-name": "",
+            "step-name": "",
+            "step-number": 1,
+            "active": "",
+            "smfid": ""
+
+        }],
+        "class": "A",
+        "owner": "USER",
+        "phase": 0,
+        "retcode": "",
+        "status": "ACTIVE",
+        "subsystem": "SYS",
+        "type": "JOB",
+        "url": "fake/url"
+    };
+
+    const inputBox: vscode.InputBox = {
+        value: "input",
+        title: null,
+        enabled: true,
+        busy: false,
+        show: jest.fn(),
+        hide: jest.fn(),
+        step: null,
+        dispose: jest.fn(),
+        ignoreFocusOut: false,
+        totalSteps: null,
+        placeholder: undefined,
+        password: false,
+        onDidChangeValue: jest.fn(),
+        onDidAccept: jest.fn(),
+        onDidHide: jest.fn(),
+        buttons: [],
+        onDidTriggerButton: jest.fn(),
+        prompt: undefined,
+        validationMessage: undefined
+    };
 
     const schema: {} = {
         host:{type:"string",optionDefinition:{description:"description"}},
@@ -63,7 +140,7 @@ describe("Profile class unit tests", () => {
     const createInputBox = jest.fn();
     const showQuickPick = jest.fn();
     const showErrorMessage = jest.fn();
-    const getConfiguration = jest.fn();
+    const getConfigurationMock = jest.fn();
     const createTreeView = jest.fn();
     const createBasicZosmfSession = jest.fn();
 
@@ -73,8 +150,13 @@ describe("Profile class unit tests", () => {
     Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfigurationMock });
+    Object.defineProperty(vscode, "ConfigurationTarget", { value: getConfigurationMock });
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+
+    const sessTree: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
+    const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
+    const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -553,6 +635,193 @@ describe("Profile class unit tests", () => {
             const response = await profiles.getSchema("zosmf");
             expect(response).toEqual(schemaReturn);
         });
+    });
+
+    describe("Deleting Profiles", () => {
+        let profiles: Profiles;
+        const getRecallMockValue = jest.fn();
+        const getRecallUSSMockValue = jest.fn();
+        beforeEach(async () => {
+            profiles = await Profiles.createInstance(log);
+            Object.defineProperty(DatasetTree, "getRecall", { value:  getRecallMockValue });
+            Object.defineProperty(USSTree, "getRecall", { value:  getRecallUSSMockValue });
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "profile1"}, {name: "profile2"}, {name: "profile3"}],
+                        defaultProfile: {name: "profile1"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        promptCredentials: jest.fn(()=> {
+                            return {};
+                        }),
+                        createNewConnection: jest.fn(()=>{
+                            return {};
+                        }),
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        saveProfile: jest.fn(()=>{
+                            return {profile: {}};
+                        }),
+                        validateAndParseUrl: jest.fn(()=>{
+                            return {};
+                        }),
+                        updateProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        getDeleteProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        deletePrompt: jest.fn(()=>{
+                            return {};
+                        }),
+                        deleteProf: jest.fn(()=>{
+                            return {};
+                        })
+                    };
+                })
+            });
+            getConfigurationMock.mockReturnValue({
+                persistence: true,
+                get: () => {
+                    return {
+                        sessions: ["profile1"],
+                        favorites: ["[profile1]: /u/myFile.txt{textFile"]
+                    };
+                },
+                update: jest.fn(()=>{
+                    return {};
+                })
+            });
+        });
+
+        afterEach(() => {
+            showInputBox.mockReset();
+            showQuickPick.mockReset();
+            createInputBox.mockReset();
+            showInformationMessage.mockReset();
+            showErrorMessage.mockReset();
+            getConfigurationMock.mockClear();
+        });
+
+        it("should delete profile from command palette", async () => {
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+        });
+
+        it("should handle missing selection: profile name", async () => {
+            showQuickPick.mockResolvedValueOnce(undefined);
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should handle case where user selects No", async () => {
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("No");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+        });
+
+        it("should handle case where there are no profiles to delete", async () => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: []
+                    };
+                })
+            });
+            profiles.refresh();
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No profiles available");
+        });
+
+        it("should delete profile from context menu", async () => {
+            const dsNode = new ZoweDatasetNode(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
+            dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree, dsNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
+        });
+
+        it("should delete session from Data Set tree", async () => {
+            const startLength = sessTree.mSessionNodes.length;
+            const favoriteLength = sessTree.mFavorites.length;
+            const dsNode = new ZoweDatasetNode(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
+            dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+            sessTree.mSessionNodes.push(dsNode);
+            sessTree.addFavorite(dsNode);
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree, dsNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
+            expect(sessTree.mSessionNodes.length).toEqual(startLength);
+            expect(sessTree.mFavorites.length).toEqual(favoriteLength);
+        });
+
+        it("should delete session from USS tree", async () => {
+            const startLength = ussTree.mSessionNodes.length;
+            const favoriteLength = ussTree.mFavorites.length;
+            const ussNode = new ZoweUSSNode(
+                "[profile3]: profile3", vscode.TreeItemCollapsibleState.Expanded,
+                null, session, null, false, profileThree.name, null, profileThree);
+            ussNode.contextValue = globals.USS_SESSION_CONTEXT;
+            ussNode.profile = profileThree;
+            ussTree.addSession("profile3");
+            ussTree.mSessionNodes.push(ussNode);
+            ussTree.mFavorites.push(ussNode);
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree, ussNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
+            expect(ussTree.mSessionNodes.length).toEqual(startLength);
+            expect(ussTree.mFavorites.length).toEqual(favoriteLength);
+        });
+
+        it("should delete session from Jobs tree", async () => {
+            const startLength = jobsTree.mSessionNodes.length;
+            const favoriteLength = jobsTree.mFavorites.length;
+            const jobNode = new Job(
+                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileThree);
+            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            jobsTree.mSessionNodes.push(jobNode);
+            jobsTree.addFavorite(jobNode);
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree, jobNode);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
+            expect(jobsTree.mSessionNodes.length).toEqual(startLength);
+            expect(jobsTree.mFavorites.length).toEqual(favoriteLength);
+        });
+
+        it("should test deletion of recall for DS", async () => {
+            sessTree.addRecall("[profile1]: TEST.DATA");
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+            expect(sessTree.getRecall()[0]).toBeUndefined();
+        });
+
+        it("should test deletion of recall for USS", async () => {
+            ussTree.addRecall("[profile1]: /node1/node2/node3.txt");
+            showQuickPick.mockResolvedValueOnce("profile1");
+            showQuickPick.mockResolvedValueOnce("Yes");
+            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+            expect(ussTree.getRecall()[0]).toBeUndefined();
+        });
+
     });
 
     it("should route through to spawn. Covers conditional test", async () => {
