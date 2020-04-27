@@ -115,8 +115,8 @@ export function isText(node: TreeItem): boolean {
  */
 export function isDocument(node: TreeItem): boolean {
     return new RegExp("^(" + globals.DS_DS_CONTEXT + "|" + globals.DS_MEMBER_CONTEXT + "|"
-                        + globals.DS_TEXT_FILE_CONTEXT + "|" + globals.JOBS_SPOOL_CONTEXT + "|"
-                        + globals.DS_BINARY_FILE_CONTEXT + ")").test(node.contextValue);
+                          + globals.DS_TEXT_FILE_CONTEXT + "|" + globals.JOBS_SPOOL_CONTEXT + "|"
+                         + globals.DS_MIGRATED_FILE_CONTEXT + ")").test(node.contextValue);
 }
 
 /**
@@ -250,6 +250,15 @@ export function isSessionNotFav(node: TreeItem): boolean {
 export function isSessionFavorite(node: TreeItem): boolean {
    return new RegExp("^(" + globals.FAVORITE_CONTEXT + ")").test(node.contextValue);
 }
+
+/**
+ * Helper function which identifies if the node is Vsam
+ * @param node
+ * @return true if a vsam file, false otherwise
+ */
+export function isVsam(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.VSAM_CONTEXT + ")").test(node.contextValue);
+ }
 
 /**
  * Helper function create the favorite version of a node
