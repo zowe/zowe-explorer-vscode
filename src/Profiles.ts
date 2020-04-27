@@ -370,11 +370,9 @@ export class Profiles {
             vscode.window.showInformationMessage(localize("deleteProfile.undefined.profilename",
                 "Operation Cancelled"));
             return;
-        } else {
-            zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
         }
 
-        return zosmfProfile;
+        return allProfiles.find(temprofile => temprofile.name === sesName);
     }
 
     public async deletePrompt(deletedProfile: IProfileLoaded) {
@@ -424,15 +422,14 @@ export class Profiles {
             let deletedProfile: IProfileLoaded;
             if (!node){
                 deletedProfile = await this.getDeleteProfile();
-                if (!deletedProfile) {
-                    return;
-                } else {
-                    deleteLabel = deletedProfile.name;
-                }
             } else {
                 deletedProfile = node.getProfile();
-                deleteLabel = node.getProfileName();
             }
+            if (!deletedProfile) {
+                return;
+            }
+            deleteLabel = deletedProfile.name;
+
             const deleteSuccess = await this.deletePrompt(deletedProfile);
             if (!deleteSuccess){
                 vscode.window.showInformationMessage(localize("deleteProfile.noSelected",
@@ -442,19 +439,18 @@ export class Profiles {
 
             // Delete from Data Set Recall
             const recallDs: string[] = datasetTree.getRecall();
-            for (let i = recallDs.length - 1; i >= 0; i--) {
-                const findNode = recallDs[i].substring(1, recallDs[i].indexOf("]")).trim();
-                if (findNode === deleteLabel) {
-                    datasetTree.removeRecall(recallDs[i]);
-                }
-            }
+            recallDs.slice().reverse()
+                .filter(ds => ds.substring(1, ds.indexOf("]")).trim()  === deleteLabel)
+                .forEach(ds => {
+                    datasetTree.removeRecall(ds);
+                });
 
             // Delete from Data Set Favorites
             const favoriteDs = datasetTree.mFavorites;
             for (let i = favoriteDs.length - 1; i >= 0; i--) {
                 const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
                 if (findNode === deleteLabel) {
-                    await datasetTree.removeFavorite(favoriteDs[i]);
+                    datasetTree.removeFavorite(favoriteDs[i]);
                     favoriteDs[i].dirty = true;
                     datasetTree.refresh();
                 }
@@ -471,12 +467,11 @@ export class Profiles {
 
             // Delete from USS Recall
             const recallUSS: string[] = ussTree.getRecall();
-            for (let i = recallUSS.length - 1; i >= 0; i--) {
-                const findNode = recallUSS[i].substring(1, recallUSS[i].indexOf("]")).trim();
-                if (findNode === deleteLabel) {
-                    ussTree.removeRecall(recallUSS[i]);
-                }
-            }
+            recallUSS.slice().reverse()
+                .filter(uss => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel)
+                .forEach(uss => {
+                    ussTree.removeRecall(uss);
+                });
 
             // Delete from USS Favorites
             ussTree.mFavorites.forEach((ses) => {
