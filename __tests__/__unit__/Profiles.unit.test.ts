@@ -698,4 +698,28 @@ describe("Profile class unit tests", () => {
         await theProfiles.checkCurrentProfile(testIProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
+
+    it("Tests getAllTypes", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const types = theProfiles.getAllTypes();
+        expect(types).toEqual(["zosmf", "banana"]);
+    });
+
+    it("Tests getProfiles", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const profiles = theProfiles.getProfiles();
+        expect(profiles[1].name).toEqual("profile2");
+    });
+
+    it("Tests getNamesForType", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const profiles = theProfiles.getProfiles();
+        expect((await theProfiles.getNamesForType("zosmf"))[1]).toEqual("profile2");
+    });
+
+    it("Tests directLoad", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const profile = await theProfiles.directLoad("zosmf","profile1");
+        expect(profile.name).toEqual("profile1");
+    });
 });
