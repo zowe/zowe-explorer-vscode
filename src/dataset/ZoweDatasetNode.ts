@@ -18,6 +18,7 @@ import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
+import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -84,15 +85,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(): Promise<ZoweDatasetNode[]> {
-        if ((!this.pattern && this.contextValue === globals.DS_SESSION_CONTEXT)){
+        if (!this.pattern && contextually.isSessionNotFav(this)) {
             return [new ZoweDatasetNode(localize("getChildren.search", "Use the search button to display datasets"),
                                  vscode.TreeItemCollapsibleState.None, this, null, globals.INFORMATION_CONTEXT)];
         }
-
-        if (this.contextValue === globals.DS_DS_CONTEXT ||
-            this.contextValue === globals.DS_MEMBER_CONTEXT ||
-            this.contextValue === globals.INFORMATION_CONTEXT) {
-            return [];
+        if (contextually.isDocument(this) || contextually.isInformation(this)) {
+             return [];
         }
 
         if (!this.dirty || this.label === "Favorites") {
@@ -136,10 +134,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                                                      this, null, globals.DS_MIGRATED_FILE_CONTEXT,
                         undefined, this.getProfile());
                     elementChildren[temp.label] = temp;
-                } else if (this.contextValue === globals.DS_SESSION_CONTEXT) {
+                // Creates a ZoweDatasetNode for a VSAM file
+                } else if (item.dsorg === "VS") {
+                    let altLabel = item.dsname;
+                    let endPoint = altLabel.indexOf(".DATA");
+                    if (endPoint === -1) {
+                        endPoint = altLabel.indexOf(".INDEX");
+                    }
+                    if (endPoint > -1) {
+                        altLabel = altLabel.substring(0, endPoint);
+                    }
+                    if (!elementChildren[altLabel]) {
+                        elementChildren[altLabel] = new ZoweDatasetNode(altLabel, vscode.TreeItemCollapsibleState.None,
+                            this, null, globals.VSAM_CONTEXT, undefined, this.getProfile());
+                    }
+                } else if (contextually.isSessionNotFav(this)) {
+
                     // Creates a ZoweDatasetNode for a PS
                     const temp = new ZoweDatasetNode(item.dsname, vscode.TreeItemCollapsibleState.None,
-                                                     this, null, undefined, undefined, this.getProfile());
+                                                    this, null, undefined, undefined, this.getProfile());
                     temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
                     elementChildren[temp.label] = temp;
                 } else {
@@ -185,7 +198,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
         const responses: zowe.IZosFilesResponse[] = [];
         try {
-            if (this.contextValue === globals.DS_SESSION_CONTEXT) {
+            if (contextually.isSessionNotFav(this)) {
                 this.pattern = this.pattern.toUpperCase();
                 // loop through each pattern
                 for (const pattern of this.pattern.split(",")) {

@@ -23,7 +23,7 @@ import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import { Session } from "@zowe/imperative";
-
+import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -82,7 +82,7 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
 export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     await Profiles.getInstance().refresh();
     ussFileProvider.mSessionNodes.forEach((sessNode) => {
-        if (sessNode.contextValue === globals.USS_SESSION_CONTEXT) {
+        if (contextually.isSession(sessNode)) {
             labelHack(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
@@ -252,7 +252,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         nodes = concatChildNodes([sesNode]);
     }
     node = nodes.find((zNode) => {
-        if (zNode.contextValue === globals.DS_FAV_TEXT_FILE_CONTEXT || zNode.contextValue === globals.DS_TEXT_FILE_CONTEXT) {
+        if (contextually.isText(zNode)) {
             return (zNode.fullPath.trim() === remote);
         }
         else {
@@ -288,7 +288,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
-        if (err.message.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+        if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
             // Store old document text in a separate variable, to be used on merge conflict
             const oldDocText = doc.getText();
             const oldDocLineCount = doc.lineCount;

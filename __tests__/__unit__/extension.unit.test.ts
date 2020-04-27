@@ -685,7 +685,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(68);
+        expect(registerCommand.mock.calls.length).toBe(76);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -699,8 +699,10 @@ describe("Extension Unit Tests", () => {
             "zowe.refreshAll",
             "zowe.refreshNode",
             "zowe.pattern",
+            "zowe.editSession",
             "zowe.ZoweNode.openPS",
             "zowe.createDataset",
+            "zowe.all.profilelink",
             "zowe.createMember",
             "zowe.deleteDataset",
             "zowe.deletePDS",
@@ -726,6 +728,7 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
             "zowe.uss.fullPath",
+            "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
             "zowe.uss.createFile",
@@ -754,6 +757,7 @@ describe("Extension Unit Tests", () => {
             "zowe.getJobJcl",
             "zowe.setJobSpool",
             "zowe.jobs.search",
+            "zowe.jobs.editSession",
             "zowe.issueTsoCmd",
             "zowe.issueMvsCmd",
             "zowe.jobs.addFavorite",
@@ -761,7 +765,11 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems"
+            "zowe.searchInAllLoadedItems",
+            "zowe.deleteProfile",
+            "zowe.cmd.deleteProfile",
+            "zowe.uss.deleteProfile",
+            "zowe.jobs.deleteProfile",
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -1857,6 +1865,26 @@ describe("Extension Unit Tests", () => {
             validatePosition: null
         };
 
+        const testDocLowercase: vscode.TextDocument = {
+            fileName: path.join(globals.DS_DIR, "/sestest/hlq.test.lowercase"),
+            uri: null,
+            isUntitled: null,
+            languageId: null,
+            version: null,
+            isDirty: null,
+            isClosed: null,
+            save: null,
+            eol: null,
+            lineCount: null,
+            lineAt: null,
+            offsetAt: null,
+            positionAt: null,
+            getText: null,
+            getWordRangeAtPosition: null,
+            validateRange: null,
+            validatePosition: null
+        };
+
         const testResponse = {
             success: true,
             commandResponse: "",
@@ -1955,6 +1983,26 @@ describe("Extension Unit Tests", () => {
         expect(mockSetEtag).toHaveBeenCalledTimes(1);
         expect(mockSetEtag).toHaveBeenCalledWith("123");
 
+        dataSetList.mockReset();
+        pathToDataSet.mockReset();
+        showInformationMessage.mockReset();
+        showErrorMessage.mockReset();
+        concatChildNodes.mockReset();
+        mockSetEtag.mockReset();
+        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
+        testTree.getChildren.mockReturnValueOnce([sessNode]);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        dataSetList.mockResolvedValueOnce(testResponse);
+        withProgress.mockResolvedValueOnce(uploadResponse);
+        testResponse.success = true;
+        pathToDataSet.mockResolvedValueOnce(testResponse);
+
+        // Test if saveFile can handle a lowercase fileName
+        await dsActions.saveFile(testDocLowercase, testTree);
+        expect(concatChildNodes.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
+
         concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
         testTree.getChildren.mockReturnValueOnce([sessNode]);
         dataSetList.mockResolvedValueOnce(testResponse);
@@ -2038,6 +2086,7 @@ describe("Extension Unit Tests", () => {
         testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
         withProgress.mockResolvedValueOnce(testResponse);
         dataSet.mockReset();
+        testDoc.getText = jest.fn();
         const downloadResponse = {
             success: true,
             commandResponse: "",

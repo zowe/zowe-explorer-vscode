@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils";
 import { sortTreeItems, getAppName } from "../shared/utils";
 import { IZoweTree } from "../api/IZoweTree";
@@ -139,7 +139,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getChildren(element?: IZoweUSSTreeNode | undefined): Promise<IZoweUSSTreeNode[]> {
         if (element) {
-            if (element.contextValue === globals.FAVORITE_CONTEXT) {
+            if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -322,7 +322,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         let remotepath: string;
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            if (node.contextValue === globals.USS_SESSION_CONTEXT) {
+            if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getHistory().length > 0) {
 
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);

@@ -5,7 +5,7 @@
     "createMember.log.error": "Error encountered when creating member! ",
     "createMember.error": "Unable to create member: ",
     "openPS.invalidNode": "openPS() called from invalid node.",
-    "openPS.error.invalidNode": "openPS() called from invalid node.",
+    "openPS.error.invalidNode": "openPS() called from invalid node. ",
     "openPS.log.debug.openDataSet": "opening physical sequential data set from label ",
     "openPS.log.error.openDataSet": "Error encountered when opening data set! ",
     "createFile.quickPickOption.dataSetType": "Type of Data Set to be Created",
@@ -66,6 +66,5 @@
     "saveFile.log.debug.saving": "Saving file ",
     "saveFile.error.saveFailed": "Data set failed to save. Data set may have been deleted on mainframe.",
     "saveFile.response.save.title": "Saving data set...",
-    "saveFile.error.ZosmfEtagMismatchError": "Rest API failure with HTTP(S) status 412",
     "saveFile.error.etagMismatch": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
 }

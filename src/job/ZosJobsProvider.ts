@@ -13,11 +13,11 @@ import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { ZosmfSession, IJob } from "@zowe/cli";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { Job } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, labelHack } from "../shared/utils";
-import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling, } from "../utils";
+import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
@@ -133,7 +133,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (element.owner === "") {
                 return;
             }
-            if (element.contextValue === globals.FAVORITE_CONTEXT) {
+            if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -304,7 +304,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            if (node.contextValue === globals.JOBS_SESSION_CONTEXT) { // This is the profile object context
+            if (contextually.isSessionNotFav(node)) { // This is the profile object context
                 if (hasHistory) { // Check if user has created some history
                     const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
                     if (globals.ISTHEIA) { // Theia doesn't work properly when directly creating a QuickPick
