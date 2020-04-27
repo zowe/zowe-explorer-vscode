@@ -22,7 +22,7 @@ when the extender package is installed. This also ties the activate functionalit
 
 ## Contextual Hooks
 
-To enable menus, extenders can reference the context values associated with the individual Tree Items. Zowe Extender uses a strategy of adding and removing 
+To enable menus, extenders can reference the context values associated with the individual Tree Items. Zowe Explorer uses a strategy of adding and removing 
 elements of context to the individual context values if that imparts additional information that could assist with menu triggers. In the example below we
 are referencing a Job type tree item that has additional information indicated by the *_rc* context. This can be used by an extender to trigger a specifc menu.   
 

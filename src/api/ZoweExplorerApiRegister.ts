@@ -64,8 +64,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
-     * Static lookup of generic extender API implementation.
-     * @private
+     * Lookup for generic extender API implementation.
+     * @static
      * @returns an instance of the API
      */
     public static getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
