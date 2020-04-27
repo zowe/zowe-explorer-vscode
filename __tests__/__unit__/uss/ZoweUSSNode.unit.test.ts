@@ -14,7 +14,8 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { generateSession, generateSessionNoCredentials, generateProfile, generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/generators/shared";
+import { generateISession, generateISessionWithoutCredentials, generateIProfile,
+    generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/generators/shared";
 import { generateUSSTree } from "../../../__mocks__/generators/uss";
 import * as fs from "fs";
 import * as path from "path";
@@ -82,8 +83,8 @@ const ProgressLocation = jest.fn().mockImplementation(() => {
 Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
 Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
 
-const session = generateSession();
-const profileOne: imperative.IProfileLoaded = generateProfile();
+const session = generateISession();
+const profileOne: imperative.IProfileLoaded = generateIProfile();
 mockLoadNamedProfile.mockReturnValue(profileOne);
 const profileOps = generateInstanceOfProfile(profileOne);
 const response: zowe.IZosFilesResponse = generateFileResponse();
@@ -487,7 +488,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         showInputBox.mockReturnValue("fake");
 
         ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, profileOne.name, "123");
-        dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, generateSessionNoCredentials(), null);
+        dsNode = new ZoweUSSNode("testSess", vscode.TreeItemCollapsibleState.Expanded, ussNode, generateISessionWithoutCredentials(), null);
     });
     afterEach(() => {
         jest.clearAllMocks();
