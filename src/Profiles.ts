@@ -232,7 +232,6 @@ export class Profiles {
                             host = result.host;
                             if (result.port !== null) {
                                 port = result.port;
-                                schemaValues.port = port;
                             }}
                         } else {
                             host = "https://" + host;
@@ -243,7 +242,6 @@ export class Profiles {
                             host = result.host;
                             if (result.port !== null) {
                                 port = result.port;
-                                schemaValues.port = port;
                             }}
                         }
                     }
@@ -251,6 +249,9 @@ export class Profiles {
                     vscode.window.showErrorMessage("Operation Cancelled");
                 }
                 schemaValues[value] = host;
+                if (port !== null) {
+                schemaValues.port = port;
+                }
                 break;
             case "port":
                 if (schemaValues[value] === undefined || schemaValues[value] === null){
@@ -337,6 +338,9 @@ export class Profiles {
                     case "string":
                         options = await this.optionsValue(value, schema);
                         const profValue = await vscode.window.showInputBox(options);
+                        if (profValue === "") {
+                            break;
+                        }
                         schemaValues[value] = profValue;
                         break;
                     case "boolean":
@@ -381,8 +385,12 @@ export class Profiles {
                                 schemaValues[value] = false;
                                 break;
                             default:
+                                if (defaultValue === "") {
+                                    break;
+                                } else {
                                 schemaValues[value] = defaultValue;
                                 break;
+                                }
                             }
                         break;
                 }
