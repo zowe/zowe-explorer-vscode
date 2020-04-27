@@ -10,15 +10,16 @@
 */
 
 import { IProfileLoaded } from "@zowe/imperative";
-import { getProfile, getLinkedProfile } from "../utils/profileLink";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { getProfile, getLinkedProfile } from "./utils/profileLink";
+import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { ZoweExplorerApi } from "./api/ZoweExplorerApi";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
  * extensions to contribute their implementations.
  * @export
  */
-export class ZoweExplorerExtender {
+export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender {
 
     /**
      * Access the singleton instance.
