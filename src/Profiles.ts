@@ -249,7 +249,7 @@ export class Profiles {
                     vscode.window.showErrorMessage("Operation Cancelled");
                 }
                 schemaValues[value] = host;
-                if (port !== null) {
+                if (port !== null || port !== undefined) {
                 schemaValues.port = port;
                 }
                 break;
