@@ -15,7 +15,6 @@ jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
 import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
-import { ZoweExplorerExtender } from "../../../src/api/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import { Profiles } from "../../../src/Profiles";

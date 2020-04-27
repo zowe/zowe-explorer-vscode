@@ -11,10 +11,10 @@
 
 import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { getProfile, getLinkedProfile } from "../utils/profileLink";
-import { Profiles } from "../Profiles";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { ZoweExplorerApi } from "./api/ZoweExplorerApi";
+import { Profiles } from "./Profiles";
+import { getProfile, getLinkedProfile } from "./utils/profileLink";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code

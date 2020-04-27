@@ -11,7 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session } from "@zowe/imperative";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { TreeItem } from "vscode";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -433,7 +433,7 @@ export namespace ZoweExplorerApi {
          * @return The requested profile
          *
          */
-        getProfile(primaryNode: IZoweTreeNode): IProfileLoaded;
+        getProfile(primaryNode: TreeItem): IProfileLoaded;
 
         /**
          * Used by other VS Code Extensions to access an alternative
@@ -443,7 +443,7 @@ export namespace ZoweExplorerApi {
          * @param primaryNode represents the Tree item that is being used
          * @return The requested profile
          */
-        getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded>;
+        getLinkedProfile(primaryNode: TreeItem, type: string): Promise<IProfileLoaded>;
 
         /**
          * After an extenders registered all its API extensions it
