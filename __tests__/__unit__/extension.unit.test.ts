@@ -2079,6 +2079,7 @@ describe("Extension Unit Tests", () => {
         testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
         withProgress.mockResolvedValueOnce(testResponse);
         dataSet.mockReset();
+        testDoc.getText = jest.fn();
         const downloadResponse = {
             success: true,
             commandResponse: "",
