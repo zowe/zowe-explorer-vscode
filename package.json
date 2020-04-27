@@ -108,6 +108,14 @@
         }
       },
       {
+        "command": "zowe.deleteProfile",
+        "title": "%deleteProfile%"
+      },
+      {
+        "command": "zowe.cmd.deleteProfile",
+        "title": "%cmd.deleteProfile%"
+      },
+      {
         "command": "zowe.createDataset",
         "title": "%createDataset%",
         "icon": {
@@ -236,6 +244,10 @@
         }
       },
       {
+        "command": "zowe.uss.deleteProfile",
+        "title": "%deleteProfile%"
+      },
+      {
         "command": "zowe.uss.createDirectory",
         "title": "%uss.createDirectory%",
         "icon": {
@@ -354,6 +366,10 @@
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "zowe.jobs.deleteProfile",
+        "title": "%deleteProfile%"
       },
       {
         "command": "zowe.refreshAllJobs",
@@ -634,7 +650,13 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.removeSession"
+          "command": "zowe.deleteProfile",
+          "group": "6_modification@4"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.removeSession",
+          "group": "6_modification@3"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -667,7 +689,13 @@
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.removeSession"
+          "command": "zowe.uss.deleteProfile",
+          "group": "6_modification@4"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.removeSession",
+          "group": "6_modification@3"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
@@ -696,6 +724,11 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.deleteProfile",
+          "group": "6_modification@4"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.setOwner"
         },
         {
@@ -704,7 +737,8 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.removeJobsSession"
+          "command": "zowe.removeJobsSession",
+          "group": "6_modification@3"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
@@ -799,6 +833,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
           "command": "zowe.saveSearch",
           "when": "never"
         },
@@ -820,6 +858,10 @@
         },
         {
           "command": "zowe.uss.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.deleteProfile",
           "when": "never"
         },
         {
@@ -860,6 +902,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.deleteProfile",
           "when": "never"
         },
         {
@@ -1108,6 +1154,7 @@
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
       "__tests__/__integration__/",
+      "__tests__/__theia__/",
       "out/"
     ],
     "reporters": [
