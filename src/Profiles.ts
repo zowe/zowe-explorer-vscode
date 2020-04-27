@@ -136,10 +136,15 @@ export class Profiles {
                 return validationResult;
             }
         }
+        if (Number(url.port) === 0) {
+            validationResult.port = null;
+        } else {
+            validationResult.port = Number(url.port);
+        }
 
         validationResult.protocol = url.protocol;
         validationResult.host = url.hostname;
-        validationResult.port = Number(url.port);
+        // validationResult.port = Number(url.port);
         validationResult.valid = true;
         return validationResult;
     }
@@ -232,7 +237,6 @@ export class Profiles {
                             host = result.host;
                             if (result.port !== null) {
                                 port = result.port;
-                                schemaValues.port = port;
                             }}
                         } else {
                             host = "https://" + host;
@@ -243,15 +247,17 @@ export class Profiles {
                             host = result.host;
                             if (result.port !== null) {
                                 port = result.port;
-                                schemaValues.port = port;
                             }}
                         }
                     }
+                    schemaValues[value] = host;
+                    if (port !== null || port !== undefined) {
+                        schemaValues.port = port;
+                    }
+                    break;
                 }catch(error){
                     vscode.window.showErrorMessage("Operation Cancelled");
                 }
-                schemaValues[value] = host;
-                break;
             case "port":
                 if (schemaValues[value] === undefined || schemaValues[value] === null){
                     if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
@@ -337,6 +343,9 @@ export class Profiles {
                     case "string":
                         options = await this.optionsValue(value, schema);
                         const profValue = await vscode.window.showInputBox(options);
+                        if (profValue === "") {
+                            break;
+                        }
                         schemaValues[value] = profValue;
                         break;
                     case "boolean":
@@ -381,8 +390,12 @@ export class Profiles {
                                 schemaValues[value] = false;
                                 break;
                             default:
+                                if (defaultValue === "") {
+                                    break;
+                                } else {
                                 schemaValues[value] = defaultValue;
                                 break;
+                                }
                             }
                         break;
                 }
