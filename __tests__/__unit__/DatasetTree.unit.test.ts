@@ -41,6 +41,20 @@ describe("DatasetTree Unit Tests", () => {
         type: "basic",
     });
 
+    const profileLoad: IProfileLoaded = {
+        name: "fake",
+        profile: {
+            host: "fake",
+            port: 999,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorize: false
+        },
+        type: "zosmf",
+        failNotFound: true,
+        message: "fake"
+    };
+
     const Rename = jest.fn();
     const renameDataSet = jest.fn();
     const renameDataSetMember = jest.fn();
@@ -276,6 +290,8 @@ describe("DatasetTree Unit Tests", () => {
                 null, undefined, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
             null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1],
+            null, globals.VSAM_CONTEXT, undefined, profileOne)
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -726,6 +742,26 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+    });
+
+    /*************************************************************************************************************
+     * Test the editSession command
+     *************************************************************************************************************/
+    it("Test the editSession command ", async () => {
+        const editnode = new ZoweDatasetNode("EditSession", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], null);
+        const checkSession = jest.spyOn(testTree, "editSession");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    editSession: jest.fn(() => {
+                        return profileLoad;
+                    }),
+                };
+            })
+        });
+        testTree.editSession(editnode);
+        expect(checkSession).toHaveBeenCalled();
     });
 
     /*************************************************************************************************************
