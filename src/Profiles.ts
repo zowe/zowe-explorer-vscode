@@ -136,10 +136,15 @@ export class Profiles {
                 return validationResult;
             }
         }
+        if (Number(url.port) === 0) {
+            validationResult.port = null;
+        } else {
+            validationResult.port = Number(url.port);
+        }
 
         validationResult.protocol = url.protocol;
         validationResult.host = url.hostname;
-        validationResult.port = Number(url.port);
+        // validationResult.port = Number(url.port);
         validationResult.valid = true;
         return validationResult;
     }
@@ -230,7 +235,7 @@ export class Profiles {
                                 return undefined;
                             } else {
                             host = result.host;
-                            if (result.port !== null || result.port !== Number(0)) {
+                            if (result.port !== null) {
                                 port = result.port;
                             }}
                         } else {
@@ -240,7 +245,7 @@ export class Profiles {
                                 return undefined;
                             } else {
                             host = result.host;
-                            if (result.port !== null || result.port !== Number(0)) {
+                            if (result.port !== null) {
                                 port = result.port;
                             }}
                         }
