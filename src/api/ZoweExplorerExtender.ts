@@ -9,8 +9,11 @@
 *                                                                                 *
 */
 
+import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
+import { ZoweExplorerApi } from "./ZoweExplorerApi"
 import { getProfile, getLinkedProfile } from "../utils/profileLink";
+import { Profiles } from "../Profiles";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 
 /**
@@ -18,7 +21,7 @@ import { IZoweTreeNode } from "./IZoweTreeNode";
  * extensions to contribute their implementations.
  * @export
  */
-export class ZoweExplorerExtender {
+export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender {
 
     /**
      * Access the singleton instance.
@@ -28,6 +31,9 @@ export class ZoweExplorerExtender {
     public static getInstance(): ZoweExplorerExtender {
         return ZoweExplorerExtender.instance;
     }
+
+    // Queue of promises to process sequentially when multiple extension register in parallel
+    private static refreshProfilesQueue = new PromiseQueue(1, Infinity);
 
     /**
      * This object represents a collection of the APIs that get exposed to other VS Code
@@ -59,4 +65,14 @@ export class ZoweExplorerExtender {
         return getLinkedProfile(primaryNode, type);
     }
 
+    /**
+     * After an extenders registered all its API extensions it
+     * might want to request that profiles should get reloaded
+     * to make them automatically appears in the Explorer drop-
+     * down dialogs.
+     */
+    public async reloadProfiles(): Promise<void> {
+        // sequentially reload the internal profiles cache to satisfy all the newly added profile types
+        ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
+    }
 }

@@ -15,6 +15,7 @@ jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
 import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
+import { ZoweExplorerExtender } from "../../../src/api/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import { Profiles } from "../../../src/Profiles";
@@ -134,9 +135,9 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const api2 = new MockUssApi2();
 
         registry.registerUssApi(api1);
-        registry.reloadProfiles();
+        registry.getExplorerExtenderApi().reloadProfiles();
         registry.registerUssApi(api2);
-        await registry.reloadProfiles();
+        await registry.getExplorerExtenderApi().reloadProfiles();
 
         expect(mockRefresh.mock.calls.length).toBe(2);
     });
