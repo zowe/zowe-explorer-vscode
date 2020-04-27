@@ -11,7 +11,7 @@
 
 import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
-import { ZoweExplorerApi } from "./ZoweExplorerApi"
+import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { getProfile, getLinkedProfile } from "../utils/profileLink";
 import { Profiles } from "../Profiles";
 import { IZoweTreeNode } from "./IZoweTreeNode";
