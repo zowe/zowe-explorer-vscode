@@ -68,22 +68,6 @@ node('ca-jenkins-agent') {
         // Create a dummy TestProfileData in order to build the source code. See issue #556
         sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
         sh "npm run build"
-      },
-      archiveOperation: {
-        // Gather details for build archives
-        def vscodePackageJson = readJSON file: "package.json"
-        def date = new Date()
-        String buildDate = date.format("yyyyMMddHHmmss")
-        def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${BRANCH_NAME}-${buildDate}"
-
-        // Generate a vsix for archiving purposes
-        sh "npx vsce package -o ${fileName}.vsix"
-
-        // Upload vsix to Artifactory
-        withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
-          sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
-        }
       }
   )
 

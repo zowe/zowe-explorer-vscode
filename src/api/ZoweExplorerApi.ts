@@ -11,6 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session } from "@zowe/imperative";
+import { IZoweTreeNode } from "./IZoweTreeNode";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -419,6 +420,33 @@ export namespace ZoweExplorerApi {
     }
 
     /**
+     * This interface can be used by other VS Code Extensions to access an alternative
+     * profile types that can be employed in conjunction with the primary profile to provide
+     * alternative support.
+     *
+     */
+    export interface IApiExplorerExtender {
+        /**
+         * Used by other VS Code Extensions to access the primary profile.
+         *
+         * @param primaryNode represents the Tree item that is being used
+         * @return The requested profile
+         *
+         */
+        getProfile(primaryNode: IZoweTreeNode): IProfileLoaded;
+
+        /**
+         * Used by other VS Code Extensions to access an alternative
+         * profile types that can be employed in conjunction with the primary
+         * profile to provide alternative support.
+         *
+         * @param primaryNode represents the Tree item that is being used
+         * @return The requested profile
+         */
+        getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded>;
+    }
+
+    /**
      * This interface can be used by other VS Code Extensions to register themselves
      * with additional API implementations. The other extension would implement one or
      * more interfaces above, for example MyZoweExplorerAppUssApi, and register it with
@@ -496,5 +524,11 @@ export namespace ZoweExplorerApi {
          * down dialogs.
          */
         reloadProfiles?(): Promise<void>;
+
+        /**
+         * Lookup of an API for the generic extender API.
+         * @returns the registered API instance
+         */
+        getExplorerExtenderApi(): IApiExplorerExtender;
     }
 }
