@@ -133,6 +133,7 @@ export class Profiles {
 
         validationResult.protocol = url.protocol;
         validationResult.host = url.hostname;
+        validationResult.port = Number(url.port);
         validationResult.valid = true;
         return validationResult;
     }
@@ -156,7 +157,6 @@ export class Profiles {
 
     public async getSchema(profileType: string): Promise<{}> {
         const profileManager = await this.getCliProfileManager(profileType);
-
         const configOptions = Array.from(profileManager.configurations);
         let schema: {};
         for (const val of configOptions) {
@@ -217,9 +217,23 @@ export class Profiles {
                     return undefined;
                 }
                 try {
-                    if (host.includes("/") || host.includes(":")) {
-                        const result = this.parseUrl(host);
-                        host = result.host;
+                    if (host.includes(":")) {
+                        if (host.includes("/")) {
+                            const result = this.parseUrl(host);
+                            host = result.host;
+                            if (!Number.isNaN(result.port)) {
+                                port = result.port;
+                                schemaValues.port = port;
+                            }
+                        } else {
+                            host = "https://" + host;
+                            const result = this.parseUrl(host);
+                            host = result.host;
+                            if (!Number.isNaN(result.port)) {
+                                port = result.port;
+                                schemaValues.port = port;
+                            }
+                        }
                     }
                 }catch(error){
                     vscode.window.showErrorMessage("Operation Cancelled");
@@ -227,29 +241,33 @@ export class Profiles {
                 schemaValues[value] = host;
                 break;
             case "port":
-                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
-                    options = {
-                        prompt: schema[value].optionDefinition.description.toString(),
-                        value: schema[value].optionDefinition.defaultValue.toString()
-                    };
+                if (schemaValues[value] === undefined || schemaValues[value] === null){
+                    if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                        options = {
+                            prompt: schema[value].optionDefinition.description.toString(),
+                            value: schema[value].optionDefinition.defaultValue.toString()
+                        };
+                    } else {
+                        options = {
+                            placeHolder: localize("createNewConnection.option.prompt.port.placeholder", "Port Number"),
+                            prompt: schema[value].optionDefinition.description.toString(),
+                        };
+                    }
+                    port = Number(await vscode.window.showInputBox(options));
+                    if (Number.isNaN(port)) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
+                        "Invalid Port number provided or operation was cancelled"));
+                        return undefined;
+                    }
+                    if (port === 0 && schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                        schemaValues[value] = Number(schema[value].optionDefinition.defaultValue.toString());
+                    } else {
+                        schemaValues[value] = port;
+                    }
+                    break;
                 } else {
-                    options = {
-                        placeHolder: localize("createNewConnection.option.prompt.port.placeholder", "Port Number"),
-                        prompt: schema[value].optionDefinition.description.toString(),
-                    };
+                    break;
                 }
-                port = Number(await vscode.window.showInputBox(options));
-                if (Number.isNaN(port)) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
-                    "Invalid Port number provided or operation was cancelled"));
-                    return undefined;
-                }
-                if (port === 0 && schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
-                    schemaValues[value] = Number(schema[value].optionDefinition.defaultValue.toString());
-                } else {
-                    schemaValues[value] = port;
-                }
-                break;
             case "user":
                 options = {
                     placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
@@ -432,6 +450,21 @@ export class Profiles {
         }
         return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
     }
+    public async getCliProfileManager(type: string): Promise<CliProfileManager> {
+        let profileManager = this.profileManagerByType.get(type);
+        if (!profileManager) {
+            profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                type
+            });
+            if (profileManager) {
+                this.profileManagerByType.set(type, profileManager);
+            } else {
+                return undefined;
+            }
+        }
+        return profileManager;
+    }
 
     private async updateProfile(ProfileInfo) {
 
@@ -468,21 +501,5 @@ export class Profiles {
             vscode.window.showErrorMessage(error.message);
         }
         return newProfile.profile;
-    }
-
-    private async getCliProfileManager(type: string): Promise<CliProfileManager> {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                type
-            });
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
     }
 }
