@@ -193,6 +193,11 @@ Array [
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
   },
   Object {
+    "command": "zowe.editSession",
+    "group": "inline",
+    "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+  },
+  Object {
     "command": "zowe.deleteProfile",
     "group": "6_modification@4",
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -224,12 +229,17 @@ Array [
   Object {
     "command": "zowe.uss.fullPath",
     "group": "inline",
-    "when": "viewItem =~ /^ussSession.*/",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.uss.createNode",
     "group": "inline",
-    "when": "viewItem =~ /^ussSession.*/",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+  },
+  Object {
+    "command": "zowe.uss.editSession",
+    "group": "inline",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.uss.deleteProfile",
@@ -263,6 +273,11 @@ Array [
   },
   Object {
     "command": "zowe.jobs.search",
+    "group": "inline",
+    "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+  },
+  Object {
+    "command": "zowe.jobs.editSession",
     "group": "inline",
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
   },

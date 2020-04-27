@@ -108,6 +108,14 @@
         }
       },
       {
+        "command": "zowe.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.deleteProfile",
         "title": "%deleteProfile%"
       },
@@ -244,6 +252,14 @@
         }
       },
       {
+        "command": "zowe.uss.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.uss.deleteProfile",
         "title": "%deleteProfile%"
       },
@@ -365,6 +381,14 @@
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.jobs.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -650,6 +674,11 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.deleteProfile",
           "group": "6_modification@4"
         },
@@ -678,13 +707,18 @@
           "group": "inline"
         },
         {
-          "when": "viewItem =~ /^ussSession.*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.fullPath",
           "group": "inline"
         },
         {
-          "when": "viewItem =~ /^ussSession.*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.createNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.editSession",
           "group": "inline"
         },
         {
@@ -720,6 +754,11 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.search",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.editSession",
           "group": "inline"
         },
         {
@@ -809,6 +848,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.all.profilelink",
           "when": "never"
         },
@@ -861,6 +904,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.deleteProfile",
           "when": "never"
         },
@@ -902,6 +949,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.editSession",
           "when": "never"
         },
         {
