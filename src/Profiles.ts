@@ -61,6 +61,7 @@ export class Profiles {
     private dsSchema: string = "Zowe-DS-Persistent";
     private ussSchema: string = "Zowe-USS-Persistent";
     private jobsSchema: string = "Zowe-Jobs-Persistent";
+    private allTypes: string[];
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -116,6 +117,7 @@ export class Profiles {
 
     public async refresh(): Promise<void> {
         this.allProfiles = [];
+        this.allTypes = [];
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
@@ -131,6 +133,12 @@ export class Profiles {
                     vscode.window.showInformationMessage(error.message);
                 }
                 this.defaultProfileByType.set(type, defaultProfile);
+            }
+            // This is in the loop because I need an instantiated profile manager config
+            if (profileManager.configurations && this.allTypes.length === 0) {
+                for (const element of profileManager.configurations) {
+                    this.allTypes.push(element.type);
+                }
             }
         }
     }
@@ -413,150 +421,172 @@ export class Profiles {
         return zosmfProfile.profile;
     }
 
-    public async deleteProfile(
-        datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
+    public async deleteProfile(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
+                               jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
 
-            let deleteLabel: string;
-            let deletedProfile: IProfileLoaded;
-            if (!node){
-                deletedProfile = await this.getDeleteProfile();
-            } else {
-                deletedProfile = node.getProfile();
+        let deleteLabel: string;
+        let deletedProfile: IProfileLoaded;
+        if (!node){
+            deletedProfile = await this.getDeleteProfile();
+        } else {
+            deletedProfile = node.getProfile();
+        }
+        if (!deletedProfile) {
+            return;
+        }
+        deleteLabel = deletedProfile.name;
+
+        const deleteSuccess = await this.deletePrompt(deletedProfile);
+        if (!deleteSuccess){
+            vscode.window.showInformationMessage(localize("deleteProfile.noSelected",
+                "Operation Cancelled"));
+            return;
+        }
+
+        // Delete from Data Set Recall
+        const recallDs: string[] = datasetTree.getRecall();
+        recallDs.slice().reverse()
+            .filter((ds) => ds.substring(1, ds.indexOf("]")).trim()  === deleteLabel)
+            .forEach((ds) => {
+                datasetTree.removeRecall(ds);
+            });
+
+        // Delete from Data Set Favorites
+        const favoriteDs = datasetTree.mFavorites;
+        for (let i = favoriteDs.length - 1; i >= 0; i--) {
+            const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
+            if (findNode === deleteLabel) {
+                datasetTree.removeFavorite(favoriteDs[i]);
+                favoriteDs[i].dirty = true;
+                datasetTree.refresh();
             }
-            if (!deletedProfile) {
-                return;
+        }
+
+        // Delete from Data Set Tree
+        datasetTree.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === deleteLabel) {
+                datasetTree.deleteSession(sessNode);
+                sessNode.dirty = true;
+                datasetTree.refresh();
             }
-            deleteLabel = deletedProfile.name;
+        });
 
-            const deleteSuccess = await this.deletePrompt(deletedProfile);
-            if (!deleteSuccess){
-                vscode.window.showInformationMessage(localize("deleteProfile.noSelected",
-                    "Operation Cancelled"));
-                return;
+        // Delete from USS Recall
+        const recallUSS: string[] = ussTree.getRecall();
+        recallUSS.slice().reverse()
+            .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel)
+            .forEach((uss) => {
+                ussTree.removeRecall(uss);
+            });
+
+        // Delete from USS Favorites
+        ussTree.mFavorites.forEach((ses) => {
+            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            if (findNode === deleteLabel) {
+                ussTree.removeFavorite(ses);
+                ses.dirty = true;
+                ussTree.refresh();
             }
+        });
 
-            // Delete from Data Set Recall
-            const recallDs: string[] = datasetTree.getRecall();
-            recallDs.slice().reverse()
-                .filter((ds) => ds.substring(1, ds.indexOf("]")).trim()  === deleteLabel)
-                .forEach((ds) => {
-                    datasetTree.removeRecall(ds);
-                });
-
-            // Delete from Data Set Favorites
-            const favoriteDs = datasetTree.mFavorites;
-            for (let i = favoriteDs.length - 1; i >= 0; i--) {
-                const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
-                if (findNode === deleteLabel) {
-                    datasetTree.removeFavorite(favoriteDs[i]);
-                    favoriteDs[i].dirty = true;
-                    datasetTree.refresh();
-                }
+        // Delete from USS Tree
+        ussTree.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === deleteLabel) {
+                ussTree.deleteSession(sessNode);
+                sessNode.dirty = true;
+                ussTree.refresh();
             }
+        });
 
-            // Delete from Data Set Tree
-            datasetTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === deleteLabel) {
-                    datasetTree.deleteSession(sessNode);
-                    sessNode.dirty = true;
-                    datasetTree.refresh();
-                }
-            });
+        // Delete from Jobs Favorites
+        jobsProvider.mFavorites.forEach((ses) => {
+            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            if (findNode === deleteLabel) {
+                jobsProvider.removeFavorite(ses);
+                ses.dirty = true;
+                jobsProvider.refresh();
+            }
+        });
 
-            // Delete from USS Recall
-            const recallUSS: string[] = ussTree.getRecall();
-            recallUSS.slice().reverse()
-                .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel)
-                .forEach((uss) => {
-                    ussTree.removeRecall(uss);
-                });
+        // Delete from Jobs Tree
+        jobsProvider.mSessionNodes.forEach((jobNode) => {
+            if (jobNode.getProfileName() === deleteLabel) {
+                jobsProvider.deleteSession(jobNode);
+                jobNode.dirty = true;
+                jobsProvider.refresh();
+            }
+        });
 
-            // Delete from USS Favorites
-            ussTree.mFavorites.forEach((ses) => {
-                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
-                if (findNode === deleteLabel) {
-                    ussTree.removeFavorite(ses);
-                    ses.dirty = true;
-                    ussTree.refresh();
-                }
-            });
+        // Delete from Data Set Sessions list
+        const dsSetting: any = {...vscode.workspace.getConfiguration().get(this.dsSchema)};
+        let sessDS: string[] = dsSetting.sessions;
+        let faveDS: string[] = dsSetting.favorites;
+        sessDS = sessDS.filter( (element) => {
+            return element.trim() !== deleteLabel;
+        });
+        faveDS = faveDS.filter( (element) => {
+            return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
+        });
+        dsSetting.sessions = sessDS;
+        dsSetting.favorites = faveDS;
+        await vscode.workspace.getConfiguration().update(this.dsSchema, dsSetting, vscode.ConfigurationTarget.Global);
 
-            // Delete from USS Tree
-            ussTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === deleteLabel) {
-                    ussTree.deleteSession(sessNode);
-                    sessNode.dirty = true;
-                    ussTree.refresh();
-                }
-            });
+        // Delete from USS Sessions list
+        const ussSetting: any = {...vscode.workspace.getConfiguration().get(this.ussSchema)};
+        let sessUSS: string[] = ussSetting.sessions;
+        let faveUSS: string[] = ussSetting.favorites;
+        sessUSS = sessUSS.filter( (element) => {
+            return element.trim() !== deleteLabel;
+        });
+        faveUSS = faveUSS.filter( (element) => {
+            return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
+        });
+        ussSetting.sessions = sessUSS;
+        ussSetting.favorites = faveUSS;
+        await vscode.workspace.getConfiguration().update(this.ussSchema, ussSetting, vscode.ConfigurationTarget.Global);
 
-            // Delete from Jobs Favorites
-            jobsProvider.mFavorites.forEach((ses) => {
-                const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
-                if (findNode === deleteLabel) {
-                    jobsProvider.removeFavorite(ses);
-                    ses.dirty = true;
-                    jobsProvider.refresh();
-                }
-            });
+        // Delete from Jobs Sessions list
+        const jobsSetting: any = {...vscode.workspace.getConfiguration().get(this.jobsSchema)};
+        let sessJobs: string[] = jobsSetting.sessions;
+        let faveJobs: string[] = jobsSetting.favorites;
+        sessJobs = sessJobs.filter( (element) => {
+            return element.trim() !== deleteLabel;
+        });
+        faveJobs = faveJobs.filter( (element) => {
+            return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
+        });
+        jobsSetting.sessions = sessJobs;
+        jobsSetting.favorites = faveJobs;
+        await vscode.workspace.getConfiguration().update(this.jobsSchema, jobsSetting, vscode.ConfigurationTarget.Global);
 
-            // Delete from Jobs Tree
-            jobsProvider.mSessionNodes.forEach((jobNode) => {
-                if (jobNode.getProfileName() === deleteLabel) {
-                    jobsProvider.deleteSession(jobNode);
-                    jobNode.dirty = true;
-                    jobsProvider.refresh();
-                }
-            });
+        // Remove from list of all profiles
+        const index = this.allProfiles.findIndex((deleteItem) => {
+            return deleteItem === deletedProfile;
+        });
+        if (index >= 0) { this.allProfiles.splice(index, 1); }
+    }
 
-            // Delete from Data Set Sessions list
-            const dsSetting: any = {...vscode.workspace.getConfiguration().get(this.dsSchema)};
-            let sessDS: string[] = dsSetting.sessions;
-            let faveDS: string[] = dsSetting.favorites;
-            sessDS = sessDS.filter( (element) => {
-                return element.trim() !== deleteLabel;
-            });
-            faveDS = faveDS.filter( (element) => {
-                return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
-            });
-            dsSetting.sessions = sessDS;
-            dsSetting.favorites = faveDS;
-            await vscode.workspace.getConfiguration().update(this.dsSchema, dsSetting, vscode.ConfigurationTarget.Global);
+    public getAllTypes() {
+        return this.allTypes;
+    }
 
-            // Delete from USS Sessions list
-            const ussSetting: any = {...vscode.workspace.getConfiguration().get(this.ussSchema)};
-            let sessUSS: string[] = ussSetting.sessions;
-            let faveUSS: string[] = ussSetting.favorites;
-            sessUSS = sessUSS.filter( (element) => {
-                return element.trim() !== deleteLabel;
-            });
-            faveUSS = faveUSS.filter( (element) => {
-                return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
-            });
-            ussSetting.sessions = sessUSS;
-            ussSetting.favorites = faveUSS;
-            await vscode.workspace.getConfiguration().update(this.ussSchema, ussSetting, vscode.ConfigurationTarget.Global);
+    public async getNamesForType(type: string) {
+        const profileManager = await this.getCliProfileManager(type);
+        const profilesForType = (await profileManager.loadAll()).filter((profile) => {
+            return profile.type === type;
+        });
+        return profilesForType.map((profile)=> {
+            return profile.name;
+        });
+    }
 
-            // Delete from Jobs Sessions list
-            const jobsSetting: any = {...vscode.workspace.getConfiguration().get(this.jobsSchema)};
-            let sessJobs: string[] = jobsSetting.sessions;
-            let faveJobs: string[] = jobsSetting.favorites;
-            sessJobs = sessJobs.filter( (element) => {
-                return element.trim() !== deleteLabel;
-            });
-            faveJobs = faveJobs.filter( (element) => {
-                return element.substring(1, element.indexOf("]")).trim() !== deleteLabel;
-            });
-            jobsSetting.sessions = sessJobs;
-            jobsSetting.favorites = faveJobs;
-            await vscode.workspace.getConfiguration().update(this.jobsSchema, jobsSetting, vscode.ConfigurationTarget.Global);
-
-            // Remove from list of all profiles
-            const index = this.allProfiles.findIndex((deleteItem) => {
-                return deleteItem === deletedProfile;
-            });
-            if (index >= 0) { this.allProfiles.splice(index, 1); }
+    public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
+        let directProfile: IProfileLoaded;
+        const profileManager = await this.getCliProfileManager(type);
+        if (profileManager) {
+            directProfile = await profileManager.load({ name });
+        }
+        return directProfile;
     }
 
     private async updateProfile(ProfileInfo) {
