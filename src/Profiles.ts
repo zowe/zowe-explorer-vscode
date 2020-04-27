@@ -348,7 +348,6 @@ export class Profiles {
     }
 
     public async getDeleteProfile() {
-        let zosmfProfile: IProfileLoaded;
         const allProfiles: IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
@@ -372,7 +371,7 @@ export class Profiles {
             return;
         }
 
-        return allProfiles.find(temprofile => temprofile.name === sesName);
+        return allProfiles.find((temprofile) => temprofile.name === sesName);
     }
 
     public async deletePrompt(deletedProfile: IProfileLoaded) {
@@ -440,8 +439,8 @@ export class Profiles {
             // Delete from Data Set Recall
             const recallDs: string[] = datasetTree.getRecall();
             recallDs.slice().reverse()
-                .filter(ds => ds.substring(1, ds.indexOf("]")).trim()  === deleteLabel)
-                .forEach(ds => {
+                .filter((ds) => ds.substring(1, ds.indexOf("]")).trim()  === deleteLabel)
+                .forEach((ds) => {
                     datasetTree.removeRecall(ds);
                 });
 
@@ -468,8 +467,8 @@ export class Profiles {
             // Delete from USS Recall
             const recallUSS: string[] = ussTree.getRecall();
             recallUSS.slice().reverse()
-                .filter(uss => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel)
-                .forEach(uss => {
+                .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel)
+                .forEach((uss) => {
                     ussTree.removeRecall(uss);
                 });
 
