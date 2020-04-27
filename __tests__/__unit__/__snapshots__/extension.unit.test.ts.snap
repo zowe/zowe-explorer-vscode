@@ -218,17 +218,17 @@ Array [
   Object {
     "command": "zowe.uss.fullPath",
     "group": "inline",
-    "when": "viewItem =~ /^ussSession.*/",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.uss.createNode",
     "group": "inline",
-    "when": "viewItem =~ /^ussSession.*/",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.uss.editSession",
     "group": "inline",
-    "when": "viewItem =~ /^ussSession.*/",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
     "command": "zowe.uss.removeSession",
