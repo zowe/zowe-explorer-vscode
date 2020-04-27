@@ -370,6 +370,29 @@ describe("Profile class unit tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
         });
 
+        it("should create profile and trim host:143 from host and save 143 as port", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
+            showInputBox.mockResolvedValueOnce("fake:143");
+            showInputBox.mockResolvedValueOnce("fake");
+            showInputBox.mockResolvedValueOnce("fake");
+            showQuickPick.mockReset();
+            showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
+            await profiles.createNewConnection("fake");
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+        });
+
+        it("should indicate invalid property: zos host", async () => {
+            // No valid zos host value
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
+            showInputBox.mockResolvedValueOnce("fake:port");
+            await profiles.createNewConnection(profileOne.name);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS Host. Operation Cancelled");
+        });
+
         it("should create new profile with basepath", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
