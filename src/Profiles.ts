@@ -230,7 +230,7 @@ export class Profiles {
                                 return undefined;
                             } else {
                             host = result.host;
-                            if (result.port !== null) {
+                            if (result.port !== null || result.port !== Number(0)) {
                                 port = result.port;
                             }}
                         } else {
@@ -240,7 +240,7 @@ export class Profiles {
                                 return undefined;
                             } else {
                             host = result.host;
-                            if (result.port !== null) {
+                            if (result.port !== null || result.port !== Number(0)) {
                                 port = result.port;
                             }}
                         }
@@ -250,7 +250,7 @@ export class Profiles {
                 }
                 schemaValues[value] = host;
                 if (port !== null || port !== undefined) {
-                schemaValues.port = port;
+                    schemaValues.port = port;
                 }
                 break;
             case "port":
