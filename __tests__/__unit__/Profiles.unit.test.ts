@@ -360,8 +360,8 @@ describe("Profile class unit tests", () => {
         it("should create profile and trim https+443 from host", async () => {
             profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
             profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            showInputBox.mockResolvedValueOnce("https://fake:443");
-            showInputBox.mockResolvedValueOnce(Number("143"));
+            showInputBox.mockResolvedValueOnce("https://fake:143");
+            // showInputBox.mockResolvedValueOnce(Number("143"));
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
@@ -528,7 +528,6 @@ describe("Profile class unit tests", () => {
 
         it("Tests getSchema() with profile type", async () => {
             profiles.getCliProfileManager = () => Promise.resolve(cliProfileManagerMock);
-            // mock.mockReturnValue(Promise.resolve({host:{type:"string",optionDefinition:{name:"host"}}}));
             const response = await profiles.getSchema("zosmf");
             expect(response).toEqual(schemaReturn);
         });
