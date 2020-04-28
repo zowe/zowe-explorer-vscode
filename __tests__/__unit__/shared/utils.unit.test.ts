@@ -11,9 +11,8 @@
 
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
+import { Session } from "@zowe/imperative";
 import * as sharedUtils from "../../../src/shared/utils";
-import { Profiles } from "../../../src/Profiles";
 
 const session = new Session({
     user: "fake",
@@ -22,40 +21,15 @@ const session = new Session({
     protocol: "https",
     type: "basic",
 });
-const profileOne: IProfileLoaded = {
-    name: "aProfile",
-    profile: {},
-    type: "zosmf",
-    message: "",
-    failNotFound: false
-};
-
-const mockLoadNamedProfile = jest.fn();
-
-Profiles.createInstance(Logger.getAppLogger());
 
 describe("Shared Utils Unit Tests - Function node.labelHack()", () => {
-    mockLoadNamedProfile.mockReturnValue(profileOne);
-
-    beforeEach(() => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    getDefaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-    });
-
-    afterAll(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
     it("Checks that labelHack subtly alters the label", async () => {
         const rootNode = new ZoweUSSNode(
-            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, null, undefined);
         expect(rootNode.label === "gappy");
         sharedUtils.labelHack(rootNode);
         expect(rootNode.label === "gappy ");
