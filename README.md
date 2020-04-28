@@ -18,6 +18,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 * For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
 * For information about how to develop for Eclipse Theia, see [Theia README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md).
+* For information about how to create a VSCode extension for Zowe Explorer (a Zowe Explorer extension) see [VSCode extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
 
 ## Contents
 
