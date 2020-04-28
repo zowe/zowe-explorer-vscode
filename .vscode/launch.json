@@ -12,8 +12,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/jest/bin/jest",
             "args": [
-                "--runInBand",
-                "--updateSnapshot"
+                "--runInBand"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
