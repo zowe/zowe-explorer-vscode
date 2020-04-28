@@ -19,8 +19,7 @@ import { generateISession, generateISessionWithoutCredentials, generateIProfile,
 import { generateUSSTree } from "../../../__mocks__/generators/uss";
 import * as fs from "fs";
 import * as path from "path";
-import { FAVORITE_CONTEXT, DS_BINARY_FILE_CONTEXT, DS_TEXT_FILE_CONTEXT, FAV_SUFFIX, USS_SESSION_CONTEXT,
-    USS_DIR_CONTEXT, USS_DIR, defineGlobals, DS_PDS_CONTEXT } from "../../../src/globals";
+import * as globals from "../../../src/globals";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 
 const ussFile = jest.fn();
@@ -105,13 +104,13 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = USS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const testDir = new ZoweUSSNode(
             "testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
         const testFile = new ZoweUSSNode(
             "testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null, false, profileOne.name, undefined);
-        testFile.contextValue = DS_TEXT_FILE_CONTEXT;
+        testFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
         expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
@@ -124,7 +123,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
     it("Tests that creating a new USS node initializes all methods and properties", async () => {
         const testNode = new ZoweUSSNode(
             "/u", vscode.TreeItemCollapsibleState.None, null, session, null, false, profileOne.name, undefined);
-        testNode.contextValue = USS_SESSION_CONTEXT;
+        testNode.contextValue = globals.USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -143,9 +142,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode(
             "root", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = USS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         const subNode = new ZoweUSSNode(
-            DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
+            globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, profileOne.name, undefined);
         const child = new ZoweUSSNode(
             "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, profileOne.name, undefined);
 
@@ -157,13 +156,13 @@ describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
 
 describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, null, profileOne.name, "123");
-    ussNode.contextValue = USS_SESSION_CONTEXT;
+    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
     let node;
 
     // USS favorited node definition
     const ussNodeFav = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
-    ussNodeFav.contextValue = DS_TEXT_FILE_CONTEXT + FAV_SUFFIX;
+    ussNodeFav.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeFav.fullPath = "/u/myuser/usstest";
     ussNodeFav.tooltip = "/u/myuser/usstest";
 
@@ -177,7 +176,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         isDirtyInEditor.mockReset();
         openedDocumentInstance.mockReset();
         node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, ussNode, null, "/");
-        node.contextValue = USS_SESSION_CONTEXT;
+        node.contextValue = globals.USS_SESSION_CONTEXT;
         node.fullPath = "/u/myuser";
         Object.defineProperty(node, "isDirtyInEditor", {
             get: isDirtyInEditor
@@ -280,22 +279,22 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
 
     it("Tests that node.setBinary() works", async () => {
         const rootNode = new ZoweUSSNode(
-            FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
-        rootNode.contextValue = FAVORITE_CONTEXT;
+            globals.FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
+        rootNode.contextValue = globals.FAVORITE_CONTEXT;
         const subNode = new ZoweUSSNode(
             "binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, true, profileOne.name, undefined);
         const child = new ZoweUSSNode(
             "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, profileOne.name, undefined);
 
         child.setBinary(true);
-        expect(child.contextValue).toEqual(DS_BINARY_FILE_CONTEXT);
+        expect(child.contextValue).toEqual(globals.DS_BINARY_FILE_CONTEXT);
         expect(JSON.stringify(child.iconPath)).toContain("document-binary.svg");
         child.setBinary(false);
-        expect(child.contextValue).toEqual(DS_TEXT_FILE_CONTEXT);
+        expect(child.contextValue).toEqual(globals.DS_TEXT_FILE_CONTEXT);
         subNode.setBinary(true);
-        expect(subNode.contextValue).toEqual(DS_BINARY_FILE_CONTEXT + FAV_SUFFIX);
+        expect(subNode.contextValue).toEqual(globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX);
         subNode.setBinary(false);
-        expect(subNode.contextValue).toEqual(DS_TEXT_FILE_CONTEXT + FAV_SUFFIX);
+        expect(subNode.contextValue).toEqual(globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
     });
 });
 
@@ -303,7 +302,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     // USS node definition
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profileOne.name);
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profileOne.name);
-    ussNode.contextValue = USS_SESSION_CONTEXT;
+    ussNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
     const testUSSTree = generateUSSTree([], [ussNode], generateTreeView());
 
@@ -368,7 +367,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     });
 
     it("Tests that node.getChildren() returns the correct Thenable<ZoweUSSNode[]>", async () => {
-        rootNode.contextValue = USS_DIR_CONTEXT;
+        rootNode.contextValue = globals.USS_DIR_CONTEXT;
         rootNode.dirty = true;
 
         // Creating structure of files and directories
@@ -404,7 +403,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
     it("Tests that when bright.List. causes an error on the zowe call, " +
         "node.getChildren() throws an error and the catch block is reached", async () => {
-            childNode.contextValue = USS_SESSION_CONTEXT;
+            childNode.contextValue = globals.USS_SESSION_CONTEXT;
             childNode.fullPath = "Throw Error";
             childNode.dirty = true;
 
@@ -416,7 +415,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
     it("Tests that when bright.List returns an unsuccessful response, " +
         "node.getChildren() throws an error and the catch block is reached", async () => {
-            childNode.contextValue = USS_SESSION_CONTEXT;
+            childNode.contextValue = globals.USS_SESSION_CONTEXT;
             childNode.dirty = true;
             const subNode = new ZoweUSSNode(
                 "Response Fail", vscode.TreeItemCollapsibleState.Collapsed, childNode, null, null, false, profileOne.name, undefined);
@@ -430,14 +429,14 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         });
 
     it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {
-        rootNode.contextValue = USS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         rootNode.dirty = false;
 
         expect(await rootNode.getChildren()).toEqual([]);
     });
 
     it("Tests that when passing a session node with no hlq the node.getChildren() method is exited early", async () => {
-        rootNode.contextValue = USS_SESSION_CONTEXT;
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
 
         expect(await rootNode.getChildren()).toEqual([]);
     });
@@ -447,7 +446,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     let ussNode;
     let dsNode;
     const testUSSTree = generateUSSTree([], [ussNode], generateTreeView());
-    defineGlobals("/test/path/");
+    globals.defineGlobals("/test/path/");
 
     testUSSTree.getTreeView.mockReturnValue(generateTreeView());
     createBasicZosmfSession.mockReturnValue(session);
@@ -503,7 +502,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Tests that correct file is downloaded
         await node.openUSS(false, true, testUSSTree);
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
         expect(isFileTagBinOrAscii.mock.calls.length).toBe(1);
         expect(isFileTagBinOrAscii.mock.calls[0][0]).toBe(session);
         expect(isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
@@ -546,11 +545,11 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     it("Tests that node.openUSS() executes successfully for favorited file", async () => {
         // Set up mock favorite session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name);
-        favoriteSession.contextValue = FAVORITE_CONTEXT;
+        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
 
         // Set up favorited nodes (directly under Favorites)
         const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None, favoriteSession, session, "/", false, profileOne.name);
-        favoriteFile.contextValue = DS_TEXT_FILE_CONTEXT + FAV_SUFFIX;
+        favoriteFile.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
 
         // For each node, make sure that code below the log.debug statement is execute
         await favoriteFile.openUSS(false, true, testUSSTree);
@@ -560,14 +559,14 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     it("Tests that node.openUSS() executes successfully for child file of favorited directory", async () => {
         // Set up mock favorite session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name);
-        favoriteSession.contextValue = FAVORITE_CONTEXT;
+        favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
 
         // Set up favorited directory with child file
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/",
                                false, profileOne.name);
-        favoriteParent.contextValue = USS_DIR_CONTEXT + FAV_SUFFIX;
+        favoriteParent.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
         const child = new ZoweUSSNode("favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir", false, profileOne.name);
-        child.contextValue = DS_TEXT_FILE_CONTEXT;
+        child.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
         await child.openUSS(false, true, testUSSTree);
         expect(showTextDocument.mock.calls.length).toBe(1);
@@ -583,7 +582,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Make sure correct file is downloaded
         await node.openUSS(false, true, testUSSTree);
         expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
+        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
         expect(withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
