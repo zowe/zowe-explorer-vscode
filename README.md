@@ -100,8 +100,8 @@ Activate the Secure Credential Store plug-in.
 
 1. (Optional) If you have existing profiles, issue the following command, using Zowe CLI:
 
-   ```
-   zowe scs u.
+   ```shell
+   zowe scs u
    ```
 
 2. Open Zowe Explorer.
