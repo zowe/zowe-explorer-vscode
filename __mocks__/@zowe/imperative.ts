@@ -68,6 +68,15 @@ export class CliProfileManager {
     public getAllProfileNames(){
         return ["name1", "name2"];
     }
+    public save(){
+        return { name: "profile1", profile: {}, type: "zosmf" };
+    }
+    public update(){
+        return { name: "profile1", profile: {}, type: "zosmf" };
+    }
+    public delete(){
+        return { name: "profile1", profile: {}, type: "zosmf" };
+    }
     public get configurations() {
         return [{
             type: "zosmf",

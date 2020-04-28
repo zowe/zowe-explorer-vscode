@@ -685,7 +685,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(69);
+        expect(registerCommand.mock.calls.length).toBe(76);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -699,6 +699,7 @@ describe("Extension Unit Tests", () => {
             "zowe.refreshAll",
             "zowe.refreshNode",
             "zowe.pattern",
+            "zowe.editSession",
             "zowe.ZoweNode.openPS",
             "zowe.createDataset",
             "zowe.all.profilelink",
@@ -727,6 +728,7 @@ describe("Extension Unit Tests", () => {
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
             "zowe.uss.fullPath",
+            "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
             "zowe.uss.createFile",
@@ -755,6 +757,7 @@ describe("Extension Unit Tests", () => {
             "zowe.getJobJcl",
             "zowe.setJobSpool",
             "zowe.jobs.search",
+            "zowe.jobs.editSession",
             "zowe.issueTsoCmd",
             "zowe.issueMvsCmd",
             "zowe.jobs.addFavorite",
@@ -762,7 +765,11 @@ describe("Extension Unit Tests", () => {
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems"
+            "zowe.searchInAllLoadedItems",
+            "zowe.deleteProfile",
+            "zowe.cmd.deleteProfile",
+            "zowe.uss.deleteProfile",
+            "zowe.jobs.deleteProfile",
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
