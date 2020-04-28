@@ -412,7 +412,7 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Tests the addRecall & getRecall commands", async () => {
         testTree.addRecall("testHistory");
-        expect(testTree.getRecall()[0]).toEqual("testHistory");
+        expect(testTree.getRecall()[0]).toEqual("TESTHISTORY");
     });
 
     /*************************************************************************************************************

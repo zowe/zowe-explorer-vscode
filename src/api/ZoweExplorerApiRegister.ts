@@ -12,7 +12,7 @@
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
-import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -20,13 +20,11 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
  * extensions to contribute their implementations.
- * @export
  */
 export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClient {
 
     /**
      * Access the singleton instance.
-     * @static
      * @returns {ZoweExplorerApiRegister} the ZoweExplorerApiRegister singleton instance
      */
     public static getInstance(): ZoweExplorerApiRegister {
@@ -35,7 +33,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
 
     /**
      * Static lookup of an API for USS for a given profile.
-     * @private
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
@@ -45,7 +42,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
 
     /**
      * Static lookup of an API for MVS for a given profile.
-     * @private
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
@@ -55,7 +51,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
 
     /**
      * Static lookup of an API for JES for a given profile.
-     * @private
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
      * @returns an instance of the API that uses the profile provided
      */
@@ -65,7 +60,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
 
     /**
      * Lookup for generic extender API implementation.
-     * @static
      * @returns an instance of the API
      */
     public static getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
