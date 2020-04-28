@@ -178,6 +178,7 @@ describe("Add refreshPS tests", () => {
 
     beforeEach(() => globals.defineGlobals(""));
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Checking common PS dataset refresh", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -340,6 +341,7 @@ describe("Add deleteDataset tests", () => {
 
     beforeEach(() => globals.defineGlobals(""));
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Checking common PS dataset deletion", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -515,6 +517,7 @@ describe("Add enterPattern tests", () => {
     }
 
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Checking common dataset filter action", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -578,6 +581,7 @@ describe("Add saveFile tests", () => {
 
     beforeEach(() => globals.defineGlobals(""));
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Checking common dataset saving action when no session is defined", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -594,8 +598,6 @@ describe("Add saveFile tests", () => {
 
         await dsActions.saveFile(testDocument, environmentalMocks.testDatasetTree);
 
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getSessionSpy).toBeCalledTimes(2);
         expect(getSessionSpy).toReturnWith(environmentalMocks.sessionWithoutCredentials);
     });
     it("Checking common dataset saving failed attempt due to inability to locate session and profile", async () => {
