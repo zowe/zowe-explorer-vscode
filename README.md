@@ -122,7 +122,12 @@ Use the following tips to familiarize yourself with the extension and make the b
 
 * **Edit a profile**: You can now edit existing profiles by clicking the **pencil** button next to the **magnifying glass** button in the explorer tree. The feature lets you modify the information inside your profile.
 
-* **Delete a profile**: You can permanently delete profiles by right-clicking the profile and selecting the **Delete Profile** option. The feature deletes a profile from your `.zowe` folder.
+* **Delete a profile**: You can permanently delete profiles by right-clicking the profile and selecting the **Delete Profile** option. The feature deletes a profile from your `.zowe` folder. Alternatively, you can delete a profile from the VSCode Command Palette.
+
+  **Follow these steps**:
+
+   1. Press **F1** on your keyboard.
+   2. Select the **Zowe: Delete a Profile Permanently** option.
 
 * **Hide a profile**: You can hide a profile from profile tree by right-clicking the profile and selecting the **Hide Profile** option. If necessary, add the profile back by clicking the **+** button from the explorer tree.
 
