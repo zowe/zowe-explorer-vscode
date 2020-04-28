@@ -47,7 +47,6 @@ async function createGlobalMocks() {
     return newVariables;
 }
 
-
 describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     it("Checks that labelRefresh subtly alters the label", async () => {
         const globalMocks = await createGlobalMocks();
