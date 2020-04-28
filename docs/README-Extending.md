@@ -38,6 +38,9 @@ are referencing a Job type tree item that has additional information indicated b
 					"group": "4_workspace"
 				}
             ],
+        ..
+        ..
+   }     
 ```
 Notice the syntax we use is for the context value or viewItem above is a regular expression as denoted by the "=~" equal test. Using regular expressions 
 to describe context allows more meaning to be embedded in the context.
@@ -117,6 +120,7 @@ Zowe CLI plugins there is a simple mechanism by which Zowe Explorers can associa
 can be linked with multiple 'Secondary' types although only a single instance of each type is allowed. 
 Within the scope of their own extender package these profiles can be accessed so making access to the relevant REST API available to the extender.
 
+
 ![Profiles](./images/ZE-profile-links.gif?raw=true "Associate Profile")
 
 ## Futures WIP
@@ -130,4 +134,3 @@ items to be reliable and consistent with the look, feel and behavior. We intend 
 ### Publishing extender API as an NPM repo
 
 We are considering publishing the API as a npm repository that can be imported into the extenders package. [Progress Details here](https://github.com/zowe/vscode-extension-for-zowe/issues/671)
-

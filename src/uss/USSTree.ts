@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils";
 import { sortTreeItems, getAppName } from "../shared/utils";
 import { IZoweTree } from "../api/IZoweTree";
