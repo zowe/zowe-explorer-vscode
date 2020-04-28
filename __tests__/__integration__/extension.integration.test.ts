@@ -606,23 +606,16 @@ describe("Extension Integration Tests", () => {
                 const dataSetName = `${pattern}.SDATA.MIGR`;
 
                 beforeEach(async () => {
-                    await Promise.all([
-                        zowe.Delete.dataSet(
-                            sessionNode.getSession(),
-                            dataSetName
-                        ),
-                        zowe.Create.dataSet(
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zowe.Create.dataSet(
                             sessionNode.getSession(),
                             zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dataSetName,
-                        ),
-                    ].map((p) => p.catch((err) => err)));
+                        ).catch((err) => err);
                 });
 
                 afterEach(async () => {
-                    await Promise.all([
-                        zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err),
-                    ].map((p) => p.catch((err) => err)));
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
                 });
 
                 it("Should send a migrate request", async () => {
@@ -643,23 +636,16 @@ describe("Extension Integration Tests", () => {
             const dataSetName = `${pattern}.PDATA.MIGR`;
 
             beforeEach(async () => {
-                await Promise.all([
-                    zowe.Delete.dataSet(
-                        sessionNode.getSession(),
-                        dataSetName
-                    ),
-                    zowe.Create.dataSet(
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                await zowe.Create.dataSet(
                         sessionNode.getSession(),
                         zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         dataSetName,
-                    ),
-                ].map((p) => p.catch((err) => err)));
+                    );
             });
 
             afterEach(async () => {
-                await Promise.all([
-                    zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err),
-                ].map((p) => p.catch((err) => err)));
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
             });
 
             it("Should send a migrate request", async () => {
@@ -704,23 +690,16 @@ describe("Extension Integration Tests", () => {
             const dataSetName = `${pattern}.SDATA.REC`;
 
             beforeEach(async () => {
-                await Promise.all([
-                    zowe.Delete.dataSet(
-                        sessionNode.getSession(),
-                        dataSetName
-                    ),
-                    zowe.Create.dataSet(
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                await zowe.Create.dataSet(
                         sessionNode.getSession(),
                         zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                         dataSetName,
-                    ),
-                ].map((p) => p.catch((err) => err)));
+                    );
             });
 
             afterEach(async () => {
-                await Promise.all([
-                    zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err),
-                ].map((p) => p.catch((err) => err)));
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
             });
 
             it("Should send a Recall request", async () => {
@@ -741,23 +720,16 @@ describe("Extension Integration Tests", () => {
             const dataSetName = `${pattern}.PDATA.REC`;
 
             beforeEach(async () => {
-                await Promise.all([
-                    zowe.Delete.dataSet(
-                        sessionNode.getSession(),
-                        dataSetName
-                    ),
-                    zowe.Create.dataSet(
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                await zowe.Create.dataSet(
                         sessionNode.getSession(),
                         zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         dataSetName,
-                    ),
-                ].map((p) => p.catch((err) => err)));
+                    );
             });
 
             afterEach(async () => {
-                await Promise.all([
-                    zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err),
-                ].map((p) => p.catch((err) => err)));
+                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
             });
 
             it("Should send a Recall request", async () => {
