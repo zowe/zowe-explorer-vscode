@@ -10,7 +10,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 * Enables you to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
 * Enables you to create, modify, rename and upload USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
-* Lets you create, edit and use Zowe CLI `zosmf` compatible profiles.
+* Lets you create, edit and delete Zowe CLI `zosmf` compatible profiles.
 * Lets you use Secure Credential Store plug-in to ensure your credentials security.
 
 **Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
@@ -74,8 +74,8 @@ You can now use Secure Credential Store plug-in in the Zowe Explorer extension. 
 
 Ensure that you meet the following prerequisites before you can use the plug-in both with Zowe CLI and Zowe Explorer:
 
-- [Install Zowe CLI](cli-installcli.md)
-- [Install Secure Credential Store for Zowe CLI](cli-scsplugin.md)
+* [Install Zowe CLI](cli-installcli.md)
+* [Install Secure Credential Store for Zowe CLI](cli-scsplugin.md)
 
 ### Using Secure Credential Store with Zowe Explorer
 
@@ -109,7 +109,6 @@ zowe scs u.
 6. Restart VSCode.
 
 The credentials of your newly created or existing profiles are now stored securely.
-
 
 ## Usage tips
 
