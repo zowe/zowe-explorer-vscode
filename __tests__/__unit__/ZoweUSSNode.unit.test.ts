@@ -62,7 +62,8 @@ describe("Unit Tests (Jest)", () => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     getDefaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    refresh: jest.fn()
                 };
             })
         });
