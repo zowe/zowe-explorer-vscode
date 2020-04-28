@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { errorHandling } from "../utils";
-import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix } from "../shared/utils";
+import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -1010,29 +1010,35 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
             }
-        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            const oldDocText = doc.getText();
-            const oldDocLineCount = doc.lineCount;
-            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
-                file: doc.fileName,
-                returnEtag: true
-            });
-            // re-assign etag, so that it can be used with subsequent requests
-            const downloadEtag = downloadResponse.apiResponse.etag;
-            if (node && downloadEtag !== node.getEtag()) {
-                node.setEtag(downloadEtag);
-            }
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
+        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
+            localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+            if (globals.ISTHEIA) {
+                await willForceUpload(node, doc, label, node ? node.getProfile(): profile);
+            } else {
+                const oldDoc = doc;
+                const oldDocText = oldDoc.getText();
+                const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
+                    file: doc.fileName,
+                    returnEtag: true
+                });
+                // re-assign etag, so that it can be used with subsequent requests
+                const downloadEtag = downloadResponse.apiResponse.etag;
+                if (node && downloadEtag !== node.getEtag()) {
+                    node.setEtag(downloadEtag);
+                }
+                vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                 "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-            const startPosition = new vscode.Position(0, 0);
-            const endPosition = new vscode.Position(oldDocLineCount, 0);
-            const deleteRange = new vscode.Range(startPosition, endPosition);
-            await vscode.window.activeTextEditor.edit((editBuilder) => {
-                // re-write the old content in the editor view
-                editBuilder.delete(deleteRange);
-                editBuilder.insert(startPosition, oldDocText);
-            });
-            await vscode.window.activeTextEditor.document.save();
+                // Store document in a separate variable, to be used on merge conflict
+                const startPosition = new vscode.Position(0, 0);
+                const endPosition = new vscode.Position(oldDoc.lineCount, 0);
+                const deleteRange = new vscode.Range(startPosition, endPosition);
+                await vscode.window.activeTextEditor.edit((editBuilder) => {
+                    // re-write the old content in the editor view
+                    editBuilder.delete(deleteRange);
+                    editBuilder.insert(startPosition, oldDocText);
+                });
+                await vscode.window.activeTextEditor.document.save();
+            }
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
