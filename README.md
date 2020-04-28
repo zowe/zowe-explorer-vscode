@@ -7,11 +7,11 @@ Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe
 
 The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
-* Enables you to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
-* Enables you to create, modify, rename and upload USS files directly to a z/OS mainframe.
+* Enables you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
+* Enables you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
-* Lets you create, edit and delete Zowe CLI `zosmf` compatible profiles.
-* Lets you use Secure Credential Store plug-in to ensure your credentials security.
+* Lets you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
+* Lets you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 
 **Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
