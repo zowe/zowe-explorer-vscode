@@ -100,6 +100,9 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
 
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const rootNode = new ZoweUSSNode(
@@ -136,6 +139,9 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that node.getSession() returns the proper session", async () => {
@@ -188,9 +194,11 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
             return callback();
         });
     });
-
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that node.refreshUSS() works correctly for dirty file state, when user didn't cancel file save", async () => {
@@ -250,6 +258,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
 
     it("Tests that getEtag() returns a value", async () => {
         const rootNode = new ZoweUSSNode(
@@ -261,6 +272,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
 describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that setEtag() assigns a value", async () => {
@@ -275,6 +289,9 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
 describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that node.setBinary() works", async () => {
@@ -318,6 +335,9 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     });
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that node is deleted if user verified", async () => {
@@ -364,6 +384,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     });
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that node.getChildren() returns the correct Thenable<ZoweUSSNode[]>", async () => {
@@ -491,6 +514,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     });
     afterEach(() => {
         jest.clearAllMocks();
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
     });
 
     it("Tests that node.openUSS() is executed successfully", async () => {
