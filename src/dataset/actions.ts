@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { errorHandling } from "../utils";
-import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix } from "../shared/utils";
+import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -181,6 +181,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             } else {
                 await vscode.window.showTextDocument(document, {preview: false});
             }
+            if (datasetProvider) { datasetProvider.addRecall(`[${node.getProfileName()}]: ${label}`); }
         } catch (err) {
             globals.LOG.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             errorHandling(err, node.getProfileName(), err.message);
@@ -879,7 +880,50 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     }
     const start = path.join(globals.DS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
-    const sesName = ending.substring(0, ending.indexOf(path.sep));
+    let sesName = ending.substring(0, ending.indexOf(path.sep));
+
+    // Added special handling for attempt to save favourite node
+    if (sesName === localize("sessions.favorites.name", "Favorites")) {
+        const datasetName = ending.split(path.sep).pop();
+        const memberRegex = /\(.+\)$/;
+        let targetNode;
+
+        if (memberRegex.test(datasetName)) {
+            const nameRegex = new RegExp(`${datasetName.replace(memberRegex, "")}$`);
+            const targetParentNode = datasetProvider.mFavorites.find((favNode) => {
+                return nameRegex.test(favNode.label);
+            });
+
+            if (targetParentNode) {
+                const memberRegexResult = datasetName.match(memberRegex);
+                const memberName = memberRegexResult && memberRegexResult[0];
+
+                const hasMember = targetParentNode.children.some((memNode) => {
+                    return memNode.label === memberName.replace(/(\()|(\))/g, "");
+                });
+                if (hasMember) {
+                    targetNode = targetParentNode;
+                }
+            }
+        } else {
+            const nameRegex = new RegExp(`${datasetName}$`);
+            targetNode = datasetProvider.mFavorites.find((favNode) => {
+                return nameRegex.test(favNode.label);
+            });
+        }
+
+        if (targetNode) {
+            const sessionRegex = /^\[.+\]/;
+            const sessionRegexResult = targetNode.label
+                .match(sessionRegex);
+            const sessionName = sessionRegexResult && sessionRegexResult[0];
+
+            if (sessionName) {
+                sesName = sessionName.replace(/(\[)|(\])/g, "");
+            }
+        }
+    }
+
     const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
@@ -971,29 +1015,33 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
             localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
-            const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
-                file: doc.fileName,
-                returnEtag: true
-            });
-            // re-assign etag, so that it can be used with subsequent requests
-            const downloadEtag = downloadResponse.apiResponse.etag;
-            if (node && downloadEtag !== node.getEtag()) {
-                node.setEtag(downloadEtag);
-            }
-            vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
+            if (globals.ISTHEIA) {
+                await willForceUpload(node, doc, label, node ? node.getProfile(): profile);
+            } else {
+                const oldDoc = doc;
+                const oldDocText = oldDoc.getText();
+                const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
+                    file: doc.fileName,
+                    returnEtag: true
+                });
+                // re-assign etag, so that it can be used with subsequent requests
+                const downloadEtag = downloadResponse.apiResponse.etag;
+                if (node && downloadEtag !== node.getEtag()) {
+                    node.setEtag(downloadEtag);
+                }
+                vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                 "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-            // Store document in a separate variable, to be used on merge conflict
-            const oldDoc = doc;
-            const oldDocText = oldDoc.getText();
-            const startPosition = new vscode.Position(0, 0);
-            const endPosition = new vscode.Position(oldDoc.lineCount, 0);
-            const deleteRange = new vscode.Range(startPosition, endPosition);
-            await vscode.window.activeTextEditor.edit((editBuilder) => {
-                // re-write the old content in the editor view
-                editBuilder.delete(deleteRange);
-                editBuilder.insert(startPosition, oldDocText);
-            });
-            await vscode.window.activeTextEditor.document.save();
+                // Store document in a separate variable, to be used on merge conflict
+                const startPosition = new vscode.Position(0, 0);
+                const endPosition = new vscode.Position(oldDoc.lineCount, 0);
+                const deleteRange = new vscode.Range(startPosition, endPosition);
+                await vscode.window.activeTextEditor.edit((editBuilder) => {
+                    // re-write the old content in the editor view
+                    editBuilder.delete(deleteRange);
+                    editBuilder.insert(startPosition, oldDocText);
+                });
+                await vscode.window.activeTextEditor.document.save();
+            }
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
         }
