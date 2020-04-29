@@ -36,7 +36,6 @@ const showErrorMessage = jest.fn();
 const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
-const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const refreshAll = jest.fn();
 const mockAddZoweSession = jest.fn();
@@ -158,7 +157,6 @@ describe("dsNodeActions", () => {
         testDSTree.refreshElement.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        existsSync.mockReturnValue(true);
     });
     afterEach(() => {
         jest.resetAllMocks();
