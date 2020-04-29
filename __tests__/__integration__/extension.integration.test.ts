@@ -316,7 +316,7 @@ describe("Extension Integration Tests", () => {
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
             const node = new ZoweDatasetNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
-            await dsActions.openPS(node, true);
+            await dsActions.openPS(node, true, testTree);
             expect(path.relative(vscode.window.activeTextEditor.document.fileName,
                 sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal("");
             expect(fs.existsSync(sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);

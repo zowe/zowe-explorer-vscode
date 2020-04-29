@@ -7,10 +7,11 @@ Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe
 
 The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes. Working with data sets and USS files from VSC can be more convenient than using 3270 emulators, and complements your Zowe CLI experience. The extension provides the following benefits:
 
-* Enables developers to create, modify, rename, copy and upload data sets directly to a z/OS mainframe.
-* Enables developers to create, modify, rename and upload USS files directly to a z/OS mainframe.
+* Enables you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
+* Enables you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
 * Provides a more streamlined way to access data sets, uss files and jobs.
-* Lets you create and use Zowe CLI `zosmf` compatible profiles.
+* Lets you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
+* Lets you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 
 **Note:** The Zowe Explorer is powered by [Zowe CLI](https://zowe.org/home/). The extension demonstrates the potential for plug-ins powered by Zowe.
 
@@ -24,6 +25,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 
 * [Software Requirements](#software-requirements)
 * [Create a Zowe CLI z/OSMF profile](#create-a-zowe-cli-zosmf-profile)
+* [Secure Credential Store](#secure-credential-store)
 * [Usage tips](#usage-tips)
 * [Sample use cases](#sample-use-cases)
 
@@ -45,7 +47,7 @@ Ensure that you meet the following prerequisites before using the extension:
 **Follow these steps:**
 
 1. Navigate to the explorer tree.
-2. Click the **+** sign next to the **DATA SETS**, **USS** or **JOBS** bar.
+2. Click the **+** button next to the **DATA SETS**, **USS** or **JOBS** bar.
 
    **Note:** If you already have a profile, select it from the drop-down menu.
 
@@ -60,6 +62,57 @@ Ensure that you meet the following prerequisites before using the extension:
 
 You successfully created a Zowe CLI `zosmf` profile. Now you can use all the functionalities of the extension.
 
+## Secure Credential Store
+
+You can now use Secure Credential Store plug-in in the Zowe Explorer extension. Secure Credentials Store plug-in lets you store your credentials securely. You can use the plug-in in the following ways:
+  
+* [Use the plug-in only with Zowe Explorer](#using-secure-credential-store-with-zowe-explorer)
+* [Use the plug-in both with Zowe CLI and Zowe Explorer](#using-secure-credential-store-with-zowe-cli-and-zowe-explorer)
+
+   For more information about Secure Credential Store plug-in for Zowe CLI, see [Secure Credential Store Plug-in for Zowe CLI](cli-scsplugin.md).
+
+### Prerequisites
+
+Ensure that you meet the following prerequisites before you can use the plug-in both with Zowe CLI and Zowe Explorer:
+
+* [Install Zowe CLI](cli-installcli.md)
+* [Install Secure Credential Store for Zowe CLI](cli-scsplugin.md)
+
+### Using Secure Credential Store with Zowe Explorer
+
+Activate the Secure Credential Store plug-in.
+
+**Follow these steps:**
+
+1. Open Zowe Explorer.
+2. Navigate to the VSCode settings.
+3. Open Zowe Explorer Settings.
+4. Add the **Zowe-Plugin** value to the `Zowe Security: Credential Key` entry field.
+5. Restart VSCode.
+6. Create a profile.
+
+Your Zowe Explorer credentials are now stored securely.
+
+### Using Secure Credential Store with Zowe CLI and Zowe Explorer
+
+Activate the Secure Credential Store plug-in.
+
+**Follow these steps:**
+
+1. (Optional) If you have existing profiles, issue the following command, using Zowe CLI:
+
+   ```shell
+   zowe scs u
+   ```
+
+2. Open Zowe Explorer.
+3. Navigate to the VSCode settings.
+4. Open Zowe Explorer Settings.
+5. Add the **Zowe-Plugin** value to the `Zowe Security: Credential Key` entry field.
+6. Restart VSCode.
+
+The credentials of your newly created or existing profiles are now stored securely.
+
 ## Usage tips
 
 Use the following tips to familiarize yourself with the extension and make the best use of it:
@@ -67,6 +120,17 @@ Use the following tips to familiarize yourself with the extension and make the b
 * **Data set, USS and jobs persistence settings:** You can enable the persistence of any data sets, USS files and jobs by adding them to the **Favorites** tab. Right-click on a data set, USS file or jobs and click **Add Favorite**.
 
 * **Syntax highlighter:** Zowe Explorer supports syntax hightlighter for data sets. To enhance the experience of using the extension, download an extension that highlights syntax, such as [IBM-JCL](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-jcl) or [IBM-Assembler](https://marketplace.visualstudio.com/items?itemName=kelosky.ibm-assembler).
+
+* **Edit a profile**: You can now edit existing profiles by clicking the **pencil** button next to the **magnifying glass** button in the explorer tree. The feature lets you modify the information inside your profile.
+
+* **Delete a profile**: You can permanently delete profiles by right-clicking the profile and selecting the **Delete Profile** option. The feature deletes a profile from your `.zowe` folder. Alternatively, you can delete a profile from the VSCode Command Palette.
+
+  **Follow these steps**:
+
+   1. Press **F1** on your keyboard.
+   2. Select the **Zowe: Delete a Profile Permanently** option.
+
+* **Hide a profile**: You can hide a profile from profile tree by right-clicking the profile and selecting the **Hide Profile** option. If necessary, add the profile back by clicking the **+** button from the explorer tree.
 
 ### Advanced Configuration
 
