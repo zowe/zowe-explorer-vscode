@@ -173,7 +173,7 @@ describe("ussNodeActions", () => {
     });
     afterAll(() => {
         Object.defineProperty(fs, "existsSync", {value: oldExistsSync});
-    })
+    });
     afterEach(() => {
         jest.resetAllMocks();
     });
