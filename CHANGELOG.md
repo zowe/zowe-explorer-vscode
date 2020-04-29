@@ -2,6 +2,28 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.5.0`
+
+- Fixes for saving of Datasets from Favourites section. Thanks @stepanzharychevbroadcom
+- Creation of alternative types of profiles. Thanks @phaumer
+- Management of Theia specific merge conflict resolution. Thanks @Alexandru-Dumitru
+- Add to recall when PS File opened. Thanks @katelynienaber
+- Provide edit support for Profile credentials. Thanks @jellypuno
+- Support for profile deletion. Thanks @crawr
+- Addressed USS file merge conflict triggering issue. Thanks @Alexandru-Dumitru
+- Provide refresh all method for Zowe Explorer - Extenders. Thanks @phaumer
+- Extender guidelines and documentation. Thanks @Colin-Stone
+- Provision of profile association links to support extenders of Zowe Explorer. Thanks @Colin-Stone
+- Creation of an extender API for extenders of Zowe Explorer. Thanks @Colin-Stone
+- Management of VSAM files within Dataset explorer. Thanks @Colin-Stone
+- VSCode context now based on Regular expression for flexibility. Thanks @Colin-Stone
+- Vsix file deployment via Theia pipeline. Thanks @crawr
+- Reduction in size of extension.ts file. Thanks @katelynienaber
+- ContextValue of undefined error addressed for new members. Thanks @katelynienaber
+- Fixed when Pull from mainframe didn't work on USS Files. Thanks @stepanzharychevbroadcom
+- Fixed Bug submitting JCL from Command Palette. Thanks @stepanzharychevbroadcom
+- Refactoring of testing for accuracy and maintainability. Thanks @stepanzharychevbroadcom
+
 ## `1.4.1`
 
 - Fix for USS files not saving correctly. Thanks @phaumer
