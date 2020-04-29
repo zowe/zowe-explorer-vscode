@@ -22,18 +22,18 @@ const session = new Session({
     type: "basic",
 });
 
-describe("Shared Utils Unit Tests - Function node.labelHack()", () => {
+describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-    it("Checks that labelHack subtly alters the label", async () => {
+    it("Checks that labelRefresh subtly alters the label", async () => {
         const rootNode = new ZoweUSSNode(
             "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, null, undefined);
         expect(rootNode.label === "gappy");
-        sharedUtils.labelHack(rootNode);
+        sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy ");
-        sharedUtils.labelHack(rootNode);
+        sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy");
     });
 });
