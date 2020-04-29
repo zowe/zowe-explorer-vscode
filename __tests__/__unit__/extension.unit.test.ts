@@ -322,7 +322,7 @@ describe("Extension Unit Tests", () => {
             treeView: new TreeView(),
             addSession: mockAddZoweSession,
             addHistory: mockAddHistory,
-            addRecall: mockAddHistory,
+            addRecall: mockAddRecall,
             getHistory: mockGetHistory,
             getRecall: mockGetRecall,
             refresh: mockRefresh,
