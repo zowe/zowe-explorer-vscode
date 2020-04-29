@@ -5,14 +5,14 @@
 {
 	"version": "0.2.0",
     "configurations": [
-
         {
             "type": "node",
             "name": "Unit Tests (Jest)",
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/jest/bin/jest",
             "args": [
-                "--runInBand",
+                "__tests__/**/*.unit.test.ts",
+                "--coverage"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
