@@ -95,7 +95,7 @@ node('ibm-jenkins-slave-dind') {
     },
     artifacts: [
       "${packagingDir}/plugins/${packageName}.vsix",
-      "${packagingDir}/screenshots/*.png"
+      // "${packagingDir}/screenshots/*.png"
     ]
   )
 
