@@ -14,10 +14,24 @@ import { Builder, By, Key, until } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import * as fs from "fs";
+import * as path from "path";
 
 const TIMEOUT = 45000;
 const SLEEPTIME = 10000;
 const WAITTIME = 30000;
+const SCREENSHOT_DIR = ".tmp/screenshots";
+
+const saveScreenshot = (driver, screenshotName: string): Promise<string> => {
+    return driver.takeScreenshot()
+        .then((base64png: string) => {
+            const file: string = `${screenshotName}-${(new Date()).toISOString()}.png`;
+            fs.writeFileSync(path.join(SCREENSHOT_DIR, file), Buffer.from(base64png, "base64"));
+            return file;
+        });
+};
+
+
 declare var it: any;
 
 describe("Extension Theia Tests", () => {
@@ -31,8 +45,10 @@ describe("Extension Theia Tests", () => {
     it("should open Zowe Explorer and find the Favorites node", async () => {
         await driver.get("http://localhost:3000");
         await driver.sleep(SLEEPTIME);
-        const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
+        await saveScreenshot(driver, "page-loaded");
+        const button = await driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
+        await saveScreenshot(driver, "zowe-plugin-button-clicked");
         const favoriteLink = await driver.wait(until.elementLocated(By.id("/0:Favorites")), WAITTIME).getAttribute("title");
         expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
