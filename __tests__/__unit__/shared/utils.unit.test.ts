@@ -22,6 +22,9 @@ import {
 import { generateDatasetSessionNode } from "../../../__mocks__/generators/datasets";
 
 describe("Add filterTreeByString Tests", () => {
+    afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
+
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
             new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
@@ -56,6 +59,9 @@ describe("Add getDocumentFilePath Tests", () => {
             datasetSessionNode
         };
     }
+
+    afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Testing that the add Suffix for datasets works", async () => {
         const environmentalMocks = generateEnvironmentalMocks();

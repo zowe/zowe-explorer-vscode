@@ -59,6 +59,7 @@ describe("Add Session Unit Test", () => {
     }
 
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Checking that addSession will cancel if there is no profile name", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
@@ -168,6 +169,7 @@ describe("Add searchForLoadedItems Tests", () => {
     }
 
     afterEach(() => jest.clearAllMocks());
+    afterAll(() => jest.restoreAllMocks());
 
     it("Checking that searchForLoadedItems works for a PDS", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
