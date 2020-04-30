@@ -19,7 +19,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { List } from "@zowe/cli";
 import { DS_PDS_CONTEXT, DS_SESSION_CONTEXT, INFORMATION_CONTEXT, DS_MEMBER_CONTEXT,
-    DS_MIGRATED_FILE_CONTEXT, DS_DS_CONTEXT } from "../../src/globals";
+    DS_MIGRATED_FILE_CONTEXT, DS_DS_CONTEXT, VSAM_CONTEXT } from "../../src/globals";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -90,6 +90,7 @@ describe("Unit Tests (Jest)", () => {
             new ZoweDatasetNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed,
                                 rootNode, null, undefined, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode, null, VSAM_CONTEXT, undefined, profileOne)
         ];
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
