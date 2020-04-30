@@ -607,11 +607,7 @@ describe("Extension Integration Tests", () => {
 
                 beforeEach(async () => {
                     await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(
-                            sessionNode.getSession(),
-                            zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                            dataSetName,
-                        ).catch((err) => err);
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
                 });
 
                 afterEach(async () => {
@@ -619,154 +615,142 @@ describe("Extension Integration Tests", () => {
                 });
 
                 it("Should send a migrate request", async () => {
-                let error;
+                    let error;
 
-                try {
-                    const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                    node.contextValue = DS_DS_CONTEXT;
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = DS_DS_CONTEXT;
 
-                    await dsActions.hMigrateDataSet(node);
-                } catch (err) {
-                    error = err;
-                }
-                expect(error).to.be.equal(undefined);
-            }).timeout(TIMEOUT);
-        });
+                        await dsActions.hMigrateDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
             describe("Migrate a partitioned data set", () => {
-            const dataSetName = `${pattern}.PDATA.MIGR`;
+                const dataSetName = `${pattern}.PDATA.MIGR`;
 
-            beforeEach(async () => {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dataSetName,
-                    );
+                beforeEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,dataSetName);
+                });
+
+                afterEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                });
+
+                it("Should send a migrate request", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = DS_DS_CONTEXT;
+
+                        await dsActions.hMigrateDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.be.equal(undefined);
+                }).timeout(TIMEOUT);
             });
-
-            afterEach(async () => {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-            });
-
-            it("Should send a migrate request", async () => {
-                let error;
-
-                try {
-                    const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                    node.contextValue = DS_DS_CONTEXT;
-
-                    await dsActions.hMigrateDataSet(node);
-                } catch (err) {
-                    error = err;
-                }
-                expect(error).to.be.equal(undefined);
-            }).timeout(TIMEOUT);
         });
-    });
         describe("Failure Scenarios", () => {
-        describe("Migrate a sequential data set", () => {
-            const dataSetName = `${pattern}.TEST.FAIL`;
+            describe("Migrate a sequential data set", () => {
+                const dataSetName = `${pattern}.TEST.FAIL`;
 
-            it("Should fail if data set doesn't exist", async () => {
-                let error;
+                it("Should fail if data set doesn't exist", async () => {
+                    let error;
 
-                try {
-                    const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                    node.contextValue = DS_DS_CONTEXT;
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = DS_DS_CONTEXT;
 
-                    await dsActions.hMigrateDataSet(node);
-                } catch (err) {
-                    error = err;
-                }
-                expect(error).to.not.equal(undefined);
-            }).timeout(TIMEOUT);
+                        await dsActions.hMigrateDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.not.equal(undefined);
+                }).timeout(TIMEOUT);
+            });
         });
     });
-});
 
     describe("Recalling a data set", () => {
-    describe("Success Scenarios", () => {
-        describe("Recall a sequential data set", () => {
-            const dataSetName = `${pattern}.SDATA.REC`;
+        describe("Success Scenarios", () => {
+            describe("Recall a sequential data set", () => {
+                const dataSetName = `${pattern}.SDATA.REC`;
 
-            beforeEach(async () => {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                        dataSetName,
-                    );
+                beforeEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
+                });
+
+                afterEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                });
+
+                it("Should send a Recall request", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = DS_DS_CONTEXT;
+
+                        await dsActions.hRecallDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.be.equal(undefined);
+                }).timeout(TIMEOUT);
             });
+            describe("Recall a partitioned data set", () => {
+                const dataSetName = `${pattern}.PDATA.REC`;
 
-            afterEach(async () => {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                beforeEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
+                });
+
+                afterEach(async () => {
+                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                });
+
+                it("Should send a Recall request", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = DS_DS_CONTEXT;
+
+                        await dsActions.hRecallDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.be.equal(undefined);
+                }).timeout(TIMEOUT);
             });
-
-            it("Should send a Recall request", async () => {
-                let error;
-
-                try {
-                    const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                    node.contextValue = DS_DS_CONTEXT;
-
-                    await dsActions.hRecallDataSet(node);
-                } catch (err) {
-                    error = err;
-                }
-                expect(error).to.be.equal(undefined);
-            }).timeout(TIMEOUT);
         });
-        describe("Recall a partitioned data set", () => {
-            const dataSetName = `${pattern}.PDATA.REC`;
+        describe("Failure Scenarios", () => {
+            describe("Recall a sequential data set", () => {
+                const dataSetName = `${pattern}.TEST.FAIL`;
 
-            beforeEach(async () => {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                await zowe.Create.dataSet(
-                        sessionNode.getSession(),
-                        zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dataSetName,
-                    );
+                it("Should fail if data set doesn't exist", async () => {
+                    let error;
+
+                    try {
+                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        node.contextValue = DS_DS_CONTEXT;
+
+                        await dsActions.hRecallDataSet(node);
+                    } catch (err) {
+                        error = err;
+                    }
+                    expect(error).to.not.equal(undefined);
+                }).timeout(TIMEOUT);
             });
-
-            afterEach(async () => {
-                await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-            });
-
-            it("Should send a Recall request", async () => {
-                let error;
-
-                try {
-                    const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                    node.contextValue = DS_DS_CONTEXT;
-
-                    await dsActions.hRecallDataSet(node);
-                } catch (err) {
-                    error = err;
-                }
-                expect(error).to.be.equal(undefined);
-            }).timeout(TIMEOUT);
-        });
-    });
-    describe("Failure Scenarios", () => {
-        describe("Recall a sequential data set", () => {
-            const dataSetName = `${pattern}.TEST.FAIL`;
-
-            it("Should fail if data set doesn't exist", async () => {
-                let error;
-
-                try {
-                    const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                    node.contextValue = DS_DS_CONTEXT;
-
-                    await dsActions.hRecallDataSet(node);
-                } catch (err) {
-                    error = err;
-                }
-                expect(error).to.not.equal(undefined);
-            }).timeout(TIMEOUT);
         });
     });
-});
 
     describe("Updating Temp Folder", () => {
         // define paths

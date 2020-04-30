@@ -284,7 +284,7 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
-         * Migrates a data set member.
+         * Migrates a data set.
          *
          * @param {string} dataSetName
          * @returns {Promise<zowe.IZosFilesResponse>}
@@ -294,7 +294,7 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
-         * Recalls a data set member.
+         * Recalls a data set.
          *
          * @param {string} dataSetName
          * @returns {Promise<zowe.IZosFilesResponse>}
