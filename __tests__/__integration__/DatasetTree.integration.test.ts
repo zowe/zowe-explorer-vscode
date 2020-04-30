@@ -239,7 +239,7 @@ describe("DatasetTree Integration Tests", async () => {
     it("Tests that addRecall adds a recently-opened file to the list", async () => {
         testTree.addRecall(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
         const recall = testTree.getRecall();
-        expect(recall[0]).toEqual(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        expect(recall[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
     });
 
     it("Tests that removeRecall removes a file from the recall list", async () => {
