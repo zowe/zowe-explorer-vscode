@@ -177,13 +177,15 @@ export class Profiles {
                         host = `https://${urlInputBox.value}`;
                     }
                 } else {
-                    host = `https://${urlInputBox.value}:0`;
+                    host = `https://${urlInputBox.value}`;
                 }
+                // tslint:disable-next-line:no-console
+                console.log(host);
                 if (this.validateAndParseUrl(host).valid) {
                     resolve(host);
                 } else {
-                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
-                        "Please enter a valid URL in the format https://url:port.");
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosURL",
+                        "Please enter a valid host URL in the format 'company.com'.");
                 }
             });
         });
@@ -280,7 +282,7 @@ export class Profiles {
         let newRU: boolean;
         let newUrl: any;
         let newPort: number;
-        let newString: string;
+        // let newString: string;
 
         const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
 
@@ -295,6 +297,13 @@ export class Profiles {
             switch (value) {
             case "host" :
                 newUrl = await this.urlInfo();
+                // tslint:disable-next-line:no-console
+                // console.log(newUrl);
+                if (newUrl === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
+                        "No valid value for z/OS URL. Operation Cancelled"));
+                    return undefined;
+                }
                 schemaValues[value] = newUrl.host;
                 if (newUrl.port !== 0) {
                     schemaValues.port = newUrl.port;
@@ -303,43 +312,59 @@ export class Profiles {
             case "port" :
                 if (schemaValues[value] === undefined) {
                     newPort = await this.portInfo(value, schema);
+                    // tslint:disable-next-line:no-console
+                    // console.log(newPort);
+                    if (Number.isNaN(newPort)) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
+                            "Invalid Port number provided or operation was cancelled"));
+                        return undefined;
+                    }
                     schemaValues[value] = newPort;
                     break;
                 }
                 break;
             case "user" :
-                if (newUrl) {
-                    newUser = await this.userInfo();
-                    schemaValues[value] = newUser;
+                newUser = await this.userInfo();
+                // tslint:disable-next-line:no-console
+                // console.log(newUser);
+                if (newUser === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return undefined;
                 }
+                schemaValues[value] = newUser;
                 break;
             case "password" :
-                if (newUser !== undefined) {
-                    newPass = await this.passwordInfo();
-                    schemaValues[value] = newPass;
+                newPass = await this.passwordInfo();
+                // tslint:disable-next-line:no-console
+                // console.log(newPass);
+                if (newPass === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return undefined;
                 }
+                schemaValues[value] = newPass;
                 break;
             case "rejectUnauthorized" :
-                if (newPass !== undefined) {
-                    newRU = await this.ruInfo();
-                    schemaValues[value] = newRU;
+                newRU = await this.ruInfo();
+                // tslint:disable-next-line:no-console
+                // console.log(newRU);
+                if (newRU === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
+                    "Operation Cancelled"));
+                    return undefined;
                 }
+                schemaValues[value] = newRU;
                 break;
             default:
                 let options: vscode.InputBoxOptions;
                 const response = await this.checkType(schema[value].type);
                 switch (response) {
-                    case "string" :
-                        options = await this.optionsValue(value, schema);
-                        newString = await vscode.window.showInputBox(options);
-                        if (newString === "") {
-                            break;
-                        }
-                        schemaValues[value] = newString;
-                        break;
                     case "number" :
                         options = await this.optionsValue(value, schema);
                         const enteredValue = await vscode.window.showInputBox(options);
+                        // tslint:disable-next-line:no-console
+                        // console.log(enteredValue);
                         if (!Number.isNaN(Number(enteredValue))) {
                             schemaValues[value] = Number(enteredValue);
                             } else {
@@ -353,11 +378,20 @@ export class Profiles {
                     case "boolean" :
                         let isTrue: boolean;
                         isTrue = await this.boolInfo(value, schema);
+                        // tslint:disable-next-line:no-console
+                        // console.log(isTrue);
+                        if (isTrue === undefined) {
+                            vscode.window.showInformationMessage(localize("createNewConnection.booleanValue",
+                            "Operation Cancelled"));
+                            return undefined;
+                        }
                         schemaValues[value] = isTrue;
                         break;
                     default :
                         options = await this.optionsValue(value, schema);
                         const defValue = await vscode.window.showInputBox(options);
+                        // tslint:disable-next-line:no-console
+                        // console.log(defValue);
                         if (defValue === "") {
                             break;
                         }
@@ -367,13 +401,11 @@ export class Profiles {
             }
         }
 
-        if (newRU !== undefined) {
-            for (const profile of this.allProfiles) {
-                if (profile.name === profileName) {
-                    vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
-                        "Profile name already exists. Please create a profile using a different name"));
-                    return undefined;
-                }
+        for (const profile of this.allProfiles) {
+            if (profile.name === profileName) {
+                vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
+                    "Profile name already exists. Please create a profile using a different name"));
+                return undefined;
             }
 
             IConnection = {
@@ -392,8 +424,6 @@ export class Profiles {
             } catch (error) {
                 await errorHandling(error.message);
             }
-        } else {
-            return;
         }
     }
 
@@ -684,6 +714,22 @@ export class Profiles {
         return directProfile;
     }
 
+    public async getCliProfileManager(type: string): Promise<CliProfileManager> {
+        let profileManager = this.profileManagerByType.get(type);
+        if (!profileManager) {
+            profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                type
+            });
+            if (profileManager) {
+                this.profileManagerByType.set(type, profileManager);
+            } else {
+                return undefined;
+            }
+        }
+        return profileManager;
+    }
+
     // ** Functions for handling Profile Information */
 
     private async urlInfo(input?) {
@@ -704,8 +750,6 @@ export class Profiles {
         urlInputBox.dispose();
 
         if (!zosURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                "No valid value for z/OS URL. Operation Cancelled"));
             return undefined;
         }
 
@@ -729,11 +773,7 @@ export class Profiles {
             };
         }
         port = Number(await vscode.window.showInputBox(options));
-        if (Number.isNaN(port)) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
-            "Invalid Port number provided or operation was cancelled"));
-            return undefined;
-        }
+
         if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
         } else {
@@ -758,7 +798,7 @@ export class Profiles {
         userName = await vscode.window.showInputBox(InputBoxOptions);
 
         if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
                 "Operation Cancelled"));
             return undefined;
         }
@@ -819,7 +859,7 @@ export class Profiles {
             rejectUnauthorize = false;
         } else {
             vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                "Operation Cancelled"));
+                    "Operation Cancelled"));
             return undefined;
         }
 
@@ -841,7 +881,7 @@ export class Profiles {
         } else if (chosenValue === selectBoolean[1]) {
             isTrue = false;
         } else {
-            vscode.window.showInformationMessage(localize("createNewConnection","Operation Cancelled"));
+            // vscode.window.showInformationMessage(localize("createNewConnection.boolean","Operation Cancelled"));
             return undefined;
         }
         return isTrue;
@@ -934,21 +974,4 @@ export class Profiles {
         }
         return zosmfProfile.profile;
     }
-
-    private async getCliProfileManager(type: string): Promise<CliProfileManager> {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                type
-            });
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
-    }
 }
-
