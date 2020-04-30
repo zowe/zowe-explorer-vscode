@@ -13,8 +13,6 @@ import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as path from "path";
-import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
