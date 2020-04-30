@@ -48,6 +48,32 @@ describe("Profile class unit tests", () => {
         validationMessage: undefined
     };
 
+    const schema: {} = {
+        host:{type:"string",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description", defaultValue: 443}},
+        user:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        password:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        rejectUnauthorized:{type:"boolean",optionDefinition:{description:"description"}},
+        basePath:{type:"string",optionDefinition:{description:"description"}}
+    };
+
+    const schema2: {} = {
+        host:{type:"string",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description",defaultValue: 123}},
+        user:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        password:{type:"string",secure:true,optionDefinition:{description:"description"}},
+        basePath:{type:"string",optionDefinition:{description:"description"}},
+        aBoolean:{type:"boolean",optionDefinition:{description:"description"}},
+        aNumber:{type:"number",optionDefinition:{description:"description",defaultValue: 123}},
+        aOther:{type:"string" && null, optionDefinition:{description:"description"}}
+    };
+
+    const schema3: {} = {
+        host:{type:"string",optionDefinition:{description:"description"}},
+        port:{type:"number",optionDefinition:{description:"description"}},
+        aNumber:{type:"number",optionDefinition:{description:"description"}}
+    };
+
     const homedir = path.join(os.homedir(), ".zowe");
     const mockJSONParse = jest.spyOn(JSON, "parse");
     const showInformationMessage = jest.fn();
@@ -159,16 +185,20 @@ describe("Profile class unit tests", () => {
         });
 
         it("should indicate missing property: zosmf url", async () => {
-            // No valid zosmf value
+            // No valid url value
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
             await profiles.createNewConnection(profileOne.name);
             expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OSMF URL. Operation Cancelled");
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
         });
 
         it("should indicate missing property: username", async () => {
             // Enter z/OS password
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce(undefined);
@@ -179,6 +209,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: password", async () => {
             // Enter z/OS password
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -190,6 +222,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate missing property: rejectUnauthorized", async () => {
             // Operation cancelled
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -201,6 +235,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should validate that profile name already exists", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -213,18 +249,23 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create new profile", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            showInputBox.mockResolvedValueOnce("");
             await profiles.createNewConnection("fake");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
         });
 
         it("should create profile with optional credentials", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("");
@@ -237,6 +278,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create profile https+443", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake");
@@ -249,12 +292,15 @@ describe("Profile class unit tests", () => {
         });
 
         it("should create 2 consecutive profiles", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake1");
             showInputBox.mockResolvedValueOnce("fake1");
             showQuickPick.mockReset();
             showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+            showQuickPick.mockResolvedValueOnce("");
             await profiles.createNewConnection("fake1");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
@@ -262,7 +308,9 @@ describe("Profile class unit tests", () => {
             showInputBox.mockReset();
             showInformationMessage.mockReset();
 
-            showInputBox.mockResolvedValueOnce("fake2");
+            // showInputBox.mockResolvedValueOnce("fake2");
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
             showInputBox.mockResolvedValueOnce("fake2");
             showInputBox.mockResolvedValueOnce("fake2");
@@ -270,6 +318,7 @@ describe("Profile class unit tests", () => {
             showQuickPick.mockReset();
 
             showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
+            showQuickPick.mockResolvedValueOnce("");
             await profiles.createNewConnection("fake2");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
