@@ -50,6 +50,7 @@ const writeText = jest.fn();
 const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const isBinaryFileSync = jest.fn();
+const oldExistsSync = fs.existsSync;
 
 const profileOne: IProfileLoaded = {
     name: "profile1",
@@ -169,6 +170,9 @@ describe("ussNodeActions", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
         existsSync.mockReturnValue(true);
+    });
+    afterAll(() => {
+        Object.defineProperty(fs, "existsSync", {value: oldExistsSync});
     });
     afterEach(() => {
         jest.resetAllMocks();
