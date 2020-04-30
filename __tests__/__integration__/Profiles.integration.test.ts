@@ -69,15 +69,15 @@ describe("Create profiles integration tests", async () => {
     }).timeout(TIMEOUT);
 
     it ("Tests if operation is cancelled when URL input is empty", async () => {
+        const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getProfType = sandbox.stub(profiles, "getProfileType");
         getProfType.returns("zosmf");
-        const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns(undefined);
 
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
-        const messageSent = showInfoSpy.calledWith("No valid value for z/OSMF URL. Operation Cancelled");
+        const messageSent = showInfoSpy.calledWith("No valid value for z/OS URL. Operation Cancelled");
         expect(messageSent).to.equal(true);
     }).timeout(TIMEOUT);
 
