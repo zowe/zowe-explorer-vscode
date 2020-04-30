@@ -23,6 +23,7 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
     valid: boolean;
+    protocol: string;
     host: string;
     port: number;
 }
@@ -41,7 +42,6 @@ export enum ValidProfileEnum {
     VALID = 0,
     INVALID = -1
 }
-
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
@@ -149,6 +149,7 @@ export class Profiles {
 
         const validationResult: IUrlValidator = {
             valid: false,
+            protocol: null,
             host: null,
             port: null
         };
@@ -282,7 +283,6 @@ export class Profiles {
         let newRU: boolean;
         let newUrl: any;
         let newPort: number;
-        // let newString: string;
 
         const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
 
@@ -297,8 +297,6 @@ export class Profiles {
             switch (value) {
             case "host" :
                 newUrl = await this.urlInfo();
-                // tslint:disable-next-line:no-console
-                // console.log(newUrl);
                 if (newUrl === undefined) {
                     vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
                         "No valid value for z/OS URL. Operation Cancelled"));
@@ -312,8 +310,6 @@ export class Profiles {
             case "port" :
                 if (schemaValues[value] === undefined) {
                     newPort = await this.portInfo(value, schema);
-                    // tslint:disable-next-line:no-console
-                    // console.log(newPort);
                     if (Number.isNaN(newPort)) {
                         vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
                             "Invalid Port number provided or operation was cancelled"));
@@ -325,8 +321,6 @@ export class Profiles {
                 break;
             case "user" :
                 newUser = await this.userInfo();
-                // tslint:disable-next-line:no-console
-                // console.log(newUser);
                 if (newUser === undefined) {
                     vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
                         "Operation Cancelled"));
@@ -336,8 +330,6 @@ export class Profiles {
                 break;
             case "password" :
                 newPass = await this.passwordInfo();
-                // tslint:disable-next-line:no-console
-                // console.log(newPass);
                 if (newPass === undefined) {
                     vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
                         "Operation Cancelled"));
@@ -347,8 +339,6 @@ export class Profiles {
                 break;
             case "rejectUnauthorized" :
                 newRU = await this.ruInfo();
-                // tslint:disable-next-line:no-console
-                // console.log(newRU);
                 if (newRU === undefined) {
                     vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
                     "Operation Cancelled"));
@@ -363,8 +353,6 @@ export class Profiles {
                     case "number" :
                         options = await this.optionsValue(value, schema);
                         const enteredValue = await vscode.window.showInputBox(options);
-                        // tslint:disable-next-line:no-console
-                        // console.log(enteredValue);
                         if (!Number.isNaN(Number(enteredValue))) {
                             schemaValues[value] = Number(enteredValue);
                             } else {
@@ -378,8 +366,6 @@ export class Profiles {
                     case "boolean" :
                         let isTrue: boolean;
                         isTrue = await this.boolInfo(value, schema);
-                        // tslint:disable-next-line:no-console
-                        // console.log(isTrue);
                         if (isTrue === undefined) {
                             vscode.window.showInformationMessage(localize("createNewConnection.booleanValue",
                             "Operation Cancelled"));
@@ -390,8 +376,6 @@ export class Profiles {
                     default :
                         options = await this.optionsValue(value, schema);
                         const defValue = await vscode.window.showInputBox(options);
-                        // tslint:disable-next-line:no-console
-                        // console.log(defValue);
                         if (defValue === "") {
                             break;
                         }
@@ -442,7 +426,6 @@ export class Profiles {
         } catch (error) {
             await errorHandling(error.message);
         }
-
 
         if (rePrompt) {
             repromptUser = loadSession.user;
@@ -881,7 +864,6 @@ export class Profiles {
         } else if (chosenValue === selectBoolean[1]) {
             isTrue = false;
         } else {
-            // vscode.window.showInformationMessage(localize("createNewConnection.boolean","Operation Cancelled"));
             return undefined;
         }
         return isTrue;
@@ -939,7 +921,6 @@ export class Profiles {
             this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
         }
 
-
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
@@ -957,7 +938,6 @@ export class Profiles {
             merge: true,
             profile: OrigProfileInfo as IProfile
         };
-
         try {
             (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
         } catch (error) {
@@ -966,12 +946,12 @@ export class Profiles {
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        let zosmfProfile: IProfile;
+        let newProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        return zosmfProfile.profile;
+        return newProfile.profile;
     }
 }
