@@ -36,6 +36,11 @@ let IConnection: {
     rejectUnauthorized: boolean;
 };
 
+interface IProfileValidation {
+    status: boolean;
+    name: string;
+}
+
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
@@ -63,6 +68,7 @@ export class Profiles {
     private ussSchema: string = "Zowe-USS-Persistent";
     private jobsSchema: string = "Zowe-Jobs-Persistent";
     private allTypes: string[];
+    private profilesForValidation: IProfileValidation[] = [];
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -72,6 +78,14 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
+        this.profilesForValidation.forEach((validate) => {
+            if (validate.name === theProfile.name) {
+                if (!validate.status) {
+                    errorHandling(localize("validateProfiles.invalid", theProfile.name) + ("is invalid"));
+                }
+            }
+        });
+
         if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
@@ -125,6 +139,26 @@ export class Profiles {
                 return profile.type === type;
             });
             if (profilesForType && profilesForType.length > 0) {
+                for (const validateProfile of profilesForType) {
+                    try {
+                        const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+                        const sessionStatus= await zowe.CheckStatus.getZosmfInfo(validateSession);
+                        if (sessionStatus) {
+                            const profileValidationResult: IProfileValidation = {
+                                status: true,
+                                name: validateProfile.name
+                            };
+                            this.profilesForValidation.push(profileValidationResult);
+                        }
+                    } catch (error) {
+                        const profileValidationResult: IProfileValidation = {
+                            status: false,
+                            name: validateProfile.name
+                        };
+                        this.profilesForValidation.push(profileValidationResult);
+                        this.log.debug(error);
+                    }
+                }
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
                 let defaultProfile: IProfileLoaded;
