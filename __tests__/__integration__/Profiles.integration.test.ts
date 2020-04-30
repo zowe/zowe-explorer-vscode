@@ -52,6 +52,8 @@ describe("Create profiles integration tests", async () => {
     });
 
     it ("Tests if profile is created successfully", async () => {
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
@@ -67,6 +69,8 @@ describe("Create profiles integration tests", async () => {
     }).timeout(TIMEOUT);
 
     it ("Tests if operation is cancelled when URL input is empty", async () => {
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns(undefined);
@@ -79,6 +83,8 @@ describe("Create profiles integration tests", async () => {
 
     it ("Tests if operation is cancelled when username input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
@@ -92,6 +98,8 @@ describe("Create profiles integration tests", async () => {
 
     it ("Tests if operation is cancelled when password input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
@@ -106,6 +114,8 @@ describe("Create profiles integration tests", async () => {
 
     it ("Tests if operation is cancelled when rejectUnauthorized input is empty", async () => {
         const showInfoSpy = sandbox.spy(vscode.window, "showInformationMessage");
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
@@ -123,6 +133,8 @@ describe("Create profiles integration tests", async () => {
     it ("Tests if operation is cancelled when username is already taken", async () => {
         const showErrorSpy = sandbox.spy(vscode.window, "showErrorMessage");
         profiles.allProfiles.push(testProfileLoaded);
+        const getProfType = sandbox.stub(profiles, "getProfileType");
+        getProfType.returns("zosmf");
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");

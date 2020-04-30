@@ -551,7 +551,7 @@ describe("Profile class unit tests", () => {
             const res = await profiles.promptCredentials(promptProfile.name);
             expect(res).toEqual(["fake", "fake", "fake"]);
             (profiles.loadNamedProfile as any).mockReset();
-          });
+        });
 
         it("should rePrompt credentials", async () => {
         const promptProfile = {name: "profile1", profile: {user: "oldfake", password: "oldfake"}};
