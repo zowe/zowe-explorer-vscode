@@ -25,6 +25,17 @@
                 "reveal": "never"
             }, 
             "problemMatcher":["$tsc"]
+        },
+        {
+            "label": "Pretest",
+            "group": "build",
+            "isBackground": false,
+            "type": "shell",
+            "command":"npm",
+            "args": [
+                "run",
+                "build:integration"
+            ]
         }
     ]
 }
