@@ -1,5 +1,4 @@
 node_modules
-dist
 out
 logs
 resources/temp
@@ -13,3 +12,4 @@ vscode-extension-for-zowe*.vsix
 .history
 .DS_Store
 .idea
+i18n

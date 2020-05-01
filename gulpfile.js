@@ -19,7 +19,7 @@ const del = require('del');
 const nls = require('vscode-nls-dev');
 
 const tsProject = ts.createProject('./tsconfig.json', { typescript });
-const outDest = 'dist';
+const outDest = 'out/src';
 
 // If all VS Code languages are supported, you can use nls.coreLanguages
 // For new languages, add { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to array below
@@ -28,7 +28,7 @@ const outDest = 'dist';
 const languages = [{folderName:'fra', id:'fr'}];
 /* ********************************************************************************* */
 const cleanTask = function() {
-	return del(['dist/**', 'package.nls.*.json', 'vscode-extension-for-zowe*.vsix']);
+	return del(['out/**', 'package.nls.*.json', 'vscode-extension-for-zowe*.vsix']);
 }
 
 const generateI18nTask = function() {

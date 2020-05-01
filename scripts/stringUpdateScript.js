@@ -16,7 +16,7 @@ const path = require("path");
 // Clean out i18n samples directory
 fse.emptyDirSync("./i18n/sample");
 
-for (const metadataJson of require("glob").sync("./dist/src/**/*.nls.metadata.json")) {
+for (const metadataJson of require("glob").sync("./out/src/**/*.nls.metadata.json")) {
     // Read localization metadata files
     const parsedData = JSON.parse(fse.readFileSync(metadataJson).toString());
     const keysPairsData = {};
@@ -28,7 +28,7 @@ for (const metadataJson of require("glob").sync("./dist/src/**/*.nls.metadata.js
     }
 
     // Write to i18n sample folder to create template for new languages
-    const i18nJson = metadataJson.replace("./dist/", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
+    const i18nJson = metadataJson.replace("./out/", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
     fse.ensureDirSync(path.dirname(i18nJson));
     fse.writeFileSync(i18nJson, JSON.stringify(keysPairsData, null, 4));
 }
