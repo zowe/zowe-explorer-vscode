@@ -103,8 +103,8 @@ describe("Create profiles integration tests", async () => {
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(2).returns(undefined);
+        showInputStub.onCall(0).returns("testUser");
+        showInputStub.onCall(1).returns(undefined);
 
         const response = await profiles.createNewConnection("testProfileIntegration");
         expect(response).to.equal(undefined);
@@ -119,8 +119,8 @@ describe("Create profiles integration tests", async () => {
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns("https://testurl.com:1001");
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
-        showInputStub.onCall(2).returns("testUser");
-        showInputStub.onCall(2).returns("testPass");
+        showInputStub.onCall(0).returns("testUser");
+        showInputStub.onCall(1).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns(undefined);
 
