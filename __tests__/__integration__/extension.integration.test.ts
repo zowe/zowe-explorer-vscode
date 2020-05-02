@@ -721,7 +721,7 @@ describe("Extension Integration Tests", () => {
         }).timeout(TIMEOUT);
 
         it("should assign default temp folder, if preference is empty", async () => {
-            const expectedDefaultTemp = path.join(__dirname, "..", "resources", "temp");
+            const expectedDefaultTemp = path.join(__dirname, "..", "..", "..", "resources", "temp");
             await vscode.workspace.getConfiguration().update("Zowe-Temp-Folder-Location",
                 { folderPath: "" }, vscode.ConfigurationTarget.Global);
             expect(ZOWETEMPFOLDER).to.equal(expectedDefaultTemp);
