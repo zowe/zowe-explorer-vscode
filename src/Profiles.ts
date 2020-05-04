@@ -303,8 +303,8 @@ export class Profiles {
         }
 
         try {
-            // const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
-            // updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
+            updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updSchemaValues, name: profileName}, profileLoaded.type);
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
@@ -991,8 +991,6 @@ export class Profiles {
     // ** Functions that Calls Get CLI Profile Manager  */
 
     private async updateProfile(ProfileInfo, profType?: string, rePrompt?: boolean) {
-        // tslint:disable-next-line:no-console
-        console.log(ProfileInfo);
         if (profType !== undefined) {
             const profileManager = await this.getCliProfileManager(profType);
             this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));

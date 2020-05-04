@@ -718,6 +718,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should edit a profile", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
@@ -734,6 +736,8 @@ describe("Profile class unit tests", () => {
         });
 
         it("should edit a profile - with error", async () => {
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
@@ -745,7 +749,9 @@ describe("Profile class unit tests", () => {
         });
 
         it("should indicate invalid property: username", async () => {
-            // Enter z/OS password
+            // Enter z/OS username
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce(undefined);
@@ -755,6 +761,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate invalid property: password", async () => {
             // Enter z/OS password
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
@@ -765,6 +773,8 @@ describe("Profile class unit tests", () => {
 
         it("should indicate invalid property: rejectUnauthorized", async () => {
             // Operation cancelled
+            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
             createInputBox.mockReturnValue(inputBox);
             profiles.getUrl = () => Promise.resolve("https://fake:143");
             showInputBox.mockResolvedValueOnce("fake");
