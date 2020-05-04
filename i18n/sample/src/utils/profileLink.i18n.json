@@ -1,0 +1,8 @@
+{
+    "profileLink.notTreeItem": "Tree Item is not a Zowe Explorer item.",
+    "profileLink.selectAltProfile": "Select a type of alternative profile to associate with this primary profile",
+    "profileLink.selectFileName": "Select the file name to associate with this primary profile",
+    "profileLink.associated": "Associated secondary profile {0}:{1} with {2}:{3} primary.",
+    "profileLink.unableToSave": "Unable to save profile association. ",
+    "profileLink.missingProfile": "Attempted to load a missing profile."
+}
