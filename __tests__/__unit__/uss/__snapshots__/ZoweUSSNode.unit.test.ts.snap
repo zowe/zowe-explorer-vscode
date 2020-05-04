@@ -43,16 +43,7 @@ ZoweUSSNode {
       "mParent": null,
       "mProfileName": "sestest",
       "parentPath": null,
-      "profile": Object {
-        "failNotFound": false,
-        "message": "",
-        "name": "sestest",
-        "profile": Object {
-          "password": undefined,
-          "user": undefined,
-        },
-        "type": "zosmf",
-      },
+      "profile": undefined,
       "profileName": "",
       "session": Session {
         "ISession": Object {
@@ -67,32 +58,14 @@ ZoweUSSNode {
     },
     "mProfileName": "sestest",
     "parentPath": null,
-    "profile": Object {
-      "failNotFound": false,
-      "message": "",
-      "name": "sestest",
-      "profile": Object {
-        "password": undefined,
-        "user": undefined,
-      },
-      "type": "zosmf",
-    },
+    "profile": undefined,
     "profileName": "",
     "session": null,
     "shortLabel": "",
   },
   "mProfileName": "sestest",
   "parentPath": null,
-  "profile": Object {
-    "failNotFound": false,
-    "message": "",
-    "name": "sestest",
-    "profile": Object {
-      "password": undefined,
-      "user": undefined,
-    },
-    "type": "zosmf",
-  },
+  "profile": undefined,
   "profileName": "",
   "session": null,
   "shortLabel": "",
