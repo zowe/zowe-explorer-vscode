@@ -26,7 +26,7 @@ const config = {
         path: path.resolve(__dirname, 'out/src'),
         filename: 'extension.js',
         libraryTarget: "commonjs2",
-        devtoolModuleFilenameTemplate: "../[resource-path]",
+        devtoolModuleFilenameTemplate: "../../[resource-path]",
     },
     devtool: 'source-map',
     externals: {
@@ -80,6 +80,5 @@ if (process.argv.includes('--vscode-nls')) {
 		}
 	})
 }
-
 
 module.exports = config;
