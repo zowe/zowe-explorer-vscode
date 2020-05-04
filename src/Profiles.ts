@@ -180,8 +180,7 @@ export class Profiles {
                 } else {
                     host = `https://${urlInputBox.value}`;
                 }
-                // tslint:disable-next-line:no-console
-                console.log(host);
+
                 if (this.validateAndParseUrl(host).valid) {
                     resolve(host);
                 } else {
