@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -105,6 +105,14 @@
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -244,6 +252,14 @@
         }
       },
       {
+        "command": "zowe.uss.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.uss.deleteProfile",
         "title": "%deleteProfile%"
       },
@@ -365,6 +381,14 @@
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.jobs.editSession",
+        "title": "%editSession%",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -650,6 +674,11 @@
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.deleteProfile",
           "group": "6_modification@4"
         },
@@ -678,13 +707,18 @@
           "group": "inline"
         },
         {
-          "when": "viewItem =~ /^ussSession.*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.fullPath",
           "group": "inline"
         },
         {
-          "when": "viewItem =~ /^ussSession.*/",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.createNode",
+          "group": "inline"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.editSession",
           "group": "inline"
         },
         {
@@ -720,6 +754,11 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.search",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.editSession",
           "group": "inline"
         },
         {
@@ -809,6 +848,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.all.profilelink",
           "when": "never"
         },
@@ -861,6 +904,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.deleteProfile",
           "when": "never"
         },
@@ -902,6 +949,10 @@
         },
         {
           "command": "zowe.jobs.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.editSession",
           "when": "never"
         },
         {
@@ -1059,7 +1110,7 @@
     "vscode:prepublish": "npm run build && npm run lint && npm run update",
     "build": "gulp build && npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "test:unit": "jest  \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
     "test": "npm run test:unit",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
@@ -1086,6 +1137,7 @@
     "@types/jest": "^25.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.66",
+    "@types/promise-queue": "2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
     "@types/vscode": "^1.34.0",
     "@types/yargs": "^11.0.0",
@@ -1118,6 +1170,7 @@
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0",
     "ts-jest": "^25.3.0",
+    "ts-node": "^8.9.1",
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
@@ -1130,6 +1183,7 @@
     "isbinaryfile": "4.0.4",
     "js-yaml": "^3.13.1",
     "moment": "2.24.0",
+    "promise-queue": "2.2.5",
     "vscode-nls": "4.1.1",
     "yamljs": "^0.3.0"
   },
