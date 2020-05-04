@@ -1159,7 +1159,6 @@
     "jest": "^25.1.0",
     "jest-html-reporter": "^2.7.0",
     "jest-junit": "^10.0.0",
-    "jest-stare": "^1.26.0",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
     "keytar": "^5.0.0",
@@ -1213,7 +1212,6 @@
     "reporters": [
       "default",
       "jest-junit",
-      "jest-stare",
       "jest-html-reporter"
     ],
     "coverageReporters": [
@@ -1227,10 +1225,6 @@
   "jest-html-reporter": {
     "pageTitle": "Zowe Extension Tests",
     "outputPath": "results/unit/results.html"
-  },
-  "jest-stare": {
-    "resultDir": "results/unit/jest-stare",
-    "coverageLink": "../coverage/lcov-report/index.html"
   },
   "jest-junit": {
     "outputDirectory": "<rootDir>/results/unit",

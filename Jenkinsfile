@@ -84,10 +84,8 @@ node('ca-jenkins-agent') {
         JEST_JUNIT_ANCESTOR_SEPARATOR: " > ",
         JEST_JUNIT_CLASSNAME: "Unit.{classname}",
         JEST_JUNIT_TITLE: "{title}",
-        JEST_STARE_RESULT_DIR: "${UNIT_TEST_ROOT}/jest-stare",
-        JEST_STARE_RESULT_HTML: "index.html"
       ],
-      testResults: [dir: "${UNIT_TEST_ROOT}/jest-stare", files: "index.html", name: "${PRODUCT_NAME} - Unit Test Report"],
+      testResults: [dir: "${UNIT_TEST_ROOT}", files: "results.html", name: "${PRODUCT_NAME} - Unit Test Report"],
       coverageResults: [dir: "${UNIT_TEST_ROOT}/coverage/lcov-report", files: "index.html", name: "${PRODUCT_NAME} - Unit Test Coverage Report"],
       junitOutput: UNIT_JUNIT_OUTPUT,
       cobertura: [
