@@ -21,7 +21,9 @@ import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IUploadOptions } from "@zowe/cli";
 
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
