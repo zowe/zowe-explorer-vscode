@@ -28,9 +28,29 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] PR Description is included
 - [ ] `npm run vscode:prepublish` has been executed
 - [ ] All checks have passed (DCO, Jenkins and Code Coverage)
-- [ ] I have added tests (unit and integration) that prove my fix is effective or that my feature works
+- [ ] I have added unit tests that prove my fix is effective, that my feature works and it has test coverage
+- [ ] I have added integration tests that prove my fix is effective or that my feature works
+- [ ] I have tested it manually and there are no regressions found
 - [ ] I have added necessary documentation (if appropriate)
-- [ ] Any dependent changes have been merged and published in downstream modules
+- [ ] Any PR dependencies has been merged and published (if appropriate)
+
+## PR Reviewer Checklist
+
+_Put an `x` in the boxes that apply. If you're unsure about any of them, don't hesitate to ask. We're here to help!_
+
+- [ ] The Checklist above is complete before the PR is opened and ready for review.
+- [ ] The [CONTRIBUTOR GUIDANCE](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) has been read and followed
+- [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
+- [ ] PR Description is included
+- [ ] `npm run vscode:prepublish` has been executed
+- [ ] All checks have passed (DCO, Jenkins and Code Coverage)
+- [ ] Unit Tests has been added
+- [ ] Integration Tests has been added
+- [ ] There is coverage for the added code
+- [ ] I have tested it manually and there are no regressions found
+- [ ] Overall functionaity works
+- [ ] Necessary documentation is added (if appropriate)
+- [ ] Any PR dependencies have been merged and published (if appropriate)
 
 ## Further comments
 

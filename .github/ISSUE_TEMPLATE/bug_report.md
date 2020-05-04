@@ -33,9 +33,10 @@ Steps to reproduce the behavior:
 **Desktop (please complete the following information):**
 
 -   OS:
--   Visual Studio Code Version:
+-   Zowe Explorer Version:
 -   (Optional) Zowe CLI Version:
--   (Optional) Zowe CLI plugins installed:
+-   (Optional) Are you using Secure Credential Store?
+<!-- If you have SCS installed, please read the documentation for Integrating SCS within Zowe Explorer: https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Security.md -->
 
 **Additional context**
 
