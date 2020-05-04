@@ -41,12 +41,12 @@ describe("Create profiles integration tests", async () => {
         failNotFound: false
     };
 
-    beforeEach(async function() {
+    beforeAll(async function() {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
     });
 
-    afterEach(async function() {
+    afterAll(async function() {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
@@ -142,8 +142,10 @@ describe("Create profiles integration tests", async () => {
         showInputStub.onCall(1).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns("True - Reject connections with self-signed certificates");
-
+        showInputStub.onCall(2).returns("");
         const response = await profiles.createNewConnection("testProfileIntegration");
+        // tslint:disable-next-line:no-console
+        console.log(response);
         expect(response).to.equal(undefined);
         const messageSent = showErrorSpy.calledWith("Profile name already exists. Please create a profile using a different name");
         expect(messageSent).to.equal(true);
