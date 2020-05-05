@@ -193,7 +193,7 @@ export class Profiles {
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
         const editSession = profileLoaded.profile;
-        const editURL = "https://" + editSession.host+ ":" + editSession.port;
+        const editURL = editSession.host+ ":" + editSession.port;
         const editUser = editSession.user;
         const editPass = editSession.password;
         const editrej = editSession.rejectUnauthorized;
@@ -222,6 +222,8 @@ export class Profiles {
                 updSchemaValues[value] = updUrl.host;
                 if (updUrl.port !== 0) {
                     updSchemaValues.port = updUrl.port;
+                } else if (editSession.port === Number("443")) {
+                    updSchemaValues.port = editSession.port;
                 }
                 break;
             case "port" :
