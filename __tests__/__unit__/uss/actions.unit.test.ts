@@ -279,11 +279,11 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             ussNode: generateUSSNode(globalVariables.testSession, generateIProfile())
         };
 
-        newVariables.mockGetEtag = jest.spyOn(newVariables.node, "getEtag").mockImplementation(() => "123");
         newVariables.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newVariables.ussNode, null, "/");
         newVariables.ussNode.children.push(newVariables.node);
         newVariables.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalVariables.testSession, globalVariables.testProfile)],
                                                     [newVariables.ussNode], generateTreeView());
+        newVariables.mockGetEtag = jest.spyOn(newVariables.node, "getEtag").mockImplementation(() => "123");
 
         return newVariables;
     }
@@ -358,11 +358,11 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
             ussNode: generateUSSNode(globalVariables.testSession, generateIProfile())
         };
 
-        newVariables.mockGetEtag = jest.spyOn(newVariables.node, "getEtag").mockImplementation(() => "123");
         newVariables.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newVariables.ussNode, null, "/");
         newVariables.ussNode.children.push(newVariables.node);
         newVariables.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalVariables.testSession, globalVariables.testProfile)],
                                                      [newVariables.ussNode], generateTreeView());
+        newVariables.mockGetEtag = jest.spyOn(newVariables.node, "getEtag").mockImplementation(() => "123");
 
         return newVariables;
     }
