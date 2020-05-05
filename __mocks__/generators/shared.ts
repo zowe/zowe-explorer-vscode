@@ -62,9 +62,9 @@ export function generateTreeView() {
     };
 }
 
-export function generateTextDocument(sessionNode: ZoweDatasetNode | ZoweUSSNode, name: string): vscode.TextDocument {
+export function generateTextDocument(fileName: string): vscode.TextDocument {
     return {
-        fileName: `/${sessionNode.label}/${name}`,
+        fileName: fileName,
         uri: null,
         isUntitled: null,
         languageId: null,
@@ -123,12 +123,10 @@ export function generateQuickPickContent(entered: any, item: vscode.QuickPickIte
     };
 }
 
-export function generateFileResponse(): zowe.IZosFilesResponse {
+export function generateFileResponse(theResponse) {
     return {
         success: true,
-        commandResponse: null,
-        apiResponse: {
-            etag: "123"
-        }
+        commandResponse: "",
+        apiResponse: theResponse
     };
-};
+}

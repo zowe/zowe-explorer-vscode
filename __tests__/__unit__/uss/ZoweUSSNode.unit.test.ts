@@ -54,7 +54,7 @@ async function declareGlobals() {
         session: generateISession(),
         profileOne: generateIProfile(),
         profileOps: null,
-        response: generateFileResponse(),
+        response: generateFileResponse({etag: "123"}),
         ussApi: null
     };
 

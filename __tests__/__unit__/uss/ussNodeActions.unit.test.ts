@@ -125,7 +125,6 @@ function getUSSTree() {
 }
 
 describe("ussNodeActions", () => {
-
     const mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
     Object.defineProperty(Profiles, "getInstance", {
