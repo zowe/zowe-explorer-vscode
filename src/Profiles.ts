@@ -276,7 +276,7 @@ export class Profiles {
                                 if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
                                     updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
                                 } else {
-                                    updSchemaValues[value] = undefined;
+                                    break;
                                 }
                             }
                         break;
