@@ -63,26 +63,26 @@ async function declareGlobals() {
     const mock = new extensionMock();
     globals.initLogger(mock);
 
-    Object.defineProperty(vscode.window, "showInputBox", { value: globalVariables.showInputBox });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: globalVariables.showQuickPick });
-    Object.defineProperty(zowe, "Create", { value: globalVariables.Create });
-    Object.defineProperty(vscode.window, "showWarningMessage", {value: globalVariables.showWarningMessage});
-    Object.defineProperty(vscode.window, "withProgress", {value: globalVariables.withProgress});
-    Object.defineProperty(sharedUtils, "concatChildNodes", {value: globalVariables.concatChildNodes});
-    Object.defineProperty(globalVariables.Create, "uss", { value: globalVariables.uss });
-    Object.defineProperty(vscode.window, "showOpenDialog", {value: globalVariables.showOpenDialog});
-    Object.defineProperty(vscode.workspace, "openTextDocument", {value: globalVariables.openTextDocument});
-    Object.defineProperty(globalVariables.Upload, "fileToUSSFile", {value: globalVariables.fileToUSSFile});
-    Object.defineProperty(zowe, "Download", {value: globalVariables.Download});
-    Object.defineProperty(globalVariables.Download, "ussFile", {value: globalVariables.ussFile});
-    Object.defineProperty(vscode.window, "showErrorMessage", {value: globalVariables.showErrorMessage});
-    Object.defineProperty(globalVariables.List, "fileList", {value: globalVariables.fileList});
-    Object.defineProperty(zowe, "Upload", {value: globalVariables.Upload});
-    Object.defineProperty(globalVariables.Upload, "fileToUSSFile", {value: globalVariables.fileToUSSFile});
-    Object.defineProperty(isbinaryfile, "isBinaryFileSync", {value: globalVariables.isBinaryFileSync});
-    Object.defineProperty(vscode.env.clipboard, "writeText", {value: globalVariables.writeText});
-    Object.defineProperty(globals, "ISTHEIA", {get: () => globalVariables.theia});
-    Object.defineProperty(vscode, "ProgressLocation", {value: globalVariables.ProgressLocation});
+    Object.defineProperty(vscode.window, "showInputBox", { value: globalVariables.showInputBox, configurable: true });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: globalVariables.showQuickPick, configurable: true });
+    Object.defineProperty(zowe, "Create", { value: globalVariables.Create, configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: globalVariables.showWarningMessage, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalVariables.withProgress, configurable: true });
+    Object.defineProperty(sharedUtils, "concatChildNodes", { value: globalVariables.concatChildNodes, configurable: true });
+    Object.defineProperty(globalVariables.Create, "uss", { value: globalVariables.uss, configurable: true });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: globalVariables.showOpenDialog, configurable: true });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: globalVariables.openTextDocument, configurable: true });
+    Object.defineProperty(globalVariables.Upload, "fileToUSSFile", { value: globalVariables.fileToUSSFile, configurable: true });
+    Object.defineProperty(zowe, "Download", { value: globalVariables.Download, configurable: true });
+    Object.defineProperty(globalVariables.Download, "ussFile", { value: globalVariables.ussFile, configurable: true });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalVariables.showErrorMessage, configurable: true });
+    Object.defineProperty(globalVariables.List, "fileList", { value: globalVariables.fileList, configurable: true });
+    Object.defineProperty(zowe, "Upload", { value: globalVariables.Upload, configurable: true });
+    Object.defineProperty(globalVariables.Upload, "fileToUSSFile", { value: globalVariables.fileToUSSFile, configurable: true });
+    Object.defineProperty(isbinaryfile, "isBinaryFileSync", { value: globalVariables.isBinaryFileSync, configurable: true });
+    Object.defineProperty(vscode.env.clipboard, "writeText", { value: globalVariables.writeText, configurable: true });
+    Object.defineProperty(globals, "ISTHEIA", { get: () => globalVariables.theia, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalVariables.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
