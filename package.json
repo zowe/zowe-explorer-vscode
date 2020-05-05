@@ -1195,6 +1195,9 @@
     "testPathIgnorePatterns": [
       "<rootDir>/src/decorators"
     ],
+    "watchPathIgnorePatterns": [
+        "<rootDir>/results/unit"
+    ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
