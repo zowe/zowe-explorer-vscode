@@ -722,6 +722,97 @@ describe("Add saveFile tests", () => {
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("failed");
     });
+    it("Checking favorite dataset saving", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, environmentalMocks.datasetSessionNode,
+            null, undefined, undefined, environmentalMocks.imperativeProfile);
+        const favoriteNode = new ZoweDatasetNode("[TestSessionName]: HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
+            environmentalMocks.datasetSessionNode, null, undefined, undefined, environmentalMocks.imperativeProfile);
+        favoriteNode.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
+        environmentalMocks.datasetSessionNode.children.push(node);
+        environmentalMocks.testDatasetTree.mFavorites.push(favoriteNode);
+
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
+        environmentalMocks.testDatasetTree.getChildren.mockReturnValueOnce([environmentalMocks.datasetSessionNode]);
+        mocked(zowe.List.dataSet).mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(mem)" }]
+            }
+        });
+        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+            success: true,
+            commandResponse: "success",
+            apiResponse: [{
+                etag: "123"
+            }]
+        });
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+        environmentalMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(environmentalMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(environmentalMocks.profileInstance);
+        const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
+        const testDocument = generateTextDocument(environmentalMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        (testDocument as any).fileName = path.join(globals.DS_DIR, "Favorites", testDocument.fileName);
+
+        await dsActions.saveFile(testDocument, environmentalMocks.testDatasetTree);
+
+        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(mockSetEtag).toHaveBeenCalledWith("123");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
+        expect(environmentalMocks.profileInstance.loadNamedProfile).toBeCalledWith("TestSessionName");
+    });
+    it("Checking favorite PDS Member saving", async () => {
+        const environmentalMocks = generateEnvironmentalMocks();
+        const node = new ZoweDatasetNode("[TestSessionName]: HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
+            environmentalMocks.datasetSessionNode, null, undefined, undefined, environmentalMocks.imperativeProfile);
+        node.contextValue = globals.DS_PDS_CONTEXT;
+        const childNode = new ZoweDatasetNode("MEM", vscode.TreeItemCollapsibleState.None,
+            node, null, undefined, undefined, environmentalMocks.imperativeProfile);
+        const favoriteNode = new ZoweDatasetNode("[TestSessionName]: HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
+            environmentalMocks.datasetSessionNode, null, undefined, undefined, environmentalMocks.imperativeProfile);
+        favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        const favoriteChildNode = new ZoweDatasetNode("MEM", vscode.TreeItemCollapsibleState.None,
+            favoriteNode, null, undefined, undefined, environmentalMocks.imperativeProfile);
+        node.children.push(childNode);
+        favoriteNode.children.push(favoriteChildNode);
+        environmentalMocks.datasetSessionNode.children.push(node);
+        environmentalMocks.testDatasetTree.mFavorites.push(favoriteNode);
+
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node, childNode]);
+        environmentalMocks.testDatasetTree.getChildren.mockReturnValueOnce([environmentalMocks.datasetSessionNode]);
+        mocked(zowe.List.dataSet).mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(MEM)" }]
+            }
+        });
+        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+            success: true,
+            commandResponse: "success",
+            apiResponse: [{
+                etag: "123"
+            }]
+        });
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+        environmentalMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(environmentalMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(environmentalMocks.profileInstance);
+        const mockSetEtag = jest.spyOn(childNode, "setEtag").mockImplementation(() => null);
+        const testDocument = generateTextDocument(environmentalMocks.datasetSessionNode, "HLQ.TEST.AFILE(MEM)");
+        (testDocument as any).fileName = path.join(globals.DS_DIR, "Favorites", testDocument.fileName);
+
+        await dsActions.saveFile(testDocument, environmentalMocks.testDatasetTree);
+
+        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(mockSetEtag).toHaveBeenCalledWith("123");
+        expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
+        expect(environmentalMocks.profileInstance.loadNamedProfile).toBeCalledWith("TestSessionName");
+    });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
         const environmentalMocks = generateEnvironmentalMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, environmentalMocks.datasetSessionNode,
