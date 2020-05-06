@@ -1178,7 +1178,7 @@
     "vscode-nls-dev": "^3.2.6"
   },
   "dependencies": {
-    "@zowe/cli": "6.10.1",
+    "@zowe/cli": "6.13.0",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
@@ -1195,6 +1195,9 @@
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/src/decorators"
+    ],
+    "watchPathIgnorePatterns": [
+      "<rootDir>/results/unit"
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
