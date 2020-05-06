@@ -28,15 +28,6 @@ interface IUrlValidator {
     port: number;
 }
 
-let IConnection: {
-    name: string;
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    rejectUnauthorized: boolean;
-};
-
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
@@ -283,6 +274,12 @@ export class Profiles {
         let newUrl: any;
         let newPort: number;
 
+        if (profileName === undefined || profileName === "") {
+            vscode.window.showInformationMessage(localize("createNewConnection.profileName",
+                "Profile name was not supplied. Operation Cancelled"));
+            return undefined;
+        }
+
         const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
 
         const schema: {} = await this.getSchema(profileType);
@@ -384,29 +381,19 @@ export class Profiles {
             }
         }
 
-        for (const profile of this.allProfiles) {
-            if (profile.name === profileName) {
-                vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
-                    "Profile name already exists. Please create a profile using a different name"));
-                return undefined;
+        try {
+            for (const profile of this.allProfiles) {
+                if (profile.name === profileName) {
+                    vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
+                        "Profile name already exists. Please create a profile using a different name"));
+                    return undefined;
+                }
             }
-
-            IConnection = {
-                name: profileName,
-                host: newUrl.host,
-                port: newUrl.port,
-                user: newUser,
-                password: newPass,
-                rejectUnauthorized: newRU
-            };
-
-            try {
-                await this.saveProfile(schemaValues, schemaValues.name, profileType);
-                vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-                return profileName;
-            } catch (error) {
-                await errorHandling(error.message);
-            }
+            await this.saveProfile(schemaValues, schemaValues.name, profileType);
+            vscode.window.showInformationMessage("Profile " + profileName + " was created.");
+            return profileName;
+        } catch (error) {
+            await errorHandling(error.message);
         }
     }
 

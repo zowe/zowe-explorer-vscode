@@ -5,6 +5,7 @@
     "createNewConnection.invalidzosURL": "Please enter a valid host URL in the format 'company.com'.",
     "editConnection.success": "Profile was successfully updated",
     "createNewConnection.option.prompt.type.placeholder": "Profile Type",
+    "createNewConnection.profileName": "Profile name was not supplied. Operation Cancelled",
     "createNewConnection.zosmfURL": "No valid value for z/OS URL. Operation Cancelled",
     "createNewConnection.undefined.port": "Invalid Port number provided or operation was cancelled",
     "createNewConnection.undefined.username": "Operation Cancelled",
