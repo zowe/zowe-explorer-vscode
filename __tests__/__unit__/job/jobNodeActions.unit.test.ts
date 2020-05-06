@@ -23,8 +23,6 @@ jest.mock("vscode");
 jest.mock("Session");
 jest.mock("@zowe/cli");
 jest.mock("@zowe/imperative");
-jest.mock("fs");
-jest.mock("fs-extra");
 jest.mock("util");
 jest.mock("isbinaryfile");
 jest.mock("DatasetTree");
@@ -35,6 +33,7 @@ const showErrorMessage = jest.fn();
 const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
+const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const refreshAllJobs = jest.fn();
 const mockRefresh = jest.fn();
@@ -157,6 +156,7 @@ describe("jobNodeActions", () => {
         testJobTree.refreshElement.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
+        existsSync.mockReturnValue(true);
     });
     afterEach(() => {
         jest.resetAllMocks();

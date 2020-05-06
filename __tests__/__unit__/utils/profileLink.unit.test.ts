@@ -22,8 +22,7 @@ import { Profiles } from "../../../src/Profiles";
 import { linkProfileDialog, getLinkedProfile } from "../../../src/utils/profileLink";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
-// jest.mock("vscode");
-// jest.mock("fs");
+jest.mock("fs");
 
 const existsSync = jest.fn();
 const mkdirSync = jest.fn();
@@ -35,11 +34,6 @@ const mockNamesForType = jest.fn();
 const showQuickPick = jest.fn();
 const showInformationMessage = jest.fn();
 const showErrorMessage = jest.fn();
-
-const oldExistsSync = fs.existsSync;
-const oldMkdirSync = fs.mkdirSync;
-const oldReadFileSync = fs.readFileSync;
-const oldWriteFileSync = fs.writeFileSync;
 
 Object.defineProperty(fs, "existsSync", {value: existsSync});
 Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
@@ -229,12 +223,6 @@ describe("Profile link unit tests part 2. No file for profile", () => {
         showQuickPick.mockReturnValueOnce("ano");
         showQuickPick.mockReturnValueOnce("pro3");
 
-    });
-    afterAll(() => {
-        Object.defineProperty(fs, "existsSync", {value: oldExistsSync});
-        Object.defineProperty(fs, "mkdirSync", {value: oldMkdirSync});
-        Object.defineProperty(fs, "readFileSync", {value: oldReadFileSync});
-        Object.defineProperty(fs, "writeFileSync", {value: oldWriteFileSync});
     });
     afterEach(() => {
         jest.resetAllMocks();
