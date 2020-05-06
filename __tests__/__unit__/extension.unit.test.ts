@@ -675,8 +675,8 @@ describe("Extension Unit Tests", () => {
         }
         sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
         sampleFavorites[2].iconPath = {
-            dark: path.join(__dirname, "..", "..", "resources", "dark", "pattern.svg"),
-            light: path.join(__dirname, "..", "..", "resources", "light", "pattern.svg")
+            dark: path.join(globals.ROOTPATH, "resources", "dark", "pattern.svg"),
+            light: path.join(globals.ROOTPATH, "resources", "light", "pattern.svg")
         };
         // tslint:disable-next-line: no-magic-numbers
         expect(mkdirSync.mock.calls.length).toBe(4);
