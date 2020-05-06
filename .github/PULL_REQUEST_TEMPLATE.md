@@ -4,6 +4,7 @@
 
 ## Release Notes
 <!-- Include the Milestone Number and a small description of your change that will be added to the changelog -->
+<!-- If there is a linked issue, it should have the same milestone as this PR -->
 
 Milestone:
 
@@ -21,34 +22,18 @@ _Put an `x` in the boxes that apply_
 
 ## Checklist
 
-_Put an `x` in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This is simply a reminder of what we are going to look for before merging your code._
+_Put an `x` in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer_
 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) wiki
 - [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
 - [ ] PR Description is included
 - [ ] `npm run vscode:prepublish` has been executed
 - [ ] All checks have passed (DCO, Jenkins and Code Coverage)
-- [ ] I have added unit tests that prove my fix is effective, that my feature works and it has test coverage
-- [ ] I have added integration tests that prove my fix is effective or that my feature works
+- [ ] I have added unit test and it is passing
+- [ ] I have added integration test and it is passing
+- [ ] There is coverage for the code that I have added
 - [ ] I have tested it manually and there are no regressions found
 - [ ] I have added necessary documentation (if appropriate)
-- [ ] Any PR dependencies has been merged and published (if appropriate)
-
-## PR Reviewer Checklist
-
-_Put an `x` in the boxes that apply. If you're unsure about any of them, don't hesitate to ask. We're here to help!_
-
-- [ ] The [CONTRIBUTOR GUIDANCE](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) has been read and followed
-- [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
-- [ ] PR Description is included
-- [ ] `npm run vscode:prepublish` has been executed
-- [ ] All checks have passed (DCO, Jenkins and Code Coverage)
-- [ ] Unit Tests has been added and passing
-- [ ] Integration Tests has been added and passing
-- [ ] There is coverage for the added code
-- [ ] I have tested it manually and there are no regressions found
-- [ ] Overall functionality works
-- [ ] Necessary documentation is added (if appropriate)
 - [ ] Any PR dependencies have been merged and published (if appropriate)
 
 ## Further comments
