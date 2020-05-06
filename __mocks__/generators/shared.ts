@@ -10,13 +10,9 @@
 */
 
 import * as imperative from "@zowe/imperative";
-import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as path from "path";
-import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
-import * as utils from "../../src/utils";
+import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 
 export function generateISession() {
     return new imperative.Session({
@@ -51,7 +47,7 @@ export function generateIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function generateTreeView() {
+export function generateTreeView():vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
@@ -59,7 +55,8 @@ export function generateTreeView() {
         selection: [],
         onDidChangeSelection: jest.fn(),
         visible: true,
-        onDidChangeVisibility: jest.fn()
+        onDidChangeVisibility: jest.fn(),
+        dispose: jest.fn()
     };
 }
 

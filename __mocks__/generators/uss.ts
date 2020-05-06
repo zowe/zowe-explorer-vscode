@@ -12,29 +12,27 @@
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
+import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
+import { USSTree } from "../../src/__mocks__/USSTree";
 
-const mockUSSRefresh = jest.fn();
-export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView: any): any {
-    return {
-        mSessionNodes: [...sessionNodes],
-        mFavorites: favoriteNodes,
-        addSession: jest.fn(),
-        refresh: mockUSSRefresh,
-        refreshAll: mockUSSRefresh,
-        removeRecall: jest.fn(),
-        addRecall: jest.fn(),
-        treeView,
-        checkCurrentProfile: jest.fn(),
-        refreshElement: jest.fn(),
-        getChildren: jest.fn(),
-        addFavorite: jest.fn(),
-        removeFavorite: jest.fn(),
-        initializeUSSFavorites: jest.fn(),
-        searchInLoadedItems: jest.fn(),
-        getTreeView: jest.fn().mockImplementation(() => treeView),
-        setItem: jest.fn(),
-        addHistory: jest.fn()
-    };
+export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
+    let newTree = new USSTree();
+    newTree.mSessionNodes = [...sessionNodes];
+    newTree.mFavorites = favoriteNodes;
+    newTree.addSession = jest.fn();
+    newTree.refresh = jest.fn();
+    newTree.removeRecall = jest.fn();
+    newTree.addRecall = jest.fn();
+    newTree.checkCurrentProfile = jest.fn();
+    newTree.refreshElement = jest.fn();
+    newTree.getChildren = jest.fn();
+    newTree.addFavorite = jest.fn();
+    newTree.removeFavorite = jest.fn();
+    newTree.searchInLoadedItems = jest.fn();
+    newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
+    newTree.setItem = jest.fn();
+    newTree.addHistory = jest.fn();
+    return newTree;
 }
 
 export function generateUSSNode(session, profile) {
