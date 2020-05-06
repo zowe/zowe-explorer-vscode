@@ -1123,13 +1123,16 @@
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
     "lint:src": "tslint --format stylish --exclude [\"**/__tests__/**/*.ts\",\"node_modules/**/*\"] \"src/**/*.ts\"",
-    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\"",
+    "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\" && eslint \"__tests__/**\"",
     "clean": "gulp clean"
   },
   "engines": {
     "vscode": "^1.43.0"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
+    "eslint": "^6.8.0",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1146,6 +1149,7 @@
     "chalk": "^2.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
+    "eslint-plugin-zowe-explorer": "file:eslint-plugin",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
