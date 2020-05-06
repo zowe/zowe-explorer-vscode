@@ -28,15 +28,6 @@ interface IUrlValidator {
     port: number;
 }
 
-// let IConnection: {
-//     name: string;
-//     host: string;
-//     port: number;
-//     user: string;
-//     password: string;
-//     rejectUnauthorized: boolean;
-// };
-
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
