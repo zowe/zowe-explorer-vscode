@@ -345,9 +345,9 @@ export class Profiles {
         let newUrl: any;
         let newPort: number;
 
-        const newName = profileName.trim();
+        const newProfileName = profileName.trim();
 
-        if (newName === undefined || newName === "") {
+        if (newProfileName === undefined || newProfileName === "") {
             vscode.window.showInformationMessage(localize("createNewConnection.profileName",
                 "Profile name was not supplied. Operation Cancelled"));
             return undefined;
@@ -364,7 +364,7 @@ export class Profiles {
         const schemaArray = Object.keys(schema);
 
         const schemaValues: any = {};
-        schemaValues.name = newName;
+        schemaValues.name = newProfileName;
 
         // Go through array of schema for input values
         for (const value of schemaArray) {
@@ -461,15 +461,15 @@ export class Profiles {
 
         try {
             for (const profile of this.allProfiles) {
-                if (profile.name === newName) {
+                if (profile.name === newProfileName) {
                     vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
                         "Profile name already exists. Please create a profile using a different name"));
                     return undefined;
                 }
             }
             await this.saveProfile(schemaValues, schemaValues.name, profileType);
-            vscode.window.showInformationMessage("Profile " + newName + " was created.");
-            return newName;
+            vscode.window.showInformationMessage("Profile " + newProfileName + " was created.");
+            return newProfileName;
         } catch (error) {
             await errorHandling(error.message);
         }
