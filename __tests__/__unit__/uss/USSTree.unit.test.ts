@@ -106,7 +106,6 @@ describe("USSTree Unit Tests - Function USSTree.initialize()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that initialize() is executed successfully", async () => {
         const testTree1 = await createUSSTree(Logger.getAppLogger());
@@ -137,7 +136,6 @@ describe("USSTree Unit Tests - Function initializeUSSTree()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests if initializeUSSTree() is executed successfully", async () => {
         const expectedUSSFavorites: ZoweUSSNode[] = [
@@ -169,7 +167,6 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         environmentalMocks.testUSSNode.label = "";
         environmentalMocks.testUSSNode.shortLabel = "";
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that USSTree.rename() is executed successfully", async () => {
         environmentalMocks.showInputBox.mockReturnValueOnce("new name");
@@ -221,7 +218,6 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that addRecall() & getRecall() are executed successfully", async () => {
         environmentalMocks.testTree.addRecall("testHistory");
@@ -235,7 +231,6 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that removeRecall() is executed successfully", async () => {
         environmentalMocks.testTree.removeRecall("testHistory");
@@ -251,7 +246,6 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -290,7 +284,6 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -318,7 +311,6 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         environmentalMocks.withProgress.mockReturnValue(environmentalMocks.testResponse);
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
         const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[0], null, "/a/b");
@@ -343,7 +335,6 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests if addSession works properly", async () => {
         const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
@@ -364,7 +355,6 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -396,7 +386,6 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -519,7 +508,6 @@ describe("USSTree Unit Tests - Function USSTree.searchInLoadedItems()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Testing that searchInLoadedItems() returns the correct array", async () => {
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[1], null, "/");
@@ -547,7 +535,6 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -599,7 +586,6 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
         const refreshSpy = jest.spyOn(environmentalMocks.testTree, "refreshElement");
@@ -642,7 +628,6 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that addRecall() & getRecall() are executed successfully", async () => {
         environmentalMocks.testTree.addRecall("testHistory");
@@ -656,7 +641,6 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that removeRecall() is executed successfully", async () => {
         environmentalMocks.testTree.removeRecall("testHistory");
@@ -672,7 +656,6 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -711,7 +694,6 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -738,7 +720,6 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
         const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, environmentalMocks.testTree.mSessionNodes[0], null, "/a/b");
@@ -763,7 +744,6 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests if addSession works properly", async () => {
         const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
@@ -782,7 +762,6 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that getChildren() returns valid list of elements", async () => {
         const rootChildren = await environmentalMocks.testTree.getChildren();
