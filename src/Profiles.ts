@@ -298,6 +298,8 @@ export class Profiles {
         try {
             const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
             updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            // tslint:disable-next-line:no-console
+            console.log(updSchemaValues);
             await this.updateProfile({profile: updSchemaValues, name: profileName}, profileLoaded.type);
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
@@ -477,6 +479,8 @@ export class Profiles {
         let newUser: any;
         let newPass: any;
 
+        // tslint:disable-next-line:no-console
+        console.log(loadProfile);
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
             loadSession = loadProfile.profile as ISession;
@@ -511,7 +515,7 @@ export class Profiles {
             try {
                 const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
                 if (rePrompt) {
-                    await this.updateProfile(loadProfile, null, rePrompt);
+                    await this.updateProfile(loadProfile, loadProfile.type, rePrompt);
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
             } catch (error) {
