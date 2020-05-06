@@ -18,7 +18,6 @@ import * as zowe from "@zowe/cli";
 import * as ussNodeActions from "../../../src/uss/actions";
 import * as globals from "../../../src/globals";
 import * as path from "path";
-import * as fs from "fs";
 import * as isbinaryfile from "isbinaryfile";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 
@@ -47,7 +46,6 @@ const openTextDocument = jest.fn();
 const Upload = jest.fn();
 const fileToUSSFile = jest.fn();
 const writeText = jest.fn();
-const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const isBinaryFileSync = jest.fn();
 
@@ -158,7 +156,6 @@ describe("ussNodeActions", () => {
     Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
     Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
     Object.defineProperty(vscode.env.clipboard, "writeText", {value: writeText});
-    Object.defineProperty(fs, "existsSync", {value: existsSync});
     Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
 
     beforeEach(() => {
@@ -168,7 +165,6 @@ describe("ussNodeActions", () => {
         testUSSTree.refreshElement.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
-        existsSync.mockReturnValue(true);
     });
     afterEach(() => {
         jest.resetAllMocks();
