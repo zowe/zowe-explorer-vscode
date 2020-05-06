@@ -449,7 +449,7 @@ export class Profiles {
         // Delete from Data Set Recall
         const recallDs: string[] = datasetTree.getRecall();
         recallDs.slice().reverse()
-            .filter((ds) => ds.substring(1, ds.indexOf("]")).trim()  === deleteLabel)
+            .filter((ds) => ds.substring(1, ds.indexOf("]")).trim() === deleteLabel.toUpperCase())
             .forEach((ds) => {
                 datasetTree.removeRecall(ds);
             });
@@ -477,7 +477,7 @@ export class Profiles {
         // Delete from USS Recall
         const recallUSS: string[] = ussTree.getRecall();
         recallUSS.slice().reverse()
-            .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel)
+            .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel.toUpperCase())
             .forEach((uss) => {
                 ussTree.removeRecall(uss);
             });
