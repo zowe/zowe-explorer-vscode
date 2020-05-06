@@ -345,10 +345,7 @@ export class Profiles {
         let newUrl: any;
         let newPort: number;
 
-        let newName = profileName.trim();
-        newName = newName.replace(/\s/g, "");
-        // tslint:disable-next-line:no-console
-        console.log(newName);
+        const newName = profileName.trim();
 
         if (newName === undefined || newName === "") {
             vscode.window.showInformationMessage(localize("createNewConnection.profileName",
