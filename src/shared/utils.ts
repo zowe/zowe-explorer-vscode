@@ -44,8 +44,8 @@ export function filterTreeByString(value: string, treeItems: vscode.QuickPickIte
  */
 export function getIconPathInResources(iconFileName: string) {
     return {
-        light: path.join(__dirname, "..", "..", "resources", "light", iconFileName),
-        dark: path.join(__dirname, "..", "..", "resources", "dark", iconFileName)
+        light: path.join(globals.ROOTPATH, "resources", "light", iconFileName),
+        dark: path.join(globals.ROOTPATH, "resources", "dark", iconFileName)
     };
 }
 
