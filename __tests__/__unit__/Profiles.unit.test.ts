@@ -282,10 +282,18 @@ describe("Profile class unit tests", () => {
         });
 
         it("should indicate missing property: profileName", async () => {
-            // No valid url value
+            // No valid profile name value
             await profiles.createNewConnection("");
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
+        });
+
+        it("should indicate missing property: profileType", async () => {
+            // No valid profile type value
+            profiles.getProfileType = () => new Promise((resolve) => { resolve(undefined); });
+            await profiles.createNewConnection(profileOne.name);
+            expect(showInformationMessage.mock.calls.length).toBe(1);
+            expect(showInformationMessage.mock.calls[0][0]).toBe("No profile type was chosen. Operation Cancelled");
         });
 
         it("should indicate missing property: zosmf url", async () => {
