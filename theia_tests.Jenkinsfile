@@ -17,6 +17,10 @@ node('ibm-jenkins-slave-nvm') {
   def stageTests1 = []
   def stageTests2 = []
 
+  // Artifactory Details
+  def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
+  def ARTIFACTORY_UPLOAD_URL = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/"
+
   pipeline.admins.add("jackjia")
 
   pipeline.setup(
@@ -29,28 +33,16 @@ node('ibm-jenkins-slave-nvm') {
   // build stage is required
   pipeline.build(
     operation: {
-      // Gather details for build archives
-      def vscodePackageJson = readJSON file: "package.json"
-      def version = "v${vscodePackageJson.version}"
-      def versionName = "vscode-extension-for-zowe-v${vscodePackageJson.version}"
       sh "mkdir -p /tmp/theia"
       dir ("/tmp/theia") {
-          pipeline.nvmShell "git clone https://github.com/eclipse-theia/theia"
-          dir ("theia") {
-            pipeline.nvmShell "node -v"
-            sh "pwd"
-            pipeline.nvmShell "npm cache clean --force"
-            pipeline.nvmShell "yarn cache clean"
-            pipeline.nvmShell "yarn"
-            sh "mkdir -p plugins"
-            dir ("plugins") {
-              sh "bash -c 'curl https://zowe.jfrog.io/zowe/libs-release-local/org/zowe/vscode/${versionName}.vsix -o ${versionName}.vsix'"
-              sh "pwd"
-              sh "ls"
-            }
-            sh "cd .."
-            sh "pwd"
-          }
+        pipeline.nvmShell "git clone https://github.com/eclipse-theia/theia"
+        dir ("theia") {
+          pipeline.nvmShell "node -v"
+          sh "pwd"
+          pipeline.nvmShell "npm cache clean --force"
+          pipeline.nvmShell "yarn cache clean"
+          pipeline.nvmShell "yarn"
+        }
       }
     },
     timeout: [
@@ -58,7 +50,41 @@ node('ibm-jenkins-slave-nvm') {
         unit: 'MINUTES'
     ]
   )
-  
+
+  pipeline.createStage(
+    name: "Build vsix as plugin",
+    stage: {
+      //Run build
+      sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
+      pipeline.nvmShell "npm run build"
+      
+      // Gather details for build archives
+      def vscodePackageJson = readJSON file: "package.json"
+      def date = new Date()
+      String buildDate = date.format("yyyyMMddHHmmss")
+      def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${BRANCH_NAME}-${buildDate}"
+
+      // Generate a vsix for archiving purposes
+      pipeline.nvmShell "npx vsce package -o ${fileName}.vsix"
+
+      dir ("/tmp/theia/theia") {
+        sh "mkdir -p plugins"
+      }
+      // Copy vsix to Theia plugins folder
+      sh "cp ${fileName}.vsix '/tmp/theia/theia/plugins/${fileName}.vsix'"
+
+      // Upload vsix to Artifactory
+      withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+        def uploadUrlArtifactory = "${ARTIFACTORY_UPLOAD_URL}/${fileName}.vsix"
+        sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
+      }
+    },
+    timeout: [
+        time: 10,
+        unit: 'MINUTES'
+    ]
+  )
+
   pipeline.createStage(
     name: "Check Firefox",
     stage: {
@@ -74,7 +100,7 @@ node('ibm-jenkins-slave-nvm') {
     name: "Run Theia Test",
     stage: {
         failFast: true
-        parallel stageTests1: { 
+        parallel "Start Theia browser": { 
             stage('Start Theia browser') {
                 try {
                     timeout(time: 10, unit: 'MINUTES') { 
@@ -90,12 +116,10 @@ node('ibm-jenkins-slave-nvm') {
                     echo "Theia Browser ended"
                 }
             }
-        }, stageTest2: {
-            stage('Run Mocha Test') {
-              sh "pwd"
-              sh "ls"
-              sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
-              pipeline.nvmShell "npm run build"
+        }, "Run Mocha Test": {
+            stage("Run Mocha Test") {
+              // give it a little time to start the server
+              sleep time: 2, unit: 'MINUTES'
               pipeline.nvmShell "npm run test:theia"
             }
         }
