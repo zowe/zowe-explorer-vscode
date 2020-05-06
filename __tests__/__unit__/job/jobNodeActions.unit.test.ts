@@ -35,6 +35,7 @@ const showErrorMessage = jest.fn();
 const showInformationMessage = jest.fn();
 const showQuickPick = jest.fn();
 const getConfiguration = jest.fn();
+const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const refreshAllJobs = jest.fn();
 const mockRefresh = jest.fn();
@@ -157,6 +158,7 @@ describe("jobNodeActions", () => {
         testJobTree.refreshElement.mockReset();
         showQuickPick.mockReset();
         showInputBox.mockReset();
+        existsSync.mockReturnValue(true);
     });
     afterEach(() => {
         jest.resetAllMocks();
