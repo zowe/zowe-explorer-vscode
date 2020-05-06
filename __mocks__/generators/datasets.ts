@@ -38,7 +38,7 @@ export function generateDatasetTree(sessionNode: ZoweDatasetNode, treeView: any)
         getChildren: jest.fn(),
         createFilterString: jest.fn(),
         setItem: jest.fn(),
-        getTreeView: jest.fn(),
+        getTreeView: jest.fn().mockImplementation(() => treeView),
         searchInLoadedItems: jest.fn(),
         removeFavorite: jest.fn(),
         removeRecall: jest.fn(),
@@ -58,4 +58,29 @@ export function generateDatasetTree(sessionNode: ZoweDatasetNode, treeView: any)
     testDatasetTree.mSessionNodes.push(sessionNode);
 
     return testDatasetTree;
+}
+
+export function generateDatasetAttributes(label: string, context: string) {
+    return {
+        blksz: "6160",
+        catnm: "ICFCAT.MV3B.CATALOGA",
+        cdate: "2019/05/08",
+        dev: "3390",
+        dsname: label,
+        dsntp: context,
+        dsorg: "PO",
+        edate: "***None***",
+        extx: "1",
+        lrecl: "80",
+        migr: "NO",
+        mvol: "N",
+        ovf: "NO",
+        rdate: "2019/07/17",
+        recfm: "FB",
+        sizex: "15",
+        spacu: "CYLINDERS",
+        used: "6",
+        vol: "3BP001",
+        vols: "3BP001"
+    };
 }

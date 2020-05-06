@@ -16,6 +16,8 @@ import * as path from "path";
 import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
+import * as utils from "../../src/utils";
+import * as zowe from "@zowe/cli";
 
 export function generateISession() {
     return new imperative.Session({
@@ -35,6 +37,10 @@ export function generateISessionWithoutCredentials() {
         protocol: "https",
         type: "basic",
     });
+}
+
+export function generateBasicZosmfSession(profile: imperative.IProfileLoaded) {
+    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
 }
 
 export function generateIProfile(): imperative.IProfileLoaded {
@@ -86,17 +92,39 @@ export function generateTextDocument(sessionNode: ZoweDatasetNode | ZoweUSSNode,
 
 export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
-        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-        defaultProfile: {name: "firstName"},
+        allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+        defaultProfile: { name: "firstName" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),
         loadNamedProfile: jest.fn(),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(),
+        createNewConnection: jest.fn(() => {
+            return { newprofile: "fake" };
+        }),
         getProfiles: jest.fn(() => {
-            return [{name: profile.name, profile}, {name: profile.name, profile}];
+            return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
         refresh: jest.fn()
+    };
+}
+
+export function generateQuickPickItem(): vscode.QuickPickItem {
+    return new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+}
+
+export function generateQuickPickContent(entered: any, item: vscode.QuickPickItem): any {
+    return {
+        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+        activeItems: [item],
+        ignoreFocusOut: true,
+        items: [item],
+        value: entered,
+        show: jest.fn(),
+        hide: jest.fn(),
+        onDidAccept: jest.fn(),
+        onDidChangeValue: jest.fn(),
+        dispose: jest.fn()
     };
 }
