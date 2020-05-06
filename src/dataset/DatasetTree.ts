@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { IProfileLoaded, Logger } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
@@ -76,13 +76,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        switch (node.contextValue) {
-            case globals.DS_MEMBER_CONTEXT:
-            case (globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX):
-                return this.renameDataSetMember(node);
-            default :
-                return this.renameDataSet(node);
-        }
+        return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
     }
 
     public open(node: IZoweDatasetTreeNode, preview: boolean) {
@@ -121,7 +115,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
         if (element) {
-            if (element.contextValue === globals.FAVORITE_CONTEXT) {
+            if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -540,7 +534,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let pattern: string;
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            if (node.contextValue === globals.DS_SESSION_CONTEXT) {
+            if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));

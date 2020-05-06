@@ -9,7 +9,7 @@
     "deleteUSSNode.showQuickPick.no": "No",
     "deleteUSSNode.error.node": "Unable to delete node: ",
     "openUSS.error.invalidNode": "open() called from invalid node.",
-    "refreshUSS.error.invalidNode": "refreshPS() called from invalid node.",
+    "refreshUSS.error.invalidNode": "refreshUSS() called from invalid node.",
     "refreshUSS.error.notFound": "not found",
     "refreshUSS.file1": "Unable to find file: ",
     "refreshUSS.file2": " was probably deleted.",
