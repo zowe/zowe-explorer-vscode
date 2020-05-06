@@ -21,6 +21,9 @@ import * as path from "path";
 import * as globals from "../../../src/globals";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 
+jest.mock('fs');
+jest.mock('path');
+
 async function generateEnvironmentalMocks() {
     const environmentalMocks = {
         ussFile: jest.fn(),
@@ -100,7 +103,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             return callback();
         });
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
@@ -138,7 +140,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
     let environmentalMocks;
 
     beforeEach(async () => { environmentalMocks = await generateEnvironmentalMocks(); });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that node.getSession() returns the proper environmentalMocks.session", async () => {
         // Creating a rootNode
@@ -164,7 +165,6 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -254,7 +254,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that getEtag() returns a value", async () => {
         const rootNode = new ZoweUSSNode(
@@ -269,7 +268,6 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that setEtag() assigns a value", async () => {
         const rootNode = new ZoweUSSNode(
@@ -286,7 +284,6 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
     beforeEach(async () => {
         environmentalMocks = await generateEnvironmentalMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     it("Tests that node.setBinary() works", async () => {
         const rootNode = new ZoweUSSNode(globals.FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null,
@@ -317,7 +314,6 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -381,7 +377,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -483,7 +478,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {

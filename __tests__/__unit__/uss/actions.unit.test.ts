@@ -21,6 +21,8 @@ import * as zowe from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 
+jest.mock('path');
+
 async function generateEnvironmentalMocks() {
     const environmentalMocks = {
         showQuickPick: jest.fn(),
@@ -107,7 +109,6 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -138,7 +139,6 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -186,7 +186,6 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
         environmentalMocks = await generateEnvironmentalMocks();
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -232,7 +231,6 @@ describe("USS Action Unit Tests - Function copyPath", () => {
         environmentalMocks.theia = false;
         blockMocks = await generateBlockMocks();
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -266,7 +264,6 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         environmentalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
         environmentalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
@@ -345,7 +342,6 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         blockMocks = await generateBlockMocks();
         environmentalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
     });
-    afterEach(() => { jest.clearAllMocks(); });
 
     async function generateBlockMocks() {
         const newMocks = {
