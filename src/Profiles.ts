@@ -364,7 +364,7 @@ export class Profiles {
         const schemaArray = Object.keys(schema);
 
         const schemaValues: any = {};
-        schemaValues.name = profileName;
+        schemaValues.name = newName;
 
         // Go through array of schema for input values
         for (const value of schemaArray) {
@@ -461,15 +461,15 @@ export class Profiles {
 
         try {
             for (const profile of this.allProfiles) {
-                if (profile.name === profileName) {
+                if (profile.name === newName) {
                     vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
                         "Profile name already exists. Please create a profile using a different name"));
                     return undefined;
                 }
             }
             await this.saveProfile(schemaValues, schemaValues.name, profileType);
-            vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-            return profileName;
+            vscode.window.showInformationMessage("Profile " + newName + " was created.");
+            return newName;
         } catch (error) {
             await errorHandling(error.message);
         }
