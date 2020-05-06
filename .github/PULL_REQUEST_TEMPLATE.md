@@ -17,7 +17,7 @@ _Put an `x` in the boxes that apply_
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation Update (if none of the other choices apply)
+- [ ] Updates to Documentation or Tests (if none of the other choices apply)
 
 ## Checklist
 
@@ -38,17 +38,16 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 
 _Put an `x` in the boxes that apply. If you're unsure about any of them, don't hesitate to ask. We're here to help!_
 
-- [ ] The Checklist above is complete before the PR is opened and ready for review.
 - [ ] The [CONTRIBUTOR GUIDANCE](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) has been read and followed
 - [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
 - [ ] PR Description is included
 - [ ] `npm run vscode:prepublish` has been executed
 - [ ] All checks have passed (DCO, Jenkins and Code Coverage)
-- [ ] Unit Tests has been added
-- [ ] Integration Tests has been added
+- [ ] Unit Tests has been added and passing
+- [ ] Integration Tests has been added and passing
 - [ ] There is coverage for the added code
 - [ ] I have tested it manually and there are no regressions found
-- [ ] Overall functionaity works
+- [ ] Overall functionality works
 - [ ] Necessary documentation is added (if appropriate)
 - [ ] Any PR dependencies have been merged and published (if appropriate)
 
