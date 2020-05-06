@@ -9,7 +9,7 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfile } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfileFromCliArgs } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
@@ -727,10 +727,14 @@ export class Profiles {
         OrigProfileInfo.port = NewProfileInfo.port;
         OrigProfileInfo.rejectUnauthorized = NewProfileInfo.rejectUnauthorized;
 
-        const updateParms: IUpdateProfile = {
+        // Using `IUpdateProfileFromCliArgs` here instead of `IUpdateProfile` is
+        // kind of a hack, but necessary to support storing secure credentials
+        // until this is fixed: https://github.com/zowe/imperative/issues/379
+        const updateParms: IUpdateProfileFromCliArgs = {
             name: this.loadedProfile.name,
             merge: true,
-            profile: OrigProfileInfo as IProfile
+            // profile: OrigProfileInfo as IProfile
+            args: OrigProfileInfo as any
         };
 
         try {
