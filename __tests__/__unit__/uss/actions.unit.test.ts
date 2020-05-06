@@ -21,7 +21,7 @@ import * as zowe from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 
-jest.mock('path');
+jest.mock("path");
 
 async function generateEnvironmentalMocks() {
     const environmentalMocks = {

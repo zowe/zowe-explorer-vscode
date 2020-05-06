@@ -21,8 +21,8 @@ import * as path from "path";
 import * as globals from "../../../src/globals";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 
-jest.mock('fs');
-jest.mock('path');
+jest.mock("fs");
+jest.mock("path");
 
 async function generateEnvironmentalMocks() {
     const environmentalMocks = {
