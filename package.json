@@ -1213,7 +1213,6 @@
     "reporters": [
       "default",
       "jest-junit",
-      "jest-stare",
       "jest-html-reporter"
     ],
     "coverageReporters": [
