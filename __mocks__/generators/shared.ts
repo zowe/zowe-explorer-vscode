@@ -17,6 +17,7 @@ import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
+import * as zowe from "@zowe/cli";
 
 export function generateISession() {
     return new imperative.Session({
@@ -36,6 +37,10 @@ export function generateISessionWithoutCredentials() {
         protocol: "https",
         type: "basic",
     });
+}
+
+export function generateBasicZosmfSession(profile: imperative.IProfileLoaded) {
+    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
 }
 
 export function generateIProfile(): imperative.IProfileLoaded {
