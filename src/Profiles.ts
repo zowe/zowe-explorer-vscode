@@ -345,13 +345,23 @@ export class Profiles {
         let newUrl: any;
         let newPort: number;
 
-        if (profileName === undefined || profileName === "") {
+        let newName = profileName.trim();
+        newName = newName.replace(/\s/g, "");
+        // tslint:disable-next-line:no-console
+        console.log(newName);
+
+        if (newName === undefined || newName === "") {
             vscode.window.showInformationMessage(localize("createNewConnection.profileName",
                 "Profile name was not supplied. Operation Cancelled"));
             return undefined;
         }
 
         const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
+        if (profileType === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.profileType",
+                "No profile type was chosen. Operation Cancelled"));
+            return undefined;
+        }
 
         const schema: {} = await this.getSchema(profileType);
         const schemaArray = Object.keys(schema);
