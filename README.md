@@ -1,7 +1,7 @@
 # Zowe Explorer
 
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
-[![slack](https://img.shields.io/badge/chat-on%20Slack-blue?style=flat-square)](https://slack.openmainframeproject.org/)
+[![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe CLI](https://github.com/zowe/community#zowe-cli) sub-project.  
 [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
