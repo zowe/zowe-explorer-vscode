@@ -14,8 +14,8 @@ import * as zowe from "@zowe/cli";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { generateISession, generateISessionWithoutCredentials, generateIProfile,
-    generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/generators/shared";
-import { generateUSSTree } from "../../../__mocks__/generators/uss";
+    generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
+import { generateUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../../../src/globals";
@@ -24,8 +24,8 @@ import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegiste
 jest.mock("fs");
 jest.mock("path");
 
-async function generateEnvironmentalMocks() {
-    const environmentalMocks = {
+async function createGlobalMocks() {
+    const globalMocks = {
         ussFile: jest.fn(),
         Download: jest.fn(),
         isDirtyInEditor: jest.fn(),
@@ -61,58 +61,54 @@ async function generateEnvironmentalMocks() {
         ussApi: null
     };
 
-    environmentalMocks.profileOps = generateInstanceOfProfile(environmentalMocks.profileOne);
-    environmentalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(environmentalMocks.profileOne);
-    environmentalMocks.mockLoadNamedProfile.mockReturnValue(environmentalMocks.profileOne);
-    environmentalMocks.getUssApiMock.mockReturnValue(environmentalMocks.ussApi);
-    ZoweExplorerApiRegister.getUssApi = environmentalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
+    globalMocks.profileOps = generateInstanceOfProfile(globalMocks.profileOne);
+    globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
+    globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
+    ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
 
-    Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: environmentalMocks.onDidSaveTextDocument, configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: environmentalMocks.getConfiguration, configurable: true });
-    Object.defineProperty(vscode.commands, "executeCommand", { value: environmentalMocks.executeCommand, configurable: true });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: environmentalMocks.showQuickPick, configurable: true });
-    Object.defineProperty(vscode.workspace, "openTextDocument", { value: environmentalMocks.openTextDocument, configurable: true });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: environmentalMocks.showInformationMessage, configurable: true });
-    Object.defineProperty(vscode.window, "showTextDocument", { value: environmentalMocks.showTextDocument, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: environmentalMocks.showErrorMessage, configurable: true });
-    Object.defineProperty(environmentalMocks.Utilities, "isFileTagBinOrAscii", { value: environmentalMocks.isFileTagBinOrAscii, configurable: true });
-    Object.defineProperty(vscode.window, "showInputBox", { value: environmentalMocks.showInputBox, configurable: true });
-    Object.defineProperty(zowe, "ZosmfSession", { value: environmentalMocks.ZosmfSession, configurable: true });
-    Object.defineProperty(environmentalMocks.ZosmfSession, "createBasicZosmfSession",
-        { value: environmentalMocks.createBasicZosmfSession, configurable: true });
-    Object.defineProperty(zowe, "Download", { value: environmentalMocks.Download, configurable: true });
-    Object.defineProperty(zowe, "Utilities", { value: environmentalMocks.Utilities, configurable: true });
-    Object.defineProperty(environmentalMocks.Download, "ussFile", { value: environmentalMocks.ussFile, configurable: true });
-    Object.defineProperty(zowe, "Delete", { value: environmentalMocks.Delete, configurable: true });
-    Object.defineProperty(fs, "existsSync", { value: environmentalMocks.existsSync, configurable: true });
-    Object.defineProperty(environmentalMocks.Delete, "ussFile", { value: environmentalMocks.ussFile, configurable: true });
-    Object.defineProperty(Profiles, "createInstance", { value: jest.fn(() => environmentalMocks.profileOps), configurable: true });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(() => environmentalMocks.profileOps), configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", { value: environmentalMocks.ProgressLocation, configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: environmentalMocks.withProgress, configurable: true });
+    Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: globalMocks.onDidSaveTextDocument, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.getConfiguration, configurable: true });
+    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: globalMocks.openTextDocument, configurable: true });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage, configurable: true });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument, configurable: true });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
+    Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", { value: globalMocks.isFileTagBinOrAscii, configurable: true });
+    Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
+    Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
+    Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession",
+        { value: globalMocks.createBasicZosmfSession, configurable: true });
+    Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
+    Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
+    Object.defineProperty(zowe, "Delete", { value: globalMocks.Delete, configurable: true });
+    Object.defineProperty(fs, "existsSync", { value: globalMocks.existsSync, configurable: true });
+    Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
+    Object.defineProperty(Profiles, "createInstance", { value: jest.fn(() => globalMocks.profileOps), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(() => globalMocks.profileOps), configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
 
-    return environmentalMocks;
+    return globalMocks;
 }
 
 describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
-    let environmentalMocks;
+    it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
+        const globalMocks = await createGlobalMocks();
 
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        environmentalMocks.withProgress.mockImplementation((progLocation, callback) => {
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
-    });
-
-    it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
-            environmentalMocks.session, null, false, environmentalMocks.profileOne.name, undefined);
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
         rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const testDir = new ZoweUSSNode(
-            "testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, environmentalMocks.profileOne.name, undefined);
+            "testDir", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, false, globalMocks.profileOne.name, undefined);
         const testFile = new ZoweUSSNode(
-            "testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null, false, environmentalMocks.profileOne.name, undefined);
+            "testFile", vscode.TreeItemCollapsibleState.None, testDir, null, null, false, globalMocks.profileOne.name, undefined);
         testFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
         expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
@@ -124,8 +120,13 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
     });
 
     it("Tests that creating a new USS node initializes all methods and properties", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
         const testNode = new ZoweUSSNode(
-            "/u", vscode.TreeItemCollapsibleState.None, null, environmentalMocks.session, null, false, environmentalMocks.profileOne.name, undefined);
+            "/u", vscode.TreeItemCollapsibleState.None, null, globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
         testNode.contextValue = globals.USS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
@@ -137,43 +138,33 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
-    let environmentalMocks;
+    it("Tests that node.getSession() returns the proper globalMocks.session", async () => {
+        const globalMocks = await createGlobalMocks();
 
-    beforeEach(async () => { environmentalMocks = await generateEnvironmentalMocks(); });
-
-    it("Tests that node.getSession() returns the proper environmentalMocks.session", async () => {
         // Creating a rootNode
         const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
-            environmentalMocks.session, null, false, environmentalMocks.profileOne.name, undefined);
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
         rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         const subNode = new ZoweUSSNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed,
-            rootNode, null, null, false, environmentalMocks.profileOne.name, undefined);
+            rootNode, null, null, false, globalMocks.profileOne.name, undefined);
         const child = new ZoweUSSNode(
-            "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, environmentalMocks.profileOne.name, undefined);
+            "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, globalMocks.profileOne.name, undefined);
 
         const returnedSession = child.getSession();
         expect(returnedSession).toBeDefined();
-        expect(returnedSession).toStrictEqual(environmentalMocks.session);
+        expect(returnedSession).toStrictEqual(globalMocks.session);
     });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             node: null,
             testUSSTree: null,
             ussNode: new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null,
-                environmentalMocks.session, null, null, environmentalMocks.profileOne.name, "123"),
+                globalMocks.session, null, null, globalMocks.profileOne.name, "123"),
             ussNodeFav: new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded,
-                null, environmentalMocks.session, null, false, environmentalMocks.profileOne.name)
+                null, globalMocks.session, null, false, globalMocks.profileOne.name)
         };
 
         newMocks.ussNode.contextValue = globals.USS_SESSION_CONTEXT;
@@ -185,93 +176,97 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         newMocks.ussNodeFav.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         newMocks.ussNodeFav.fullPath = "/u/myuser/usstest";
         newMocks.ussNodeFav.tooltip = "/u/myuser/usstest";
-        environmentalMocks.withProgress.mockImplementation((progLocation, callback) => {
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
 
-        Object.defineProperty(newMocks.node, "isDirtyInEditor", { get: environmentalMocks.isDirtyInEditor });
-        Object.defineProperty(newMocks.node, "openedDocumentInstance", { get: environmentalMocks.openedDocumentInstance });
+        Object.defineProperty(newMocks.node, "isDirtyInEditor", { get: globalMocks.isDirtyInEditor });
+        Object.defineProperty(newMocks.node, "openedDocumentInstance", { get: globalMocks.openedDocumentInstance });
 
         return newMocks;
     }
 
     it("Tests that node.refreshUSS() works correctly for dirty file state, when user didn't cancel file save", async () => {
-        environmentalMocks.ussFile.mockResolvedValue(environmentalMocks.response);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(true);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.ussFile.mockResolvedValue(globalMocks.response);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
-        expect(environmentalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(2);
-        expect(environmentalMocks.executeCommand.mock.calls.length).toBe(2);
+        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(2);
+        expect(globalMocks.executeCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
     it("Tests that node.refreshUSS() works correctly for dirty file state, when user cancelled file save", async () => {
-        environmentalMocks.ussFile.mockResolvedValueOnce(environmentalMocks.response);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(true);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(true);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
 
         await blockMocks.node.refreshUSS();
 
-        expect(environmentalMocks.ussFile.mock.calls.length).toBe(0);
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.ussFile.mock.calls.length).toBe(0);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
 
     it("Tests that node.refreshUSS() works correctly for not dirty file state", async () => {
-        environmentalMocks.ussFile.mockResolvedValueOnce(environmentalMocks.response);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(false);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
-        expect(environmentalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(0);
-        expect(environmentalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(0);
+        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
     it("Tests that node.refreshUSS() works correctly with exception thrown in process", async () => {
-        environmentalMocks.ussFile.mockRejectedValueOnce(Error(""));
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(true);
-        environmentalMocks.isDirtyInEditor.mockReturnValueOnce(false);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.ussFile.mockRejectedValueOnce(Error(""));
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(true);
+        globalMocks.isDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
-        expect(environmentalMocks.ussFile.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.executeCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.executeCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
-    let environmentalMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-    });
-
     it("Tests that getEtag() returns a value", async () => {
+        const globalMocks = await createGlobalMocks();
+
         const rootNode = new ZoweUSSNode(
-            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, environmentalMocks.session, null, false, environmentalMocks.profileOne.name, "123");
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, globalMocks.profileOne.name, "123");
         expect(rootNode.getEtag() === "123");
     });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
-    let environmentalMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-    });
-
     it("Tests that setEtag() assigns a value", async () => {
+        const globalMocks = await createGlobalMocks();
+
         const rootNode = new ZoweUSSNode(
-            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, environmentalMocks.session, null, false, environmentalMocks.profileOne.name, "123");
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, globalMocks.profileOne.name, "123");
         expect(rootNode.getEtag() === "123");
         rootNode.setEtag("ABC");
         expect(rootNode.getEtag() === "ABC");
@@ -279,20 +274,16 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
-    let environmentalMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-    });
-
     it("Tests that node.setBinary() works", async () => {
+        const globalMocks = await createGlobalMocks();
+
         const rootNode = new ZoweUSSNode(globals.FAVORITE_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, null,
-            environmentalMocks.session, null, false, environmentalMocks.profileOne.name, undefined);
+            globalMocks.session, null, false, globalMocks.profileOne.name, undefined);
         rootNode.contextValue = globals.FAVORITE_CONTEXT;
         const subNode = new ZoweUSSNode(
-            "binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, true, environmentalMocks.profileOne.name, undefined);
+            "binaryFile", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, null, true, globalMocks.profileOne.name, undefined);
         const child = new ZoweUSSNode(
-            "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, environmentalMocks.profileOne.name, undefined);
+            "child", vscode.TreeItemCollapsibleState.None, subNode, null, null, false, globalMocks.profileOne.name, undefined);
 
         child.setBinary(true);
         expect(child.contextValue).toEqual(globals.DS_BINARY_FILE_CONTEXT);
@@ -307,28 +298,20 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             ussNode: null,
             testUSSTree: null,
-            mParent: new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, environmentalMocks.session,
-                null, false, environmentalMocks.profileOne.name)
+            mParent: new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.session,
+                null, false, globalMocks.profileOne.name)
         };
 
         newMocks.ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded,
-            newMocks.mParent, environmentalMocks.session, null, false, environmentalMocks.profileOne.name);
+            newMocks.mParent, globalMocks.session, null, false, globalMocks.profileOne.name);
         newMocks.ussNode.contextValue = globals.USS_SESSION_CONTEXT;
         newMocks.ussNode.fullPath = "/u/myuser";
         newMocks.testUSSTree = generateUSSTree([], [newMocks.ussNode], generateTreeView());
-        environmentalMocks.withProgress.mockImplementation((progLocation, callback) => {
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
 
@@ -336,26 +319,38 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
     }
 
     it("Tests that node is deleted if user verified", async () => {
-        environmentalMocks.showQuickPick.mockResolvedValueOnce("Yes");
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showQuickPick.mockResolvedValueOnce("Yes");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
     });
 
     it("Tests that node is not deleted if user did not verify", async () => {
-        environmentalMocks.showQuickPick.mockResolvedValueOnce("No");
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showQuickPick.mockResolvedValueOnce("No");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
 
     it("Tests that node is not deleted if user cancelled", async () => {
-        environmentalMocks.showQuickPick.mockResolvedValueOnce(undefined);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showQuickPick.mockResolvedValueOnce(undefined);
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
 
     it("Tests that node is not deleted if an error thrown", async () => {
-        environmentalMocks.showQuickPick.mockResolvedValueOnce("Yes");
-        environmentalMocks.ussFile.mockImplementationOnce(() => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.ussFile.mockImplementationOnce(() => {
             throw (Error("testError"));
         });
 
@@ -364,29 +359,21 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
             // tslint:disable-next-line:no-empty
         } catch (err) { }
 
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
-            rootNode: new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, null, environmentalMocks.session,
-                null, false, environmentalMocks.profileOne.name, undefined),
+            rootNode: new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session,
+                null, false, globalMocks.profileOne.name, undefined),
             childNode: null
         };
         newMocks.childNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null,
-            environmentalMocks.session, "root", false, environmentalMocks.profileOne.name, undefined);
-        environmentalMocks.withProgress.mockImplementation((progLocation, callback) => {
+            globalMocks.session, "root", false, globalMocks.profileOne.name, undefined);
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
 
@@ -394,15 +381,18 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     }
 
     it("Tests that node.getChildren() returns the correct Thenable<ZoweUSSNode[]>", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         blockMocks.rootNode.contextValue = globals.USS_DIR_CONTEXT;
         blockMocks.rootNode.dirty = true;
 
         // Creating structure of files and directories
         const sampleChildren: ZoweUSSNode[] = [
             new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.rootNode,
-                environmentalMocks.session, "/u", false, environmentalMocks.profileOne.name, undefined),
+                globalMocks.session, "/u", false, globalMocks.profileOne.name, undefined),
             new ZoweUSSNode("myFile.txt", vscode.TreeItemCollapsibleState.None, blockMocks.rootNode,
-                environmentalMocks.session, "/u", false, environmentalMocks.profileOne.name, undefined),
+                globalMocks.session, "/u", false, globalMocks.profileOne.name, undefined),
         ];
         sampleChildren[1].command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [sampleChildren[1]] };
         blockMocks.rootNode.children.push(sampleChildren[0]);
@@ -414,8 +404,11 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     });
 
     it("Tests that node.getChildren() returns no children if none exist", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         const nodeNoChildren = new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.rootNode,
-            environmentalMocks.session, "/u", false, environmentalMocks.profileOne.name, undefined);
+            globalMocks.session, "/u", false, globalMocks.profileOne.name, undefined);
         nodeNoChildren.dirty = false;
 
         const rootChildren = await nodeNoChildren.getChildren();
@@ -423,6 +416,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     });
 
     it("Tests that error is thrown when node label is blank", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         blockMocks.rootNode.label = "";
         blockMocks.rootNode.dirty = true;
 
@@ -431,39 +427,51 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
     it("Tests that when bright.List. causes an error on the zowe call, " +
         "node.getChildren() throws an error and the catch block is reached", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = await createBlockMocks(globalMocks);
+
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.fullPath = "Throw Error";
             blockMocks.childNode.dirty = true;
 
             await blockMocks.childNode.getChildren();
-            expect(environmentalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(environmentalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
+            expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
+            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
                 "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
         });
 
     it("Tests that when bright.List returns an unsuccessful response, " +
         "node.getChildren() throws an error and the catch block is reached", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = await createBlockMocks(globalMocks);
+
             blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
             blockMocks.childNode.dirty = true;
             const subNode = new ZoweUSSNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed,
-                blockMocks.childNode, null, null, false, environmentalMocks.profileOne.name, undefined);
+                blockMocks.childNode, null, null, false, globalMocks.profileOne.name, undefined);
             subNode.fullPath = "THROW ERROR";
             subNode.dirty = true;
 
             await subNode.getChildren();
-            expect(environmentalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(environmentalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
+            expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
+            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
                 "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!");
         });
 
-    it("Tests that when passing a environmentalMocks.session node that is not dirty the node.getChildren() method is exited early", async () => {
+    it("Tests that when passing a globalMocks.session node that is not dirty the node.getChildren() method is exited early", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         blockMocks.rootNode.dirty = false;
 
         expect(await blockMocks.rootNode.getChildren()).toEqual([]);
     });
 
-    it("Tests that when passing a environmentalMocks.session node with no hlq the node.getChildren() method is exited early", async () => {
+    it("Tests that when passing a globalMocks.session node with no hlq the node.getChildren() method is exited early", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
 
         expect(await blockMocks.rootNode.getChildren()).toEqual([]);
@@ -471,20 +479,12 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
             dsNode: null,
             ussNode: new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null,
-                environmentalMocks.session, null, null, environmentalMocks.profileOne.name, "123")
+                globalMocks.session, null, null, globalMocks.profileOne.name, "123")
         };
 
         newMocks.testUSSTree = generateUSSTree([], [newMocks.ussNode], generateTreeView());
@@ -492,11 +492,11 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             "testSess", vscode.TreeItemCollapsibleState.Expanded, newMocks.ussNode, generateISessionWithoutCredentials(), null);
 
         newMocks.testUSSTree.getTreeView.mockReturnValue(generateTreeView());
-        environmentalMocks.createBasicZosmfSession.mockReturnValue(environmentalMocks.session);
-        environmentalMocks.ussFile.mockReturnValue(environmentalMocks.response);
-        environmentalMocks.withProgress.mockReturnValue(environmentalMocks.response);
-        environmentalMocks.openTextDocument.mockResolvedValue("test.doc");
-        environmentalMocks.showInputBox.mockReturnValue("fake");
+        globalMocks.createBasicZosmfSession.mockReturnValue(globalMocks.session);
+        globalMocks.ussFile.mockReturnValue(globalMocks.response);
+        globalMocks.withProgress.mockReturnValue(globalMocks.response);
+        globalMocks.openTextDocument.mockResolvedValue("test.doc");
+        globalMocks.showInputBox.mockReturnValue("fake");
         globals.defineGlobals("/test/path/");
 
         Object.defineProperty(Profiles, "getInstance", {
@@ -504,17 +504,17 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    getDefaultProfile: environmentalMocks.mockLoadNamedProfile,
+                    getDefaultProfile: globalMocks.mockLoadNamedProfile,
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
-                    loadNamedProfile: environmentalMocks.mockLoadNamedProfile,
+                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
-                        return [{name: environmentalMocks.profileOne.name, profile: environmentalMocks.profileOne},
-                                {name: environmentalMocks.profileOne.name, profile: environmentalMocks.profileOne}];
+                        return [{name: globalMocks.profileOne.name, profile: globalMocks.profileOne},
+                                {name: globalMocks.profileOne.name, profile: globalMocks.profileOne}];
                     }),
                     refresh: jest.fn(),
                 };
@@ -525,20 +525,23 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     }
 
     it("Tests that node.openUSS() is executed successfully", async () => {
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode,
-            environmentalMocks.session, "/", false, environmentalMocks.profileOne.name);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
 
-        const isBinSpy = jest.spyOn(environmentalMocks.ussApi, "isFileTagBinOrAscii");
-        environmentalMocks.existsSync.mockReturnValue(null);
+        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode,
+            globalMocks.session, "/", false, globalMocks.profileOne.name);
+
+        const isBinSpy = jest.spyOn(globalMocks.ussApi, "isFileTagBinOrAscii");
+        globalMocks.existsSync.mockReturnValue(null);
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(environmentalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(environmentalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
-        expect(environmentalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
-        expect(environmentalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toBe(environmentalMocks.session);
-        expect(environmentalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
-        expect(environmentalMocks.withProgress).toBeCalledWith(
+        expect(globalMocks.existsSync.mock.calls.length).toBe(1);
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toBe(globalMocks.session);
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
+        expect(globalMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening USS file..."
@@ -546,83 +549,95 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         );
 
         // Tests that correct file is opened in editor
-        environmentalMocks.withProgress(environmentalMocks.downloadUSSFile);
-        expect(environmentalMocks.withProgress).toBeCalledWith(environmentalMocks.downloadUSSFile);
-        expect(environmentalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
+        globalMocks.withProgress(globalMocks.downloadUSSFile);
+        expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
+        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
     it ("Tests that node.openUSS() fails when an error is thrown", async () => {
-        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussNode,
-            null, "/", false, environmentalMocks.profileOne.name);
-        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent,
-            null, "/parent", false, environmentalMocks.profileOne.name);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
 
-        environmentalMocks.existsSync.mockReturnValue("exists");
-        environmentalMocks.showTextDocument.mockRejectedValueOnce(Error("testError"));
+        const parent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussNode,
+            null, "/", false, globalMocks.profileOne.name);
+        const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent,
+            null, "/parent", false, globalMocks.profileOne.name);
+
+        globalMocks.existsSync.mockReturnValue("exists");
+        globalMocks.showTextDocument.mockRejectedValueOnce(Error("testError"));
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
         // tslint:disable-next-line: no-empty
         } catch (err) { }
 
-        expect(environmentalMocks.ussFile.mock.calls.length).toBe(0);
-        expect(environmentalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
+        expect(globalMocks.ussFile.mock.calls.length).toBe(0);
+        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
     });
 
     it("Tests that node.openUSS() executes successfully for favorited file", async () => {
-        // Set up mock favorite environmentalMocks.session
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        // Set up mock favorite globalMocks.session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
-            null, environmentalMocks.session, null, false, environmentalMocks.profileOne.name);
+            null, globalMocks.session, null, false, globalMocks.profileOne.name);
         favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
 
         // Set up favorited nodes (directly under Favorites)
         const favoriteFile = new ZoweUSSNode("favFile", vscode.TreeItemCollapsibleState.None,
-            favoriteSession, environmentalMocks.session, "/", false, environmentalMocks.profileOne.name);
+            favoriteSession, globalMocks.session, "/", false, globalMocks.profileOne.name);
         favoriteFile.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
 
         // For each node, make sure that code below the log.debug statement is execute
         await favoriteFile.openUSS(false, true, blockMocks.testUSSTree);
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
     });
 
     it("Tests that node.openUSS() executes successfully for child file of favorited directory", async () => {
-        // Set up mock favorite environmentalMocks.session
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        // Set up mock favorite globalMocks.session
         const favoriteSession = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
-            null, environmentalMocks.session, null, false, environmentalMocks.profileOne.name);
+            null, globalMocks.session, null, false, globalMocks.profileOne.name);
         favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
 
         // Set up favorited directory with child file
         const favoriteParent = new ZoweUSSNode("favParent", vscode.TreeItemCollapsibleState.Collapsed, favoriteSession, null, "/",
-                               false, environmentalMocks.profileOne.name);
+                               false, globalMocks.profileOne.name);
         favoriteParent.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
         const child = new ZoweUSSNode(
-            "favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir", false, environmentalMocks.profileOne.name);
+            "favChild", vscode.TreeItemCollapsibleState.Collapsed, favoriteParent, null, "/favDir", false, globalMocks.profileOne.name);
         child.contextValue = globals.DS_TEXT_FILE_CONTEXT;
 
         await child.openUSS(false, true, blockMocks.testUSSTree);
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
-        environmentalMocks.showTextDocument.mockReset();
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        globalMocks.showTextDocument.mockReset();
     });
 
     it("Tests that node.openUSS() is executed successfully when chtag says binary", async () => {
-        environmentalMocks.isFileTagBinOrAscii.mockReturnValue(true);
-        environmentalMocks.existsSync.mockReturnValue(null);
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.isFileTagBinOrAscii.mockReturnValue(true);
+        globalMocks.existsSync.mockReturnValue(null);
 
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode,
-            environmentalMocks.session, "/", false, blockMocks.ussNode.getProfileName());
+            globalMocks.session, "/", false, blockMocks.ussNode.getProfileName());
 
         // Make sure correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(environmentalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(environmentalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
-        expect(environmentalMocks.withProgress).toBeCalledWith(
+        expect(globalMocks.existsSync.mock.calls.length).toBe(1);
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
+        expect(globalMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Opening USS file..."
@@ -630,14 +645,17 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         );
 
         // Make sure correct file is displayed in the editor
-        environmentalMocks.withProgress(environmentalMocks.downloadUSSFile);
-        expect(environmentalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
-        expect(environmentalMocks.showTextDocument.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
+        globalMocks.withProgress(globalMocks.downloadUSSFile);
+        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
+        expect(globalMocks.showTextDocument.mock.calls.length).toBe(1);
+        expect(globalMocks.showTextDocument.mock.calls[0][0]).toBe("test.doc");
     });
 
     it("Tests that node.openUSS() fails when passed an invalid node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         const badParent = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussNode, null, null);
         badParent.contextValue = "turnip";
         const brat = new ZoweUSSNode("brat", vscode.TreeItemCollapsibleState.None, badParent, null, null);
@@ -647,9 +665,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // tslint:disable-next-line: no-empty
         } catch (err) { }
 
-        expect(environmentalMocks.ussFile.mock.calls.length).toBe(0);
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(2);
-        expect(environmentalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
-        expect(environmentalMocks.showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
+        expect(globalMocks.ussFile.mock.calls.length).toBe(0);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
+        expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
     });
 });

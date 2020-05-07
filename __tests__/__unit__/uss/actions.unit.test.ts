@@ -10,8 +10,8 @@
 */
 
 import * as ussNodeActions from "../../../src/uss/actions";
-import { generateUSSTree, generateUSSNode, generateFavoriteUSSNode } from "../../../__mocks__/generators/uss";
-import { generateIProfile, generateISession, generateTreeView, generateTextDocument, generateFileResponse } from "../../../__mocks__/generators/shared";
+import { generateUSSTree, generateUSSNode, generateFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
+import { generateIProfile, generateISession, generateTreeView, generateTextDocument, generateFileResponse } from "../../../__mocks__/mockCreators/shared";
 import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -23,8 +23,8 @@ import * as isbinaryfile from "isbinaryfile";
 
 jest.mock("path");
 
-async function generateEnvironmentalMocks() {
-    const environmentalMocks = {
+async function createGlobalMocks() {
+    const globalMocks = {
         showQuickPick: jest.fn(),
         showInputBox: jest.fn(),
         Create: jest.fn(),
@@ -54,7 +54,7 @@ async function generateEnvironmentalMocks() {
         }),
     };
 
-    environmentalMocks.mockLoadNamedProfile.mockReturnValue(environmentalMocks.testProfile);
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     // Mock the logger
     globals.defineGlobals("/test/path/");
     // tslint:disable-next-line: no-object-literal-type-assertion
@@ -65,26 +65,26 @@ async function generateEnvironmentalMocks() {
     const mock = new extensionMock();
     globals.initLogger(mock);
 
-    Object.defineProperty(vscode.window, "showInputBox", { value: environmentalMocks.showInputBox, configurable: true });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: environmentalMocks.showQuickPick, configurable: true });
-    Object.defineProperty(zowe, "Create", { value: environmentalMocks.Create, configurable: true });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: environmentalMocks.showWarningMessage, configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: environmentalMocks.withProgress, configurable: true });
-    Object.defineProperty(sharedUtils, "concatChildNodes", { value: environmentalMocks.concatChildNodes, configurable: true });
-    Object.defineProperty(environmentalMocks.Create, "uss", { value: environmentalMocks.uss, configurable: true });
-    Object.defineProperty(vscode.window, "showOpenDialog", { value: environmentalMocks.showOpenDialog, configurable: true });
-    Object.defineProperty(vscode.workspace, "openTextDocument", { value: environmentalMocks.openTextDocument, configurable: true });
-    Object.defineProperty(environmentalMocks.Upload, "fileToUSSFile", { value: environmentalMocks.fileToUSSFile, configurable: true });
-    Object.defineProperty(zowe, "Download", { value: environmentalMocks.Download, configurable: true });
-    Object.defineProperty(environmentalMocks.Download, "ussFile", { value: environmentalMocks.ussFile, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: environmentalMocks.showErrorMessage, configurable: true });
-    Object.defineProperty(environmentalMocks.List, "fileList", { value: environmentalMocks.fileList, configurable: true });
-    Object.defineProperty(zowe, "Upload", { value: environmentalMocks.Upload, configurable: true });
-    Object.defineProperty(environmentalMocks.Upload, "fileToUSSFile", { value: environmentalMocks.fileToUSSFile, configurable: true });
-    Object.defineProperty(isbinaryfile, "isBinaryFileSync", { value: environmentalMocks.isBinaryFileSync, configurable: true });
-    Object.defineProperty(vscode.env.clipboard, "writeText", { value: environmentalMocks.writeText, configurable: true });
-    Object.defineProperty(globals, "ISTHEIA", { get: () => environmentalMocks.theia, configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", { value: environmentalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
+    Object.defineProperty(zowe, "Create", { value: globalMocks.Create, configurable: true });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.showWarningMessage, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    Object.defineProperty(sharedUtils, "concatChildNodes", { value: globalMocks.concatChildNodes, configurable: true });
+    Object.defineProperty(globalMocks.Create, "uss", { value: globalMocks.uss, configurable: true });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog, configurable: true });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: globalMocks.openTextDocument, configurable: true });
+    Object.defineProperty(globalMocks.Upload, "fileToUSSFile", { value: globalMocks.fileToUSSFile, configurable: true });
+    Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
+    Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
+    Object.defineProperty(globalMocks.List, "fileList", { value: globalMocks.fileList, configurable: true });
+    Object.defineProperty(zowe, "Upload", { value: globalMocks.Upload, configurable: true });
+    Object.defineProperty(globalMocks.Upload, "fileToUSSFile", { value: globalMocks.fileToUSSFile, configurable: true });
+    Object.defineProperty(isbinaryfile, "isBinaryFileSync", { value: globalMocks.isBinaryFileSync, configurable: true });
+    Object.defineProperty(vscode.env.clipboard, "writeText", { value: globalMocks.writeText, configurable: true });
+    Object.defineProperty(globals, "ISTHEIA", { get: () => globalMocks.theia, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -93,82 +93,78 @@ async function generateEnvironmentalMocks() {
                 type: "zosmf",
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(),
-                loadNamedProfile: environmentalMocks.mockLoadNamedProfile
+                loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
         })
     });
 
-    return environmentalMocks;
+    return globalMocks;
 }
 
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: generateUSSNode(environmentalMocks.testSession, generateIProfile())
+            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
         };
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile)],
+        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
                                                      [newMocks.ussNode], generateTreeView());
 
         return newMocks;
     }
 
     it("Tests if createUSSNode is executed successfully", async () => {
-        environmentalMocks.showQuickPick.mockResolvedValueOnce("File");
-        environmentalMocks.showInputBox.mockReturnValueOnce("USSFolder");
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showQuickPick.mockResolvedValueOnce("File");
+        globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
 
         await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode, blockMocks.testUSSTree);
         expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(0);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 });
 
 describe("USS Action Unit Tests - Function createUSSNode", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: generateUSSNode(environmentalMocks.testSession, generateIProfile())
+            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
         };
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile)],
+        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
                                                      [newMocks.ussNode], generateTreeView());
 
         return newMocks;
     }
 
     it("Tests that createUSSNode is executed successfully", async () => {
-        environmentalMocks.showInputBox.mockReturnValueOnce("USSFolder");
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(0);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
     it("Tests that createUSSNode does not execute if node name was not entered", async () => {
-        environmentalMocks.showInputBox.mockReturnValueOnce("");
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showInputBox.mockReturnValueOnce("");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(0);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
     it("Tests that only the child node is refreshed when createUSSNode() is called on a child node", async () => {
-        environmentalMocks.showInputBox.mockReturnValueOnce("USSFolder");
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
         const isTopLevel = false;
         spyOn(ussNodeActions, "refreshAllUSS");
 
@@ -179,37 +175,32 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
 });
 
 describe("USS Action Unit Tests - Function refreshAllUSS", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: generateUSSNode(environmentalMocks.testSession, generateIProfile())
+            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
         };
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile)],
+        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
                                                      [newMocks.ussNode], generateTreeView());
 
         return newMocks;
     }
 
     it("Tests that refreshAllUSS() is executed successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    getDefaultProfile: environmentalMocks.mockLoadNamedProfile,
-                    loadNamedProfile: environmentalMocks.mockLoadNamedProfile,
+                    getDefaultProfile: globalMocks.mockLoadNamedProfile,
+                    loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
                     getProfiles: jest.fn(() => {
-                        return [{name: environmentalMocks.testProfile.name, profile: environmentalMocks.testProfile},
-                                {name: environmentalMocks.testProfile.name, profile: environmentalMocks.testProfile}];
+                        return [{name: globalMocks.testProfile.name, profile: globalMocks.testProfile},
+                                {name: globalMocks.testProfile.name, profile: globalMocks.testProfile}];
                     }),
                     refresh: jest.fn(),
                 };
@@ -223,61 +214,49 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
 });
 
 describe("USS Action Unit Tests - Function copyPath", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        environmentalMocks.theia = false;
-        blockMocks = await generateBlockMocks();
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
-            ussNode: generateUSSNode(environmentalMocks.testSession, generateIProfile())
+            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
         };
 
         return newMocks;
     }
 
     it("should copy the node's full path to the system clipboard", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.theia = false;
         await ussNodeActions.copyPath(blockMocks.ussNode);
-        expect(environmentalMocks.writeText).toBeCalledWith(blockMocks.ussNode.fullPath);
+        expect(globalMocks.writeText).toBeCalledWith(blockMocks.ussNode.fullPath);
     });
 
     it("should not copy the node's full path to the system clipboard if theia", async () => {
-        environmentalMocks.theia = true;
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.theia = false;
+        globalMocks.theia = true;
 
         await ussNodeActions.copyPath(blockMocks.ussNode);
-        expect(environmentalMocks.writeText).not.toBeCalled();
+        expect(globalMocks.writeText).not.toBeCalled();
     });
 });
 
 describe("USS Action Unit Tests - Function saveUSSFile", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-        environmentalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        environmentalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        environmentalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             node: null,
             mockGetEtag: null,
             testUSSTree: null,
             testResponse: generateFileResponse({items: []}),
             testDoc: generateTextDocument(path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")),
-            ussNode: generateUSSNode(environmentalMocks.testSession, generateIProfile())
+            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
         };
 
         newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile)],
+        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
                                                     [newMocks.ussNode], generateTreeView());
         newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
 
@@ -285,77 +264,92 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
     }
 
     it("Testing that saveUSSFile is executed successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
+        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
         blockMocks.testResponse.apiResponse.items = [{name: "testFile", mode: "-rwxrwx"}];
         blockMocks.testResponse.success = true;
 
-        environmentalMocks.fileList.mockResolvedValueOnce(blockMocks.testResponse);
-        environmentalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
+        globalMocks.fileList.mockResolvedValueOnce(blockMocks.testResponse);
+        globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
         blockMocks.testUSSTree.getChildren.mockReturnValueOnce([
-            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, "/"), environmentalMocks.testSession]);
+            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, "/"), globalMocks.testSession]);
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(environmentalMocks.concatChildNodes.mock.calls.length).toBe(1);
+        expect(globalMocks.concatChildNodes.mock.calls.length).toBe(1);
         expect(blockMocks.mockGetEtag).toBeCalledTimes(1);
         expect(blockMocks.mockGetEtag).toReturnWith("123");
     });
 
     it("Tests that saveUSSFile fails when save fails", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
+        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
         blockMocks.testResponse.success = false;
         blockMocks.testResponse.commandResponse = "Save failed";
 
-        environmentalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
+        globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showErrorMessage.mock.calls[0][0]).toBe("Save failed");
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Save failed");
     });
 
     it("Tests that saveUSSFile fails when error occurs", async () => {
-        environmentalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
+        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
+        globalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(environmentalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
     });
 
     it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
+        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
         const downloadResponse = generateFileResponse({etag: ""});
         blockMocks.testResponse.success = false;
         blockMocks.testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
 
-        environmentalMocks.withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
-        environmentalMocks.ussFile.mockResolvedValueOnce(downloadResponse);
+        globalMocks.withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
+        globalMocks.ussFile.mockResolvedValueOnce(downloadResponse);
 
         try {
             await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         } catch (e) { expect(e.message).toBe("vscode.Position is not a constructor"); }
-        expect(environmentalMocks.showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
+        expect(globalMocks.showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
     });
 });
 
 describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
-    let environmentalMocks;
-    let blockMocks;
-
-    beforeEach(async () => {
-        environmentalMocks = await generateEnvironmentalMocks();
-        blockMocks = await generateBlockMocks();
-        environmentalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
-    });
-
-    async function generateBlockMocks() {
+    async function createBlockMocks(globalMocks) {
         const newMocks = {
             node: null,
             mockGetEtag: null,
             testUSSTree: null,
             testResponse: generateFileResponse({items: []}),
             testDoc: generateTextDocument(path.normalize("/sestest/tmp/foo.txt")),
-            ussNode: generateUSSNode(environmentalMocks.testSession, generateIProfile())
+            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
         };
 
         newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(environmentalMocks.testSession, environmentalMocks.testProfile)],
+        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
                                                      [newMocks.ussNode], generateTreeView());
         newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
 
@@ -363,39 +357,51 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     }
 
     it("Tests that uploadDialog() works for non-binary file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = {fsPath: "/tmp/foo.txt"};
-        environmentalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        environmentalMocks.isBinaryFileSync.mockReturnValueOnce(false);
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        expect(environmentalMocks.showOpenDialog).toBeCalled();
-        expect(environmentalMocks.openTextDocument).toBeCalled();
+        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.openTextDocument).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = {fsPath: "/tmp/foo.zip"};
-        environmentalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        environmentalMocks.isBinaryFileSync.mockReturnValueOnce(true);
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        globalMocks.isBinaryFileSync.mockReturnValueOnce(true);
 
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        expect(environmentalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.showOpenDialog).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
-        environmentalMocks.showInputBox.mockReturnValueOnce("new name");
-        environmentalMocks.fileToUSSFile.mockImplementationOnce(() => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
+        globalMocks.showInputBox.mockReturnValueOnce("new name");
+        globalMocks.fileToUSSFile.mockImplementationOnce(() => {
             throw (Error("testError"));
         });
         const fileUri = {fsPath: "/tmp/foo.txt"};
-        environmentalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        environmentalMocks.isBinaryFileSync.mockReturnValueOnce(false);
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         try {
             await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
             // tslint:disable-next-line:no-empty
         } catch (err) { }
-        expect(environmentalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
