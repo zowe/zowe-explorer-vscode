@@ -180,8 +180,11 @@ export class Profiles {
     }
 
     public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve) => {
-            urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+        return new Promise<string | undefined> ((resolve, reject) => {
+            urlInputBox.onDidHide(() => {
+                reject(undefined);
+                resolve(urlInputBox.value);
+            });
             urlInputBox.onDidAccept(() => {
                 if (this.validateAndParseUrl(urlInputBox.value).valid) {
                     resolve(urlInputBox.value);
