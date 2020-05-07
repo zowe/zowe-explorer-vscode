@@ -154,7 +154,7 @@ node('ca-jenkins-agent') {
         def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
         sh "npm install ssp-dos2unix"
         sh "node ./scripts/d2uChangelog.js"
-        def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
+        def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'").trim()
 
         // Gather details about the GitHub APIs used to publish a release
         def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
