@@ -12,6 +12,7 @@
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
+import * as loggerConfig from "../log4jsconfig.json";
 
 // Globals
 export let ZOWETEMPFOLDER;
@@ -71,8 +72,6 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    const loggerConfig = require("../log4jsconfig.json");
-    // const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
     loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
     loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
     loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");

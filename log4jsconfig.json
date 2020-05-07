@@ -6,21 +6,24 @@
 				"layout": {
 					"type": "pattern",
 					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
-				}
+        },
+        "filename": ""
 			},
 			"imperative": {
 				"type": "fileSync",
 				"layout": {
 					"type": "pattern",
 					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
-				}
+        },
+        "filename":""
 			},
 			"app": {
 				"type": "fileSync",
 				"layout": {
 					"type": "pattern",
 					"pattern": "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m"
-				}
+        },
+        "filename": ""
 			}
 		},
 		"categories": {

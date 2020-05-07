@@ -18,6 +18,7 @@
         // "noUnusedParameters": true,  /* Report errors on unused parameters. */
         "experimentalDecorators": true,
         "removeComments": true,
+        "resolveJsonModule": true,
         "rootDir": "."
     },
     "exclude": [
