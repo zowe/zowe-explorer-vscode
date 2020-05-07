@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -1196,7 +1196,7 @@
       "<rootDir>/src/decorators"
     ],
     "watchPathIgnorePatterns": [
-        "<rootDir>/results/unit"
+      "<rootDir>/results/unit"
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
