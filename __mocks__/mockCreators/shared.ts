@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 
-export function generateISession() {
+export function createISession() {
     return new imperative.Session({
         user: "fake",
         password: "fake",
@@ -24,7 +24,7 @@ export function generateISession() {
     });
 }
 
-export function generateISessionWithoutCredentials() {
+export function createISessionWithoutCredentials() {
     return new imperative.Session({
         user: "",
         password: "",
@@ -34,7 +34,7 @@ export function generateISessionWithoutCredentials() {
     });
 }
 
-export function generateIProfile(): imperative.IProfileLoaded {
+export function createIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
@@ -47,7 +47,7 @@ export function generateIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function generateTreeView():vscode.TreeView<ZoweTreeProvider> {
+export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
@@ -60,7 +60,7 @@ export function generateTreeView():vscode.TreeView<ZoweTreeProvider> {
     };
 }
 
-export function generateTextDocument(fileName: string): vscode.TextDocument {
+export function createTextDocument(fileName: string): vscode.TextDocument {
     return {
         fileName: fileName,
         uri: null,
@@ -82,7 +82,7 @@ export function generateTextDocument(fileName: string): vscode.TextDocument {
     };
 }
 
-export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
+export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
         allProfiles: [{ name: "firstName" }, { name: "secondName" }],
         defaultProfile: { name: "firstName" },
@@ -102,7 +102,7 @@ export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
     };
 }
 
-export function generateFileResponse(theResponse) {
+export function createFileResponse(theResponse) {
     return {
         success: true,
         commandResponse: "",

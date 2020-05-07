@@ -13,9 +13,9 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { generateISession, generateISessionWithoutCredentials, generateIProfile,
-    generateFileResponse, generateTreeView, generateInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
-import { generateUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { createISession, createISessionWithoutCredentials, createIProfile,
+    createFileResponse, createTreeView, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
+import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../../../src/globals";
@@ -54,14 +54,14 @@ async function createGlobalMocks() {
                 Notification: 15
             };
         }),
-        session: generateISession(),
-        profileOne: generateIProfile(),
+        session: createISession(),
+        profileOne: createIProfile(),
         profileOps: null,
-        response: generateFileResponse({etag: "123"}),
+        response: createFileResponse({etag: "123"}),
         ussApi: null
     };
 
-    globalMocks.profileOps = generateInstanceOfProfile(globalMocks.profileOne);
+    globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
@@ -172,7 +172,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         newMocks.node = new ZoweUSSNode("test-node", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
         newMocks.node.contextValue = globals.USS_SESSION_CONTEXT;
         newMocks.node.fullPath = "/u/myuser";
-        newMocks.testUSSTree = generateUSSTree([newMocks.ussNodeFav], [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([newMocks.ussNodeFav], [newMocks.ussNode], createTreeView());
         newMocks.ussNodeFav.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         newMocks.ussNodeFav.fullPath = "/u/myuser/usstest";
         newMocks.ussNodeFav.tooltip = "/u/myuser/usstest";
@@ -310,7 +310,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
             newMocks.mParent, globalMocks.session, null, false, globalMocks.profileOne.name);
         newMocks.ussNode.contextValue = globals.USS_SESSION_CONTEXT;
         newMocks.ussNode.fullPath = "/u/myuser";
-        newMocks.testUSSTree = generateUSSTree([], [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([], [newMocks.ussNode], createTreeView());
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -487,11 +487,11 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 globalMocks.session, null, null, globalMocks.profileOne.name, "123")
         };
 
-        newMocks.testUSSTree = generateUSSTree([], [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([], [newMocks.ussNode], createTreeView());
         newMocks.dsNode = new ZoweUSSNode(
-            "testSess", vscode.TreeItemCollapsibleState.Expanded, newMocks.ussNode, generateISessionWithoutCredentials(), null);
+            "testSess", vscode.TreeItemCollapsibleState.Expanded, newMocks.ussNode, createISessionWithoutCredentials(), null);
 
-        newMocks.testUSSTree.getTreeView.mockReturnValue(generateTreeView());
+        newMocks.testUSSTree.getTreeView.mockReturnValue(createTreeView());
         globalMocks.createBasicZosmfSession.mockReturnValue(globalMocks.session);
         globalMocks.ussFile.mockReturnValue(globalMocks.response);
         globalMocks.withProgress.mockReturnValue(globalMocks.response);

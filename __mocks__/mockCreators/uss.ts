@@ -15,7 +15,7 @@ import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { USSTree } from "../../src/__mocks__/USSTree";
 
-export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
+export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     let newTree = new USSTree();
     newTree.mSessionNodes = [...sessionNodes];
     newTree.mFavorites = favoriteNodes;
@@ -35,7 +35,7 @@ export function generateUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: Zowe
     return newTree;
 }
 
-export function generateUSSNode(session, profile) {
+export function createUSSNode(session, profile) {
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profile.name);
     ussNode.contextValue = globals.USS_SESSION_CONTEXT;
@@ -43,7 +43,7 @@ export function generateUSSNode(session, profile) {
     return ussNode;
 }
 
-export function generateFavoriteUSSNode(session, profile) {
+export function createFavoriteUSSNode(session, profile) {
     const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     mParent.contextValue = globals.FAVORITE_CONTEXT;

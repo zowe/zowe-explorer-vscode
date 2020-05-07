@@ -10,8 +10,8 @@
 */
 
 import * as ussNodeActions from "../../../src/uss/actions";
-import { generateUSSTree, generateUSSNode, generateFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
-import { generateIProfile, generateISession, generateTreeView, generateTextDocument, generateFileResponse } from "../../../__mocks__/mockCreators/shared";
+import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
+import { createIProfile, createISession, createTreeView, createTextDocument, createFileResponse } from "../../../__mocks__/mockCreators/shared";
 import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -45,8 +45,8 @@ async function createGlobalMocks() {
         concatChildNodes: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         theia: false,
-        testSession: generateISession(),
-        testProfile: generateIProfile(),
+        testSession: createISession(),
+        testProfile: createIProfile(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15
@@ -105,10 +105,10 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
         };
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-                                                     [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+                                                     [newMocks.ussNode], createTreeView());
 
         return newMocks;
     }
@@ -130,10 +130,10 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
         };
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-                                                     [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+                                                     [newMocks.ussNode], createTreeView());
 
         return newMocks;
     }
@@ -178,10 +178,10 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
         };
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-                                                     [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+                                                     [newMocks.ussNode], createTreeView());
 
         return newMocks;
     }
@@ -216,7 +216,7 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
 describe("USS Action Unit Tests - Function copyPath", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
         };
 
         return newMocks;
@@ -249,15 +249,15 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             node: null,
             mockGetEtag: null,
             testUSSTree: null,
-            testResponse: generateFileResponse({items: []}),
-            testDoc: generateTextDocument(path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")),
-            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
+            testResponse: createFileResponse({items: []}),
+            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")),
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
         };
 
         newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-                                                    [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+                                                    [newMocks.ussNode], createTreeView());
         newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
 
         return newMocks;
@@ -322,7 +322,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
         globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
         globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        const downloadResponse = generateFileResponse({etag: ""});
+        const downloadResponse = createFileResponse({etag: ""});
         blockMocks.testResponse.success = false;
         blockMocks.testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
 
@@ -342,15 +342,15 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
             node: null,
             mockGetEtag: null,
             testUSSTree: null,
-            testResponse: generateFileResponse({items: []}),
-            testDoc: generateTextDocument(path.normalize("/sestest/tmp/foo.txt")),
-            ussNode: generateUSSNode(globalMocks.testSession, generateIProfile())
+            testResponse: createFileResponse({items: []}),
+            testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
         };
 
         newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = generateUSSTree([generateFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-                                                     [newMocks.ussNode], generateTreeView());
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+                                                     [newMocks.ussNode], createTreeView());
         newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
 
         return newMocks;

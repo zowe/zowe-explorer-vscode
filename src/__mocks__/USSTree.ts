@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { MockMethod } from "../decorators/MockMethod";
 import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode } from "../api/IZoweTreeNode";
-import { generateTreeView } from "../../__mocks__/mockCreators/shared";
+import { createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 
 /**
@@ -62,7 +62,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     public getTreeView(): vscode.TreeView<ZoweTreeProvider> {
-        return generateTreeView();
+        return createTreeView();
     }
 
     /**
