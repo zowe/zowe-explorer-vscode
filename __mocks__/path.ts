@@ -10,7 +10,7 @@
 */
 
 export function join(...paths: string[]): string {
-    const value = paths.join("\\");
+    const value = paths.join("/");
     return value;
 }
 
