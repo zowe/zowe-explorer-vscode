@@ -20,6 +20,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../../../src/globals";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { getIconByNode } from "../../../src/generators/icons";
 
 jest.mock("fs");
 jest.mock("path");
