@@ -14,7 +14,7 @@
                 "--runInBand",
             ],
             "cwd": "${workspaceFolder}",
-            "args": ["--runInBand"],
+            "args": ["--runInBand", "--updateSnapshot"],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
         },
