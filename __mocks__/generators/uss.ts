@@ -12,6 +12,8 @@
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
+import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
+import { USSTree } from "../../src/__mocks__/USSTree";
 import { getIconByNode } from "../../src/generators/icons";
 
 const mockUSSRefresh = jest.fn();
