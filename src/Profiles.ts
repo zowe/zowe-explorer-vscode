@@ -180,8 +180,11 @@ export class Profiles {
     }
 
     public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve) => {
-            urlInputBox.onDidHide(() => { resolve(urlInputBox.value); });
+        return new Promise<string | undefined> ((resolve, reject) => {
+            urlInputBox.onDidHide(() => {
+                reject(undefined);
+                resolve(urlInputBox.value);
+            });
             urlInputBox.onDidAccept(() => {
                 if (this.validateAndParseUrl(urlInputBox.value).valid) {
                     resolve(urlInputBox.value);
@@ -385,45 +388,6 @@ export class Profiles {
         return allProfiles.find((temprofile) => temprofile.name === sesName);
     }
 
-    public async deletePrompt(deletedProfile: IProfileLoaded) {
-        const profileName = deletedProfile.name;
-        this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("deleteProfile.quickPickOption", "Are you sure you want to permanently delete ") + profileName,
-            ignoreFocusOut: true,
-            canPickMany: false
-        };
-        // confirm that the user really wants to delete
-        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.yes", "Yes"),
-            localize("deleteProfile.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteProfile.showQuickPick.yes", "Yes")) {
-            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked no. Cancelling delete of profile"));
-            return;
-        }
-
-        const profileType = ZoweExplorerApiRegister.getMvsApi(deletedProfile).getProfileTypeName();
-        try {
-            this.deleteProf(deletedProfile, profileName, profileType);
-        } catch (error) {
-            this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
-            await errorHandling(error, profileName, error.message);
-            throw error;
-        }
-
-        vscode.window.showInformationMessage("Profile " + profileName + " was deleted.");
-        return profileName;
-    }
-
-    public async deleteProf(ProfileInfo, ProfileName, ProfileType) {
-        let zosmfProfile: IProfile;
-        try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType))
-            .delete({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
-        return zosmfProfile.profile;
-    }
-
     public async deleteProfile(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
                                jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType) {
 
@@ -590,6 +554,44 @@ export class Profiles {
             directProfile = await profileManager.load({ name });
         }
         return directProfile;
+    }
+
+    private async deletePrompt(deletedProfile: IProfileLoaded) {
+        const profileName = deletedProfile.name;
+        this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: localize("deleteProfile.quickPickOption", "Are you sure you want to permanently delete ") + profileName,
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        // confirm that the user really wants to delete
+        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.yes", "Yes"),
+            localize("deleteProfile.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteProfile.showQuickPick.yes", "Yes")) {
+            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked no. Cancelling delete of profile"));
+            return;
+        }
+
+        try {
+            this.deleteProfileOnDisk(deletedProfile, profileName, deletedProfile.type);
+        } catch (error) {
+            this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
+            await errorHandling(error, profileName, error.message);
+            throw error;
+        }
+
+        vscode.window.showInformationMessage("Profile " + profileName + " was deleted.");
+        return profileName;
+    }
+
+    private async deleteProfileOnDisk(ProfileInfo, ProfileName, ProfileType) {
+        let zosmfProfile: IProfile;
+        try {
+            zosmfProfile = await (await this.getCliProfileManager(ProfileType))
+            .delete({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+        } catch (error) {
+            vscode.window.showErrorMessage(error.message);
+        }
+        return zosmfProfile.profile;
     }
 
     // ** Functions for handling Profile Information */
