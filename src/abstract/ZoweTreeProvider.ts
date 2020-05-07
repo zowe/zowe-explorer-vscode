@@ -134,7 +134,7 @@ export class ZoweTreeProvider {
             node.getProfile().profile= EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
             await setSession(node, EditSession as ISession);
-            await this.refresh();
+            this.refresh();
         }
     }
 
