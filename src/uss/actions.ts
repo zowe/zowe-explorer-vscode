@@ -270,6 +270,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     }
 
+    binary = binary || await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(node.fullPath);
     try {
         const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
