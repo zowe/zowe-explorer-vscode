@@ -236,7 +236,7 @@ export class Profiles {
             try {
                 const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
                 updProfile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-                await this.updateProfile({profile: updProfile, name: profileName});
+                await this.updateProfile({profile: updProfile, name: profileName, type: profileLoaded.type});
                 vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
                 return updProfile;
