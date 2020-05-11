@@ -130,7 +130,7 @@ export class PersistentFilters {
 
     public async removeRecall(name: string) {
         const index = this.mRecall.findIndex((recallItem) => {
-            return recallItem.includes(name);
+            return recallItem.includes(name.toUpperCase());
         });
         if (index >= 0) { this.mRecall.splice(index, 1); }
         await this.updateRecall();
