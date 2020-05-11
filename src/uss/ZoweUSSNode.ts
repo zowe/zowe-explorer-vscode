@@ -480,7 +480,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
-                    binary: this.binary,
+                    binary: this.binary || await ZoweExplorerApiRegister.getUssApi(this.getProfile()).isFileTagBinOrAscii(this.fullPath),
                     returnEtag: true
                 });
                 this.setEtag(response.apiResponse.etag);
