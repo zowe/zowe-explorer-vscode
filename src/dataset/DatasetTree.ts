@@ -735,11 +735,23 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
-            node.contextValue = globals.DS_SESSION_CONTEXT;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
+            Profiles.getInstance().profilesForValidation.forEach((validate) => {
+                if (validate.name === node.label) {
+                    if (!validate.status) {
+                        node.contextValue = globals.INACTIVE_CONTEXT;
+                        const inactiveIcon = getIconByNode(node);
+                        if (inactiveIcon) {
+                            node.iconPath = inactiveIcon.path;
+                        }
+                    } else {
+                        node.contextValue = globals.DS_SESSION_CONTEXT;
+                        const icon = getIconByNode(node);
+                        if (icon) {
+                            node.iconPath = icon.path;
+                        }
+                    }
+                }
+            });
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }

@@ -17,6 +17,7 @@ import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { getIconByNode } from "../generators/icons";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession } from "../utils";
+import * as globals from "../globals";
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -82,12 +83,14 @@ export class ZoweTreeProvider {
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
-        const icon = getIconByNode(element);
-        if (icon) {
-            element.iconPath = icon.path;
+        if (element.contextValue !== globals.INACTIVE_CONTEXT) {
+            const icon = getIconByNode(element);
+            if (icon) {
+                element.iconPath = icon.path;
+            }
+            element.dirty = true;
+            this.mOnDidChangeTreeData.fire(element);
         }
-        element.dirty = true;
-        this.mOnDidChangeTreeData.fire(element);
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
@@ -126,7 +129,7 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
-    public async editSession(node: IZoweDatasetTreeNode) {
+    public async editSession(node: IZoweTreeNode) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);

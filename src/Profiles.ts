@@ -61,6 +61,7 @@ export class Profiles {
 
     private static loader: Profiles;
 
+    public profilesForValidation: IProfileValidation[] = [];
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -68,7 +69,6 @@ export class Profiles {
     private ussSchema: string = "Zowe-USS-Persistent";
     private jobsSchema: string = "Zowe-Jobs-Persistent";
     private allTypes: string[];
-    private profilesForValidation: IProfileValidation[] = [];
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
@@ -81,7 +81,14 @@ export class Profiles {
         this.profilesForValidation.forEach((validate) => {
             if (validate.name === theProfile.name) {
                 if (!validate.status) {
-                    errorHandling(localize("validateProfiles.invalid", theProfile.name) + ("is invalid"));
+                    errorHandling(localize("validateProfiles.invalid2", "Profile Name ") +
+                        (theProfile.name) +
+                        localize("validateProfiles.invalid1",
+                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+                    throw new Error(localize("validateProfiles.invalid2", "Profile Name ") +
+                        (theProfile.name) +
+                        localize("validateProfiles.invalid1",
+                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
                 }
             }
         });
@@ -156,7 +163,6 @@ export class Profiles {
                             name: validateProfile.name
                         };
                         this.profilesForValidation.push(profileValidationResult);
-                        this.log.debug(error);
                     }
                 }
                 this.allProfiles.push(...profilesForType);

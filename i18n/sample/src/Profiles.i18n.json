@@ -1,4 +1,6 @@
 {
+    "validateProfiles.invalid2": "Profile Name ",
+    "validateProfiles.invalid1": " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
     "ussNodeActions.error": "Error encountered in ",
     "loadNamedProfile.error.profileName": "Could not find profile named: ",
     "loadNamedProfile.error.period": ".",
