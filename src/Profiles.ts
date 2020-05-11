@@ -402,7 +402,7 @@ export class Profiles {
 
         const profileType = ZoweExplorerApiRegister.getMvsApi(deletedProfile).getProfileTypeName();
         try {
-            this.deleteProf(deletedProfile, profileName, profileType);
+            this.deleteProf(deletedProfile);
         } catch (error) {
             this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
@@ -413,11 +413,11 @@ export class Profiles {
         return profileName;
     }
 
-    public async deleteProf(ProfileInfo, ProfileName, ProfileType) {
+    public async deleteProf(ProfileInfo) {
         let zosmfProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType))
-            .delete({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            zosmfProfile = await (await this.getCliProfileManager(ProfileInfo.type))
+            .delete({ profile: ProfileInfo, name: ProfileInfo.name, type: ProfileInfo.type});
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -709,10 +709,14 @@ export class Profiles {
     // ** Functions that Calls Get CLI Profile Manager  */
 
     private async updateProfile(ProfileInfo, rePrompt?: boolean) {
-
-        for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-            const profileManager = await this.getCliProfileManager(type);
-            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+        if (ProfileInfo.type !== undefined) {
+            const profileManager = await this.getCliProfileManager(ProfileInfo.type);
+            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name}));
+        } else {
+            for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+                const profileManager = await this.getCliProfileManager(type);
+                this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+            }
         }
 
 
