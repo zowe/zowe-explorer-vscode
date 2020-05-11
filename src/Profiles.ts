@@ -308,7 +308,7 @@ export class Profiles {
         }
     }
 
-    public async promptCredentials(sessName, rePrompt?: boolean, checkCred?: boolean) {
+    public async promptCredentials(sessName, rePrompt?: boolean) {
 
         let repromptUser: any;
         let repromptPass: any;
@@ -351,10 +351,7 @@ export class Profiles {
         } else {
             try {
                 const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
-                if ((rePrompt) && (checkCred)) {
-                    rePrompt = false;
-                    await this.updateProfile(loadProfile, rePrompt);
-                } else if ((rePrompt) && (!checkCred)) {
+                if (rePrompt) {
                     await this.updateProfile(loadProfile, rePrompt);
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];

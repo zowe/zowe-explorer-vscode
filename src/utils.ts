@@ -50,7 +50,7 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             } else {
                 vscode.window.showErrorMessage(errMsg, "Check Credentials").then((selection) => {
                     if (selection) {
-                        Profiles.getInstance().promptCredentials(label.trim(), true, true);
+                        Profiles.getInstance().promptCredentials(label.trim(), true);
                     }
                 });
             }
