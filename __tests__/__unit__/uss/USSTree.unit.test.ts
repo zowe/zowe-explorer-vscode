@@ -52,23 +52,6 @@ async function createGlobalMocks() {
         testTree: null
     };
 
-    globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.testTree = addSessionNode(new USSTree(), globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-    globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
-    globalMocks.getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
-    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.getConfiguration.mockReturnValue({
-        get: (setting: string) => [
-            "[test]: /u/aDir{directory}",
-            "[test]: /u/myFile.txt{textFile}",
-        ],
-        update: jest.fn(()=>{
-            return {};
-        })
-    });
-
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "renameUSSFile", { value: globalMocks.renameUSSFile, configurable: true });
@@ -83,8 +66,8 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.getConfiguration, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", {value: globalMocks.ProgressLocation});
-    Object.defineProperty(vscode.window, "withProgress", {value: globalMocks.withProgress});
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -94,8 +77,27 @@ async function createGlobalMocks() {
                 checkCurrentProfile: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
+        }),
+        configurable: true
+    });
+
+    globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+    globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
+    globalMocks.getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.getConfiguration.mockReturnValue({
+        get: (setting: string) => [
+            "[test]: /u/aDir{directory}",
+            "[test]: /u/myFile.txt{textFile}",
+        ],
+        update: jest.fn(()=>{
+            return {};
         })
     });
+    globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.testTree = addSessionNode(new USSTree(), globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.testTree.addHistory("/u/myuser");
 
     return globalMocks;
 }
@@ -217,7 +219,7 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
         const globalMocks = await createGlobalMocks();
 
         globalMocks.testTree.addRecall("testHistory");
-        expect(globalMocks.testTree.getRecall()[0]).toEqual("testHistory");
+        expect(globalMocks.testTree.getRecall()[0]).toEqual("TESTHISTORY");
     });
 });
 
@@ -226,7 +228,7 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.testTree.removeRecall("testHistory");
-        expect(globalMocks.testTree.getRecall().includes("testHistory")).toEqual(false);
+        expect(globalMocks.testTree.getRecall().includes("TESTHISTORY")).toEqual(false);
     });
 });
 
@@ -275,7 +277,7 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
             testDir: new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed,
                                      globalMocks.testTree.mSessionNodes[1], null, "/")
         };
-        globalMocks.testTree.mFavorites = [];
+        globalMocks.testTree.mFavorites = [newMocks.testDir];
 
         return newMocks;
     }
@@ -338,8 +340,8 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
                 null, globalMocks.testSession, null),
             startLength: null
         };
-        newMocks.startLength = newMocks.testTree2.mSessionNodes.length;
         newMocks.testTree2.mSessionNodes.push(newMocks.testSessionNode);
+        newMocks.startLength = newMocks.testTree2.mSessionNodes.length;
 
         return newMocks;
     }
@@ -360,6 +362,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             theia: false,
+            qpValue: "",
             qpItem: new utils.FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(utils, "resolveQuickPickHelper")
         };
@@ -372,7 +375,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
             activeItems: [newMocks.qpItem],
             ignoreFocusOut: true,
             items: [newMocks.qpItem],
-            value: "",
+            value: newMocks.qpValue,
             show: jest.fn(()=>{
                 return {};
             }),
@@ -391,6 +394,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        blockMocks.qpValue = "/U/HARRY";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HARRY");
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
@@ -412,7 +416,9 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        blockMocks.qpValue = "/U/HLQ/STUFF";
         blockMocks.qpItem = new utils.FilterDescriptor("/U/HLQ/STUFF");
+        globalMocks.showInputBox.mockReturnValueOnce("/U/HLQ/STUFF");
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/U/HLQ/STUFF");
@@ -434,6 +440,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.theia = true;
+        blockMocks.qpValue = "/u/myFiles";
         globalMocks.showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
         globalMocks.showInputBox.mockReturnValueOnce("/u/myFiles");
 
@@ -459,6 +466,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.theia = true;
+        blockMocks.qpValue = "/u/thisFile";
         globalMocks.showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
@@ -627,7 +635,7 @@ describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall
         const globalMocks = await createGlobalMocks();
 
         globalMocks.testTree.addRecall("testHistory");
-        expect(globalMocks.testTree.getRecall()[0]).toEqual("testHistory");
+        expect(globalMocks.testTree.getRecall()[0]).toEqual("TESTHISTORY");
     });
 });
 
@@ -636,7 +644,7 @@ describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.testTree.removeRecall("testHistory");
-        expect(globalMocks.testTree.getRecall().includes("testHistory")).toEqual(false);
+        expect(globalMocks.testTree.getRecall().includes("TESTHISTORY")).toEqual(false);
     });
 });
 
@@ -646,8 +654,8 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
             parentDir: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
             childFile: null,
         };
-        newMocks.childFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
         newMocks.childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, newMocks.parentDir, null, "/parent");
+        newMocks.childFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
         globalMocks.testTree.mFavorites = [];
 
         return newMocks;
