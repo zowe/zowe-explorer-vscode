@@ -22,8 +22,7 @@ import { Profiles } from "../../../src/Profiles";
 import { linkProfileDialog, getLinkedProfile } from "../../../src/utils/profileLink";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
-// jest.mock("vscode");
-// jest.mock("fs");
+jest.mock("fs");
 
 const existsSync = jest.fn();
 const mkdirSync = jest.fn();
