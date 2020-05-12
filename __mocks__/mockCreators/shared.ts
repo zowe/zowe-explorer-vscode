@@ -107,7 +107,7 @@ export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
         refresh: jest.fn()
-    };
+    } as any;
 }
 
 export function generateQuickPickItem(): vscode.QuickPickItem {
