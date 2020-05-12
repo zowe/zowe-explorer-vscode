@@ -164,4 +164,23 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(() => {registry.getMvsApi(undefined);}).toThrow();
         expect(() => {registry.getJesApi(undefined);}).toThrow();
     });
+
+    it("provides access to the common api for a profile registered to any api regsitry", () => {
+        const defaultProfile = profiles.getDefaultProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(defaultProfile);
+        const profileUnused: IProfileLoaded = {
+            name: "profileUnused",
+            profile: {
+                user: undefined,
+                password: undefined
+            },
+            type: "zftp",
+            message: "",
+            failNotFound: false
+        };
+
+        expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
+        expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
+        expect(() => {ZoweExplorerApiRegister.getCommonApi(profileUnused);}).toThrow();
+    });
 });
