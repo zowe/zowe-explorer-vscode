@@ -239,7 +239,7 @@ export class Profiles {
             try {
                 const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
                 updProfile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-                await this.updateProfile({profile: updProfile, name: profileName});
+                await this.updateProfile({profile: updProfile, name: profileName, type: profileLoaded.type});
                 vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
                 return updProfile;
@@ -572,7 +572,7 @@ export class Profiles {
         }
 
         try {
-            this.deleteProfileOnDisk(deletedProfile, profileName, deletedProfile.type);
+            this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
             this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
@@ -583,11 +583,11 @@ export class Profiles {
         return profileName;
     }
 
-    private async deleteProfileOnDisk(ProfileInfo, ProfileName, ProfileType) {
+    private async deleteProfileOnDisk(ProfileInfo) {
         let zosmfProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType))
-            .delete({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            zosmfProfile = await (await this.getCliProfileManager(ProfileInfo.type))
+            .delete({ profile: ProfileInfo, name: ProfileInfo.name, type: ProfileInfo.type });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -711,10 +711,14 @@ export class Profiles {
     // ** Functions that Calls Get CLI Profile Manager  */
 
     private async updateProfile(ProfileInfo, rePrompt?: boolean) {
-
-        for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-            const profileManager = await this.getCliProfileManager(type);
-            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+        if (ProfileInfo.type !== undefined) {
+            const profileManager = await this.getCliProfileManager(ProfileInfo.type);
+            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name}));
+        } else {
+            for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+                const profileManager = await this.getCliProfileManager(type);
+                this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+            }
         }
 
 

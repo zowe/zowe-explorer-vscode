@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.5.2`
+
+- Fix undefined profile error message. Thanks @JillieBeanSim
+
 ## `1.5.1`
 
 - Fix failure to load optional secure fields from profiles. Thanks @tjohnsonBCM
