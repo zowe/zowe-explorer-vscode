@@ -140,6 +140,7 @@ export class Profiles {
     public async refresh(): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
+        this.profilesForValidation = [];
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
@@ -147,22 +148,9 @@ export class Profiles {
             });
             if (profilesForType && profilesForType.length > 0) {
                 for (const validateProfile of profilesForType) {
-                    try {
-                        const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
-                        const sessionStatus= await zowe.CheckStatus.getZosmfInfo(validateSession);
-                        if (sessionStatus) {
-                            const profileValidationResult: IProfileValidation = {
-                                status: true,
-                                name: validateProfile.name
-                            };
-                            this.profilesForValidation.push(profileValidationResult);
-                        }
-                    } catch (error) {
-                        const profileValidationResult: IProfileValidation = {
-                            status: false,
-                            name: validateProfile.name
-                        };
-                        this.profilesForValidation.push(profileValidationResult);
+                    // This validation if done for z/OSMF Profiles only.
+                    if (validateProfile.type === "zosmf") {
+                        await this.validateProfiles(validateProfile);
                     }
                 }
                 this.allProfiles.push(...profilesForType);
@@ -594,6 +582,26 @@ export class Profiles {
             directProfile = await profileManager.load({ name });
         }
         return directProfile;
+    }
+
+    private async validateProfiles(validateProfile: IProfileLoaded) {
+        try {
+            const sessionStatus = await ZoweExplorerApiRegister.getInstance().registerCheckStatusApi(validateProfile);
+            if (sessionStatus) {
+                const profileValidationResult: IProfileValidation = {
+                    status: true,
+                    name: validateProfile.name
+                };
+                this.profilesForValidation.push(profileValidationResult);
+            }
+        } catch (error) {
+            const profileValidationResult: IProfileValidation = {
+                status: false,
+                name: validateProfile.name
+            };
+            this.profilesForValidation.push(profileValidationResult);
+        }
+        return;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {

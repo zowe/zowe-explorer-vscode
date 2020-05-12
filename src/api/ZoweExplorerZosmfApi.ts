@@ -40,6 +40,12 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
         return this.session;
     }
+
+    public async getZosmfStatus(validateProfile?: IProfileLoaded): Promise<zowe.IZosmfInfoResponse> {
+        const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+        const sessionStatus= await zowe.CheckStatus.getZosmfInfo(validateSession);
+        return sessionStatus;
+    }
 }
 
 /**
