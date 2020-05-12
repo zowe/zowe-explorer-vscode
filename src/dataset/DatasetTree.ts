@@ -284,6 +284,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // add a command to execute the search
             temp.command = {command: "zowe.pattern", title: "", arguments: [temp]};
         } else {    // pds | ds
+            let sessionNode = node.getSessionNode();
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
             temp.contextValue = contextually.asFavorite(temp);
