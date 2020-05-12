@@ -126,15 +126,14 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
-    public async editSession(node: IZoweDatasetTreeNode) {
+    public async editSession(node: IZoweTreeNode) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
-
         if (EditSession) {
             node.getProfile().profile= EditSession as IProfile;
-            setProfile(node, EditSession as IProfile);
-            setSession(node, EditSession as ISession);
+            await setProfile(node, EditSession as IProfile);
+            await setSession(node, EditSession as ISession);
             this.refresh();
         }
     }
