@@ -545,7 +545,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         node.pattern = "TEST";
         node.contextValue = globals.DS_SESSION_CONTEXT;
 
-        mocked(vscode.window.showInputBox).mockReturnValueOnce("test" as any);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInputBox)).toBeCalledWith({
@@ -559,7 +559,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         node.pattern = "TEST";
         node.contextValue = globals.DS_SESSION_CONTEXT;
 
-        mocked(vscode.window.showInputBox).mockReturnValueOnce("" as any);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
