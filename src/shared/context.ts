@@ -240,6 +240,15 @@ export function isSession(node: TreeItem): boolean {
 export function isSessionInactive(node: TreeItem): boolean {
     return new RegExp("^(" + globals.INACTIVE_CONTEXT + ")").test(node.contextValue);
 }
+
+/**
+ * Helper function which identifies if the node is a session but not a favorite
+ * @param node
+ * @return true if a session, false otherwise
+ */
+export function isSessionActive(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.ACTIVE_CONTEXT + ")").test(node.contextValue);
+}
 /**
  * Helper function which identifies if the node is a session but not a favorite
  * @param node

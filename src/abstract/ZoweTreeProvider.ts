@@ -16,8 +16,10 @@ import { OwnerFilterDescriptor } from "../job/utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { getIconByNode } from "../generators/icons";
 import { Profiles } from "../Profiles";
-import { setProfile, setSession } from "../utils";
+import { setProfile, setSession, errorHandling } from "../utils";
 import * as globals from "../globals";
+import * as nls from "vscode-nls";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -83,15 +85,14 @@ export class ZoweTreeProvider {
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
-        if (element.contextValue !== globals.INACTIVE_CONTEXT) {
-            const icon = getIconByNode(element);
-            if (icon) {
-                element.iconPath = icon.path;
-            }
-            element.dirty = true;
-            this.mOnDidChangeTreeData.fire(element);
+        const icon = getIconByNode(element);
+        if (icon) {
+            element.iconPath = icon.path;
         }
+        element.dirty = true;
+        this.mOnDidChangeTreeData.fire(element);
     }
+
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(this.persistenceSchema)) {
@@ -132,6 +133,8 @@ export class ZoweTreeProvider {
     public async editSession(node: IZoweTreeNode) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
+        // Check what happens is inactive
+        await Profiles.getInstance().validateProfiles(profile);
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
             node.getProfile().profile= EditSession as IProfile;
@@ -141,6 +144,33 @@ export class ZoweTreeProvider {
         }
     }
 
+    public async checkCurrentProfile(node: IZoweTreeNode) {
+        const profile = node.getProfile();
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
+        if (!profileStatus.status) {
+            if (node.contextValue !== globals.INACTIVE_CONTEXT) {
+                node.contextValue = globals.INACTIVE_CONTEXT;
+                const inactiveIcon = getIconByNode(node);
+                if (inactiveIcon) {
+                    node.iconPath = inactiveIcon.path;
+                }
+            }
+            await errorHandling(localize("validateProfiles.invalid2", "Profile Name ") +
+                (profile.name) +
+                localize("validateProfiles.invalid1",
+                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+        } else {
+            if (node.contextValue !== globals.ACTIVE_CONTEXT) {
+                node.contextValue = globals.ACTIVE_CONTEXT;
+                const activeIcon = getIconByNode(node);
+                if (activeIcon) {
+                    node.iconPath = activeIcon.path;
+                }
+            }
+        }
+        await this.refresh();
+    }
+
     protected deleteSessionByLabel(revisedLabel: string) {
         if (revisedLabel.includes("[")) {
             revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
@@ -148,4 +178,5 @@ export class ZoweTreeProvider {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
+
 }

@@ -11,13 +11,13 @@
 
 import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
-import { isSessionInactive } from "../../../shared/context";
+import { isSessionActive } from "../../../shared/context";
 
 const icon: IIconItem = {
-    id: IconId.sessionOpen,
-    type: IconHierarchyType.derived,
-    path: getIconPathInResources("folder-root-default-closed-inactive.svg"),
-    check: (node) => isSessionInactive(node)
+    id: IconId.sessionInactive,
+    type: IconHierarchyType.base,
+    path: getIconPathInResources("folder-root-default-closed-active.svg"),
+    check: (node) => isSessionActive(node)
 };
 
 export default icon;

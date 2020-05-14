@@ -500,12 +500,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
-    public async checkCurrentProfile(node: IZoweUSSTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
-    }
-
     /**
      * Adds a single session to the USS tree
      *

@@ -69,20 +69,13 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-        this.profilesForValidation.forEach((validate) => {
-            if (validate.name === theProfile.name) {
-                if (!validate.status) {
-                    errorHandling(localize("validateProfiles.invalid2", "Profile Name ") +
-                        (theProfile.name) +
-                        localize("validateProfiles.invalid1",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-                    throw new Error(localize("validateProfiles.invalid2", "Profile Name ") +
-                        (theProfile.name) +
-                        localize("validateProfiles.invalid1",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-                }
-            }
-        });
+
+        // Check what happens if there's an error
+        const profileStatus = await this.validateProfiles(theProfile);
+        if (!profileStatus.status) {
+            this.validProfile = ValidProfileEnum.INVALID;
+            return profileStatus;
+        }
 
         if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
@@ -102,12 +95,15 @@ export class Profiles {
                 theProfile.profile.password = this.passWrd;
                 theProfile.profile.base64EncodedAuth = this.baseEncd;
                 this.validProfile = ValidProfileEnum.VALID;
+                return profileStatus;
             } else {
                 return;
             }
         } else {
             this.validProfile = ValidProfileEnum.VALID;
+            return profileStatus;
         }
+
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -131,19 +127,12 @@ export class Profiles {
     public async refresh(): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
-        this.profilesForValidation = [];
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
                 return profile.type === type;
             });
             if (profilesForType && profilesForType.length > 0) {
-                for (const validateProfile of profilesForType) {
-                    // This validation if done for z/OSMF Profiles only.
-                    if (validateProfile.type === "zosmf") {
-                        await this.validateProfiles(validateProfile);
-                    }
-                }
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
                 let defaultProfile: IProfileLoaded;
@@ -768,24 +757,61 @@ export class Profiles {
         return profileManager;
     }
 
-    private async validateProfiles(validateProfile: IProfileLoaded) {
+    public async validateProfiles(theProfile: IProfileLoaded) {
+        let filteredProfile: IProfileValidation;
+        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+
         try {
-            const sessionStatus = await ZoweExplorerApiRegister.getInstance().registerCheckStatusApi(validateProfile);
-            if (sessionStatus) {
-                const profileValidationResult: IProfileValidation = {
-                    status: true,
-                    name: validateProfile.name
-                };
-                this.profilesForValidation.push(profileValidationResult);
+            // Filter profilesForValidation to check if the profile is already validated
+            this.profilesForValidation.filter((profile) => {
+                if (profile.name === theProfile.name) {
+                    filteredProfile = {
+                        status: profile.status,
+                        name: profile.name
+                    };
+                }
+            });
+
+            // If not yet validated, call getStatus and validate the profile
+            // status will be stored in profilesForValidation
+            if (filteredProfile === undefined) {
+                try {
+                    const profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                    if (profileStatus) {
+                        filteredProfile = {
+                            status: true,
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                    }
+                } catch (error) {
+                    filteredProfile = {
+                        status: false,
+                        name: theProfile.name
+                    };
+                    this.profilesForValidation.push(filteredProfile);
+                }
             }
-        } catch (error) {
-            const profileValidationResult: IProfileValidation = {
-                status: false,
-                name: validateProfile.name
-            };
-            this.profilesForValidation.push(profileValidationResult);
+
+            // // if Profile Status is invalid, an error will throwned
+            // if (!filteredProfile.status) {
+            //     errorHandling(localize("validateProfiles.invalid2", "Profile Name ") +
+            //         (theProfile.name) +
+            //         localize("validateProfiles.invalid1",
+            //         " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+            //     throw new Error(localize("validateProfiles.invalid2", "Profile Name ") +
+            //         (theProfile.name) +
+            //         localize("validateProfiles.invalid1",
+            //         " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+
+            // }
+
+            return filteredProfile;
+
+        }   catch (error) {
+            await errorHandling(error);
         }
-        return;
+
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {

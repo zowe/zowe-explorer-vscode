@@ -533,6 +533,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
+
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getHistory().length > 0) {
@@ -606,13 +607,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.addHistory(node.pattern);
         }
     }
-
-    public async checkCurrentProfile(node: IZoweDatasetTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
-    }
-
 
     /**
      * Rename data set member
@@ -735,23 +729,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
-            Profiles.getInstance().profilesForValidation.forEach((validate) => {
-                if (validate.name === node.label) {
-                    if (!validate.status) {
-                        node.contextValue = globals.INACTIVE_CONTEXT;
-                        const inactiveIcon = getIconByNode(node);
-                        if (inactiveIcon) {
-                            node.iconPath = inactiveIcon.path;
-                        }
-                    } else {
-                        node.contextValue = globals.DS_SESSION_CONTEXT;
-                        const icon = getIconByNode(node);
-                        if (icon) {
-                            node.iconPath = icon.path;
-                        }
-                    }
-                }
-            });
+            node.contextValue = globals.DS_SESSION_CONTEXT;
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
+            }
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }
