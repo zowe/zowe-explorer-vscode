@@ -13,6 +13,7 @@ import { IconHierarchyType, IconId, IIconItem } from "../index";
 import { getIconPathInResources } from "../../../shared/utils";
 import sessionIcon from "./session";
 import { TreeItemCollapsibleState } from "vscode";
+import { INACTIVE_CONTEXT } from "../../../globals";
 
 const icon: IIconItem = {
     id: IconId.sessionOpen,
@@ -20,7 +21,7 @@ const icon: IIconItem = {
     path: getIconPathInResources("folder-root-default-open-active.svg"),
     check: (node) => {
         const parentCheck = sessionIcon.check(node);
-        return parentCheck && node.collapsibleState === TreeItemCollapsibleState.Expanded;
+        return parentCheck && node.collapsibleState === TreeItemCollapsibleState.Expanded && node.contextValue !== INACTIVE_CONTEXT;
     }
 };
 

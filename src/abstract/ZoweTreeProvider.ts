@@ -84,6 +84,9 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
+        if (element.contextValue.includes("session")) {
+            this.checkCurrentProfile(element);
+        }
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
@@ -148,7 +151,7 @@ export class ZoweTreeProvider {
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (!profileStatus.status) {
-            if (node.contextValue !== globals.INACTIVE_CONTEXT) {
+            if (node.contextValue.includes("session") && node.contextValue !== globals.INACTIVE_CONTEXT) {
                 node.contextValue = globals.INACTIVE_CONTEXT;
                 const inactiveIcon = getIconByNode(node);
                 if (inactiveIcon) {
@@ -164,7 +167,7 @@ export class ZoweTreeProvider {
                 localize("validateProfiles.invalid1",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
             } else {
-            if (node.contextValue !== globals.ACTIVE_CONTEXT) {
+            if (node.contextValue.includes("session") && node.contextValue !== globals.ACTIVE_CONTEXT) {
                 node.contextValue = globals.ACTIVE_CONTEXT;
                 const activeIcon = getIconByNode(node);
                 if (activeIcon) {
