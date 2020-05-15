@@ -74,12 +74,9 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking that the prefix is set correctly on the job", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking that the prefix is set correctly on the job", async () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, blockMocks.session, null, null);
 
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("*");
@@ -111,12 +108,9 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking that the owner is set correctly on the job", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking that the owner is set correctly on the job", async () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null,
             blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
@@ -146,12 +140,9 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking that stop command of Job Node is executed properly", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking that stop command of Job Node is executed properly", async () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null,
             blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
@@ -167,6 +158,8 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
         );
     });
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
@@ -192,12 +185,9 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking modification of Job Node", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking modification of Job Node", async () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null,
             blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
@@ -214,6 +204,8 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         );
     });
     it("Checking failed attempt to modify Job Node", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
@@ -243,12 +235,9 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking download of Job Spool", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking download of Job Spool", async () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null,
             blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
         const fileUri = {
@@ -274,6 +263,8 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         );
     });
     it("Checking failed attempt to download Job Spool", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const fileUri = {
             fsPath: "/tmp/foo",
             scheme: "",
@@ -303,12 +294,9 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking download of Job JCL", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking download of Job JCL", async () => {
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null,
             blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
 
@@ -318,6 +306,8 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
         expect(mocked(vscode.window.showTextDocument)).toBeCalled();
     });
     it("Checking failed attempt to download Job JCL", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         await jobActions.downloadJcl(undefined);
         expect(mocked(vscode.window.showErrorMessage)).toBeCalled();
     });
@@ -350,12 +340,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking submit of active text editor content as JCL", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking submit of active text editor content as JCL", async () => {
         mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(blockMocks.datasetSessionNode.label);
@@ -376,6 +363,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     });
 
     it("Checking failed attempt to submit of active text editor content as JCL", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(null); // Here we imitate the case when no profile was selected
@@ -417,12 +406,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         };
     }
 
-    beforeEach(() => {
+    it("Checking Submit Job for PDS Member content", async () => {
         createGlobalMocks();
         blockMocks = createBlockMocks();
-    });
-
-    it("Checking Submit Job for PDS Member content", async () => {
         const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         subNode.contextValue = globals.DS_PDS_CONTEXT;
@@ -439,6 +425,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
     });
     it("Checking Submit Job for PS Dataset content", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const dataset = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         dataset.contextValue = globals.DS_DS_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
@@ -453,6 +441,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)");
     });
     it("Checking Submit Job for Favourite PDS Member content", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
@@ -474,6 +464,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
     });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
@@ -493,6 +485,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
     });
     it("Checking Submit Job for unsupported Dataset content", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const corruptedNode = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         corruptedNode.contextValue = "gibberish";
