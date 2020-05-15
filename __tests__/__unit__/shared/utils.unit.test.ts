@@ -62,12 +62,10 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
         };
     }
 
-    beforeEach(() => {
-        blockMocks = createBlockMocks();
-    });
     afterAll(() => jest.restoreAllMocks());
 
     it("Testing that the add Suffix for datasets works", async () => {
+        blockMocks = createBlockMocks();
         globals.defineGlobals("/test/path/");
 
         let node = new ZoweDatasetNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
