@@ -1,6 +1,7 @@
 # Zowe Explorer
 
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe CLI](https://github.com/zowe/community#zowe-cli) sub-project.  
 [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
@@ -20,6 +21,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 * For information about how to install the extension from a `VSIX` file and run system tests on the extension, see the [Developer README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README.md).
 * For information about how to develop for Eclipse Theia, see [Theia README](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md).
 * For information about how to create a VSCode extension for Zowe Explorer (a Zowe Explorer extension) see [VSCode extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
+* For questions and general guidance, please visit #zowe-explorer channel on [Slack](https://openmainframeproject.slack.com/)
 
 ## Contents
 
