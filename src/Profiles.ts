@@ -793,19 +793,6 @@ export class Profiles {
                 }
             }
 
-            // // if Profile Status is invalid, an error will throwned
-            // if (!filteredProfile.status) {
-            //     errorHandling(localize("validateProfiles.invalid2", "Profile Name ") +
-            //         (theProfile.name) +
-            //         localize("validateProfiles.invalid1",
-            //         " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-            //     throw new Error(localize("validateProfiles.invalid2", "Profile Name ") +
-            //         (theProfile.name) +
-            //         localize("validateProfiles.invalid1",
-            //         " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-
-            // }
-
             return filteredProfile;
 
         }   catch (error) {

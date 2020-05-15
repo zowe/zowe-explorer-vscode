@@ -159,7 +159,11 @@ export class ZoweTreeProvider {
                 (profile.name) +
                 localize("validateProfiles.invalid1",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-        } else {
+            this.log.debug(localize("validateProfiles.invalid2", "Profile Name ") +
+                (node.getProfileName()) +
+                localize("validateProfiles.invalid1",
+                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+            } else {
             if (node.contextValue !== globals.ACTIVE_CONTEXT) {
                 node.contextValue = globals.ACTIVE_CONTEXT;
                 const activeIcon = getIconByNode(node);
