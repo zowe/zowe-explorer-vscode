@@ -62,13 +62,11 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         };
     }
 
-    beforeEach(() => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-    });
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking that addSession will cancel if there is no profile name", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const entered = undefined;
         mocked(vscode.window.showInputBox).mockResolvedValueOnce(entered);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -82,6 +80,8 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
     });
     it("Checking that addSession works correctly with supplied profile name", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const entered = undefined;
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("fake");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -95,6 +95,8 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toEqual({ newprofile: "fake" });
     });
     it("Checking that addSession works correctly with existing profile", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const entered = "";
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
@@ -109,6 +111,8 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toBe("firstName");
     });
     it("Checking that addSession works correctly with supplied resolveQuickPickHelper", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const entered = "fake";
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
@@ -119,6 +123,8 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
     });
     it("Checking that addSession works correctly with undefined profile", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const entered = "";
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
@@ -132,6 +138,8 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
     });
     it("Checking that addSession works correctly if createNewConnection is invalid", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const entered = "fake";
         blockMocks.profileInstance.createNewConnection = jest.fn().mockRejectedValue(new Error("create connection error"));
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -172,13 +180,11 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         };
     }
 
-    beforeEach(() => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-    });
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking that searchForLoadedItems works for a PDS", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
             blockMocks.datasetSessionNode, blockMocks.session, globals.DS_PDS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -202,6 +208,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(blockMocks.testDatasetTree.addHistory).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a member", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
             blockMocks.datasetSessionNode, blockMocks.session, globals.DS_DS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -233,6 +241,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(blockMocks.testDatasetTree.addHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
     });
     it("Checking that searchForLoadedItems works for a USS folder", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussSessionNode, null, "/");
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
@@ -252,6 +262,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(openNode).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a USS file", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.ussSessionNode, null, "/");
         const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
@@ -275,6 +287,8 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(openNode).toHaveBeenCalledWith(false, true, blockMocks.testUssTree);
     });
     it("Checking that searchForLoadedItems fails when no pattern is entered", async () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
         blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
         blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
         const qpItem = null;
