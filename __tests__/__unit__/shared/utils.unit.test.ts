@@ -47,40 +47,6 @@ async function createGlobalMocks() {
     return newVariables;
 }
 
-const session = new Session({
-    user: "fake",
-    password: "fake",
-    hostname: "fake",
-    protocol: "https",
-    type: "basic",
-});
-const profileOne: IProfileLoaded = {
-    name: "aProfile",
-    profile: {},
-    type: "zosmf",
-    message: "",
-    failNotFound: false
-};
-
-const mockLoadNamedProfile = jest.fn();
-Profiles.createInstance(Logger.getAppLogger());
-
-describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
-    mockLoadNamedProfile.mockReturnValue(profileOne);
-
-    beforeEach(() => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    getDefaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-    });
-    afterEach(() => { jest.clearAllMocks(); });
-    afterAll(() => { jest.restoreAllMocks(); });
 
 describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     it("Checks that labelRefresh subtly alters the label", async () => {
