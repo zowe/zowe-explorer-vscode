@@ -24,7 +24,6 @@ jest.mock("Session");
 jest.mock("@zowe/cli");
 jest.mock("@zowe/imperative");
 jest.mock("util");
-jest.mock("isbinaryfile");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
 
