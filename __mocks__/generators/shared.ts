@@ -10,7 +10,6 @@
 */
 
 import * as imperative from "@zowe/imperative";
-import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as path from "path";
@@ -20,7 +19,7 @@ import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
 
-export function createISession() {
+export function generateISession() {
     return new imperative.Session({
         user: "fake",
         password: "fake",
@@ -30,7 +29,7 @@ export function createISession() {
     });
 }
 
-export function createISessionWithoutCredentials() {
+export function generateISessionWithoutCredentials() {
     return new imperative.Session({
         user: "",
         password: "",
@@ -40,11 +39,11 @@ export function createISessionWithoutCredentials() {
     });
 }
 
-export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
+export function generateBasicZosmfSession(profile: imperative.IProfileLoaded) {
     return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
 }
 
-export function createIProfile(): imperative.IProfileLoaded {
+export function generateIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
@@ -57,7 +56,7 @@ export function createIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
+export function generateTreeView() {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
@@ -65,14 +64,13 @@ export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
         selection: [],
         onDidChangeSelection: jest.fn(),
         visible: true,
-        onDidChangeVisibility: jest.fn(),
-        dispose: jest.fn()
+        onDidChangeVisibility: jest.fn()
     };
 }
 
-export function createTextDocument(fileName: string): vscode.TextDocument {
+export function generateTextDocument(sessionNode: ZoweDatasetNode | ZoweUSSNode, name: string): vscode.TextDocument {
     return {
-        fileName: fileName,
+        fileName: `/${sessionNode.label}/${name}`,
         uri: null,
         isUntitled: null,
         languageId: null,
@@ -92,7 +90,7 @@ export function createTextDocument(fileName: string): vscode.TextDocument {
     };
 }
 
-export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
+export function generateInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
         allProfiles: [{ name: "firstName" }, { name: "secondName" }],
         defaultProfile: { name: "firstName" },
@@ -109,22 +107,14 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
         refresh: jest.fn()
-    } as any;
+    };
 }
 
-export function createFileResponse(theResponse) {
-    return {
-        success: true,
-        commandResponse: "",
-        apiResponse: theResponse
-    } as any;
-}
-
-export function createQuickPickItem(): vscode.QuickPickItem {
+export function generateQuickPickItem(): vscode.QuickPickItem {
     return new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 }
 
-export function createQuickPickContent(entered: any, item: vscode.QuickPickItem): any {
+export function generateQuickPickContent(entered: any, item: vscode.QuickPickItem): any {
     return {
         placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
         activeItems: [item],
