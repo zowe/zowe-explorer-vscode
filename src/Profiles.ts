@@ -23,25 +23,16 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
     valid: boolean;
+    protocol: string;
     host: string;
     port: number;
 }
-
-let IConnection: {
-    name: string;
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    rejectUnauthorized: boolean;
-};
 
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
     INVALID = -1
 }
-
 export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
@@ -146,11 +137,10 @@ export class Profiles {
 
     public validateAndParseUrl(newUrl: string): IUrlValidator {
         let url: URL;
-        const validProtocols: string[] = ["https"];
-        const DEFAULT_HTTPS_PORT: number = 443;
 
         const validationResult: IUrlValidator = {
             valid: false,
+            protocol: null,
             host: null,
             port: null
         };
@@ -161,19 +151,7 @@ export class Profiles {
             return validationResult;
         }
 
-        // overkill with only one valid protocol, but we may expand profile types and protocols in the future?
-        if (!validProtocols.some((validProtocol: string) => url.protocol.includes(validProtocol))) {
-            return validationResult;
-        }
-
-        // if port is empty, set https defaults
-        if (!url.port.trim()) {
-            validationResult.port = DEFAULT_HTTPS_PORT;
-        }
-        else {
-            validationResult.port = Number(url.port);
-        }
-
+        validationResult.port = Number(url.port);
         validationResult.host = url.hostname;
         validationResult.valid = true;
         return validationResult;
@@ -186,11 +164,22 @@ export class Profiles {
                 resolve(urlInputBox.value);
             });
             urlInputBox.onDidAccept(() => {
-                if (this.validateAndParseUrl(urlInputBox.value).valid) {
-                    resolve(urlInputBox.value);
+                let host: string;
+                if (urlInputBox.value.includes(":")) {
+                    if (urlInputBox.value.includes("/")) {
+                        host = urlInputBox.value;
+                    } else {
+                        host = `https://${urlInputBox.value}`;
+                    }
                 } else {
-                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosmfURL",
-                        "Please enter a valid URL in the format https://url:port.");
+                    host = `https://${urlInputBox.value}`;
+                }
+
+                if (this.validateAndParseUrl(host).valid) {
+                    resolve(host);
+                } else {
+                    urlInputBox.validationMessage = localize("createNewConnection.invalidzosURL",
+                        "Please enter a valid host URL in the format 'company.com'.");
                 }
             });
         });
@@ -198,86 +187,281 @@ export class Profiles {
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
         const editSession = profileLoaded.profile;
-        const editURL = "https://" + editSession.host+ ":" + editSession.port;
+        const editURL = editSession.host+ ":" + editSession.port;
         const editUser = editSession.user;
         const editPass = editSession.password;
         const editrej = editSession.rejectUnauthorized;
         let updUser: string;
         let updPass: string;
         let updRU: boolean;
+        let updPort: number;
+        let updUrl: any;
 
-        const updUrl = await this.urlInfo(editURL);
+        const schema: {} = await this.getSchema(profileLoaded.type);
+        const schemaArray = Object.keys(schema);
 
-        if (updUrl) {
-            updUser = await this.userInfo(editUser);
-        } else {
-            return;
-        }
+        const updSchemaValues: any = {};
+        updSchemaValues.name = profileName;
 
-        if (updUser !== undefined) {
-            updPass = await this.passwordInfo(editPass);
-        } else {
-            return;
-        }
-
-        if (updPass !== undefined) {
-            updRU = await this.ruInfo(editrej);
-        } else {
-            return;
-        }
-
-        if (updRU !== undefined) {
-            const updProfile = {
-                host: updUrl.host,
-                port: updUrl.port,
-                user: updUser,
-                password: updPass,
-                rejectUnauthorized: updRU,
-                base64EncodedAuth: null
-            };
-
-            try {
-                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updProfile);
-                updProfile.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
-                await this.updateProfile({profile: updProfile, name: profileName});
-                vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
-
-                return updProfile;
-
-            } catch (error) {
-                await errorHandling(error.message);
+        // Go through array of schema for input values
+        for (const value of schemaArray) {
+            switch (value) {
+            case "host" :
+                updUrl = await this.urlInfo(editURL);
+                if (updUrl === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
+                        "No valid value for z/OS URL. Operation Cancelled"));
+                    return undefined;
+                }
+                updSchemaValues[value] = updUrl.host;
+                if (updUrl.port !== 0) {
+                    updSchemaValues.port = updUrl.port;
+                } else if (editSession.port === Number("443")) {
+                    updSchemaValues.port = editSession.port;
+                }
+                break;
+            case "port" :
+                if (updSchemaValues[value] === undefined) {
+                    updPort = await this.portInfo(value, schema);
+                    if (Number.isNaN(updPort)) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
+                            "Invalid Port number provided or operation was cancelled"));
+                        return undefined;
+                    }
+                    updSchemaValues[value] = updPort;
+                    break;
+                }
+                break;
+            case "user" :
+                updUser = await this.userInfo(editUser);
+                if (updUser === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return undefined;
+                }
+                updSchemaValues[value] = updUser;
+                break;
+            case "password" :
+                updPass = await this.passwordInfo(editPass);
+                if (updPass === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return undefined;
+                }
+                updSchemaValues[value] = updPass;
+                break;
+            case "rejectUnauthorized" :
+                updRU = await this.ruInfo(editrej);
+                if (updRU === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
+                    "Operation Cancelled"));
+                    return undefined;
+                }
+                updSchemaValues[value] = updRU;
+                break;
+            default:
+                let options: vscode.InputBoxOptions;
+                const response = await this.checkType(schema[value].type);
+                switch (response) {
+                    case "number" :
+                        options = await this.optionsValue(value, schema, editSession[value]);
+                        const updValue = await vscode.window.showInputBox(options);
+                        if (!Number.isNaN(Number(updValue))) {
+                            updSchemaValues[value] = Number(updValue);
+                            } else {
+                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                                    updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                } else {
+                                    break;
+                                }
+                            }
+                        break;
+                    case "boolean" :
+                        let updIsTrue: boolean;
+                        updIsTrue = await this.boolInfo(value, schema);
+                        if (updIsTrue === undefined) {
+                            vscode.window.showInformationMessage(localize("createNewConnection.booleanValue",
+                            "Operation Cancelled"));
+                            return undefined;
+                        }
+                        updSchemaValues[value] = updIsTrue;
+                        break;
+                    default :
+                        options = await this.optionsValue(value, schema, editSession[value]);
+                        const updDefValue = await vscode.window.showInputBox(options);
+                        if (updDefValue === "") {
+                            break;
+                        }
+                        updSchemaValues[value] = updDefValue;
+                        break;
+                }
             }
         }
 
+        try {
+            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
+            updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
+            await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
+            vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
+
+            return updSchemaValues;
+
+        } catch (error) {
+            await errorHandling(error.message);
+        }
     }
 
-    public async createNewConnection(profileName: string, profileType: string ="zosmf"): Promise<string | undefined> {
+    public async getProfileType(): Promise<string> {
+        let profileType: string;
+        const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
+        const typeOptions = Array.from(profTypes);
+        if (typeOptions.length === 1 && typeOptions[0] === "zosmf") {
+            profileType = typeOptions[0];
+        } else {
+            const quickPickTypeOptions: vscode.QuickPickOptions = {
+                placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type"),
+                ignoreFocusOut: true,
+                canPickMany: false
+            };
+            profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+        }
+        return profileType;
+    }
 
+    public async getSchema(profileType: string): Promise<{}> {
+        const profileManager = await this.getCliProfileManager(profileType);
+        const configOptions = Array.from(profileManager.configurations);
+        let schema: {};
+        for (const val of configOptions) {
+            if (val.type === profileType) {
+                schema = val.schema.properties;
+            }
+        }
+        return schema;
+    }
+
+    public async createNewConnection(profileName: string, requestedProfileType?: string): Promise<string | undefined> {
         let newUser: string;
         let newPass: string;
         let newRU: boolean;
+        let newUrl: any;
+        let newPort: number;
 
-        const newUrl = await this.urlInfo();
+        const newProfileName = profileName.trim();
 
-        if (newUrl) {
-            newUser = await this.userInfo();
-        } else {
-            return;
+        if (newProfileName === undefined || newProfileName === "") {
+            vscode.window.showInformationMessage(localize("createNewConnection.profileName",
+                "Profile name was not supplied. Operation Cancelled"));
+            return undefined;
         }
 
-        if (newUser !== undefined) {
-            newPass = await this.passwordInfo();
-        } else {
-            return;
+        const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
+        if (profileType === undefined) {
+            vscode.window.showInformationMessage(localize("createNewConnection.profileType",
+                "No profile type was chosen. Operation Cancelled"));
+            return undefined;
         }
 
-        if (newPass !== undefined) {
-            newRU = await this.ruInfo();
-        } else {
-            return;
+        const schema: {} = await this.getSchema(profileType);
+        const schemaArray = Object.keys(schema);
+
+        const schemaValues: any = {};
+        schemaValues.name = newProfileName;
+
+        // Go through array of schema for input values
+        for (const value of schemaArray) {
+            switch (value) {
+            case "host" :
+                newUrl = await this.urlInfo();
+                if (newUrl === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
+                        "No valid value for z/OS URL. Operation Cancelled"));
+                    return undefined;
+                }
+                schemaValues[value] = newUrl.host;
+                if (newUrl.port !== 0) {
+                    schemaValues.port = newUrl.port;
+                }
+                break;
+            case "port" :
+                if (schemaValues[value] === undefined) {
+                    newPort = await this.portInfo(value, schema);
+                    if (Number.isNaN(newPort)) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
+                            "Invalid Port number provided or operation was cancelled"));
+                        return undefined;
+                    }
+                    schemaValues[value] = newPort;
+                    break;
+                }
+                break;
+            case "user" :
+                newUser = await this.userInfo();
+                if (newUser === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return undefined;
+                }
+                schemaValues[value] = newUser;
+                break;
+            case "password" :
+                newPass = await this.passwordInfo();
+                if (newPass === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+                        "Operation Cancelled"));
+                    return undefined;
+                }
+                schemaValues[value] = newPass;
+                break;
+            case "rejectUnauthorized" :
+                newRU = await this.ruInfo();
+                if (newRU === undefined) {
+                    vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
+                    "Operation Cancelled"));
+                    return undefined;
+                }
+                schemaValues[value] = newRU;
+                break;
+            default:
+                let options: vscode.InputBoxOptions;
+                const response = await this.checkType(schema[value].type);
+                switch (response) {
+                    case "number" :
+                        options = await this.optionsValue(value, schema);
+                        const enteredValue = await vscode.window.showInputBox(options);
+                        if (!Number.isNaN(Number(enteredValue))) {
+                            schemaValues[value] = Number(enteredValue);
+                            } else {
+                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+                                    schemaValues[value] = schema[value].optionDefinition.defaultValue;
+                                } else {
+                                    schemaValues[value] = undefined;
+                                }
+                            }
+                        break;
+                    case "boolean" :
+                        let isTrue: boolean;
+                        isTrue = await this.boolInfo(value, schema);
+                        if (isTrue === undefined) {
+                            vscode.window.showInformationMessage(localize("createNewConnection.booleanValue",
+                            "Operation Cancelled"));
+                            return undefined;
+                        }
+                        schemaValues[value] = isTrue;
+                        break;
+                    default :
+                        options = await this.optionsValue(value, schema);
+                        const defValue = await vscode.window.showInputBox(options);
+                        if (defValue === "") {
+                            break;
+                        }
+                        schemaValues[value] = defValue;
+                        break;
+                }
+            }
         }
 
-        if (newRU !== undefined) {
+        try {
             for (const profile of this.allProfiles) {
                 if (profile.name.toLowerCase() === profileName.toLowerCase()) {
                     vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
@@ -285,26 +469,11 @@ export class Profiles {
                     return undefined;
                 }
             }
-
-            IConnection = {
-                name: profileName,
-                host: newUrl.host,
-                port: newUrl.port,
-                user: newUser,
-                password: newPass,
-                rejectUnauthorized: newRU
-            };
-
-            try {
-                await zowe.ZosmfSession.createBasicZosmfSession(IConnection);
-                await this.saveProfile(IConnection, IConnection.name, profileType);
-                vscode.window.showInformationMessage("Profile " + profileName + " was created.");
-                return profileName;
-            } catch (error) {
-                await errorHandling(error.message);
-            }
-        } else {
-            return;
+            await this.saveProfile(schemaValues, schemaValues.name, profileType);
+            vscode.window.showInformationMessage("Profile " + newProfileName + " was created.");
+            return newProfileName;
+        } catch (error) {
+            await errorHandling(error.message);
         }
     }
 
@@ -323,7 +492,6 @@ export class Profiles {
         } catch (error) {
             await errorHandling(error.message);
         }
-
 
         if (rePrompt) {
             repromptUser = loadSession.user;
@@ -556,6 +724,22 @@ export class Profiles {
         return directProfile;
     }
 
+    public async getCliProfileManager(type: string): Promise<CliProfileManager> {
+        let profileManager = this.profileManagerByType.get(type);
+        if (!profileManager) {
+            profileManager = await new CliProfileManager({
+                profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                type
+            });
+            if (profileManager) {
+                this.profileManagerByType.set(type, profileManager);
+            } else {
+                return undefined;
+            }
+        }
+        return profileManager;
+    }
+
     private async deletePrompt(deletedProfile: IProfileLoaded) {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
@@ -572,7 +756,7 @@ export class Profiles {
         }
 
         try {
-            this.deleteProfileOnDisk(deletedProfile, profileName, deletedProfile.type);
+            this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
             this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
             await errorHandling(error, profileName, error.message);
@@ -583,11 +767,11 @@ export class Profiles {
         return profileName;
     }
 
-    private async deleteProfileOnDisk(ProfileInfo, ProfileName, ProfileType) {
+    private async deleteProfileOnDisk(ProfileInfo) {
         let zosmfProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType))
-            .delete({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            zosmfProfile = await (await this.getCliProfileManager(ProfileInfo.type))
+            .delete({ profile: ProfileInfo, name: ProfileInfo.name, type: ProfileInfo.type });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
@@ -598,7 +782,7 @@ export class Profiles {
 
     private async urlInfo(input?) {
 
-        let zosmfURL: string;
+        let zosURL: string;
 
         const urlInputBox = vscode.window.createInputBox();
         if (input) {
@@ -607,21 +791,43 @@ export class Profiles {
         urlInputBox.ignoreFocusOut = true;
         urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
         urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
-            "Enter a z/OSMF URL in the format 'https://url:port'.");
+            "Enter a z/OS URL in the format 'https://url:port'.");
 
         urlInputBox.show();
-        zosmfURL = await this.getUrl(urlInputBox);
+        zosURL = await this.getUrl(urlInputBox);
         urlInputBox.dispose();
 
-        if (!zosmfURL) {
-            vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                "No valid value for z/OSMF URL. Operation Cancelled"));
+        if (!zosURL) {
             return undefined;
         }
 
-        const zosmfUrlParsed = this.validateAndParseUrl(zosmfURL);
+        const zosmfUrlParsed = this.validateAndParseUrl(zosURL);
 
         return zosmfUrlParsed;
+    }
+
+    private async portInfo(input: string, schema: {}){
+        let options: vscode.InputBoxOptions;
+        let port: number;
+        if (schema[input].optionDefinition.hasOwnProperty("defaultValue")){
+            options = {
+                prompt: schema[input].optionDefinition.description.toString(),
+                value: schema[input].optionDefinition.defaultValue.toString()
+            };
+        } else {
+            options = {
+                placeHolder: localize("createNewConnection.option.prompt.port.placeholder", "Port Number"),
+                prompt: schema[input].optionDefinition.description.toString(),
+            };
+        }
+        port = Number(await vscode.window.showInputBox(options));
+
+        if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+            port = Number(schema[input].optionDefinition.defaultValue.toString());
+        } else {
+            return port;
+        }
+        return port;
     }
 
     private async userInfo(input?) {
@@ -640,7 +846,7 @@ export class Profiles {
         userName = await vscode.window.showInputBox(InputBoxOptions);
 
         if (userName === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
+            vscode.window.showInformationMessage(localize("createNewConnection.undefined.passWord",
                 "Operation Cancelled"));
             return undefined;
         }
@@ -701,34 +907,112 @@ export class Profiles {
             rejectUnauthorize = false;
         } else {
             vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                "Operation Cancelled"));
+                    "Operation Cancelled"));
             return undefined;
         }
 
         return rejectUnauthorize;
     }
 
+    private async boolInfo(input: string, schema: {}) {
+        let isTrue: boolean;
+        const description: string = schema[input].optionDefinition.description.toString();
+        const quickPickBooleanOptions: vscode.QuickPickOptions = {
+            placeHolder: description,
+            ignoreFocusOut: true,
+            canPickMany: false
+        };
+        const selectBoolean = ["True", "False"];
+        const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
+        if (chosenValue === selectBoolean[0]) {
+            isTrue = true;
+        } else if (chosenValue === selectBoolean[1]) {
+            isTrue = false;
+        } else {
+            return undefined;
+        }
+        return isTrue;
+    }
+
+    private async optionsValue(value: string, schema: {}, input?: string): Promise<vscode.InputBoxOptions> {
+        let options: vscode.InputBoxOptions;
+        const description: string = schema[value].optionDefinition.description.toString();
+        let editValue: any;
+
+        if (input !== undefined) {
+            editValue = input;
+            options = {
+                prompt: description,
+                value: editValue
+            };
+        } else if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
+            options = {
+                prompt: description,
+                value: schema[value].optionDefinition.defaultValue
+            };
+        } else {
+            options = {
+                placeHolder: description,
+                prompt: description
+            };
+        }
+        return options;
+    }
+
+    private async checkType(input?): Promise<string> {
+        const isTrue = Array.isArray(input);
+        let test: string;
+        let index: number;
+        if (isTrue) {
+            if (input.includes("boolean")) {
+                index = input.indexOf("boolean");
+                test = input[index];
+                return test;
+            }
+            if (input.includes("number")) {
+                index = input.indexOf("number");
+                test = input[index];
+                return test;
+            }
+            if (input.includes("string")) {
+                index = input.indexOf("string");
+                test = input[index];
+                return test;
+            }
+        } else {
+            test = input;
+        }
+        return test;
+    }
+
     // ** Functions that Calls Get CLI Profile Manager  */
 
     private async updateProfile(ProfileInfo, rePrompt?: boolean) {
-
-        for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-            const profileManager = await this.getCliProfileManager(type);
-            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+        if (ProfileInfo.type !== undefined) {
+            const profileManager = await this.getCliProfileManager(ProfileInfo.type);
+            this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name}));
+        } else {
+            for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
+                const profileManager = await this.getCliProfileManager(type);
+                this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name }));
+            }
         }
-
 
         const OrigProfileInfo = this.loadedProfile.profile;
         const NewProfileInfo = ProfileInfo.profile;
 
-        if (!rePrompt) {
-            OrigProfileInfo.user = NewProfileInfo.user;
-            OrigProfileInfo.password = NewProfileInfo.password;
-        }
+        const profileArray = Object.keys(this.loadedProfile.profile);
+        for (const value of profileArray) {
+            if (value === "user" || value === "password") {
+                if (!rePrompt) {
+                    OrigProfileInfo.user = NewProfileInfo.user;
+                    OrigProfileInfo.password = NewProfileInfo.password;
+                }
+            } else {
+                OrigProfileInfo[value] = NewProfileInfo[value];
+            }
 
-        OrigProfileInfo.host = NewProfileInfo.host;
-        OrigProfileInfo.port = NewProfileInfo.port;
-        OrigProfileInfo.rejectUnauthorized = NewProfileInfo.rejectUnauthorized;
+        }
 
         // Using `IUpdateProfileFromCliArgs` here instead of `IUpdateProfile` is
         // kind of a hack, but necessary to support storing secure credentials
@@ -739,7 +1023,6 @@ export class Profiles {
             // profile: OrigProfileInfo as IProfile
             args: OrigProfileInfo as any
         };
-
         try {
             (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
         } catch (error) {
@@ -748,29 +1031,12 @@ export class Profiles {
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
-        let zosmfProfile: IProfile;
+        let newProfile: IProfile;
         try {
-            zosmfProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
-        return zosmfProfile.profile;
-    }
-
-    private async getCliProfileManager(type: string): Promise<CliProfileManager> {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            profileManager = await new CliProfileManager({
-                profileRootDirectory: path.join(getZoweDir(), "profiles"),
-                type
-            });
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
+        return newProfile.profile;
     }
 }
-
