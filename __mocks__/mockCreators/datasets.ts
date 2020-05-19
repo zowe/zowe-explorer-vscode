@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import * as globals from "../../src/globals";
 
-export function generateDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
+export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
     const datasetNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
         null, session, undefined, undefined, profile);
     datasetNode.contextValue = globals.DS_SESSION_CONTEXT;
@@ -22,7 +22,7 @@ export function generateDatasetSessionNode(session: imperative.Session, profile:
     return datasetNode;
 }
 
-export function generateDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): any {
+export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): any {
     const testDatasetTree = {
         mSessionNodes: [],
         mFavorites: [],
@@ -60,7 +60,7 @@ export function generateDatasetTree(sessionNode: ZoweDatasetNode, treeView: any)
     return testDatasetTree;
 }
 
-export function generateDatasetAttributes(label: string, context: string) {
+export function createDatasetAttributes(label: string, context: string) {
     return {
         blksz: "6160",
         catnm: "ICFCAT.MV3B.CATALOGA",
