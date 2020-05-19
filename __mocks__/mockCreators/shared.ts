@@ -70,9 +70,9 @@ export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
     };
 }
 
-export function createTextDocument(fileName: string): vscode.TextDocument {
+export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode | ZoweUSSNode): vscode.TextDocument {
     return {
-        fileName: fileName,
+        fileName: sessionNode? `/${sessionNode.label}/${name}` : name,
         uri: null,
         isUntitled: null,
         languageId: null,
