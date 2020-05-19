@@ -72,9 +72,10 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
-    loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
-    loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
+    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)){
+        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
+            context.extensionPath, loggerConfig.log4jsConfig.appenders[appenderName].filename);
+    }
     Logger.initLogger(loggerConfig);
     this.LOG = Logger.getAppLogger();
 }
