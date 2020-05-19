@@ -21,8 +21,6 @@ import * as zowe from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
 
-jest.mock("path");
-
 async function createGlobalMocks() {
     const globalMocks = {
         showQuickPick: jest.fn(),
