@@ -10,6 +10,7 @@
 */
 
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
@@ -41,6 +42,14 @@ export function createUSSNode(session, profile) {
     ussNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
     return ussNode;
+}
+
+export function createUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
+    const zoweUSSNode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null,
+        session, "/", false, profile.name, undefined, profile);
+    zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
+
+    return zoweUSSNode;
 }
 
 export function createFavoriteUSSNode(session, profile) {

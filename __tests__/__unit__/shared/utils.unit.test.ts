@@ -9,20 +9,21 @@
 *                                                                                 *
 */
 
-import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import * as vscode from "vscode";
-import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
-import * as sharedUtils from "../../../src/shared/utils";
-import { Profiles } from "../../../src/Profiles";
-import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { Job } from "../../../src/job/ZoweJobNode";
-import * as globals from "../../../src/globals";
-import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
-import * as zowe from "@zowe/cli";
 import * as utils from "../../../src/utils";
+import * as sharedUtils from "../../../src/shared/utils";
+import * as globals from "../../../src/globals";
+import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
+import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
+import * as vscode from "vscode";
 import * as path from "path";
 import { createIProfile, createISessionWithoutCredentials, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
-import { generateDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { Profiles } from "../../../src/Profiles";
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+
+jest.mock("path");
 
 async function createGlobalMocks() {
     const newVariables = {
@@ -46,7 +47,6 @@ async function createGlobalMocks() {
 
     return newVariables;
 }
-
 
 describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
     it("Checks that labelRefresh subtly alters the label", async () => {
@@ -190,6 +190,8 @@ describe("Test force upload", () => {
 });
 
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
+    afterAll(() => jest.restoreAllMocks());
+
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
             new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
@@ -213,21 +215,24 @@ describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
 });
 
 describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
+    let blockMocks;
     function createBlockMocks() {
-        const newVariables = {
-            session: createISessionWithoutCredentials(),
-            imperativeProfile: createIProfile(),
-            datasetSessionNode: null
+        const session = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode
         };
-
-        newVariables.datasetSessionNode = generateDatasetSessionNode(newVariables.session, newVariables.imperativeProfile);
-
-        return newVariables;
     }
 
-    it("Testing that getDocumentFilePath works", async () => {
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Testing that the add Suffix for datasets works", async () => {
+        blockMocks = createBlockMocks();
         globals.defineGlobals("/test/path/");
-        const blockMocks = createBlockMocks();
 
         let node = new ZoweDatasetNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
@@ -253,6 +258,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
         node = new ZoweDatasetNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml"));
+
         node = new ZoweDatasetNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml"));
