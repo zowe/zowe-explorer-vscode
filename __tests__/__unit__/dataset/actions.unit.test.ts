@@ -1,18 +1,18 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import {
-    generateBasicZosmfSession, generateInstanceOfProfile,
-    generateIProfile,
-    generateISession, generateISessionWithoutCredentials, generateTextDocument,
-    generateTreeView
+    createBasicZosmfSession, createInstanceOfProfile,
+    createIProfile,
+    createISession, createISessionWithoutCredentials, createTextDocument,
+    createTreeView
 } from "../../../__mocks__/mockCreators/shared";
 import {
-    generateDatasetAttributes,
-    generateDatasetSessionNode,
-    generateDatasetTree
+    createDatasetAttributes,
+    createDatasetSessionNode,
+    createDatasetTree
 } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { bindMvsApi, generateMvsApi } from "../../../__mocks__/mockCreators/api";
+import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import * as path from "path";
@@ -69,12 +69,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const imperativeProfile = generateIProfile();
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -84,7 +84,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -183,12 +183,12 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const imperativeProfile = generateIProfile();
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -198,7 +198,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -360,12 +360,12 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const imperativeProfile = generateIProfile();
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -375,7 +375,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -557,12 +557,12 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const imperativeProfile = generateIProfile();
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -572,7 +572,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -620,14 +620,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const sessionWithoutCredentials = generateISessionWithoutCredentials();
-        const imperativeProfile = generateIProfile();
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -639,7 +639,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -657,7 +657,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const getSessionSpy = jest.spyOn(blockMocks.mvsApi, "getSession").mockReturnValueOnce(blockMocks.sessionWithoutCredentials);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -674,7 +674,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(undefined);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([nodeWithoutSession]);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -698,7 +698,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
                 items: []
             }
         });
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -736,7 +736,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -774,7 +774,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         });
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -816,7 +816,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, "Favorites", testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -867,7 +867,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const mockSetEtag = jest.spyOn(childNode, "setEtag").mockImplementation(() => null);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE(MEM)");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, "Favorites", testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -889,7 +889,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
@@ -926,7 +926,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         });
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE(mem)");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE(mem)", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -968,7 +968,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         });
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testDocument = generateTextDocument(blockMocks.datasetSessionNode, "HLQ.TEST.AFILE");
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -982,14 +982,14 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const sessionWithoutCredentials = generateISessionWithoutCredentials();
-        const imperativeProfile = generateIProfile();
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -1001,7 +1001,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -1025,7 +1025,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [generateDatasetAttributes(node.label, node.contextValue)]
+                items: [createDatasetAttributes(node.label, node.contextValue)]
             }
         });
 
@@ -1052,7 +1052,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [generateDatasetAttributes(node.label, node.contextValue)]
+                items: [createDatasetAttributes(node.label, node.contextValue)]
             }
         });
 
@@ -1080,7 +1080,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [generateDatasetAttributes(normalisedLabel, node.contextValue)]
+                items: [createDatasetAttributes(normalisedLabel, node.contextValue)]
             }
         });
 
@@ -1108,7 +1108,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [generateDatasetAttributes(normalisedLabel, node.contextValue)]
+                items: [createDatasetAttributes(normalisedLabel, node.contextValue)]
             }
         });
 
@@ -1150,14 +1150,14 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const sessionWithoutCredentials = generateISessionWithoutCredentials();
-        const imperativeProfile = generateIProfile();
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -1169,7 +1169,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -1244,14 +1244,14 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const sessionWithoutCredentials = generateISessionWithoutCredentials();
-        const imperativeProfile = generateIProfile();
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -1263,7 +1263,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
@@ -1459,14 +1459,14 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const sessionWithoutCredentials = generateISessionWithoutCredentials();
-        const imperativeProfile = generateIProfile();
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const zosmfSession = generateBasicZosmfSession(imperativeProfile);
-        const treeView = generateTreeView();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const mvsApi = generateMvsApi(imperativeProfile);
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
@@ -1478,7 +1478,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
         };
     }
 
