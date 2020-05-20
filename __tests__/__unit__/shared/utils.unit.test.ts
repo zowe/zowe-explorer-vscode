@@ -22,7 +22,7 @@ import * as zowe from "@zowe/cli";
 import * as utils from "../../../src/utils";
 import * as path from "path";
 import { createIProfile, createISessionWithoutCredentials, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
-import { generateDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 
 async function createGlobalMocks() {
     const newVariables = {
@@ -220,7 +220,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             datasetSessionNode: null
         };
 
-        newVariables.datasetSessionNode = generateDatasetSessionNode(newVariables.session, newVariables.imperativeProfile);
+        newVariables.datasetSessionNode = createDatasetSessionNode(newVariables.session, newVariables.imperativeProfile);
 
         return newVariables;
     }
