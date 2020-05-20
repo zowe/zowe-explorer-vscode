@@ -15,7 +15,7 @@ import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
-export function generateIJobObject(): zowe.IJob {
+export function createIJobObject(): zowe.IJob {
     return {
         "jobid": "JOB1234",
         "jobname": "TESTJOB",
@@ -43,7 +43,7 @@ export function generateIJobObject(): zowe.IJob {
     };
 }
 
-export function generateJobsTree(session: imperative.Session, iJob: zowe.IJob, profile: imperative.IProfileLoaded, treeView: any): any {
+export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, profile: imperative.IProfileLoaded, treeView: any): any {
     const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
     jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
