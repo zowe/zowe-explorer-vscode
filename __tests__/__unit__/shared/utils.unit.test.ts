@@ -12,16 +12,182 @@
 import * as utils from "../../../src/utils";
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
+import { Session, IProfileLoaded, Logger } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
-import {
-    generateIProfile,
-    generateISessionWithoutCredentials
-} from "../../../__mocks__/mockCreators/shared";
-import { generateDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createIProfile, createISessionWithoutCredentials, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
+import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { Profiles } from "../../../src/Profiles";
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 
 jest.mock("path");
+
+async function createGlobalMocks() {
+    const newVariables = {
+        session: createISession(),
+        profileOne: createIProfile(),
+        mockLoadNamedProfile: jest.fn()
+    };
+
+    Profiles.createInstance(Logger.getAppLogger());
+    newVariables.mockLoadNamedProfile.mockReturnValue(newVariables.profileOne);
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                getDefaultProfile: {name: "firstName"},
+                loadNamedProfile: newVariables.mockLoadNamedProfile
+            };
+        }),
+        configurable: true
+    });
+
+    return newVariables;
+}
+
+describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
+    it("Checks that labelRefresh subtly alters the label", async () => {
+        const globalMocks = await createGlobalMocks();
+        const rootNode = new ZoweUSSNode(
+            "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, null, undefined);
+        expect(rootNode.label === "gappy");
+        sharedUtils.labelRefresh(rootNode);
+        expect(rootNode.label === "gappy ");
+        sharedUtils.labelRefresh(rootNode);
+        expect(rootNode.label === "gappy");
+    });
+});
+
+describe("Positive testing", () => {
+    it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", async () => {
+        const dsNode = new ZoweDatasetNode(null, null, null, null);
+        const value = sharedUtils.isZoweDatasetTreeNode(dsNode);
+        expect(value).toBeTruthy();
+    });
+    it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", async () => {
+        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const value = sharedUtils.isZoweUSSTreeNode(ussNode);
+        expect(value).toBeTruthy();
+    });
+    it("should pass for  ZoweJobTreeNode with Job node type", async () => {
+        const jobNode = new Job(null, null, null, null, null, null);
+        const value = sharedUtils.isZoweJobTreeNode(jobNode);
+        expect(value).toBeTruthy();
+    });
+});
+
+describe("Negative testing for ZoweDatasetTreeNode", () => {
+    it("should fail with ZoweUSSNode node type", async () => {
+        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const value = sharedUtils.isZoweDatasetTreeNode(ussNode);
+        expect(value).toBeFalsy();
+    });
+    it("should fail with Job node type", async () => {
+        const jobNode = new Job(null, null, null, null, null, null);
+        const value = sharedUtils.isZoweDatasetTreeNode(jobNode);
+        expect(value).toBeFalsy();
+    });
+});
+
+describe("Negative testing for ZoweUSSTreeNode", () => {
+    it("should fail with ZoweDatasetNode node type", async () => {
+        const dsNode = new ZoweDatasetNode(null, null, null, null);
+        const value = sharedUtils.isZoweUSSTreeNode(dsNode);
+        expect(value).toBeFalsy();
+    });
+    it("should fail with Job node type", async () => {
+        const jobNode = new Job(null, null, null, null, null, null);
+        const value = sharedUtils.isZoweUSSTreeNode(jobNode);
+        expect(value).toBeFalsy();
+    });
+});
+
+describe("Negative testing for ZoweJobTreeNode", () => {
+    it("should fail with ZoweDatasetNode node type", async () => {
+        const dsNode = new ZoweDatasetNode(null, null, null, null);
+        const value = sharedUtils.isZoweJobTreeNode(dsNode);
+        expect(value).toBeFalsy();
+    });
+    it("should fail with ZoweUSSNode node type", async () => {
+        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const value = sharedUtils.isZoweJobTreeNode(ussNode);
+        expect(value).toBeFalsy();
+    });
+});
+
+describe("Test force upload", () => {
+    async function createBlockMocks() {
+        const newVariables = {
+            dsNode: new ZoweDatasetNode(null, null, null, null),
+            ussNode: new ZoweUSSNode(null, null, null, null, null),
+            showInformationMessage: jest.fn(),
+            showWarningMessage: jest.fn(),
+            getMvsApi: jest.fn(),
+            getUssApi: jest.fn(),
+            withProgress: jest.fn(),
+            fileResponse: createFileResponse({ etag: null }),
+            ProgressLocation: jest.fn().mockImplementation(() => {
+                return {
+                    Notification: 15
+                };
+            })
+        };
+
+        Object.defineProperty(vscode.window, "showInformationMessage", {value: newVariables.showInformationMessage, configurable: true});
+        Object.defineProperty(vscode.window, "showWarningMessage", {value: newVariables.showWarningMessage, configurable: true});
+        Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {value: newVariables.getMvsApi, configurable: true});
+        Object.defineProperty(ZoweExplorerApiRegister, "getUssApi", {value: newVariables.getUssApi, configurable: true});
+        Object.defineProperty(vscode.window, "withProgress", {value: newVariables.withProgress, configurable: true});
+        Object.defineProperty(vscode, "ProgressLocation", {value: newVariables.ProgressLocation, configurable: true});
+
+        return newVariables;
+    }
+
+    it("should successfully call upload for a USS file if user clicks 'Yes'", async () => {
+        const blockMocks = await createBlockMocks();
+        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
+        blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
+        await sharedUtils.willForceUpload(blockMocks.ussNode, null, null);
+        expect(blockMocks.withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Saving file..."
+            }, expect.any(Function)
+        );
+    });
+
+    it("should successfully call upload for a data set if user clicks 'Yes'", async () => {
+        const blockMocks = await createBlockMocks();
+        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
+        blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        expect(blockMocks.withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Saving data set..."
+            }, expect.any(Function)
+        );
+    });
+
+    it("should cancel upload if user clicks 'No'", async () => {
+        const blockMocks = await createBlockMocks();
+        blockMocks.showInformationMessage.mockResolvedValueOnce("No");
+        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
+    });
+
+    it("should display specific message if Theia is detected", async () => {
+        const blockMocks = await createBlockMocks();
+        Object.defineProperty(globals, "ISTHEIA", {value : true});
+        blockMocks.showInformationMessage.mockResolvedValueOnce("No");
+        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        expect(blockMocks.showWarningMessage.mock.calls[0][0]).toBe(
+            "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.");
+    });
+});
 
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
     afterAll(() => jest.restoreAllMocks());
@@ -51,9 +217,9 @@ describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
 describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
     let blockMocks;
     function createBlockMocks() {
-        const session = generateISessionWithoutCredentials();
-        const imperativeProfile = generateIProfile();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
+        const session = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
 
         return {
             session,

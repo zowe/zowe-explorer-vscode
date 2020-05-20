@@ -13,7 +13,7 @@ import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerApi } from "../../src/api/ZoweExplorerApi";
 
-export function generateJesApi(profile: imperative.IProfileLoaded) {
+export function createJesApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getJesApi(profile);
 }
 export function bindJesApi(api: ZoweExplorerApi.IJes) {
@@ -22,7 +22,7 @@ export function bindJesApi(api: ZoweExplorerApi.IJes) {
     ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
 }
 
-export function generateMvsApi(profile: imperative.IProfileLoaded) {
+export function createMvsApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getMvsApi(profile);
 }
 export function bindMvsApi(api: ZoweExplorerApi.IMvs) {

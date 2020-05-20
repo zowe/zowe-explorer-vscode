@@ -252,15 +252,15 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Checks that labelHack works
+     * Checks that labelRefresh works
      *************************************************************************************************************/
-    it("Checks that labelHack subtley alters the label", async () => {
+    it("Checks that labelRefresh subtley alters the label", async () => {
         const rootNode = new ZoweUSSNode(
             "gappy", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, false, profileOne.name, undefined);
         expect(rootNode.label === "gappy");
-        sharedUtils.labelHack(rootNode);
+        sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy ");
-        sharedUtils.labelHack(rootNode);
+        sharedUtils.labelRefresh(rootNode);
         expect(rootNode.label === "gappy");
     });
 

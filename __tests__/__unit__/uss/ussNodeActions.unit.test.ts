@@ -327,38 +327,6 @@ describe("ussNodeActions", () => {
         });
     });
 
-    describe("deleteUSSNode", () => {
-        it("should delete node if user verified", async () => {
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await ussNode.deleteUSSNode(testUSSTree, "");
-            expect(testUSSTree.refresh).toHaveBeenCalled();
-        });
-        it("should not delete node if user did not verify", async () => {
-            showQuickPick.mockResolvedValueOnce("No");
-            await ussNode.deleteUSSNode(testUSSTree, "");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-        it("should not delete node if user cancelled", async () => {
-            showQuickPick.mockResolvedValueOnce(undefined);
-            await ussNode.deleteUSSNode(testUSSTree, "");
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-        it("should not delete node if an error thrown", async () => {
-            showErrorMessage.mockReset();
-            showQuickPick.mockResolvedValueOnce("Yes");
-            ussFile.mockImplementationOnce(() => {
-                throw (Error("testError"));
-            });
-            try {
-                await ussNode.deleteUSSNode(testUSSTree, "");
-                // tslint:disable-next-line:no-empty
-            } catch (err) {
-            }
-            expect(showErrorMessage.mock.calls.length).toBe(1);
-            expect(testUSSTree.refresh).not.toHaveBeenCalled();
-        });
-    });
-
     describe("uploadFile", () => {
         Object.defineProperty(zowe, "Upload", {value: Upload});
         Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
