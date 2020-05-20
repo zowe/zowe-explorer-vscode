@@ -13,17 +13,17 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Job } from "../../../src/job/ZoweJobNode";
 import {
-    generateISession,
-    generateIProfile,
-    generateTreeView, generateISessionWithoutCredentials, generateTextDocument, generateInstanceOfProfile
-} from "../../../__mocks__/generators/shared";
-import { generateIJobObject, generateJobsTree } from "../../../__mocks__/generators/jobs";
-import { generateJesApi, bindJesApi } from "../../../__mocks__/generators/api";
+    createISession,
+    createIProfile,
+    createTreeView, createISessionWithoutCredentials, createTextDocument, createInstanceOfProfile
+} from "../../../__mocks__/mockCreators/shared";
+import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
-import { generateDatasetSessionNode, generateDatasetTree } from "../../../__mocks__/generators/datasets";
+import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
 
 const activeTextEditorDocument = jest.fn();
@@ -60,17 +60,17 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const treeView = generateTreeView();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
+        const session = createISession();
+        const treeView = createTreeView();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
 
         return {
             session,
             treeView,
             iJob,
             imperativeProfile,
-            testJobsTree: generateJobsTree(session, iJob, imperativeProfile, treeView)
+            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView)
         };
     }
 
@@ -94,17 +94,17 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const treeView = generateTreeView();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
+        const session = createISession();
+        const treeView = createTreeView();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
 
         return {
             session,
             treeView,
             iJob,
             imperativeProfile,
-            testJobsTree: generateJobsTree(session, iJob, imperativeProfile, treeView)
+            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView)
         };
     }
 
@@ -129,9 +129,9 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
+        const session = createISession();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
 
         return {
             session,
@@ -174,9 +174,9 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
+        const session = createISession();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
 
         return {
             session,
@@ -221,10 +221,10 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
-        const jesApi = generateJesApi(imperativeProfile);
+        const session = createISession();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
+        const jesApi = createJesApi(imperativeProfile);
         bindJesApi(jesApi);
 
         return {
@@ -283,9 +283,9 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISession();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
+        const session = createISession();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
 
         return {
             session,
@@ -317,14 +317,14 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISessionWithoutCredentials();
-        const treeView = generateTreeView();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const textDocument = generateTextDocument(datasetSessionNode, "HLQ.TEST.AFILE(mem)");
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const jesApi = generateJesApi(imperativeProfile);
+        const session = createISessionWithoutCredentials();
+        const treeView = createTreeView();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const textDocument = createTextDocument("HLQ.TEST.AFILE(mem)", datasetSessionNode);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const jesApi = createJesApi(imperativeProfile);
         bindJesApi(jesApi);
 
         return {
@@ -333,7 +333,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             iJob,
             imperativeProfile,
             datasetSessionNode,
-            testDatasetTree: generateDatasetTree(datasetSessionNode, treeView),
+            testDatasetTree: createDatasetTree(datasetSessionNode, treeView),
             textDocument,
             profileInstance,
             jesApi
@@ -388,12 +388,12 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
     let blockMocks;
 
     function createBlockMocks() {
-        const session = generateISessionWithoutCredentials();
-        const iJob = generateIJobObject();
-        const imperativeProfile = generateIProfile();
-        const datasetSessionNode = generateDatasetSessionNode(session, imperativeProfile);
-        const profileInstance = generateInstanceOfProfile(imperativeProfile);
-        const jesApi = generateJesApi(imperativeProfile);
+        const session = createISessionWithoutCredentials();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const jesApi = createJesApi(imperativeProfile);
         bindJesApi(jesApi);
 
         return {
