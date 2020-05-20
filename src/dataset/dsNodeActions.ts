@@ -13,7 +13,7 @@ import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
-import { labelHack, refreshTree } from "../shared/utils";
+import { labelRefresh, refreshTree } from "../shared/utils";
 
 /**
  * Refreshes treeView
@@ -24,7 +24,7 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (contextually.isSessionNotFav(sessNode)) {
-            labelHack(sessNode);
+            labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
             refreshTree(sessNode);
