@@ -25,6 +25,7 @@ export function createISession() {
         user: "fake",
         password: "fake",
         hostname: "fake",
+        port: 443,
         protocol: "https",
         type: "basic",
     });
@@ -50,6 +51,24 @@ export function createIProfile(): imperative.IProfileLoaded {
         profile: {
             user: undefined,
             password: undefined
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+}
+
+export function createInvalidIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
         },
         type: "zosmf",
         message: "",
