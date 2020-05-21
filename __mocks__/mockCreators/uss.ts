@@ -48,7 +48,12 @@ export function createUSSNode(session, profile) {
 export function createUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
     const zoweUSSNode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null,
         session, "/", false, profile.name, undefined, profile);
+    zoweUSSNode.fullPath = "test";
     zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
+    const targetIcon = getIconByNode(zoweUSSNode);
+    if (targetIcon) {
+        zoweUSSNode.iconPath = targetIcon.path;
+    }
 
     return zoweUSSNode;
 }
@@ -61,17 +66,4 @@ export function createFavoriteUSSNode(session, profile) {
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";
     return ussNodeF;
-}
-
-export function addSessionNode(theTree, theSession, theProfile) {
-    const newSessNode = new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, theSession, null, false, theProfile.name);
-    theTree.mSessionNodes.push(newSessNode);
-    const sessionIndex = theTree.mSessionNodes.length - 1;
-    theTree.mSessionNodes[sessionIndex].contextValue = globals.USS_SESSION_CONTEXT;
-    theTree.mSessionNodes[sessionIndex].fullPath = "test";
-    const targetIcon = getIconByNode(theTree.mSessionNodes[sessionIndex]);
-    if (targetIcon) {
-        theTree.mSessionNodes[1].iconPath = targetIcon.path;
-    }
-    return theTree;
 }

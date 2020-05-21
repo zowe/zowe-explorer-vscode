@@ -18,7 +18,7 @@ import { createIProfile, createISession, createISessionWithoutCredentials, creat
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { createUSSNode, createFavoriteUSSNode, addSessionNode } from "../../../__mocks__/mockCreators/uss";
+import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
 
 async function createGlobalMocks() {
@@ -96,7 +96,9 @@ async function createGlobalMocks() {
         })
     });
     globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.testTree = addSessionNode(new USSTree(), globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.testTree = new USSTree();
+    const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addHistory("/u/myuser");
 
     return globalMocks;
@@ -335,11 +337,13 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
 describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            testTree2: addSessionNode(new USSTree(), globalMocks.testSession, globalMocks.testProfile),
+            testTree2: new USSTree(),
             testSessionNode: new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
                 null, globalMocks.testSession, null),
             startLength: null
         };
+        const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+        newMocks.testTree2.mSessionNodes.push(ussSessionTestNode);
         newMocks.testTree2.mSessionNodes.push(newMocks.testSessionNode);
         newMocks.startLength = newMocks.testTree2.mSessionNodes.length;
 
@@ -754,8 +758,8 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         // Creating rootNode
         const sessNode = [
             new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, false),
-            new ZoweUSSNode("ussTestSess", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession,
-                            null, false, globalMocks.testProfile.name)
+            new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession,
+                            "/", false, globalMocks.testProfile.name)
         ];
         sessNode[0].contextValue = globals.FAVORITE_CONTEXT;
         sessNode[1].contextValue = globals.USS_SESSION_CONTEXT;
