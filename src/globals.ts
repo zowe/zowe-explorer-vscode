@@ -45,6 +45,7 @@ export const VSAM_CONTEXT = "vsam";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
+export const EXTRA_USS_FAVS: string[] = [];
 
 /**
  * Defines all global variables
