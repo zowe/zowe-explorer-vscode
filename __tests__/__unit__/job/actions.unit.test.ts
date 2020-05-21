@@ -493,3 +493,31 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(mocked(vscode.window.showErrorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
     });
 });
+
+describe("refreshAll", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            iJob: createIJobObject(),
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            treeView: createTreeView(),
+            jobsTree: null,
+            jesApi: null
+        };
+        newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.jobsTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
+        bindJesApi(newMocks.jesApi);
+
+        return newMocks;
+    }
+
+    it("Testing that refreshAllJobs is executed successfully", async () => {
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const submitJclSpy = jest.spyOn(jobActions, "refreshAllJobs");
+        jobActions.refreshAllJobs(blockMocks.jobsTree);
+        expect(submitJclSpy).toHaveBeenCalledTimes(1);
+    });
+});
