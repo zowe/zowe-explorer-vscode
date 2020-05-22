@@ -307,7 +307,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
 
 describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     function createBlockMocks() {
-        let newMocks = {
+        const newMocks = {
             session: createISessionWithoutCredentials(),
             treeView: createTreeView(),
             dsNode: null,
@@ -318,7 +318,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
             datasetSessionNode: null,
             ussSessionNode: null,
             quickPickItem: createQuickPickItem()
-        }
+        };
 
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);

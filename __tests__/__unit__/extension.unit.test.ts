@@ -2232,6 +2232,8 @@ describe("Extension Unit Tests", () => {
                     return {};
                 })
             });
+        });
+    });
 
     it("Testing that that openPS credentials prompt is executed successfully", async () => {
         showQuickPick.mockReset();
