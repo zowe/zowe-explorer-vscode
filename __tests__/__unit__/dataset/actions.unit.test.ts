@@ -83,6 +83,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -93,7 +94,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -195,6 +196,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -205,7 +207,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -370,6 +372,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -380,7 +383,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -565,6 +568,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -575,7 +579,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -628,6 +632,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -640,7 +645,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -988,6 +993,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -1000,7 +1006,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -1154,6 +1160,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -1166,7 +1173,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -1246,6 +1253,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -1258,7 +1266,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
@@ -1459,6 +1467,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -1471,7 +1480,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
             datasetSessionNode,
             mvsApi,
             profileInstance,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView)
+            testDatasetTree
         };
     }
 
