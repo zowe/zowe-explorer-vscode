@@ -15,6 +15,7 @@ import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { USSTree } from "../../src/__mocks__/USSTree";
+import { getIconByNode } from "../../src/generators/icons";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     let newTree = new USSTree();
@@ -47,7 +48,12 @@ export function createUSSNode(session, profile) {
 export function createUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
     const zoweUSSNode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null,
         session, "/", false, profile.name, undefined, profile);
+    zoweUSSNode.fullPath = "test";
     zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
+    const targetIcon = getIconByNode(zoweUSSNode);
+    if (targetIcon) {
+        zoweUSSNode.iconPath = targetIcon.path;
+    }
 
     return zoweUSSNode;
 }
