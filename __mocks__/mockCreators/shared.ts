@@ -25,6 +25,7 @@ export function createISession() {
         user: "fake",
         password: "fake",
         hostname: "fake",
+        port: 1443,
         protocol: "https",
         type: "basic",
     });
@@ -57,7 +58,25 @@ export function createIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView(): vscode.TreeView<ZoweTreeProvider> {
+export function createInvalidIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+}
+
+export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
