@@ -16,7 +16,7 @@ node('ca-jenkins-agent') {
   def PRODUCT_NAME = "Zowe Explorer"
 
   // This is the what should be considered the master branch (for deployment purposes)
-  def MASTER_BRANCH = "v1.5.x"
+  def MASTER_BRANCH = "master"
 
   // Artifactory Details
   def ARTIFACTORY_CREDENTIALS_ID = "zowe.jfrog.io"
