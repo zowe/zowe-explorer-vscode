@@ -190,8 +190,6 @@ describe("Test force upload", () => {
 });
 
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
-    afterAll(() => jest.restoreAllMocks());
-
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
             new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
@@ -227,8 +225,6 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             datasetSessionNode
         };
     }
-
-    afterAll(() => jest.restoreAllMocks());
 
     it("Testing that the add Suffix for datasets works", async () => {
         blockMocks = createBlockMocks();
