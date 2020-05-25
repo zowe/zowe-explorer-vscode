@@ -18,7 +18,7 @@
     "createNewConnection.option.prompt.profileName": "Enter a name for the connection",
     "createNewConnection.enterprofileName": "Profile Name was not supplied. Operation Cancelled",
     "addSession.log.debug.createNewProfile": "User created a new profile",
-    "addZoweSession.log.debug.selectProfile": "User selected profile ",
-    "addZoweSession.log.debug.cancelledSelection": "User cancelled profile selection",
+    "createZoweSession.log.debug.selectProfile": "User selected profile ",
+    "createZoweSession.log.debug.cancelledSelection": "User cancelled profile selection",
     "deactivate.error": "Unable to delete temporary folder. "
 }

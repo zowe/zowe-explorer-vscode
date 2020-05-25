@@ -213,7 +213,7 @@ describe("Extension Unit Tests", () => {
     const showQuickPick = jest.fn();
     const mockCheckCurrentProfile = jest.fn();
     const createQuickPick = jest.fn();
-    const mockAddZoweSession = jest.fn();
+    const mockcreateZoweSession = jest.fn();
     const mockAddHistory = jest.fn();
     const mockGetHistory = jest.fn();
     const mockGetRecall = jest.fn();
@@ -319,7 +319,7 @@ describe("Extension Unit Tests", () => {
             mSessionNodes: [],
             mFavorites: [],
             treeView: new TreeView(),
-            addSession: mockAddZoweSession,
+            addSession: mockcreateZoweSession,
             addHistory: mockAddHistory,
             addRecall: mockAddRecall,
             getHistory: mockGetHistory,
@@ -350,7 +350,7 @@ describe("Extension Unit Tests", () => {
     const USSTree = jest.fn().mockImplementation(() => {
         return {
             mSessionNodes: [],
-            addSession: mockAddZoweSession,
+            addSession: mockcreateZoweSession,
             refresh: mockUSSRefresh,
             addHistory: mockAddHistory,
             getHistory: mockGetHistory,

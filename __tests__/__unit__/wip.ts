@@ -52,13 +52,13 @@
                 })
             });
 
-            await extension.addZoweSession(testTree);
+            await extension.createZoweSession(testTree);
             expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
         });
 
         it("Testing that addSession with supplied profile name", async () => {
             const entered = undefined;
-            const addSession = jest.spyOn(extension, "addZoweSession");
+            const addSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -79,14 +79,14 @@
             });
 
             showInputBox.mockReturnValueOnce("fake");
-            await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
         it("Testing that addSession with existing profile", async () => {
             const entered = "";
-            const addSession = jest.spyOn(extension, "addZoweSession");
+            const addSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -111,13 +111,13 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
         });
 
         it("Testing that addSession with supplied resolveQuickPickHelper", async () => {
             const entered = "fake";
-            const addSession = jest.spyOn(extension, "addZoweSession");
+            const addSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -137,14 +137,14 @@
                 })
             });
 
-            await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
         it("Testing that addSession with undefined profile", async () => {
             const entered = "";
-            const addSession = jest.spyOn(extension, "addZoweSession");
+            const addSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -169,15 +169,15 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
 
         it("Testing that addSession if createNewConnection is invalid", async () => {
             const entered = "fake";
-            const addSession = jest.spyOn(extension, "addZoweSession");
+            const addSession = jest.spyOn(extension, "createZoweSession");
 
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -210,14 +210,14 @@
                 })
             });
 
-            await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
         it("Testing that addSession if listProfile is invalid", async () => {
             const entered = "fake";
-            const addSession = jest.spyOn(extension, "addZoweSession");
+            const addSession = jest.spyOn(extension, "createZoweSession");
 
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -250,8 +250,8 @@
                 })
             });
 
-            await extension.addZoweSession(testTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
     });
@@ -292,7 +292,7 @@
             showInformationMessage.mockReset();
         });
 
-        it("Testing that addZoweSession will cancel if there is no profile name", async () => {
+        it("Testing that createZoweSession will cancel if there is no profile name", async () => {
             showQuickPick.mockReset();
             showInputBox.mockReset();
             showInformationMessage.mockReset();
@@ -315,13 +315,13 @@
                 })
             });
 
-            await extension.addZoweSession(testTree);
+            await extension.createZoweSession(testTree);
             expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
         });
 
-        it("Testing that addZoweSession with supplied profile name", async () => {
+        it("Testing that createZoweSession with supplied profile name", async () => {
             const entered = undefined;
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -342,14 +342,14 @@
             });
 
             showInputBox.mockReturnValueOnce("fake");
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
-        it("Testing that addZoweSession with theia", async () => {
+        it("Testing that createZoweSession with theia", async () => {
             const entered = "";
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
             Object.defineProperty(globals, "ISTHEIA", { get: () => true });
 
             // Assert edge condition user cancels the input path box
@@ -375,15 +375,15 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
             Object.defineProperty(globals, "ISTHEIA", { get: () => false });
         });
 
-        it("Testing that addZoweSession with theia fails if no choice", async () => {
+        it("Testing that createZoweSession with theia fails if no choice", async () => {
             const entered = null;
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
             Object.defineProperty(globals, "ISTHEIA", { get: () => true });
 
             // Assert edge condition user cancels the input path box
@@ -409,16 +409,16 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
             expect(showInformationMessage).toHaveBeenCalled();
 
             Object.defineProperty(globals, "ISTHEIA", { get: () => false });
         });
 
-        it("Testing that addZoweSession with existing profile", async () => {
+        it("Testing that createZoweSession with existing profile", async () => {
             const entered = "";
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -443,13 +443,13 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
         });
 
-        it("Testing that addZoweSession with supplied resolveQuickPickHelper", async () => {
+        it("Testing that createZoweSession with supplied resolveQuickPickHelper", async () => {
             const entered = "fake";
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -469,14 +469,14 @@
                 })
             });
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
-        it("Testing that addZoweSession with undefined profile", async () => {
+        it("Testing that createZoweSession with undefined profile", async () => {
             const entered = "";
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -501,15 +501,15 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
 
-        it("Testing that addZoweSession if createNewConnection is invalid", async () => {
+        it("Testing that createZoweSession if createNewConnection is invalid", async () => {
             const entered = "fake";
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
 
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -542,14 +542,14 @@
                 })
             });
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
-        it("Testing that addZoweSession if listProfile is invalid", async () => {
+        it("Testing that createZoweSession if listProfile is invalid", async () => {
             const entered = "fake";
-            const addZoweSession = jest.spyOn(extension, "addZoweSession");
+            const createZoweSession = jest.spyOn(extension, "createZoweSession");
 
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -582,8 +582,8 @@
                 })
             });
 
-            await extension.addZoweSession(testUSSTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testUSSTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
     });
@@ -609,13 +609,13 @@
                 })
             });
 
-            await extension.addZoweSession(testJobsTree);
+            await extension.createZoweSession(testJobsTree);
             expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
         });
 
         it("Testing that addJobsSession with supplied profile name", async () => {
             const entered = undefined;
-            const addJobsSession = jest.spyOn(extension, "addZoweSession");
+            const addJobsSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -636,14 +636,14 @@
             });
 
             showInputBox.mockReturnValueOnce("fake");
-            await extension.addZoweSession(testJobsTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testJobsTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
         it("Testing that addJobsSession with existing profile", async () => {
             const entered = "";
-            const addJobsSession = jest.spyOn(extension, "addZoweSession");
+            const addJobsSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -668,13 +668,13 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testJobsTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testJobsTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
         });
 
         it("Testing that addJobsSession with supplied resolveQuickPickHelper", async () => {
             const entered = "fake";
-            const addJobsSession = jest.spyOn(extension, "addZoweSession");
+            const addJobsSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -694,14 +694,14 @@
                 })
             });
 
-            await extension.addZoweSession(testJobsTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testJobsTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
         it("Testing that addJobsSession with undefined profile", async () => {
             const entered = "";
-            const addJobsSession = jest.spyOn(extension, "addZoweSession");
+            const addJobsSession = jest.spyOn(extension, "createZoweSession");
 
             // Assert edge condition user cancels the input path box
             createQuickPick.mockReturnValue({
@@ -726,15 +726,15 @@
                 () => Promise.resolve(createQuickPick())
             );
 
-            await extension.addZoweSession(testJobsTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testJobsTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
 
         it("Testing that addJobsSession if createNewConnection is invalid", async () => {
             const entered = "fake";
-            const addJobsSession = jest.spyOn(extension, "addZoweSession");
+            const addJobsSession = jest.spyOn(extension, "createZoweSession");
 
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -767,14 +767,14 @@
                 })
             });
 
-            await extension.addZoweSession(testJobsTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testJobsTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
 
         it("Testing that addJobsSession if listProfile is invalid", async () => {
             const entered = "fake";
-            const addJobsSession = jest.spyOn(extension, "addZoweSession");
+            const addJobsSession = jest.spyOn(extension, "createZoweSession");
 
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -807,8 +807,8 @@
                 })
             });
 
-            await extension.addZoweSession(testJobsTree);
-            expect(extension.addZoweSession).toHaveBeenCalled();
+            await extension.createZoweSession(testJobsTree);
+            expect(extension.createZoweSession).toHaveBeenCalled();
 
         });
     });

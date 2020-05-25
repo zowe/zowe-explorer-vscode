@@ -44,7 +44,7 @@ async function createGlobalMocks() {
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
-describe("Shared Actions Unit Tests - Function addZoweSession", () => {
+describe("Shared Actions Unit Tests - Function createZoweSession", () => {
     let blockMocks;
 
     function createBlockMocks() {
@@ -79,7 +79,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
             .mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
-        await extension.addZoweSession(blockMocks.testDatasetTree);
+        await blockMocks.testDatasetTree.createZoweSession(blockMocks.testDatasetTree);
         expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
     });
     it("Checking that addSession works correctly with supplied profile name", async () => {
@@ -93,7 +93,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         mocked(vscode.window.createQuickPick).mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
-        await extension.addZoweSession(blockMocks.testDatasetTree);
+        await blockMocks.testDatasetTree.createZoweSession(blockMocks.testDatasetTree);
         expect(blockMocks.testDatasetTree.addSession).toBeCalled();
         expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toEqual({ newprofile: "fake" });
     });
@@ -109,7 +109,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
 
-        await extension.addZoweSession(blockMocks.testDatasetTree);
+        await blockMocks.testDatasetTree.createZoweSession(blockMocks.testDatasetTree);
         expect(blockMocks.testDatasetTree.addSession).toBeCalled();
         expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toBe("firstName");
     });
@@ -122,7 +122,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         mocked(vscode.window.createQuickPick).mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
-        await extension.addZoweSession(blockMocks.testDatasetTree);
+        await blockMocks.testDatasetTree.createZoweSession(blockMocks.testDatasetTree);
         expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
     });
     it("Checking that addSession works correctly with undefined profile", async () => {
@@ -137,7 +137,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
 
-        await extension.addZoweSession(blockMocks.testDatasetTree);
+        await blockMocks.testDatasetTree.createZoweSession(blockMocks.testDatasetTree);
         expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
     });
     it("Checking that addSession works correctly if createNewConnection is invalid", async () => {
@@ -152,7 +152,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
-        await extension.addZoweSession(blockMocks.testDatasetTree);
+        await blockMocks.testDatasetTree.createZoweSession(blockMocks.testDatasetTree);
         expect(errorHandlingSpy).toBeCalled();
         expect(errorHandlingSpy.mock.calls[0][0]).toEqual(new Error("create connection error"));
     });
