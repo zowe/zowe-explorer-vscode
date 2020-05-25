@@ -107,8 +107,7 @@ describe("Shared Actions Unit Tests - Function addZoweSession", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
 
         await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).toBeCalled();
-        expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toBe("firstName");
+        expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
     });
     it("Checking that addSession works correctly with supplied resolveQuickPickHelper", async () => {
         createGlobalMocks();
