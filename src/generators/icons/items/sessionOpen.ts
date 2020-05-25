@@ -18,7 +18,7 @@ import { INACTIVE_CONTEXT } from "../../../globals";
 const icon: IIconItem = {
     id: IconId.sessionOpen,
     type: IconHierarchyType.derived,
-    path: getIconPathInResources("folder-root-default-open-active.svg"),
+    path: getIconPathInResources("folder-root-connected-open.svg"),
     check: (node) => {
         const parentCheck = sessionIcon.check(node);
         return parentCheck && node.collapsibleState === TreeItemCollapsibleState.Expanded && node.contextValue !== INACTIVE_CONTEXT;

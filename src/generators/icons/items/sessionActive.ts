@@ -16,7 +16,7 @@ import { isSessionActive } from "../../../shared/context";
 const icon: IIconItem = {
     id: IconId.sessionInactive,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("folder-root-default-closed-active.svg"),
+    path: getIconPathInResources("folder-root-connected-closed.svg"),
     check: (node) => isSessionActive(node)
 };
 
