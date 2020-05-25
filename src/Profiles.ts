@@ -14,15 +14,14 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+
 import * as globals from "./globals";
+
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
-import { USSTree } from "./uss/USSTree";
-import { DatasetTree } from "./dataset/DatasetTree";
-import { ZosJobsProvider } from "./job/ZosJobsProvider";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
@@ -209,16 +208,17 @@ export class Profiles {
         });
         // Filter to list of the APIs available for current tree explorer
         profileNamesList = profileNamesList.filter((profileName) => {
+            let a = Profiles.getInstance();
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
-            if (zoweFileProvider instanceof USSTree) {
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.USS) {
                 const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
                 return ussProfileTypes.includes(profile.type);
             }
-            if (zoweFileProvider instanceof DatasetTree) {
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.Dataset) {
                 const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
                 return mvsProfileTypes.includes(profile.type);
             }
-            if (zoweFileProvider instanceof ZosJobsProvider) {
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.Job) {
                 const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
                 return jesProfileTypes.includes(profile.type);
             }

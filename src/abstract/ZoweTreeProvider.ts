@@ -10,6 +10,7 @@
 */
 
 import * as vscode from "vscode";
+import * as globals from "../globals";
 import { Logger, IProfile, ISession  } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
@@ -31,7 +32,7 @@ export class ZoweTreeProvider {
     protected log: Logger = Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    constructor(protected persistenceSchema: string, public mFavoriteSession: IZoweTreeNode) {
+    constructor(protected persistenceSchema: globals.PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
         this.mHistory = new PersistentFilters(this.persistenceSchema);
     }
 
@@ -104,6 +105,10 @@ export class ZoweTreeProvider {
 
     public getHistory() {
         return this.mHistory.getHistory();
+    }
+
+    public getTreeType() {
+        return this.persistenceSchema;
     }
 
     public async addHistory(criteria: string) {

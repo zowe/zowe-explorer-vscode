@@ -54,6 +54,7 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
         refresh: jest.fn(),
         getTreeView: jest.fn(),
         treeView,
+        getTreeType: jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.Job),
         checkCurrentProfile: jest.fn(),
         refreshElement: jest.fn(),
         getProfiles: jest.fn(),

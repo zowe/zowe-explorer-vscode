@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
+import { PersistenceSchemaEnum } from "../globals";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -155,6 +156,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Retrieves history(Recall) elements from persisted settings.
      */
     getHistory();
+    /**
+     * Returns the type of the tree provider.
+     * @returns {PersistenceSchemaEnum} the type of tree: Dataset, USS, or Job
+     */
+    getTreeType(): PersistenceSchemaEnum;
     /**
      * Deletes a root node from the tree.
      * @param node: A root node representing a session
