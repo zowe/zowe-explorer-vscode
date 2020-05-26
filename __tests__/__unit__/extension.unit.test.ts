@@ -40,7 +40,6 @@ jest.mock("@zowe/imperative");
 jest.mock("fs");
 jest.mock("fs-extra");
 jest.mock("util");
-jest.mock("isbinaryfile");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
 
@@ -169,6 +168,7 @@ describe("Extension Unit Tests", () => {
     const mockReveal = jest.fn();
     const createWebviewPanel = jest.fn();
     const createTreeView = jest.fn();
+    const pathMock = jest.fn();
     const registerCommand = jest.fn();
     const onDidSaveTextDocument = jest.fn();
     const onDidChangeSelection = jest.fn();
@@ -253,6 +253,7 @@ describe("Extension Unit Tests", () => {
     const mockCreateFilterString = jest.fn();
     const withProgress = jest.fn();
     const downloadDataset = jest.fn();
+    const downloadUSSFile = jest.fn();
     const mockInitialize = jest.fn();
     const mockInitializeUSS = jest.fn();
     const mockOpenItemFromPath = jest.fn();
@@ -767,7 +768,7 @@ describe("Extension Unit Tests", () => {
             "zowe.deleteProfile",
             "zowe.cmd.deleteProfile",
             "zowe.uss.deleteProfile",
-            "zowe.jobs.deleteProfile",
+            "zowe.jobs.deleteProfile"
         ];
         expect(actualCommands).toEqual(expectedCommands);
         expect(onDidSaveTextDocument.mock.calls.length).toBe(1);
@@ -868,169 +869,273 @@ describe("Extension Unit Tests", () => {
         await extension.activate(mock);
     });
 
-    it("Testing that createMember correctly executes", async () => {
-        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: [{
-                etag: "123"
-            }]
-        };
-
-        showInputBox.mockResolvedValue("testMember");
-
-        jest.spyOn(mvsApi, "getContents").mockResolvedValueOnce(Promise.resolve(uploadResponse));
-        withProgress.mockImplementation((progLocation, callback) => {
-            return callback();
-        });
-
-        await dsActions.createMember(parent, testTree);
-
-        expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInputBox.mock.calls[0][0]).toEqual({placeHolder: "Name of Member"});
-        expect(bufferToDataSet.mock.calls.length).toBe(1);
-        expect(bufferToDataSet.mock.calls[0][0]).toBe(session);
-        expect(bufferToDataSet.mock.calls[0][1]).toEqual(Buffer.from(""));
-        expect(bufferToDataSet.mock.calls[0][2]).toBe(parent.label + "(testMember)");
-
-        bufferToDataSet.mockRejectedValueOnce(Error("test"));
-        showErrorMessage.mockReset();
-        try {
-            await dsActions.createMember(parent, testTree);
-            // tslint:disable-next-line:no-empty
-        } catch (err) {
-        }
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Unable to create member: test Error: test");
-
-        bufferToDataSet.mockReset();
-
-        showInputBox.mockResolvedValue("");
-
-        await dsActions.createMember(parent, testTree);
-
-        expect(bufferToDataSet.mock.calls.length).toBe(0);
-
-        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.createMember(parent, testTree);
-    });
-
     it("should not change the existing context menus", async () => {
         const packageJsonContent = require("../../package.json");
         expect(packageJsonContent.contributes.menus["view/item/context"]).toMatchSnapshot();
-    });
-
-    it("Testing that refreshPS correctly executes with and without error", async () => {
-        const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-
-        showErrorMessage.mockReset();
-        openTextDocument.mockReset();
-        openTextDocument.mockResolvedValueOnce({isDirty: true});
-        dataSet.mockReset();
-        showTextDocument.mockReset();
-
-        dataSet.mockReturnValueOnce(fileResponse);
-        await dsActions.refreshPS(node);
-
-        expect(dataSet.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls[0][0]).toBe(node.getSession());
-        expect(dataSet.mock.calls[0][1]).toBe(node.label);
-        expect(dataSet.mock.calls[0][2]).toEqual({
-            file: path.join(globals.DS_DIR, node.getSessionNode().label, node.label),
-            returnEtag: true
-        });
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label, node.label ));
-        expect(showTextDocument.mock.calls.length).toBe(2);
-        expect(executeCommand.mock.calls.length).toBe(1);
-
-
-        showInformationMessage.mockReset();
-        openTextDocument.mockResolvedValueOnce({isDirty: false});
-        executeCommand.mockReset();
-
-        await dsActions.refreshPS(node);
-
-        expect(executeCommand.mock.calls.length).toBe(0);
-
-        dataSet.mockRejectedValueOnce(Error("not found"));
-        showInformationMessage.mockReset();
-
-        await dsActions.refreshPS(node);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably deleted.");
-
-        showErrorMessage.mockReset();
-        dataSet.mockReset();
-        dataSet.mockRejectedValueOnce(Error(""));
-
-        await dsActions.refreshPS(child);
-
-        expect(dataSet.mock.calls[0][1]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
-
-        showErrorMessage.mockReset();
-        openTextDocument.mockReset();
-        openTextDocument.mockResolvedValueOnce({isDirty: true});
-        openTextDocument.mockResolvedValueOnce({isDirty: true});
-        dataSet.mockReset();
-        showTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(fileResponse);
-
-        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.refreshPS(node);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls.length).toBe(1);
-
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(fileResponse);
-
-        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.refreshPS(child);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls.length).toBe(1);
-
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(fileResponse);
-
-        parent.contextValue = globals.FAVORITE_CONTEXT;
-        await dsActions.refreshPS(child);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(dataSet.mock.calls.length).toBe(1);
-
-        showErrorMessage.mockReset();
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-
-    });
-
-    it("Call Change File type", async () => {
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, ussNode, null, null);
-        const response: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "132"
-            }
-        };
-        ussFile.mockResolvedValueOnce(response);
-        const res = ussActions.changeFileType(node, false, testUSSTree);
-        expect(res).not.toBeUndefined();
     });
 
     it("Test Get Profile", async () => {
         const ProfNode = new ZoweDatasetNode("[sestest1,sestest2]", vscode.TreeItemCollapsibleState.Expanded, null, session);
         await ProfNode.getProfile();
         expect(ProfNode).not.toBeUndefined();
+    });
+
+    describe("Add Session Unit Test", () => {
+        const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+
+        beforeEach(() => {
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [profileOne, {name: "secondName"}],
+                        defaultProfile: profileOne,
+                        validProfile: ValidProfileEnum.VALID,
+                        checkCurrentProfile: jest.fn(),
+                        createNewConnection: jest.fn(()=>{
+                            return {newprofile: "fake"};
+                        }),
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        loadNamedProfile: mockLoadNamedProfile
+                    };
+                })
+            });
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(qpItem)
+            );
+        });
+
+        afterEach(() => {
+            showQuickPick.mockReset();
+            showInputBox.mockReset();
+            showInformationMessage.mockReset();
+        });
+
+        it("Testing that addSession will cancel if there is no profile name", async () => {
+            const entered = undefined;
+            showInputBox.mockResolvedValueOnce(entered);
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addZoweSession(testTree);
+            expect(showInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
+        });
+
+        it("Testing that addSession with supplied profile name", async () => {
+            const entered = undefined;
+            const addSession = jest.spyOn(extension, "addZoweSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            showInputBox.mockReturnValueOnce("fake");
+            await extension.addZoweSession(testTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addSession with existing profile", async () => {
+            const entered = "";
+            const addSession = jest.spyOn(extension, "addZoweSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: "firstName",
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addZoweSession(testTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+        });
+
+        it("Testing that addSession with supplied resolveQuickPickHelper", async () => {
+            const entered = "fake";
+            const addSession = jest.spyOn(extension, "addZoweSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addZoweSession(testTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addSession with undefined profile", async () => {
+            const entered = "";
+            const addSession = jest.spyOn(extension, "addZoweSession");
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                label: undefined,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const resolveQuickPickHelper = jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
+                () => Promise.resolve(createQuickPick())
+            );
+
+            await extension.addZoweSession(testTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+        });
+
+
+        it("Testing that addSession if createNewConnection is invalid", async () => {
+            const entered = "fake";
+            const addSession = jest.spyOn(extension, "addZoweSession");
+
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        listProfile: jest.fn(()=>{
+                            return {};
+                        }),
+                        loadNamedProfile: mockLoadNamedProfile
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addZoweSession(testTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+        });
+
+        it("Testing that addSession if listProfile is invalid", async () => {
+            const entered = "fake";
+            const addSession = jest.spyOn(extension, "addZoweSession");
+
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        createNewConnection: jest.fn(()=>{
+                            return {};
+                        }),
+                        loadNamedProfile: mockLoadNamedProfile
+                    };
+                })
+            });
+
+            // Assert edge condition user cancels the input path box
+            createQuickPick.mockReturnValue({
+                placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: entered,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                hide: jest.fn(()=>{
+                    return {};
+                }),
+                onDidAccept: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await extension.addZoweSession(testTree);
+            expect(extension.addZoweSession).toHaveBeenCalled();
+
+        });
     });
 
     it("Testing that createFile is executed successfully", async () => {
@@ -1373,472 +1478,6 @@ describe("Extension Unit Tests", () => {
         expect(createFileSpy).toHaveBeenCalled();
 
         dataSetList.mockReset();
-    });
-
-    it("Testing that deleteDataset is executed successfully", async () => {
-        existsSync.mockReset();
-        unlinkSync.mockReset();
-        showQuickPick.mockReset();
-        const deleteSpy = jest.spyOn(mvsApi, "deleteDataSet");
-
-        let node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne);
-        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, undefined, undefined, profileOne);
-        let child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, profileOne);
-        const parentAsFavorite = new ZoweDatasetNode("[sestest]: parent", vscode.TreeItemCollapsibleState.Collapsed,
-                                                     sessNode, null, undefined, undefined, profileOne);
-        parentAsFavorite.contextValue = globals.PDS_FAV_CONTEXT;
-        testTree.mFavorites.push(parentAsFavorite);
-
-        existsSync.mockReturnValueOnce(true);
-        showQuickPick.mockResolvedValueOnce("Yes");
-        findFavoritedNode.mockReturnValue(parentAsFavorite);
-        await dsActions.deleteDataset(node, testTree);
-        expect(deleteSpy.mock.calls.length).toBe(1);
-        expect(deleteSpy.mock.calls[0][0]).toBe(node.label);
-        expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label, node.label ));
-        expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label, node.label ));
-
-        unlinkSync.mockReset();
-        deleteSpy.mockReset();
-        existsSync.mockReturnValueOnce(false);
-        showQuickPick.mockResolvedValueOnce("Yes");
-        await dsActions.deleteDataset(child, testTree);
-
-        expect(unlinkSync.mock.calls.length).toBe(0);
-        expect(deleteSpy.mock.calls[0][0]).toBe(child.getParent().getLabel() + "(" + child.label + ")");
-
-        deleteSpy.mockReset();
-        deleteSpy.mockRejectedValueOnce(Error("not found"));
-        showQuickPick.mockResolvedValueOnce("Yes");
-
-        await expect(dsActions.deleteDataset(node, testTree)).rejects.toEqual(Error("not found"));
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("Unable to find file: " + node.label + " was probably already deleted.");
-
-        deleteSpy.mockReset();
-        showErrorMessage.mockReset();
-        deleteSpy.mockRejectedValueOnce(Error(""));
-        showQuickPick.mockResolvedValueOnce("Yes");
-
-        await expect(dsActions.deleteDataset(node, testTree)).rejects.toEqual(Error(""));
-
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(" Error");
-
-        showQuickPick.mockResolvedValueOnce("No");
-
-        await dsActions.deleteDataset(child, testTree);
-
-        existsSync.mockReturnValueOnce(true);
-        node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne);
-        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.deleteDataset(node, testTree);
-
-        existsSync.mockReturnValueOnce(true);
-        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node, null, undefined, undefined, profileOne);
-        await dsActions.deleteDataset(child, testTree);
-        expect(mockRefreshElement).toHaveBeenCalledWith(parent);
-        expect(mockRefreshElement).toHaveBeenCalledWith(parentAsFavorite);
-    });
-
-    it("Testing that deleteDataset is executed successfully for favorite", async () => {
-        existsSync.mockReset();
-        unlinkSync.mockReset();
-        showQuickPick.mockReset();
-        const deleteSpy = jest.spyOn(mvsApi, "deleteDataSet");
-        mockRemoveFavorite.mockReset();
-
-        const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = globals.FAVORITE_CONTEXT;
-        const nodeAsFavorite = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        nodeAsFavorite.contextValue = globals.FAVORITE_CONTEXT;
-        sessNode.children.push(node, nodeAsFavorite, child);
-        testTree.mFavorites.push(nodeAsFavorite);
-
-        existsSync.mockReturnValueOnce(true);
-        showQuickPick.mockResolvedValueOnce("Yes");
-        findNonFavoritedNode.mockReturnValue(node);
-
-        await dsActions.deleteDataset(child, testTree);
-
-        expect(deleteSpy.mock.calls.length).toBe(1);
-        expect(deleteSpy.mock.calls[0][0]).toBe("HLQ.TEST.DELETE.NODE");
-        expect(mockRemoveFavorite.mock.calls.length).toBe(1);
-        expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.NODE" );
-        expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
-        expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            nodeAsFavorite.getSessionNode().label, "HLQ.TEST.DELETE.NODE" ));
-        expect(findNonFavoritedNode).toBeCalledWith(nodeAsFavorite);
-
-        sessNode.children = [];
-    });
-
-    it("Testing that deleteDataset is executed successfully for pdsf", async () => {
-        existsSync.mockReset();
-        unlinkSync.mockReset();
-        showQuickPick.mockReset();
-        const deleteSpy = jest.spyOn(mvsApi, "deleteDataSet");
-        mockRemoveFavorite.mockReset();
-
-        const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PDS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-
-        existsSync.mockReturnValueOnce(true);
-        showQuickPick.mockResolvedValueOnce("Yes");
-        await dsActions.deleteDataset(child, testTree);
-
-        expect(deleteSpy.mock.calls.length).toBe(1);
-        expect(deleteSpy.mock.calls[0][0]).toBe("HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))");
-        expect(mockRemoveFavorite.mock.calls.length).toBe(1);
-        expect(mockRemoveFavorite.mock.calls[0][0].label).toBe( "[sestest]: HLQ.TEST.DELETE.PDS(MEMBER)" );
-        expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))" ));
-        expect(unlinkSync.mock.calls.length).toBe(1);
-        expect(unlinkSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label, "HLQ.TEST.DELETE.PDS([sestest]: HLQ.TEST.DELETE.PDS(MEMBER))" ));
-    });
-
-    it("Testing that deleteDataset fails if junk passed", async () => {
-        existsSync.mockReset();
-        unlinkSync.mockReset();
-        showQuickPick.mockReset();
-        delDataset.mockReset();
-        mockRemoveFavorite.mockReset();
-        showErrorMessage.mockReset();
-
-        const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, node, null);
-        node.contextValue = "junk";
-
-        existsSync.mockReturnValueOnce(true);
-        showQuickPick.mockResolvedValueOnce("Yes");
-        await expect(dsActions.deleteDataset(child, testTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
-    });
-
-    it("Testing that enterPattern is executed successfully", async () => {
-        showInformationMessage.mockReset();
-        showInputBox.mockReset();
-
-        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node.pattern = "TEST";
-        node.contextValue = globals.DS_SESSION_CONTEXT;
-
-        showInputBox.mockReturnValueOnce("test");
-        await dsActions.enterPattern(node, testTree);
-
-        expect(showInputBox.mock.calls.length).toBe(1);
-        expect(showInputBox.mock.calls[0][0]).toEqual({
-            prompt: "Search data sets by entering patterns: use a comma to separate multiple patterns",
-            value: node.pattern
-        });
-        expect(showInformationMessage.mock.calls.length).toBe(0);
-
-        showInputBox.mockReturnValueOnce("");
-        showInputBox.mockReset();
-        showInformationMessage.mockReset();
-        await dsActions.enterPattern(node, testTree);
-
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("You must enter a pattern.");
-    });
-
-    it("Testing that enterPattern is executed successfully for search favorite", async () => {
-        mockAddZoweSession.mockReset();
-        const favoriteSample = new ZoweDatasetNode("[sestest]: HLQ.TEST", vscode.TreeItemCollapsibleState.None, undefined, null);
-
-        await dsActions.enterPattern(favoriteSample, testTree);
-
-        expect(mockAddZoweSession.mock.calls.length).toBe(1);
-        expect(mockAddZoweSession.mock.calls[0][0]).toEqual("sestest");
-    });
-
-    it("Testing that saveFile is executed successfully", async () => {
-        const testDoc: vscode.TextDocument = {
-            fileName: path.join(globals.DS_DIR, "/sestest/HLQ.TEST.AFILE"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-        const testDoc0: vscode.TextDocument = {
-            fileName: path.join(globals.DS_DIR, "HLQ.TEST.AFILE"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        const testDocLowercase: vscode.TextDocument = {
-            fileName: path.join(globals.DS_DIR, "/sestest/hlq.test.lowercase"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        const testResponse = {
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                items: []
-            }
-        };
-
-        // If session node is not defined, it should take the session from Profile
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            protocol: "https",
-            type: "basic",
-        });
-        // testing if no session is defined (can happen while saving from favorites)
-        const nodeWitoutSession = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
-                                                        null, null, undefined, undefined, profileOne);
-        testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
-        concatChildNodes.mockReturnValueOnce([nodeWitoutSession]);
-        const getSessionSpy = jest.spyOn(mvsApi, "getSession").mockReturnValueOnce(sessionwocred);
-        await dsActions.saveFile(testDoc0, testTree);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getSessionSpy.mock.calls.length).toBe(3);
-        expect(getSessionSpy.mock.results[0].value).toEqual(sessionwocred);
-
-        // testing if no documentSession is found (no session + no profile)
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    loadNamedProfile: () => undefined
-                };
-            })
-        });
-        createBasicZosmfSession.mockReset();
-        testTree.getChildren.mockReset();
-        showErrorMessage.mockReset();
-        testTree.getChildren.mockReturnValueOnce([nodeWitoutSession]);
-        await dsActions.saveFile(testDoc0, testTree);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Couldn't locate session when saving data set!");
-
-        testTree.getChildren.mockReset();
-        createBasicZosmfSession.mockReset();
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [profileOne, {name: "secondName"}],
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None,
-            sessNode, null, undefined, undefined, profileOne), sessNode]);
-        showErrorMessage.mockReset();
-        const dataSetSpy = jest.spyOn(mvsApi, "dataSet").mockImplementationOnce(
-            async () => testResponse as zowe.IZosFilesResponse);
-        await dsActions.saveFile(testDoc, testTree);
-        expect(dataSetSpy.mock.calls.length).toBe(1);
-        expect(dataSetSpy.mock.calls[0][0]).toBe("HLQ.TEST.AFILE");
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Data set failed to save. Data set may have been deleted on mainframe.");
-
-        const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne);
-        sessNode.children.push(node);
-        testResponse.apiResponse.items = [{dsname: "HLQ.TEST.AFILE"}, {dsname: "HLQ.TEST.AFILE(mem)"}];
-        dataSetList.mockReset();
-        pathToDataSet.mockReset();
-        showErrorMessage.mockReset();
-        concatChildNodes.mockReset();
-        const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
-        mockSetEtag.mockReset();
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: [{
-                etag: "123"
-            }]
-        };
-        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        withProgress.mockResolvedValueOnce(uploadResponse);
-        testResponse.success = true;
-        pathToDataSet.mockResolvedValueOnce(testResponse);
-
-        await dsActions.saveFile(testDoc, testTree);
-
-        expect(concatChildNodes.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
-        expect(mockSetEtag).toHaveBeenCalledTimes(1);
-        expect(mockSetEtag).toHaveBeenCalledWith("123");
-
-        dataSetList.mockReset();
-        pathToDataSet.mockReset();
-        showInformationMessage.mockReset();
-        showErrorMessage.mockReset();
-        concatChildNodes.mockReset();
-        mockSetEtag.mockReset();
-        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        withProgress.mockResolvedValueOnce(uploadResponse);
-        testResponse.success = true;
-        pathToDataSet.mockResolvedValueOnce(testResponse);
-
-        // Test if saveFile can handle a lowercase fileName
-        await dsActions.saveFile(testDocLowercase, testTree);
-        expect(concatChildNodes.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toBe("success");
-
-        concatChildNodes.mockReturnValueOnce([sessNode.children[0]]);
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        testResponse.success = false;
-        testResponse.commandResponse = "Save failed";
-        pathToDataSet.mockResolvedValueOnce(testResponse);
-
-        await dsActions.saveFile(testDoc, testTree);
-
-        const testDoc2: vscode.TextDocument = {
-            fileName: path.normalize("/sestest/HLQ.TEST.AFILE"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockReset();
-
-        await dsActions.saveFile(testDoc2, testTree);
-
-        expect(dataSetList.mock.calls.length).toBe(0);
-
-        const testDoc3: vscode.TextDocument = {
-            fileName: path.join(globals.DS_DIR, "/sestest/HLQ.TEST.AFILE(mem)"),
-            uri: null,
-            isUntitled: null,
-            languageId: null,
-            version: null,
-            isDirty: null,
-            isClosed: null,
-            save: null,
-            eol: null,
-            lineCount: null,
-            lineAt: null,
-            offsetAt: null,
-            positionAt: null,
-            getText: null,
-            getWordRangeAtPosition: null,
-            validateRange: null,
-            validatePosition: null
-        };
-
-        dataSetList.mockReset();
-        showErrorMessage.mockReset();
-
-        sessNode.children.push(new ZoweDatasetNode(
-            "HLQ.TEST.AFILE(mem)", vscode.TreeItemCollapsibleState.None, sessNode, null, undefined, undefined, profileOne));
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        testResponse.success = true;
-        concatChildNodes.mockReset();
-        concatChildNodes.mockReturnValueOnce(sessNode.children);
-
-        await dsActions.saveFile(testDoc3, testTree);
-        expect(concatChildNodes.mock.calls.length).toBe(1);
-
-        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null,
-            undefined, undefined, profileOne), sessNode]);
-        dataSetList.mockReset();
-        showErrorMessage.mockReset();
-
-        testTree.getChildren.mockReturnValueOnce([sessNode]);
-        dataSetList.mockResolvedValueOnce(testResponse);
-        concatChildNodes.mockReset();
-        concatChildNodes.mockReturnValueOnce(sessNode.children);
-        testResponse.success = false;
-        testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
-        withProgress.mockResolvedValueOnce(testResponse);
-        dataSet.mockReset();
-        testDoc.getText = jest.fn();
-        const downloadResponse = {
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                etag: ""
-            }
-        };
-        dataSet.mockResolvedValue(downloadResponse);
-
-        await dsActions.saveFile(testDoc, testTree);
-        expect(showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
-        expect(concatChildNodes.mock.calls.length).toBe(1);
     });
 
     it("Testing that openPS is executed successfully", async () => {
@@ -2214,6 +1853,223 @@ describe("Extension Unit Tests", () => {
         const spyopenPS = jest.spyOn(dsActions, "openPS");
         await dsActions.openPS(dsNode, true, testTree);
         expect(spyopenPS).toHaveBeenCalled();
+    });
+
+    describe("Add searchForLoadedItems Tests", () => {
+        it("Testing that filterTreeByString returns the correct array", async () => {
+            const qpItems = [
+                new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF1"),
+                new utils.FilterItem("[sestest]: HLQ.PROD3.STUFF2(TESTMEMB)"),
+                new utils.FilterItem("[sestest]: /test/tree/abc"),
+            ];
+
+            let filteredValues = await sharedUtils.filterTreeByString("testmemb", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[1]]);
+            filteredValues = await sharedUtils.filterTreeByString("sestest", qpItems);
+            expect(filteredValues).toStrictEqual(qpItems);
+            filteredValues = await sharedUtils.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0]]);
+            filteredValues = await sharedUtils.filterTreeByString("HLQ.*.STUFF*", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
+            filteredValues = await sharedUtils.filterTreeByString("/test/tree/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+            filteredValues = await sharedUtils.filterTreeByString("*/abc", qpItems);
+            expect(filteredValues).toStrictEqual([qpItems[2]]);
+        });
+
+        it("Testing that searchForLoadedItems works for a PDS", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+            mockAddHistory.mockReset();
+
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_PDS_CONTEXT);
+            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            testTree.getChildren.mockReturnValue([sessNode]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testNode]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
+                if (arg) {
+                    return Promise.resolve([testNode]);
+                } else {
+                    return Promise.resolve([sessNode]);
+                }
+            });
+
+            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(() => {
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(() => {
+                    return {};
+                }),
+                dispose: jest.fn(() => {
+                    return {};
+                })
+            });
+
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+        });
+
+        it("Testing that searchForLoadedItems works for a member", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+            mockAddHistory.mockReset();
+
+            const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_DS_CONTEXT);
+            testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            const testMember = new ZoweDatasetNode("TESTMEMB", null, testNode, session, globals.DS_MEMBER_CONTEXT);
+            testMember.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            testNode.children.push(testMember);
+            testTree.getChildren.mockReturnValue([sessNode]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(dsActions, "openPS").mockImplementationOnce(() => Promise.resolve(null));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testMember]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testTree, "getChildren").mockImplementation((arg) => {
+                if (arg === testNode) {
+                    return Promise.resolve([testMember]);
+                } else if (arg) {
+                    return Promise.resolve([testNode]);
+                } else {
+                    return Promise.resolve([sessNode]);
+                }
+            });
+            const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF(TESTMEMB)");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(() => {
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(() => {
+                    return {};
+                }),
+                dispose: jest.fn(() => {
+                    return {};
+                })
+            });
+
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+        });
+
+        it("Testing that searchForLoadedItems works for a USS folder", async () => {
+            showQuickPick.mockReset();
+            testUSSTree.getChildren.mockReset();
+
+            const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, "/");
+            testUSSTree.getChildren.mockReturnValue([testUSSTree.mSessionNodes[0]]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([folder]));
+            jest.spyOn(folder, "getProfileName").mockImplementationOnce(() => "sestest");
+            jest.spyOn(testUSSTree.mSessionNodes[0], "getChildren").mockImplementationOnce(() => Promise.resolve([folder]));
+            const qpItem = new utils.FilterItem("[sestest]: /folder");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const openNode = jest.spyOn(folder, "openUSS");
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(openNode).toHaveBeenCalledTimes(0);
+        });
+
+        it("Testing that searchForLoadedItems works for a USS file", async () => {
+            showQuickPick.mockReset();
+            testUSSTree.getChildren.mockReset();
+
+            const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, testUSSTree.mSessionNodes[0], null, "/");
+            const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+            testUSSTree.getChildren.mockReturnValue([testUSSTree.mSessionNodes[0]]);
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([file]));
+            jest.spyOn(testUSSTree.mSessionNodes[0], "getChildren").mockImplementationOnce(() => Promise.resolve([folder]));
+            jest.spyOn(folder, "getChildren").mockImplementationOnce(() => Promise.resolve([file]));
+            const qpItem = new utils.FilterItem("[sestest]: /folder/file");
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: [qpItem],
+                ignoreFocusOut: true,
+                items: [qpItem],
+                value: qpItem,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            const openNode = jest.spyOn(file, "openUSS");
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledWith("/folder/file");
+            expect(openNode).toHaveBeenCalledWith(false, true, testUSSTree);
+        });
+
+        it("Testing that searchForLoadedItems fails when no pattern is entered", async () => {
+            showQuickPick.mockReset();
+            testTree.getChildren.mockReset();
+
+            jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
+            jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(null));
+            createQuickPick.mockReturnValueOnce({
+                placeholder: "Select a filter",
+                activeItems: null,
+                ignoreFocusOut: true,
+                items: null,
+                value: null,
+                show: jest.fn(()=>{
+                    return {};
+                }),
+                onDidChangeValue: jest.fn(()=>{
+                    return {};
+                }),
+                dispose: jest.fn(()=>{
+                    return {};
+                })
+            });
+
+            await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
+
+            expect(mockAddHistory).toBeCalledTimes(0);
+            mockAddHistory.mockReset();
+        });
+        showQuickPick.mockReset();
+        showInputBox.mockReset();
+        showInformationMessage.mockReset();
     });
 
     describe("Add USS Session Unit Test", () => {
@@ -2948,6 +2804,38 @@ describe("Extension Unit Tests", () => {
         });
     });
 
+    it("tests that the prefix is set correctly on the job", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, null, null);
+
+        showInputBox.mockReturnValueOnce("*");
+        await jobActions.setPrefix(node, testJobsTree);
+
+        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls[0][0]).toEqual({
+            prompt: "Prefix"
+        });
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+    });
+
+    it("tests that the owner is set correctly on the job", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+
+        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, iJob, profileOne);
+
+        showInputBox.mockReturnValueOnce("OWNER");
+        await jobActions.setOwner(node, testJobsTree);
+
+        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls[0][0]).toEqual({
+            prompt: "Owner",
+        });
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+    });
+
     it("tests that the spool content is opened in a new document", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -3049,6 +2937,176 @@ describe("Extension Unit Tests", () => {
         await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
         expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
         showErrorMessage.mockReset();
+    });
+
+    it("tests that a stop command is issued", async () => {
+        showInformationMessage.mockReset();
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await jobActions.stopCommand(jobNode);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Command response: fake response"
+        );
+    });
+
+    it("tests that a stop command is not issued", async () => {
+        showInformationMessage.mockReset();
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await jobActions.stopCommand(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests that a modify command is issued", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValue("modify");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await jobActions.modifyCommand(jobNode);
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Command response: fake response"
+        );
+    });
+
+    it("tests that a modify command is not issued", async () => {
+        showInformationMessage.mockReset();
+        showInputBox.mockReset();
+        showInputBox.mockReturnValue("modify");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        await jobActions.modifyCommand(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests that the spool is downloaded", async () => {
+        const fileUri = {fsPath: "/tmp/foo"};
+        showOpenDialog.mockReturnValue([fileUri]);
+        const downloadFileSpy = jest.spyOn(jesApi, "downloadSpoolContent");
+        await jobActions.downloadSpool(jobNode);
+        expect(showOpenDialog).toBeCalled();
+        expect(downloadFileSpy).toBeCalled();
+        expect(downloadFileSpy.mock.calls[0][0]).toEqual(
+            {
+                jobid: jobNode.job.jobid,
+                jobname: jobNode.job.jobname,
+                outDir: fileUri.fsPath
+            }
+        );
+    });
+
+    it("tests that the spool is not downloaded", async () => {
+        const fileUri = {fsPath: "/tmp/foo"};
+        showOpenDialog.mockReturnValue([fileUri]);
+        await jobActions.downloadSpool(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests that the jcl is downloaded", async () => {
+        getJclForJob.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        await jobActions.downloadJcl(jobNode);
+        expect(getJclForJob).toBeCalled();
+        expect(openTextDocument).toBeCalled();
+        expect(showTextDocument).toBeCalled();
+    });
+
+    it("tests that the jcl is not downloaded", async () => {
+        getJclForJob.mockReset();
+        openTextDocument.mockReset();
+        showTextDocument.mockReset();
+        await jobActions.downloadJcl(undefined);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+    });
+
+    it("tests that the jcl is submitted", async () => {
+        showInformationMessage.mockReset();
+        createBasicZosmfSession.mockReturnValue(session);
+        submitJcl.mockReturnValue(iJob);
+        testTree.getChildren.mockReturnValueOnce([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null), sessNode]);
+        await dsActions.submitJcl(testTree);
+        expect(submitJcl).toBeCalled();
+        expect(showInformationMessage).toBeCalled();
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Job submitted [JOB1234](command:zowe.setJobSpool?%5Bnull%2C%22JOB1234%22%5D)");
+    });
+
+    it("tests that a pds member is submitted", async () => {
+        showErrorMessage.mockReset();
+        const rootNode = new ZoweDatasetNode("sessionRoot", vscode.TreeItemCollapsibleState.Collapsed, null, session);
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        const file = new ZoweDatasetNode("file", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        file.contextValue = "file";
+        const subNode = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        const member = new ZoweDatasetNode(globals.DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null);
+        const favorite = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        favorite.contextValue = globals.FAVORITE_CONTEXT;
+        const favoriteSubNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favorite, null);
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        const favoritemember = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null);
+        favoritemember.contextValue = globals.DS_MEMBER_CONTEXT;
+        const gibberish = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null);
+        gibberish.contextValue = "gibberish";
+        const gibberishSubNode = new ZoweDatasetNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, gibberish, null);
+        submitJob.mockReturnValue(iJob);
+
+        // pds member
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        await dsActions.submitMember(member);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("pds(member)");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+
+        // file node
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        await dsActions.submitMember(file);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("file");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22sessionRoot%22%2C%22JOB1234%22%5D)");
+
+        // favorite member
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.submitMember(favoritemember);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL(pds)");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
+
+        // favorite
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        await dsActions.submitMember(favoriteSubNode);
+        expect(submitJob.mock.calls.length).toBe(1);
+        expect(submitJob.mock.calls[0][1]).toEqual("TEST.JCL");
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)");
+
+        // gibberish
+        showInformationMessage.mockReset();
+        submitJob.mockReset();
+        submitJob.mockReturnValue(iJob);
+        try {
+            await dsActions.submitMember(gibberishSubNode);
+        } catch (e) {
+            expect(e.message).toEqual("submitMember() called from invalid node.");
+        }
+        expect(showInformationMessage).not.toBeCalled();
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
     });
 
     it("Tests that temp folder handles default preference", () => {
@@ -3160,270 +3218,68 @@ describe("Extension Unit Tests", () => {
 
     });
 
-    it("Tests the showDSAttributes function", async () => {
-        dataSetList.mockReset();
-        const node = new ZoweDatasetNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const testResponse = {
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                items: [{
-                    blksz:"6160",
-                    catnm:"ICFCAT.MV3B.CATALOGA",
-                    cdate:"2019/05/08",
-                    dev:"3390",
-                    dsname:"AUSER.A1557332.A996850.TEST1",
-                    dsntp:globals.DS_PDS_CONTEXT,
-                    dsorg:"PO",
-                    edate:"***None***",
-                    extx:"1",
-                    lrecl:"80",
-                    migr:"NO",
-                    mvol:"N",
-                    ovf:"NO",
-                    rdate:"2019/07/17",
-                    recfm:"FB",
-                    sizex:"15",
-                    spacu:"CYLINDERS",
-                    used:"6",
-                    vol:"3BP001",
-                    vols:"3BP001"}]
-            }
-        };
-        const emptyResponse = {
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                items: []
-            }
-        };
-        createWebviewPanel.mockReturnValue({
-            webview: {
-                html: ""
-            }
-        });
-        dataSetList.mockReturnValueOnce(testResponse);
-        await dsActions.showDSAttributes(node, testTree);
-        expect(dataSetList.mock.calls.length).toBe(1);
-        expect(dataSetList.mock.calls[0][0]).toBe(node.getSession());
-        expect(dataSetList.mock.calls[0][1]).toBe(node.label);
-        expect(dataSetList.mock.calls[0][2]).toEqual({attributes: true } );
+    it("Testing that the add Suffix for datasets works", async () => {
+        globals.defineGlobals("/test/path/");
+        let node = new ZoweDatasetNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl"));
+        node = new ZoweDatasetNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm"));
+        node = new ZoweDatasetNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl"));
+        node = new ZoweDatasetNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli"));
+        node = new ZoweDatasetNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli"));
+        node = new ZoweDatasetNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh"));
+        node = new ZoweDatasetNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx"));
+        node = new ZoweDatasetNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml"));
 
-        // mock a partitioned data set favorite
-        dataSetList.mockReset();
-        dataSetList.mockReturnValueOnce(testResponse);
-        const node1 = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node1.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.showDSAttributes(node1, testTree);
-        expect(dataSetList.mock.calls.length).toBe(1);
-
-        // mock a classic data set favorite
-        dataSetList.mockReset();
-        dataSetList.mockReturnValueOnce(testResponse);
-        const node2 = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        node2.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.showDSAttributes(node2, testTree);
-        expect(dataSetList.mock.calls.length).toBe(1);
-
-        // mock a response and no attributes
-        showErrorMessage.mockReset();
-        dataSetList.mockReset();
-        dataSetList.mockReturnValueOnce(emptyResponse);
-        await expect(dsActions.showDSAttributes(node1, testTree)).rejects.toEqual(
-            Error("No matching data set names found for query: AUSER.A1557332.A996850.TEST1"));
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual(
-            "Unable to list attributes: No matching data set names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching data set names found for query: AUSER.A1557332.A996850.TEST1");
-    });
-
-    describe("Copying Data Sets", () => {
-        it("Should copy the label of a node to the clipboard", async () => {
-            renameDataSet.mockReset();
-
-            const node = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = globals.DS_SESSION_CONTEXT;
-
-            await dsActions.copyDataSet(node);
-            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
-        });
-        it("Should copy the label of a favourited node to the clipboard", async () => {
-            renameDataSet.mockReset();
-
-            const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = "ds_fav";
-
-            await dsActions.copyDataSet(node);
-            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.DELETE.NODE" }));
-        });
-        it("Should copy the label of a member to the clipboard", async () => {
-            renameDataSet.mockReset();
-
-            const parent = new ZoweDatasetNode("HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-            parent.contextValue = globals.DS_PDS_CONTEXT;
-            child.contextValue = globals.DS_MEMBER_CONTEXT;
-            await dsActions.copyDataSet(child);
-            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
-        });
-        it("Should copy the label of a favourited member to the clipboard", async () => {
-            renameDataSet.mockReset();
-
-            const parent = new ZoweDatasetNode("[sestest]: HLQ.TEST.PARENT.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-            parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-            child.contextValue = globals.DS_MEMBER_CONTEXT;
-            await dsActions.copyDataSet(child);
-            expect(clipboard.readText()).toBe(JSON.stringify({ profileName: "sestest", dataSetName: "HLQ.TEST.PARENT.NODE", memberName: "child" }));
-        });
-    });
-    describe("Pasting Data Sets", () => {
-        it("Should call zowe.Copy.dataSet when pasting to sequential data set", async () => {
-            const copySpy = jest.spyOn(mvsApi, "copyDataSetMember");
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode,
-                                             null, undefined, undefined, profileOne);
-            node.contextValue = globals.DS_SESSION_CONTEXT;
-
-            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: profileOne.name }));
-            await dsActions.pasteDataSet(node, testTree);
-
-            expect(copySpy.mock.calls.length).toBe(1);
-            expect(copySpy).toHaveBeenLastCalledWith(
-                { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-                { dataSetName: "HLQ.TEST.TO.NODE" },
-            );
-        });
-        it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
-            let error;
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode,
-                                            null, undefined, undefined, profileOne);
-            node.contextValue = globals.DS_SESSION_CONTEXT;
-            clipboard.writeText("INVALID");
-            try {
-                await dsActions.pasteDataSet(node, testTree);
-            } catch(err) {
-                error = err;
-            }
-
-            expect(error).toBeTruthy();
-            expect(error.message).toContain("Invalid clipboard. Copy from data set first");
-            expect(copyDataSet.mock.calls.length).toBe(0);
-        });
-        it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
-            showInputBox.mockReset();
-            dataSetGet.mockImplementation(() => {
-                throw Error("Member not found");
-            });
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode,
-                                             null, undefined, undefined, profileOne);
-            node.contextValue = globals.DS_PDS_CONTEXT;
-
-            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await dsActions.pasteDataSet(node, testTree);
-
-            expect(copyDataSet.mock.calls.length).toBe(0);
-        });
-        it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
-            jest.spyOn(mvsApi, "getContents").mockImplementation(() => {
-                throw Error("Member not found");
-            });
-            const spy2 = jest.spyOn(mvsApi, "copyDataSetMember");
-
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None,
-                                             sessNode, null, undefined, undefined, profileOne);
-            node.contextValue = globals.DS_PDS_CONTEXT;
-            showInputBox.mockResolvedValueOnce("mem1");
-
-            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await dsActions.pasteDataSet(node, testTree);
-
-            expect(spy2.mock.calls.length).toBe(1);
-            expect(findFavoritedNode).toHaveBeenLastCalledWith(
-                node,
-            );
-            expect(spy2).toHaveBeenLastCalledWith(
-                { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-                { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
-            );
-        });
-        it("Should throw an error when pasting to a member that already exists", async () => {
-            const testResponse: zowe.IZosFilesResponse = {
-                success: true,
-                commandResponse: "",
-                apiResponse: {
-                    items: [
-                        {member: "MEM1"},
-                        {member: "MEM2"}
-                    ]
-                }
-            };
-            let error;
-            jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = globals.DS_PDS_CONTEXT;
-            showInputBox.mockResolvedValueOnce("mem1");
-
-            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-
-            try {
-                await dsActions.pasteDataSet(node, testTree);
-            } catch(err) {
-                error = err;
-            }
-
-            expect(error).toBeTruthy();
-            expect(error.message).toBe("HLQ.TEST.TO.NODE(mem1) already exists. You cannot replace a member");
-            expect(copyDataSet.mock.calls.length).toBe(0);
-        });
-        it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
-            findNonFavoritedNode.mockReset();
-            const testResponse: zowe.IZosFilesResponse = {
-                success: true,
-                commandResponse: "",
-                apiResponse: {
-                    items: []
-                }
-            };
-            jest.spyOn(mvsApi, "allMembers").mockImplementationOnce(async () => testResponse);
-            const copySpy = jest.spyOn(mvsApi, "copyDataSetMember");
-
-            dataSetGet.mockImplementation(() => {
-                throw Error("Member not found");
-            });
-            const favoritedNode = new ZoweDatasetNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null,
-                undefined, undefined, profileOne);
-            favoritedNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-            const nonFavoritedNode = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null,
-                undefined, undefined, profileOne);
-            findNonFavoritedNode.mockImplementationOnce(() => nonFavoritedNode);
-
-            showInputBox.mockResolvedValueOnce("mem1");
-            clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
-            await dsActions.pasteDataSet(favoritedNode, testTree);
-
-            expect(copySpy.mock.calls.length).toBe(1);
-            expect(findNonFavoritedNode).toHaveBeenLastCalledWith(
-                favoritedNode,
-            );
-            expect(mockRefreshElement).toHaveBeenLastCalledWith(
-                nonFavoritedNode,
-            );
-            expect(copySpy).toHaveBeenLastCalledWith(
-                { dataSetName: "HLQ.TEST.BEFORE.NODE" },
-                { dataSetName: "HLQ.TEST.TO.NODE", memberName: "mem1" },
-            );
-        });
-    });
-    describe("Migrate Data Sets", () => {
-        it("should call HMigrate.hMigrateDataSet on a sequential data set", async () => {
-            const migrateSpy = jest.spyOn(mvsApi, "hMigrateDataSet");
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = globals.DS_DS_CONTEXT;
-
-            await dsActions.hMigrateDataSet(node);
-
-            expect(migrateSpy.mock.calls.length).toBe(1);
-            expect(showInformationMessage).toHaveBeenCalled();
-            expect(migrateSpy).toHaveBeenLastCalledWith("HLQ.TEST.TO.NODE");
-        });
+        node = new ZoweDatasetNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml"));
+        node = new ZoweDatasetNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.TXML"));
+        node = new ZoweDatasetNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml"));
+        node = new ZoweDatasetNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm"));
+        node = new ZoweDatasetNode("AUSER", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER"));
+        node = new ZoweDatasetNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml"));
+        node = new ZoweDatasetNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "XML.AUSER.TEST(member)"));
+        node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml"));
+        node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm"));
+        node = new ZoweDatasetNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy"));
+        node = new ZoweDatasetNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toBe(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc"));
+        node = new ZoweDatasetNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, sessNode, null);
+        expect(sharedUtils.getDocumentFilePath(node.label, node)).toEqual(path.join(path.sep,
+            "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log"));
     });
 });
