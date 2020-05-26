@@ -3891,17 +3891,4 @@ describe("Extension Unit Tests", () => {
         expect(sharedUtils.getDocumentFilePath(node.label, node)).toEqual(path.join(path.sep,
             "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log"));
     });
-    describe("Recall Data Sets", () => {
-        it("should call HRecall.hRecallDataSet on a sequential data set", async () => {
-            const RecallSpy = jest.spyOn(mvsApi, "hRecallDataSet");
-            const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-            node.contextValue = globals.DS_DS_CONTEXT;
-
-            await dsActions.hRecallDataSet(node);
-
-            expect(RecallSpy.mock.calls.length).toBe(1);
-            expect(showInformationMessage).toHaveBeenCalled();
-            expect(RecallSpy).toHaveBeenLastCalledWith("HLQ.TEST.TO.NODE");
-        });
-    });
 });

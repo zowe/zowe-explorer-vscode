@@ -1508,3 +1508,54 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
     });
 });
+
+describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const sessionWithoutCredentials = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const zosmfSession = createBasicZosmfSession(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            sessionWithoutCredentials,
+            zosmfSession,
+            treeView,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            profileInstance,
+            testDatasetTree
+        };
+    }
+
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Checking PS dataset recall", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        const recallSpy = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
+        recallSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: []
+            }
+        });
+
+        await dsActions.hRecallDataSet(node);
+
+        expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+    });
+});
