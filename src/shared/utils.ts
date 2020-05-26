@@ -65,7 +65,7 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * This function does this by adding or removing a blank.
  * @param {TreeItem} node - the node element
  */
-export function labelHack( node: vscode.TreeItem ): void {
+export function labelRefresh( node: vscode.TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
 
