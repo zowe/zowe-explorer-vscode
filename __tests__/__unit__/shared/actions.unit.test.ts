@@ -29,7 +29,7 @@ import { create } from "domain";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { USSTree } from "../../../src/uss/USSTree";
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
