@@ -150,7 +150,7 @@ Array [
   Object {
     "command": "zowe.hRecallDataSet",
     "group": "8_hsmcommands",
-    "when": "view == zowe.explorer && viewItem =~ /^(pds.*|migr.*)/",
+    "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
   },
   Object {
     "command": "zowe.createMember",
