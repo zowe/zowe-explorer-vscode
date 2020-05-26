@@ -26,6 +26,7 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { closeOpenedTextFile } from "../utils/workspace";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -632,7 +633,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
         const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
-        const closedOpenedInstance = await dsActions.closeOpenedTextFile(beforeFullPath);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
         if (afterMemberName) {
@@ -685,7 +686,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
         const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
-        const closedOpenedInstance = await dsActions.closeOpenedTextFile(beforeFullPath);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
         if (afterDataSetName) {

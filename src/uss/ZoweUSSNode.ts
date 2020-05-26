@@ -27,6 +27,7 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { closeOpenedTextFile } from "../utils/workspace";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -273,11 +274,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * helper method to change the node names in one go
-     * @param oldReference string
-     * @param revision string
+     * Helper method to change the node names in one go
+     * @param newFullPath string
      */
     public async rename(newFullPath: string) {
+        const currentFilePath = this.getUSSDocumentFilePath();
+        const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
+
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
@@ -287,6 +290,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.commands.executeCommand("zowe.uss.refreshAll");
         } else {
             await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        }
+
+        if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
     }

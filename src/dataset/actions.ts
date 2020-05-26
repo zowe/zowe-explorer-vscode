@@ -26,6 +26,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZowe
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
+import { closeOpenedTextFile } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -1046,41 +1047,4 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
     }
-}
-
-/**
- * Opens the next tab in editor with given delay
- */
-function openNextTab(delay: number) {
-    return new Promise((resolve) => {
-        vscode.commands.executeCommand("workbench.action.nextEditor");
-        setTimeout(() => resolve(), delay);
-    });
-}
-
-interface IExtTextEditor extends vscode.TextEditor { id: string; }
-
-/**
- * Closes opened file tab using iteration through the tabs
- * This kind of method is caused by incompleteness of VSCode API, which allows to close only currently selected editor
- * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
- */
-export async function closeOpenedTextFile(filePath: string) {
-    const tabSwitchDelay = 200;
-    const openedWindows = [] as IExtTextEditor[];
-
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    while (selectedEditor && !openedWindows.some((window) => window.id === selectedEditor.id)) {
-        openedWindows.push(selectedEditor);
-
-        await openNextTab(tabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-
-        if (selectedEditor && selectedEditor.document.fileName === filePath) {
-            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            return true;
-        }
-    }
-
-    return false;
 }

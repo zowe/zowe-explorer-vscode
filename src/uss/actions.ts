@@ -116,11 +116,11 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
             await ZoweExplorerApiRegister.getUssApi(
                 originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
-            originalNode.rename(newNamePath);
+            await originalNode.rename(newNamePath);
 
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
-                oldFavorite.rename(newNamePath);
+                await oldFavorite.rename(newNamePath);
                 ussFileProvider.addFavorite(oldFavorite);
             }
         } catch (err) {
