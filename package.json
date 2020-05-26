@@ -632,7 +632,7 @@
           "group": "7_hsmcommands"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(pds.*|migr.*)/",
+          "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
           "command": "zowe.hRecallDataSet",
           "group": "8_hsmcommands"
         },
