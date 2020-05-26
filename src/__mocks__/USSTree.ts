@@ -40,6 +40,15 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public addFavorite(node: IZoweUSSTreeNode) {}
 
     /**
+     * @param {string} itemPath
+     * @param {IZoweUSSTreeNode} sessionNode
+     * @memberof USSTree
+     */
+    @MockMethod()
+    // tslint:disable-next-line:no-empty
+    public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode) {}
+
+    /**
      * @param {IZoweUSSTreeNode} node
      * @memberof USSTree
      */
@@ -113,6 +122,16 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     @MockMethod()
     // tslint:disable-next-line:no-empty
     public addRecall(criteria: string) {}
+
+    /**
+     * @returns {string[]}
+     * @memberof USSTree
+     */
+    @MockMethod()
+    // tslint:disable-next-line:no-empty
+    public getRecall(): string[] {
+        return null;
+    }
 
     /**
      * Takes argument of type ZoweUSSNode and returns it converted to a general [TreeItem]
