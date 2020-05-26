@@ -157,3 +157,28 @@ export function createQuickPickContent(entered: any, item: vscode.QuickPickItem)
         dispose: jest.fn()
     };
 }
+
+export function createInputBox(value: string): any {
+    const inputBox: vscode.InputBox = {
+        value: value,
+        title: null,
+        enabled: true,
+        busy: false,
+        show: jest.fn(),
+        hide: jest.fn(),
+        step: null,
+        dispose: jest.fn(),
+        ignoreFocusOut: false,
+        totalSteps: null,
+        placeholder: undefined,
+        password: false,
+        onDidChangeValue: jest.fn(),
+        onDidAccept: jest.fn(),
+        onDidHide: jest.fn(),
+        buttons: [],
+        onDidTriggerButton: jest.fn(),
+        prompt: undefined,
+        validationMessage: undefined
+    };
+    return inputBox;
+}
