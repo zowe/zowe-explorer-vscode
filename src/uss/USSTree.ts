@@ -85,9 +85,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         try {
             let newNamePath = path.join(parentPath + newName);
             newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            const oldNamePath = originalNode.fullPath;
+
+            const hasClosedTab = await originalNode.rename(newNamePath);
             await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
-            originalNode.rename(newNamePath);
+                originalNode.getProfile()).rename(oldNamePath, newNamePath);
+            await originalNode.refreshAndReopen(hasClosedTab);
 
             if (oldFavorite) {
                 this.removeFavorite(oldFavorite);

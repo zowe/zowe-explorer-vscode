@@ -27,6 +27,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
+import { setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -1011,6 +1012,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
+                setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
             localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
@@ -1030,16 +1032,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
                 }
                 vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                 "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-                // Store document in a separate variable, to be used on merge conflict
-                const startPosition = new vscode.Position(0, 0);
-                const endPosition = new vscode.Position(oldDoc.lineCount, 0);
-                const deleteRange = new vscode.Range(startPosition, endPosition);
-                await vscode.window.activeTextEditor.edit((editBuilder) => {
-                    // re-write the old content in the editor view
-                    editBuilder.delete(deleteRange);
-                    editBuilder.insert(startPosition, oldDocText);
-                });
-                await vscode.window.activeTextEditor.document.save();
+                if (vscode.window.activeTextEditor) {
+                    // Store document in a separate variable, to be used on merge conflict
+                    const startPosition = new vscode.Position(0, 0);
+                    const endPosition = new vscode.Position(oldDoc.lineCount, 0);
+                    const deleteRange = new vscode.Range(startPosition, endPosition);
+                    await vscode.window.activeTextEditor.edit((editBuilder) => {
+                        // re-write the old content in the editor view
+                        editBuilder.delete(deleteRange);
+                        editBuilder.insert(startPosition, oldDocText);
+                    });
+                    await vscode.window.activeTextEditor.document.save();
+                }
             }
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);

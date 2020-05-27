@@ -1296,61 +1296,61 @@ describe("DatasetTree Unit Tests", () => {
             expect(renameDataSetMember).toHaveBeenLastCalledWith(child.getSession(), "HLQ.TEST.RENAME.NODE", "mem1", "mem2");
             expect(error).toBe(defaultError);
         });
+    });*/
+});
+
+
+/*************************************************************************************************************
+ * Testing openItemFromPath
+ *************************************************************************************************************/
+describe("openItemFromPath tests", () => {
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
     });
-});*/
 
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
 
-    /*************************************************************************************************************
-     * Testing openItemFromPath
-     *************************************************************************************************************/
-    describe("openItemFromPath tests", () => {
-        const session = new Session({
-            user: "fake",
-            password: "fake",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
+    const testTree = new DatasetTree();
+    const sessionNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
+        null, session, undefined, undefined, profileOne);
+    sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
+    sessionNode.pattern = "test";
+    const pdsNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, pdsNode, null);
+    const dsNode = new ZoweDatasetNode("TEST.DS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
+    dsNode.contextValue = globals.DS_DS_CONTEXT;
 
-        const profileOne: IProfileLoaded = {
-            name: "aProfile",
-            profile: {},
-            type: "zosmf",
-            message: "",
-            failNotFound: false
-        };
-
-        const testTree = new DatasetTree();
-        const sessionNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Collapsed,
-            null, session, undefined, undefined, profileOne);
-        sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
-        sessionNode.pattern = "test";
-        const pdsNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
-        const member = new ZoweDatasetNode("TESTMEMB", vscode.TreeItemCollapsibleState.None, pdsNode, null);
-        const dsNode = new ZoweDatasetNode("TEST.DS", vscode.TreeItemCollapsibleState.Collapsed, sessionNode, null);
-        dsNode.contextValue = globals.DS_DS_CONTEXT;
-
-        beforeEach(async () => {
-            pdsNode.children = [member];
-            sessionNode.children = [pdsNode, dsNode];
-            testTree.mSessionNodes = [sessionNode];
-        });
-
-        it("Should open a DS in the tree", async () => {
-            spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([dsNode]));
-
-            await testTree.openItemFromPath("[testSess]: TEST.DS", sessionNode);
-
-            expect(testTree.getHistory().includes("TEST.DS")).toBe(true);
-        });
-
-        it("Should open a member in the tree", async () => {
-            spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([pdsNode]));
-            spyOn(pdsNode, "getChildren").and.returnValue(Promise.resolve([member]));
-
-            await testTree.openItemFromPath("[testSess]: TEST.PDS(TESTMEMB)", sessionNode);
-
-            expect(testTree.getHistory().includes("TEST.PDS(TESTMEMB)")).toBe(true);
-        });
+    beforeEach(async () => {
+        pdsNode.children = [member];
+        sessionNode.children = [pdsNode, dsNode];
+        testTree.mSessionNodes = [sessionNode];
     });
+
+    it("Should open a DS in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([dsNode]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.DS", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.DS")).toBe(true);
+    });
+
+    it("Should open a member in the tree", async () => {
+        spyOn(sessionNode, "getChildren").and.returnValue(Promise.resolve([pdsNode]));
+        spyOn(pdsNode, "getChildren").and.returnValue(Promise.resolve([member]));
+
+        await testTree.openItemFromPath("[testSess]: TEST.PDS(TESTMEMB)", sessionNode);
+
+        expect(testTree.getHistory().includes("TEST.PDS(TESTMEMB)")).toBe(true);
+    });
+});

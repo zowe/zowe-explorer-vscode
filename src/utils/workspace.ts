@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
-import { workspaceUtilTabSwitchDelay, workspaceUtilMaxEmptyWindowsInTheRow } from "../config/constants";
+import {
+    workspaceUtilTabSwitchDelay,
+    workspaceUtilMaxEmptyWindowsInTheRow,
+    workspaceUtilFileSaveInterval,
+    workspaceUtilFileSaveMaxIterationCount
+} from "../config/constants";
 
 interface IExtTextEditor extends vscode.TextEditor {
     id: string;
@@ -12,6 +17,32 @@ function openNextTab(delay: number) {
     return new Promise((resolve) => {
         vscode.commands.executeCommand("workbench.action.nextEditor");
         setTimeout(() => resolve(), delay);
+    });
+}
+
+let fileWasSaved = false;
+
+export function setFileSaved(status: boolean) {
+    fileWasSaved = status;
+}
+
+export async function awaitForDocumentBeingSaved() {
+    fileWasSaved = false;
+    return new Promise((resolve) => {
+        let count = 0;
+        const saveWaitIntervalId = setInterval(() => {
+            if (workspaceUtilFileSaveMaxIterationCount > count) {
+                count++;
+                if (fileWasSaved) {
+                    fileWasSaved = false;
+                    clearInterval(saveWaitIntervalId);
+                    resolve();
+                }
+            } else {
+                clearInterval(saveWaitIntervalId);
+                resolve();
+            }
+        }, workspaceUtilFileSaveInterval);
     });
 }
 
@@ -72,7 +103,11 @@ export async function closeOpenedTextFile(path: string) {
         selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
         if (selectedEditor && selectedEditor.document.fileName === path) {
-            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+            const isDirty = selectedEditor.document.isDirty;
+            await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+            if (isDirty) {
+                await awaitForDocumentBeingSaved();
+            }
             return true;
         }
     }

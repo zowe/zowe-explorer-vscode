@@ -25,7 +25,9 @@ import { isBinaryFileSync } from "isbinaryfile";
 import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { setFileSaved } from "../utils/workspace";
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -108,15 +110,18 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
     const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
-    const newName = await vscode.window.showInputBox({value: oldLabel});
+    const newName = await vscode.window.showInputBox({ value: oldLabel });
     if (newName && newName !== oldLabel) {
         try {
             let newNamePath = path.join(parentPath + newName);
             newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            const oldNamePath = originalNode.fullPath;
+
+            const hasClosedTab = await originalNode.rename(newNamePath);
             await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
+                originalNode.getProfile()).rename(oldNamePath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
-            await originalNode.rename(newNamePath);
+            await originalNode.refreshAndReopen(hasClosedTab);
 
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
@@ -237,7 +242,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let node: IZoweUSSTreeNode;
     // TODO remove as
     const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
-                                child.getProfileName() && child.getProfileName() === sesName.trim()));
+        child.getProfileName() && child.getProfileName() === sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
@@ -254,8 +259,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     node = nodes.find((zNode) => {
         if (contextually.isText(zNode)) {
             return (zNode.fullPath.trim() === remote);
-        }
-        else {
+        } else {
             return false;
         }
     });
@@ -282,6 +286,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
             node.setEtag(uploadResponse.apiResponse.etag);
+            setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
@@ -310,15 +315,17 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
                 vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                     "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-                const startPosition = new vscode.Position(0, 0);
-                const endPosition = new vscode.Position(oldDocLineCount, 0);
-                const deleteRange = new vscode.Range(startPosition, endPosition);
-                await vscode.window.activeTextEditor.edit((editBuilder) => {
-                    // re-write the old content in the editor view
-                    editBuilder.delete(deleteRange);
-                    editBuilder.insert(startPosition, oldDocText);
-                });
-                await vscode.window.activeTextEditor.document.save();
+                if (vscode.window.activeTextEditor) {
+                    const startPosition = new vscode.Position(0, 0);
+                    const endPosition = new vscode.Position(oldDocLineCount, 0);
+                    const deleteRange = new vscode.Range(startPosition, endPosition);
+                    await vscode.window.activeTextEditor.edit((editBuilder) => {
+                        // re-write the old content in the editor view
+                        editBuilder.delete(deleteRange);
+                        editBuilder.insert(startPosition, oldDocText);
+                    });
+                    await vscode.window.activeTextEditor.document.save();
+                }
             }
         } else {
             globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
