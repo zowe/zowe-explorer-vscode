@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.5.0",
+  "version": "1.5.2",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -150,6 +150,10 @@
       {
         "command": "zowe.hMigrateDataSet",
         "title": "%hMigrateDataSet%"
+      },
+      {
+        "command": "zowe.hRecallDataSet",
+        "title": "%hRecallDataSet%"
       },
       {
         "command": "zowe.pasteDataSet",
@@ -626,6 +630,11 @@
           "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
           "command": "zowe.hMigrateDataSet",
           "group": "7_hsmcommands"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
+          "command": "zowe.hRecallDataSet",
+          "group": "8_hsmcommands"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
