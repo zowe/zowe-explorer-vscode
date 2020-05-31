@@ -30,6 +30,53 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
+// ! bill changes
+interface IDsnValidator {
+    valid: boolean;
+    dsname: string;
+    errors: string[];
+}
+
+const validateQualifierOrMember = (isValid: boolean,qualifier: string): boolean=>{
+    let qualifierValid = true;
+    const testFirstCharacter = /^[A-Z#@$]/.test(qualifier);
+    const hasOnlyValidChars = /^[0-9A-Z@#$-]+$/.test(qualifier);
+    const SMALL_LIMIT = 1;
+    const BIG_LIMIT = 8;
+    if(qualifier.length<SMALL_LIMIT || qualifier.length>BIG_LIMIT){
+        qualifierValid = false;
+    }
+    if(!testFirstCharacter) {
+        qualifierValid = false;
+    }
+    if(!hasOnlyValidChars) {
+        qualifierValid = false;
+    }
+    return isValid && qualifierValid;
+};
+
+const validateDatasetName = (dsname: string): IDsnValidator=>{
+    let valid = true;
+    const errors = [];
+    const SMALL_LIMIT=0;
+    const BIG_LIMIT=44;
+    if(dsname.length===SMALL_LIMIT||dsname.length>BIG_LIMIT){
+        valid=false;
+        errors.push(`Invalid DSN length ${dsname.length}`);
+    }
+    const isAllQualifiersValid = dsname.split(".").reduce(validateQualifierOrMember,true);
+    if(!isAllQualifiersValid){
+        valid=false;
+        errors.push(`Has invalid qualifier`);
+    }
+    const validationResult: IDsnValidator = {
+        valid,
+        dsname,
+        errors
+    };
+    return validationResult;
+};
+
 /**
  * Refreshes treeView
  *
@@ -253,8 +300,35 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 break;
         }
 
-        // get name of data set
-        let name = await vscode.window.showInputBox({placeHolder: localize("dataset.name", "Name of Data Set")});
+        // !bill changes
+        const dsnInputBox = vscode.window.createInputBox();
+        dsnInputBox.ignoreFocusOut = false;
+        dsnInputBox.placeholder = localize("dataset.name.placeholder", "Name of Data Set");
+        dsnInputBox.prompt = localize("dataset.name", "Enter a valid Data Set Name.");
+        dsnInputBox.show();
+
+        async function getDSN(dsnameInputBox){
+            return new Promise<string | undefined>((resolve,reject)=>{
+                dsnameInputBox.onDidHide(()=>{
+                    reject(undefined);
+                    resolve(dsnameInputBox);
+                });
+                dsnameInputBox.onDidAccept(()=>{
+                    let datasetName: string;
+                    datasetName = dsnameInputBox.value.toUpperCase();
+                    const results = validateDatasetName(datasetName);
+                    if(results.valid){
+                        resolve(datasetName);
+                    } else {
+                        const errorMessage: string = `Invalid Data Set Name: \n  *${results.errors.join("\n  *")}`;
+                        dsnameInputBox.validationMessage = localize("dataset.name.invalidName","{0}",errorMessage);
+                    }
+                });
+            });
+        }
+
+        let name = await getDSN(dsnInputBox);
+        dsnInputBox.dispose();
         if (name) {
             name = name.trim().toUpperCase();
 
