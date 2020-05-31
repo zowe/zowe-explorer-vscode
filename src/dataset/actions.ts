@@ -300,7 +300,6 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 break;
         }
 
-        // !bill changes
         const dsnInputBox = vscode.window.createInputBox();
         dsnInputBox.ignoreFocusOut = false;
         dsnInputBox.placeholder = localize("dataset.name.placeholder", "Name of Data Set");
@@ -320,7 +319,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                     if(results.valid){
                         resolve(datasetName);
                     } else {
-                        const errorMessage: string = `Invalid Data Set Name: \n  *${results.errors.join("\n  *")}`;
+                        const errorMessage: string = `Invalid Data Set Name: (${results.errors.join(", ")})`;
                         dsnameInputBox.validationMessage = localize("dataset.name.invalidName","{0}",errorMessage);
                     }
                 });
