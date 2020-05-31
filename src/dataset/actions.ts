@@ -30,7 +30,6 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
-// ! bill changes
 interface IDsnValidator {
     valid: boolean;
     dsname: string;
