@@ -36,7 +36,7 @@ interface IDsnValidator {
     errors: string[];
 }
 
-const validateQualifierOrMember = (isValid: boolean,qualifier: string): boolean=>{
+function validateQualifierOrMember(isValid: boolean,qualifier: string): boolean{
     let qualifierValid = true;
     const testFirstCharacter = /^[A-Z#@$]/.test(qualifier);
     const hasOnlyValidChars = /^[0-9A-Z@#$-]+$/.test(qualifier);
@@ -52,9 +52,9 @@ const validateQualifierOrMember = (isValid: boolean,qualifier: string): boolean=
         qualifierValid = false;
     }
     return isValid && qualifierValid;
-};
+}
 
-const validateDatasetName = (dsname: string): IDsnValidator=>{
+export function validateDatasetName(dsname: string): IDsnValidator{
     let valid = true;
     const errors = [];
     const SMALL_LIMIT=0;
@@ -74,7 +74,7 @@ const validateDatasetName = (dsname: string): IDsnValidator=>{
         errors
     };
     return validationResult;
-};
+}
 
 /**
  * Refreshes treeView

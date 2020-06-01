@@ -1559,3 +1559,20 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
     });
 });
+
+describe("Validate dataset names",()=>{
+    it("Checking Invalid dataset names",()=>{
+        expect(dsActions.validateDatasetName("ABC.9AAA.ZD").valid).toBeFalsy();
+        expect(dsActions.validateDatasetName("ABC.Z%AAA.ZD").valid).toBeFalsy();
+        expect(dsActions.validateDatasetName("ABC..ZD").valid).toBeFalsy();
+        expect(dsActions.validateDatasetName("ABC.9AAA.").valid).toBeFalsy();
+        expect(dsActions.validateDatasetName("ABC.AAAA.ZD9999999").valid).toBeFalsy();
+        expect(dsActions.validateDatasetName("ABCd.AAAA.ZD99999999nkdfnvjkdfnvjdflaksjdfhgt").valid).toBeFalsy();
+    });
+    it("Checking Valid dataset names",()=>{
+        expect(dsActions.validateDatasetName("ABC.#AAA.ZD").valid).toBeTruthy();
+        expect(dsActions.validateDatasetName("ABC.Z-AAA.ZD").valid).toBeTruthy();
+        expect(dsActions.validateDatasetName("ABC.#9.ZD").valid).toBeTruthy();
+        expect(dsActions.validateDatasetName("ABC.AAA").valid).toBeTruthy();
+    });
+});
