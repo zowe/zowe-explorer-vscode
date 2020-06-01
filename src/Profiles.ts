@@ -479,12 +479,12 @@ export class Profiles {
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
 
-        let repromptUser: any;
-        let repromptPass: any;
-        let loadProfile: any;
-        let loadSession: any;
-        let newUser: any;
-        let newPass: any;
+        let repromptUser: string;
+        let repromptPass: string;
+        let loadProfile: IProfileLoaded;
+        let loadSession: ISession;
+        let newUser: string;
+        let newPass: string;
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
