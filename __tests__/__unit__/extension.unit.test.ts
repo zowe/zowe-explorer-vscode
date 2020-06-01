@@ -276,6 +276,8 @@ describe("Extension Unit Tests", () => {
     const getProfileName = jest.fn();
     const HMigrate = jest.fn();
     const hMigrateDataSet = jest.fn();
+    const HRecall = jest.fn();
+    const hRecallDataSet = jest.fn();
     const closeOpenedTextFile = jest.fn();
     let mockClipboardData: string;
     const fileResponse: zowe.IZosFilesResponse = {
@@ -491,6 +493,8 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(zowe, "HMigrate", { value: HMigrate });
     Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
+    Object.defineProperty(zowe, "HRecall", { value: HRecall });
+    Object.defineProperty(HRecall, "dataSet", { value: hRecallDataSet });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard });
     Object.defineProperty(Rename, "dataSetMember", { value: renameDataSetMember });
     Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: getProfileName });
@@ -684,7 +688,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[0][0]).toBe("zowe.explorer");
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
-        expect(registerCommand.mock.calls.length).toBe(76);
+        expect(registerCommand.mock.calls.length).toBe(77);
         registerCommand.mock.calls.forEach((call, i ) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
@@ -720,6 +724,7 @@ describe("Extension Unit Tests", () => {
             "zowe.pasteDataSet",
             "zowe.renameDataSetMember",
             "zowe.hMigrateDataSet",
+            "zowe.hRecallDataSet",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
