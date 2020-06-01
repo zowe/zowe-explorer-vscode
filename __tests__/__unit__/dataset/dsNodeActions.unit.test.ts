@@ -64,7 +64,7 @@ const profileOne: brtimperative.IProfileLoaded = {
 
 function getDSNode() {
     const mParent = new ZoweDatasetNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    const dsNode = new ZoweDatasetNode("sesstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, undefined, undefined, profileOne);
+    const dsNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, undefined, undefined, profileOne);
     dsNode.contextValue = DS_SESSION_CONTEXT;
     dsNode.pattern = "test hlq";
     return dsNode;
@@ -72,7 +72,7 @@ function getDSNode() {
 
 function getFavoriteDSNode() {
     const mParent = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    const dsNodeF = new ZoweDatasetNode("[profile]:sesstest", vscode.TreeItemCollapsibleState.Expanded,
+    const dsNodeF = new ZoweDatasetNode("[sestest]: sestest", vscode.TreeItemCollapsibleState.Expanded,
             mParent, session, undefined, undefined, profileOne);
     mParent.contextValue = FAVORITE_CONTEXT;
     dsNodeF.contextValue = DS_SESSION_CONTEXT + FAV_SUFFIX;

@@ -13,12 +13,25 @@ import * as imperative from "@zowe/imperative";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as path from "path";
-import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
+
+export function createPersistentConfig() {
+    return {
+        persistence: true,
+        get: () => {
+            return {
+                sessions: ["sestest", "profile1", "profile2"],
+                favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"]
+            }
+        },
+        update: jest.fn(()=>{
+            return {};
+        })
+    }
+}
 
 export function createISession() {
     return new imperative.Session({
@@ -42,7 +55,14 @@ export function createISessionWithoutCredentials() {
 }
 
 export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
-    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
+    let i = zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
+    return i;
+}
+
+export function removeNodeFromArray(badNode, array) {
+    array.splice(array.findIndex(
+        (nodeInArray) => badNode.getProfileName() === nodeInArray.getProfileName()
+    ), 1)
 }
 
 export function createIProfile(): imperative.IProfileLoaded {
@@ -67,6 +87,24 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
             port: 1443,
             user: null,
             password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+}
+
+export function createValidIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type : "zosmf",
+            host: "test",
+            port: 1443,
+            user: "test",
+            password: "test",
             rejectUnauthorized: false,
             name: "testName"
         },
@@ -113,7 +151,7 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
-        allProfiles: [{ name: "profile1" }, { name: "profile2" }],
+        allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
         defaultProfile: { name: "profile1" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),

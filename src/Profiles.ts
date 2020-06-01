@@ -207,7 +207,6 @@ export class Profiles {
         });
         // Filter to list of the APIs available for current tree explorer
         profileNamesList = profileNamesList.filter((profileName) => {
-            let a = Profiles.getInstance();
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
             if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.USS) {
                 const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
@@ -706,14 +705,14 @@ export class Profiles {
 
         // Delete from Data Set Favorites
         const favoriteDs = datasetTree.mFavorites;
-        for (let i = favoriteDs.length - 1; i >= 0; i--) {
-            const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
+        datasetTree.mFavorites.forEach((favNode) => {
+            const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
             if (findNode === deleteLabel) {
-                datasetTree.removeFavorite(favoriteDs[i]);
-                favoriteDs[i].dirty = true;
+                datasetTree.removeFavorite(favNode);
+                favNode.dirty = true;
                 datasetTree.refresh();
             }
-        }
+        });
 
         // Delete from Data Set Tree
         datasetTree.mSessionNodes.forEach((sessNode) => {
