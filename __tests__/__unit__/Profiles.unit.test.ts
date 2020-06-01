@@ -1016,8 +1016,9 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         const favoriteLength = blockMocks.testDatasetTree.mFavorites.length;
         const dsNode = new ZoweDatasetNode(
             "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
-        const dsNodeAsFavorite = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`, vscode.TreeItemCollapsibleState.None,
-            blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session, dsNode.contextValue, null, dsNode.getProfile());
+        const dsNodeAsFavorite = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`,
+                                        vscode.TreeItemCollapsibleState.None, blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session,
+                                        dsNode.contextValue, null, dsNode.getProfile());
         dsNode.contextValue = globals.DS_SESSION_CONTEXT;
         blockMocks.testDatasetTree.mSessionNodes.push(dsNode);
         blockMocks.testDatasetTree.addFavorite(dsNodeAsFavorite);
