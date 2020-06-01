@@ -518,6 +518,7 @@ export class Profiles {
             return;
         } else {
             try {
+                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
                 if (rePrompt) {
                     const infoMsg = localize("errorHandling.save.credentials", "Save entered Credentials for future use with ") +
                     `\n${loadProfile.name}\n` +localize("errorHandling.save.credentials2",". Saving Credentials will update the yaml file.");
@@ -526,14 +527,8 @@ export class Profiles {
                             rePrompt = false;
                         }
                     });
-                    // tslint:disable-next-line:no-console
-                    console.log(loadProfile);
                     await this.updateProfile(loadProfile, rePrompt);
-                    await vscode.commands.executeCommand("zowe.refreshAll");
                 }
-                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
-                // tslint:disable-next-line:no-console
-                console.log(updSession.ISession.password);
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
             } catch (error) {
                 await errorHandling(error.message);
@@ -1000,8 +995,6 @@ export class Profiles {
     // ** Functions that Calls Get CLI Profile Manager  */
 
     private async updateProfile(ProfileInfo, rePrompt?: boolean) {
-        // tslint:disable-next-line:no-console
-        console.log(rePrompt);
         if (ProfileInfo.type !== undefined) {
             const profileManager = await this.getCliProfileManager(ProfileInfo.type);
             this.loadedProfile = (await profileManager.load({ name: ProfileInfo.name}));
@@ -1013,16 +1006,12 @@ export class Profiles {
         }
 
         const OrigProfileInfo = this.loadedProfile.profile;
-        // tslint:disable-next-line:no-console
-        console.log(OrigProfileInfo);
         const NewProfileInfo = ProfileInfo.profile;
-        // tslint:disable-next-line:no-console
-        console.log(NewProfileInfo);
 
         const profileArray = Object.keys(this.loadedProfile.profile);
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
-                if (rePrompt === false) {
+                if (!rePrompt) {
                     OrigProfileInfo.user = NewProfileInfo.user;
                     OrigProfileInfo.password = NewProfileInfo.password;
                 }
@@ -1041,10 +1030,6 @@ export class Profiles {
             // profile: OrigProfileInfo as IProfile
             args: OrigProfileInfo as any
         };
-        // tslint:disable-next-line:no-console
-        console.log("updateParms");
-        // tslint:disable-next-line:no-console
-        console.log(updateParms);
         try {
             (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
         } catch (error) {
