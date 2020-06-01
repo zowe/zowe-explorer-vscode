@@ -560,6 +560,7 @@ describe("Profile class unit tests", () => {
 
         showInputBox.mockResolvedValueOnce("fake");
         showInputBox.mockResolvedValueOnce("fake");
+        showInformationMessage.mockResolvedValueOnce(true);
         const res = await profiles.promptCredentials(promptProfile.name, true);
         expect(res).toEqual(["fake", "fake", "fake"]);
         (profiles.loadNamedProfile as any).mockReset();
