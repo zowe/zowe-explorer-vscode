@@ -624,6 +624,7 @@ describe("DatasetTree Unit Tests", () => {
 
         showQuickPick.mockReset();
         showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("HLQ.PROD2.STUFF"));
+        showInputBox.mockReturnValueOnce("HLQ.PROD2.STUFF");
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
 
@@ -679,6 +680,7 @@ describe("DatasetTree Unit Tests", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
         showInputBox.mockReturnValueOnce("HARRY.PROD");
+        showInputBox.mockReturnValueOnce("HARRY.PROD");
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HARRY.PROD");
 
@@ -709,7 +711,9 @@ describe("DatasetTree Unit Tests", () => {
             })
         });
 
+        showInputBox.mockReset();
         showInformationMessage.mockReset();
+        showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
         // Assert choosing the new filter specification but fills in path in QuickPick
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
@@ -733,6 +737,9 @@ describe("DatasetTree Unit Tests", () => {
                 return {};
             })
         });
+
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("HLQ.PROD2.STUFF");
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD2.STUFF");
 
@@ -742,6 +749,31 @@ describe("DatasetTree Unit Tests", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
+
+        // Check that if user edits a filter, the edited string is used, not the original one
+        showQuickPick.mockReset();
+        qpItem = new utils.FilterItem("HLQ.PROD2.STUFF");
+        createQuickPick.mockReturnValueOnce({
+            placeholder: "Select a filter",
+            activeItems: [qpItem],
+            ignoreFocusOut: true,
+            items: [qpItem],
+            value: entered,
+            show: jest.fn(()=>{
+                return {};
+            }),
+            hide: jest.fn(()=>{
+                return {};
+            }),
+            onDidAccept: jest.fn(()=>{
+                return {};
+            })
+        });
+
+        showInputBox.mockReset();
+        showInputBox.mockReturnValueOnce("HLQ.PROD1.STUFF");
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
 
     /*************************************************************************************************************
@@ -913,7 +945,6 @@ describe("DatasetTree Unit Tests", () => {
         showInputBox.mockReturnValueOnce("fake");
 
         await testTree.datasetFilterPrompt(dsNode);
-
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
     });
@@ -964,7 +995,6 @@ describe("DatasetTree Unit Tests", () => {
         });
 
         await testTree.datasetFilterPrompt(dsNode);
-
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
 
     });
@@ -1062,7 +1092,6 @@ describe("DatasetTree Unit Tests", () => {
         });
 
         await testTree.datasetFilterPrompt(dsNode);
-
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
     });
 

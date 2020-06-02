@@ -359,19 +359,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         }
                     }
                 }
-                if (!remotepath) {
-                    // manually entering a search - switch to an input box
-                    const options: vscode.InputBoxOptions = {
-                        prompt: localize("filterPrompt.option.prompt.search",
-                            "Create a new filter"),
-                        value: sessionNode.fullPath
-                    };
-                    // get user input
-                    remotepath = await vscode.window.showInputBox(options);
-                    if (!remotepath || remotepath.length === 0) {
-                        vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
-                        return;
-                    }
+                // manually entering a search - switch to an input box
+                const options: vscode.InputBoxOptions = {
+                    prompt: localize("filterPrompt.option.prompt.search",
+                        "Create a new filter"),
+                    value: remotepath
+                };
+                // get user input
+                remotepath = await vscode.window.showInputBox(options);
+                if (!remotepath || remotepath.length === 0) {
+                    vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
+                    return;
                 }
             } else {
                 // executing search from saved search in favorites
