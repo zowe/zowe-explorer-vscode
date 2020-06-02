@@ -55,8 +55,7 @@ export function createISessionWithoutCredentials() {
 }
 
 export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
-    let i = zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
-    return i;
+    return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
 }
 
 export function removeNodeFromArray(badNode, array) {
