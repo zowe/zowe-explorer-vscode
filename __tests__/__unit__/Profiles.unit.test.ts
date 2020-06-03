@@ -670,6 +670,51 @@ describe("Profiles Unit Tests - Function getSchema", () => {
     });
 });
 
+
+describe("Profiles Unit Tests - Function updateProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            imperativeProfile: createIProfile(),
+            changedImperativeProfile: createIProfile(),
+            profileInfo: null,
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2" };
+        newMocks.profileInfo = newMocks.changedImperativeProfile;
+        Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
+            value: jest.fn(() => {
+                return new Promise((resolve) => { resolve(newMocks.imperativeProfile); });
+            }),
+            configurable: true
+        });
+        Object.defineProperty(globalMocks.mockCliProfileManager, "update", { value: jest.fn(), configurable: true });
+        newMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+
+        return newMocks;
+    }
+
+    it("Tests that updateProfile successfully updates a profile of undefined type", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.profileInfo.type = undefined;
+
+        await blockMocks.profiles.updateProfile(blockMocks.profileInfo);
+        expect(blockMocks.imperativeProfile.profile).toEqual(blockMocks.changedImperativeProfile.profile);
+    });
+
+    it("Tests that updateProfile successfully updates a profile of defined type (zosmf)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        await blockMocks.profiles.updateProfile(blockMocks.profileInfo);
+        expect(blockMocks.imperativeProfile.profile).toEqual(blockMocks.changedImperativeProfile.profile);
+    });
+});
+
 describe("Profiles Unit Tests - Function editSession", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {

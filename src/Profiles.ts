@@ -595,7 +595,6 @@ export class Profiles {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-
         let repromptUser: any;
         let repromptPass: any;
         let loadProfile: any;
