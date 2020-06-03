@@ -520,10 +520,12 @@ export class Profiles {
             try {
                 const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
                 if (rePrompt) {
-                    const infoMsg = localize("errorHandling.save.credentials", "Save entered Credentials for future use with ") +
-                    `\n${loadProfile.name}\n` +localize("errorHandling.save.credentials2",". Saving Credentials will update the yaml file.");
-                    await vscode.window.showInformationMessage(infoMsg, "Save Credentials for Future Use").then((selection) => {
-                        if (selection) {
+                    const button1 = localize("promptCredentials.saveCredentials.button", "Save Credentials for Future Use");
+                    const button2 = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered Credentials for future use with {0}. Saving Credentials will update the yaml file.", loadProfile.name);
+                    // `\n${loadProfile.name}\n` +localize("promptCredentials.infoMsg.credentials2","");
+                    await vscode.window.showInformationMessage(infoMsg, ...[button1, button2]).then((selection) => {
+                        if (selection === button1) {
                             rePrompt = false;
                         }
                     });

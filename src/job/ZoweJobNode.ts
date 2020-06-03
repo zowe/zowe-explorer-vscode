@@ -204,6 +204,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJobsByOwnerAndPrefix(owner, prefix);
             } catch (error) {
                 await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+                await vscode.commands.executeCommand("zowe.refreshAllJobs");
             }
         }
         return jobsInternal;

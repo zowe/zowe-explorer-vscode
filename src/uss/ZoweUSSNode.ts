@@ -154,7 +154,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
-            errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
