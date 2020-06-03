@@ -777,7 +777,7 @@ export class Profiles {
             if (filteredProfile === undefined) {
                 try {
                     const profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
-                    if (profileStatus) {
+                    if (profileStatus === "active") {
                         filteredProfile = {
                             status: true,
                             name: theProfile.name
@@ -785,6 +785,7 @@ export class Profiles {
                         this.profilesForValidation.push(filteredProfile);
                     }
                 } catch (error) {
+                    await errorHandling(error);
                     filteredProfile = {
                         status: false,
                         name: theProfile.name
