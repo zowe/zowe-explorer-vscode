@@ -670,7 +670,6 @@ describe("Profiles Unit Tests - Function getSchema", () => {
     });
 });
 
-
 describe("Profiles Unit Tests - Function updateProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
