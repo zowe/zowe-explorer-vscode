@@ -258,14 +258,14 @@ Array [
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
   },
   Object {
-    "command": "zowe.hMigrateDataSet",
-    "group": "7_hsmCommands",
-    "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
+    "command": "zowe.hRecallDataSet",
+    "group": "7_hsmCommands@0",
+    "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
   },
   Object {
-    "command": "zowe.hRecallDataSet",
-    "group": "8_hsmCommands",
-    "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
+    "command": "zowe.hMigrateDataSet",
+    "group": "7_hsmCommands@1",
+    "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
   },
   Object {
     "command": "zowe.refreshJobsServer",
