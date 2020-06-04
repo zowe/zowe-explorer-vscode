@@ -19,9 +19,8 @@ import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-
 import * as nls from "vscode-nls";
-import { Profiles } from "../Profiles";
+
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -214,8 +213,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, {attributes: true}));
             }
         } catch (err) {
+            try{
             await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
             await vscode.commands.executeCommand("zowe.refreshAll");
+            } catch (err) {
+                await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            }
         }
         return responses;
     }

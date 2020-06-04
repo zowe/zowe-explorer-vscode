@@ -1105,9 +1105,7 @@ describe("DatasetTree Unit Tests", () => {
         await utils.errorHandling(error, label);
 
         expect(showErrorMessage.mock.calls.length).toEqual(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
-        `\n${label}\n` +
-        " are valid or this may lead to a lock-out.");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
     });
 
     it("tests utils error handling USS", async () => {
@@ -1122,9 +1120,7 @@ describe("DatasetTree Unit Tests", () => {
         await utils.errorHandling(error, label);
 
         expect(showErrorMessage.mock.calls.length).toEqual(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
-        `\n${label}\n` +
-        " are valid or this may lead to a lock-out.");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
     });
 
     it("tests utils error handling: Theia", async () => {
@@ -1143,9 +1139,7 @@ describe("DatasetTree Unit Tests", () => {
         await utils.errorHandling(error, label);
 
         expect(showErrorMessage.mock.calls.length).toEqual(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Invalid Credentials. Please ensure the username and password for " +
-        `\n${label}\n` +
-        " are valid or this may lead to a lock-out.");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
     });
 
     describe("Renaming Data Sets", () => {
