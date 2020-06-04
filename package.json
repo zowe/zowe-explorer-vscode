@@ -742,14 +742,14 @@
           "group": "6_modification@5"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
-          "command": "zowe.hMigrateDataSet",
-          "group": "7_hsmCommands"
-        },
-        {
           "when": "view == zowe.explorer && viewItem =~ /^migr.*/",
           "command": "zowe.hRecallDataSet",
-          "group": "8_hsmCommands"
+          "group": "7_hsmCommands@0"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
+          "command": "zowe.hMigrateDataSet",
+          "group": "7_hsmCommands@1"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
