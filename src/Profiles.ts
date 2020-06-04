@@ -480,7 +480,7 @@ export class Profiles {
 
         try {
             for (const profile of this.allProfiles) {
-                if (profile.name === newProfileName) {
+                if (profile.name.toLowerCase() === profileName.toLowerCase()) {
                     vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
                         "Profile name already exists. Please create a profile using a different name"));
                     return undefined;

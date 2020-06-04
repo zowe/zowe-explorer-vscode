@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils";
-import { labelHack, refreshTree } from "../shared/utils";
+import { labelRefresh, refreshTree } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
@@ -34,7 +34,7 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
     await Profiles.getInstance().refresh();
     jobsProvider.mSessionNodes.forEach((jobNode) => {
         if (contextually.isSession(jobNode)) {
-            labelHack(jobNode);
+            labelRefresh(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
             refreshTree(jobNode);
