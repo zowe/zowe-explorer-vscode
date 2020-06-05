@@ -17,7 +17,7 @@ import * as zowe from "@zowe/cli";
 import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as profileLoader from "../../src/Profiles";
 import * as utils from "../../src/utils";
-import { labelHack } from "../../src/shared/utils";
+import { labelRefresh } from "../../src/shared/utils";
 import * as globals from "../../src/globals";
 import { Job } from "../../src/job/ZoweJobNode";
 import { ZosJobsProvider, createJobsTree } from "../../src/job/ZosJobsProvider";
@@ -99,6 +99,20 @@ describe("Zos Jobs Unit Tests", () => {
             protocol: "https",
             type: "basic",
         });
+
+        const profileLoad: IProfileLoaded = {
+            name: "fake",
+            profile: {
+                host: "fake",
+                port: 999,
+                user: "fake",
+                password: "fake",
+                rejectUnauthorize: false
+            },
+            type: "zosmf",
+            failNotFound: true,
+            message: "fake"
+        };
 
         const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
         Object.defineProperty(profileLoader, "loadNamedProfile", {
@@ -309,7 +323,7 @@ describe("Zos Jobs Unit Tests", () => {
             job.prefix = "zowe*";
             expect(job.prefix).toEqual("zowe*");
             // reset
-            labelHack(job);
+            labelRefresh(job);
             job.children = [];
             job.dirty = true;
         });
@@ -323,7 +337,7 @@ describe("Zos Jobs Unit Tests", () => {
             job.searchId = "JOB12345";
             expect(job.searchId).toEqual("JOB12345");
             // reset
-            labelHack(job);
+            labelRefresh(job);
             job.children = [];
             job.dirty = true;
         });
@@ -832,6 +846,29 @@ describe("Zos Jobs Unit Tests", () => {
             expect(spoolFiles.length).toBe(1);
             expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
             expect(spoolFiles[0].owner).toEqual("fake");
+        });
+
+        /*************************************************************************************************************
+         * Test the editSession command
+         *************************************************************************************************************/
+        it("Test the editSession command ", async () => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        getDefaultProfile: jest.fn(),
+                        editSession: jest.fn(() => {
+                            return profileLoad;
+                        }),
+                    };
+                })
+            });
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const checkSession = jest.spyOn(testJobsProvider, "editSession");
+            testJobsProvider.editSession(jobNode);
+            expect(checkSession).toHaveBeenCalled();
         });
     });
 

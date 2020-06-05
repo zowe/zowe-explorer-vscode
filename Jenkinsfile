@@ -68,22 +68,6 @@ node('ca-jenkins-agent') {
         // Create a dummy TestProfileData in order to build the source code. See issue #556
         sh "cp resources/testProfileData.example.ts resources/testProfileData.ts"
         sh "npm run build"
-      },
-      archiveOperation: {
-        // Gather details for build archives
-        def vscodePackageJson = readJSON file: "package.json"
-        def date = new Date()
-        String buildDate = date.format("yyyyMMddHHmmss")
-        def fileName = "vscode-extension-for-zowe-v${vscodePackageJson.version}-${BRANCH_NAME}-${buildDate}"
-
-        // Generate a vsix for archiving purposes
-        sh "npx vsce package -o ${fileName}.vsix"
-
-        // Upload vsix to Artifactory
-        withCredentials([usernamePassword(credentialsId: ARTIFACTORY_CREDENTIALS_ID, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          def uploadUrlArtifactory = "https://zowe.jfrog.io/zowe/libs-snapshot-local/org/zowe/vscode/${fileName}.vsix"
-          sh "curl -u ${USERNAME}:${PASSWORD} --data-binary \"@${fileName}.vsix\" -H \"Content-Type: application/octet-stream\" -X PUT ${uploadUrlArtifactory}"
-        }
       }
   )
 
@@ -170,7 +154,7 @@ node('ca-jenkins-agent') {
         def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
         sh "npm install ssp-dos2unix"
         sh "node ./scripts/d2uChangelog.js"
-        def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | tr \\\" \\` | sed -z 's/\\n/\\\\n/g'").trim()
+        def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'").trim()
 
         // Gather details about the GitHub APIs used to publish a release
         def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"

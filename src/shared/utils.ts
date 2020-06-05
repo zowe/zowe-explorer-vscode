@@ -9,12 +9,19 @@
 *                                                                                 *
 */
 
+// Generic utility functions related to all node types. See ./src/utils.ts for other utility functions.
+
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { IZoweTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
+import { IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { Profiles } from "../Profiles";
-import { ISession } from "@zowe/imperative";
+import { ISession, IProfileLoaded } from "@zowe/imperative";
+import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { IUploadOptions } from "@zowe/cli";
+
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
@@ -58,7 +65,7 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * This function does this by adding or removing a blank.
  * @param {TreeItem} node - the node element
  */
-export function labelHack( node: vscode.TreeItem ): void {
+export function labelRefresh( node: vscode.TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
 
@@ -187,4 +194,94 @@ export function getProfile(node: IZoweTreeNode) {
         profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));
     }
     return profile;
+}
+
+
+/**
+ * Function that rewrites the document in the active editor thus marking it dirty
+ * @param {vscode.TextDocument} doc - document to rewrite
+ * @returns void
+ */
+
+export async function markFileAsDirty(doc: vscode.TextDocument): Promise<void> {
+    const docText = doc.getText();
+    const startPosition = new vscode.Position(0, 0);
+    const endPosition = new vscode.Position(doc.lineCount, 0);
+    const deleteRange = new vscode.Range(startPosition, endPosition);
+    vscode.window.activeTextEditor.edit((editBuilder) => {
+        editBuilder.delete(deleteRange);
+        editBuilder.insert(startPosition, docText);
+    });
+}
+
+
+/**
+ * Function that will forcefully upload a file and won't check for matching Etag
+ */
+export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+                                      doc: vscode.TextDocument,
+                                      remotePath: string,
+                                      profile?: IProfileLoaded,
+                                      binary?: boolean,
+                                      returnEtag?: boolean): Promise<void> {
+    // Upload without passing the etag to force upload
+    const uploadOptions: IUploadOptions = {
+        returnEtag: true
+    };
+
+    // setup to handle both cases (dataset & USS)
+    let title: string;
+    if (isZoweDatasetTreeNode(node)) {
+        title = localize("saveFile.response.save.title", "Saving data set...");
+    } else {
+        title = localize("saveUSSFile.response.title", "Saving file...");
+    }
+    if (globals.ISTHEIA) {
+        vscode.window.showWarningMessage(localize("saveFile.error.theiaDetected", "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."));
+    }
+    vscode.window.showInformationMessage(localize("saveFile.info.confirmUpload","Would you like to overwrite the remote file?"),
+    localize("saveFile.overwriteConfirmation.yes", "Yes"),
+    localize("saveFile.overwriteConfirmation.no", "No"))
+    .then(async (selection) => {
+        if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
+            const uploadResponse = vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title
+            }, () => {
+                if (isZoweDatasetTreeNode(node)) {
+                    return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
+                        remotePath,
+                        uploadOptions);
+                } else {
+                    return ZoweExplorerApiRegister.getUssApi(profile).putContents(
+                        doc.fileName, remotePath, binary, null, null, returnEtag);
+                    }
+            });
+            uploadResponse.then((response) => {
+                if (response.success) {
+                    vscode.window.showInformationMessage(response.commandResponse);
+                    if (node) {
+                        node.setEtag(response.apiResponse[0].etag);
+                    }
+                }
+            });
+        } else {
+            vscode.window.showInformationMessage("Upload cancelled.");
+            await markFileAsDirty(doc);
+        }
+    });
+}
+
+// Type guarding for current IZoweNodeType.
+// Makes it possible to have multiple types in a function signature, but still be able to use type specific code inside the function definition
+export function isZoweDatasetTreeNode(node: IZoweNodeType): node is IZoweDatasetTreeNode {
+    return (node as IZoweDatasetTreeNode).pattern !== undefined;
+}
+
+export function isZoweUSSTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweUSSTreeNode {
+    return (node as IZoweUSSTreeNode).openUSS !== undefined;
+}
+
+export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode): node is IZoweJobTreeNode {
+    return (node as IZoweJobTreeNode).job !== undefined;
 }

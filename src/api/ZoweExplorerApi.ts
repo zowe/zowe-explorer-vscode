@@ -11,6 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session } from "@zowe/imperative";
+import { TreeItem } from "vscode";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -283,12 +284,22 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
-         * Migrates a data set member.
+         * Migrates a data set.
          *
          * @param {string} dataSetName
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         hMigrateDataSet(
+            dataSetName: string,
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Recalls a data set.
+         *
+         * @param {string} dataSetName
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        hRecallDataSet(
             dataSetName: string,
         ): Promise<zowe.IZosFilesResponse>;
 
@@ -419,6 +430,41 @@ export namespace ZoweExplorerApi {
     }
 
     /**
+     * This interface can be used by other VS Code Extensions to access an alternative
+     * profile types that can be employed in conjunction with the primary profile to provide
+     * alternative support.
+     *
+     */
+    export interface IApiExplorerExtender {
+        /**
+         * Used by other VS Code Extensions to access the primary profile.
+         *
+         * @param primaryNode represents the Tree item that is being used
+         * @return The requested profile
+         *
+         */
+        getProfile(primaryNode: TreeItem): IProfileLoaded;
+
+        /**
+         * Used by other VS Code Extensions to access an alternative
+         * profile types that can be employed in conjunction with the primary
+         * profile to provide alternative support.
+         *
+         * @param primaryNode represents the Tree item that is being used
+         * @return The requested profile
+         */
+        getLinkedProfile(primaryNode: TreeItem, type: string): Promise<IProfileLoaded>;
+
+        /**
+         * After an extenders registered all its API extensions it
+         * might want to request that profiles should get reloaded
+         * to make them automatically appears in the Explorer drop-
+         * down dialogs.
+         */
+        reloadProfiles(): Promise<void>;
+    }
+
+    /**
      * This interface can be used by other VS Code Extensions to register themselves
      * with additional API implementations. The other extension would implement one or
      * more interfaces above, for example MyZoweExplorerAppUssApi, and register it with
@@ -488,5 +534,11 @@ export namespace ZoweExplorerApi {
          * @returns the registered API instance
          */
         getJesApi(profile: IProfileLoaded): IJes;
+
+        /**
+         * Lookup of an API for the generic extender API.
+         * @returns the registered API instance
+         */
+        getExplorerExtenderApi(): IApiExplorerExtender;
     }
 }

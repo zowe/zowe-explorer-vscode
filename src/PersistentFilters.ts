@@ -103,8 +103,9 @@ export class PersistentFilters {
      */
     public async addRecall(criteria: string) {
         if (criteria) {
+            criteria = criteria.toUpperCase();
             // Remove any entries that match
-            this.mRecall = this.mRecall.filter( (element) => {
+            this.mRecall = this.mRecall.filter((element) => {
                 return element.trim() !== criteria.trim();
             });
 
@@ -127,11 +128,12 @@ export class PersistentFilters {
         return this.mRecall;
     }
 
-    public removeRecall(name: string) {
+    public async removeRecall(name: string) {
         const index = this.mRecall.findIndex((recallItem) => {
-            return recallItem.includes(name);
+            return recallItem.includes(name.toUpperCase());
         });
         if (index >= 0) { this.mRecall.splice(index, 1); }
+        await this.updateRecall();
     }
 
     public async resetHistory() {

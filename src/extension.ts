@@ -32,7 +32,7 @@ import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, ge
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
-
+import { linkProfileDialog } from "./utils/profileLink";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -153,6 +153,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         });
     }
+    if (datasetProvider || ussFileProvider || jobsProvider) {
+        vscode.commands.registerCommand("zowe.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.cmd.deleteProfile", async () =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider));
+        vscode.commands.registerCommand("zowe.uss.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
+            Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+    }
 
     // return the Extension's API to other extensions that want to register their APIs.
     return ZoweExplorerApiRegister.getInstance();
@@ -164,8 +174,10 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.refreshAll", () => dsActions.refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => dsActions.refreshPS(node));
     vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.filterPrompt(node));
+    vscode.commands.registerCommand("zowe.editSession", async (node) => datasetProvider.editSession(node));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider));
     vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFile(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.createMember", (node) => dsActions.createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deletePDS", (node) => dsActions.deleteDataset(node, datasetProvider));
@@ -184,6 +196,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.pasteDataSet", (node) => dsActions.pasteDataSet(node, datasetProvider));
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
+    vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
     vscode.workspace.onDidChangeConfiguration(async (e) => { datasetProvider.onDidChangeConfiguration(e); });
 
     initSubscribers(context, datasetProvider);
@@ -196,6 +209,7 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS());
     vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) => ussActions.refreshUSSInTree(node, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.filterPrompt(node));
+    vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node));
     vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode) => ussFileProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) => ussActions.createUSSNode(node, ussFileProvider, "file"));
@@ -238,6 +252,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
         jobsProvider.setItem(jobsProvider.getTreeView(), job);
     });
     vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node));
+    vscode.commands.registerCommand("zowe.jobs.editSession", async (node) => jobsProvider.editSession(node));
     vscode.commands.registerCommand("zowe.issueTsoCmd", async () => MvsCommandHandler.getInstance().issueMvsCommand());
     vscode.commands.registerCommand("zowe.issueMvsCmd", async (node, command) =>
         MvsCommandHandler.getInstance().issueMvsCommand(node.session, command));
@@ -362,8 +377,8 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         return profile.name;
     });
     // Filter to list of the APIs available for current tree explorer
-    profileNamesList = profileNamesList.filter((profileName) => {
-        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+    profileNamesList = profileNamesList.filter((name) => {
+        const profile = Profiles.getInstance().loadNamedProfile(name);
         if (zoweFileProvider instanceof USSTree) {
             const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
             return ussProfileTypes.includes(profile.type);
@@ -377,54 +392,58 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
             return jesProfileTypes.includes(profile.type);
         }
     });
+
+    let profileName: string;
+
     if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((profileName) =>
+        profileNamesList = profileNamesList.filter((name) =>
             // Find all cases where a profile is not already displayed
-            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName )
+            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === name )
         );
     }
-    const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
-    const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
-    const quickpick = vscode.window.createQuickPick();
-    const placeholder = localize("addSession.quickPickOption",
-        "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
 
-    if (globals.ISTHEIA) {
-        const options: vscode.QuickPickOptions = {
-            placeHolder: placeholder
-        };
-        // get user selection
-        const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        chosenProfile = choice === createPick ? "" : choice.label;
-    } else {
-        quickpick.items = [createPick, ...items];
-        quickpick.placeholder = placeholder;
-        quickpick.ignoreFocusOut = true;
-        quickpick.show();
-        const choice = await resolveQuickPickHelper(quickpick);
-        quickpick.hide();
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        if (choice instanceof FilterDescriptor) {
-            chosenProfile = "";
+    if (profileNamesList.length) {
+        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
+        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const quickpick = vscode.window.createQuickPick();
+        const placeholder = localize("addSession.quickPickOption",
+            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
+
+        if (globals.ISTHEIA) {
+            const options: vscode.QuickPickOptions = {
+                placeHolder: placeholder
+            };
+            // get user selection
+            const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            chosenProfile = choice === createPick ? "" : choice.label;
         } else {
-            chosenProfile = choice.label;
+            quickpick.items = [createPick, ...items];
+            quickpick.placeholder = placeholder;
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                chosenProfile = "";
+                if (quickpick.value) {
+                    profileName = quickpick.value;
+                }
+            } else {
+                chosenProfile = choice.label;
+            }
         }
     }
 
     if (chosenProfile === "") {
         let newprofile: any;
-        let profileName: string;
-        if (quickpick.value) {
-            profileName = quickpick.value;
-        }
-
         const options = {
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),

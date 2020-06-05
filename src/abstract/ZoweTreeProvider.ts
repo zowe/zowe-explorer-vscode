@@ -10,11 +10,13 @@
 */
 
 import * as vscode from "vscode";
-import { Logger } from "@zowe/imperative";
+import { Logger, IProfile, ISession  } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { getIconByNode } from "../generators/icons";
+import { Profiles } from "../Profiles";
+import { setProfile, setSession } from "../utils";
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -123,6 +125,19 @@ export class ZoweTreeProvider {
     public renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string) {
         return undefined;
     }
+
+    public async editSession(node: IZoweTreeNode) {
+        const profile = node.getProfile();
+        const profileName = node.getProfileName();
+        const EditSession = await Profiles.getInstance().editSession(profile, profileName);
+        if (EditSession) {
+            node.getProfile().profile= EditSession as IProfile;
+            await setProfile(node, EditSession as IProfile);
+            await setSession(node, EditSession as ISession);
+            this.refresh();
+        }
+    }
+
     protected deleteSessionByLabel(revisedLabel: string) {
         if (revisedLabel.includes("[")) {
             revisedLabel = revisedLabel.substring(0, revisedLabel.indexOf(" ["));
