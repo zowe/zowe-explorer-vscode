@@ -516,10 +516,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profile.name);
             node.contextValue = globals.USS_SESSION_CONTEXT;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
+            this.checkCurrentProfile(node);
             node.dirty = true;
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);

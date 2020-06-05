@@ -51,7 +51,7 @@ export namespace ZoweExplorerApi {
          *      will use the profile the API was retrieved with by default
          * @returns {IZosmfInfoResponse} z/OSMF Check Status response
          */
-        getStatus(profile: IProfileLoaded, profileType?): Promise<string>;
+        getStatus?(profile: IProfileLoaded, profileType?): Promise<string>;
     }
 
     /**

@@ -249,7 +249,7 @@ export function isSessionInactive(node: TreeItem): boolean {
  */
 export function isSessionActive(node: TreeItem): boolean {
     return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
-    + globals.DS_SESSION_CONTEXT + ")(.*" + globals.INACTIVE_CONTEXT + ")").test(node.contextValue);
+    + globals.DS_SESSION_CONTEXT + ")(.*" + globals.ACTIVE_CONTEXT + ")").test(node.contextValue);
 }
 /**
  * Helper function which identifies if the node is a session but not a favorite

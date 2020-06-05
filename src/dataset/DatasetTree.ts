@@ -721,7 +721,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a single session to the data set tree
      *
      */
-    private addSingleSession(profile: IProfileLoaded) {
+    private async addSingleSession(profile: IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
@@ -733,10 +733,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const node = new ZoweDatasetNode(
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
             node.contextValue = globals.DS_SESSION_CONTEXT;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
+            this.checkCurrentProfile(node);
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }

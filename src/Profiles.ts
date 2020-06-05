@@ -29,7 +29,7 @@ interface IUrlValidator {
 }
 
 interface IProfileValidation {
-    status: boolean;
+    status: string;
     name: string;
 }
 
@@ -72,7 +72,7 @@ export class Profiles {
 
         // Check what happens if there's an error
         const profileStatus = await this.validateProfiles(theProfile);
-        if (!profileStatus.status) {
+        if (profileStatus.status === "inactive") {
             this.validProfile = ValidProfileEnum.INVALID;
             return profileStatus;
         }
@@ -777,17 +777,35 @@ export class Profiles {
             if (filteredProfile === undefined) {
                 try {
                     const profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
-                    if (profileStatus === "active") {
-                        filteredProfile = {
-                            status: true,
-                            name: theProfile.name
-                        };
-                        this.profilesForValidation.push(filteredProfile);
+
+                    switch (profileStatus) {
+                        case "active":
+                            filteredProfile = {
+                                status: "active",
+                                name: theProfile.name
+                            };
+                            this.profilesForValidation.push(filteredProfile);
+                            break;
+                        case "inactive":
+                            filteredProfile = {
+                                status: "inactive",
+                                name: theProfile.name
+                            };
+                            this.profilesForValidation.push(filteredProfile);
+                            break;
+                        case "unverified":
+                            filteredProfile = {
+                                status: "unverified",
+                                name: theProfile.name
+                            };
+                            this.profilesForValidation.push(filteredProfile);
+                        default:
                     }
+
                 } catch (error) {
                     await errorHandling(error);
                     filteredProfile = {
-                        status: false,
+                        status: "inactive",
                         name: theProfile.name
                     };
                     this.profilesForValidation.push(filteredProfile);

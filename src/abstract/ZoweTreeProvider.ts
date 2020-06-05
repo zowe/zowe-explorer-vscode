@@ -145,13 +145,12 @@ export class ZoweTreeProvider {
             await setSession(node, EditSession as ISession);
             this.refresh();
         }
-        
         try {
             // refresh profilesForValidation to check the profile status again
             await Profiles.getInstance().profilesForValidation.filter((checkProfile) => {
                 if (checkProfile.name === profileName) {
                     Profiles.getInstance().profilesForValidation.pop();
-                    this.log.debug('editSession: Profile was edited' + profileName);
+                    this.log.debug("editSession: Profile was edited" + profileName);
                 }
             });
 
@@ -165,15 +164,15 @@ export class ZoweTreeProvider {
     public async checkCurrentProfile(node: IZoweTreeNode) {
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
-        if (!profileStatus.status) {
-            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
-                && node.contextValue.indexOf(globals.INACTIVE_CONTEXT) === -1) {
+        if (profileStatus.status === "inactive") {
+            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
                 const inactiveIcon = getIconById(IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
                 }
             }
+
             await errorHandling(localize("validateProfiles.invalid1", "Profile Name ") +
                 (profile.name) +
                 localize("validateProfiles.invalid2",
@@ -182,9 +181,8 @@ export class ZoweTreeProvider {
                 (node.getProfileName()) +
                 localize("validateProfiles.invalid2",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-        } else {
-            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
-                 && node.contextValue.indexOf(globals.ACTIVE_CONTEXT) === -1) {
+        } else if (profileStatus.status === "active") {
+            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
                 const activeIcon = getIconById(IconId.sessionActive);
                 if (activeIcon) {
