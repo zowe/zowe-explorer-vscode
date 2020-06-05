@@ -37,18 +37,10 @@ interface IDsnValidator {
 }
 
 function validateQualifierOrMember(isValid: boolean,qualifier: string): boolean{
-    let qualifierValid = true;
-    const testFirstCharacter = /^[A-Z#@$]/.test(qualifier);
-    const hasOnlyValidChars = /^[0-9A-Z@#$-]+$/.test(qualifier);
+    let qualifierValid = true;\
     const SMALL_LIMIT = 1;
     const BIG_LIMIT = 8;
     if(qualifier.length<SMALL_LIMIT || qualifier.length>BIG_LIMIT){
-        qualifierValid = false;
-    }
-    if(!testFirstCharacter) {
-        qualifierValid = false;
-    }
-    if(!hasOnlyValidChars) {
         qualifierValid = false;
     }
     return isValid && qualifierValid;

@@ -125,6 +125,30 @@ describe("Extension Unit Tests", () => {
         checkCurrentProfile: jest.fn(),
         usesSecurity: jest.fn().mockReturnValue(true)
     };
+
+    const createInputBox = jest.fn();
+    const inputBox: vscode.InputBox = {
+        value: "ABC.ABC",
+        title: null,
+        enabled: true,
+        busy: false,
+        show: jest.fn(),
+        hide: jest.fn(),
+        step: null,
+        dispose: jest.fn(),
+        ignoreFocusOut: false,
+        totalSteps: null,
+        placeholder: undefined,
+        password: false,
+        onDidChangeValue: jest.fn(),
+        onDidAccept: jest.fn(),
+        onDidHide: jest.fn(),
+        buttons: [],
+        onDidTriggerButton: jest.fn(),
+        prompt: undefined,
+        validationMessage: undefined
+    };
+
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => {
             return profileOps;
@@ -135,6 +159,7 @@ describe("Extension Unit Tests", () => {
             return profileOps;
         })
     });
+    Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
 
     const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne);
     const getMvsApiMock = jest.fn();
@@ -1157,10 +1182,11 @@ describe("Extension Unit Tests", () => {
                 items: [{name: "NODE", dsname: "NODE"}]
             }
         };
-
+        
         showQuickPick.mockReset();
         getConfiguration.mockReset();
         showInputBox.mockReset();
+        createInputBox.mockReset();
         dataSetCreate.mockReset();
         allMembers.mockReset();
         dataSetList.mockReset();
@@ -1170,6 +1196,7 @@ describe("Extension Unit Tests", () => {
         mockCreateFilterString.mockReturnValue("NODE");
         createTreeView.mockReturnValue(new TreeView());
         showInputBox.mockReturnValue("NODE");
+        createInputBox.mockReturnValue(inputBox);
         allMembers.mockReturnValue(uploadResponse);
         dataSetList.mockReturnValue(uploadResponse);
         mockGetHistory.mockReturnValue([]);
