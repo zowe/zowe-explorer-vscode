@@ -14,7 +14,7 @@ import { Logger, IProfile, ISession  } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
-import { getIconByNode } from "../generators/icons";
+import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils";
 import * as globals from "../globals";
@@ -145,15 +145,31 @@ export class ZoweTreeProvider {
             await setSession(node, EditSession as ISession);
             this.refresh();
         }
+        
+        try {
+            // refresh profilesForValidation to check the profile status again
+            await Profiles.getInstance().profilesForValidation.filter((checkProfile) => {
+                if (checkProfile.name === profileName) {
+                    Profiles.getInstance().profilesForValidation.pop();
+                    this.log.debug('editSession: Profile was edited' + profileName);
+                }
+            });
+
+            await this.checkCurrentProfile(node);
+        } catch (error) {
+            await errorHandling(error);
+        }
+
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode) {
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (!profileStatus.status) {
-            if (node.contextValue.includes("session") && node.contextValue !== globals.INACTIVE_CONTEXT) {
-                node.contextValue = globals.INACTIVE_CONTEXT;
-                const inactiveIcon = getIconByNode(node);
+            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
+                && node.contextValue.indexOf(globals.INACTIVE_CONTEXT) === -1) {
+                node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
+                const inactiveIcon = getIconById(IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
                 }
@@ -166,11 +182,11 @@ export class ZoweTreeProvider {
                 (node.getProfileName()) +
                 localize("validateProfiles.invalid2",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-            } else {
+        } else {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))
-                 && node.contextValue !== globals.ACTIVE_CONTEXT) {
-                node.contextValue = globals.ACTIVE_CONTEXT;
-                const activeIcon = getIconByNode(node);
+                 && node.contextValue.indexOf(globals.ACTIVE_CONTEXT) === -1) {
+                node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
+                const activeIcon = getIconById(IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
                 }
