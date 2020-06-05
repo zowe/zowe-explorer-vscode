@@ -499,10 +499,10 @@ export class Profiles {
         }
 
         if (!loadSession.user || rePrompt) {
-
             newUser = await this.userInfo(repromptUser);
-
             loadSession.user = loadProfile.profile.user = newUser;
+        } else {
+            newUser = loadSession.user = loadProfile.profile.user;
         }
 
         if (newUser === undefined) {
@@ -511,6 +511,8 @@ export class Profiles {
             if (!loadSession.password || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
                 loadSession.password = loadProfile.profile.password = newPass;
+            } else {
+                newPass = loadSession.password = loadProfile.profile.password;
             }
         }
 
