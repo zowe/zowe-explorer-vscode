@@ -171,6 +171,8 @@ describe("Profile class unit tests", () => {
     const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
     const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
 
+    const profilesForValidation = [{status: "", name: ""}];
+
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
             overrides: {
@@ -239,7 +241,7 @@ describe("Profile class unit tests", () => {
                             return {};
                         }),
                         checkCurrentProfile: jest.fn(()=> {
-                            return {};
+                            return profilesForValidation;
                         }),
                         createNewConnection: jest.fn(()=>{
                             return {};

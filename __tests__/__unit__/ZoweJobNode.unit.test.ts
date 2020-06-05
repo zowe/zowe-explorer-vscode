@@ -50,6 +50,8 @@ describe("Zos Jobs Unit Tests", () => {
         };
     });
 
+    const profilesForValidation = [{status: "", name: ""}];
+
     beforeAll(() => {
         Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
     });
@@ -217,7 +219,9 @@ describe("Zos Jobs Unit Tests", () => {
                         getDefaultProfile: mockLoadDefaultProfile,
                         loadNamedProfile: mockLoadNamedProfile,
                         validProfile: profileLoader.ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
                         promptCredentials: jest.fn(()=> {
                             return ["fakeUser","","fakeEncoding"];
                         }),
@@ -544,7 +548,9 @@ describe("Zos Jobs Unit Tests", () => {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         getDefaultProfile: () => ({name: "firstName"}),
                         validProfile: profileLoader.ValidProfileEnum.INVALID,
-                        checkCurrentProfile: jest.fn()
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
                     };
                 })
             });

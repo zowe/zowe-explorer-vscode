@@ -49,7 +49,8 @@ async function createGlobalMocks() {
         testSession: createISession(),
         testResponse: createFileResponse({items: []}),
         testUSSNode: null,
-        testTree: null
+        testTree: null,
+        profilesForValidation: [{status: "", name: ""}],
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
@@ -74,7 +75,9 @@ async function createGlobalMocks() {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
-                checkCurrentProfile: jest.fn(),
+                checkCurrentProfile: jest.fn(() => {
+                    return globalMocks.profilesForValidation
+                }),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
         }),
