@@ -53,7 +53,7 @@ export function validateDatasetName(dsname: string): IDsnValidator{
     const BIG_LIMIT=44;
     if(dsname.length===SMALL_LIMIT||dsname.length>BIG_LIMIT){
         valid=false;
-        errors.push(`Invalid DSN length ${dsname.length}`);
+        errors.push(`Invalid DSN length: ${dsname.length}`);
     }
     const isAllQualifiersValid = dsname.split(".").reduce(validateQualifierOrMember,true);
     if(!isAllQualifiersValid){
