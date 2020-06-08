@@ -520,7 +520,7 @@ export class Profiles {
             try {
                 const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession(loadProfile);
                 if (rePrompt) {
-                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials for Future Use");
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
                     const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}. Saving credentials will update the local yaml file.", loadProfile.name);
                     // `\n${loadProfile.name}\n` +localize("promptCredentials.infoMsg.credentials2","");
