@@ -15,7 +15,7 @@
     "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
     "promptCredentials.saveCredentials.button": "Save Credentials",
     "promptCredentials.doNotSave.button": "Do Not Save",
-    "promptCredentials.saveCredentials.infoMessage": "Save entered credentials for future use with profile: {0}. Saving credentials will update the local yaml file.",
+    "promptCredentials.saveCredentials.infoMessage": "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
     "deleteProfile.noProfilesLoaded": "No profiles available",
     "deleteProfile.quickPickOption": "Are you sure you want to permanently delete ",
     "deleteProfile.undefined.profilename": "Operation Cancelled",
