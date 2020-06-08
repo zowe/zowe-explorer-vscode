@@ -93,11 +93,19 @@
       },
       {
         "command": "zowe.addFavorite",
-        "title": "%addFavorite%"
+        "title": "%addFavorite%",
+        "icon": {
+          "light": "./resources/dark/edit.svg",
+          "dark": "./resources/light/edit.svg"
+        }
       },
       {
         "command": "zowe.uss.addFavorite",
-        "title": "%uss.addFavorite%"
+        "title": "%uss.addFavorite%",
+        "icon": {
+          "light": "./resources/dark/edit.svg",
+          "dark": "./resources/light/edit.svg"
+        }
       },
       {
         "command": "zowe.addSession",
@@ -221,11 +229,19 @@
       },
       {
         "command": "zowe.removeFavorite",
-        "title": "%removeFavorite%"
+        "title": "%removeFavorite%",
+        "icon": {
+          "light": "./resources/dark/edit.svg",
+          "dark": "./resources/light/edit.svg"
+        }
       },
       {
         "command": "zowe.uss.removeFavorite",
-        "title": "%uss.removeFavorite%"
+        "title": "%uss.removeFavorite%",
+        "icon": {
+          "light": "./resources/dark/edit.svg",
+          "dark": "./resources/light/edit.svg"
+        }
       },
       {
         "command": "zowe.removeSavedSearch",
@@ -349,11 +365,19 @@
       },
       {
         "command": "zowe.jobs.addFavorite",
-        "title": "%addFavorite%"
+        "title": "%addFavorite%",
+        "icon": {
+          "light": "./resources/dark/edit.svg",
+          "dark": "./resources/light/edit.svg"
+        }
       },
       {
         "command": "zowe.jobs.removeFavorite",
-        "title": "%removeFavorite%"
+        "title": "%removeFavorite%",
+        "icon": {
+          "light": "./resources/dark/edit.svg",
+          "dark": "./resources/light/edit.svg"
+        }
       },
       {
         "command": "zowe.jobs.removeSearchFavorite",
@@ -499,7 +523,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.addFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
@@ -544,7 +568,7 @@
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
           "command": "zowe.uss.removeFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*_fav.*/",
@@ -589,7 +613,7 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
           "command": "zowe.addFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^member.*/",
@@ -664,7 +688,7 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
           "command": "zowe.removeFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -811,12 +835,12 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.addFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
-          "group": "4_workspace"
+          "group": "inline"
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^server.*_fav.*/",
