@@ -50,7 +50,7 @@ async function createGlobalMocks() {
         testResponse: createFileResponse({items: []}),
         testUSSNode: null,
         testTree: null,
-        profilesForValidation: [{status: "", name: ""}],
+        profilesForValidation: [{status: "active", name: "fake"}],
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });

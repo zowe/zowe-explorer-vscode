@@ -467,13 +467,26 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
                 await errorHandling(error, newprofile, error.message);
             }
             await zoweFileProvider.addSession(newprofile);
+            // Retrieve Session Node and Validate the Profile
+            zoweFileProvider.mSessionNodes.filter((checkNode) => {
+                if (checkNode.getProfileName() === newprofile) {
+                    zoweFileProvider.checkCurrentProfile(checkNode);
+                }
+            })
             await zoweFileProvider.refresh();
         }
     } else if (chosenProfile) {
         globals.LOG.debug(localize("addZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
         await zoweFileProvider.addSession(chosenProfile);
+        // Retrieve Session Node and Validate the Profile
+        zoweFileProvider.mSessionNodes.filter((checkNode) => {
+            if (checkNode.getProfileName() === chosenProfile) {
+                zoweFileProvider.checkCurrentProfile(checkNode);
+            }
+        })
     } else {
         globals.LOG.debug(localize("addZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+        return;
     }
 }
 

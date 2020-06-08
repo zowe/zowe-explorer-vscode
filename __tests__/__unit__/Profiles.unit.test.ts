@@ -26,6 +26,7 @@ import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
+import { Profile } from "selenium-webdriver/firefox";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -171,7 +172,7 @@ describe("Profile class unit tests", () => {
     const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
     const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
 
-    const profilesForValidation = [{status: "", name: ""}];
+    const profilesForValidation = [{status: "active", name: "fake"}];
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -1106,7 +1107,10 @@ describe("Profile class unit tests", () => {
                 return {
                     promptCredentials: jest.fn(() => {
                         return ["testUser", "testPass", "fake"];
-                    })
+                    }),
+                    validateProfiles: jest.fn(() => {
+                        return [{status: "active", name: "fake"}]
+                    }),
                 };
             })
         });

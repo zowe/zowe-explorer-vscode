@@ -140,7 +140,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // validate line
             const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
-            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session?A?I?n?a?ctive\}$/;
+            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
@@ -721,7 +721,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a single session to the data set tree
      *
      */
-    private async addSingleSession(profile: IProfileLoaded) {
+    private addSingleSession(profile: IProfileLoaded) {
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
@@ -733,7 +733,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const node = new ZoweDatasetNode(
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
             node.contextValue = globals.DS_SESSION_CONTEXT;
-            this.checkCurrentProfile(node);
+            const icon = getIconByNode(node);
+            if (icon) {	
+                node.iconPath = icon.path;	
+            }
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }

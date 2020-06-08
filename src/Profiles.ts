@@ -88,7 +88,7 @@ export class Profiles {
             } catch (error) {
                 errorHandling(error, theProfile.name,
                     localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
-                return;
+                return profileStatus;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
                 theProfile.profile.user = this.usrNme;
@@ -97,7 +97,7 @@ export class Profiles {
                 this.validProfile = ValidProfileEnum.VALID;
                 return profileStatus;
             } else {
-                return;
+                return profileStatus;
             }
         } else {
             this.validProfile = ValidProfileEnum.VALID;
@@ -803,7 +803,7 @@ export class Profiles {
                     }
 
                 } catch (error) {
-                    await errorHandling(error);
+                    this.log.debug("Validate Error - Invalid Profile: " + error);
                     filteredProfile = {
                         status: "inactive",
                         name: theProfile.name
@@ -816,6 +816,7 @@ export class Profiles {
 
         }   catch (error) {
             await errorHandling(error);
+            this.log.debug("Validate Error: " + error);
         }
 
     }

@@ -50,7 +50,7 @@ describe("Zos Jobs Unit Tests", () => {
         };
     });
 
-    const profilesForValidation = [{status: "", name: ""}];
+    const profilesForValidation = [{status: "active", name: "fake"}];
 
     beforeAll(() => {
         Object.defineProperty(zowe, "GetJobs", { value: GetJobs });

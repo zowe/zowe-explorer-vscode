@@ -142,7 +142,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            // await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            this.checkCurrentProfile(element);
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -516,7 +517,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profile.name);
             node.contextValue = globals.USS_SESSION_CONTEXT;
-            this.checkCurrentProfile(node);
+            const icon = getIconByNode(node);
+            if (icon) {	
+                node.iconPath = icon.path;	
+            }
             node.dirty = true;
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);

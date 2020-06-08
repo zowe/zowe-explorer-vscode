@@ -54,7 +54,6 @@ describe("DatasetTree Unit Tests", () => {
         failNotFound: true,
         message: "fake"
     };
-
     const Rename = jest.fn();
     const renameDataSet = jest.fn();
     const renameDataSetMember = jest.fn();
@@ -146,7 +145,7 @@ describe("DatasetTree Unit Tests", () => {
             WorkspaceFolder: 3
         };
     });
-    const profilesForValidation = [{status: "", name: ""}];
+    const profilesForValidation = [{status: "active", name: "fake"}];
     Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
     const mockLoadNamedProfile = jest.fn();
     const profileOne: IProfileLoaded = {
@@ -181,6 +180,7 @@ describe("DatasetTree Unit Tests", () => {
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(),
                     updateProfile: jest.fn()
                 };
@@ -905,8 +905,9 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation
+                        return profilesForValidation;
                     }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -951,8 +952,9 @@ describe("DatasetTree Unit Tests", () => {
                     loadNamedProfile: mockLoadNamedProfile,
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation
+                        return profilesForValidation;
                     }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["", "", ""];
                     }),
@@ -1015,8 +1017,9 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation
+                        return profilesForValidation;
                     }),
+                    validateProfiles: jest.fn(),
                     loadNamedProfile: jest.fn(()=> {
                         return null;
                     }),
@@ -1066,8 +1069,9 @@ describe("DatasetTree Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     validProfile: ValidProfileEnum.INVALID,
                     checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation
+                        return profilesForValidation;
                     }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
