@@ -2,6 +2,18 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.6.0`
+
+- Create connections with any registered profile type. Thanks @JillieBeanSim
+- Streamline first profile creation. Thanks @crawr
+- Add recall options for migrated datasets. Thanks @Pranay154
+- Fix persistent data after recall functionality. Thanks @katelynienaber
+- Fix deleting and editing connection not considering other profile types. Thanks @phaumer
+- Fix multiple prompts when escaping/canceling editing session. Thanks @jellypuno
+- Fix failure to load optional secure fields from profiles. Thanks @tjohnsonBCM
+- Fixed issue when manually editing/deleting associated profiles. Thanks @Colin-Stone
+- Refactor unit tests. Thanks @stepanzharychevbroadcom, @katelynienaber
+
 ## `1.5.2`
 
 - Fix undefined profile error message. Thanks @JillieBeanSim
