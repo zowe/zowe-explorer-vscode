@@ -518,14 +518,14 @@ export class Profiles {
             return;
         } else {
             try {
-                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession(loadProfile);
                 if (rePrompt) {
-                    const button1 = localize("promptCredentials.saveCredentials.button", "Save Credentials for Future Use");
-                    const button2 = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered Credentials for future use with {0}. Saving Credentials will update the yaml file.", loadProfile.name);
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials for Future Use");
+                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}. Saving credentials will update the local yaml file.", loadProfile.name);
                     // `\n${loadProfile.name}\n` +localize("promptCredentials.infoMsg.credentials2","");
-                    await vscode.window.showInformationMessage(infoMsg, ...[button1, button2]).then((selection) => {
-                        if (selection === button1) {
+                    await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                        if (selection === saveButton) {
                             rePrompt = false;
                         }
                     });

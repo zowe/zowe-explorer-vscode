@@ -30,8 +30,7 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  *************************************************************************************************************/
 export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
     let httpErrCode = null;
-    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the username and password for {0}", label) +
-        localize("errorHandling.invalid.credentials2"," are valid or this may lead to a lock-out.");
+    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.", label);
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
