@@ -534,13 +534,18 @@ describe("Profile class unit tests", () => {
             profiles.loadNamedProfile = jest.fn(() => {
                 return promptProfile as any;
             });
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+            Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {
                 value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
+                    return {
+                        getSession: jest.fn(() => {
+                            return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
+                        })
+                    };
                 })
             });
             showInputBox.mockResolvedValueOnce("fake");
             showInputBox.mockResolvedValueOnce("fake");
+            showInformationMessage.mockResolvedValueOnce("Do Not Save");
             const res = await profiles.promptCredentials(promptProfile.name);
             expect(res).toEqual(["fake", "fake", "fake"]);
             (profiles.loadNamedProfile as any).mockReset();
@@ -552,15 +557,19 @@ describe("Profile class unit tests", () => {
             return promptProfile as any;
         });
 
-        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
+        Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {
             value: jest.fn(() => {
-                return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
+                return {
+                    getSession: jest.fn(() => {
+                        return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
+                    })
+                };
             })
         });
 
         showInputBox.mockResolvedValueOnce("fake");
         showInputBox.mockResolvedValueOnce("fake");
-        showInformationMessage.mockResolvedValueOnce(true);
+        showInformationMessage.mockResolvedValueOnce("Save Credentials for Future Use");
         const res = await profiles.promptCredentials(promptProfile.name, true);
         expect(res).toEqual(["fake", "fake", "fake"]);
         (profiles.loadNamedProfile as any).mockReset();
