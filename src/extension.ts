@@ -35,7 +35,8 @@ import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
 import * as welcomeWebview from "./webviews/welcome/index";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * The function that runs when the extension is loaded
@@ -90,7 +91,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                         displayName: localize("displayName", "Zowe Explorer")
                     }
                 );
-            } catch (err) { throw new ImperativeError({msg: err.toString()}); }
+            } catch (err) {
+                throw new ImperativeError({ msg: err.toString() });
+            }
         }
 
         // Ensure that ~/.zowe folder exists
@@ -110,7 +113,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     } catch (err) {
         await errorHandling(err, null, (localize("initialize.log.error", "Error encountered while activating and initializing logger! ")));
         globals.LOG.error(localize("initialize.log.error",
-                                           "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
+            "Error encountered while activating and initializing logger! ") + JSON.stringify(err));
     }
 
     const spoolProvider = new SpoolProvider();
@@ -124,15 +127,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // If the temp folder location has been changed, update current temp folder preference
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
             const updatedPreferencesTempPath: string = vscode.workspace.getConfiguration()
-                    /* tslint:disable:no-string-literal */
-                    .get("Zowe-Temp-Folder-Location")["folderPath"];
+                /* tslint:disable:no-string-literal */
+                .get("Zowe-Temp-Folder-Location")["folderPath"];
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
         }
     });
-    if (datasetProvider) { initDatasetProvider(context, datasetProvider); }
-    if (ussFileProvider) { initUSSProvider(context, ussFileProvider); }
-    if (jobsProvider) { initJobsProvider(context, jobsProvider); }
+    vscode.commands.registerCommand("zowe.openWelcomeScreen", async () => welcomeWebview.generateInstance("Welcome to Zowe!"));
+    if (datasetProvider) {
+        initDatasetProvider(context, datasetProvider);
+    }
+    if (ussFileProvider) {
+        initUSSProvider(context, ussFileProvider);
+    }
+    if (jobsProvider) {
+        initJobsProvider(context, jobsProvider);
+    }
     if (datasetProvider || ussFileProvider) {
         vscode.commands.registerCommand("zowe.openRecentMember", () => sharedActions.openRecentMemberPrompt(datasetProvider, ussFileProvider));
         vscode.commands.registerCommand("zowe.searchInAllLoadedItems",
@@ -166,7 +176,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     }
 
-    welcomeWebview.generateInstance("Welcome to Zowe!");
+    if (!vscode.workspace.getConfiguration().get("Zowe Welcome Window Shown")) {
+        welcomeWebview.generateInstance("Welcome to Zowe!");
+        await vscode.workspace.getConfiguration().update("Zowe Welcome Window Shown", true, vscode.ConfigurationTarget.Global);
+    }
 
     // return the Extension's API to other extensions that want to register their APIs.
     return ZoweExplorerApiRegister.getInstance();
@@ -201,10 +214,13 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
     vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
-    vscode.workspace.onDidChangeConfiguration(async (e) => { datasetProvider.onDidChangeConfiguration(e); });
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        datasetProvider.onDidChangeConfiguration(e);
+    });
 
     initSubscribers(context, datasetProvider);
 }
+
 function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     vscode.commands.registerCommand("zowe.uss.addFavorite", async (node: IZoweUSSTreeNode) => ussFileProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
@@ -229,7 +245,9 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
-    vscode.workspace.onDidChangeConfiguration(async (e) => { ussFileProvider.onDidChangeConfiguration(e); });
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        ussFileProvider.onDidChangeConfiguration(e);
+    });
 
     initSubscribers(context, ussFileProvider);
 }
@@ -264,7 +282,9 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
-    vscode.workspace.onDidChangeConfiguration(async (e) => { jobsProvider.onDidChangeConfiguration(e); });
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        jobsProvider.onDidChangeConfiguration(e);
+    });
 
     initSubscribers(context, jobsProvider);
 }
@@ -273,8 +293,12 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {
-        theTreeView.onDidCollapseElement(async (e) => { await theProvider.flipState(e.element, false); });
-        theTreeView.onDidExpandElement(async (e) => { await theProvider.flipState(e.element, true); });
+        theTreeView.onDidCollapseElement(async (e) => {
+            await theProvider.flipState(e.element, false);
+        });
+        theTreeView.onDidExpandElement(async (e) => {
+            await theProvider.flipState(e.element, true);
+        });
     }
 }
 
@@ -305,10 +329,12 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
         try {
             return require(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) { /* Do nothing */ }
+        } catch (err) { /* Do nothing */
+        }
         try {
             return require(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) { /* Do nothing */ }
+        } catch (err) { /* Do nothing */
+        }
         vscode.window.showWarningMessage(localize("initialize.module.load",
             "Credentials not managed, unable to load security file: ") + moduleName);
     }
@@ -402,7 +428,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
     if (profileNamesList) {
         profileNamesList = profileNamesList.filter((name) =>
             // Find all cases where a profile is not already displayed
-            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === name )
+            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === name)
         );
     }
 
@@ -463,7 +489,9 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
             newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
-        } catch (error) { await errorHandling(error, chosenProfile, error.message); }
+        } catch (error) {
+            await errorHandling(error, chosenProfile, error.message);
+        }
         if (newprofile) {
             try {
                 await Profiles.getInstance().refresh();

@@ -101,6 +101,10 @@
         "title": "%uss.addFavorite%"
       },
       {
+        "command": "zowe.openWelcomeScreen",
+        "title": "%openWelcomeScreen%"
+      },
+      {
         "command": "zowe.addSession",
         "title": "%addSession%",
         "icon": {
@@ -1111,6 +1115,11 @@
             "framework": "vscode"
           },
           "description": "%Zowe-Environment%",
+          "scope": "window"
+        },
+        "Zowe Welcome Window Shown": {
+          "default": false,
+          "description": "%Zowe-Welcome-Window-Shown%",
           "scope": "window"
         }
       }
