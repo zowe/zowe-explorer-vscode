@@ -98,11 +98,7 @@ export class MvsCommandHandler {
             if (!command) {
                 command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
             }
-            try {
-                await this.issueCommand(session, command1);
-            } catch (error) {
-                await errorHandling(error, zosmfProfile.name, error.message);
-            }
+            await this.issueCommand(session, command1);
         } else {
             vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
             return;
