@@ -514,13 +514,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if (openingTextFailed) {
-                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Yes, re-download");
-                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "No");
+                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
+                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
 
                 const response = await vscode.window.showErrorMessage(
                     localize(
                         "openUSS.log.info.failedToOpenAsText",
-                        "Failed to open file as text. Do you want to try with re-downloading it as binary?"),
+                        "Failed to open file as text. Re-download file as binary?"),
                     ...[
                         yesResponse,
                         noResponse
