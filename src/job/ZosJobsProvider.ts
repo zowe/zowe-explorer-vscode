@@ -572,8 +572,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             const node = new Job(zosmfProfile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, zosmfProfile);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;
             const icon = getIconByNode(node);
-            if (icon) {	
-                node.iconPath = icon.path;	
+            if (icon) {
+                node.iconPath = icon.path;
             }
             node.dirty = true;
             this.mSessionNodes.push(node);

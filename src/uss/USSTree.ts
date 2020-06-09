@@ -518,8 +518,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                              profile.name);
             node.contextValue = globals.USS_SESSION_CONTEXT;
             const icon = getIconByNode(node);
-            if (icon) {	
-                node.iconPath = icon.path;	
+            if (icon) {
+                node.iconPath = icon.path;
             }
             node.dirty = true;
             this.mSessionNodes.push(node);

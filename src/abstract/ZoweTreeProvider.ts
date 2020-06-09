@@ -166,7 +166,10 @@ export class ZoweTreeProvider {
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
-                node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
+                // change contextValue only if the word inactive is not there
+                if (node.contextValue.toLowerCase().indexOf("inactive") === -1) {
+                    node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
+                }
                 const inactiveIcon = getIconById(IconId.sessionInactive);
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
@@ -183,7 +186,10 @@ export class ZoweTreeProvider {
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
         } else if (profileStatus.status === "active") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
-                node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
+                // change contextValue only if the word active is not there
+                if (node.contextValue.toLowerCase().indexOf("active") === -1) {
+                    node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
+                }
                 const activeIcon = getIconById(IconId.sessionActive);
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;

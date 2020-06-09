@@ -29,6 +29,21 @@ export namespace ZosmfSession {
     }
 }
 
+export namespace CheckStatus {
+    export function getZosmfInfo(session: Session) {
+        return {
+            zos_version: "fake",
+            zosmf_port: "fake",
+            zosmf_version: "fake",
+            zosmf_hostname: "fake",
+            zosmf_saf_realm: "fake",
+            zosmf_full_version: "fake",
+            api_version: "fake",
+            plugins: "fake"
+        }
+    }
+}
+
 export declare const enum sampleCreateDataSetTypeEnum {
     DATA_SET_BINARY = 0,
     DATA_SET_C = 1,

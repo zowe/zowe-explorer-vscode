@@ -26,7 +26,6 @@ import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
-import { Profile } from "selenium-webdriver/firefox";
 
 describe("Profile class unit tests", () => {
     // Mocking log.debug
@@ -172,7 +171,7 @@ describe("Profile class unit tests", () => {
     const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
     const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
 
-    const profilesForValidation = [{status: "active", name: "fake"}];
+    const profilesForValidation = {status: "active", name: "fake"};
 
     beforeEach(() => {
         mockJSONParse.mockReturnValue({
@@ -242,6 +241,9 @@ describe("Profile class unit tests", () => {
                             return {};
                         }),
                         checkCurrentProfile: jest.fn(()=> {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(() => {
                             return profilesForValidation;
                         }),
                         createNewConnection: jest.fn(()=>{
@@ -1102,18 +1104,6 @@ describe("Profile class unit tests", () => {
 
     it("Tests checkCurrentProfile() with valid profile", async () => {
         const theProfiles = await Profiles.createInstance(log);
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    promptCredentials: jest.fn(() => {
-                        return ["testUser", "testPass", "fake"];
-                    }),
-                    validateProfiles: jest.fn(() => {
-                        return [{status: "active", name: "fake"}]
-                    }),
-                };
-            })
-        });
         const testProfile = {
             type : "zosmf",
             host: null,
@@ -1130,6 +1120,21 @@ describe("Profile class unit tests", () => {
             message: "",
             failNotFound: false
         };
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return ["testUser", "testPass", "fake"];
+                    }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {status: "active", name: testIProfile.name};
+                    }),
+                    validateProfiles: jest.fn(() => {
+                        return {status: "active", name: testIProfile.name};
+                    })
+                };
+            })
+        });
         theProfiles.validProfile = -1;
         await theProfiles.checkCurrentProfile(testIProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);

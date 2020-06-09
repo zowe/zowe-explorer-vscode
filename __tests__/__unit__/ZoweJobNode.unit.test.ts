@@ -50,7 +50,7 @@ describe("Zos Jobs Unit Tests", () => {
         };
     });
 
-    const profilesForValidation = [{status: "active", name: "fake"}];
+    const profilesForValidation = {status: "active", name: "fake"};
 
     beforeAll(() => {
         Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
@@ -353,11 +353,11 @@ describe("Zos Jobs Unit Tests", () => {
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], false);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-closed.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
                 testJobsProvider.mSessionNodes[1].getSession(), iJob, profileOne);
@@ -451,7 +451,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             showInputBox.mockReturnValueOnce("");
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(newjobNode.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(newjobNode.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(newjobNode.owner).toEqual("MYHLQ");
             expect(newjobNode.prefix).toEqual("*");
             expect(newjobNode.searchId).toEqual("");
@@ -582,7 +582,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce(""); // need the jobId in this case
             // Assert choosing the new filter option followed by an owner
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -593,7 +593,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by a prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -604,7 +604,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by an owner and prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -618,7 +618,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO12345");
             // Assert choosing the new filter option followed by a Job id
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
@@ -691,7 +691,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce(""); // need the jobId in this case
             // Assert choosing the new filter option followed by an owner
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -701,7 +701,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by a prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -710,7 +710,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by an owner and prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -719,7 +719,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO12345");
             // Assert choosing the new filter option followed by a Job id
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");

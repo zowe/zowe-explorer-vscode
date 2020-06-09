@@ -472,7 +472,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
                 if (checkNode.getProfileName() === newprofile) {
                     zoweFileProvider.checkCurrentProfile(checkNode);
                 }
-            })
+            });
             await zoweFileProvider.refresh();
         }
     } else if (chosenProfile) {
@@ -483,7 +483,7 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
             if (checkNode.getProfileName() === chosenProfile) {
                 zoweFileProvider.checkCurrentProfile(checkNode);
             }
-        })
+        });
     } else {
         globals.LOG.debug(localize("addZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
         return;

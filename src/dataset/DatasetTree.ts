@@ -734,8 +734,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
             node.contextValue = globals.DS_SESSION_CONTEXT;
             const icon = getIconByNode(node);
-            if (icon) {	
-                node.iconPath = icon.path;	
+            if (icon) {
+                node.iconPath = icon.path;
             }
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);

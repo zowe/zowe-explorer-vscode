@@ -26,7 +26,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Session, Logger, IProfileLoaded } from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as utils from "../../src/utils";
-import { Profiles, ValidProfileEnum } from "../../src/Profiles";
+import { Profiles, ValidProfileEnum  } from "../../src/Profiles";
 import * as globals from "../../src/globals";
 import * as fs from "fs";
 
@@ -112,6 +112,7 @@ describe("DatasetTree Unit Tests", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
+    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
     Object.defineProperty(filters, "getFilters", { value: getFilters });
@@ -145,7 +146,7 @@ describe("DatasetTree Unit Tests", () => {
             WorkspaceFolder: 3
         };
     });
-    const profilesForValidation = [{status: "active", name: "fake"}];
+    const profilesForValidation = {status: "active", name: "fake"};
     Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
     const mockLoadNamedProfile = jest.fn();
     const profileOne: IProfileLoaded = {
@@ -424,7 +425,7 @@ describe("DatasetTree Unit Tests", () => {
         expect(testTree.mFavorites.length).toEqual(2);
 
         // Check adding a session
-        testTree.addFavorite(testTree.mSessionNodes[1]);
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
 
         // tslint:disable-next-line: no-magic-numbers
         expect(testTree.mFavorites.length).toEqual(3);
@@ -612,7 +613,7 @@ describe("DatasetTree Unit Tests", () => {
 
         // Assert choosing the new filter specification followed by a path
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
 
         // Assert edge condition user cancels the input path box
@@ -715,7 +716,7 @@ describe("DatasetTree Unit Tests", () => {
         showInformationMessage.mockReset();
         // Assert choosing the new filter specification but fills in path in QuickPick
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
 
         showQuickPick.mockReset();

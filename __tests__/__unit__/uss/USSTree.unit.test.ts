@@ -50,7 +50,7 @@ async function createGlobalMocks() {
         testResponse: createFileResponse({items: []}),
         testUSSNode: null,
         testTree: null,
-        profilesForValidation: [{status: "active", name: "fake"}],
+        profilesForValidation: {status: "active", name: "fake"},
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
@@ -76,7 +76,7 @@ async function createGlobalMocks() {
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(() => {
-                    return globalMocks.profilesForValidation
+                    return globalMocks.profilesForValidation;
                 }),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
@@ -779,7 +779,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         }
 
         expect(sessNode).toEqual(rootChildren);
-        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-closed.svg");
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-star-closed.svg");
     });
 
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<session>", async () => {
