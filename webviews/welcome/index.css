@@ -1,0 +1,15 @@
+h1 {
+    font-size: 22px
+}
+
+h2 {
+    font-size: 18px;
+}
+
+h2 .css-style {
+    color: #ffc107;
+}
+
+h2 .js-style {
+    color: #fd7e14;
+}

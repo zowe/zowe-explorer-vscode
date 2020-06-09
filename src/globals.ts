@@ -20,6 +20,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
+export let EXT_PATH;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
@@ -63,6 +64,10 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+}
+
+export function definePaths(context: vscode.ExtensionContext) {
+    EXT_PATH = context.extensionPath;
 }
 
 /**

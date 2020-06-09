@@ -33,6 +33,7 @@ import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
+import * as welcomeWebview from "./webviews/welcome/index";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
@@ -52,6 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(preferencesTempPath);
+    globals.definePaths(context);
 
     // Call cleanTempDir before continuing
     // this is to handle if the application crashed on a previous execution and
@@ -163,6 +165,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     }
+
+    welcomeWebview.generateInstance("Welcome to Zowe!");
 
     // return the Extension's API to other extensions that want to register their APIs.
     return ZoweExplorerApiRegister.getInstance();
