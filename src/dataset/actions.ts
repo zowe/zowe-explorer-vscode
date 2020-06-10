@@ -87,7 +87,10 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
     try {
         const datasetName = dsUtils.getDatasetLabel(node);
-        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).putContents(doc.fileName, datasetName);
+        const prof = node.getProfile();
+        await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+            encoding: prof.profile.encoding
+        });
     } catch (e) {
         errorHandling(e, node.getProfileName(), e.message);
     }
@@ -166,9 +169,11 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
                     location: vscode.ProgressLocation.Notification,
                     title: "Opening data set..."
                 }, function downloadDataset() {
-                    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(label, {
+                    const prof = node.getProfile();
+                    return ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                         file: documentFilePath,
-                        returnEtag: true
+                        returnEtag: true,
+                        encoding: prof.profile.encoding
                     });
                 });
                 node.setEtag(response.apiResponse.etag);
@@ -703,9 +708,11 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
                 throw Error(localize("refreshPS.error.invalidNode", "refreshPS() called from invalid node."));
         }
         const documentFilePath = getDocumentFilePath(label, node);
-        const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getContents(label, {
+        const prof = node.getProfile();
+        const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
-            returnEtag: true
+            returnEtag: true,
+            encoding: prof.profile.encoding
         });
         node.setEtag(response.apiResponse.etag);
 
@@ -973,7 +980,11 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             location: vscode.ProgressLocation.Notification,
             title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
-            return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName, label, uploadOptions);
+            const prof = node.getProfile() || profile;
+            if (prof.profile.encoding) {
+                uploadOptions.encoding = prof.profile.encoding;
+            }
+            return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, uploadOptions);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
@@ -988,9 +999,14 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             } else {
                 const oldDoc = doc;
                 const oldDocText = oldDoc.getText();
-                const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).getContents(label, {
+                const prof = node.getProfile() || profile;
+                if (prof.profile.encoding) {
+                    uploadOptions.encoding = prof.profile.encoding;
+                }
+                const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                     file: doc.fileName,
-                    returnEtag: true
+                    returnEtag: true,
+                    encoding: prof.profile.encoding
                 });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
