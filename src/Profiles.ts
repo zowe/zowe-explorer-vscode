@@ -703,7 +703,6 @@ export class Profiles {
             });
 
         // Delete from Data Set Favorites
-        const favoriteDs = datasetTree.mFavorites;
         datasetTree.mFavorites.forEach((favNode) => {
             const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
             if (findNode === deleteLabel) {
@@ -917,9 +916,7 @@ export class Profiles {
             return undefined;
         }
 
-        const zosmfUrlParsed = this.validateAndParseUrl(zosURL);
-
-        return zosmfUrlParsed;
+        return this.validateAndParseUrl(zosURL);
     }
 
     private async portInfo(input: string, schema: {}){
