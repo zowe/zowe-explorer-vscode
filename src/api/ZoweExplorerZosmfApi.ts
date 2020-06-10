@@ -71,6 +71,19 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, task, etag, returnEtag);
     }
 
+    public async putContent(inputFilePath: string, ussFilePath: string,
+                            options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        const task: ITaskWithStatus = {
+            percentComplete: 0,
+            statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
+            stageName: TaskStage.IN_PROGRESS
+        };
+
+        options.task = task;
+        return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
+    }
+
+
     public async uploadDirectory(
         inputDirectoryPath: string,
         ussDirectoryPath: string,

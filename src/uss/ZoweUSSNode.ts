@@ -423,7 +423,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                 fullPath, {
                                     file: documentFilePath,
                                     binary: chooseBinary,
-                                    returnEtag: true
+                                    returnEtag: true,
+                                    encoding: profile.profile.encoding
                                 });
                         }
                     );
@@ -478,10 +479,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
-                const response = await ZoweExplorerApiRegister.getUssApi(this.getProfile()).getContents(this.fullPath, {
+                const prof = this.getProfile();
+                const response = await ZoweExplorerApiRegister.getUssApi(prof).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
                     binary: this.binary,
-                    returnEtag: true
+                    returnEtag: true,
+                    encoding: prof.profile.encoding
                 });
                 this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;
