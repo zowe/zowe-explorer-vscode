@@ -869,7 +869,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             location: vscode.ProgressLocation.Notification,
             title: localize("saveFile.response.save.title", "Saving data set...")
         }, () => {
-            const prof = node.getProfile() || profile;
+            const prof = (node) ? node.getProfile() : profile;
             if (prof.profile.encoding) {
                 uploadOptions.encoding = prof.profile.encoding;
             }
@@ -889,7 +889,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             } else {
                 const oldDoc = doc;
                 const oldDocText = oldDoc.getText();
-                const prof = node.getProfile() || profile;
+                const prof = (node) ? node.getProfile() : profile;
                 if (prof.profile.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
