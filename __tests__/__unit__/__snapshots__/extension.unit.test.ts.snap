@@ -14,7 +14,7 @@ Array [
   },
   Object {
     "command": "zowe.uss.addFavorite",
-    "group": "4_workspace",
+    "group": "inline",
     "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
   },
   Object {
@@ -59,7 +59,7 @@ Array [
   },
   Object {
     "command": "zowe.uss.removeFavorite",
-    "group": "4_workspace",
+    "group": "inline",
     "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
   },
   Object {
@@ -104,7 +104,7 @@ Array [
   },
   Object {
     "command": "zowe.addFavorite",
-    "group": "4_workspace",
+    "group": "inline",
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
   },
   Object {
@@ -179,7 +179,7 @@ Array [
   },
   Object {
     "command": "zowe.removeFavorite",
-    "group": "4_workspace",
+    "group": "inline",
     "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
   },
   Object {
@@ -326,12 +326,12 @@ Array [
   },
   Object {
     "command": "zowe.jobs.addFavorite",
-    "group": "4_workspace",
+    "group": "inline",
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
   },
   Object {
     "command": "zowe.jobs.removeFavorite",
-    "group": "4_workspace",
+    "group": "inline",
     "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
   },
   Object {

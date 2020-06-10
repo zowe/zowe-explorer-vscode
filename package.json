@@ -95,16 +95,16 @@
         "command": "zowe.addFavorite",
         "title": "%addFavorite%",
         "icon": {
-          "light": "./resources/dark/edit.svg",
-          "dark": "./resources/light/edit.svg"
+          "dark": "./resources/dark/favorites-open-dark.svg",
+          "light": "./resources/light/favorites-open-light.svg"
         }
       },
       {
         "command": "zowe.uss.addFavorite",
         "title": "%uss.addFavorite%",
         "icon": {
-          "light": "./resources/dark/edit.svg",
-          "dark": "./resources/light/edit.svg"
+          "dark": "./resources/dark/favorites-open-dark.svg",
+          "light": "./resources/light/favorites-open-light.svg"
         }
       },
       {
@@ -231,16 +231,16 @@
         "command": "zowe.removeFavorite",
         "title": "%removeFavorite%",
         "icon": {
-          "light": "./resources/dark/edit.svg",
-          "dark": "./resources/light/edit.svg"
+          "dark": "./resources/dark/favorites-close-dark.svg",
+          "light": "./resources/light/favorites-close-light.svg"
         }
       },
       {
         "command": "zowe.uss.removeFavorite",
         "title": "%uss.removeFavorite%",
         "icon": {
-          "light": "./resources/dark/edit.svg",
-          "dark": "./resources/light/edit.svg"
+          "dark": "./resources/dark/favorites-close-dark.svg",
+          "light": "./resources/light/favorites-close-light.svg"
         }
       },
       {
@@ -367,16 +367,16 @@
         "command": "zowe.jobs.addFavorite",
         "title": "%addFavorite%",
         "icon": {
-          "light": "./resources/dark/edit.svg",
-          "dark": "./resources/light/edit.svg"
+          "dark": "./resources/dark/favorites-open-dark.svg",
+          "light": "./resources/light/favorites-open-light.svg"
         }
       },
       {
         "command": "zowe.jobs.removeFavorite",
         "title": "%removeFavorite%",
         "icon": {
-          "light": "./resources/dark/edit.svg",
-          "dark": "./resources/light/edit.svg"
+          "dark": "./resources/dark/favorites-close-dark.svg",
+          "light": "./resources/light/favorites-close-light.svg"
         }
       },
       {
