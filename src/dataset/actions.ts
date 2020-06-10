@@ -935,7 +935,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
         }
     }
 
-    const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
+    const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
         return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
