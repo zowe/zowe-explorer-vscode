@@ -87,6 +87,7 @@ export namespace ZoweExplorerApi {
         /**
          * Uploads the file at the given path. Use for Save.
          *
+         * @deprecated
          * @param {string} inputFilePath
          * @param {string} ussFilePath
          * @param {boolean} [binary]
@@ -104,6 +105,20 @@ export namespace ZoweExplorerApi {
             localEncoding?: string,
             etag?: string,
             returnEtag?: boolean
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Uploads the file at the given path. Use for Save.
+         *
+         * @param {string} inputFilePath
+         * @param {string} ussFilePath
+         * @param {zowe.IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        putContent?(
+            inputFilePath: string,
+            ussFilePath: string,
+            options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
