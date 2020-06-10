@@ -222,6 +222,7 @@ describe("Zos Jobs Unit Tests", () => {
                         checkCurrentProfile: jest.fn(() => {
                             return profilesForValidation;
                         }),
+                        validateProfiles: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fakeUser","","fakeEncoding"];
                         }),
@@ -396,7 +397,11 @@ describe("Zos Jobs Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         getDefaultProfile: () => ({name: "firstName"}),
-                        promptCredentials: undefined
+                        promptCredentials: undefined,
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -551,6 +556,7 @@ describe("Zos Jobs Unit Tests", () => {
                         checkCurrentProfile: jest.fn(() => {
                             return profilesForValidation;
                         }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -868,11 +874,42 @@ describe("Zos Jobs Unit Tests", () => {
                         editSession: jest.fn(() => {
                             return profileLoad;
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const checkSession = jest.spyOn(testJobsProvider, "editSession");
+            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            testJobsProvider.editSession(jobNode);
+            expect(checkSession).toHaveBeenCalled();
+        });
+
+        it("Test the editSession command with inactive profile ", async () => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        getDefaultProfile: jest.fn(),
+                        editSession: jest.fn(() => {
+                            return profileLoad;
+                        }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return {status: "inactive", name: profileOne.name};
+                        }),
+                        profilesForValidation: [{status: "inactive", name:profileOne.name}],
+                        validateProfiles: jest.fn(),
+                    };
+                })
+            });
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const checkSession = jest.spyOn(testJobsProvider, "editSession");
+            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
             testJobsProvider.editSession(jobNode);
             expect(checkSession).toHaveBeenCalled();
         });

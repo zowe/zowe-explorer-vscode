@@ -120,7 +120,12 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         loadNamedProfile: jest.fn(),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
-        checkCurrentProfile: jest.fn(),
+        checkCurrentProfile: jest.fn(() => {
+            return {status: "active", name: "fake"};
+        }),
+        profilesForValidation: [{status: "active", name: "fake"}],
+        validateProfiles: jest.fn(),
+        editSession: jest.fn(),
         createNewConnection: jest.fn(() => {
             return { newprofile: "fake" };
         }),

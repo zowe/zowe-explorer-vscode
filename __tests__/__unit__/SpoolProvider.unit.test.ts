@@ -48,12 +48,18 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
+    const profilesForValidation = {status: "active", name: "fake"};
 
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"}
+                defaultProfile: {name: "firstName"},
+                checkCurrentProfile: jest.fn(() => {
+                    return profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
             };
         })
     });
@@ -115,6 +121,10 @@ describe("SpoolProvider Unit Tests", () => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })

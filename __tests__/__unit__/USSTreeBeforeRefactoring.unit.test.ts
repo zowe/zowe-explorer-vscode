@@ -88,6 +88,7 @@ describe("Unit Tests (Jest)", () => {
     createTreeView.mockReturnValue("testTreeView");
 
     const testTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
+    const profilesForValidation = {status: "active", name: "fake"};
     const profileOne: IProfileLoaded = {
         name: "aProfile",
         profile: {
@@ -108,7 +109,11 @@ describe("Unit Tests (Jest)", () => {
                 allProfiles: [profileOne, {name: "secondName"}],
                 getDefaultProfile: mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
-                checkCurrentProfile: jest.fn(),
+                checkCurrentProfile: jest.fn(() => {
+                    return profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
                 loadNamedProfile: mockLoadNamedProfile
             };
         })
@@ -217,6 +222,10 @@ describe("Unit Tests (Jest)", () => {
                     promptCredentials: jest.fn(()=> {
                         return [{values: "fake"}, {values: "fake"}, {values: "fake"}];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });

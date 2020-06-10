@@ -181,6 +181,7 @@ describe("DatasetTree Unit Tests", () => {
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
+                    profilesForValidation: [],
                     validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(),
                     updateProfile: jest.fn()
@@ -531,6 +532,10 @@ describe("DatasetTree Unit Tests", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -585,7 +590,11 @@ describe("DatasetTree Unit Tests", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -761,6 +770,36 @@ describe("DatasetTree Unit Tests", () => {
                     editSession: jest.fn(() => {
                         return profileLoad;
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                };
+            })
+        });
+        testTree.editSession(editnode);
+        expect(checkSession).toHaveBeenCalled();
+    });
+
+    /*************************************************************************************************************
+     * Test the editSession command with inactive profiles
+     *************************************************************************************************************/
+    it("Test the editSession command ", async () => {
+        const editnode = new ZoweDatasetNode("EditSession", vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1], session, undefined, undefined, profileOne);
+        editnode.contextValue = globals.DS_SESSION_CONTEXT;
+        const checkSession = jest.spyOn(testTree, "editSession");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    editSession: jest.fn(() => {
+                        return profileLoad;
+                    }),
+                    profilesForValidation: [{status: "inactive", name:profileOne.name}],
+                    checkCurrentProfile: jest.fn(() => {
+                        return {status: "inactive", name:profileOne.name};
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });

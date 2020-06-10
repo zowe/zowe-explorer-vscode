@@ -243,6 +243,7 @@ describe("Profile class unit tests", () => {
                         checkCurrentProfile: jest.fn(()=> {
                             return profilesForValidation;
                         }),
+                        profilesForValidation: [],
                         validateProfiles: jest.fn(() => {
                             return profilesForValidation;
                         }),
@@ -854,6 +855,7 @@ describe("Profile class unit tests", () => {
                         createNewConnection: jest.fn(()=>{
                             return {};
                         }),
+                        profilesForValidation: [],
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
@@ -874,7 +876,11 @@ describe("Profile class unit tests", () => {
                         }),
                         deleteProf: jest.fn(()=>{
                             return {};
-                        })
+                        }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -928,7 +934,11 @@ describe("Profile class unit tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: []
+                        allProfiles: [],
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -1030,6 +1040,10 @@ describe("Profile class unit tests", () => {
                     createNewConnection: jest.fn(()=>{
                         return {newprofile: "fake"};
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     listProfile: jest.fn(()=>{
                         return {};
                     }),
@@ -1072,6 +1086,10 @@ describe("Profile class unit tests", () => {
                     createNewConnection: jest.fn(()=>{
                         return {};
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     listProfile: jest.fn(()=>{
                         return {};
                     }),
@@ -1129,6 +1147,7 @@ describe("Profile class unit tests", () => {
                     checkCurrentProfile: jest.fn(() => {
                         return {status: "active", name: testIProfile.name};
                     }),
+                    profilesForValidation: [],
                     validateProfiles: jest.fn(() => {
                         return {status: "active", name: testIProfile.name};
                     })
@@ -1198,7 +1217,11 @@ describe("Profile class unit tests", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    promptCredentials: undefined
+                    promptCredentials: undefined,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });

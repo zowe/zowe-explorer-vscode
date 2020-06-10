@@ -106,6 +106,7 @@ describe("mvsCommandActions unit testing", () => {
 
 
     const mvsActions = MvsCommandHandler.getInstance();
+    const profilesForValidation = {status: "active", name: "fake"};
 
     it("tests the issueMvsCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -113,7 +114,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -147,7 +152,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -180,7 +189,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -213,7 +226,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -243,7 +260,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -274,7 +295,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -320,6 +345,10 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [],
                     defaultProfile: undefined,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -336,6 +365,10 @@ describe("mvsCommandActions unit testing", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -370,6 +403,10 @@ describe("mvsCommandActions unit testing", () => {
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -401,6 +438,10 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });

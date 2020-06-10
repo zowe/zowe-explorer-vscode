@@ -114,6 +114,7 @@ describe("Extension Unit Tests", () => {
         message: "",
         failNotFound: false
     };
+    const profilesForValidation = {status: "active", name: "fake"};
     let mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
     const profileOps = {
@@ -123,6 +124,8 @@ describe("Extension Unit Tests", () => {
         loadNamedProfile: mockLoadNamedProfile,
         validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(),
+        profilesForValidation: [],
+        validateProfiles: jest.fn(),
         usesSecurity: jest.fn().mockReturnValue(true)
     };
     Object.defineProperty(Profiles, "createInstance", {
@@ -519,7 +522,10 @@ describe("Extension Unit Tests", () => {
                     promptCredentials: jest.fn(),
                     usesSecurity: true,
                     getProfiles: jest.fn(),
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     refresh: jest.fn(),
                 };
             })
@@ -895,7 +901,10 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [profileOne, {name: "secondName"}],
                         defaultProfile: profileOne,
                         validProfile: ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         createNewConnection: jest.fn(()=>{
                             return {newprofile: "fake"};
                         }),
@@ -1074,6 +1083,10 @@ describe("Extension Unit Tests", () => {
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -1114,6 +1127,10 @@ describe("Extension Unit Tests", () => {
                         createNewConnection: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -1272,7 +1289,10 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -1360,7 +1380,10 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -1444,7 +1467,10 @@ describe("Extension Unit Tests", () => {
                     defaultProfile: profileOne,
                     loadNamedProfile: mockLoadNamedProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -1736,7 +1762,10 @@ describe("Extension Unit Tests", () => {
                     }),
                     getProfiles: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
@@ -1775,7 +1804,10 @@ describe("Extension Unit Tests", () => {
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -1809,7 +1841,10 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: ValidProfileEnum.INVALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })
@@ -1844,7 +1879,10 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return [undefined, undefined, undefined];
                     }),
@@ -2092,6 +2130,10 @@ describe("Extension Unit Tests", () => {
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -2334,6 +2376,10 @@ describe("Extension Unit Tests", () => {
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -2374,6 +2420,10 @@ describe("Extension Unit Tests", () => {
                         createNewConnection: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -2418,6 +2468,10 @@ describe("Extension Unit Tests", () => {
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -2443,7 +2497,10 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         validProfile: ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
@@ -2475,7 +2532,10 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         validProfile: ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
@@ -2506,7 +2566,10 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         validProfile: ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return [undefined, undefined, undefined];
                         }),
@@ -2538,7 +2601,10 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         validProfile: ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fake", "fake", "fake"];
                         }),
@@ -2564,7 +2630,10 @@ describe("Extension Unit Tests", () => {
                         allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                         defaultProfile: {name: "firstName"},
                         validProfile: ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -2740,6 +2809,10 @@ describe("Extension Unit Tests", () => {
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -2780,6 +2853,10 @@ describe("Extension Unit Tests", () => {
                         createNewConnection: jest.fn(()=>{
                             return {};
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         loadNamedProfile: mockLoadNamedProfile
                     };
                 })
@@ -2847,7 +2924,10 @@ describe("Extension Unit Tests", () => {
                 return {
                     validProfile: ValidProfileEnum.VALID,
                     loadNamedProfile: mockLoadNamedProfile,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -2865,7 +2945,10 @@ describe("Extension Unit Tests", () => {
                     defaultProfile: {name: "firstName"},
                     loadNamedProfile: mockLoadNamedProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -2898,7 +2981,10 @@ describe("Extension Unit Tests", () => {
                 return {
                     loadNamedProfile: mockLoadNamedProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -2933,7 +3019,10 @@ describe("Extension Unit Tests", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: ValidProfileEnum.INVALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     loadNamedProfile: mockLoadNamedProfile
                 };
             })

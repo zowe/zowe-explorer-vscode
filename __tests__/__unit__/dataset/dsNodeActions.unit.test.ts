@@ -121,6 +121,7 @@ const session = new brtimperative.Session({
     protocol: "https",
     type: "basic",
 });
+const profilesForValidation = {status: "active", name: "fake"};
 
 describe("dsNodeActions", () => {
 
@@ -132,7 +133,12 @@ describe("dsNodeActions", () => {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
-                loadNamedProfile: mockLoadNamedProfile
+                loadNamedProfile: mockLoadNamedProfile,
+                checkCurrentProfile: jest.fn(() => {
+                    return profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
             };
         })
     });
@@ -172,6 +178,11 @@ describe("dsNodeActions", () => {
                             return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
                         }),
                         refresh: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        profilesForValidation: [],
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
