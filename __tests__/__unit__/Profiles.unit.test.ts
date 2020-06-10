@@ -16,7 +16,7 @@ import * as child_process from "child_process";
 import { Logger, IProfileLoaded, Session, CliProfileManager } from "@zowe/imperative";
 import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
-import { ZosmfSession, IJob } from "@zowe/cli";
+import { ZosmfSession, IJob, CheckStatus } from "@zowe/cli";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Job } from "../../src/job/ZoweJobNode";
@@ -1241,6 +1241,86 @@ describe("Profile class unit tests", () => {
             message: "",
             failNotFound: false
         };
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+
+    it("Tests checkCurrentProfile() and validateProfiles() with active profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const testProfile = {
+            type : "zosmf",
+            host: "fake",
+            port: 1443,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorized: false,
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return undefined;
+                    }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {status: "active", name: testIProfile.name};
+                    }),
+                    validateProfiles: jest.fn(() => {
+                        return {status: "active", name: testIProfile.name};
+                    }),
+                    profilesForValidation: [{status: "active", name: testIProfile.name}]
+                };
+            })
+        });
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
+    });
+
+    it("Tests checkCurrentProfile()  and validateProfiles() with inactive profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const testProfile = {
+            type : "zosmf",
+            host: null,
+            port: 1443,
+            user: null,
+            password: null,
+            rejectUnauthorized: false,
+            name: "testName"
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        Object.defineProperty(CheckStatus, "getZosmfInfo", {
+            value: jest.fn(() => {
+                return undefined
+            })
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return undefined;
+                    }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {status: "inactive", name: testIProfile.name};
+                    }),
+                    validateProfiles: jest.fn(() => {
+                        return {status: "inactive", name: testIProfile.name};
+                    }),
+                    profilesForValidation: [{status: "inactive", name: testIProfile.name}]
+                };
+            })
+        });
         await theProfiles.checkCurrentProfile(testIProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
