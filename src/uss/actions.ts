@@ -157,15 +157,15 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
 
     await Promise.all(
         value.map(async (item) => {
-                const isBinary = isBinaryFileSync(item.fsPath);
+            const isBinary = isBinaryFileSync(item.fsPath);
 
-                if (isBinary) {
-                    await uploadBinaryFile(node, item.fsPath);
-                } else {
-                    const doc = await vscode.workspace.openTextDocument(item);
-                    await uploadFile(node, doc);
-                }
+            if (isBinary) {
+                await uploadBinaryFile(node, item.fsPath);
+            } else {
+                const doc = await vscode.workspace.openTextDocument(item);
+                await uploadFile(node, doc);
             }
+        }
         ));
     ussFileProvider.refresh();
 }
@@ -174,7 +174,16 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+        const prof = node.getProfile();
+
+        // if new api method exists, use it
+        if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContent(filePath, ussName, {
+                binary: true,
+            });
+        } else {
+            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+        }
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -184,7 +193,17 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(doc.fileName, ussName);
+        const prof = node.getProfile();
+
+        // if new api method exists, use it
+        if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, {
+                encoding: prof.profile.encoding
+            });
+        } else {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
+        }
+
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -237,7 +256,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let node: IZoweUSSTreeNode;
     // TODO remove as
     const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
-                                child.getProfileName() && child.getProfileName() === sesName.trim()));
+        child.getProfileName() && child.getProfileName() === sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
@@ -275,8 +294,21 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
-                doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+            const prof = sesNode.getProfile();
+            // if new api method exists, use it
+            if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
+                return ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, remote, {
+                    binary,
+                    localEncoding: null,
+                    etag: etagToUpload,
+                    returnEtag,
+                    encoding: prof.profile.encoding
+                });
+            } else {
+                return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
+                    doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+            }
+
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
@@ -295,12 +327,14 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 // Store old document text in a separate variable, to be used on merge conflict
                 const oldDocText = doc.getText();
                 const oldDocLineCount = doc.lineCount;
-                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(node.getProfile()).getContents(
+                const prof = node.getProfile();
+                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(
                     node.fullPath, {
-                        file: node.getUSSDocumentFilePath(),
-                        binary,
-                        returnEtag: true
-                    });
+                    file: node.getUSSDocumentFilePath(),
+                    binary,
+                    returnEtag: true,
+                    encoding: prof.profile.encoding
+                });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
                 if (downloadEtag !== etagToUpload) {
