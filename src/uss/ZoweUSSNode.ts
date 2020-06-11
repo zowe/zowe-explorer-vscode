@@ -94,7 +94,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.label = this.profileName + this.shortLabel;
             this.tooltip = this.profileName + this.fullPath;
         }
-        // TODO: this should not be necessary of each node gets initialized with the profile reference.
+        // TODO: this should not be necessary if each node gets initialized with the profile reference.
         if (mProfileName) {
             this.setProfile(Profiles.getInstance().loadNamedProfile(mProfileName));
         } else if (mParent && mParent.mProfileName) {
