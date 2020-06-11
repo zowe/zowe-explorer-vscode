@@ -38,7 +38,7 @@
     "submitMember.jobSubmitted": "Job submitted ",
     "submitMember.jobSubmissionFailed": "Job submission failed\n",
     "deleteDataset.log.debug": "Deleting data set ",
-    "deleteDataset.quickPickOption": "? This will permanently remove it from your system.",
+    "deleteDataset.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
     "deleteDataset.showQuickPick.delete": "Delete",
     "deleteDataset.showQuickPick.Cancel": "Cancel",
     "deleteDataset.showQuickPick.log.debug": "User picked cancel. Cancelling delete of data set",

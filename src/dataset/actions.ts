@@ -591,7 +591,7 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
 export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("deleteDataset.quickPickOption", "Delete ") + node.label + localize("deleteDataset.quickPickOption", "? This will permanently remove it from your system."),
+        placeHolder: localize("deleteDataset.quickPickOption", "Delete {0}? This will permanently remove it from your system.", node.label),
         ignoreFocusOut: true,
         canPickMany: false
     };
