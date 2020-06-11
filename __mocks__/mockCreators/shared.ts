@@ -61,7 +61,7 @@ export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
 export function removeNodeFromArray(badNode, array) {
     array.splice(array.findIndex(
         (nodeInArray) => badNode.getProfileName() === nodeInArray.getProfileName()
-    ), 1)
+    ), 1);
 }
 
 export function createIProfile(): imperative.IProfileLoaded {
@@ -81,7 +81,7 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            type : "zosmf",
+            type: "zosmf",
             host: null,
             port: 1443,
             user: null,
@@ -113,7 +113,7 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
+export function createTreeView(): vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
@@ -164,7 +164,8 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getProfiles: jest.fn(() => {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
-        refresh: jest.fn()
+        refresh: jest.fn(),
+        editSession: jest.fn()
     } as any;
 }
 
@@ -197,7 +198,7 @@ export function createQuickPickContent(entered: any, item: vscode.QuickPickItem)
 
 export function createInputBox(value: string): any {
     const inputBox: vscode.InputBox = {
-        value: value,
+        value,
         title: null,
         enabled: true,
         busy: false,
@@ -218,4 +219,13 @@ export function createInputBox(value: string): any {
         validationMessage: undefined
     };
     return inputBox;
+}
+
+export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
+    return {
+        get: jest.fn(),
+        update: jest.fn(),
+        has: jest.fn(),
+        inspect: jest.fn()
+    };
 }
