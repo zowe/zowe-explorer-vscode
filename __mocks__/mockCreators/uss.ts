@@ -25,6 +25,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.refresh = jest.fn();
     newTree.removeRecall = jest.fn();
     newTree.addRecall = jest.fn();
+    newTree.getRecall = jest.fn();
     newTree.checkCurrentProfile = jest.fn();
     newTree.refreshElement = jest.fn();
     newTree.getChildren = jest.fn();
