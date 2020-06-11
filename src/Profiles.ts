@@ -853,7 +853,7 @@ export class Profiles {
             return undefined;
         }
 
-        return userName;
+        return userName.trim();
     }
 
     private async passwordInfo(input?) {
@@ -879,7 +879,7 @@ export class Profiles {
             return undefined;
         }
 
-        return passWord;
+        return passWord.trim();
     }
 
     private async ruInfo(input?) {
