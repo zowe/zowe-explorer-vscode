@@ -177,7 +177,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     if (!vscode.workspace.getConfiguration().get("Zowe Welcome Window Shown")) {
-        welcomeWebview.generateInstance("Welcome to Zowe!");
+        await welcomeWebview.generateInstance("Welcome to Zowe!");
         await vscode.workspace.getConfiguration().update("Zowe Welcome Window Shown", true, vscode.ConfigurationTarget.Global);
     }
 

@@ -12,23 +12,18 @@
 import * as fs from "fs";
 import * as path from "path";
 
-export function getContentForWebView(directory: string): {html: string; js: string; css: string;} {
+export async function getContentForWebView(directory: string): Promise<{ html: string; js: string; css: string; }> {
     return {
-        html: fs.readFileSync(path.resolve(directory, "index.html"), "UTF-8"),
-        js: fs.readFileSync(path.resolve(directory, "index.js"), "UTF-8"),
-        css: fs.readFileSync(path.resolve(directory, "index.css"), "UTF-8")
+        html: await fs.promises.readFile(path.resolve(directory, "index.html"), { encoding: "utf-8" }),
+        js: await fs.promises.readFile(path.resolve(directory, "index.js"), { encoding: "utf-8" }),
+        css: await fs.promises.readFile(path.resolve(directory, "index.css"), { encoding: "utf-8" })
     };
 }
 
-export function unifyContentOfHTML(content: {html: string; js: string; css: string;}) {
+export function unifyContentOfHTML(content: { html: string; js: string; css: string; }) {
     let html = content.html;
     html = html.replace("<style-inject></style-inject>", `<style>${content.css}</style>`);
     html = html.replace("<script-inject></script-inject>", `<script>${content.js}</script>`);
 
     return html;
-}
-
-export function injectConstantsBlockToHTML(html: string, constants: {[index: string]: any}) {
-    const constantsString = Buffer.from(JSON.stringify(constants)).toString("base64");
-    return html.replace("constantsPlaceholderAttribute", `constants="${constantsString}"`);
 }

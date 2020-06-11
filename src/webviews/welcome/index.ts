@@ -5,13 +5,13 @@ import * as globals from "../../globals";
 
 class WelcomeWebView {
     private panel: vscode.WebviewPanel;
-    private readonly content: { html: string; js: string; css: string; };
+    private content: { html: string; js: string; css: string; };
 
-    constructor() {
-        this.content = getContentForWebView(path.resolve(globals.EXT_PATH, "webviews", "welcome"));
-    }
+    public async initialize(title: string) {
+        if (!this.content) {
+            this.content = await getContentForWebView(path.resolve(globals.EXT_PATH, "webviews", "welcome"));
+        }
 
-    public initialize(title: string) {
         this.initView(title);
         this.initHTMLContent();
     }
@@ -33,19 +33,18 @@ class WelcomeWebView {
 
     private initHTMLContent() {
         this.panel.webview.html = unifyContentOfHTML(this.content);
-        console.log(this.panel.webview.html)
     }
 }
 
 let instance = null as WelcomeWebView;
 
-export function generateInstance(title: string) {
+export async function generateInstance(title: string) {
     if (!instance) {
         instance = new WelcomeWebView();
     }
 
     if (instance) {
-        instance.initialize(title);
+        await instance.initialize(title);
     }
 
     return instance;
