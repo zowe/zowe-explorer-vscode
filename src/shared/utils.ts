@@ -233,7 +233,11 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                 title
             }, () => {
                 if (isZoweDatasetTreeNode(node)) {
-                    return ZoweExplorerApiRegister.getMvsApi(node ? node.getProfile(): profile).putContents(doc.fileName,
+                    const prof = node ? node.getProfile(): profile;
+                    if (prof.profile.encoding) {
+                        uploadOptions.encoding = prof.profile.encoding;
+                    }
+                    return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName,
                         remotePath,
                         uploadOptions);
                 } else {
