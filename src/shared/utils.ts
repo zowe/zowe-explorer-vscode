@@ -237,9 +237,24 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                         remotePath,
                         uploadOptions);
                 } else {
-                    return ZoweExplorerApiRegister.getUssApi(profile).putContents(
-                        doc.fileName, remotePath, binary, null, null, returnEtag);
+
+                    // if new api method exists, use it
+                    if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
+                        return ZoweExplorerApiRegister.getUssApi(profile).putContent(
+                            doc.fileName, remotePath, 
+                            {
+                                binary,
+                                localEncoding: null,
+                                etag: null,
+                                returnEtag,
+                                encoding: profile.profile.encoding
+                            });
+                    } else {
+                        return ZoweExplorerApiRegister.getUssApi(profile).putContents(
+                            doc.fileName, remotePath, binary, null, null, returnEtag);
                     }
+                }
+
             });
             uploadResponse.then((response) => {
                 if (response.success) {
