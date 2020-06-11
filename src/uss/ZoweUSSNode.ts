@@ -302,7 +302,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
+            placeHolder: localize("deleteUSSNode.quickPickOption", "Delete {0}? This will permanently remove it from your system.", this.label),
             ignoreFocusOut: true,
             canPickMany: false
         };
