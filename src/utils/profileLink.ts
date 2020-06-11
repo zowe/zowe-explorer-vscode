@@ -91,13 +91,17 @@ async function findLinkedProfile(aProfile: IProfileLoaded, type: string) {
         const file = path.join(linkRootDirectory, aProfile.type, aProfile.name + FILE_SUFFIX);
         if (fs.existsSync(file)) {
             const properties = readYaml.safeLoad(fs.readFileSync(file));
-            const links = properties.secondaries;
-            for (const element of Object.keys(links)) {
-                if (element === type) {
-                    try {
-                        profile = await Profiles.getInstance().directLoad(type, links[type]);
-                    } catch (err) {
-                        throw new Error(localize("profileLink.missingProfile", "Attempted to load a missing profile.") + " + " + err.message);
+            if (properties) {
+                const links = properties.secondaries;
+                if (links) {
+                    for (const element of Object.keys(links)) {
+                        if (element === type) {
+                            try {
+                                profile = await Profiles.getInstance().directLoad(type, links[type]);
+                            } catch (err) {
+                                throw new Error(localize("profileLink.missingProfile", "Attempted to load a missing profile.") + " + " + err.message);
+                            }
+                        }
                     }
                 }
             }

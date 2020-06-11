@@ -16,7 +16,7 @@ import { ZosmfSession, IJob } from "@zowe/cli";
 import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { Job } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, labelHack } from "../shared/utils";
+import { getAppName, sortTreeItems, labelRefresh } from "../shared/utils";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
@@ -426,7 +426,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (icon) {
                 node.iconPath = icon.path;
             }
-            labelHack(node);
+            labelRefresh(node);
             node.dirty = true;
             this.refreshElement(node);
             this.addHistory(searchCriteria);

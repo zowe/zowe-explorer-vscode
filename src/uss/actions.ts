@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { labelHack, refreshTree, concatChildNodes, willForceUpload } from "../shared/utils";
+import { labelRefresh, refreshTree, concatChildNodes, willForceUpload } from "../shared/utils";
 import { errorHandling } from "../utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
@@ -86,7 +86,7 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
     await Profiles.getInstance().refresh();
     ussFileProvider.mSessionNodes.forEach((sessNode) => {
         if (contextually.isSession(sessNode)) {
-            labelHack(sessNode);
+            labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
             refreshTree(sessNode);

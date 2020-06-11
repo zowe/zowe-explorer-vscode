@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { errorHandling } from "../utils";
-import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import { labelRefresh, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -41,7 +41,7 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (contextually.isSessionNotFav(sessNode)) {
-            labelHack(sessNode);
+            labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
             refreshTree(sessNode);
@@ -799,6 +799,19 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
     vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
     localize("hMigrate.requestSent2", " requested."));
     return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+}
+
+/**
+ * Recall data sets
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node to paste to
+ */
+export async function hRecallDataSet(node: ZoweDatasetNode) {
+    const { dataSetName } = dsUtils.getNodeLabels(node);
+    vscode.window.showInformationMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName +
+    localize("hRecall.requestSent2", " requested."));
+    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
 }
 
 /**

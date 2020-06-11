@@ -198,6 +198,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.pasteDataSet", (node) => dsActions.pasteDataSet(node, datasetProvider));
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
+    vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
     vscode.workspace.onDidChangeConfiguration(async (e) => { datasetProvider.onDidChangeConfiguration(e); });
 
     initSubscribers(context, datasetProvider);
@@ -378,8 +379,8 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
         return profile.name;
     });
     // Filter to list of the APIs available for current tree explorer
-    profileNamesList = profileNamesList.filter((profileName) => {
-        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+    profileNamesList = profileNamesList.filter((name) => {
+        const profile = Profiles.getInstance().loadNamedProfile(name);
         if (zoweFileProvider instanceof USSTree) {
             const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
             return ussProfileTypes.includes(profile.type);
@@ -393,54 +394,58 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTre
             return jesProfileTypes.includes(profile.type);
         }
     });
+
+    let profileName: string;
+
     if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((profileName) =>
+        profileNamesList = profileNamesList.filter((name) =>
             // Find all cases where a profile is not already displayed
-            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName )
+            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === name )
         );
     }
-    const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
-    const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
-    const quickpick = vscode.window.createQuickPick();
-    const placeholder = localize("addSession.quickPickOption",
-        "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
 
-    if (globals.ISTHEIA) {
-        const options: vscode.QuickPickOptions = {
-            placeHolder: placeholder
-        };
-        // get user selection
-        const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        chosenProfile = choice === createPick ? "" : choice.label;
-    } else {
-        quickpick.items = [createPick, ...items];
-        quickpick.placeholder = placeholder;
-        quickpick.ignoreFocusOut = true;
-        quickpick.show();
-        const choice = await resolveQuickPickHelper(quickpick);
-        quickpick.hide();
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-            return;
-        }
-        if (choice instanceof FilterDescriptor) {
-            chosenProfile = "";
+    if (profileNamesList.length) {
+        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
+        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const quickpick = vscode.window.createQuickPick();
+        const placeholder = localize("addSession.quickPickOption",
+            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
+
+        if (globals.ISTHEIA) {
+            const options: vscode.QuickPickOptions = {
+                placeHolder: placeholder
+            };
+            // get user selection
+            const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            chosenProfile = choice === createPick ? "" : choice.label;
         } else {
-            chosenProfile = choice.label;
+            quickpick.items = [createPick, ...items];
+            quickpick.placeholder = placeholder;
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                chosenProfile = "";
+                if (quickpick.value) {
+                    profileName = quickpick.value;
+                }
+            } else {
+                chosenProfile = choice.label;
+            }
         }
     }
 
     if (chosenProfile === "") {
         let newprofile: any;
-        let profileName: string;
-        if (quickpick.value) {
-            profileName = quickpick.value;
-        }
-
         const options = {
             placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
             prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
