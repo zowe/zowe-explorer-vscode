@@ -33,6 +33,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.removeFavorite = jest.fn();
     newTree.searchInLoadedItems = jest.fn();
     newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
+    newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem('test'));
     newTree.setItem = jest.fn();
     newTree.addHistory = jest.fn();
     return newTree;

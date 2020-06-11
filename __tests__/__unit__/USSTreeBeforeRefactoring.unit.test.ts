@@ -136,29 +136,6 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Calls getTreeItem with sample element and checks the return is vscode.TreeItem
-     * SHOULD BE MOVED TO ZoweTreeProvider tests
-     *************************************************************************************************************/
-    it("Testing the getTreeItem method", async () => {
-        const sampleElement = new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None,
-            null, null, null);
-        expect(testTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
-    });
-
-    /*************************************************************************************************************
-     * Creates a rootNode and checks that a getParent() call returns null
-     * SHOULD BE MOVED TO ZoweTreeProvider tests
-     *************************************************************************************************************/
-    it("Tests that getParent returns null when called on a rootNode", async () => {
-        // Waiting until we populate rootChildren with what getChildren() returns
-        const rootChildren = await testTree.getChildren();
-        const parent = testTree.getParent(rootChildren[0]);
-        // We expect parent to equal null because when we call getParent() on the rootNode
-        // It should return null rather than itself
-        expect(parent).toEqual(null);
-    });
-
-    /*************************************************************************************************************
      * Creates a child with a rootNode as parent and checks that a getParent() call returns null.
      * Also creates a child with a non-rootNode parent and checks that getParent() returns the correct ZoweUSSNode
      * SHOULD BE MOVED TO ZoweTreeProvider tests
@@ -179,7 +156,6 @@ describe("Unit Tests (Jest)", () => {
         expect(testTree.getParent(testTree.mSessionNodes[0])).toBe(null);
         expect(parent1).toBe(testTree.mSessionNodes[0]);
         expect(parent2).toBe(sampleChild1);
-
     });
 
     /*************************************************************************************************************
