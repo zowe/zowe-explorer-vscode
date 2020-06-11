@@ -855,7 +855,6 @@ describe("Profile class unit tests", () => {
                         createNewConnection: jest.fn(()=>{
                             return {};
                         }),
-                        profilesForValidation: [],
                         listProfile: jest.fn(()=>{
                             return {};
                         }),
@@ -1302,7 +1301,7 @@ describe("Profile class unit tests", () => {
         };
         Object.defineProperty(CheckStatus, "getZosmfInfo", {
             value: jest.fn(() => {
-                return undefined
+                return undefined;
             })
         });
         Object.defineProperty(Profiles, "getInstance", {
@@ -1321,6 +1320,46 @@ describe("Profile class unit tests", () => {
                 };
             })
         });
+        await theProfiles.checkCurrentProfile(testIProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+
+    it("Tests checkCurrentProfile()  and validateProfiles() with invalid profile", async () => {
+        const theProfiles = await Profiles.createInstance(log);
+        const testProfile = {
+            type : "zosmf",
+            host: "fake",
+            port: 1443,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorized: false,
+            name: "testName"
+        };
+        const testIProfile: IProfileLoaded = {
+            name: "testProf",
+            profile: testProfile,
+            type: "zosmf",
+            message: "",
+            failNotFound: false
+        };
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    promptCredentials: jest.fn(() => {
+                        return undefined;
+                    }),
+                    checkCurrentProfile: jest.fn(),
+                    validateProfiles: jest.fn(),
+                    profilesForValidation: undefined
+                };
+            })
+        });
+        Object.defineProperty(CheckStatus, "getZosmfInfo", {
+            value: jest.fn(() => {
+                throw testIProfile.name;
+            })
+        });
+
         await theProfiles.checkCurrentProfile(testIProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });

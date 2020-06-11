@@ -761,64 +761,57 @@ export class Profiles {
         let filteredProfile: IProfileValidation;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        try {
-            // Filter profilesForValidation to check if the profile is already validated
-            this.profilesForValidation.filter((profile) => {
-                if (profile.name === theProfile.name) {
-                    filteredProfile = {
-                        status: profile.status,
-                        name: profile.name
-                    };
-                }
-            });
-
-            // If not yet validated, call getStatus and validate the profile
-            // status will be stored in profilesForValidation
-            if (filteredProfile === undefined) {
-                try {
-                    const profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
-
-                    switch (profileStatus) {
-                        case "active":
-                            filteredProfile = {
-                                status: "active",
-                                name: theProfile.name
-                            };
-                            this.profilesForValidation.push(filteredProfile);
-                            break;
-                        case "inactive":
-                            filteredProfile = {
-                                status: "inactive",
-                                name: theProfile.name
-                            };
-                            this.profilesForValidation.push(filteredProfile);
-                            break;
-                        case "unverified":
-                            filteredProfile = {
-                                status: "unverified",
-                                name: theProfile.name
-                            };
-                            this.profilesForValidation.push(filteredProfile);
-                        default:
-                    }
-
-                } catch (error) {
-                    this.log.debug("Validate Error - Invalid Profile: " + error);
-                    filteredProfile = {
-                        status: "inactive",
-                        name: theProfile.name
-                    };
-                    this.profilesForValidation.push(filteredProfile);
-                }
+        // Filter profilesForValidation to check if the profile is already validated
+        this.profilesForValidation.filter((profile) => {
+            if (profile.name === theProfile.name) {
+                filteredProfile = {
+                    status: profile.status,
+                    name: profile.name
+                };
             }
+        });
 
-            return filteredProfile;
+        // If not yet validated, call getStatus and validate the profile
+        // status will be stored in profilesForValidation
+        if (filteredProfile === undefined) {
+            try {
+                const profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
 
-        }   catch (error) {
-            await errorHandling(error);
-            this.log.debug("Validate Error: " + error);
+                switch (profileStatus) {
+                    case "active":
+                        filteredProfile = {
+                            status: "active",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "inactive":
+                        filteredProfile = {
+                            status: "inactive",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "unverified":
+                        filteredProfile = {
+                            status: "unverified",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                    default:
+                }
+
+            } catch (error) {
+                this.log.debug("Validate Error - Invalid Profile: " + error);
+                filteredProfile = {
+                    status: "inactive",
+                    name: theProfile.name
+                };
+                this.profilesForValidation.push(filteredProfile);
+            }
         }
 
+        return filteredProfile;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
