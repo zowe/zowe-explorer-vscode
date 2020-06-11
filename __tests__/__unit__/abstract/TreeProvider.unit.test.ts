@@ -9,13 +9,14 @@
 *                                                                                 *
 */
 
-import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { createIProfile, createISession, createTreeView, createFileResponse } from "../../__mocks__/mockCreators/shared";
-import { createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
-import { ValidProfileEnum, Profiles } from "../../src/Profiles";
+import { createIProfile, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
+import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
+import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import { Logger } from "@zowe/imperative";
-import { createUSSTree } from "../../src/uss/USSTree";
+import * as globals from "../../../src/globals";
+import { createUSSTree } from "../../../src/uss/USSTree";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -23,7 +24,9 @@ async function createGlobalMocks() {
         mockDefaultProfile: jest.fn(),
         withProgress: jest.fn(),
         createTreeView: jest.fn(),
+        mockAffects: jest.fn(),
         getConfiguration: jest.fn(),
+        refresh: jest.fn(),
         testProfile: createIProfile(),
         testSession: createISession(),
         testResponse: createFileResponse({items: []}),
@@ -34,8 +37,16 @@ async function createGlobalMocks() {
                 Notification: 15
             };
         }),
+        enums: jest.fn().mockImplementation(() => {
+            return {
+                Global: 1,
+                Workspace: 2,
+                WorkspaceFolder: 3
+            };
+        })
     };
 
+    Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
@@ -52,11 +63,13 @@ async function createGlobalMocks() {
         }),
         configurable: true
     });
-    
+
+    globalMocks.mockAffects.mockReturnValue(true);
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
     globalMocks.testSessionNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testUSSTree = await createUSSTree(Logger.getAppLogger());
+    Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
@@ -83,13 +96,6 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 });
 
 describe("Tree Provider unit tests, function getParent", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testSessionNode: null,
-        };
-        return newMocks;
-    }
-
     it("Tests that getParent returns null when called on a root node", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -109,4 +115,39 @@ describe("Tree Provider unit tests, function getParent", () => {
 
         expect(globalMocks.testUSSTree.getParent(sampleChild)).toBe(globalMocks.testUSSTree.mSessionNodes[1]);
     });
-})
+});
+
+describe("Tree Provider unit tests, function getTreeItem", () => {
+    it("Testing the onDidConfiguration", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const Event = jest.fn().mockImplementation(() => {
+            return {
+                affectsConfiguration: globalMocks.mockAffects
+            };
+        });
+        const e = new Event();
+        globalMocks.getConfiguration.mockClear();
+
+        await globalMocks.testUSSTree.onDidChangeConfiguration(e);
+        expect(globalMocks.getConfiguration.mock.calls.length).toBe(2);
+    });
+});
+
+describe("Tree Provider unit tests, function getTreeItem", () => {
+    it("Testing that expand tree is executed successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed,
+                                       globalMocks.testUSSTree.mSessionNodes[0], globalMocks.testSession, null);
+        folder.contextValue = globals.USS_DIR_CONTEXT;
+
+        // Testing flipState to open
+        await globalMocks.testUSSTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+
+        // Testing flipState to closed
+        await globalMocks.testUSSTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
+    });
+});
