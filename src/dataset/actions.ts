@@ -893,51 +893,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     }
     const start = path.join(globals.DS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
-    let sesName = ending.substring(0, ending.indexOf(path.sep));
-
-    // Added special handling for attempt to save favourite node
-    if (sesName === localize("sessions.favorites.name", "Favorites")) {
-        const datasetName = ending.split(path.sep).pop();
-        const memberRegex = /\(.+\)$/;
-        let targetNode;
-
-        if (memberRegex.test(datasetName)) {
-            const nameRegex = new RegExp(`${datasetName.replace(memberRegex, "")}$`);
-            const targetParentNode = datasetProvider.mFavorites.find((favNode) => {
-                return nameRegex.test(favNode.label);
-            });
-
-            if (targetParentNode) {
-                const memberRegexResult = datasetName.match(memberRegex);
-                const memberName = memberRegexResult && memberRegexResult[0];
-
-                const hasMember = targetParentNode.children.some((memNode) => {
-                    return memNode.label === memberName.replace(/(\()|(\))/g, "");
-                });
-                if (hasMember) {
-                    targetNode = targetParentNode;
-                }
-            }
-        } else {
-            const nameRegex = new RegExp(`${datasetName}$`);
-            targetNode = datasetProvider.mFavorites.find((favNode) => {
-                return nameRegex.test(favNode.label);
-            });
-        }
-
-        if (targetNode) {
-            const sessionRegex = /^\[.+\]/;
-            const sessionRegexResult = targetNode.label
-                .match(sessionRegex);
-            const sessionName = sessionRegexResult && sessionRegexResult[0];
-
-            if (sessionName) {
-                sesName = sessionName.replace(/(\[)|(\])/g, "");
-            }
-        }
-    }
-
-    const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
+    const sesName = ending.substring(0, ending.indexOf(path.sep));
+    const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
         return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));

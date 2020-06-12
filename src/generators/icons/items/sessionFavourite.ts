@@ -16,7 +16,7 @@ import { isSessionFavorite } from "../../../shared/context";
 const icon: IIconItem = {
     id: IconId.sessionFavourite,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("folder-root-favorite-closed.svg"),
+    path: getIconPathInResources("folder-root-favorite-star-closed.svg"),
     check: (node) =>  isSessionFavorite(node)
 };
 
