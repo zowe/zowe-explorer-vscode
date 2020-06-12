@@ -131,7 +131,7 @@ export class ZoweTreeProvider {
         const profileName = node.getProfileName();
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
-            node.getProfile().profile= EditSession as IProfile;
+            node.getProfile().profile = EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
             await setSession(node, EditSession as ISession);
             this.refresh();

@@ -49,8 +49,11 @@ export function createIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
+            host: "fake",
+            port: 999,
             user: undefined,
-            password: undefined
+            password: undefined,
+            rejectUnauthorize: false
         },
         type: "zosmf",
         message: "",

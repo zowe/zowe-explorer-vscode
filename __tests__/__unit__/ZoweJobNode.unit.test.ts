@@ -342,77 +342,6 @@ describe("Zos Jobs Unit Tests", () => {
             job.dirty = true;
         });
 
-        it("Testing that expand tree is executed successfully", async () => {
-            const refresh = jest.fn();
-            createBasicZosmfSession.mockReturnValue(session);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
-            refresh.mockReset();
-            await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
-            await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], false);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-closed.svg");
-            await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
-
-            const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
-                testJobsProvider.mSessionNodes[1].getSession(), iJob, profileOne);
-            job.contextValue = "job";
-            await testJobsProvider.flipState(job, true);
-            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
-            await testJobsProvider.flipState(job, false);
-            expect(JSON.stringify(job.iconPath)).toContain("folder-closed.svg");
-            await testJobsProvider.flipState(job, true);
-            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
-        });
-
-        it("Testing that prompt credentials work", async () => {
-            const refresh = jest.fn();
-            createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.getProfile());
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
-            refresh.mockReset();
-            jest.spyOn(testJobsProvider, "flipState");
-            newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-            await testJobsProvider.flipState(newjobNode, true);
-            expect(testJobsProvider.flipState).toHaveBeenCalled();
-
-            const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
-                sessionwocred, iJob, profileOne);
-            job.contextValue = "job";
-            await testJobsProvider.flipState(job, true);
-            expect(JSON.stringify(job.iconPath)).toContain("folder-open.svg");
-        });
-
-        it("Testing that prompt credentials will have an error", async () => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        getDefaultProfile: () => ({name: "firstName"}),
-                        promptCredentials: undefined
-                    };
-                })
-            });
-            const refresh = jest.fn();
-            createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("[fake]: Owner:fakeUser Prefix:*", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.getProfile());
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
-            refresh.mockReset();
-            jest.spyOn(testJobsProvider, "flipState");
-            newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-            await testJobsProvider.flipState(newjobNode, true);
-            expect(testJobsProvider.flipState).toHaveBeenCalled();
-
-            newjobNode.label = "Favorites";
-            await testJobsProvider.flipState(newjobNode, true);
-            expect(testJobsProvider.flipState).toHaveBeenCalled();
-        });
-
         /*************************************************************************************************************
          * Jobs Filter prompts
          *************************************************************************************************************/
@@ -535,28 +464,6 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             await testJobsProvider.searchPrompt(newjobNode);
             expect(profileLoader.Profiles.getInstance().validProfile).toBe(profileLoader.ValidProfileEnum.VALID);
-        });
-
-        it("Testing the jobs prompt credentials error", async () => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        getDefaultProfile: () => ({name: "firstName"}),
-                        validProfile: profileLoader.ValidProfileEnum.INVALID,
-                        checkCurrentProfile: jest.fn()
-                    };
-                })
-            });
-
-            createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
-                jobNode, sessionwocred, iJob, jobNode.getProfile());
-            newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            testJobsProvider.initializeJobsTree(Logger.getAppLogger());
-            await testJobsProvider.searchPrompt(newjobNode);
-            expect(profileLoader.Profiles.getInstance().validProfile).toBe(profileLoader.ValidProfileEnum.INVALID);
         });
 
         it("Testing that user filter prompts are executed successfully theia specific route", async () => {
@@ -739,32 +646,6 @@ describe("Zos Jobs Unit Tests", () => {
         });
 
         /*************************************************************************************************************
-         * Specific interpret tests
-         *************************************************************************************************************/
-        it("Testing the interpret routine", async () => {
-            const testJobsProvider = new ZosJobsProvider();
-            expect(testJobsProvider.interpretFreeform("STC01234")).toEqual("JobId:STC01234");
-            expect(testJobsProvider.interpretFreeform("job STC01234")).toEqual("JobId:STC01234");
-            expect(testJobsProvider.interpretFreeform("STC01234 JOB")).toEqual("JobId:STC01234");
-            expect(testJobsProvider.interpretFreeform("JOB12345")).toEqual("JobId:JOB12345");
-            expect(testJobsProvider.interpretFreeform("JOB0123456")).toEqual("JobId:JOB01234");
-            expect(testJobsProvider.interpretFreeform("JOB012345N")).toEqual("JobId:JOB01234");
-            // We interpret this as an owner prefix as the value is invalid as a job
-            expect(testJobsProvider.interpretFreeform("JOB0X25N")).toEqual("Owner:JOB0X25N");
-
-            expect(testJobsProvider.interpretFreeform("MYHLQ*")).toEqual("Owner:MYHLQ*");
-
-            expect(testJobsProvider.interpretFreeform("Owner: MYHLQ pRefix: STYYY*")).toEqual("Owner:MYHLQ Prefix:STYYY*");
-            expect(testJobsProvider.interpretFreeform("jobid: JOB0X25N")).toEqual("JobId:JOB0X25N"); // Although invalid Job ID the user is explicit
-            expect(testJobsProvider.interpretFreeform("MYHLQ")).toEqual("Owner:MYHLQ");
-            // Although invalid Job ID the user is explicit
-            expect(testJobsProvider.interpretFreeform("MYHLQ* myJobname")).toEqual("Owner:MYHLQ* Prefix:myJobname");
-            expect(testJobsProvider.interpretFreeform("MYHLQ* myJob")).toEqual("Owner:MYHLQ* Prefix:myJob");
-            expect(testJobsProvider.interpretFreeform("MYHLQ* myJob*")).toEqual("Owner:MYHLQ* Prefix:myJob*");
-            expect(testJobsProvider.interpretFreeform("* * STC01234")).toEqual("JobId:STC01234");
-        });
-
-        /*************************************************************************************************************
          * Testing that add search and Favorite sorting works
          *************************************************************************************************************/
         it("Testing that add Search Favorite works properly", async () => {
@@ -816,90 +697,6 @@ describe("Zos Jobs Unit Tests", () => {
             testTree.removeFavorite(testTree.mFavorites[0]);
             testTree.removeFavorite(testTree.mFavorites[0]);
             expect(testTree.mFavorites).toEqual([]);
-        });
-
-        it("Tests the children are the spool files", async () => {
-            const iJobFile: zowe.IJobFile = {
-                "byte-count": 128,
-                "job-correlator": "",
-                "record-count": 1,
-                "records-url": "fake/records",
-                "class": "A",
-                "ddname": "STDOUT",
-                "id": 101,
-                "jobid": "101",
-                "jobname": "TESTJOB",
-                "lrecl": 80,
-                "procstep": "",
-                "recfm": "FB",
-                "stepname": "STEP",
-                "subsystem": ""
-            };
-            const jobNodeSpool = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileOne);
-            jobNodeSpool.contextValue = "job";
-            const getSpoolFiles = jest.fn();
-            Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
-            Object.defineProperty(GetJobs, "getSpoolFiles", { value: getSpoolFiles });
-            getSpoolFiles.mockReturnValue([iJobFile]);
-            jobNodeSpool.dirty = true;
-            const spoolFiles = await jobNodeSpool.getChildren();
-            expect(spoolFiles.length).toBe(1);
-            expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
-            expect(spoolFiles[0].owner).toEqual("fake");
-        });
-
-        /*************************************************************************************************************
-         * Test the editSession command
-         *************************************************************************************************************/
-        it("Test the editSession command ", async () => {
-            Object.defineProperty(profileLoader.Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
-                        loadNamedProfile: mockLoadNamedProfile,
-                        getDefaultProfile: jest.fn(),
-                        editSession: jest.fn(() => {
-                            return profileLoad;
-                        }),
-                    };
-                })
-            });
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            const checkSession = jest.spyOn(testJobsProvider, "editSession");
-            testJobsProvider.editSession(jobNode);
-            expect(checkSession).toHaveBeenCalled();
-        });
-    });
-
-    describe("ZosJobsProvider onDidConfiguration", () => {
-        /*************************************************************************************************************
-         * Testing the onDidConfiguration
-         *************************************************************************************************************/
-        const testJobsProvider = new ZosJobsProvider();
-
-        it("Testing the onDidConfiguration", async () => {
-            const mockAffects = jest.fn();
-            const Event = jest.fn().mockImplementation(() => {
-                return {
-                    affectsConfiguration: mockAffects
-                };
-            });
-            const e = new Event();
-            mockAffects.mockReturnValue(true);
-            getConfiguration.mockReset();
-            getConfiguration.mockReturnValue({
-                get: (setting: string) => [
-                    "[test]: /u/aDir{directory}",
-                    "[test]: /u/myFile.txt{textFile}",
-                ],
-                update: jest.fn(()=>{
-                    return {};
-                })
-            });
-            await testJobsProvider.onDidChangeConfiguration(e);
-            expect(getConfiguration).toHaveBeenCalled();
-            expect(getConfiguration).toHaveBeenCalledTimes(2);
         });
     });
 });

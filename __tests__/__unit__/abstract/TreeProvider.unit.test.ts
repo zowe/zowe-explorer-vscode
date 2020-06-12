@@ -1,0 +1,117 @@
+/*
+* This program and the accompanying materials are made available under the terms of the *
+* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+* https://www.eclipse.org/legal/epl-v20.html                                      *
+*                                                                                 *
+* SPDX-License-Identifier: EPL-2.0                                                *
+*                                                                                 *
+* Copyright Contributors to the Zowe Project.                                     *
+*                                                                                 *
+*/
+
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import * as vscode from "vscode";
+import { createIProfile, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
+import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
+import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
+import { Logger } from "@zowe/imperative";
+import * as globals from "../../../src/globals";
+import { createUSSTree } from "../../../src/uss/USSTree";
+import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { Job } from "../../../src/job/ZoweJobNode";
+import { createJobsTree } from "../../../src/job/ZosJobsProvider";
+
+async function createGlobalMocks() {
+    const globalMocks = {
+        mockLoadNamedProfile: jest.fn(),
+        mockDefaultProfile: jest.fn(),
+        withProgress: jest.fn(),
+        createTreeView: jest.fn(),
+        mockAffects: jest.fn(),
+        mockEditSession: jest.fn(),
+        getConfiguration: jest.fn(),
+        refresh: jest.fn(),
+        testProfile: createIProfile(),
+        testSession: createISession(),
+        testResponse: createFileResponse({items: []}),
+        testUSSTree: null,
+        testSessionNode: null,
+        ProgressLocation: jest.fn().mockImplementation(() => {
+            return {
+                Notification: 15
+            };
+        }),
+        enums: jest.fn().mockImplementation(() => {
+            return {
+                Global: 1,
+                Workspace: 2,
+                WorkspaceFolder: 3
+            };
+        })
+    };
+
+    Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.getConfiguration, configurable: true });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
+                getDefaultProfile: globalMocks.mockDefaultProfile,
+                validProfile: ValidProfileEnum.VALID,
+                checkCurrentProfile: jest.fn(),
+                loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                editSession: globalMocks.mockEditSession
+            };
+        }),
+        configurable: true
+    });
+
+    globalMocks.mockAffects.mockReturnValue(true);
+    globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+    globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
+    globalMocks.testSessionNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.testUSSTree = await createUSSTree(Logger.getAppLogger());
+    Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
+    globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
+    globalMocks.getConfiguration.mockReturnValue({
+        get: (setting: string) => [
+            "[test]: /u/aDir{directory}",
+            "[test]: /u/myFile.txt{textFile}",
+        ],
+        update: jest.fn(()=>{
+            return {};
+        })
+    });
+
+    return globalMocks;
+}
+
+describe("ZoweJobNode unit tests - Function editSession", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testIJob: createIJobObject(),
+            testJobsProvider: await createJobsTree(Logger.getAppLogger()),
+            jobNode: null
+        }
+        newMocks.jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, newMocks.testIJob, globalMocks.testProfile);
+        newMocks.jobNode.contextValue = "job";
+        newMocks.jobNode.dirty = true;
+
+        return newMocks;
+    }
+
+    it("Tests that editSession is executed successfully ", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const checkSession = jest.spyOn(blockMocks.testJobsProvider, "editSession");
+
+        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
+        expect(globalMocks.mockEditSession).toHaveBeenCalled();
+    });
+});
