@@ -14,11 +14,13 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as globals from "./globals";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { errorHandling, getZoweDir } from "./utils";
+import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
-import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode } from "./api/IZoweTreeNode";
+import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
+
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
@@ -158,7 +160,7 @@ export class Profiles {
     }
 
     public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve, reject) => {
+        return new Promise<string | undefined>((resolve, reject) => {
             urlInputBox.onDidHide(() => {
                 reject(undefined);
                 resolve(urlInputBox.value);
@@ -183,6 +185,121 @@ export class Profiles {
                 }
             });
         });
+    }
+
+    /**
+     * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
+     * selecting which profile you would like to add from the drop-down that appears.
+     * The profiles that are in the tree view already will not appear in the
+     * drop-down.
+     *
+     * @export
+     * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
+     */
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+        const allProfiles = (await Profiles.getInstance()).allProfiles;
+        const createNewProfile = "Create a New Connection to z/OS";
+        let chosenProfile: string = "";
+
+        // Get all profiles
+        let profileNamesList = allProfiles.map((profile) => {
+            return profile.name;
+        });
+        // Filter to list of the APIs available for current tree explorer
+        profileNamesList = profileNamesList.filter((profileName) => {
+            const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.USS) {
+                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                return ussProfileTypes.includes(profile.type);
+            }
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.Dataset) {
+                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                return mvsProfileTypes.includes(profile.type);
+            }
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.Job) {
+                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                return jesProfileTypes.includes(profile.type);
+            }
+        });
+        if (profileNamesList) {
+            profileNamesList = profileNamesList.filter((profileName) =>
+                // Find all cases where a profile is not already displayed
+                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
+            );
+        }
+        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
+        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const quickpick = vscode.window.createQuickPick();
+        const placeholder = localize("addSession.quickPickOption",
+            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
+
+        if (globals.ISTHEIA) {
+            const options: vscode.QuickPickOptions = {
+                placeHolder: placeholder
+            };
+            // get user selection
+            const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            chosenProfile = choice === createPick ? "" : choice.label;
+        } else {
+            quickpick.items = [createPick, ...items];
+            quickpick.placeholder = placeholder;
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                chosenProfile = "";
+            } else {
+                chosenProfile = choice.label;
+            }
+        }
+
+        if (chosenProfile === "") {
+            let newprofile: any;
+            let profileName: string;
+            if (quickpick.value) {
+                profileName = quickpick.value;
+            }
+
+            const options = {
+                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+                value: profileName
+            };
+            profileName = await vscode.window.showInputBox(options);
+            if (!profileName) {
+                vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Profile Name was not supplied. Operation Cancelled"));
+                return;
+            }
+            chosenProfile = profileName.trim();
+            globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+            try {
+                newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
+            } catch (error) { await errorHandling(error, chosenProfile, error.message); }
+            if (newprofile) {
+                try {
+                    await Profiles.getInstance().refresh();
+                } catch (error) {
+                    await errorHandling(error, newprofile, error.message);
+                }
+                await zoweFileProvider.addSession(newprofile);
+                await zoweFileProvider.refresh();
+            }
+        } else if (chosenProfile) {
+            globals.LOG.debug(localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
+            await zoweFileProvider.addSession(chosenProfile);
+        } else {
+            globals.LOG.debug(localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+        }
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
@@ -478,7 +595,6 @@ export class Profiles {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-
         let repromptUser: any;
         let repromptPass: any;
         let loadProfile: any;
@@ -589,15 +705,14 @@ export class Profiles {
             });
 
         // Delete from Data Set Favorites
-        const favoriteDs = datasetTree.mFavorites;
-        for (let i = favoriteDs.length - 1; i >= 0; i--) {
-            const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
+        datasetTree.mFavorites.forEach((favNode) => {
+            const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
             if (findNode === deleteLabel) {
-                datasetTree.removeFavorite(favoriteDs[i]);
-                favoriteDs[i].dirty = true;
+                datasetTree.removeFavorite(favNode);
+                favNode.dirty = true;
                 datasetTree.refresh();
             }
-        }
+        });
 
         // Delete from Data Set Tree
         datasetTree.mSessionNodes.forEach((sessNode) => {
@@ -803,9 +918,7 @@ export class Profiles {
             return undefined;
         }
 
-        const zosmfUrlParsed = this.validateAndParseUrl(zosURL);
-
-        return zosmfUrlParsed;
+        return this.validateAndParseUrl(zosURL);
     }
 
     private async portInfo(input: string, schema: {}){
