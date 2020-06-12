@@ -134,7 +134,6 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
         refresh: jest.fn(),
-        editSession: jest.fn()
     } as any;
 }
 
