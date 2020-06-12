@@ -803,7 +803,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         }
 
         expect(sessNode).toEqual(rootChildren);
-        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-closed.svg");
+        expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-star-closed.svg");
     });
 
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<session>", async () => {
