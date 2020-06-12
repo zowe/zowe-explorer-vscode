@@ -19,6 +19,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
+import { WorkspaceConfiguration } from "vscode";
 
 export function createISession() {
     return new imperative.Session({
@@ -62,7 +63,7 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            type : "zosmf",
+            type: "zosmf",
             host: null,
             port: 1443,
             user: null,
@@ -76,7 +77,7 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
+export function createTreeView(): vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
@@ -132,7 +133,8 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getProfiles: jest.fn(() => {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
-        refresh: jest.fn()
+        refresh: jest.fn(),
+        editSession: jest.fn()
     } as any;
 }
 
@@ -160,5 +162,14 @@ export function createQuickPickContent(entered: any, item: vscode.QuickPickItem)
         onDidAccept: jest.fn(),
         onDidChangeValue: jest.fn(),
         dispose: jest.fn()
+    };
+}
+
+export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
+    return {
+        get: jest.fn(),
+        update: jest.fn(),
+        has: jest.fn(),
+        inspect: jest.fn()
     };
 }
