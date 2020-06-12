@@ -594,6 +594,28 @@ describe("Profile class unit tests", () => {
             (profiles.loadNamedProfile as any).mockReset();
         });
 
+        it("should prompt credentials: username is optional", async () => {
+            const promptProfile = {name: "profile1", profile: {user: undefined, password: "fake"}};
+            profiles.loadNamedProfile = jest.fn(() => {
+                return promptProfile as any;
+            });
+            showInputBox.mockResolvedValueOnce("fake");
+            const res = await profiles.promptCredentials(promptProfile.name);
+            expect(res).toBeUndefined();
+            (profiles.loadNamedProfile as any).mockReset();
+        });
+
+        it("should prompt credentials: password is optional", async () => {
+            const promptProfile = {name: "profile1", profile: {user: "fake", password: undefined}};
+            profiles.loadNamedProfile = jest.fn(() => {
+                return promptProfile as any;
+            });
+            showInputBox.mockResolvedValueOnce("fake");
+            const res = await profiles.promptCredentials(promptProfile.name);
+            expect(res).toBeUndefined();
+            (profiles.loadNamedProfile as any).mockReset();
+        });
+
         it("should validate URL", async () => {
             const input = "fake/url";
             const res = await profiles.validateAndParseUrl(input);

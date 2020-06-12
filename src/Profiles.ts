@@ -516,10 +516,10 @@ export class Profiles {
         }
 
         if (!loadSession.user || rePrompt) {
-
             newUser = await this.userInfo(repromptUser);
-
             loadSession.user = loadProfile.profile.user = newUser;
+        } else {
+            newUser = loadSession.user = loadProfile.profile.user;
         }
 
         if (newUser === undefined) {
@@ -528,6 +528,8 @@ export class Profiles {
             if (!loadSession.password || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
                 loadSession.password = loadProfile.profile.password = newPass;
+            } else {
+                newPass = loadSession.password = loadProfile.profile.password;
             }
         }
 
@@ -925,7 +927,7 @@ export class Profiles {
             return undefined;
         }
 
-        return userName;
+        return userName.trim();
     }
 
     private async passwordInfo(input?) {
@@ -951,7 +953,7 @@ export class Profiles {
             return undefined;
         }
 
-        return passWord;
+        return passWord.trim();
     }
 
     private async ruInfo(input?) {
