@@ -47,6 +47,15 @@ export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
 
 /**
+ * The types of persistence schemas wich are available in settings.json
+ */
+export enum PersistenceSchemaEnum {
+    Dataset = "Zowe-DS-Persistent",
+    USS = "Zowe-USS-Persistent",
+    Job = "Zowe-Jobs-Persistent"
+}
+
+/**
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
  */
