@@ -321,6 +321,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
                 matchingNode.label = afterLabel;
+                matchingNode.tooltip = afterLabel;
                 this.refreshElement(matchingNode);
             }
         }
@@ -338,6 +339,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (matchingNode) {
             const prefix = matchingNode.label.substring(0, matchingNode.label.indexOf(":") + 2);
             matchingNode.label = prefix + newLabel;
+            matchingNode.tooltip = prefix + newLabel;
             this.refreshElement(matchingNode);
         }
     }
@@ -693,6 +695,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
                 node.label = `${favPrefix}${afterDataSetName}`;
+                node.tooltip = `${favPrefix}${afterDataSetName}`;
 
                 if (isFavourite) {
                     const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
