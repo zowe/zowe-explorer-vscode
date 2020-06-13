@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import * as zowe from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
+import { removeNodeFromArray } from "./shared";
 
 export function createIJobObject(): zowe.IJob {
     return {
@@ -49,11 +50,16 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
 
     const testJobsTree = {
         mSessionNodes: [],
+        mFavorites: [],
         getChildren: jest.fn(),
         addSession: jest.fn(),
         refresh: jest.fn(),
         getTreeView: jest.fn(),
+        deleteSession: jest.fn(),
+        addFavorite: jest.fn(),
+        removeFavorite: jest.fn(),
         treeView,
+        getTreeType: jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.Job),
         checkCurrentProfile: jest.fn(),
         refreshElement: jest.fn(),
         getProfiles: jest.fn(),
@@ -62,6 +68,9 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
+    testJobsTree.addFavorite.mockImplementation((newFavorite) => { testJobsTree.mFavorites.push(newFavorite); });
+    testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
+    testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
 
     return testJobsTree;
 }
