@@ -164,7 +164,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
             testUSSTree: null,
             ussNode: new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null,
                 globalMocks.session, null, null, globalMocks.profileOne.name, "123"),
-            ussNodeFav: new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded,
+            ussNodeFav: new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded,
                 null, globalMocks.session, null, false, globalMocks.profileOne.name)
         };
 

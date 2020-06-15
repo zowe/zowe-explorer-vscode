@@ -49,7 +49,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
     public static readonly defaultDialogText: string = localize("SpecifyCriteria", "Create new..");
-    private static readonly persistenceSchema: string = "Zowe-Jobs-Persistent";
+    private static readonly persistenceSchema: globals.PersistenceSchemaEnum = globals.PersistenceSchemaEnum.Job;
 
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
