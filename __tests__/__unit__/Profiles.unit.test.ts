@@ -1541,3 +1541,37 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 });
+
+describe("Profiles Unit Tests - Function validateProfiles", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            invalidProfile: createInvalidIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that validaterofiles handles inactive profiles", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        Object.defineProperty(CheckStatus, "getZosmfInfo", {
+            value: jest.fn(() => {
+                return undefined;
+            })
+        });
+
+        await theProfiles.checkCurrentProfile(blockMocks.validProfile);
+        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+});
+
