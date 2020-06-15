@@ -306,9 +306,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             ignoreFocusOut: true,
             canPickMany: false
         };
-        if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
-        localize("deleteUSSNode.showQuickPick.no", "No")],
-            quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
+        if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.delete", "Delete"),
+        localize("deleteUSSNode.showQuickPick.cancel", "Cancel")],
+            quickPickOptions) !== localize("deleteUSSNode.showQuickPick.delete", "Delete")) {
             return;
         }
         try {

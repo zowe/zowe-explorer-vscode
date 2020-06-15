@@ -598,7 +598,7 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     // confirm that the user really wants to delete
     if (await vscode.window.showQuickPick([localize("deleteDataset.showQuickPick.delete", "Delete"),
         localize("deleteDataset.showQuickPick.Cancel", "Cancel")], quickPickOptions) !== localize("deleteDataset.showQuickPick.delete", "Delete")) {
-        globals.LOG.debug(localize("deleteDataset.showQuickPick.log.debug", "User picked cancel. Cancelling delete of data set"));
+        globals.LOG.debug(localize("deleteDataset.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of data set"));
         return;
     }
 

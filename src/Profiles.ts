@@ -866,9 +866,10 @@ export class Profiles {
             canPickMany: false
         };
         // confirm that the user really wants to delete
-        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.yes", "Yes"),
-            localize("deleteProfile.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteProfile.showQuickPick.yes", "Yes")) {
-            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked no. Cancelling delete of profile"));
+        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.delete", "Delete"),
+                                               localize("deleteProfile.showQuickPick.cancel", "Cancel")], quickPickOptions) !==
+                                               localize("deleteProfile.showQuickPick.delete", "Delete")) {
+            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
             return;
         }
 

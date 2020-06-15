@@ -41,7 +41,7 @@
     "deleteDataset.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
     "deleteDataset.showQuickPick.delete": "Delete",
     "deleteDataset.showQuickPick.Cancel": "Cancel",
-    "deleteDataset.showQuickPick.log.debug": "User picked cancel. Cancelling delete of data set",
+    "deleteDataset.showQuickPick.log.debug": "User picked Cancel. Cancelling delete of data set",
     "deleteDataSet.invalidNode.error": "deleteDataSet() called from invalid node.",
     "deleteDataSet.delete.log.error": "Error encountered when deleting data set! ",
     "deleteDataSet.error.notFound": "not found",
