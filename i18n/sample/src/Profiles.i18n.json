@@ -1,5 +1,5 @@
 {
-    "ussNodeActions.error": "Error encountered in ",
+    "checkCurrentProfile.error": "Error encountered in ",
     "loadNamedProfile.error.profileName": "Could not find profile named: ",
     "loadNamedProfile.error.period": ".",
     "createNewConnection.invalidzosURL": "Please enter a valid host URL in the format 'company.com'.",

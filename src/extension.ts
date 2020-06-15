@@ -359,7 +359,6 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
 }
 
 /**
-
  * Recursively deletes directory
  *
  * @param directory path to directory to be deleted

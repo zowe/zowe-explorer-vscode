@@ -89,7 +89,7 @@ export class Profiles {
                 }
             } catch (error) {
                 errorHandling(error, theProfile.name,
-                    localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
+                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`);
                 return profileStatus;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {

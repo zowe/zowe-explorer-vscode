@@ -25,12 +25,12 @@ export function createPersistentConfig() {
             return {
                 sessions: ["sestest", "profile1", "profile2"],
                 favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"]
-            }
+            };
         },
         update: jest.fn(()=>{
             return {};
         })
-    }
+    };
 }
 
 export function createISession() {

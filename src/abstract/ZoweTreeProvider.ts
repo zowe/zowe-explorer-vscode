@@ -18,9 +18,7 @@ import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
-import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
-import * as globals from "../globals";
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
