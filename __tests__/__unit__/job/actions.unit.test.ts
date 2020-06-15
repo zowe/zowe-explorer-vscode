@@ -21,7 +21,6 @@ import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreator
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import * as utils from "../../../src/utils";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";

@@ -14,12 +14,14 @@ import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
-import { USSTree } from "../../src/__mocks__/USSTree";
 import { getIconByNode } from "../../src/generators/icons";
+import { removeNodeFromArray } from "./shared";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
-    let newTree = new USSTree();
+    const newTree = new USSTree();
     newTree.mSessionNodes = [...sessionNodes];
+    newTree.mRecall = [];
+    newTree.mSessions = [];
     newTree.mFavorites = favoriteNodes;
     newTree.addSession = jest.fn();
     newTree.refresh = jest.fn();
@@ -31,11 +33,21 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.getChildren = jest.fn();
     newTree.addFavorite = jest.fn();
     newTree.removeFavorite = jest.fn();
+    newTree.openItemFromPath = jest.fn();
+    newTree.deleteSession = jest.fn();
     newTree.searchInLoadedItems = jest.fn();
     newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
     newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem('test'));
+    newTree.getTreeType: jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS);
     newTree.setItem = jest.fn();
     newTree.addHistory = jest.fn();
+  
+    newTree.addFavorite.mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
+    newTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
+    newTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
+    newTree.addRecall.mockImplementation((newRecall) => newTree.mRecall.push(newRecall));
+    newTree.removeRecall.mockImplementation((badRecall) => newTree.mRecall.splice(newTree.mRecall.indexOf(badRecall), 1));
+    newTree.getRecall.mockImplementation(() => { return newTree.mRecall });
     return newTree;
 }
 
@@ -48,7 +60,7 @@ export function createUSSNode(session, profile) {
 }
 
 export function createUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const zoweUSSNode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null,
+    const zoweUSSNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, null,
         session, "/", false, profile.name, undefined, profile);
     zoweUSSNode.fullPath = "test";
     zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
@@ -61,7 +73,7 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
 }
 
 export function createFavoriteUSSNode(session, profile) {
-    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const ussNodeF = new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     mParent.contextValue = globals.FAVORITE_CONTEXT;
     ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
