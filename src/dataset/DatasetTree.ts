@@ -48,7 +48,7 @@ export async function createDatasetTree(log: Logger) {
  * @implements {vscode.TreeDataProvider}
  */
 export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweDatasetTreeNode> {
-    private static readonly persistenceSchema: string = "Zowe-DS-Persistent";
+    private static readonly persistenceSchema: globals.PersistenceSchemaEnum = globals.PersistenceSchemaEnum.Dataset;
     private static readonly defaultDialogText: string = "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search",
         "Create a new filter. Comma separate multiple entries (pattern 1, pattern 2, ...)");
     public mFavoriteSession: ZoweDatasetNode;
