@@ -819,40 +819,38 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
-        blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
-        (testDocument as any).fileName = path.join(globals.DS_DIR, "Favorites", testDocument.fileName);
+        (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
-        expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith("TestSessionName");
     });
     it("Checking favorite PDS Member saving", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode("[TestSessionName]: HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
+        const node = new ZoweDatasetNode(`[${blockMocks.imperativeProfile.name}]: HLQ.TEST.AFILE`, vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
         node.contextValue = globals.DS_PDS_CONTEXT;
         const childNode = new ZoweDatasetNode("MEM", vscode.TreeItemCollapsibleState.None,
             node, null, undefined, undefined, blockMocks.imperativeProfile);
-        const favoriteNode = new ZoweDatasetNode("[TestSessionName]: HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
+        const favoriteNode = new ZoweDatasetNode(`[${blockMocks.imperativeProfile.name}]: HLQ.TEST.AFILE`, vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
         favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         const favoriteChildNode = new ZoweDatasetNode("MEM", vscode.TreeItemCollapsibleState.None,
             favoriteNode, null, undefined, undefined, blockMocks.imperativeProfile);
         node.children.push(childNode);
         favoriteNode.children.push(favoriteChildNode);
-        blockMocks.datasetSessionNode.children.push(node);
         blockMocks.testDatasetTree.mFavorites.push(favoriteNode);
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node, childNode]);
-        blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
+        blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([]);
         mocked(zowe.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
@@ -874,14 +872,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const mockSetEtag = jest.spyOn(childNode, "setEtag").mockImplementation(() => null);
         const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.datasetSessionNode);
-        (testDocument as any).fileName = path.join(globals.DS_DIR, "Favorites", testDocument.fileName);
+        (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("success");
-        expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith("TestSessionName");
+        expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
     });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
         globals.defineGlobals("");
