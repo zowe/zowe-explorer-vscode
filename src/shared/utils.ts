@@ -261,7 +261,7 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                     // if new api method exists, use it
                     if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
                         return ZoweExplorerApiRegister.getUssApi(profile).putContent(
-                            doc.fileName, remotePath, 
+                            doc.fileName, remotePath,
                             {
                                 binary,
                                 localEncoding: null,
