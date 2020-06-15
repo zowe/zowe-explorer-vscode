@@ -63,6 +63,7 @@ async function createGlobalMocks() {
     Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
     Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: newMocks.mockGetConfiguration, configurable: true });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: newMocks.mockConfigurationTarget, configurable: true });
 
@@ -1139,14 +1140,14 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testUSSTree.mRecall = ["[SESTEST]: /node1/node2/node3.txt"];
+        blockMocks.testUSSTree.addRecall("[SESTEST]: /node1/node2/node3.txt");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
-        expect(blockMocks.testUSSTree.getRecall()[0]).toBeUndefined();
+        expect(blockMocks.testUSSTree.getRecall()[1]).toBeUndefined();
     });
 });
 

@@ -16,38 +16,28 @@ import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { getIconByNode } from "../../src/generators/icons";
 import { removeNodeFromArray } from "./shared";
+import { USSTree } from "../../src/uss/USSTree";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     const newTree = new USSTree();
     newTree.mSessionNodes = [...sessionNodes];
-    newTree.mRecall = [];
-    newTree.mSessions = [];
     newTree.mFavorites = favoriteNodes;
     newTree.addSession = jest.fn();
     newTree.refresh = jest.fn();
-    newTree.removeRecall = jest.fn();
-    newTree.addRecall = jest.fn();
-    newTree.getRecall = jest.fn();
     newTree.checkCurrentProfile = jest.fn();
     newTree.refreshElement = jest.fn();
     newTree.getChildren = jest.fn();
-    newTree.addFavorite = jest.fn();
-    newTree.removeFavorite = jest.fn();
+    newTree.addFavorite = jest.fn().mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
+    newTree.removeFavorite = jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
     newTree.openItemFromPath = jest.fn();
-    newTree.deleteSession = jest.fn();
+    newTree.deleteSession = jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
     newTree.searchInLoadedItems = jest.fn();
     newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
     newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem('test'));
-    newTree.getTreeType: jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS);
+    newTree.getTreeType = jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS);
     newTree.setItem = jest.fn();
     newTree.addHistory = jest.fn();
-  
-    newTree.addFavorite.mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
-    newTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
-    newTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
-    newTree.addRecall.mockImplementation((newRecall) => newTree.mRecall.push(newRecall));
-    newTree.removeRecall.mockImplementation((badRecall) => newTree.mRecall.splice(newTree.mRecall.indexOf(badRecall), 1));
-    newTree.getRecall.mockImplementation(() => { return newTree.mRecall });
+
     return newTree;
 }
 
