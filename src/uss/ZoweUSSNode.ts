@@ -484,7 +484,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     file: ussDocumentFilePath,
                     binary: this.binary,
                     returnEtag: true,
-                    encoding: prof.profile.encoding
+                    encoding: prof?.profile.encoding
                 });
                 this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;
