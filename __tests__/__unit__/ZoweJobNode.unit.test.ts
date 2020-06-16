@@ -233,30 +233,6 @@ describe("Zos Jobs Unit Tests", () => {
             jest.resetAllMocks();
         });
 
-        it("should add the session to the tree", async () => {
-            createBasicZosmfSession.mockReturnValue(session);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            const sessions = testJobsProvider.mSessionNodes.length;
-            await testJobsProvider.addSession("fake");
-            expect(testJobsProvider.mSessionNodes[sessions]).toBeDefined();
-            expect(testJobsProvider.mSessionNodes[sessions].label).toEqual("fake");
-            expect(testJobsProvider.mSessionNodes[sessions].tooltip).toEqual("fake - owner: fake prefix: *");
-        });
-
-        it("should add another session to the tree", async () => {
-            createBasicZosmfSession.mockReturnValue(sessionwocred);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            const sessions = testJobsProvider.mSessionNodes.length;
-            await testJobsProvider.addSession("fake");
-            expect(testJobsProvider.mSessionNodes[sessions]).toBeDefined();
-            expect(testJobsProvider.mSessionNodes[sessions].label).toEqual("fake");
-            expect(testJobsProvider.mSessionNodes[sessions].tooltip).toEqual("fake - owner:  prefix: *");
-        });
-
-        it("tests that the TreeView is created successfully", async () => {
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-        });
-
         it("tests that the user is informed when a job is deleted", async () => {
             showInformationMessage.mockReset();
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
@@ -265,81 +241,6 @@ describe("Zos Jobs Unit Tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toEqual(
                 `Job ${jobNode.job.jobname}(${jobNode.job.jobid}) deleted`
             );
-        });
-
-        it("should delete the session", async () => {
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            testJobsProvider.deleteSession(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes.length).toBe(1);
-        });
-
-        it("should get the jobs of the session", async () => {
-            createBasicZosmfSession.mockReturnValue(session);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            await testJobsProvider.addSession("fake");
-            const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
-            expect(jobs.length).toBe(2);
-            expect(jobs[0].job.jobid).toEqual(iJob.jobid);
-            expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
-            expect(jobs[1].job.jobid).toEqual(iJobComplete.jobid);
-            expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - 0");
-        });
-
-        it("should get the jobs of the session on id", async () => {
-            createBasicZosmfSession.mockReturnValue(session);
-            getJob.mockReturnValue(iJob);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            await testJobsProvider.addSession("fake");
-            testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
-            testJobsProvider.mSessionNodes[1].dirty = true;
-            const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
-            expect(jobs.length).toBe(1);
-            expect(jobs[0].job.jobid).toEqual(iJob.jobid);
-            expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
-        });
-
-        it("should set the owner to the session userid", async () => {
-            createBasicZosmfSession.mockReturnValue(session);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
-            const job = jobs[0];
-            job.owner = "";
-            expect(job.owner).toEqual("fake");
-            job.owner = "new";
-            expect(job.owner).toEqual("new");
-        });
-
-        it("should set the prefix to the default and specific value", async () => {
-            createBasicZosmfSession.mockReturnValue(session);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
-            const job = jobs[0];
-            job.prefix = "";
-            expect(job.prefix).toEqual("*");
-            job.prefix = "zowe*";
-            expect(job.prefix).toEqual("zowe*");
-            // reset
-            labelRefresh(job);
-            job.children = [];
-            job.dirty = true;
-        });
-
-        it("should set the search jobid to a specific value", async () => {
-            createBasicZosmfSession.mockReturnValue(session);
-            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
-            getJobsByOwnerAndPrefix.mockReturnValue([iJob, iJobComplete]);
-            const jobs = await testJobsProvider.mSessionNodes[1].getChildren();
-            const job = jobs[0];
-            job.searchId = "JOB12345";
-            expect(job.searchId).toEqual("JOB12345");
-            // reset
-            labelRefresh(job);
-            job.children = [];
-            job.dirty = true;
         });
 
         /*************************************************************************************************************
@@ -643,60 +544,6 @@ describe("Zos Jobs Unit Tests", () => {
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(showInformationMessage.mock.calls.length).toBe(1);
             expect(showInformationMessage.mock.calls[0][0]).toBe("No selection made.");
-        });
-
-        /*************************************************************************************************************
-         * Testing that add search and Favorite sorting works
-         *************************************************************************************************************/
-        it("Testing that add Search Favorite works properly", async () => {
-            getConfiguration.mockReset();
-            getConfiguration.mockReturnValue({
-                get: (setting: string) => [
-                    "[test]: Owner:stonecc Prefix:*{server}",
-                    "[test]: USER1(JOB30148){job}",
-                ],
-                update: jest.fn(()=>{
-                    return {};
-                })
-            });
-            const testTree = await createJobsTree(Logger.getAppLogger());
-            testTree.mFavorites = [];
-            const job = new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1],
-                testTree.mSessionNodes[1].getSession(), iJob, profileOne);
-
-            // Check adding job
-            await testTree.addFavorite(job);
-            expect(testTree.mFavorites.length).toEqual(1);
-
-            testTree.mSessionNodes[1].owner = "myHLQ";
-            testTree.mSessionNodes[1].prefix = "*";
-            await testTree.saveSearch(testTree.mSessionNodes[1]);
-            // tslint:disable-next-line: no-magic-numbers
-            expect(testTree.mFavorites.length).toEqual(2);
-
-            testTree.mSessionNodes[1].owner = "*";
-            testTree.mSessionNodes[1].prefix = "aH*";
-            await testTree.saveSearch(testTree.mSessionNodes[1]);
-            // tslint:disable-next-line: no-magic-numbers
-            expect(testTree.mFavorites.length).toEqual(3);
-
-            testTree.mSessionNodes[1].owner = "*";
-            testTree.mSessionNodes[1].prefix = "*";
-            testTree.mSessionNodes[1].searchId = "JOB1234";
-            await testTree.saveSearch(testTree.mSessionNodes[1]);
-            // tslint:disable-next-line: no-magic-numbers
-            expect(testTree.mFavorites.length).toEqual(4);
-            expect(testTree.mFavorites[0].label).toEqual("[firstProfileName]: JobId:JOB1234");
-            expect(testTree.mFavorites[1].label).toEqual("[firstProfileName]: Owner:* Prefix:aH*");
-            expect(testTree.mFavorites[2].label).toEqual("[firstProfileName]: Owner:myHLQ Prefix:*");
-            // tslint:disable-next-line: no-magic-numbers
-            expect(testTree.mFavorites[3].label).toEqual("[firstProfileName]: MYHLQ(JOB1283)");
-
-            testTree.removeFavorite(testTree.mFavorites[0]);
-            testTree.removeFavorite(testTree.mFavorites[0]);
-            testTree.removeFavorite(testTree.mFavorites[0]);
-            testTree.removeFavorite(testTree.mFavorites[0]);
-            expect(testTree.mFavorites).toEqual([]);
         });
     });
 });
