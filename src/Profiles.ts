@@ -637,7 +637,7 @@ export class Profiles {
             return;
         } else {
             try {
-                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession(loadProfile);
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
                 if (rePrompt) {
                     const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
                     const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
