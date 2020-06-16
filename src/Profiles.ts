@@ -99,6 +99,8 @@ export class Profiles {
                 this.validProfile = ValidProfileEnum.VALID;
                 return profileStatus;
             } else {
+                // return invalid if credetials are not provided
+                this.validProfile = ValidProfileEnum.INVALID;
                 return profileStatus;
             }
         } else {
@@ -876,6 +878,7 @@ export class Profiles {
 
     public async validateProfiles(theProfile: IProfileLoaded) {
         let filteredProfile: IProfileValidation;
+        let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
         // Filter profilesForValidation to check if the profile is already validated
@@ -892,7 +895,12 @@ export class Profiles {
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
             try {
-                const profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+
+                if (getSessStatus.getStatus) {
+                    profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                } else {
+                    profileStatus = "unverified";
+                }
 
                 switch (profileStatus) {
                     case "active":

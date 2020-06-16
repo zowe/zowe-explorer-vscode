@@ -142,8 +142,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            // await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-            this.checkCurrentProfile(element);
             return element.getChildren();
         }
         return this.mSessionNodes;
