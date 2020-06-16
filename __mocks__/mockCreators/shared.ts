@@ -13,12 +13,25 @@ import * as imperative from "@zowe/imperative";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import * as path from "path";
-import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
+
+export function createPersistentConfig() {
+    return {
+        persistence: true,
+        get: () => {
+            return {
+                sessions: ["sestest", "profile1", "profile2"],
+                favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"]
+            }
+        },
+        update: jest.fn(()=>{
+            return {};
+        })
+    }
+}
 
 export function createISession() {
     return new imperative.Session({
@@ -45,6 +58,12 @@ export function createBasicZosmfSession(profile: imperative.IProfileLoaded) {
     return zowe.ZosmfSession.createBasicZosmfSession(profile.profile);
 }
 
+export function removeNodeFromArray(badNode, array) {
+    array.splice(array.findIndex(
+        (nodeInArray) => badNode.getProfileName() === nodeInArray.getProfileName()
+    ), 1);
+}
+
 export function createIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
@@ -62,7 +81,7 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
-            type : "zosmf",
+            type: "zosmf",
             host: null,
             port: 1443,
             user: null,
@@ -76,7 +95,25 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView():vscode.TreeView<ZoweTreeProvider> {
+export function createValidIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type : "zosmf",
+            host: "test",
+            port: 1443,
+            user: "test",
+            password: "test",
+            rejectUnauthorized: false,
+            name: "testName"
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+}
+
+export function createTreeView(): vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),
         onDidExpandElement: jest.fn(),
@@ -113,8 +150,8 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
-        allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-        defaultProfile: { name: "firstName" },
+        allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
+        defaultProfile: { name: "profile1" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),
         loadNamedProfile: jest.fn(),
@@ -127,7 +164,8 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getProfiles: jest.fn(() => {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
-        refresh: jest.fn()
+        refresh: jest.fn(),
+        editSession: jest.fn()
     } as any;
 }
 
@@ -155,5 +193,39 @@ export function createQuickPickContent(entered: any, item: vscode.QuickPickItem)
         onDidAccept: jest.fn(),
         onDidChangeValue: jest.fn(),
         dispose: jest.fn()
+    };
+}
+
+export function createInputBox(value: string): any {
+    const inputBox: vscode.InputBox = {
+        value,
+        title: null,
+        enabled: true,
+        busy: false,
+        show: jest.fn(),
+        hide: jest.fn(),
+        step: null,
+        dispose: jest.fn(),
+        ignoreFocusOut: false,
+        totalSteps: null,
+        placeholder: undefined,
+        password: false,
+        onDidChangeValue: jest.fn(),
+        onDidAccept: jest.fn(),
+        onDidHide: jest.fn(),
+        buttons: [],
+        onDidTriggerButton: jest.fn(),
+        prompt: undefined,
+        validationMessage: undefined
+    };
+    return inputBox;
+}
+
+export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
+    return {
+        get: jest.fn(),
+        update: jest.fn(),
+        has: jest.fn(),
+        inspect: jest.fn()
     };
 }
