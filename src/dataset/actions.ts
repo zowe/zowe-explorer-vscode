@@ -299,59 +299,64 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-
-    let label = parent.label.trim();
-    if (contextually.isFavoritePds(parent) || contextually.isFavoriteDs(parent)) {
-        label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
-    }
-
-    globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
-    let attributes: any;
-    try {
-        attributes = await ZoweExplorerApiRegister.getMvsApi(parent.getProfile()).dataSet(label, { attributes: true });
-        attributes = attributes.apiResponse.items;
-        attributes = attributes.filter((dataSet) => {
-            return dataSet.dsname.toUpperCase() === label.toUpperCase();
-        });
-        if (attributes.length === 0) {
-            throw new Error(localize("showDSAttributes.lengthError", "No matching data set names found for query: ") + label);
+    datasetProvider.checkCurrentProfile(parent);
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        let label = parent.label.trim();
+        if (contextually.isFavoritePds(parent) || contextually.isFavoriteDs(parent)) {
+            label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
         }
-    } catch (err) {
-        globals.LOG.error(localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
-        errorHandling(err, parent.getProfileName(), localize("showDSAttributes.error", "Unable to list attributes: ") + err.message);
-        throw (err);
-    }
 
-    // shouldn't be possible for there to be two cataloged data sets with the same name,
-    // but just in case we'll display all of the results
-    // if there's only one result (which there should be), we will just pass in attributes[0]
-    // so that prettyJson doesn't display the attributes as an array with a hyphen character
-    const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
-    // const attributesFilePath = path.join(ZOWETEMPFOLDER, label + ".yaml");
-    // fs.writeFileSync(attributesFilePath, attributesText);
-    // const document = await vscode.workspace.openTextDocument(attributesFilePath);
-    // await vscode.window.showTextDocument(document);
-    const attributesMessage = localize("attributes.title", "Attributes");
-    const webviewHTML = `<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>${label} "${attributesMessage}"</title>
-    </head>
-    <body>
-     ${attributesText.replace(/\n/g, "</br>")}
-    </body>
-    </html>`;
-    const column = vscode.window.activeTextEditor
-        ? vscode.window.activeTextEditor.viewColumn
-        : undefined;
-    const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
-        "zowe",
-        label + " " + localize("attributes.title", "Attributes"),
-        column || 1,
-        {}
-    );
-    panel.webview.html = webviewHTML;
+        globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
+        let attributes: any;
+        try {
+            attributes = await ZoweExplorerApiRegister.getMvsApi(parent.getProfile()).dataSet(label, { attributes: true });
+            attributes = attributes.apiResponse.items;
+            attributes = attributes.filter((dataSet) => {
+                return dataSet.dsname.toUpperCase() === label.toUpperCase();
+            });
+            if (attributes.length === 0) {
+                throw new Error(localize("showDSAttributes.lengthError", "No matching data set names found for query: ") + label);
+            }
+        } catch (err) {
+            globals.LOG.error(localize("showDSAttributes.log.error", "Error encountered when listing attributes! ") + JSON.stringify(err));
+            errorHandling(err, parent.getProfileName(), localize("showDSAttributes.error", "Unable to list attributes: ") + err.message);
+            throw (err);
+        }
+
+        // shouldn't be possible for there to be two cataloged data sets with the same name,
+        // but just in case we'll display all of the results
+        // if there's only one result (which there should be), we will just pass in attributes[0]
+        // so that prettyJson doesn't display the attributes as an array with a hyphen character
+        const attributesText = TextUtils.prettyJson(attributes.length > 1 ? attributes : attributes[0], undefined, false);
+        // const attributesFilePath = path.join(ZOWETEMPFOLDER, label + ".yaml");
+        // fs.writeFileSync(attributesFilePath, attributesText);
+        // const document = await vscode.workspace.openTextDocument(attributesFilePath);
+        // await vscode.window.showTextDocument(document);
+        const attributesMessage = localize("attributes.title", "Attributes");
+        const webviewHTML = `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>${label} "${attributesMessage}"</title>
+        </head>
+        <body>
+        ${attributesText.replace(/\n/g, "</br>")}
+        </body>
+        </html>`;
+        const column = vscode.window.activeTextEditor
+            ? vscode.window.activeTextEditor.viewColumn
+            : undefined;
+        const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
+            "zowe",
+            label + " " + localize("attributes.title", "Attributes"),
+            column || 1,
+            {}
+        );
+        panel.webview.html = webviewHTML;
+    } else {
+        vscode.window.showErrorMessage(localize("showDSAttributes.checkProfile", "Profile is invalid"));
+        return;
+    }
 }
 
 /**
@@ -362,49 +367,55 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    let beforeDataSetName = node.label.trim();
-    let favPrefix = "";
-    let isFavourite;
+    datasetProvider.checkCurrentProfile(node);
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        let beforeDataSetName = node.label.trim();
+        let favPrefix = "";
+        let isFavourite;
 
-    if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-        isFavourite = true;
-        favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
-        beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
-    }
-    const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
-    const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
-    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
-
-    globals.LOG.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
-    if (afterDataSetName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
-
-            if (isFavourite) {
-                const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-                datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
-            } else {
-                const temp = node.label;
-                node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-                datasetProvider.renameFavorite(node, afterDataSetName);
-                node.label = temp;
-            }
-            datasetProvider.refreshElement(node);
-            datasetProvider.updateFavorites();
-
-            if (fs.existsSync(beforeFullPath)) {
-              fs.unlinkSync(beforeFullPath);
-            }
-
-            if (closedOpenedInstance) {
-                vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
-            }
-        } catch (err) {
-            globals.LOG.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
+        if (node.contextValue.includes(globals.FAV_SUFFIX)) {
+            isFavourite = true;
+            favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
+            beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
         }
+        const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
+        const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
+
+        globals.LOG.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
+        if (afterDataSetName) {
+            try {
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
+                node.label = `${favPrefix}${afterDataSetName}`;
+
+                if (isFavourite) {
+                    const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
+                    datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
+                } else {
+                    const temp = node.label;
+                    node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
+                    datasetProvider.renameFavorite(node, afterDataSetName);
+                    node.label = temp;
+                }
+                datasetProvider.refreshElement(node);
+                datasetProvider.updateFavorites();
+
+                if (fs.existsSync(beforeFullPath)) {
+                fs.unlinkSync(beforeFullPath);
+                }
+
+                if (closedOpenedInstance) {
+                    vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
+                }
+            } catch (err) {
+                globals.LOG.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
+                errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                throw err;
+            }
+        }
+    } else {
+        vscode.window.showErrorMessage(localize("renameDataSet.checkProfile", "Profile is invalid"));
+        return;
     }
 }
 
@@ -463,13 +474,19 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
         globals.LOG.error(localize("submitJcl.log.error.nullSession", "Session for submitting JCL was null or undefined!"));
         return;
     }
-    try {
-        const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
-        const args = [sessProfileName, job.jobid];
-        const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-        vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
-    } catch (error) {
-        errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
+    await Profiles.getInstance().checkCurrentProfile(sessProfile);
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        try {
+            const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
+            const args = [sessProfileName, job.jobid];
+            const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+            vscode.window.showInformationMessage(localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
+        } catch (error) {
+            errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        }
+    } else {
+        vscode.window.showErrorMessage(localize("submitJcl.checkProfile", "Profile is invalid"));
+        return;
     }
 }
 
@@ -623,7 +640,13 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
             default:
                 throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
-        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).deleteDataSet(label);
+        datasetProvider.checkCurrentProfile(node);
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).deleteDataSet(label);
+        } else {
+            vscode.window.showErrorMessage(localize("deleteDataset.checkProfile", "Profile is invalid"));
+            return;
+        }
     } catch (err) {
         globals.LOG.error(localize("deleteDataSet.delete.log.error", "Error encountered when deleting data set! ") + JSON.stringify(err));
         if (err.message.includes(localize("deleteDataSet.error.notFound", "not found"))) {
@@ -793,10 +816,16 @@ export async function copyDataSet(node: IZoweNodeType) {
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
-    const { dataSetName } = dsUtils.getNodeLabels(node);
-    vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
-    localize("hMigrate.requestSent2", " requested."));
-    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        const { dataSetName } = dsUtils.getNodeLabels(node);
+        vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
+        localize("hMigrate.requestSent2", " requested."));
+        return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+    } else {
+        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+        return;
+    }
 }
 
 /**
@@ -806,10 +835,16 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
-    const { dataSetName } = dsUtils.getNodeLabels(node);
-    vscode.window.showInformationMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName +
-    localize("hRecall.requestSent2", " requested."));
-    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        const { dataSetName } = dsUtils.getNodeLabels(node);
+        vscode.window.showInformationMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName +
+        localize("hRecall.requestSent2", " requested."));
+        return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+    } else {
+        vscode.window.showErrorMessage(localize("hMigrateDataSet.checkProfile", "Profile is invalid"));
+        return;
+    }
 }
 
 /**
