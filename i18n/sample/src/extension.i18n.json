@@ -12,13 +12,5 @@
     "profile.init.read.imperative": "Unable to read imperative file. ",
     "initialize.module.load": "Credentials not managed, unable to load security file: ",
     "moveTempFolder.error": "Error encountered when creating temporary folder! ",
-    "addSession.quickPickOption": "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer",
-    "enterPattern.pattern": "No selection made.",
-    "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
-    "createNewConnection.option.prompt.profileName": "Enter a name for the connection",
-    "createNewConnection.enterprofileName": "Profile Name was not supplied. Operation Cancelled",
-    "addSession.log.debug.createNewProfile": "User created a new profile",
-    "addZoweSession.log.debug.selectProfile": "User selected profile ",
-    "addZoweSession.log.debug.cancelledSelection": "User cancelled profile selection",
     "deactivate.error": "Unable to delete temporary folder. "
 }
