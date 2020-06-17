@@ -117,8 +117,8 @@ describe("Extension Unit Tests", () => {
     let mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
     const profileOps = {
-        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-        defaultProfile: {name: "firstName"},
+        allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+        defaultProfile: { name: "firstName" },
         getDefaultProfile: mockLoadNamedProfile,
         loadNamedProfile: mockLoadNamedProfile,
         validProfile: ValidProfileEnum.VALID,
@@ -295,7 +295,7 @@ describe("Extension Unit Tests", () => {
         readText: jest.fn().mockImplementation(() => mockClipboardData),
     };
     const initialize = jest.fn();
-    const getImperativeConfig = jest.fn().mockReturnValue({profiles: []});
+    const getImperativeConfig = jest.fn().mockReturnValue({ profiles: [] });
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
@@ -402,9 +402,9 @@ describe("Extension Unit Tests", () => {
     const testTree = DatasetTree();
     testTree.mSessionNodes = [];
     testTree.mSessionNodes.push(sessNode);
-    Object.defineProperty(testTree, "onDidExpandElement", {value: jest.fn()});
-    Object.defineProperty(testTree, "onDidCollapseElement", {value: jest.fn()});
-    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
+    Object.defineProperty(testTree, "onDidExpandElement", { value: jest.fn() });
+    Object.defineProperty(testTree, "onDidCollapseElement", { value: jest.fn() });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
 
     const testUSSTree = USSTree();
     testUSSTree.mSessionNodes = [];
@@ -415,81 +415,81 @@ describe("Extension Unit Tests", () => {
     testJobsTree.mSessionNodes.push(jobNode);
 
     mockLoadNamedProfile = jest.fn();
-    Object.defineProperty(sharedUtils, "concatChildNodes", {value: concatChildNodes});
-    Object.defineProperty(fs, "mkdirSync", {value: mkdirSync});
-    Object.defineProperty(imperative, "CliProfileManager", {value: CliProfileManager});
-    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-    Object.defineProperty(vscode.window, "createWebviewPanel", {value: createWebviewPanel});
-    Object.defineProperty(vscode, "Uri", {value: Uri});
-    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
-    Object.defineProperty(vscode.commands, "registerCommand", {value: registerCommand});
-    Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {value: onDidSaveTextDocument});
-    Object.defineProperty(vscode.window, "onDidCollapseElement", {value: onDidCollapseElement});
-    Object.defineProperty(vscode.window, "onDidExpandElement", {value: onDidExpandElement});
-    Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
-    Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {value: onDidChangeConfiguration});
-    Object.defineProperty(fs, "readdirSync", {value: readdirSync});
-    Object.defineProperty(fs, "createReadStream", {value: createReadStream});
-    Object.defineProperty(fs, "existsSync", {value: existsSync});
-    Object.defineProperty(fs, "unlinkSync", {value: unlinkSync});
-    Object.defineProperty(fs, "rmdirSync", {value: rmdirSync});
-    Object.defineProperty(fs, "readFileSync", {value: readFileSync});
-    Object.defineProperty(fsextra, "moveSync", {value: moveSync});
-    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
-    Object.defineProperty(vscode.window, "showWarningMessage", {value: showWarningMessage});
-    Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-    Object.defineProperty(vscode.window, "showQuickBox", {value: showQuickBox});
-    Object.defineProperty(vscode.window, "activeTextEditor", {value: activeTextEditor});
-    Object.defineProperty(activeTextEditor, "document", {value: document});
-    Object.defineProperty(document, "save", {value: save});
-    Object.defineProperty(document, "getText", {value: getText});
-    Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
-    Object.defineProperty(zowe, "ZosmfSession", {value: ZosmfSession});
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {value: createBasicZosmfSession});
-    Object.defineProperty(zowe, "Upload", {value: Upload});
-    Object.defineProperty(Upload, "bufferToDataSet", {value: bufferToDataSet});
-    Object.defineProperty(Upload, "pathToDataSet", {value: pathToDataSet});
-    Object.defineProperty(Upload, "fileToUSSFile", {value: fileToUSSFile});
-    Object.defineProperty(zowe, "Create", {value: Create});
-    Object.defineProperty(Create, "dataSet", {value: dataSetCreate});
-    Object.defineProperty(zowe, "Get", {value: Get});
-    Object.defineProperty(Get, "dataSet", {value: dataSetGet});
-    Object.defineProperty(zowe, "List", {value: List});
-    Object.defineProperty(List, "dataSet", {value: dataSetList});
-    Object.defineProperty(List, "fileList", {value: fileList});
-    Object.defineProperty(List, "allMembers", {value: allMembers});
-    Object.defineProperty(vscode.workspace, "openTextDocument", {value: openTextDocument});
-    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-    Object.defineProperty(vscode.window, "showTextDocument", {value: showTextDocument});
-    Object.defineProperty(vscode.window, "showOpenDialog", {value: showOpenDialog});
-    Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
-    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
-    Object.defineProperty(zowe, "Download", {value: Download});
-    Object.defineProperty(Download, "dataSet", {value: dataSet});
-    Object.defineProperty(treeMock, "DatasetTree", {value: DatasetTree});
-    Object.defineProperty(treeUSSMock, "USSTree", {value: USSTree});
-    Object.defineProperty(zowe, "Delete", {value: Delete});
-    Object.defineProperty(Delete, "dataSet", {value: delDataset});
-    Object.defineProperty(zowe, "CreateDataSetTypeEnum", {value: CreateDataSetTypeEnum});
-    Object.defineProperty(zowe, "Utilities", {value: Utilities});
-    Object.defineProperty(Download, "ussFile", {value: ussFile});
-    Object.defineProperty(Utilities, "isFileTagBinOrAscii", {value: isFileTagBinOrAscii});
-    Object.defineProperty(zowe, "GetJobs", {value: GetJobs});
-    Object.defineProperty(GetJobs, "getSpoolContentById", {value: getSpoolContentById});
-    Object.defineProperty(GetJobs, "getJclForJob", {value: getJclForJob});
-    Object.defineProperty(zowe, "DownloadJobs", {value: DownloadJobs});
-    Object.defineProperty(DownloadJobs, "downloadAllSpoolContentCommon", {value: downloadAllSpoolContentCommon});
-    Object.defineProperty(zowe, "SubmitJobs", {value: SubmitJobs});
-    Object.defineProperty(SubmitJobs, "submitJcl", {value: submitJcl});
-    Object.defineProperty(SubmitJobs, "submitJob", {value: submitJob});
-    Object.defineProperty(zowe, "IssueCommand", {value: IssueCommand});
-    Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
-    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider});
-    Object.defineProperty(vscode.Disposable, "from", {value: from});
-    Object.defineProperty(vscode.Uri, "parse", {value: parse});
-    Object.defineProperty(zowe, "Rename", {value: Rename});
+    Object.defineProperty(sharedUtils, "concatChildNodes", { value: concatChildNodes });
+    Object.defineProperty(fs, "mkdirSync", { value: mkdirSync });
+    Object.defineProperty(imperative, "CliProfileManager", { value: CliProfileManager });
+    Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
+    Object.defineProperty(vscode.window, "createWebviewPanel", { value: createWebviewPanel });
+    Object.defineProperty(vscode, "Uri", { value: Uri });
+    Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
+    Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
+    Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
+    Object.defineProperty(vscode.window, "onDidCollapseElement", { value: onDidCollapseElement });
+    Object.defineProperty(vscode.window, "onDidExpandElement", { value: onDidExpandElement });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+    Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
+    Object.defineProperty(fs, "readdirSync", { value: readdirSync });
+    Object.defineProperty(fs, "createReadStream", { value: createReadStream });
+    Object.defineProperty(fs, "existsSync", { value: existsSync });
+    Object.defineProperty(fs, "unlinkSync", { value: unlinkSync });
+    Object.defineProperty(fs, "rmdirSync", { value: rmdirSync });
+    Object.defineProperty(fs, "readFileSync", { value: readFileSync });
+    Object.defineProperty(fsextra, "moveSync", { value: moveSync });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: showWarningMessage });
+    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "showQuickBox", { value: showQuickBox });
+    Object.defineProperty(vscode.window, "activeTextEditor", { value: activeTextEditor });
+    Object.defineProperty(activeTextEditor, "document", { value: document });
+    Object.defineProperty(document, "save", { value: save });
+    Object.defineProperty(document, "getText", { value: getText });
+    Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand });
+    Object.defineProperty(zowe, "ZosmfSession", { value: ZosmfSession });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+    Object.defineProperty(zowe, "Upload", { value: Upload });
+    Object.defineProperty(Upload, "bufferToDataSet", { value: bufferToDataSet });
+    Object.defineProperty(Upload, "pathToDataSet", { value: pathToDataSet });
+    Object.defineProperty(Upload, "fileToUSSFile", { value: fileToUSSFile });
+    Object.defineProperty(zowe, "Create", { value: Create });
+    Object.defineProperty(Create, "dataSet", { value: dataSetCreate });
+    Object.defineProperty(zowe, "Get", { value: Get });
+    Object.defineProperty(Get, "dataSet", { value: dataSetGet });
+    Object.defineProperty(zowe, "List", { value: List });
+    Object.defineProperty(List, "dataSet", { value: dataSetList });
+    Object.defineProperty(List, "fileList", { value: fileList });
+    Object.defineProperty(List, "allMembers", { value: allMembers });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: openTextDocument });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: showTextDocument });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: showOpenDialog });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
+    Object.defineProperty(zowe, "Download", { value: Download });
+    Object.defineProperty(Download, "dataSet", { value: dataSet });
+    Object.defineProperty(treeMock, "DatasetTree", { value: DatasetTree });
+    Object.defineProperty(treeUSSMock, "USSTree", { value: USSTree });
+    Object.defineProperty(zowe, "Delete", { value: Delete });
+    Object.defineProperty(Delete, "dataSet", { value: delDataset });
+    Object.defineProperty(zowe, "CreateDataSetTypeEnum", { value: CreateDataSetTypeEnum });
+    Object.defineProperty(zowe, "Utilities", { value: Utilities });
+    Object.defineProperty(Download, "ussFile", { value: ussFile });
+    Object.defineProperty(Utilities, "isFileTagBinOrAscii", { value: isFileTagBinOrAscii });
+    Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
+    Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
+    Object.defineProperty(GetJobs, "getJclForJob", { value: getJclForJob });
+    Object.defineProperty(zowe, "DownloadJobs", { value: DownloadJobs });
+    Object.defineProperty(DownloadJobs, "downloadAllSpoolContentCommon", { value: downloadAllSpoolContentCommon });
+    Object.defineProperty(zowe, "SubmitJobs", { value: SubmitJobs });
+    Object.defineProperty(SubmitJobs, "submitJcl", { value: submitJcl });
+    Object.defineProperty(SubmitJobs, "submitJob", { value: submitJob });
+    Object.defineProperty(zowe, "IssueCommand", { value: IssueCommand });
+    Object.defineProperty(IssueCommand, "issueSimple", { value: issueSimple });
+    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: registerTextDocumentContentProvider });
+    Object.defineProperty(vscode.Disposable, "from", { value: from });
+    Object.defineProperty(vscode.Uri, "parse", { value: parse });
+    Object.defineProperty(zowe, "Rename", { value: Rename });
     Object.defineProperty(Rename, "dataSet", { value: renameDataSet });
-    Object.defineProperty(zowe, "Copy", {value: Copy});
+    Object.defineProperty(zowe, "Copy", { value: Copy });
     Object.defineProperty(Copy, "dataSet", { value: copyDataSet });
     Object.defineProperty(zowe, "HMigrate", { value: HMigrate });
     Object.defineProperty(HMigrate, "dataSet", { value: hMigrateDataSet });
@@ -503,7 +503,7 @@ describe("Extension Unit Tests", () => {
     Object.defineProperty(imperative, "ImperativeConfig", { value: ImperativeConfig });
     Object.defineProperty(ImperativeConfig, "instance", { value: icInstance });
     Object.defineProperty(icInstance, "cliHome", { get: cliHome });
-    Object.defineProperty(utils, "closeOpenedTextFile", {value: closeOpenedTextFile});
+    Object.defineProperty(utils, "closeOpenedTextFile", { value: closeOpenedTextFile });
 
     beforeEach(() => {
         mockLoadNamedProfile.mockReturnValue(profileOne);
@@ -511,8 +511,8 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
                     validProfile: ValidProfileEnum.VALID,
                     getDefaultProfile: mockLoadNamedProfile,
                     loadNamedProfile: mockLoadNamedProfile,
@@ -550,14 +550,14 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReturnValueOnce({
             persistence: true,
             get: () => "folderpath",
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
         getConfiguration.mockReturnValueOnce({
             persistence: true,
             get: (setting: string) => "vscode",
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -565,7 +565,7 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReturnValueOnce({
             persistence: true,
             get: () => "",
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -578,7 +578,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -590,7 +590,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -602,7 +602,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -614,7 +614,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -626,7 +626,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -637,7 +637,7 @@ describe("Extension Unit Tests", () => {
                 WorkspaceFolder: 3
             };
         });
-        Object.defineProperty(vscode, "ConfigurationTarget", {value: enums});
+        Object.defineProperty(vscode, "ConfigurationTarget", { value: enums });
         // tslint:disable-next-line: no-object-literal-type-assertion
         const extensionMock = jest.fn(() => ({
             subscriptions: [],
@@ -676,7 +676,7 @@ describe("Extension Unit Tests", () => {
         if (targetIcon) {
             sampleFavorites[2].iconPath = targetIcon.path;
         }
-        sampleFavorites[2].command = {command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]]};
+        sampleFavorites[2].command = { command: "zowe.pattern", title: "", arguments: [sampleFavorites[2]] };
         sampleFavorites[2].iconPath = {
             dark: path.join(__dirname, "..", "..", "..", "resources", "dark", "pattern.svg"),
             light: path.join(__dirname, "..", "..", "..", "resources", "light", "pattern.svg")
@@ -689,7 +689,7 @@ describe("Extension Unit Tests", () => {
         expect(createTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
         // tslint:disable-next-line: no-magic-numbers
         expect(registerCommand.mock.calls.length).toBe(77);
-        registerCommand.mock.calls.forEach((call, i ) => {
+        registerCommand.mock.calls.forEach((call, i) => {
             expect(registerCommand.mock.calls[i][1]).toBeInstanceOf(Function);
         });
         const actualCommands = [];
@@ -803,14 +803,14 @@ describe("Extension Unit Tests", () => {
         // .get("Zowe-Temp-Folder-Location")["folderPath"];
         getConfiguration.mockReturnValueOnce({
             get: () => "",
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
         // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => undefined,
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -821,7 +821,7 @@ describe("Extension Unit Tests", () => {
                 "[test]: brtvs99.fail{fail}",
                 "[test]: brtvs99.test.search{session}",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -830,7 +830,7 @@ describe("Extension Unit Tests", () => {
             get: (setting: string) => [
                 "",
             ],
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -851,7 +851,7 @@ describe("Extension Unit Tests", () => {
             get: () => {
                 return [""];
             },
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -867,7 +867,7 @@ describe("Extension Unit Tests", () => {
         // getConfiguration("Zowe-Environment").get("framework");
         getConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
-            update: jest.fn(()=>{
+            update: jest.fn(() => {
                 return {};
             })
         });
@@ -886,7 +886,7 @@ describe("Extension Unit Tests", () => {
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
-        openTextDocument.mockResolvedValueOnce({isDirty: true});
+        openTextDocument.mockResolvedValueOnce({ isDirty: true });
         dataSet.mockReset();
         showTextDocument.mockReset();
 
@@ -902,13 +902,13 @@ describe("Extension Unit Tests", () => {
         });
         expect(openTextDocument.mock.calls.length).toBe(1);
         expect(openTextDocument.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label, node.label ));
+            node.getSessionNode().label, node.label));
         expect(showTextDocument.mock.calls.length).toBe(2);
         expect(executeCommand.mock.calls.length).toBe(1);
 
 
         showInformationMessage.mockReset();
-        openTextDocument.mockResolvedValueOnce({isDirty: false});
+        openTextDocument.mockResolvedValueOnce({ isDirty: false });
         executeCommand.mockReset();
 
         await dsActions.refreshPS(node);
@@ -935,8 +935,8 @@ describe("Extension Unit Tests", () => {
 
         showErrorMessage.mockReset();
         openTextDocument.mockReset();
-        openTextDocument.mockResolvedValueOnce({isDirty: true});
-        openTextDocument.mockResolvedValueOnce({isDirty: true});
+        openTextDocument.mockResolvedValueOnce({ isDirty: true });
+        openTextDocument.mockResolvedValueOnce({ isDirty: true });
         dataSet.mockReset();
         showTextDocument.mockReset();
         dataSet.mockReturnValueOnce(fileResponse);
@@ -967,438 +967,6 @@ describe("Extension Unit Tests", () => {
         showErrorMessage.mockReset();
         dataSet.mockReset();
         openTextDocument.mockReset();
-    });
-
-    it("Testing that createFile is executed successfully", async () => {
-        const sessNode2 = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-        sessNode2.contextValue = globals.DS_SESSION_CONTEXT;
-        sessNode2.pattern = "test hlq";
-        const childNode = new ZoweDatasetNode("NODE", vscode.TreeItemCollapsibleState.None, sessNode2, null, undefined, undefined, profileOne);
-        sessNode2.children.push(childNode);
-
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: {
-                items: [{name: "NODE", dsname: "NODE"}]
-            }
-        };
-
-        showQuickPick.mockReset();
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        dataSetCreate.mockReset();
-        allMembers.mockReset();
-        dataSetList.mockReset();
-        mockGetHistory.mockReset();
-
-        getConfiguration.mockReturnValue("FakeConfig");
-        mockCreateFilterString.mockReturnValue("NODE");
-        createTreeView.mockReturnValue(new TreeView());
-        showInputBox.mockReturnValue("NODE");
-        allMembers.mockReturnValue(uploadResponse);
-        dataSetList.mockReturnValue(uploadResponse);
-        mockGetHistory.mockReturnValue([]);
-        testTree.getTreeView.mockReturnValue(new TreeView());
-
-        showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await dsActions.createFile(sessNode2, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set C");
-        await dsActions.createFile(sessNode2, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await dsActions.createFile(sessNode2, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await dsActions.createFile(sessNode2, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(sessNode2, testTree);
-
-        // tslint:disable-next-line: no-magic-numbers
-        expect(showQuickPick.mock.calls.length).toBe(5);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls.length).toBe(5);
-        expect(getConfiguration.mock.calls[0][0]).toBe("Zowe-Default-Datasets-Binary");
-        expect(getConfiguration.mock.calls[1][0]).toBe("Zowe-Default-Datasets-C");
-        expect(getConfiguration.mock.calls[2][0]).toBe("Zowe-Default-Datasets-Classic");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls[3][0]).toBe("Zowe-Default-Datasets-PDS");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls[4][0]).toBe("Zowe-Default-Datasets-PS");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(showInputBox.mock.calls.length).toBe(5);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(dataSetCreate.mock.calls.length).toBe(5);
-        expect(dataSetCreate.mock.calls[0][0]).toEqual(session);
-
-        showInformationMessage.mockReset();
-        showErrorMessage.mockReset();
-
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(sessNode2, testTree);
-
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        dataSetCreate.mockRejectedValueOnce(Error("Generic Error"));
-        try {
-            await dsActions.createFile(sessNode2, testTree);
-        } catch (err) {
-            // do nothing
-        }
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("Error encountered when creating data set! Generic Error Error: Generic Error");
-
-        showQuickPick.mockReset();
-        showErrorMessage.mockReset();
-
-        showQuickPick.mockReturnValueOnce(undefined);
-        try {
-            await dsActions.createFile(sessNode, testTree);
-            // tslint:disable-next-line:no-empty
-        } catch (err) {
-        }
-
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls.length).toBe(0);
-
-        mockGetHistory.mockReset();
-        testTree.treeView.reveal.mockReset();
-        mockCreateFilterString.mockReset();
-        mockCreateFilterString.mockReturnValue("NODE1,NODE.*");
-
-        // Testing the addition of new node to tree view
-        mockGetHistory.mockReturnValueOnce(["NODE1"]);
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
-        expect(testTree.treeView.reveal.mock.calls.length).toBe(1);
-
-        testTree.addHistory.mockReset();
-
-        mockGetHistory.mockReturnValueOnce(["NODE"]);
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(sessNode2, testTree);
-        expect(testTree.addHistory.mock.calls.length).toBe(1);
-
-        mockCreateFilterString.mockReset();
-
-        mockGetHistory.mockReturnValueOnce([null]);
-        mockCreateFilterString.mockReturnValueOnce("NODE");
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
-
-        allMembers.mockReset();
-        dataSetList.mockReset();
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-    });
-
-    it("tests the createFile for prompt credentials", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [profileOne, {name: "secondName"}],
-                    defaultProfile: profileOne,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-
-            })
-        });
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            protocol: "https",
-            type: "basic",
-        });
-        const uploadResponse: zowe.IZosFilesResponse = {
-            success: true,
-            commandResponse: "success",
-            apiResponse: {
-                items: []
-            }
-        };
-
-        createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
-                                                null, sessionwocred, undefined, undefined, profileOne);
-        newsessNode.contextValue = globals.DS_SESSION_CONTEXT;
-
-        showQuickPick.mockReset();
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        dataSetCreate.mockReset();
-        dataSetList.mockReset();
-        mockGetHistory.mockReset();
-        allMembers.mockReset();
-
-        getConfiguration.mockReturnValue("FakeConfig");
-        mockCreateFilterString.mockReturnValue("NODE");
-        createTreeView.mockReturnValue(new TreeView());
-        showInputBox.mockReturnValue("FakeName");
-        mockGetHistory.mockReturnValue(["mockHistory"]);
-        dataSetList.mockReturnValue(uploadResponse);
-        allMembers.mockReturnValue(uploadResponse);
-        testTree.getTreeView.mockReturnValue(new TreeView());
-
-        showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set C");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(newsessNode, testTree);
-
-        // tslint:disable-next-line: no-magic-numbers
-        expect(showQuickPick.mock.calls.length).toBe(5);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls.length).toBe(5);
-        expect(getConfiguration.mock.calls[0][0]).toBe("Zowe-Default-Datasets-Binary");
-        expect(getConfiguration.mock.calls[1][0]).toBe("Zowe-Default-Datasets-C");
-        expect(getConfiguration.mock.calls[2][0]).toBe("Zowe-Default-Datasets-Classic");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls[3][0]).toBe("Zowe-Default-Datasets-PDS");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls[4][0]).toBe("Zowe-Default-Datasets-PS");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(showInputBox.mock.calls.length).toBe(5);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(dataSetCreate.mock.calls.length).toBe(5);
-
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        dataSetCreate.mockReset();
-        dataSetList.mockReset();
-        mockGetHistory.mockReset();
-        allMembers.mockReset();
-    });
-
-    it("tests the createFile for prompt credentials, favorite route", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [profileOne, {name: "secondName"}],
-                    defaultProfile: profileOne,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            protocol: "https",
-            type: "basic",
-        });
-
-        createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
-                                                null, sessionwocred, undefined, undefined, profileOne);
-        newsessNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-
-        showQuickPick.mockReset();
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        dataSetCreate.mockReset();
-        testTree.getChildren.mockReset();
-        allMembers.mockReset();
-        dataSet.mockReset();
-        mockGetHistory.mockReset();
-
-        getConfiguration.mockReturnValue("FakeConfig");
-        mockCreateFilterString.mockReturnValue("NODE");
-        showInputBox.mockReturnValue("FakeName");
-        createTreeView.mockReturnValue(new TreeView());
-        testTree.getChildren.mockReturnValue([new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode,
-                                                                  null, undefined, undefined, profileOne), sessNode]);
-        allMembers.mockReturnValue(defaultUploadResponse);
-        dataSet.mockReturnValue(defaultUploadResponse);
-        mockGetHistory.mockReturnValue(["mockHistory1"]);
-        testTree.getTreeView.mockReturnValue(new TreeView());
-
-        showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set C");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Classic");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Partitioned");
-        await dsActions.createFile(newsessNode, testTree);
-        showQuickPick.mockResolvedValueOnce("Data Set Sequential");
-        await dsActions.createFile(newsessNode, testTree);
-
-        // tslint:disable-next-line: no-magic-numbers
-        expect(showQuickPick.mock.calls.length).toBe(5);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls.length).toBe(5);
-        expect(getConfiguration.mock.calls[0][0]).toBe("Zowe-Default-Datasets-Binary");
-        expect(getConfiguration.mock.calls[1][0]).toBe("Zowe-Default-Datasets-C");
-        expect(getConfiguration.mock.calls[2][0]).toBe("Zowe-Default-Datasets-Classic");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls[3][0]).toBe("Zowe-Default-Datasets-PDS");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(getConfiguration.mock.calls[4][0]).toBe("Zowe-Default-Datasets-PS");
-        // tslint:disable-next-line: no-magic-numbers
-        expect(showInputBox.mock.calls.length).toBe(5);
-        // tslint:disable-next-line: no-magic-numbers
-        expect(dataSetCreate.mock.calls.length).toBe(5);
-
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        testTree.getChildren.mockReset();
-        allMembers.mockReset();
-        dataSet.mockReset();
-        mockGetHistory.mockReset();
-    });
-
-    it("tests the createFile for prompt credentials error", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [profileOne, {name: "secondName"}],
-                    defaultProfile: profileOne,
-                    loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                };
-            })
-        });
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            protocol: "https",
-            type: "basic",
-        });
-        const createFileSpy = jest.spyOn(dsActions, "createFile");
-        createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newsessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
-                                                null, sessionwocred, undefined, undefined, profileOne);
-        newsessNode.contextValue = globals.DS_SESSION_CONTEXT;
-        newsessNode.pattern = "sestest";
-
-        showQuickPick.mockReset();
-        getConfiguration.mockReset();
-        showInputBox.mockReset();
-        dataSetCreate.mockReset();
-        mockGetHistory.mockReset();
-        allMembers.mockReset();
-        dataSetList.mockReset();
-
-        getConfiguration.mockReturnValueOnce("FakeConfig");
-        mockCreateFilterString.mockReturnValue("NODE");
-        showInputBox.mockReturnValueOnce("sestest");
-        mockGetHistory.mockReturnValueOnce(["mockHistory"]);
-        allMembers.mockReturnValueOnce(defaultUploadResponse);
-        dataSetList.mockReturnValue(defaultUploadResponse);
-        testTree.getTreeView.mockReturnValue(new TreeView());
-
-        showQuickPick.mockResolvedValueOnce("Data Set Binary");
-        await dsActions.createFile(newsessNode, testTree);
-        expect(createFileSpy).toHaveBeenCalled();
-
-        dataSetList.mockReset();
-    });
-
-    it("Testing that openPS is executed successfully", async () => {
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        showErrorMessage.mockReset();
-        existsSync.mockReset();
-        withProgress.mockReset();
-
-        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-
-        existsSync.mockReturnValue(null);
-
-        withProgress.mockReturnValue(fileResponse);
-        openTextDocument.mockResolvedValueOnce("test doc");
-
-        await dsActions.openPS(node, true, testTree);
-
-        expect(existsSync.mock.calls.length).toBe(1);
-        expect(existsSync.mock.calls[0][0]).toBe(path.join(globals.DS_DIR,
-            node.getSessionNode().label.trim(), node.label));
-        expect(withProgress).toBeCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Opening data set..."
-            }, expect.any(Function)
-        );
-        withProgress(downloadDataset);
-        expect(withProgress).toBeCalledWith(downloadDataset);
-        // expect(dataSet.mock.calls.length).toBe(1);
-        // expect(dataSet.mock.calls[0][0]).toBe(session);
-        // expect(dataSet.mock.calls[0][1]).toBe(node.label);
-        // expect(dataSet.mock.calls[0][2]).toEqual({file: sharedUtils.getDocumentFilePath(node.label, node)});
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(sharedUtils.getDocumentFilePath(node.label, node));
-        expect(showTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls[0][0]).toBe("test doc");
-
-        openTextDocument.mockResolvedValueOnce("test doc");
-        const node2 = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None, sessNode, null);
-
-        await dsActions.openPS(node2, true, testTree);
-
-        dataSet.mockReset();
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        existsSync.mockReset();
-
-        existsSync.mockReturnValue("exists");
-        showTextDocument.mockRejectedValueOnce(Error("testError"));
-
-        try {
-            await dsActions.openPS(child, true);
-        } catch (err) {
-            // do nothing
-        }
-
-        expect(dataSet.mock.calls.length).toBe(0);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(openTextDocument.mock.calls[0][0]).toBe(sharedUtils.getDocumentFilePath(parent.label + "(" + child.label + ")", node));
-        expect(showTextDocument.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
-
-        const child2 = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, node2, null);
-        try {
-            await dsActions.openPS(child2, true, testTree);
-        } catch (err) {
-            // do nothing
-        }
-
-        openTextDocument.mockReset();
-        showTextDocument.mockReset();
-        parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        await dsActions.openPS(child, true, testTree);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-
-        parent.contextValue = globals.FAVORITE_CONTEXT;
-        await dsActions.openPS(child, true, testTree);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-
-        showErrorMessage.mockReset();
     });
 
     /*************************************************************************************************************
@@ -1535,157 +1103,6 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
     });
 
-    it("Testing that that openPS credentials prompt is executed successfully", async () => {
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        dataSet.mockReturnValueOnce(fileResponse);
-
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
-        const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                    getProfiles: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("fake");
-
-        await dsActions.openPS(dsNode, true, testTree);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-    });
-
-    it("Testing that that openPS credentials prompt works with favorites", async () => {
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
-        const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                    loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                };
-            })
-        });
-
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("fake");
-
-        await dsActions.openPS(dsNode, true, testTree);
-        expect(openTextDocument.mock.calls.length).toBe(1);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-    });
-
-    it("Testing that that openPS credentials prompt ends in error", async () => {
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
-        const dsNode = new ZoweDatasetNode("testSess", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    validProfile: ValidProfileEnum.INVALID,
-                    checkCurrentProfile: jest.fn(),
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        await dsActions.openPS(dsNode, true, testTree);
-        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        showInformationMessage.mockReset();
-        showErrorMessage.mockReset();
-    });
-
-    it("Testing that that openPS credentials with favorites ends in error", async () => {
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        showQuickPick.mockReset();
-        showInputBox.mockReset();
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
-        const dsNode = new ZoweDatasetNode("[test]: TEST.JCL", vscode.TreeItemCollapsibleState.Expanded, sessNode, sessionwocred);
-        dsNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    promptCredentials: jest.fn(()=> {
-                        return [undefined, undefined, undefined];
-                    }),
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("fake");
-        const spyopenPS = jest.spyOn(dsActions, "openPS");
-        await dsActions.openPS(dsNode, true, testTree);
-        expect(spyopenPS).toHaveBeenCalled();
-    });
-
     describe("Add searchForLoadedItems Tests", () => {
         it("Testing that filterTreeByString returns the correct array", async () => {
             const qpItems = [
@@ -1701,7 +1118,7 @@ describe("Extension Unit Tests", () => {
             filteredValues = await sharedUtils.filterTreeByString("HLQ.PROD2.STUFF1", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[0]]);
             filteredValues = await sharedUtils.filterTreeByString("HLQ.*.STUFF*", qpItems);
-            expect(filteredValues).toStrictEqual([qpItems[0],qpItems[1]]);
+            expect(filteredValues).toStrictEqual([qpItems[0], qpItems[1]]);
             filteredValues = await sharedUtils.filterTreeByString("/test/tree/abc", qpItems);
             expect(filteredValues).toStrictEqual([qpItems[2]]);
             filteredValues = await sharedUtils.filterTreeByString("*/abc", qpItems);
@@ -1716,6 +1133,7 @@ describe("Extension Unit Tests", () => {
             const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_PDS_CONTEXT);
             testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             testTree.getChildren.mockReturnValue([sessNode]);
+            testTree.getTreeView.mockReturnValue({ reveal: jest.fn() });
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
             jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testNode]));
             jest.spyOn(testUSSTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([]));
@@ -1761,6 +1179,7 @@ describe("Extension Unit Tests", () => {
             testMember.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             testNode.children.push(testMember);
             testTree.getChildren.mockReturnValue([sessNode]);
+            testTree.getTreeView.mockReturnValue({ reveal: jest.fn() });
             jest.spyOn(utils, "resolveQuickPickHelper").mockImplementationOnce(() => Promise.resolve(qpItem));
             jest.spyOn(dsActions, "openPS").mockImplementationOnce(() => Promise.resolve(null));
             jest.spyOn(testTree, "searchInLoadedItems").mockImplementationOnce(() => Promise.resolve([testMember]));
@@ -1815,13 +1234,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: qpItem,
-                show: jest.fn(()=>{
+                show: jest.fn(() => {
                     return {};
                 }),
-                onDidChangeValue: jest.fn(()=>{
+                onDidChangeValue: jest.fn(() => {
                     return {};
                 }),
-                dispose: jest.fn(()=>{
+                dispose: jest.fn(() => {
                     return {};
                 })
             });
@@ -1851,13 +1270,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: [qpItem],
                 value: qpItem,
-                show: jest.fn(()=>{
+                show: jest.fn(() => {
                     return {};
                 }),
-                onDidChangeValue: jest.fn(()=>{
+                onDidChangeValue: jest.fn(() => {
                     return {};
                 }),
-                dispose: jest.fn(()=>{
+                dispose: jest.fn(() => {
                     return {};
                 })
             });
@@ -1882,13 +1301,13 @@ describe("Extension Unit Tests", () => {
                 ignoreFocusOut: true,
                 items: null,
                 value: null,
-                show: jest.fn(()=>{
+                show: jest.fn(() => {
                     return {};
                 }),
-                onDidChangeValue: jest.fn(()=>{
+                onDidChangeValue: jest.fn(() => {
                     return {};
                 }),
-                dispose: jest.fn(()=>{
+                dispose: jest.fn(() => {
                     return {};
                 })
             });
@@ -1903,7 +1322,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
     });
 
-  // TODO Node tests
+    // TODO Node tests
     it("Testing that open is executed successfully", async () => {
         ussFile.mockReset();
         openTextDocument.mockReset();
@@ -1915,10 +1334,10 @@ describe("Extension Unit Tests", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
                     getDefaultProfile: mockLoadNamedProfile,
-                    promptCredentials: jest.fn(()=> {
+                    promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: mockLoadNamedProfile,
@@ -1926,7 +1345,10 @@ describe("Extension Unit Tests", () => {
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
                     getProfiles: jest.fn(() => {
-                        return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                        return [{ name: profileOne.name, profile: profileOne }, {
+                            name: profileOne.name,
+                            profile: profileOne
+                        }];
                     }),
                     refresh: jest.fn(),
                 };
@@ -1952,12 +1374,12 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
-                        createNewConnection: jest.fn(()=>{
-                            return {newprofile: "fake"};
+                        allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                        defaultProfile: { name: "firstName" },
+                        createNewConnection: jest.fn(() => {
+                            return { newprofile: "fake" };
                         }),
-                        listProfile: jest.fn(()=>{
+                        listProfile: jest.fn(() => {
                             return {};
                         }),
                         loadNamedProfile: mockLoadNamedProfile
@@ -1982,11 +1404,14 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined }
+                        }, { name: "secondName" }],
+                        defaultProfile: { name: "firstName" },
                         validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return ["fake", "fake", "fake"];
                         }),
                     };
@@ -2014,11 +1439,14 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined }
+                        }, { name: "secondName" }],
+                        defaultProfile: { name: "firstName" },
                         validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return ["fake", "fake", "fake"];
                         }),
                     };
@@ -2045,11 +1473,14 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined }
+                        }, { name: "secondName" }],
+                        defaultProfile: { name: "firstName" },
                         validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return [undefined, undefined, undefined];
                         }),
                     };
@@ -2077,11 +1508,14 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined }
+                        }, { name: "secondName" }],
+                        defaultProfile: { name: "firstName" },
                         validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
-                        promptCredentials: jest.fn(()=> {
+                        promptCredentials: jest.fn(() => {
                             return ["fake", "fake", "fake"];
                         }),
                     };
@@ -2103,8 +1537,11 @@ describe("Extension Unit Tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
-                        allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                        defaultProfile: {name: "firstName"},
+                        allProfiles: [{
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined }
+                        }, { name: "secondName" }],
+                        defaultProfile: { name: "firstName" },
                         validProfile: ValidProfileEnum.VALID,
                         checkCurrentProfile: jest.fn(),
                     };
@@ -2159,112 +1596,9 @@ describe("Extension Unit Tests", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests that the spool content is opened in a new document", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    validProfile: ValidProfileEnum.VALID,
-                    loadNamedProfile: mockLoadNamedProfile,
-                    checkCurrentProfile: jest.fn(),
-                };
-            })
-        });
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        await jobActions.getSpoolContent(testJobsTree, "sessionName", iJobFile);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-    });
-
-    it("tests that the spool content is not opened in a new document", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                };
-            })
-        });
-        showErrorMessage.mockReset();
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        await jobActions.getSpoolContent(testJobsTree, undefined, undefined);
-        expect(showErrorMessage.mock.calls.length).toBe(1);
-    });
-
-    it("tests that the spool content credentials prompt is executed successfully", async () => {
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
-        createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
-        newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: mockLoadNamedProfile,
-                    validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    promptCredentials: jest.fn(()=> {
-                        return ["fake", "fake", "fake"];
-                    }),
-                };
-            })
-        });
-
-        showInputBox.mockReturnValueOnce("fake");
-        showInputBox.mockReturnValueOnce("fake");
-
-        await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
-        expect(showTextDocument.mock.calls.length).toBe(1);
-    });
-
-    it("tests that the spool content credentials prompt ends in error", async () => {
-        showTextDocument.mockReset();
-        openTextDocument.mockReset();
-        const sessionwocred = new imperative.Session({
-            user: "",
-            password: "",
-            hostname: "fake",
-            port: 443,
-            protocol: "https",
-            type: "basic",
-        });
-        createBasicZosmfSession.mockReturnValue(sessionwocred);
-        const newjobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, jobNode, sessionwocred, iJob, jobNode.getProfile());
-        newjobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
-                    validProfile: ValidProfileEnum.INVALID,
-                    checkCurrentProfile: jest.fn(),
-                    loadNamedProfile: mockLoadNamedProfile
-                };
-            })
-        });
-
-        await jobActions.getSpoolContent(testJobsTree, newjobNode.label, iJobFile);
-        expect(Profiles.getInstance().validProfile).toBe(ValidProfileEnum.INVALID);
-        showErrorMessage.mockReset();
-    });
-
     it("tests that a stop command is issued", async () => {
         showInformationMessage.mockReset();
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
         await jobActions.stopCommand(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
@@ -2274,7 +1608,7 @@ describe("Extension Unit Tests", () => {
 
     it("tests that a stop command is not issued", async () => {
         showInformationMessage.mockReset();
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
         await jobActions.stopCommand(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
@@ -2283,7 +1617,7 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
         showInputBox.mockReturnValue("modify");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
         await jobActions.modifyCommand(jobNode);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual(
@@ -2295,13 +1629,13 @@ describe("Extension Unit Tests", () => {
         showInformationMessage.mockReset();
         showInputBox.mockReset();
         showInputBox.mockReturnValue("modify");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
         await jobActions.modifyCommand(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
     it("tests that the spool is downloaded", async () => {
-        const fileUri = {fsPath: "/tmp/foo"};
+        const fileUri = { fsPath: "/tmp/foo" };
         showOpenDialog.mockReturnValue([fileUri]);
         const downloadFileSpy = jest.spyOn(jesApi, "downloadSpoolContent");
         await jobActions.downloadSpool(jobNode);
@@ -2317,7 +1651,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("tests that the spool is not downloaded", async () => {
-        const fileUri = {fsPath: "/tmp/foo"};
+        const fileUri = { fsPath: "/tmp/foo" };
         showOpenDialog.mockReturnValue([fileUri]);
         await jobActions.downloadSpool(undefined);
         expect(showErrorMessage.mock.calls.length).toBe(1);
