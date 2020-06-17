@@ -153,10 +153,12 @@ export class ZoweTreeProvider {
         }
         try {
             // refresh profilesForValidation to check the profile status again
-            await Profiles.getInstance().profilesForValidation.filter((checkProfile) => {
+            Profiles.getInstance().profilesForValidation.forEach((checkProfile, index) => {
+                if (index === 0) {
+                    Profiles.getInstance().profilesForValidation = [];
+                }
                 if (checkProfile.name === profileName) {
-                    Profiles.getInstance().profilesForValidation.pop();
-                    this.log.debug("editSession: Profile was edited" + profileName);
+                    Profiles.getInstance().profilesForValidation.splice(index,1);
                 }
             });
 
