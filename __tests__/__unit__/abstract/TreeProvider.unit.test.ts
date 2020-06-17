@@ -98,8 +98,10 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
             testIJob: createIJobObject(),
             testJobsProvider: await createJobsTree(Logger.getAppLogger()),
             jobNode: null
-        }
-        newMocks.jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, globalMocks.testSession, newMocks.testIJob, globalMocks.testProfile);
+        };
+
+        newMocks.jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
+                                   null, globalMocks.testSession, newMocks.testIJob, globalMocks.testProfile);
         newMocks.jobNode.contextValue = "job";
         newMocks.jobNode.dirty = true;
 

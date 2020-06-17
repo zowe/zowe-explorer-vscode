@@ -38,6 +38,7 @@ export function createISessionWithoutCredentials() {
         hostname: "fake",
         protocol: "https",
         type: "basic",
+        base64EncodedAuth: "fakeEncoding"
     });
 }
 
@@ -147,12 +148,12 @@ export function createQuickPickItem(): vscode.QuickPickItem {
     return new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 }
 
-export function createQuickPickContent(entered: any, item: vscode.QuickPickItem): any {
+export function createQuickPickContent(entered: any, itemArray: vscode.QuickPickItem[], placeholderString: string): any {
     return {
-        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-        activeItems: [item],
+        placeholder: placeholderString,
+        activeItems: itemArray,
         ignoreFocusOut: true,
-        items: [item],
+        items: itemArray,
         value: entered,
         show: jest.fn(),
         hide: jest.fn(),
