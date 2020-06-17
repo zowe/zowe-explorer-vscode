@@ -169,7 +169,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    vscode.commands.registerCommand("zowe.addSession", async () => addZoweSession(datasetProvider));
+    vscode.commands.registerCommand("zowe.addSession", async () => datasetProvider.createZoweSession(datasetProvider));
     vscode.commands.registerCommand("zowe.addFavorite", async (node) => datasetProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.refreshAll", () => dsActions.refreshAll(datasetProvider));
     vscode.commands.registerCommand("zowe.refreshNode", (node) => dsActions.refreshPS(node));
@@ -204,7 +204,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
 function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
     vscode.commands.registerCommand("zowe.uss.addFavorite", async (node: IZoweUSSTreeNode) => ussFileProvider.addFavorite(node));
     vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
-    vscode.commands.registerCommand("zowe.uss.addSession", async () => addZoweSession(ussFileProvider));
+    vscode.commands.registerCommand("zowe.uss.addSession", async () => ussFileProvider.createZoweSession(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshAll", () => ussActions.refreshAllUSS(ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.refreshUSS", (node: IZoweUSSTreeNode) => node.refreshUSS());
     vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) => ussActions.refreshUSSInTree(node, ussFileProvider));
@@ -237,7 +237,7 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.runStopCommand", (job) => jobActions.stopCommand(job));
     vscode.commands.registerCommand("zowe.refreshJobsServer", async (job) => jobActions.refreshJobsServer(job, jobsProvider));
     vscode.commands.registerCommand("zowe.refreshAllJobs", async () => jobActions.refreshAllJobs(jobsProvider));
-    vscode.commands.registerCommand("zowe.addJobsSession", () => addZoweSession(jobsProvider));
+    vscode.commands.registerCommand("zowe.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider));
     vscode.commands.registerCommand("zowe.setOwner", (job) => jobActions.setOwner(job, jobsProvider));
     vscode.commands.registerCommand("zowe.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider));
     vscode.commands.registerCommand("zowe.removeJobsSession", (job) => jobsProvider.deleteSession(job));
@@ -355,125 +355,6 @@ export function moveTempFolder(previousTempPath: string, currentTempPath: string
     } catch (err) {
         globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
         vscode.window.showErrorMessage(err.message);
-    }
-}
-
-/**
- * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
- * selecting which profile you would like to add from the drop-down that appears.
- * The profiles that are in the tree view already will not appear in the
- * drop-down.
- *
- * @export
- * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
- */
-export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const allProfiles = (await Profiles.getInstance()).allProfiles;
-    const createNewProfile = "Create a New Connection to z/OS";
-    let chosenProfile: string = "";
-
-    // Get all profiles
-    let profileNamesList = allProfiles.map((profile) => {
-        return profile.name;
-    });
-    // Filter to list of the APIs available for current tree explorer
-    profileNamesList = profileNamesList.filter((name) => {
-        const profile = Profiles.getInstance().loadNamedProfile(name);
-        if (zoweFileProvider instanceof USSTree) {
-            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-            return ussProfileTypes.includes(profile.type);
-        }
-        if (zoweFileProvider instanceof DatasetTree) {
-            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-            return mvsProfileTypes.includes(profile.type);
-        }
-        if (zoweFileProvider instanceof ZosJobsProvider) {
-            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-            return jesProfileTypes.includes(profile.type);
-        }
-    });
-
-    let profileName: string;
-
-    if (profileNamesList) {
-        profileNamesList = profileNamesList.filter((name) =>
-            // Find all cases where a profile is not already displayed
-            !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === name )
-        );
-    }
-
-    if (profileNamesList.length) {
-        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
-        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
-        const quickpick = vscode.window.createQuickPick();
-        const placeholder = localize("addSession.quickPickOption",
-            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
-
-        if (globals.ISTHEIA) {
-            const options: vscode.QuickPickOptions = {
-                placeHolder: placeholder
-            };
-            // get user selection
-            const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
-            if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                return;
-            }
-            chosenProfile = choice === createPick ? "" : choice.label;
-        } else {
-            quickpick.items = [createPick, ...items];
-            quickpick.placeholder = placeholder;
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await resolveQuickPickHelper(quickpick);
-            quickpick.hide();
-            if (!choice) {
-                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
-                return;
-            }
-            if (choice instanceof FilterDescriptor) {
-                chosenProfile = "";
-                if (quickpick.value) {
-                    profileName = quickpick.value;
-                }
-            } else {
-                chosenProfile = choice.label;
-            }
-        }
-    }
-
-    if (chosenProfile === "") {
-        let newprofile: any;
-        const options = {
-            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
-            value: profileName
-        };
-        profileName = await vscode.window.showInputBox(options);
-        if (!profileName) {
-            vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
-                "Profile Name was not supplied. Operation Cancelled"));
-            return;
-        }
-        chosenProfile = profileName.trim();
-        globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-        try {
-            newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
-        } catch (error) { await errorHandling(error, chosenProfile, error.message); }
-        if (newprofile) {
-            try {
-                await Profiles.getInstance().refresh();
-            } catch (error) {
-                await errorHandling(error, newprofile, error.message);
-            }
-            await zoweFileProvider.addSession(newprofile);
-            await zoweFileProvider.refresh();
-        }
-    } else if (chosenProfile) {
-        globals.LOG.debug(localize("addZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
-        await zoweFileProvider.addSession(chosenProfile);
-    } else {
-        globals.LOG.debug(localize("addZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
     }
 }
 
