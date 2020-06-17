@@ -10,13 +10,15 @@
 */
 
 import * as vscode from "vscode";
+import * as globals from "../globals";
 import { Logger, IProfile, ISession  } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
-import { IZoweTreeNode, IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
+import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { getIconByNode } from "../generators/icons";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession } from "../utils";
+import { IZoweTree } from "../api/IZoweTree";
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -30,7 +32,7 @@ export class ZoweTreeProvider {
     protected log: Logger = Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    constructor(protected persistenceSchema: string, public mFavoriteSession: IZoweTreeNode) {
+    constructor(protected persistenceSchema: globals.PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
         this.mHistory = new PersistentFilters(this.persistenceSchema);
     }
 
@@ -105,6 +107,10 @@ export class ZoweTreeProvider {
         return this.mHistory.getHistory();
     }
 
+    public getTreeType() {
+        return this.persistenceSchema;
+    }
+
     public async addHistory(criteria: string) {
         if (criteria) {
             this.mHistory.addHistory(criteria);
@@ -136,6 +142,10 @@ export class ZoweTreeProvider {
             await setSession(node, EditSession as ISession);
             this.refresh();
         }
+    }
+
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {
+        await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }
 
     protected deleteSessionByLabel(revisedLabel: string) {
