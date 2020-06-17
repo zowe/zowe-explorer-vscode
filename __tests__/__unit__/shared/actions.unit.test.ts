@@ -73,7 +73,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking that searchForLoadedItems works for a PDS", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
@@ -99,7 +99,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(blockMocks.testDatasetTree.addHistory).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a member", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
@@ -133,7 +133,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(blockMocks.testDatasetTree.addHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
     });
     it("Checking that searchForLoadedItems works for a USS folder", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussSessionNode, null, "/");
@@ -155,7 +155,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(openNode).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a USS file", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed,
@@ -181,7 +181,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(openNode).toHaveBeenCalledWith(false, true, blockMocks.testUssTree);
     });
     it("Checking that searchForLoadedItems fails when no pattern is entered", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
@@ -224,7 +224,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     }
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, blockMocks.dsNode, blockMocks.session);
@@ -243,7 +243,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.dsNode.contextValue = globals.DS_DS_CONTEXT;
@@ -260,7 +260,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a USS file", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const node = new ZoweUSSNode("node3.txt", vscode.TreeItemCollapsibleState.None, blockMocks.ussSessionNode, null, "/node1/node2");
