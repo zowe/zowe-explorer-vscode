@@ -9,213 +9,1393 @@
 *                                                                                 *
 */
 
-jest.mock("vscode");
-jest.mock("child_process");
+import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
+         createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
+         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
+import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
+import { Profiles, ValidProfileEnum } from "../../src/Profiles";
+import * as globals from "../../src/globals";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
-import { Logger, IProfileLoaded, Session, CliProfileManager } from "@zowe/imperative";
-import * as globals from "../../src/globals";
-import { Profiles, ValidProfileEnum } from "../../src/Profiles";
-import { ZosmfSession, IJob } from "@zowe/cli";
-import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { Job } from "../../src/job/ZoweJobNode";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweNodeType } from "../../src/api/IZoweTreeNode";
-import { IZoweTree } from "../../src/api/IZoweTree";
-import { DatasetTree } from "../../src/dataset/DatasetTree";
-import { USSTree } from "../../src/uss/USSTree";
-import { ZosJobsProvider } from "../../src/job/ZosJobsProvider";
+import * as utils from "../../src/utils";
+import { Logger } from "@zowe/imperative";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
+import { ZosmfSession } from "@zowe/cli";
+import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
+import { Job } from "../../src/job/ZoweJobNode";
+import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
+import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
 
-describe("Profile class unit tests", () => {
-    // Mocking log.debug
-    const log = Logger.getAppLogger();
+jest.mock("vscode");
+jest.mock("child_process");
+jest.mock("fs");
+jest.mock("fs-extra");
 
-    const profileOne = { name: "profile1", profile: {}, type: "zosmf" };
-    const profileTwo = { name: "profile2", profile: {}, type: "zosmf" };
-    const mockLoadNamedProfile = jest.fn();
-    const profileThree: IProfileLoaded = {
-        name: "profile3",
-        profile: {
-            user: undefined,
-            password: undefined
-        },
-        type: "zosmf",
-        message: "",
-        failNotFound: false
+async function createGlobalMocks() {
+    const newMocks = {
+        mockShowInputBox: jest.fn(),
+        mockGetConfiguration: jest.fn(),
+        mockCreateQuickPick: jest.fn(),
+        mockShowQuickPick: jest.fn(),
+        mockShowInformationMessage: jest.fn(),
+        mockGetInstance: jest.fn(),
+        mockShowErrorMessage: jest.fn(),
+        mockCreateInputBox: jest.fn(),
+        mockLog: jest.fn(),
+        mockDebug: jest.fn(),
+        mockError: jest.fn(),
+        mockConfigurationTarget: jest.fn(),
+        mockCreateBasicZosmfSession: jest.fn(),
+        mockCliProfileManager: createProfileManager()
     };
-    mockLoadNamedProfile.mockReturnValue(profileThree);
 
-    const session = new Session({
-        user: "fake",
-        password: "fake",
-        hostname: "fake",
-        protocol: "https",
-        type: "basic",
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
+    Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: newMocks.mockShowErrorMessage, configurable: true });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
+    Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
+    Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
+    Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
+    Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
+    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
+    Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
+    Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: newMocks.mockGetConfiguration, configurable: true });
+    Object.defineProperty(vscode, "ConfigurationTarget", { value: newMocks.mockConfigurationTarget, configurable: true });
+
+    return newMocks;
+}
+
+describe("Profiles Unit Tests - Function createZoweSession", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            mockLoadNamedProfile: jest.fn(),
+            imperativeProfile: createIProfile(),
+            datasetSessionNode: null,
+            quickPickItem: createQuickPickItem(),
+            profiles: null,
+            testDatasetTree: null,
+            profileInstance: null,
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.profileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
+
+        return newMocks;
+    }
+
+    it("Tests that createZoweSession fails if profile name is invalid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = undefined;
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(entered);
+
+        // Assert edge condition user cancels the input path box
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+
+        await Profiles.getInstance().loadNamedProfile("profile1");
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
     });
 
-    const iJob: IJob = {
-        "jobid": "JOB1234",
-        "jobname": "TESTJOB",
-        "files-url": "fake/files",
-        "job-correlator": "correlator",
-        "phase-name": "PHASE",
-        "reason-not-running": "",
-        "step-data": [{
-            "proc-step-name": "",
-            "program-name": "",
-            "step-name": "",
-            "step-number": 1,
-            "active": "",
-            "smfid": ""
+    it("Tests that createZoweSession successfully creates a new session with profile name supplied by user", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = undefined;
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
 
-        }],
-        "class": "A",
-        "owner": "USER",
-        "phase": 0,
-        "retcode": "",
-        "status": "ACTIVE",
-        "subsystem": "SYS",
-        "type": "JOB",
-        "url": "fake/url"
-    };
+        // Assert edge condition user cancels the input path box
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
-    const inputBox: vscode.InputBox = {
-        value: "input",
-        title: null,
-        enabled: true,
-        busy: false,
-        show: jest.fn(),
-        hide: jest.fn(),
-        step: null,
-        dispose: jest.fn(),
-        ignoreFocusOut: false,
-        totalSteps: null,
-        placeholder: undefined,
-        password: false,
-        onDidChangeValue: jest.fn(),
-        onDidAccept: jest.fn(),
-        onDidHide: jest.fn(),
-        buttons: [],
-        onDidTriggerButton: jest.fn(),
-        prompt: undefined,
-        validationMessage: undefined
-    };
-    const profileLoad: IProfileLoaded = {
-        name: "fake",
-        profile: {
-            host: "fake",
-            port: 999,
-            user: "fake",
-            password: "fake",
-            rejectUnauthorized: false
-        },
-        type: "zosmf",
-        failNotFound: true,
-        message: "fake"
-    };
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(blockMocks.testDatasetTree.addSession).toBeCalled();
+        expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toEqual({ newprofile: "fake" });
+    });
 
-    const schema: {} = {
-        host:{type:"string",optionDefinition:{description:"description"}},
-        port:{type:"number",optionDefinition:{description:"description", defaultValue: 443}},
-        user:{type:"string",secure:true,optionDefinition:{description:"description"}},
-        password:{type:"string",secure:true,optionDefinition:{description:"description"}},
-        rejectUnauthorized:{type:"boolean",optionDefinition:{description:"description"}},
-        basePath:{type:"string",optionDefinition:{description:"description"}}
-    };
+    it("Tests that createZoweSession successfully creates a new session with profile name selected from list by user", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = "";
 
-    const schema2: {} = {
-        host:{type:"string",optionDefinition:{description:"description"}},
-        port:{type:"number",optionDefinition:{description:"description",defaultValue: 123}},
-        user:{type:"string",secure:true,optionDefinition:{description:"description"}},
-        password:{type:"string",secure:true,optionDefinition:{description:"description"}},
-        basePath:{type:"string",optionDefinition:{description:"description"}},
-        aBoolean:{type:["boolean", "null"],optionDefinition:{description:"description"}},
-        aNumber:{type:"number",optionDefinition:{description:"description",defaultValue: 123}}
-    };
+        // Assert edge condition user cancels the input path box
+        const quickPickContent = createQuickPickContent(entered, blockMocks.quickPickItem);
+        quickPickContent.label = "firstName";
+        globalMocks.mockCreateQuickPick.mockReturnValue(quickPickContent);
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
 
-    const schema3: {} = {
-        host:{type:"string",optionDefinition:{description:"description"}},
-        port:{type:"number",optionDefinition:{description:"description"}},
-        aNumber:{type:["number", "null"],optionDefinition:{description:"description"}},
-        aOther:{type:["string", "null"], optionDefinition:{description:"description"}}
-    };
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(blockMocks.testDatasetTree.addSession).toBeCalled();
+        expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toBe("firstName");
+    });
 
-    // tslint:disable-next-line:max-line-length
-    const schemaReturn = {host:{type:"string",optionDefinition:{name:"host",aliases:["H"],description:"The z/OSMF server host name.",type:"string",required:true,group:"Zosmf Connection Options"}},port:{type:"number",optionDefinition:{name:"port",aliases:["P"],description:"The z/OSMF server port.",type:"number",defaultValue:443,group:"Zosmf Connection Options"}},user:{type:"string",secure:true,optionDefinition:{name:"user",aliases:["u"],description:"Mainframe (z/OSMF) user name, which can be the same as your TSO login.",type:"string",required:true,group:"Zosmf Connection Options"}},password:{type:"string",secure:true,optionDefinition:{name:"password",aliases:["pass","pw"],description:"Mainframe (z/OSMF) password, which can be the same as your TSO password.",type:"string",group:"Zosmf Connection Options",required:true}},rejectUnauthorized:{type:"boolean",optionDefinition:{name:"reject-unauthorized",aliases:["ru"],description:"Reject self-signed certificates.",type:"boolean",defaultValue:true,group:"Zosmf Connection Options"}},basePath:{type:"string",optionDefinition:{name:"base-path",aliases:["bp"],description:"The base path for your API mediation layer instance. Specify this option to prepend the base path to all z/OSMF resources when making REST requests. Do not specify this option if you are not using an API mediation layer.",type:"string",group:"Zosmf Connection Options"}}};
+    it("Tests that createZoweSession successfully creates a new session with profile name selected from list by user by typing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = "fake";
 
-    // tslint:disable-next-line:max-line-length
-    const cliProfileManagerMock = Object.create({configurations:[{type:"zosmf",schema:{type:"object",title:"z\/OSMF Profile",description:"z\/OSMF Profile",properties:{host:{type:"string",optionDefinition:{name:"host",aliases:["H"],description:"The z\/OSMF server host name.",type:"string",required:true,group:"Zosmf Connection Options"}},port:{type:"number",optionDefinition:{name:"port",aliases:["P"],description:"The z\/OSMF server port.",type:"number",defaultValue:443,group:"Zosmf Connection Options"}},user:{type:"string",secure:true,optionDefinition:{name:"user",aliases:["u"],description:"Mainframe (z\/OSMF) user name, which can be the same as your TSO login.",type:"string",required:true,group:"Zosmf Connection Options"}},password:{type:"string",secure:true,optionDefinition:{name:"password",aliases:["pass","pw"],description:"Mainframe (z\/OSMF) password, which can be the same as your TSO password.",type:"string",group:"Zosmf Connection Options",required:true}},rejectUnauthorized:{type:"boolean",optionDefinition:{name:"reject-unauthorized",aliases:["ru"],description:"Reject self-signed certificates.",type:"boolean",defaultValue:true,group:"Zosmf Connection Options"}},basePath:{type:"string",optionDefinition:{name:"base-path",aliases:["bp"],description:"The base path for your API mediation layer instance. Specify this option to prepend the base path to all z\/OSMF resources when making REST requests. Do not specify this option if you are not using an API mediation layer.",type:"string",group:"Zosmf Connection Options"}}},required:["host"]},createProfileExamples:[{options:"zos123 --host zos123 --port 1443 --user ibmuser --password myp4ss",description:"Create a zosmf profile called 'zos123' to connect to z\/OSMF at host zos123 and port 1443"},{options:"zos124 --host zos124 --user ibmuser --password myp4ss --reject-unauthorized false",description:"Create a zosmf profile called 'zos124' to connect to z\/OSMF at the host zos124 (default port - 443) and allow self-signed certificates"},{options:"zosAPIML --host zosAPIML --port 2020 --user ibmuser --password myp4ss --reject-unauthorized false --base-path basePath",description:"Create a zosmf profile called 'zos124' to connect to z\/OSMF at the host zos124 (default port - 443) and allow self-signed certificates"}],updateProfileExamples:[{options:"zos123 --user newuser --password newp4ss",description:"Update a zosmf profile named 'zos123' with a new username and password"}]}]}) as CliProfileManager;
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
-    const mockJSONParse = jest.spyOn(JSON, "parse");
-    const showInformationMessage = jest.fn();
-    const showInputBox = jest.fn();
-    const createInputBox = jest.fn();
-    const showQuickPick = jest.fn();
-    const showErrorMessage = jest.fn();
-    const getConfigurationMock = jest.fn();
-    const createTreeView = jest.fn();
-    const createBasicZosmfSession = jest.fn();
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
+    });
 
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-    Object.defineProperty(vscode.window, "createInputBox", { value: createInputBox });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-    Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfigurationMock });
-    Object.defineProperty(vscode, "ConfigurationTarget", { value: getConfigurationMock });
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+    it("Tests that createZoweSession fails if profile not selected", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = "";
 
-    const sessTree: IZoweTree<IZoweDatasetTreeNode> = new DatasetTree();
-    const ussTree: IZoweTree<IZoweUSSTreeNode> = new USSTree();
-    const jobsTree: IZoweTree<IZoweJobTreeNode> = new ZosJobsProvider();
+        // Assert edge condition user cancels the input path box
+        const quickPickContent = createQuickPickContent(entered, blockMocks.quickPickItem);
+        quickPickContent.label = undefined;
+        globalMocks.mockCreateQuickPick.mockReturnValue(quickPickContent);
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
 
-    beforeEach(() => {
-        mockJSONParse.mockReturnValue({
-            overrides: {
-                CredentialManager: false
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
+    });
+
+    it("Tests that createZoweSession fails if createNewConnection fails", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const entered = "fake";
+        blockMocks.profileInstance.createNewConnection = jest.fn().mockRejectedValue(new Error("create connection error"));
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(entered);
+
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(errorHandlingSpy).toBeCalled();
+        expect(errorHandlingSpy.mock.calls[0][0]).toEqual(new Error("create connection error"));
+    });
+
+    it("Testing that createZoweSession with theia", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const entered = "";
+        const createZoweSessionSpy = jest.spyOn(blockMocks.profiles, "createZoweSession");
+        Object.defineProperty(globals, "ISTHEIA", { get: () => true, configurable: true });
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(createZoweSessionSpy).toHaveBeenCalled();
+    });
+
+    it("Testing that createZoweSession with theia fails if no choice", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const entered = null;
+        const createZoweSessionSpy = jest.spyOn(blockMocks.profiles, "createZoweSession");
+        Object.defineProperty(globals, "ISTHEIA", { get: () => true, configurable: true });
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
+
+        await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
+        expect(createZoweSessionSpy).toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+    });
+});
+
+describe("Profiles Unit Tests - Function createNewConnection", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            mockLoadNamedProfile: jest.fn(),
+            imperativeProfile: createIProfile(),
+            datasetSessionNode: null,
+            inputBox: createInputBox("input"),
+            quickPickItem: createQuickPickItem(),
+            profiles: null,
+            testSchemas: createTestSchemas(),
+            testDatasetTree: null,
+            profileInstance: null
+        };
+        newMocks.imperativeProfile.name = "profile1";
+        newMocks.imperativeProfile.profile.user = "fake";
+        newMocks.imperativeProfile.profile.password = "1234";
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        newMocks.profileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
+        globalMocks.mockCreateInputBox.mockReturnValue(newMocks.inputBox);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+
+        return newMocks;
+    }
+
+    it("Tests that createNewConnection fails if profileName is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        await blockMocks.profiles.createNewConnection("");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if profileType is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve(undefined); });
+
+        await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No profile type was chosen. Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
+
+        await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if username is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if password is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if rejectUnauthorized is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+
+        await blockMocks.profiles.createNewConnection(blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
+    });
+
+    it("Tests that createNewConnection creates a new profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+
+        await blockMocks.profiles.createNewConnection("fake");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+    });
+
+    it("Tests that createNewConnection creates a new profile with optional credentials", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValue("");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+
+        await blockMocks.profiles.createNewConnection("fake");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+    });
+
+    it("Tests that createNewConnection creates a new profile twice in a row", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockShowInputBox.mockResolvedValue("fake1");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+
+        await blockMocks.profiles.createNewConnection("fake1");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
+
+        globalMocks.mockShowInputBox.mockReset();
+        globalMocks.mockShowInformationMessage.mockReset();
+        globalMocks.mockShowInputBox.mockResolvedValue("fake2");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
+
+        await blockMocks.profiles.createNewConnection("fake2");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
+    });
+
+    it("Tests that createNewConnection creates an alternate profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:234"); });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("13");
+
+        await blockMocks.profiles.createNewConnection("alternate");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
+    });
+
+    it("Tests that createNewConnection creates an alternate profile with default aNumber value", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:234"); });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection("alternate");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
+    });
+
+    it("Tests that createNewConnection creates an alternate profile with default port value", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake"); });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("0");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("True");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("126");
+
+        await blockMocks.profiles.createNewConnection("alternate");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
+    });
+
+    it("Tests that createNewConnection fails to create an alternate profile if port is invalid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake"); });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
+        await blockMocks.profiles.createNewConnection("fake");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Invalid Port number provided or operation was cancelled");
+    });
+
+    it("Tests that createNewConnection fails to create an alternate profile if aBoolean is invalid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.createNewConnection("fake");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection creates an alternate profile with an optional port", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
+        blockMocks.profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake"); });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(Number("143"));
+
+        await blockMocks.profiles.createNewConnection("fake");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+    });
+});
+
+describe("Profiles Unit Tests - Function promptCredentials", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            mockLoadNamedProfile: jest.fn(),
+            imperativeProfile: createIProfile(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.imperativeProfile.name = "profile1";
+        newMocks.imperativeProfile.profile.user = "fake";
+        newMocks.imperativeProfile.profile.password = "1234";
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
+
+        return newMocks;
+    }
+
+    it("Tests that promptCredentials is executed successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
+        blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
+        const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
+        expect(res).toEqual(["fake", "fake", "fake"]);
+    });
+
+    it("Tests that promptCredentials is executed successfully when profile already contains username/password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.imperativeProfile.profile = { user: "oldfake", password: "oldfake" };
+        blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+
+        const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name, true);
+        expect(res).toEqual(["fake", "fake", "fake"]);
+    });
+
+    it("Tests that promptCredentials fails if username is invalid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
+        blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
+        expect(res).toBeUndefined();
+    });
+
+    it("Tests that promptCredentials fails if password is invalid", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
+        blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
+        expect(res).toBeUndefined();
+    });
+});
+
+describe("Profiles Unit Tests - Function validateAndParseUrl", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that validateAndParseUrl returns invalid for invalid URL", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const input = "fake/url";
+        const res = await blockMocks.profiles.validateAndParseUrl(input);
+        expect(res.valid).toBe(false);
+    });
+
+    it("Tests that validateAndParseUrl successfully validates a URL with a port", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const input = "https://fake:143";
+
+        const res = await blockMocks.profiles.validateAndParseUrl(input);
+        expect(res.valid).toBe(true);
+        expect(res.host).toBe("fake");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(res.port).toBe(143);
+
+    });
+
+    it("Tests that validateAndParseUrl returns invalid for invalid port", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const res = await blockMocks.profiles.validateAndParseUrl("http://10.142.0.23:9999999999/some/path");
+        expect(res.valid).toBe(false);
+    });
+
+    it("Tests that validateAndParseUrl returns invalid for invalid URL syntax", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const res = await blockMocks.profiles.validateAndParseUrl("https://fake::80");
+        expect(res.valid).toBe(false);
+    });
+});
+
+describe("Profiles Unit Tests - Function getProfileType", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getProfileType returns correct profile type when receiving only one type", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ZoweExplorerApiRegister.getInstance().registeredApiTypes = () => (["zosmf"]);
+
+        const response = await blockMocks.profiles.getProfileType();
+        expect(response).toEqual("zosmf");
+    });
+
+    it("Tests that getProfileType returns correct profile type when receiving multiple types", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        ZoweExplorerApiRegister.getInstance().registeredApiTypes = () => (["zosmf", "alternate"]);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("alternate");
+
+        const res = await blockMocks.profiles.getProfileType();
+        expect(res).toEqual("alternate");
+    });
+});
+
+describe("Profiles Unit Tests - Function getSchema", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            testSchemas: createTestSchemas(),
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getSchema returns correct schema for zosmf profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+
+        const response = await blockMocks.profiles.getSchema("zosmf");
+        // tslint:disable-next-line: no-magic-numbers
+        expect(response).toEqual(blockMocks.testSchemas[3]);
+    });
+});
+
+describe("Profiles Unit Tests - Function updateProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            imperativeProfile: createIProfile(),
+            changedImperativeProfile: createIProfile(),
+            profileInfo: null,
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2" };
+        newMocks.profileInfo = newMocks.changedImperativeProfile;
+        Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
+            value: jest.fn(() => {
+                return new Promise((resolve) => { resolve(newMocks.imperativeProfile); });
+            }),
+            configurable: true
+        });
+        Object.defineProperty(globalMocks.mockCliProfileManager, "update", { value: jest.fn(), configurable: true });
+        newMocks.profiles.getCliProfileManager = () => Promise.resolve(globalMocks.mockCliProfileManager);
+
+        return newMocks;
+    }
+
+    it("Tests that updateProfile successfully updates a profile of undefined type", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.profileInfo.type = undefined;
+
+        await blockMocks.profiles.updateProfile(blockMocks.profileInfo);
+        expect(blockMocks.imperativeProfile.profile).toEqual(blockMocks.changedImperativeProfile.profile);
+    });
+
+    it("Tests that updateProfile successfully updates a profile of defined type (zosmf)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        await blockMocks.profiles.updateProfile(blockMocks.profileInfo);
+        expect(blockMocks.imperativeProfile.profile).toEqual(blockMocks.changedImperativeProfile.profile);
+    });
+});
+
+describe("Profiles Unit Tests - Function editSession", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            session: createISessionWithoutCredentials(),
+            mockLoadNamedProfile: jest.fn(),
+            imperativeProfile: createIProfile(),
+            datasetSessionNode: null,
+            inputBox: createInputBox("input"),
+            profiles: null,
+            testSchemas: createTestSchemas(),
+            profileInstance: null
+        };
+        newMocks.imperativeProfile.name = "profile1";
+        newMocks.imperativeProfile.profile.user = "fake";
+        newMocks.imperativeProfile.profile.password = "1234";
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        globalMocks.mockCreateInputBox.mockReturnValue(newMocks.inputBox);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        return newMocks;
+    }
+
+    it("Tests that editSession successfully edits a session of type zosmf", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate with entered port number", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate with default aNumber", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate with empty aNumber", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession successfully edits a session of type alternate with empty aOther value", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[2]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("123");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("");
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
+    });
+
+    it("Tests that editSession fails with error", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValue("fake");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowErrorMessage.mock.calls.length).toEqual(1);
+    });
+
+    it("Tests that editSession fails with invalid url supplied", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve(undefined);
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
+    });
+
+    it("Tests that editSession fails with invalid username supplied", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that editSession fails with invalid password supplied", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that editSession fails with invalid rejectUnauthorized value supplied", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[0]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that editSession fails with invalid aBoolean value supplied on alternate profile type", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake.com:143");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that editSession fails with invalid port value supplied", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
+        blockMocks.profiles.getSchema = () => new Promise((resolve) => { resolve(blockMocks.testSchemas[1]); });
+        blockMocks.profiles.getUrl = () => Promise.resolve("https://fake");
+        globalMocks.mockCreateInputBox.mockReturnValue(blockMocks.inputBox);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Invalid Port number provided or operation was cancelled");
+    });
+});
+
+describe("Profiles Unit Tests - Function deleteProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            mockLoadNamedProfile: jest.fn(),
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            USSSessionNode: null,
+            iJob: createIJobObject(),
+            imperativeProfile: createIProfile(),
+            session: null,
+            testSchemas: createTestSchemas(),
+            profileInstance: null
+        };
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
+            { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.session = createBasicZosmfSession(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.USSSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testUSSTree = createUSSTree([], [newMocks.USSSessionNode], newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
+        newMocks.testDatasetTree.addRecall("[profile1]: TEST.NODE");
+        newMocks.testUSSTree.addRecall("[profile1]: /u/myuser");
+        globalMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
+
+        return newMocks;
+    }
+
+    it("Tests that deleteProfile successfully deletes a profile from the command palette", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("profile1");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
+    });
+
+    it("Tests that deleteProfile successfully handles missing profile name selection", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce(undefined);
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that deleteProfile successfully handles case where user selects No", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("profile1");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("No");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that deleteProfile successfully executes when there are no profiles to delete", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profiles.allProfiles = [];
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No profiles available");
+    });
+
+    it("Tests that deleteProfile successfully deletes profile from context menu", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const dsNode = new ZoweDatasetNode(
+            "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, dsNode);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
+    });
+
+    it("Tests that deleteProfile successfully deletes a profile from a dataset tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const startLength = blockMocks.testDatasetTree.mSessionNodes.length;
+        const favoriteLength = blockMocks.testDatasetTree.mFavorites.length;
+        const dsNode = new ZoweDatasetNode(
+            "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
+        const dsNodeAsFavorite = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`,
+                                        vscode.TreeItemCollapsibleState.None, blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session,
+                                        dsNode.contextValue, null, dsNode.getProfile());
+        dsNode.contextValue = globals.DS_SESSION_CONTEXT;
+        blockMocks.testDatasetTree.mSessionNodes.push(dsNode);
+        blockMocks.testDatasetTree.addFavorite(dsNodeAsFavorite);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, dsNode);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
+        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(startLength);
+        expect(blockMocks.testDatasetTree.mFavorites.length).toEqual(favoriteLength);
+    });
+
+    it("Tests that deleteProfile successfully deletes a profile from a USS tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const startLength = blockMocks.testUSSTree.mSessionNodes.length;
+        const favoriteLength = blockMocks.testUSSTree.mFavorites.length;
+        const ussNode = new ZoweUSSNode(
+            "[sestest]: testNode", vscode.TreeItemCollapsibleState.Expanded,
+            null, blockMocks.session, null, false, blockMocks.imperativeProfile.name, null, blockMocks.imperativeProfile);
+        const ussNodeAsFavorite = new ZoweUSSNode("[" + blockMocks.USSSessionNode.label.trim() + "]: testNode", vscode.TreeItemCollapsibleState.None,
+            null, blockMocks.session, null, false, blockMocks.imperativeProfile.name, null, blockMocks.imperativeProfile);
+        ussNode.contextValue = globals.USS_SESSION_CONTEXT;
+        ussNode.profile = blockMocks.imperativeProfile;
+        blockMocks.testUSSTree.mSessionNodes.push(ussNode);
+        blockMocks.testUSSTree.mFavorites.push(ussNodeAsFavorite);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, ussNode);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
+        expect(blockMocks.testUSSTree.mSessionNodes.length).toEqual(startLength);
+        expect(blockMocks.testUSSTree.mFavorites.length).toEqual(favoriteLength);
+    });
+
+    it("Tests that deleteProfile successfully deletes a profile from a jobs tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const startLength = blockMocks.testJobTree.mSessionNodes.length;
+        const favoriteLength = blockMocks.testJobTree.mFavorites.length;
+        const jobNode = new Job(
+            "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        const jobNodeAsFavorite = new Job(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`, vscode.TreeItemCollapsibleState.Expanded,
+            null, blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+        blockMocks.testJobTree.mSessionNodes.push(jobNode);
+        blockMocks.testJobTree.addFavorite(jobNodeAsFavorite);
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, jobNode);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
+        expect(blockMocks.testJobTree.mSessionNodes.length).toEqual(startLength);
+        expect(blockMocks.testJobTree.mFavorites.length).toEqual(favoriteLength);
+    });
+
+    it("Tests that deleteProfile successfully deletes all related recall items for a dataset tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.testDatasetTree.mRecall = ["[SESTEST]: TEST.DATA"];
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
+        expect(blockMocks.testDatasetTree.getRecall()[0]).toBeUndefined();
+    });
+
+    it("Tests that deleteProfile successfully deletes all related recall items for a USS tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.testUSSTree.mRecall = ["[SESTEST]: /node1/node2/node3.txt"];
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+
+        await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
+        expect(blockMocks.testUSSTree.getRecall()[0]).toBeUndefined();
+    });
+});
+
+describe("Profiles Unit Tests - Function createInstance", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            mockJSONParse: jest.spyOn(JSON, "parse"),
+            profileInstance: null,
+            testProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
+                           { name: "profile1", profile: {}, type: "zosmf" },
+                           { name: "profile2", profile: {}, type: "zosmf" }]
+        };
+        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
+            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
+                return {
+                    status: 0,
+                    stdout,
+                    stderr
+                };
+            };
+            if (args[0].indexOf("getAllProfiles") >= 0) {
+                return createFakeChildProcess(0, JSON.stringify(newMocks.testProfiles), "");
+            } else {
+                // load default profile
+                return createFakeChildProcess(0, JSON.stringify(newMocks.testProfiles[1]), "");
             }
         });
-    });
-    afterEach(() => {
-        jest.resetAllMocks();
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that createInstance executes successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const profiles = await Profiles.createInstance(blockMocks.log);
+        expect(Profiles.getInstance()).toStrictEqual(profiles);
     });
 
-    it("should create an instance", async () => {
-        const profiles = await Profiles.createInstance(log);
-        expect(Profiles.getInstance()).toBe(profiles);
+    it("Tests that createInstance successfully routes through to spawn", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.mockJSONParse.mockReturnValueOnce({
+            overrides: { CredentialManager: "ANO" }
+        });
+        blockMocks.mockJSONParse.mockReturnValueOnce(blockMocks.testProfiles);
+        blockMocks.mockJSONParse.mockReturnValueOnce(blockMocks.testProfiles[1]);
+
+        await Profiles.createInstance(blockMocks.log);
+        expect(Profiles.getInstance().allProfiles).toEqual(blockMocks.testProfiles);
     });
 
-    it("should return all profiles ", async () => {
-        const profiles = await Profiles.createInstance(log);
+    it("Tests that createInstance properly handles errors when failing to route through to spawn", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.mockJSONParse.mockReturnValueOnce({
+            overrides: undefined
+        });
+        blockMocks.mockJSONParse.mockReturnValueOnce(blockMocks.testProfiles);
+        blockMocks.mockJSONParse.mockReturnValueOnce(blockMocks.testProfiles[1]);
+
+        await Profiles.createInstance(blockMocks.log);
+        expect(Profiles.getInstance().allProfiles).toEqual(blockMocks.testProfiles);
+    });
+});
+
+describe("Profiles Unit Tests - Property allProfiles", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that allProfiles contains all profiles", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const profiles = await Profiles.createInstance(blockMocks.log);
         const loadedProfiles = profiles.allProfiles;
-        expect(loadedProfiles).toEqual([profileOne, profileTwo]);
+        expect(loadedProfiles).toEqual([{ name: "sestest", profile: {}, type: "zosmf" },
+                                        { name: "profile1", profile: {}, type: "zosmf" },
+                                        { name: "profile2", profile: {}, type: "zosmf" }]);
     });
+});
 
-    it("should return a default profile", async () => {
-        const profiles = await Profiles.createInstance(log);
+describe("Profiles Unit Tests - Function getDefaultProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getDefaultProfile returns the default profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const profiles = await Profiles.createInstance(blockMocks.log);
         const loadedProfiles = profiles.getDefaultProfile();
-        expect(loadedProfiles).toEqual(profileOne);
+        expect(loadedProfiles).toEqual({ name: "profile1", profile: {}, type: "zosmf" });
     });
+});
 
-    it("should load a named profile ", async () => {
-        const profiles = await Profiles.createInstance(log);
+describe("Profiles Unit Tests - Function getProfiles", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getProfiles returns all profiles of the specified type", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const profiles = await Profiles.createInstance(blockMocks.log);
+        const loadedProfiles = profiles.getProfiles("zosmf");
+        expect(loadedProfiles).toEqual([{ name: "sestest", profile: {}, type: "zosmf" },
+                                        { name: "profile1", profile: {}, type: "zosmf" },
+                                        { name: "profile2", profile: {}, type: "zosmf" }]);
+    });
+});
+
+describe("Profiles Unit Tests - Function directLoad", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that directLoad returns the specified profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const profile = await theProfiles.directLoad("zosmf", "profile1");
+        expect(profile.name).toEqual("profile1");
+    });
+});
+
+describe("Profiles Unit Tests - Function getNamesForType", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getNamesForType returns all profile names for profiles of the specified type", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        expect((await theProfiles.getNamesForType("zosmf"))[1]).toEqual("profile1");
+    });
+});
+
+describe("Profiles Unit Tests - Function getAllTypes", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getAllTypes returns the names of all profile types", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const types = theProfiles.getAllTypes();
+        expect(types).toEqual(["zosmf", "banana"]);
+    });
+});
+
+describe("Profiles Unit Tests - Function loadNamedProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            profileInstance: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that loadNamedProfile returns the profile with the specified name", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const profiles = await Profiles.createInstance(blockMocks.log);
         const loadedProfile = profiles.loadNamedProfile("profile2");
-        expect(loadedProfile).toEqual(profileTwo);
+        expect(loadedProfile).toEqual({ name: "profile2", profile: {}, type: "zosmf" });
     });
 
-    it("should load a named profile ", async () => {
-        const profiles = await Profiles.createInstance(log);
-        const neededProfiles = [profileOne, profileTwo];
-        const loadedProfile = profiles.getProfiles("zosmf");
-        expect(loadedProfile).toEqual(neededProfiles);
-    });
+    it("Tests that loadNamedProfile fails to load a non-existent profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
 
-
-    it("should fail to load a non existing profile ", async () => {
         let success = false;
-        const profiles = await Profiles.createInstance(log);
+        const profiles = await Profiles.createInstance(blockMocks.log);
         try {
             profiles.loadNamedProfile("profile3");
         } catch (error) {
@@ -224,1036 +1404,56 @@ describe("Profile class unit tests", () => {
         }
         expect(success).toBe(true);
     });
-
-    describe("Creating a new connection", () => {
-        let profiles: Profiles;
-        beforeEach(async () => {
-            profiles = await Profiles.createInstance(log);
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: [{name: "profile1"}, {name: "profile2"}],
-                        defaultProfile: {name: "profile1"},
-                        loadNamedProfile: [{name: "profile1"}, {profile: {user: "fake", password: "1234"}}],
-                        promptCredentials: jest.fn(()=> {
-                            return {};
-                        }),
-                        checkCurrentProfile: jest.fn(()=> {
-                            return {};
-                        }),
-                        createNewConnection: jest.fn(()=>{
-                            return {};
-                        }),
-                        listProfile: jest.fn(()=>{
-                            return {};
-                        }),
-                        saveProfile: jest.fn(()=>{
-                            return {profile: {}};
-                        }),
-                        validateAndParseUrl: jest.fn(()=>{
-                            return {};
-                        }),
-                        updateProfile: jest.fn(()=>{
-                            return {};
-                        }),
-                        urlInfo: jest.fn(()=>{
-                            return{};
-                        }),
-                        userInfo: jest.fn(()=>{
-                            return{};
-                        }),
-                        passwordInfo: jest.fn(()=>{
-                            return{};
-                        }),
-                        ruInfo: jest.fn(()=>{
-                            return{};
-                        }),
-                    };
-                })
-            });
-        });
-
-        afterEach(() => {
-            showInputBox.mockReset();
-            showQuickPick.mockReset();
-            createInputBox.mockReset();
-            showInformationMessage.mockReset();
-            showErrorMessage.mockReset();
-        });
-
-        it("should indicate missing property: profileName", async () => {
-            // No valid profile name value
-            await profiles.createNewConnection("");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
-        });
-
-        it("should indicate missing property: profileType", async () => {
-            // No valid profile type value
-            profiles.getProfileType = () => new Promise((resolve) => { resolve(undefined); });
-            await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No profile type was chosen. Operation Cancelled");
-        });
-
-        it("should indicate missing property: zosmf url", async () => {
-            // No valid url value
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve(undefined); });
-            await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
-        });
-
-        it("should indicate missing property: username", async () => {
-            // Enter z/OS password
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("should indicate missing property: password", async () => {
-            // Enter z/OS password
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("should indicate missing property: rejectUnauthorized", async () => {
-            // Operation cancelled
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection(profileOne.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("should validate that profile name already exists", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            await profiles.createNewConnection(profileOne.name);
-            expect(showErrorMessage.mock.calls.length).toBe(1);
-            expect(showErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
-        });
-
-        it("should create new profile", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            showInputBox.mockResolvedValueOnce("");
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-        });
-
-        it("should create profile with optional credentials", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("");
-            showInputBox.mockResolvedValueOnce("");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-        });
-
-        it("should create profile https+443", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-        });
-
-        it("should create 2 consecutive profiles", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake1");
-            showInputBox.mockResolvedValueOnce("fake1");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            await profiles.createNewConnection("fake1");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake1 was created.");
-
-            showInputBox.mockReset();
-            showInformationMessage.mockReset();
-
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
-            showInputBox.mockResolvedValueOnce("fake2");
-            showInputBox.mockResolvedValueOnce("fake2");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("True - Reject connections with self-signed certificates");
-            await profiles.createNewConnection("fake2");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake2 was created.");
-        });
-
-        it("should create new profile with basepath", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            showInputBox.mockResolvedValueOnce("fake");
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-        });
-
-        it("should create new alternative profile", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:234"); });
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False");
-            showInputBox.mockResolvedValueOnce("13");
-            await profiles.createNewConnection("alternate");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
-        });
-
-        it("should create new alternative profile with default aNumber value", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:234"); });
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.createNewConnection("alternate");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
-        });
-
-        it("should create new alternative profile with default port value", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake"); });
-            showInputBox.mockResolvedValueOnce("0");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("True");
-            showInputBox.mockResolvedValueOnce("126");
-            await profiles.createNewConnection("alternate");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile alternate was created.");
-        });
-
-        it("create alternate profile: should indicate invalid port", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake"); });
-            showInputBox.mockResolvedValueOnce("fake");
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Invalid Port number provided or operation was cancelled");
-        });
-
-        it("create alternate profile: should indicate missing property: aBoolean", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake:143"); });
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce(undefined);
-            const resp = await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("should create new alternative profile without a default port", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema3); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => new Promise((resolve) => { resolve("https://fake"); });
-            showInputBox.mockResolvedValueOnce(Number("143"));
-            await profiles.createNewConnection("fake");
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
-        });
-
-        it("should prompt credentials", async () => {
-            const promptProfile = {name: "profile1", profile: {user: undefined, password: undefined}};
-            profiles.loadNamedProfile = jest.fn(() => {
-                return promptProfile as any;
-            });
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res).toEqual(["fake", "fake", "fake"]);
-            (profiles.loadNamedProfile as any).mockReset();
-        });
-
-        it("should rePrompt credentials", async () => {
-        const promptProfile = {name: "profile1", profile: {user: "oldfake", password: "oldfake"}};
-        profiles.loadNamedProfile = jest.fn(() => {
-            return promptProfile as any;
-        });
-
-        Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-            value: jest.fn(() => {
-                return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-            })
-        });
-
-        showInputBox.mockResolvedValueOnce("fake");
-        showInputBox.mockResolvedValueOnce("fake");
-        const res = await profiles.promptCredentials(promptProfile.name, true);
-        expect(res).toEqual(["fake", "fake", "fake"]);
-        (profiles.loadNamedProfile as any).mockReset();
-        });
-
-        it("should prompt credentials: username invalid", async () => {
-            const promptProfile = {name: "profile1", profile: {user: undefined, password: undefined}};
-            profiles.loadNamedProfile = jest.fn(() => {
-                return promptProfile as any;
-            });
-            showInputBox.mockResolvedValueOnce(undefined);
-            const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res).toBeUndefined();
-            (profiles.loadNamedProfile as any).mockReset();
-        });
-
-        it("should prompt credentials: password invalid", async () => {
-            const promptProfile = {name: "profile1", profile: {user: undefined, password: undefined}};
-            profiles.loadNamedProfile = jest.fn(() => {
-                return promptProfile as any;
-            });
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res).toBeUndefined();
-            (profiles.loadNamedProfile as any).mockReset();
-        });
-
-        it("should prompt credentials: username is optional", async () => {
-            const promptProfile = {name: "profile1", profile: {user: undefined, password: "fake"}};
-            profiles.loadNamedProfile = jest.fn(() => {
-                return promptProfile as any;
-            });
-            showInputBox.mockResolvedValueOnce("fake");
-            const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res).toBeUndefined();
-            (profiles.loadNamedProfile as any).mockReset();
-        });
-
-        it("should prompt credentials: password is optional", async () => {
-            const promptProfile = {name: "profile1", profile: {user: "fake", password: undefined}};
-            profiles.loadNamedProfile = jest.fn(() => {
-                return promptProfile as any;
-            });
-            showInputBox.mockResolvedValueOnce("fake");
-            const res = await profiles.promptCredentials(promptProfile.name);
-            expect(res).toBeUndefined();
-            (profiles.loadNamedProfile as any).mockReset();
-        });
-
-        it("should validate URL", async () => {
-            const input = "fake/url";
-            const res = await profiles.validateAndParseUrl(input);
-            expect(res.valid).toBe(false);
-        });
-
-        it("should validate URL and port 143", async () => {
-            const input = "https://fake:143";
-            const res = await profiles.validateAndParseUrl(input);
-            expect(res.valid).toBe(true);
-            expect(res.host).toBe("fake");
-            // tslint:disable-next-line: no-magic-numbers
-            expect(res.port).toBe(143);
-
-        });
-
-        it("should reject out of range port url", async () => {
-            const res = await profiles.validateAndParseUrl("http://10.142.0.23:9999999999/some/path");
-            expect(res.valid).toBe(false);
-        });
-
-        it("should reject invalid url syntax", async () => {
-            const res = await profiles.validateAndParseUrl("https://fake::80");
-            expect(res.valid).toBe(false);
-        });
-
-        it("Tests getProfileType() with only zosmf profile type", async () => {
-            ZoweExplorerApiRegister.getInstance().registeredApiTypes = () => (["zosmf"]);
-            const response = await profiles.getProfileType();
-            expect(response).toEqual("zosmf");
-        });
-
-        it("Tests getProfileType() with multiple profile types", async () => {
-            ZoweExplorerApiRegister.getInstance().registeredApiTypes = () => (["zosmf","alternate"]);
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("alternate");
-            const res = await profiles.getProfileType();
-            expect(res).toEqual("alternate");
-        });
-
-        it("Tests getSchema() with profile type", async () => {
-            profiles.getCliProfileManager = () => Promise.resolve(cliProfileManagerMock);
-            const response = await profiles.getSchema("zosmf");
-            expect(response).toEqual(schemaReturn);
-        });
-
-        it("should edit a zosmf profile", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
-        });
-
-        it("should edit an alternate profile", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False");
-            showInputBox.mockResolvedValueOnce("123");
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
-        });
-
-        it("should edit an alternate profile using port prompt", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake");
-            showInputBox.mockResolvedValueOnce("123");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False");
-            showInputBox.mockResolvedValueOnce("123");
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
-        });
-
-        it("should edit an alternate profile with default aNumber", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False");
-            showInputBox.mockResolvedValueOnce(undefined);
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
-        });
-
-        it("should edit an alternate profile with an empty aNumber value", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema3); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce(undefined);
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
-        });
-
-        it("should edit an alternate profile with an empty aOther string value", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema3); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("123");
-            showInputBox.mockResolvedValueOnce("");
-            Object.defineProperty(ZosmfSession, "createBasicZosmfSession", {
-                value: jest.fn(() => {
-                    return { ISession: {user: "fake", password: "fake", base64EncodedAuth: "fake"} };
-                })
-            });
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile was successfully updated");
-        });
-
-        it("should edit a profile - with error", async () => {
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showQuickPick.mockReset();
-            showQuickPick.mockResolvedValueOnce("False - Accept connections with self-signed certificates");
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showErrorMessage.mock.calls.length).toEqual(1);
-        });
-
-        it("edit a profile, should indicate invalid property: url", async () => {
-            // Enter z/OS username
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve(undefined);
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
-        });
-
-        it("edit a profile, should indicate invalid property: username", async () => {
-            // Enter z/OS username
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("edit a profile, should indicate invalid property: password", async () => {
-            // Enter z/OS password
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("edit a profile, should indicate invalid property: rejectUnauthorized", async () => {
-            // Operation cancelled
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("zosmf"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("edit a profile, should indicate invalid property: aBoolean for alternate profile type", async () => {
-            // Operation cancelled
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake.com:143");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce("fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("edit a profile, should indicate invalid property: port", async () => {
-            // Enter z/OS username
-            profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
-            profiles.getSchema = () => new Promise((resolve) => { resolve(schema2); });
-            createInputBox.mockReturnValue(inputBox);
-            profiles.getUrl = () => Promise.resolve("https://fake");
-            showInputBox.mockResolvedValueOnce(undefined);
-            await profiles.editSession(profileLoad, profileLoad.name);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Invalid Port number provided or operation was cancelled");
-        });
-    });
-
-    describe("Deleting Profiles", () => {
-        let profiles: Profiles;
-        const getRecallMockValue = jest.fn();
-        const getRecallUSSMockValue = jest.fn();
-        beforeEach(async () => {
-            profiles = await Profiles.createInstance(log);
-            Object.defineProperty(DatasetTree, "getRecall", { value:  getRecallMockValue });
-            Object.defineProperty(USSTree, "getRecall", { value:  getRecallUSSMockValue });
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: [{name: "profile1"}, {name: "profile2"}, {name: "profile3"}],
-                        defaultProfile: {name: "profile1"},
-                        loadNamedProfile: mockLoadNamedProfile,
-                        promptCredentials: jest.fn(()=> {
-                            return {};
-                        }),
-                        createNewConnection: jest.fn(()=>{
-                            return {};
-                        }),
-                        listProfile: jest.fn(()=>{
-                            return {};
-                        }),
-                        saveProfile: jest.fn(()=>{
-                            return {profile: {}};
-                        }),
-                        validateAndParseUrl: jest.fn(()=>{
-                            return {};
-                        }),
-                        updateProfile: jest.fn(()=>{
-                            return {};
-                        }),
-                        getDeleteProfile: jest.fn(()=>{
-                            return {};
-                        }),
-                        deletePrompt: jest.fn(()=>{
-                            return {};
-                        }),
-                        deleteProf: jest.fn(()=>{
-                            return {};
-                        })
-                    };
-                })
-            });
-            getConfigurationMock.mockReturnValue({
-                persistence: true,
-                get: () => {
-                    return {
-                        sessions: ["profile1"],
-                        favorites: ["[profile1]: /u/myFile.txt{textFile"]
-                    };
-                },
-                update: jest.fn(()=>{
-                    return {};
-                })
-            });
-        });
-
-        afterEach(() => {
-            showInputBox.mockReset();
-            showQuickPick.mockReset();
-            createInputBox.mockReset();
-            showInformationMessage.mockReset();
-            showErrorMessage.mockReset();
-            getConfigurationMock.mockClear();
-        });
-
-        it("should delete profile from command palette", async () => {
-            showQuickPick.mockResolvedValueOnce("profile1");
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
-        });
-
-        it("should handle missing selection: profile name", async () => {
-            showQuickPick.mockResolvedValueOnce(undefined);
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("should handle case where user selects No", async () => {
-            showQuickPick.mockResolvedValueOnce("profile1");
-            showQuickPick.mockResolvedValueOnce("No");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
-        });
-
-        it("should handle case where there are no profiles to delete", async () => {
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        allProfiles: []
-                    };
-                })
-            });
-            profiles.refresh();
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("No profiles available");
-        });
-
-        it("should delete profile from context menu", async () => {
-            const dsNode = new ZoweDatasetNode(
-                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
-            dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree, dsNode);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
-        });
-
-        it("should delete session from Data Set tree", async () => {
-            const startLength = sessTree.mSessionNodes.length;
-            const favoriteLength = sessTree.mFavorites.length;
-            const dsNode = new ZoweDatasetNode(
-                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileThree);
-            dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-            sessTree.mSessionNodes.push(dsNode);
-            sessTree.addFavorite(dsNode);
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree, dsNode);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
-            expect(sessTree.mSessionNodes.length).toEqual(startLength);
-            expect(sessTree.mFavorites.length).toEqual(favoriteLength);
-        });
-
-        it("should delete session from USS tree", async () => {
-            const startLength = ussTree.mSessionNodes.length;
-            const favoriteLength = ussTree.mFavorites.length;
-            const ussNode = new ZoweUSSNode(
-                "[profile3]: profile3", vscode.TreeItemCollapsibleState.Expanded,
-                null, session, null, false, profileThree.name, null, profileThree);
-            ussNode.contextValue = globals.USS_SESSION_CONTEXT;
-            ussNode.profile = profileThree;
-            ussTree.addSession("profile3");
-            ussTree.mSessionNodes.push(ussNode);
-            ussTree.mFavorites.push(ussNode);
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree, ussNode);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
-            expect(ussTree.mSessionNodes.length).toEqual(startLength);
-            expect(ussTree.mFavorites.length).toEqual(favoriteLength);
-        });
-
-        it("should delete session from Jobs tree", async () => {
-            const startLength = jobsTree.mSessionNodes.length;
-            const favoriteLength = jobsTree.mFavorites.length;
-            const jobNode = new Job(
-                "profile3", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profileThree);
-            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
-            jobsTree.mSessionNodes.push(jobNode);
-            jobsTree.addFavorite(jobNode);
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree, jobNode);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile3 was deleted.");
-            expect(jobsTree.mSessionNodes.length).toEqual(startLength);
-            expect(jobsTree.mFavorites.length).toEqual(favoriteLength);
-        });
-
-        it("should test deletion of recall for DS", async () => {
-            sessTree.addRecall("[profile1]: TEST.DATA");
-            showQuickPick.mockResolvedValueOnce("profile1");
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
-            expect(sessTree.getRecall()[0]).toBeUndefined();
-        });
-
-        it("should test deletion of recall for USS", async () => {
-            ussTree.addRecall("[profile1]: /node1/node2/node3.txt");
-            showQuickPick.mockResolvedValueOnce("profile1");
-            showQuickPick.mockResolvedValueOnce("Yes");
-            await profiles.deleteProfile(sessTree, ussTree, jobsTree);
-            expect(showInformationMessage.mock.calls.length).toBe(1);
-            expect(showInformationMessage.mock.calls[0][0]).toBe("Profile profile1 was deleted.");
-            expect(ussTree.getRecall()[0]).toBeUndefined();
-        });
-
-    });
-
-    it("should route through to spawn. Covers conditional test", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "profile1", profile: {}, type: "zosmf"}, {name: "profile2", profile: {}, type: "zosmf"}],
-                    defaultProfile: {name: "profile1", profile: {}, type: "zosmf"},
-                    createNewConnection: jest.fn(()=>{
-                        return {newprofile: "fake"};
-                    }),
-                    listProfile: jest.fn(()=>{
-                        return {};
-                    }),
-                };
-            })
-        });
-        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
-            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
-                return {
-                    status: 0,
-                    stdout,
-                    stderr
-                };
-            };
-            if (args[0].indexOf("getAllProfiles") >= 0) {
-                return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
-            } else {
-                // load default profile
-                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
-            }
-        });
-        mockJSONParse.mockReturnValueOnce({
-            overrides: {
-                CredentialManager: "ANO"
-            }
-        });
-        mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
-        mockJSONParse.mockReturnValueOnce(profileOne);
-        await Profiles.createInstance(log);
-        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
-    });
-
-    it("should route through to spawn. Coverage of error handling", async () => {
-        // tslint:disable-next-line: prefer-const
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [{name: "profile1", profile: {}, type: "zosmf"}, {name: "profile2", profile: {}, type: "zosmf"}],
-                    defaultProfile: {name: "profile1", profile: {}, type: "zosmf"},
-                    createNewConnection: jest.fn(()=>{
-                        return {};
-                    }),
-                    listProfile: jest.fn(()=>{
-                        return {};
-                    }),
-                };
-            })
-        });
-        (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
-            const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
-                return {
-                    status: 0,
-                    stdout,
-                    stderr
-                };
-            };
-            if (args[0].indexOf("getAllProfiles") >= 0) {
-                return createFakeChildProcess(0, JSON.stringify([profileOne, profileTwo]), "");
-            } else {
-                // load default profile
-                return createFakeChildProcess(0, JSON.stringify(profileOne), "");
-            }
-        });
-        mockJSONParse.mockReturnValueOnce({
-            overrides: undefined
-        });
-        mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
-        mockJSONParse.mockReturnValueOnce(profileOne);
-        await Profiles.createInstance(log);
-        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
-    });
-
-    it("Tests checkCurrentProfile() with valid profile", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    promptCredentials: jest.fn(() => {
-                        return ["testUser", "testPass", "fake"];
-                    })
-                };
-            })
-        });
-        const testProfile = {
-            type : "zosmf",
-            host: null,
-            port: 1443,
-            user: null,
-            password: null,
-            rejectUnauthorized: false,
-            name: "testName"
+});
+
+describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            invalidProfile: createInvalidIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null
         };
-        const testIProfile: IProfileLoaded = {
-            name: "testProf",
-            profile: testProfile,
-            type: "zosmf",
-            message: "",
-            failNotFound: false
-        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that checkCurrentProfile is successful when user is prompted for missing credentials", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        blockMocks.profiles.promptCredentials = jest.fn(() => {
+            return ["test", "test", "test"];
+        });
         theProfiles.validProfile = -1;
-        await theProfiles.checkCurrentProfile(testIProfile);
+        await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
     });
 
-    it("Tests checkCurrentProfile() with valid profile", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        const testProfile = {
-            type : "zosmf",
-            host: "fake",
-            port: 1443,
-            user: "fake",
-            password: "fake",
-            rejectUnauthorized: false,
-        };
-        const testIProfile: IProfileLoaded = {
-            name: "testProf",
-            profile: testProfile,
-            type: "zosmf",
-            message: "",
-            failNotFound: false
-        };
+    it("Tests that checkCurrentProfile is successful for a profile with valid stored credentials", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
         theProfiles.validProfile = -1;
-        await theProfiles.checkCurrentProfile(testIProfile);
+        await theProfiles.checkCurrentProfile(blockMocks.validProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
     });
 
-    it("Tests checkCurrentProfile() with invalid profile", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    promptCredentials: jest.fn(() => {
-                        return undefined;
-                    })
-                };
-            })
+    it("Tests that checkCurrentProfile fails when user enters invalid credentials", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        blockMocks.profiles.promptCredentials = jest.fn(() => {
+            return undefined;
         });
-        const testProfile = {
-            type : "zosmf",
-            host: null,
-            port: 1443,
-            user: null,
-            password: null,
-            rejectUnauthorized: false,
-            name: "testName"
-        };
-        const testIProfile: IProfileLoaded = {
-            name: "testProf",
-            profile: testProfile,
-            type: "zosmf",
-            message: "",
-            failNotFound: false
-        };
-        await theProfiles.checkCurrentProfile(testIProfile);
+        await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
-    });
-
-    it("Tests checkCurrentProfile() with invalid profile", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    promptCredentials: undefined
-                };
-            })
-        });
-        const testProfile = {
-            type : "zosmf",
-            host: null,
-            port: 1443,
-            user: null,
-            password: null,
-            rejectUnauthorized: false,
-            name: "testName"
-        };
-        const testIProfile: IProfileLoaded = {
-            name: "testProf",
-            profile: testProfile,
-            type: "zosmf",
-            message: "",
-            failNotFound: false
-        };
-        await theProfiles.checkCurrentProfile(testIProfile);
-        expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
-    });
-
-    it("Tests getAllTypes", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        const types = theProfiles.getAllTypes();
-        expect(types).toEqual(["zosmf", "banana"]);
-    });
-
-    it("Tests getProfiles", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        const profiles = theProfiles.getProfiles();
-        expect(profiles[1].name).toEqual("profile2");
-    });
-
-    it("Tests getNamesForType", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        const profiles = theProfiles.getProfiles();
-        expect((await theProfiles.getNamesForType("zosmf"))[1]).toEqual("profile2");
-    });
-
-    it("Tests directLoad", async () => {
-        const theProfiles = await Profiles.createInstance(log);
-        const profile = await theProfiles.directLoad("zosmf","profile1");
-        expect(profile.name).toEqual("profile1");
     });
 });
