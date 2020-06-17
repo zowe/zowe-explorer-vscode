@@ -4,16 +4,16 @@
     "getChildren.error.response": "Retrieving response from ",
     "getChildren.responses.error.response": "The response from Zowe CLI was not successful",
     "getChildren.responses.open": "Open",
-    "deleteUSSNode.quickPickOption": "Are you sure you want to delete ",
-    "deleteUSSNode.showQuickPick.yes": "Yes",
-    "deleteUSSNode.showQuickPick.no": "No",
+    "deleteUSSNode.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
+    "deleteUSSNode.showQuickPick.delete": "Delete",
+    "deleteUSSNode.showQuickPick.cancel": "Cancel",
     "deleteUSSNode.error.node": "Unable to delete node: ",
     "openUSS.error.invalidNode": "open() called from invalid node.",
     "refreshUSS.error.invalidNode": "refreshUSS() called from invalid node.",
     "refreshUSS.error.notFound": "not found",
     "refreshUSS.file1": "Unable to find file: ",
     "refreshUSS.file2": " was probably deleted.",
-    "openUSS.log.info.failedToOpenAsText.yes": "Yes, re-download",
-    "openUSS.log.info.failedToOpenAsText.no": "No",
-    "openUSS.log.info.failedToOpenAsText": "Failed to open file as text. Do you want to try with re-downloading it as binary?"
+    "openUSS.log.info.failedToOpenAsText.yes": "Re-download",
+    "openUSS.log.info.failedToOpenAsText.no": "Cancel",
+    "openUSS.log.info.failedToOpenAsText": "Failed to open file as text. Re-download file as binary?"
 }

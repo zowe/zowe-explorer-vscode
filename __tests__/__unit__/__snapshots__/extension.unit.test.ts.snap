@@ -13,6 +13,11 @@ Array [
     "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
+    "command": "zowe.uss.addFavorite",
+    "group": "inline",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+  },
+  Object {
     "command": "zowe.uss.editSession",
     "group": "inline",
     "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
@@ -58,6 +63,11 @@ Array [
     "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
   },
   Object {
+    "command": "zowe.uss.removeFavorite",
+    "group": "inline",
+    "when": "view == zowe.uss.explorer && viewItem =~ /^(?!ussSession.*).*_fav.*/",
+  },
+  Object {
     "command": "zowe.uss.text",
     "group": "2_systemSpecific@2",
     "when": "view == zowe.uss.explorer && viewItem =~ /^binaryFile.*/",
@@ -101,6 +111,11 @@ Array [
     "command": "zowe.uss.removeSession",
     "group": "6_modification@2",
     "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+  },
+  Object {
+    "command": "zowe.addFavorite",
+    "group": "inline",
+    "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav)(member|migr|ds|pds).*/",
   },
   Object {
     "command": "zowe.uss.renameNode",
@@ -176,6 +191,11 @@ Array [
     "command": "zowe.issueMvsCmd",
     "group": "3_systemSpecific",
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+  },
+  Object {
+    "command": "zowe.removeFavorite",
+    "group": "inline",
+    "when": "view == zowe.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
   },
   Object {
     "command": "zowe.hRecallDataSet",
@@ -322,12 +342,12 @@ Array [
   },
   Object {
     "command": "zowe.jobs.addFavorite",
-    "group": "2_workspace@0",
+    "group": "inline",
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)job.*/",
   },
   Object {
     "command": "zowe.jobs.removeFavorite",
-    "group": "2_workspace@0",
+    "group": "inline",
     "when": "view == zowe.jobs && viewItem =~ /^job.*_fav.*/",
   },
   Object {

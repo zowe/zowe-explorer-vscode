@@ -998,7 +998,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("profile1");
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1046,7 +1046,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         const dsNode = new ZoweDatasetNode(
             "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
         dsNode.contextValue = globals.DS_SESSION_CONTEXT;
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, dsNode);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1067,7 +1067,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         dsNode.contextValue = globals.DS_SESSION_CONTEXT;
         blockMocks.testDatasetTree.mSessionNodes.push(dsNode);
         blockMocks.testDatasetTree.addFavorite(dsNodeAsFavorite);
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, dsNode);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1091,7 +1091,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         ussNode.profile = blockMocks.imperativeProfile;
         blockMocks.testUSSTree.mSessionNodes.push(ussNode);
         blockMocks.testUSSTree.mFavorites.push(ussNodeAsFavorite);
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, ussNode);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1113,7 +1113,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
         blockMocks.testJobTree.mSessionNodes.push(jobNode);
         blockMocks.testJobTree.addFavorite(jobNodeAsFavorite);
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree, jobNode);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1128,7 +1128,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
 
         blockMocks.testDatasetTree.mRecall = ["[SESTEST]: TEST.DATA"];
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
@@ -1142,7 +1142,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
 
         blockMocks.testUSSTree.addRecall("[SESTEST]: /node1/node2/node3.txt");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
-        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
