@@ -861,14 +861,15 @@ export class Profiles {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("deleteProfile.quickPickOption", "Are you sure you want to permanently delete ") + profileName,
+            placeHolder: localize("deleteProfile.quickPickOption", "Delete {0}? This will permanently remove it from your system.", profileName),
             ignoreFocusOut: true,
             canPickMany: false
         };
         // confirm that the user really wants to delete
-        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.yes", "Yes"),
-            localize("deleteProfile.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteProfile.showQuickPick.yes", "Yes")) {
-            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked no. Cancelling delete of profile"));
+        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.delete", "Delete"),
+                                               localize("deleteProfile.showQuickPick.cancel", "Cancel")], quickPickOptions) !==
+                                               localize("deleteProfile.showQuickPick.delete", "Delete")) {
+            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
             return;
         }
 
