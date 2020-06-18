@@ -302,13 +302,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("deleteUSSNode.quickPickOption", "Are you sure you want to delete ") + this.label,
+            placeHolder: localize("deleteUSSNode.quickPickOption", "Delete {0}? This will permanently remove it from your system.", this.label),
             ignoreFocusOut: true,
             canPickMany: false
         };
-        if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.yes", "Yes"),
-        localize("deleteUSSNode.showQuickPick.no", "No")],
-            quickPickOptions) !== localize("deleteUSSNode.showQuickPick.yes", "Yes")) {
+        if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.delete", "Delete"),
+        localize("deleteUSSNode.showQuickPick.cancel", "Cancel")],
+            quickPickOptions) !== localize("deleteUSSNode.showQuickPick.delete", "Delete")) {
             return;
         }
         try {
@@ -514,13 +514,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if (openingTextFailed) {
-                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Yes, re-download");
-                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "No");
+                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
+                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
 
                 const response = await vscode.window.showErrorMessage(
                     localize(
                         "openUSS.log.info.failedToOpenAsText",
-                        "Failed to open file as text. Do you want to try with re-downloading it as binary?"),
+                        "Failed to open file as text. Re-download file as binary?"),
                     ...[
                         yesResponse,
                         noResponse
