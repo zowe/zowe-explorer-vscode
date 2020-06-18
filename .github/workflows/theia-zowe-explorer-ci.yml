@@ -10,46 +10,17 @@ jobs:
     services:
       theia:
         image: theiaide/theia
+        # opens 3000 on the host and service container
         ports:
           - 3000:3000
 
     steps:
       - uses: actions/checkout@v2
 
-        # this test file must exist for build to succeed and unit tests depend on it
       - run: npm ci
+        # this test file must exist for build to succeed and unit tests depend on it
       - run: cp resources/testProfileData.example.ts resources/testProfileData.ts
       - run: npm run build
       - run: npm run lint
+      - run: firefox -headless --screenshot ${packagingDir}/screenshots/firefox-test.jpg http://localhost:3000/
       - run: npm run test:theia
-
-      # steps:
-      # - uses: actions/checkout@v2
-
-      # - name: Use Node.js ${{ matrix.node-version }}
-      #   uses: actions/setup-node@v1
-      #   with:
-      #     node-version: ${{ matrix.node-version }}
-
-
-      # # fail for moderate errors
-      # - run: npm audit --audit-level=moderate
-      #   if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-
-      #   # this test file must exist for build to succeed and unit tests depend on it
-      # - run: cp resources/testProfileData.example.ts resources/testProfileData.ts
-
-      # - run: npm run build --if-present
-
-      # - run: npm test
-      #   env:
-      #     CI: true
-      #     NODE_OPTIONS: --max_old_space_size=4096
-
-      # - name: Upload test results
-      #   uses: actions/upload-artifact@v1
-      #   # we'll use windows to publish 
-      #   if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-      #   with:
-      #     name: results
-      #     path: results/
