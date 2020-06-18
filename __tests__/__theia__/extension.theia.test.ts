@@ -29,7 +29,7 @@ describe("Extension Theia Tests", () => {
     const driver = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
 
     it("should open Zowe Explorer and find the Favorites node", async () => {
-        await driver.get("http://theia:3000");
+        await driver.get("http://localhost:3000");
         await driver.sleep(SLEEPTIME);
         const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
