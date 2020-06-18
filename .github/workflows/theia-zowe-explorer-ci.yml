@@ -1,4 +1,4 @@
-name: Theia IDE
+name: Theia Zowe Explorer CI
 
 on: [push]
 
@@ -13,6 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+        # this test file must exist for build to succeed and unit tests depend on it
+      - run: npm run ci
+      - run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+      - run: npm run build
+      - run: npm run lint
       - run: npm run test:theia
 
       # steps:
