@@ -62,6 +62,7 @@ export class CliProfileManager {
     }
     public loadAll() {
         return [
+            { name: "sestest", profile: {}, type: "zosmf" },
             { name: "profile1", profile: {}, type: "zosmf" },
             { name: "profile2", profile: {}, type: "zosmf" }];
     }

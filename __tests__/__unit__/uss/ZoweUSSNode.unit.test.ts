@@ -164,7 +164,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
             testUSSTree: null,
             ussNode: new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null,
                 globalMocks.session, null, null, globalMocks.profileOne.name, "123"),
-            ussNodeFav: new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded,
+            ussNodeFav: new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded,
                 null, globalMocks.session, null, false, globalMocks.profileOne.name)
         };
 
@@ -323,7 +323,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.showQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.showQuickPick.mockResolvedValueOnce("Delete");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
     });
@@ -332,7 +332,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.showQuickPick.mockResolvedValueOnce("No");
+        globalMocks.showQuickPick.mockResolvedValueOnce("Cancel");
         await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "");
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
@@ -350,7 +350,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.showQuickPick.mockResolvedValueOnce("Yes");
+        globalMocks.showQuickPick.mockResolvedValueOnce("Delete");
         globalMocks.ussFile.mockImplementationOnce(() => {
             throw (Error("testError"));
         });
