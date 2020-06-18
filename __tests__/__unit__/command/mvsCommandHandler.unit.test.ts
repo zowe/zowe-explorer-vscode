@@ -144,8 +144,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    zosmfProfile: mockLoadNamedProfile
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -184,8 +183,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    zosmfProfile: mockLoadNamedProfile
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -223,8 +221,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    zosmfProfile: mockLoadNamedProfile
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -262,8 +259,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    zosmfProfile: mockLoadNamedProfile
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -298,8 +294,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    zosmfProfile: mockLoadNamedProfile
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -335,8 +330,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    zosmfProfile: mockLoadNamedProfile
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -401,7 +395,6 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -441,7 +434,6 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
