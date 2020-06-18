@@ -22,5 +22,10 @@ jobs:
       - run: cp resources/testProfileData.example.ts resources/testProfileData.ts
       - run: npm run build
       - run: npm run lint
-      - run: firefox -headless --screenshot ${packagingDir}/screenshots/firefox-test.jpg http://localhost:3000/
+      - run: firefox -headless --screenshot screenshots/firefox-test.jpg http://localhost:3000/
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v1
+        with:
+          name: results
+          path: screenshots/firefox-test.jpg
       - run: npm run test:theia
