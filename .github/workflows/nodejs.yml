@@ -11,7 +11,7 @@ jobs:
       # if one system fails, continue to run the other
       fail-fast: false
       matrix:
-        node-version: [8.x, 10.x, 12.x]
+        node-version: [10.x, 12.x]
         # macos-latest
         os: [macos-latest, ubuntu-latest, windows-latest]
 
