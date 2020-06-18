@@ -615,7 +615,7 @@ export class Profiles {
             repromptPass = loadSession.password;
         }
 
-        if (!loadSession.user || rePrompt) {
+        if (loadSession.user === "" || rePrompt) {
             newUser = await this.userInfo(repromptUser);
             loadSession.user = loadProfile.profile.user = newUser;
         } else {
@@ -625,7 +625,7 @@ export class Profiles {
         if (newUser === undefined) {
             return;
         } else {
-            if (!loadSession.password || rePrompt) {
+            if (loadSession.password === "" || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
                 loadSession.password = loadProfile.profile.password = newPass;
             } else {
