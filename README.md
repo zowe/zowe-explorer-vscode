@@ -1,7 +1,7 @@
 # Zowe Explorer
 
-[![](http://vsmarketplacebadge.apphb.com/rating/Zowe.vscode-extension-for-zowe.svg)](http://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)
-[![](http://vsmarketplacebadge.apphb.com/rating/Zowe.vscode-extension-for-zowe.svg)](http://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)
+[![version](http://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)](http://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)
+[![downloads](http://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)](http://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
@@ -36,11 +36,10 @@ New features:
 
 Fixed bugs:
 
-* Fixed persistent data after the recall functionality.
 * Fixed the delete a connection and edit a connection functions.
-* Fixed multiple prompts when canceling an edit session.
+* Fixed the issue that caused extra pop-ups to appear when canceling an edit session. 
 * Fixed failure to load optional secure fields from profiles.
-* Fixed the issue related to manual editing/deleting the associated profiles.
+* Fixed issue related to the manual edition/deletion of associated profiles.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -87,7 +86,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 2. Open the **DATA SETS** bar.
 3. Hover over the profile that you want to apply the filter to.
 4. Click the **magnifying glass** icon.
-5. Enter a pattern you want to creata a filter for.  
+5. Enter a pattern you want to create a filter for.  
   The data sets that match your pattern(s) are displayed in the explorer tree.
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
