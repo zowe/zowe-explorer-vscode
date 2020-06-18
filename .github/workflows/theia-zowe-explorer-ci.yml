@@ -7,8 +7,12 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    container: 
-      image: theiaide/theia
+    container:
+      image: node:lts
+
+    services:
+      theia:
+        image: theiaide/theia
 
     steps:
       - uses: actions/checkout@v2
