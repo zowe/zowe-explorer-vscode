@@ -28,3 +28,8 @@ jobs:
       env:
         CI: true
         NODE_OPTIONS: --max_old_space_size=4096
+    - name: Upload test results
+      uses: actions/upload-artifact@v1
+      with:
+        name: results
+        path: results/

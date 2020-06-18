@@ -1,7 +1,7 @@
 # Zowe Explorer
 
+[![Node.js CI](https://github.com/zowe/vscode-extension-for-zowe/workflows/Node.js%20CI/badge.svg)](https://github.com/zowe/vscode-extension-for-zowe/actions)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
-![Node.js CI](https://github.com/zowe/vscode-extension-for-zowe/workflows/Node.js%20CI/badge.svg)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 Zowe Explorer is a separately delivered component of Zowe belonging to the [Zowe CLI](https://github.com/zowe/community#zowe-cli) sub-project.  
