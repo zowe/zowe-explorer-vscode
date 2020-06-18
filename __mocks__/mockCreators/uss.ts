@@ -14,27 +14,40 @@ import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
-import { USSTree } from "../../src/__mocks__/USSTree";
 import { getIconByNode } from "../../src/generators/icons";
+import { removeNodeFromArray } from "./shared";
 
-export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
-    let newTree = new USSTree();
-    newTree.mSessionNodes = [...sessionNodes];
-    newTree.mFavorites = favoriteNodes;
-    newTree.addSession = jest.fn();
-    newTree.refresh = jest.fn();
-    newTree.removeRecall = jest.fn();
-    newTree.addRecall = jest.fn();
-    newTree.getRecall = jest.fn();
-    newTree.checkCurrentProfile = jest.fn();
-    newTree.refreshElement = jest.fn();
-    newTree.getChildren = jest.fn();
-    newTree.addFavorite = jest.fn();
-    newTree.removeFavorite = jest.fn();
-    newTree.searchInLoadedItems = jest.fn();
-    newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
-    newTree.setItem = jest.fn();
-    newTree.addHistory = jest.fn();
+export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): any {
+    const newTree = {
+        mSessionNodes: [...sessionNodes],
+        mFavorites: favoriteNodes,
+        mRecall: [],
+        mSessions: [],
+        addSession: jest.fn(),
+        refresh: jest.fn(),
+        removeRecall: jest.fn(),
+        openItemFromPath: jest.fn(),
+        addRecall: jest.fn(),
+        getRecall: jest.fn(),
+        deleteSession: jest.fn(),
+        checkCurrentProfile: jest.fn(),
+        refreshElement: jest.fn(),
+        getChildren: jest.fn(),
+        getTreeType: jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS),
+        addFavorite: jest.fn(),
+        removeFavorite: jest.fn(),
+        searchInLoadedItems: jest.fn(),
+        getTreeView: jest.fn().mockImplementation(() => treeView),
+        setItem: jest.fn(),
+        addHistory: jest.fn()
+    }
+    newTree.addFavorite.mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
+    newTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
+    newTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
+    newTree.addRecall.mockImplementation((newRecall) => newTree.mRecall.push(newRecall));
+    newTree.removeRecall.mockImplementation((badRecall) => newTree.mRecall.splice(newTree.mRecall.indexOf(badRecall), 1));
+    newTree.getRecall.mockImplementation(() => { return newTree.mRecall });
+
     return newTree;
 }
 
@@ -47,7 +60,7 @@ export function createUSSNode(session, profile) {
 }
 
 export function createUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const zoweUSSNode = new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, null,
+    const zoweUSSNode = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Collapsed, null,
         session, "/", false, profile.name, undefined, profile);
     zoweUSSNode.fullPath = "test";
     zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
@@ -60,7 +73,7 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
 }
 
 export function createFavoriteUSSNode(session, profile) {
-    const ussNodeF = new ZoweUSSNode("[profile]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
+    const ussNodeF = new ZoweUSSNode("[sestest]: usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const mParent = new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     mParent.contextValue = globals.FAVORITE_CONTEXT;
     ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
