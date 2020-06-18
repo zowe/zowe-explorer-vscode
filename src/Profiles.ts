@@ -615,7 +615,7 @@ export class Profiles {
             repromptPass = loadSession.password;
         }
 
-        if (loadSession.user === "" || rePrompt) {
+        if (!loadSession.user || rePrompt) {
             newUser = await this.userInfo(repromptUser);
             loadSession.user = loadProfile.profile.user = newUser;
         } else {
@@ -623,9 +623,12 @@ export class Profiles {
         }
 
         if (newUser === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
-            if (loadSession.password === "" || rePrompt) {
+            if (!loadSession.password || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
                 loadSession.password = loadProfile.profile.password = newPass;
             } else {
@@ -634,7 +637,10 @@ export class Profiles {
         }
 
         if (newPass === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             try {
                 const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
