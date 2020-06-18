@@ -103,6 +103,9 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });

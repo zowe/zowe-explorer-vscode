@@ -9,11 +9,16 @@
 *                                                                                 *
 */
 
+jest.mock("Session");
+jest.mock("@zowe/imperative");
+
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as utils from "../../../src/utils";
+import { Session, IProfileLoaded } from "@zowe/imperative";
+import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -80,6 +85,26 @@ describe("mvsCommandActions unit testing", () => {
         };
     });
 
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+
+    const profileOne: IProfileLoaded = {
+        name: "aProfile",
+        profile: {},
+        type: "zosmf",
+        message: "",
+        failNotFound: false
+    };
+
+    const testNode = new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, null,
+    session, undefined, undefined, profileOne);
+
     Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
     Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
     Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
@@ -119,6 +144,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });
@@ -157,6 +184,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });
@@ -194,6 +223,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });
@@ -231,6 +262,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });
@@ -265,6 +298,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });
@@ -300,6 +335,8 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    zosmfProfile: mockLoadNamedProfile
                 };
             })
         });
@@ -349,6 +386,7 @@ describe("mvsCommandActions unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
             })
         });
@@ -362,6 +400,8 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -400,6 +440,8 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -438,10 +480,10 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
                     validateProfiles: jest.fn(),
+                    checkCurrentProfile: jest.fn(()=> {
+                        return profileLoader.ValidProfileEnum.INVALID;
+                    }),
                 };
             })
         });
@@ -458,4 +500,48 @@ describe("mvsCommandActions unit testing", () => {
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
+
+    it("tests the issueMvsCommand function user does not select a profile", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
+        showQuickPick.mockReturnValueOnce(undefined);
+
+        await mvsActions.issueMvsCommand();
+
+        expect(showInformationMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+    });
+
+    it("tests the issueMvsCommand function from a session", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
+                    defaultProfile: {name: "firstName"},
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
+                    checkCurrentProfile: jest.fn(),
+                    zosmfProfile: mockLoadNamedProfile
+                };
+            })
+        });
+
+        showInputBox.mockReturnValueOnce("/d iplinfo1");
+        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+
+        await mvsActions.issueMvsCommand(session, null, testNode);
+
+        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(0);
+    });
+
 });
