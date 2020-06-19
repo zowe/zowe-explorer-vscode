@@ -7,13 +7,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    container:
-      image: node:lts-buster
-
     services:
       theia:
         image: theiaide/theia
-        # opens 3000 on the host and service container
         ports:
           - 3000:3000
 
@@ -21,14 +17,21 @@ jobs:
       - uses: actions/checkout@v2
 
       - run: npm ci
-        # this test file must exist for build to succeed and unit tests depend on it
-      - run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+
+      - name: Create test data file
+        run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+
       - run: npm run build
+
       - run: npm run lint
-      - run: firefox -headless --screenshot screenshots/firefox-test.jpg http://theia:3000/
+
+      - name: Verify Theia
+        run: firefox --screenshot screenshots/firefox-test.jpg http://127.0.0.1:3000/
+
       - name: Upload screenshot
         uses: actions/upload-artifact@v1
         with:
           name: results
           path: screenshots/firefox-test.jpg
+
       - run: npm run test:theia
