@@ -20,6 +20,7 @@ import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
 import { Profiles, ValidProfileEnum } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
+import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -66,7 +67,9 @@ async function createGlobalMocks() {
         mockImperativeConfig: jest.fn(),
         mockInitialize: jest.fn(),
         mockGetImperativeConfig: jest.fn().mockReturnValue({profiles: []}),
-        mockCliProfileManager: null,
+        mockCliProfileManager: jest.fn().mockImplementation(() => {
+            return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
+        }),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
             return {
@@ -82,16 +85,7 @@ async function createGlobalMocks() {
             protocol: "https",
             type: "basic",
         }),
-        testProfileLoaded: imperative.IProfileLoaded = {
-            name: "sestest",
-            profile: {
-                user: undefined,
-                password: undefined
-            },
-            type: "zosmf",
-            message: "",
-            failNotFound: false
-        },
+        testProfile: createIProfile(),
         testProfileOps: {
             allProfiles: [{name: "firstName"}, {name: "secondName"}],
             defaultProfile: {name: "firstName"},
@@ -109,8 +103,10 @@ async function createGlobalMocks() {
             "zowe.refreshAll",
             "zowe.refreshNode",
             "zowe.pattern",
+            "zowe.editSession",
             "zowe.ZoweNode.openPS",
             "zowe.createDataset",
+            "zowe.all.profilelink",
             "zowe.createMember",
             "zowe.deleteDataset",
             "zowe.deletePDS",
@@ -129,6 +125,7 @@ async function createGlobalMocks() {
             "zowe.pasteDataSet",
             "zowe.renameDataSetMember",
             "zowe.hMigrateDataSet",
+            "zowe.hRecallDataSet",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -136,6 +133,7 @@ async function createGlobalMocks() {
             "zowe.uss.refreshUSS",
             "zowe.uss.refreshUSSInTree",
             "zowe.uss.fullPath",
+            "zowe.uss.editSession",
             "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
             "zowe.uss.createFile",
@@ -164,6 +162,7 @@ async function createGlobalMocks() {
             "zowe.getJobJcl",
             "zowe.setJobSpool",
             "zowe.jobs.search",
+            "zowe.jobs.editSession",
             "zowe.issueTsoCmd",
             "zowe.issueMvsCmd",
             "zowe.jobs.addFavorite",
@@ -171,9 +170,13 @@ async function createGlobalMocks() {
             "zowe.jobs.saveSearch",
             "zowe.jobs.removeSearchFavorite",
             "zowe.openRecentMember",
-            "zowe.searchInAllLoadedItems"
+            "zowe.searchInAllLoadedItems",
+            "zowe.deleteProfile",
+            "zowe.cmd.deleteProfile",
+            "zowe.uss.deleteProfile",
+            "zowe.jobs.deleteProfile"
         ]
-    }
+    };
 
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
     Object.defineProperty(imperative, "CliProfileManager", { value: globalMocks.mockCliProfileManager, configurable: true });
@@ -196,10 +199,12 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.mockShowErrorMessage, configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.mockShowWarningMessage, configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession", { value: globalMocks.mockCreateBasicZosmfSession, configurable: true });
+    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession",
+                         { value: globalMocks.mockCreateBasicZosmfSession, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
-    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", { value: globalMocks.mockRegisterTextDocumentContentProvider, configurable: true });
+    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider",
+                         { value: globalMocks.mockRegisterTextDocumentContentProvider, configurable: true });
     Object.defineProperty(vscode.Disposable, "from", { value: globalMocks.mockFrom, configurable: true });
     Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: globalMocks.mockGetProfileName, configurable: true });
     Object.defineProperty(globalMocks.mockCliProfileManager, "initialize", { value: globalMocks.mockInitialize, configurable: true });
@@ -223,13 +228,12 @@ async function createGlobalMocks() {
     } as vscode.ExtensionContext));
     globalMocks.mockExtension = new mockExtensionCreator();
 
-    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfileLoaded);
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
-    globalMocks.mockCreateTreeView.mockReturnValue(new TreeView());
+    globalMocks.mockCreateTreeView.mockReturnValue(createTreeView());
     globalMocks.mockReadFileSync.mockReturnValue("");
     globalMocks.testProfileOps.getDefaultProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.testProfileOps.loadNamedProfile = globalMocks.mockLoadNamedProfile;
-    globalMocks.mockCliProfileManager = jest.fn().mockImplementation(() => { globalMocks.mockGetAllProfileNames, globalMocks.mockLoad });
     globalMocks.testTreeView = jest.fn().mockImplementation(() => {
         return {
             reveal: globalMocks.mockReveal,
