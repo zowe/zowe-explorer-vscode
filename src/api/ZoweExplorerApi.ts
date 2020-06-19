@@ -11,7 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session } from "@zowe/imperative";
-import { IZoweTreeNode } from "./IZoweTreeNode";
+import { TreeItem } from "vscode";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -284,12 +284,22 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
-         * Migrates a data set member.
+         * Migrates a data set.
          *
          * @param {string} dataSetName
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         hMigrateDataSet(
+            dataSetName: string,
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Recalls a data set.
+         *
+         * @param {string} dataSetName
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        hRecallDataSet(
             dataSetName: string,
         ): Promise<zowe.IZosFilesResponse>;
 
@@ -433,7 +443,7 @@ export namespace ZoweExplorerApi {
          * @return The requested profile
          *
          */
-        getProfile(primaryNode: IZoweTreeNode): IProfileLoaded;
+        getProfile(primaryNode: TreeItem): IProfileLoaded;
 
         /**
          * Used by other VS Code Extensions to access an alternative
@@ -443,7 +453,15 @@ export namespace ZoweExplorerApi {
          * @param primaryNode represents the Tree item that is being used
          * @return The requested profile
          */
-        getLinkedProfile(primaryNode: IZoweTreeNode, type: string): Promise<IProfileLoaded>;
+        getLinkedProfile(primaryNode: TreeItem, type: string): Promise<IProfileLoaded>;
+
+        /**
+         * After an extenders registered all its API extensions it
+         * might want to request that profiles should get reloaded
+         * to make them automatically appears in the Explorer drop-
+         * down dialogs.
+         */
+        reloadProfiles(): Promise<void>;
     }
 
     /**

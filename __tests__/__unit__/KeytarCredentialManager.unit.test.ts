@@ -67,6 +67,31 @@ describe("KeytarCredentialManager Unit Tests", () => {
         expect(secret).toBe("froyo");
     });
 
+    it("Test that loading of required credential fails if missing", async () => {
+        let secret;
+        let error;
+        try {
+            secret = await credentialMgr.load("user5", false);
+        } catch (err) {
+            error = err;
+        }
+        expect(secret).toBeUndefined();
+        expect(error).toBeDefined();
+        expect(error.message).toBe("Unable to load credentials.");
+    });
+
+    it("Test that loading of optional credential does not fail if missing", async () => {
+        let secret;
+        let error;
+        try {
+            secret = await credentialMgr.load("user5", true);
+        } catch (err) {
+            error = err;
+        }
+        expect(secret).toBeNull();
+        expect(error).toBeUndefined();
+    });
+
     it("Test deleting passwords from credential store", async () => {
         await credentialMgr.delete("user3");
         // tslint:disable-next-line no-magic-numbers

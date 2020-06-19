@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { errorHandling } from "../utils";
-import { labelHack, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import { labelRefresh, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -39,7 +39,7 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
     await Profiles.getInstance().refresh();
     datasetProvider.mSessionNodes.forEach((sessNode) => {
         if (contextually.isSessionNotFav(sessNode)) {
-            labelHack(sessNode);
+            labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
             refreshTree(sessNode);
@@ -179,6 +179,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             } else {
                 await vscode.window.showTextDocument(document, {preview: false});
             }
+            if (datasetProvider) { datasetProvider.addRecall(`[${node.getProfileName()}]: ${label}`); }
         } catch (err) {
             globals.LOG.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             errorHandling(err, node.getProfileName(), err.message);
@@ -590,14 +591,14 @@ export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: 
 export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     globals.LOG.debug(localize("deleteDataset.log.debug", "Deleting data set ") + node.label);
     const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("deleteDataset.quickPickOption", "Are you sure you want to delete ") + node.label,
+        placeHolder: localize("deleteDataset.quickPickOption", "Delete {0}? This will permanently remove it from your system.", node.label),
         ignoreFocusOut: true,
         canPickMany: false
     };
     // confirm that the user really wants to delete
-    if (await vscode.window.showQuickPick([localize("deleteDataset.showQuickPick.yes", "Yes"),
-        localize("deleteDataset.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteDataset.showQuickPick.yes", "Yes")) {
-        globals.LOG.debug(localize("deleteDataset.showQuickPick.log.debug", "User picked no. Cancelling delete of data set"));
+    if (await vscode.window.showQuickPick([localize("deleteDataset.showQuickPick.delete", "Delete"),
+        localize("deleteDataset.showQuickPick.Cancel", "Cancel")], quickPickOptions) !== localize("deleteDataset.showQuickPick.delete", "Delete")) {
+        globals.LOG.debug(localize("deleteDataset.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of data set"));
         return;
     }
 
@@ -799,6 +800,19 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
 }
 
 /**
+ * Recall data sets
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} node - The node to paste to
+ */
+export async function hRecallDataSet(node: ZoweDatasetNode) {
+    const { dataSetName } = dsUtils.getNodeLabels(node);
+    vscode.window.showInformationMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName +
+    localize("hRecall.requestSent2", " requested."));
+    return ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+}
+
+/**
  * Paste data sets
  *
  * @export
@@ -878,7 +892,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     const start = path.join(globals.DS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
-    const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
+    const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
         return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));

@@ -2,6 +2,55 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.6.0`
+
+- Create connections with any registered profile type. Thanks @JillieBeanSim
+- Streamline first profile creation. Thanks @crawr
+- Add recall options for migrated datasets. Thanks @Pranay154
+- Fix persistent data after recall functionality. Thanks @katelynienaber
+- Fix deleting and editing connection not considering other profile types. Thanks @phaumer
+- Fix multiple prompts when escaping/canceling editing session. Thanks @jellypuno
+- Fix failure to load optional secure fields from profiles. Thanks @tjohnsonBCM
+- Fixed issue when manually editing/deleting associated profiles. Thanks @Colin-Stone
+- Refactor unit tests. Thanks @stepanzharychevbroadcom, @katelynienaber
+
+## `1.5.2`
+
+- Fix undefined profile error message. Thanks @JillieBeanSim
+
+## `1.5.1`
+
+- Fix failure to load optional secure fields from profiles. Thanks @tjohnsonBCM
+- Fix pressing Escape does not abort Edit profile dialogue. Thanks @jellypuno
+- Fix editing of Credentials when setting them to spaces. Thanks @jellypuno
+- Fix deletion of profiles not considering all extensibility use cases. Thanks @phaumer
+
+## `1.5.0`
+
+- Fixes for saving of Datasets from Favourites section. Thanks @stepanzharychevbroadcom
+- Management of Theia specific merge conflict resolution. Thanks @Alexandru-Dumitru
+- Add to recall when PS File opened. Thanks @katelynienaber
+- Provide edit support for Profile credentials. Thanks @jellypuno
+- Support for profile deletion. Thanks @crawr
+- Addressed USS file merge conflict triggering issue. Thanks @Alexandru-Dumitru
+- Provide refresh all method for Zowe Explorer - Extenders. Thanks @phaumer
+- Extender guidelines and documentation. Thanks @Colin-Stone
+- Provision of profile association links to support extenders of Zowe Explorer. Thanks @Colin-Stone
+- Creation of an extender API for extenders of Zowe Explorer. Thanks @Colin-Stone
+- Management of VSAM files within Dataset explorer. Thanks @Colin-Stone
+- VSCode context now based on Regular expression for flexibility. Thanks @Colin-Stone
+- Vsix file deployment via Theia pipeline. Thanks @crawr
+- Reduction in size of extension.ts file. Thanks @katelynienaber
+- ContextValue of undefined error addressed for new members. Thanks @katelynienaber
+- Fixed when Pull from mainframe didn't work on USS Files. Thanks @stepanzharychevbroadcom
+- Fixed Bug submitting JCL from Command Palette. Thanks @stepanzharychevbroadcom
+- Refactoring of testing for accuracy and maintainability. Thanks @stepanzharychevbroadcom
+
+## `1.4.1`
+
+- Fix for USS files not saving correctly. Thanks @phaumer
+- Icon update for migrated files only. Thanks @Colin-Stone
+
 ## `1.4.0`
 
 - Added support for large datasets and PDS members. Thanks @jellypuno

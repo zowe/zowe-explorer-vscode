@@ -65,7 +65,7 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * This function does this by adding or removing a blank.
  * @param {TreeItem} node - the node element
  */
-export function labelHack( node: vscode.TreeItem ): void {
+export function labelRefresh( node: vscode.TreeItem ): void {
     node.label = node.label.endsWith(" ") ? node.label.substring(0, node.label.length -1 ) : node.label+ " ";
 }
 
@@ -123,7 +123,7 @@ export function getAppName(isTheia: boolean) {
  * @param {IZoweTreeNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
-    return path.join(globals.DS_DIR, "/" + getProfile(node) + "/" + appendSuffix(label) );
+    return path.join(globals.DS_DIR, "/" + node.getProfileName() + "/" + appendSuffix(label) );
 }
 
 /**
@@ -180,22 +180,6 @@ export function checkForAddedSuffix(filename: string): boolean {
     return ((dotPos >= 2 && dotPos <= 4) && // if the last characters are 2 to 4 long and lower case it has been added
         ((filename.substring(filename.length - dotPos) === filename.substring(filename.length - dotPos).toLowerCase())));
 }
-
-/**
- * Returns the profile for the specified node
- *
- * @export
- * @param {IZoweTreeNode} node
- */
-export function getProfile(node: IZoweTreeNode) {
-    let profile = node.getSessionNode().label.trim();
-    // if this is a favorite node, further extraction is necessary
-    if (profile.includes("[")) {
-        profile = profile.substring(profile.indexOf("[") + 1, profile.indexOf("]"));
-    }
-    return profile;
-}
-
 
 /**
  * Function that rewrites the document in the active editor thus marking it dirty
