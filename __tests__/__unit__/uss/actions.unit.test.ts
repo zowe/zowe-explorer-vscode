@@ -39,6 +39,7 @@ function createGlobalMocks() {
         fileList: jest.fn(),
         showWarningMessage: jest.fn(),
         showErrorMessage: jest.fn(),
+        createTreeView: jest.fn(),
         fileToUSSFile: jest.fn(),
         Upload: jest.fn(),
         isBinaryFileSync: jest.fn(),
@@ -84,6 +85,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument, configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", { value: globalMocks.isFileTagBinOrAscii, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
     Object.defineProperty(globalMocks.List, "fileList", { value: globalMocks.fileList, configurable: true });
