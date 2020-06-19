@@ -1,7 +1,7 @@
 # Zowe Explorer
 
-[![version](http://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)](http://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)
-[![downloads](http://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)](http://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)
+[![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.svg)
+[![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.svg)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
