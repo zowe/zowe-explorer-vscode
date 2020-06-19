@@ -76,6 +76,11 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
+
+    /**
+     * API method to wrap to the newer `putContent`.
+     * @deprecated
+     */
     public async putContents(inputFilePath: string, ussFilePath: string,
                              binary?: boolean, localEncoding?: string,
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
@@ -84,7 +89,12 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
             statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
             stageName: TaskStage.IN_PROGRESS
         };
-        return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, task, etag, returnEtag);
+        return this.putContent(inputFilePath, ussFilePath, {
+            binary,
+            localEncoding,
+            etag,
+            returnEtag
+        });
     }
 
     public async putContent(inputFilePath: string, ussFilePath: string,
