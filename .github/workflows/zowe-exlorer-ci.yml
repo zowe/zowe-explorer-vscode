@@ -16,7 +16,8 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Check out code
+      uses: actions/checkout@v2
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
@@ -26,11 +27,13 @@ jobs:
     - run: npm install
 
     # fail for moderate errors
-    - run: npm audit --audit-level=moderate
+    - name: Audit from Windows / Node 12.x
+      run: npm audit --audit-level=moderate
       if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
 
       # this test file must exist for build to succeed and unit tests depend on it
-    - run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+    - name: Create test data file
+      run: cp resources/testProfileData.example.ts resources/testProfileData.ts
 
     - run: npm run build --if-present
 
@@ -39,9 +42,9 @@ jobs:
         CI: true
         NODE_OPTIONS: --max_old_space_size=4096
 
-    - name: Upload test results
+    - name: Upload test results from Windows / Node 12.x
       uses: actions/upload-artifact@v1
-      # we'll use windows to publish 
+      # Publish on this combination 
       if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       with:
         name: results
