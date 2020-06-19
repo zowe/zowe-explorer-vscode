@@ -37,7 +37,7 @@ New features:
 Fixed bugs:
 
 * Fixed the delete a connection and edit a connection functions.
-* Fixed the issue that caused extra pop-ups to appear when canceling an edit session. 
+* Fixed the issue that caused extra pop-ups to appear when canceling an edit session.
 * Fixed failure to load optional secure fields from profiles.
 * Fixed issue related to the manual edition/deletion of associated profiles.
 
