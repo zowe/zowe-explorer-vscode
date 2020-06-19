@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      # if one system fails, continue to run tests on the other systems
+      # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
         node-version: [10.x, 12.x]
@@ -26,7 +26,6 @@ jobs:
 
     - run: npm install
 
-    # fail for moderate errors
     - name: Audit from Windows / Node 12.x
       run: npm audit --audit-level=moderate
       if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
@@ -43,7 +42,6 @@ jobs:
 
     - name: Upload test results from Windows / Node 12.x
       uses: actions/upload-artifact@v1
-      # Publish on this combination 
       if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       with:
         name: results

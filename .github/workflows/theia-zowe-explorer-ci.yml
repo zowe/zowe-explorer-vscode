@@ -12,6 +12,7 @@ jobs:
         image: theiaide/theia
         ports:
           - 3000:3000
+        options: --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --timeout=3s --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
