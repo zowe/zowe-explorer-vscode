@@ -1173,7 +1173,7 @@
     "update": "node scripts/stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "watch": "webpack --mode development --vscode-nls --watch --info-verbosity verbose",
+    "watch": "gulp build && webpack --mode development --vscode-nls --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",

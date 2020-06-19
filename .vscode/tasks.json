@@ -9,12 +9,10 @@
             "problemMatcher": "$tsc-watch",
             "isBackground": true,
             "presentation": {
+                "panel": "dedicated",
                 "reveal": "never"
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         },
         {
             "type": "npm",
