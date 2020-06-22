@@ -514,12 +514,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return this.createSearchLabel(owner, prefix, jobId);
     }
 
-    public async checkCurrentProfile(node: IZoweJobTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
-    }
-
     /**
      * Function that takes a search criteria and updates a search node based upon it
      * @param node - a IZoweJobTreeNode node

@@ -140,7 +140,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // validate line
             const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
-            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
+            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
@@ -276,6 +276,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
+
+            await this.checkCurrentProfile(node);
+
             temp.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             const icon = getIconByNode(temp);
             if (icon) {
@@ -533,6 +536,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
+
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getHistory().length > 0) {
@@ -603,13 +607,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.addHistory(node.pattern);
         }
     }
-
-    public async checkCurrentProfile(node: IZoweDatasetTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
-    }
-
 
     /**
      * Rename data set member

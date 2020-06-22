@@ -400,11 +400,14 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile);
 
         return {
             session,
             datasetSessionNode,
-            treeView
+            treeView,
+            profile,
+            imperativeProfile
         };
     }
 
@@ -462,12 +465,13 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.mSessionNodes[1].pattern = "test";
 
-        testTree.addFavorite(testTree.mSessionNodes[1]);
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
 
         expect(testTree.mFavorites[0].label).toBe(`[${blockMocks.datasetSessionNode.label}]: ${testTree.mSessionNodes[1].pattern}`);
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_SESSION_CONTEXT}${globals.FAV_SUFFIX}`);
@@ -680,7 +684,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter - Theia", async () => {
@@ -762,7 +766,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter", async () => {
