@@ -27,6 +27,7 @@ import * as fs from "fs";
 
 function createGlobalMocks() {
     const globalMocks = {
+        renameUSSFile: jest.fn(),
         showQuickPick: jest.fn(),
         showInputBox: jest.fn(),
         Create: jest.fn(),
@@ -87,6 +88,7 @@ function createGlobalMocks() {
     Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument, configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
+    Object.defineProperty(globalMocks.Utilities, "renameUSSFile", { value: globalMocks.renameUSSFile, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", { value: globalMocks.isFileTagBinOrAscii, configurable: true });
@@ -276,9 +278,21 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
         expect(fs.unlinkSync).toBeCalledTimes(0);
     });
 
-    it("should be able to call rename without errors", async () => {
+    it("should be able to call rename with same name", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+
+
+        await ussNodeActions.renameUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "something");
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
+    });
+
+    it("should be able to call rename with new name", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        globalMocks.showInputBox.mockReturnValueOnce("new name");
+        globalMocks.renameUSSFile.mockReturnValueOnce(true);
 
         await ussNodeActions.renameUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "something");
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
