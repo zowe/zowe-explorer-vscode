@@ -400,7 +400,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
@@ -420,7 +420,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
 
         mocked(fs.existsSync).mockReturnValueOnce(false);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
@@ -437,7 +437,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockRejectedValueOnce(Error("not found"));
 
@@ -454,7 +454,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockRejectedValueOnce(Error(""));
 
@@ -470,7 +470,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("No" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
 
@@ -491,7 +491,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
@@ -514,7 +514,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
@@ -540,7 +540,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         blockMocks.testDatasetTree.mFavorites.push(child);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
@@ -563,7 +563,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             parent, null, undefined, undefined, blockMocks.imperativeProfile);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Yes" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
 
