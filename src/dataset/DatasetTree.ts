@@ -570,19 +570,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         } else { pattern = choice.label; }
                     }
                 }
+                const options2: vscode.InputBoxOptions = {
+                    prompt: localize("enterPattern.options.prompt",
+                        "Search data sets by entering patterns: use a comma to separate multiple patterns"),
+                    value: pattern,
+                };
+                // get user input
+                pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
-                    // manually entering a search
-                    const options2: vscode.InputBoxOptions = {
-                        prompt: localize("enterPattern.options.prompt",
-                            "Search data sets by entering patterns: use a comma to separate multiple patterns"),
-                        value: node.pattern,
-                    };
-                    // get user input
-                    pattern = await vscode.window.showInputBox(options2);
-                    if (!pattern) {
-                        vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
-                        return;
-                    }
+                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
+                    return;
                 }
             } else {
                 // executing search from saved search in favorites

@@ -641,6 +641,8 @@ describe("Zos Jobs Unit Tests", () => {
             showQuickPick.mockReset();
             qpItem = new utils.FilterItem("Owner:MEHLQ Prefix:*");
             showQuickPick.mockReturnValueOnce(qpItem);
+            showInputBox.mockReturnValueOnce("MEHLQ");
+            showInputBox.mockReturnValueOnce("*");
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
@@ -738,6 +740,8 @@ describe("Zos Jobs Unit Tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
 
             qpItem = new utils.FilterItem("Owner:MEHLQ2 Prefix:*");
+            showInputBox.mockReturnValueOnce("MEHLQ2");
+            showInputBox.mockReturnValueOnce("*");
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ2");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");

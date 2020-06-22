@@ -474,6 +474,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         blockMocks.theia = true;
         blockMocks.qpValue = "/u/thisFile";
         globalMocks.showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
+        globalMocks.showInputBox.mockReturnValueOnce("/u/thisFile");
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");

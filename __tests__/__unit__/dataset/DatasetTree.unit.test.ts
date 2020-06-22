@@ -711,6 +711,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         globalMocks.isTheia.mockReturnValue(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("HLQ.PROD1.STUFF"));
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addHistory("test");
@@ -791,6 +792,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const quickPickItem = new utils.FilterDescriptor("HLQ.PROD1.STUFF");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(createQuickPickContent("HLQ.PROD1.STUFF", quickPickItem));
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const resolveQuickPickSpy = jest.spyOn(utils, "resolveQuickPickHelper");
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
