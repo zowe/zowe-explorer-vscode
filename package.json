@@ -1161,7 +1161,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "gulp build && npm run license && npm run lint && webpack --mode production --vscode-nls",
+    "vscode:prepublish": "gulp build && npm run license && npm run lint && webpack --mode production --vscode-nls && npm run update",
     "build": "gulp build && npm run license && webpack --mode development --vscode-nls && npm run update",
     "build:integration": "gulp build && npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
