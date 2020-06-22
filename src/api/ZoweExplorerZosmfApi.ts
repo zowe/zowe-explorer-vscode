@@ -84,11 +84,6 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
     public async putContents(inputFilePath: string, ussFilePath: string,
                              binary?: boolean, localEncoding?: string,
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
-        const task: ITaskWithStatus = {
-            percentComplete: 0,
-            statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
-            stageName: TaskStage.IN_PROGRESS
-        };
         return this.putContent(inputFilePath, ussFilePath, {
             binary,
             localEncoding,
