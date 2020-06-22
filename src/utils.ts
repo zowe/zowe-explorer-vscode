@@ -32,8 +32,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *************************************************************************************************************/
 export function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
     let httpErrCode = null;
-    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the username and password for ") +
-        `\n${label}\n` + localize("errorHandling.invalid.credentials2"," are valid or this may lead to a lock-out.");
+    const errMsg = localize("errorHandling.invalid.credentials", "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.", label);
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -50,9 +49,9 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                 vscode.window.showErrorMessage(errMsg);
                 Profiles.getInstance().promptCredentials(label.trim());
             } else {
-                vscode.window.showErrorMessage(errMsg, "Check Credentials").then((selection) => {
+                vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
-                        Profiles.getInstance().promptCredentials(label.trim(), true);
+                        await Profiles.getInstance().promptCredentials(label.trim(), true);
                     }
                 });
             }
