@@ -48,11 +48,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param node This parameter identifies the node that needs to be called
      */
     editSession(node: IZoweNodeType): Promise<void>;
+
     /**
      * Add a new session to the container
      * @param zoweFileProvider The tree to which the profile should be added
      */
     createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void>;
+
 
     /**
      * Adds a favorite node

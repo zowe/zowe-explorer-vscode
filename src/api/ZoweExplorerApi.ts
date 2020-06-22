@@ -43,6 +43,15 @@ export namespace ZoweExplorerApi {
          * @returns {Session} a Zowe CLI Session
          */
         getSession(profile?: IProfileLoaded): Session;
+
+        /**
+         * Create a session for the specific profile type.
+         *
+         * @param {IProfileLoaded} profile
+         *      will use the profile the API was retrieved with by default
+         * @returns {IZosmfInfoResponse} z/OSMF Check Status response
+         */
+        getStatus?(profile: IProfileLoaded, profileType?): Promise<string>;
     }
 
     /**
