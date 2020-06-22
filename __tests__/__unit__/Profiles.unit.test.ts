@@ -528,8 +528,9 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.imperativeProfile.profile = { user: undefined, password: undefined };
+        blockMocks.imperativeProfile.profile = { user: "fake", password: "fake" };
         blockMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce("Save Credentials");
         globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
             { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
