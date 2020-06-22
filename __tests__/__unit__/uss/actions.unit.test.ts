@@ -9,6 +9,8 @@
 *                                                                                 *
 */
 
+jest.mock("fs");
+
 import * as ussNodeActions from "../../../src/uss/actions";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import { createIProfile, createISession, createTreeView, createTextDocument, createFileResponse } from "../../../__mocks__/mockCreators/shared";
@@ -21,6 +23,7 @@ import * as sharedUtils from "../../../src/shared/utils";
 import * as zowe from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as isbinaryfile from "isbinaryfile";
+import * as fs from "fs";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -230,6 +233,49 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
         ussNodeActions.refreshAllUSS(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
     });
+});
+
+describe("USS Action Unit Tests - Function renameUSSNode", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testUSSTree: null,
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+        };
+        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+                                                     [newMocks.ussNode], createTreeView());
+
+        return newMocks;
+    }
+
+    it("should call unlink if file exists", () => {
+        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((filePath: string) => {
+            return true;
+        });
+        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((filePath: string) => {
+            // do nothing
+        });
+
+        ussNodeActions.deleteFromDisk(null, "some/where/that/exists");
+
+        expect(fs.existsSync).toBeCalledTimes(1);
+        expect(fs.unlinkSync).toBeCalledTimes(1);
+    });
+
+    it("should call not unlink if file doesn't exists", () => {
+
+        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((filePath: string) => {
+            return false;
+        });
+        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((filePath: string) => {
+            // do nothing
+        });
+
+        ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
+
+        expect(fs.existsSync).toBeCalledTimes(1);
+        expect(fs.unlinkSync).toBeCalledTimes(0);
+    });
+
 });
 
 describe("USS Action Unit Tests - Function copyPath", () => {
