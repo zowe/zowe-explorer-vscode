@@ -17,7 +17,7 @@ import { TreeItemCollapsibleState } from "vscode";
 const icon: IIconItem = {
     id: IconId.sessionFavouriteOpen,
     type: IconHierarchyType.derived,
-    path: getIconPathInResources("folder-root-favorite-open.svg"),
+    path: getIconPathInResources("folder-root-favorite-star-open.svg"),
     check: (node) => {
         const parentCheck = sessionFavouriteIcon.check(node);
         return parentCheck && node.collapsibleState === TreeItemCollapsibleState.Expanded;
