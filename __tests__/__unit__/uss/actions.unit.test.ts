@@ -276,6 +276,15 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
         expect(fs.unlinkSync).toBeCalledTimes(0);
     });
 
+    it("should be able to call rename without errors", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        globalMocks.showInputBox.mockReturnValueOnce("new name");
+
+        await ussNodeActions.renameUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "something");
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
+    });
+
 });
 
 describe("USS Action Unit Tests - Function copyPath", () => {
