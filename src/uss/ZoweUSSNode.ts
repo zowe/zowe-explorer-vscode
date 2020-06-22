@@ -17,7 +17,7 @@ import * as path from "path";
 import * as moment from "moment";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
-import { errorHandling } from "../utils";
+import { errorHandling, refreshTree } from "../utils";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import { getIconByNode } from "../generators/icons/index";
@@ -146,6 +146,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: zowe.IZosFilesResponse[] = [];
+        const sessNode = this.getSessionNode();
         try {
             responses.push(await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
@@ -154,7 +155,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
-            errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            await refreshTree(sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren = {};
