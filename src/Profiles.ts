@@ -614,12 +614,13 @@ export class Profiles {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-        let repromptUser: any;
-        let repromptPass: any;
-        let loadProfile: any;
-        let loadSession: any;
-        let newUser: any;
-        let newPass: any;
+
+        let repromptUser: string;
+        let repromptPass: string;
+        let loadProfile: IProfileLoaded;
+        let loadSession: ISession;
+        let newUser: string;
+        let newPass: string;
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
@@ -641,7 +642,10 @@ export class Profiles {
         }
 
         if (newUser === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             if (!loadSession.password || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
@@ -652,11 +656,22 @@ export class Profiles {
         }
 
         if (newPass === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             try {
-                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
                 if (rePrompt) {
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", loadProfile.name);
+                    await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                        if (selection === saveButton) {
+                            rePrompt = false;
+                        }
+                    });
                     await this.updateProfile(loadProfile, rePrompt);
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
@@ -1203,8 +1218,8 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
                 }
             } else {
                 OrigProfileInfo[value] = NewProfileInfo[value];

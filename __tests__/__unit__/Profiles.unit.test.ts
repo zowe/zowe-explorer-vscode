@@ -579,6 +579,7 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
             { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
+        globalMocks.mockShowInformationMessage.mockResolvedValueOnce("Save Credentials");
 
         const res = await blockMocks.profiles.promptCredentials(blockMocks.imperativeProfile.name);
         expect(res).toEqual(["fake", "fake", "fake"]);
