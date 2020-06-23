@@ -126,7 +126,7 @@ describe("Negative testing for ZoweJobTreeNode", () => {
 
 describe("Test uploadContents", () => {
 
-    it("should test with uss node and profile that new API method is called", async () => {
+    it("should test with uss node that new API method is called if it exists", async () => {
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn
             <any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>
@@ -147,7 +147,7 @@ describe("Test uploadContents", () => {
         expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
     });
 
-    it("should test with uss node and profile that old API method is called", async () => {
+    it("should test with uss node that old API method is called", async () => {
         const putContents = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn
             <any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>
@@ -160,15 +160,11 @@ describe("Test uploadContents", () => {
         await sharedUtils.uploadContent(new ZoweUSSNode(null, null, null, null, null), {
             fileName: "whatever"
         } as any,
-            null, {
-                profile: {
-                    encoding: 123
-                }
-            } as any);
+            null);
         expect(ZoweExplorerApiRegister.getUssApi(null).putContents).toBeCalled();
     });
 
-    it("should test with uss node and profile that old API method is called", async () => {
+    it("should test with data set node that old API method is called", async () => {
         const putContents = jest.fn();
         ZoweExplorerApiRegister.getMvsApi = jest.fn
             <any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>
