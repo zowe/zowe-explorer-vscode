@@ -30,6 +30,7 @@ async function createGlobalMocks() {
         qpPlaceholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
     };
 
+    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
@@ -218,6 +219,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
+        Object.defineProperty(newMocks.testUSSTree, "getRecall", { value: jest.fn(), configurable: true });
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
 
         return newMocks;

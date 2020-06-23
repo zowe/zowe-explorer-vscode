@@ -117,3 +117,69 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
     });
 });
+
+describe("Tree Provider unit tests, function getTreeItem", () => {
+    it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {
+        const globalMocks = await createGlobalMocks();
+        const sampleElement = new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None,
+            null, null, null);
+        expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
+    });
+});
+
+describe("Tree Provider unit tests, function getParent", () => {
+    it("Tests that getParent returns null when called on a root node", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Await return value from getChildren
+        const rootChildren = await globalMocks.testUSSTree.getChildren();
+        const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
+
+        expect(parent).toEqual(null);
+    });
+
+    it("Tests that getParent returns the correct ZoweUSSNode when called on a non-root node", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating child of session node
+        const sampleChild: ZoweUSSNode = new ZoweUSSNode("/u/myUser/zowe1", vscode.TreeItemCollapsibleState.None,
+        globalMocks.testUSSTree.mSessionNodes[1], globalMocks.testSession, null);
+
+        expect(globalMocks.testUSSTree.getParent(sampleChild)).toBe(globalMocks.testUSSTree.mSessionNodes[1]);
+    });
+});
+
+describe("Tree Provider unit tests, function getTreeItem", () => {
+    it("Testing the onDidConfiguration", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const Event = jest.fn().mockImplementation(() => {
+            return {
+                affectsConfiguration: globalMocks.mockAffects
+            };
+        });
+        const e = new Event();
+        globalMocks.getConfiguration.mockClear();
+
+        await globalMocks.testUSSTree.onDidChangeConfiguration(e);
+        expect(globalMocks.getConfiguration.mock.calls.length).toBe(2);
+    });
+});
+
+describe("Tree Provider unit tests, function getTreeItem", () => {
+    it("Testing that expand tree is executed successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed,
+                                       globalMocks.testUSSTree.mSessionNodes[0], globalMocks.testSession, null);
+        folder.contextValue = globals.USS_DIR_CONTEXT;
+
+        // Testing flipState to open
+        await globalMocks.testUSSTree.flipState(folder, true);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-open.svg");
+
+        // Testing flipState to closed
+        await globalMocks.testUSSTree.flipState(folder, false);
+        expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
+    });
+});
