@@ -15,7 +15,10 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 * Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
 * Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 
-Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
+More information:
+
+* For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
+* Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
 
 ## Contents
 
@@ -30,12 +33,12 @@ Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slac
 
 New features:
 
-* Create profiles with different, other than `zosmf`, profile types. For example, if you have the FTP plug-in, you can create a profile of the FTP type.
+* Create profiles with different, other than `zosmf`, profile types. For example, if you have the FTP plug-in installed, you can create a profile of the FTP type.
 * Improved user experience around adding new profiles. If the quick pick list does not contain any profiles, you will be prompted to create a new profile instead of picking the option to create a new profile from the empty list.
 
 Fixed bugs:
 
-* Fixed the delete a connection and edit a connection functions.
+* Fixed the **delete a connection** and **edit a connection** functions.
 * Fixed the issue that caused extra pop-ups to appear when canceling an edit session.
 * Fixed failure to load optional secure fields from profiles.
 * Fixed issue related to the manual edition/deletion of associated profiles.
@@ -208,7 +211,7 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 * Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
-* Use a **syntax highlighter:** Zowe Explorer supports syntax highlighter for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
+* **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
 
 * **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
 
@@ -222,4 +225,4 @@ For information how to configure Zowe Explorer, see [Zowe Explorer Configuration
 
 You can extend the possibilities of Zowe Explorer by creating you own extensions. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
 
-**Tip:** Check an example of Zowe Explorers extensions — [Zowe Explorer FTP extension](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
+**Tip:** View an example of Zowe Explorers extensions — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
