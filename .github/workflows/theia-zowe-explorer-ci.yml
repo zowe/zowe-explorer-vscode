@@ -28,7 +28,7 @@ jobs:
       - run: npm run lint
 
       - name: sleep
-        run: "sleep time: 5, unit: 'MINUTES'"
+        run: sleep 300
 
       - name: Verify Theia
         run: firefox --screenshot screenshots/firefox-test.jpg http://127.0.0.1:3000/
