@@ -30,6 +30,11 @@ interface IUrlValidator {
     port: number;
 }
 
+interface IProfileValidation {
+    status: string;
+    name: string;
+}
+
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
@@ -49,6 +54,7 @@ export class Profiles {
 
     private static loader: Profiles;
 
+    public profilesForValidation: IProfileValidation[] = [];
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -65,6 +71,14 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
+
+        // Check what happens if there's an error
+        const profileStatus = await this.validateProfiles(theProfile);
+        if (profileStatus.status === "inactive") {
+            this.validProfile = ValidProfileEnum.INVALID;
+            return profileStatus;
+        }
+
         if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
@@ -75,20 +89,25 @@ export class Profiles {
                 }
             } catch (error) {
                 errorHandling(error, theProfile.name,
-                    localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
-                return;
+                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`);
+                return profileStatus;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
                 theProfile.profile.user = this.usrNme;
                 theProfile.profile.password = this.passWrd;
                 theProfile.profile.base64EncodedAuth = this.baseEncd;
                 this.validProfile = ValidProfileEnum.VALID;
+                return profileStatus;
             } else {
-                return;
+                // return invalid if credetials are not provided
+                this.validProfile = ValidProfileEnum.INVALID;
+                return profileStatus;
             }
         } else {
             this.validProfile = ValidProfileEnum.VALID;
+            return profileStatus;
         }
+
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -870,6 +889,69 @@ export class Profiles {
             }
         }
         return profileManager;
+    }
+
+    public async validateProfiles(theProfile: IProfileLoaded) {
+        let filteredProfile: IProfileValidation;
+        let profileStatus;
+        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+
+        // Filter profilesForValidation to check if the profile is already validated
+        this.profilesForValidation.filter((profile) => {
+            if (profile.name === theProfile.name) {
+                filteredProfile = {
+                    status: profile.status,
+                    name: profile.name
+                };
+            }
+        });
+
+        // If not yet validated, call getStatus and validate the profile
+        // status will be stored in profilesForValidation
+        if (filteredProfile === undefined) {
+            try {
+
+                if (getSessStatus.getStatus) {
+                    profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                } else {
+                    profileStatus = "unverified";
+                }
+
+                switch (profileStatus) {
+                    case "active":
+                        filteredProfile = {
+                            status: "active",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "inactive":
+                        filteredProfile = {
+                            status: "inactive",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "unverified":
+                        filteredProfile = {
+                            status: "unverified",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                    default:
+                }
+
+            } catch (error) {
+                this.log.debug("Validate Error - Invalid Profile: " + error);
+                filteredProfile = {
+                    status: "inactive",
+                    name: theProfile.name
+                };
+                this.profilesForValidation.push(filteredProfile);
+            }
+        }
+
+        return filteredProfile;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {

@@ -12,7 +12,7 @@
 import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import { createUSSTree, USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { Logger } from "@zowe/imperative";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
 import * as utils from "../../../src/utils";
 import { createIProfile, createISession, createISessionWithoutCredentials, createFileResponse } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
@@ -49,7 +49,8 @@ async function createGlobalMocks() {
         testSession: createISession(),
         testResponse: createFileResponse({items: []}),
         testUSSNode: null,
-        testTree: null
+        testTree: null,
+        profilesForValidation: {status: "active", name: "fake"},
     };
 
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
@@ -74,7 +75,11 @@ async function createGlobalMocks() {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
-                checkCurrentProfile: jest.fn(),
+                checkCurrentProfile: jest.fn(() => {
+                    return globalMocks.profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
         }),
@@ -469,6 +474,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         blockMocks.theia = true;
         blockMocks.qpValue = "/u/thisFile";
         globalMocks.showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
+        globalMocks.showInputBox.mockReturnValueOnce("/u/thisFile");
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
@@ -831,5 +837,72 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
 
         const dirChildren = await globalMocks.testTree.getChildren(directory);
         expect(dirChildren[0].label).toEqual(sampleChildren[0].label);
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
+    const profileLoad: IProfileLoaded = {
+        name: "fake",
+        profile: {
+            host: "fake",
+            port: 999,
+            user: "fake",
+            password: "fake",
+            rejectUnauthorize: false
+        },
+        type: "zosmf",
+        failNotFound: true,
+        message: "fake"
+    };
+    const profilesForValidation = {status: "active", name: "fake"};
+    /*************************************************************************************************************
+     * Test the editSession command
+     *************************************************************************************************************/
+    it("Test the editSession command ", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
+                                                null, globalMocks.testSession, null);
+        const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    editSession: jest.fn(() => {
+                        return profileLoad;
+                    }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                };
+            })
+        });
+        globalMocks.testTree.editSession(testSessionNode);
+        expect(checkSession).toHaveBeenCalled();
+    });
+
+    /*************************************************************************************************************
+     * Test the editSession command with inactive profiles
+     *************************************************************************************************************/
+    it("Test the editSession command ", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed,
+                                                null, globalMocks.testSession, globalMocks.testProfile.name);
+        const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    editSession: jest.fn(() => {
+                        return profileLoad;
+                    }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return {status: "inactive", name: globalMocks.testProfile.name};
+                    }),
+                    profilesForValidation: [{status: "inactive", name:globalMocks.testProfile.name}],
+                    validateProfiles: jest.fn(),
+                };
+            })
+        });
+        globalMocks.testTree.editSession(testSessionNode);
+        expect(checkSession).toHaveBeenCalled();
     });
 });

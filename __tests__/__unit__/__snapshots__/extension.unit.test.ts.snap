@@ -23,6 +23,11 @@ Array [
     "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
   },
   Object {
+    "command": "zowe.all.profilelink",
+    "group": "inline",
+    "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+  },
+  Object {
     "command": "zowe.uss.editFile",
     "group": "inline",
     "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
@@ -154,6 +159,11 @@ Array [
   },
   Object {
     "command": "zowe.editSession",
+    "group": "inline",
+    "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+  },
+  Object {
+    "command": "zowe.all.profilelink",
     "group": "inline",
     "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
   },
@@ -299,6 +309,11 @@ Array [
   },
   Object {
     "command": "zowe.jobs.editSession",
+    "group": "inline",
+    "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+  },
+  Object {
+    "command": "zowe.all.profilelink",
     "group": "inline",
     "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
   },
