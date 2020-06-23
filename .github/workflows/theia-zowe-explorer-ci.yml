@@ -12,7 +12,8 @@ jobs:
         image: theiaide/theia
         ports:
           - 3000:3000
-        options: --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
+        options: --init
+        # options: --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
 
     steps:
       - uses: actions/checkout@v2
@@ -25,6 +26,9 @@ jobs:
       - run: npm run build
 
       - run: npm run lint
+
+      - name: sleep
+        run: "sleep time: 5, unit: 'MINUTES'"
 
       - name: Verify Theia
         run: firefox --screenshot screenshots/firefox-test.jpg http://127.0.0.1:3000/
