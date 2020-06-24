@@ -9,11 +9,57 @@
 *                                                                                 *
 */
 
-import { ZosmfUssApi } from "../../../src/api/ZoweExplorerZosmfApi";
-import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
-import { IZosFilesResponse } from "@zowe/cli";
+import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
+import * as zowe from "@zowe/cli";
 
 describe("Zosmf API tests", () => {
+
+    it("should test that copy data set uses default options", async () => {
+
+        const dataSet = jest.fn(async (session, toDataSet, options) => {
+            expect(options).toMatchSnapshot();
+            return { api: "", commandResponse: "", success: true };
+        });
+
+        (zowe as any).Copy = { dataSet };
+
+        const api = new ZosmfMvsApi();
+        api.getSession = jest.fn();
+        await api.copyDataSetMember({ dataSetName: "IBM.FROM", memberName: "IEFBR14" }, { dataSetName: "IBM.TO", memberName: "IEFBR15" });
+
+    });
+
+    it("should test that copy data set uses enq", async () => {
+
+        const dataSet = jest.fn(async (session, toDataSet, options) => {
+            expect(options).toMatchSnapshot();
+            return { api: "", commandResponse: "", success: true };
+        });
+
+        (zowe as any).Copy = { dataSet };
+
+        const api = new ZosmfMvsApi();
+        api.getSession = jest.fn();
+        await api.copyDataSetMember({ dataSetName: "IBM.FROM", memberName: "IEFBR14" }, { dataSetName: "IBM.TO", memberName: "IEFBR15" },
+            { enq: "SHR", fromDataSet: { dataSetName: "BROADCOM.FROM" } });
+
+    });
+
+    it("should test that copy data set uses enq only", async () => {
+
+        const dataSet = jest.fn(async (session, toDataSet, options) => {
+            expect(options).toMatchSnapshot();
+            return { api: "", commandResponse: "", success: true };
+        });
+
+        (zowe as any).Copy = { dataSet };
+
+        const api = new ZosmfMvsApi();
+        api.getSession = jest.fn();
+        await api.copyDataSetMember({ dataSetName: "IBM.FROM", memberName: "IEFBR14" }, { dataSetName: "IBM.TO", memberName: "IEFBR15" },
+            { enq: "SHR" } as any);
+
+    });
 
     it("should test that common putContent is called by putContents", async () => {
 
@@ -21,8 +67,8 @@ describe("Zosmf API tests", () => {
 
         (api.putContent as any) = jest.fn<ReturnType<typeof api.putContents>, Parameters<typeof api.putContents>>(
             async (inputFilePath: string, ussFilePath: string,
-                   binary?: boolean, localEncoding?: string,
-                   etag?: string, returnEtag?: boolean) => {
+                binary?: boolean, localEncoding?: string,
+                etag?: string, returnEtag?: boolean) => {
 
                 return {
                     success: true,
