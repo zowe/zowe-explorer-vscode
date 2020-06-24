@@ -131,6 +131,7 @@ describe("mvsCommandActions unit testing", () => {
 
 
     const mvsActions = MvsCommandHandler.getInstance();
+    const profilesForValidation = {status: "active", name: "fake"};
 
     it("tests the issueMvsCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -138,9 +139,12 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -174,9 +178,12 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -209,9 +216,12 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -244,9 +254,12 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -276,9 +289,12 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -309,9 +325,12 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
-                    validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    validProfile: profileLoader.ValidProfileEnum.VALID
                 };
             })
         });
@@ -357,8 +376,11 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [],
                     defaultProfile: undefined,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn()
                 };
             })
         });
@@ -373,10 +395,13 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -409,10 +434,13 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -444,6 +472,7 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
+                    validateProfiles: jest.fn(),
                     checkCurrentProfile: jest.fn(()=> {
                         return profileLoader.ValidProfileEnum.INVALID;
                     }),

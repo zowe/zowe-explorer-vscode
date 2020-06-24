@@ -62,6 +62,7 @@ async function createGlobalMocks() {
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(),
+                validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 editSession: globalMocks.mockEditSession
             };

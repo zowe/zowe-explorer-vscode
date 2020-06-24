@@ -1,5 +1,5 @@
 {
-    "ussNodeActions.error": "Error encountered in ",
+    "checkCurrentProfile.error": "Error encountered in ",
     "loadNamedProfile.error.profileName": "Could not find profile named: ",
     "loadNamedProfile.error.period": ".",
     "createNewConnection.invalidzosURL": "Please enter a valid host URL in the format 'company.com'.",
@@ -21,6 +21,11 @@
     "createNewConnection.profileName": "Profile name was not supplied. Operation Cancelled",
     "createNewConnection.profileType": "No profile type was chosen. Operation Cancelled",
     "createNewConnection.duplicateProfileName": "Profile name already exists. Please create a profile using a different name",
+    "promptCredentials.undefined.username": "Operation Cancelled",
+    "promptCredentials.undefined.password": "Operation Cancelled",
+    "promptCredentials.saveCredentials.button": "Save Credentials",
+    "promptCredentials.doNotSave.button": "Do Not Save",
+    "promptCredentials.saveCredentials.infoMessage": "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.",
     "deleteProfile.noProfilesLoaded": "No profiles available",
     "deleteProfile.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
     "deleteProfile.undefined.profilename": "Operation Cancelled",
