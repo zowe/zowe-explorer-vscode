@@ -67,8 +67,8 @@ describe("Zosmf API tests", () => {
 
         (api.putContent as any) = jest.fn<ReturnType<typeof api.putContents>, Parameters<typeof api.putContents>>(
             async (inputFilePath: string, ussFilePath: string,
-                binary?: boolean, localEncoding?: string,
-                etag?: string, returnEtag?: boolean) => {
+                   binary?: boolean, localEncoding?: string,
+                   etag?: string, returnEtag?: boolean) => {
 
                 return {
                     success: true,
