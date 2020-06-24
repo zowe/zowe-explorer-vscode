@@ -179,7 +179,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -289,8 +289,20 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
+            const prof = sesNode.getProfile();
+            // if new api method exists, use it
+            if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
+                return ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, remote, {
+                    binary,
+                    localEncoding: null,
+                    etag: etagToUpload,
+                    returnEtag,
+                    encoding: prof.profile.encoding
+                });
+            } else {
                 return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
                     doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+            }
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
