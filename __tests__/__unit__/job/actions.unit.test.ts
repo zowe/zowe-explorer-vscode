@@ -395,6 +395,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
     it("Checking Submit Job for PDS Member content", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         subNode.contextValue = globals.DS_PDS_CONTEXT;
@@ -413,6 +414,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
     it("Checking Submit Job for PS Dataset content", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const dataset = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         dataset.contextValue = globals.DS_DS_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
@@ -429,6 +431,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
     it("Checking Submit Job for Favourite PDS Member content", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const favoriteSession = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         favoriteSession.contextValue = globals.FAVORITE_CONTEXT;
@@ -473,6 +476,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
     it("Checking Submit Job for unsupported Dataset content", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const corruptedNode = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, null);
         corruptedNode.contextValue = "gibberish";

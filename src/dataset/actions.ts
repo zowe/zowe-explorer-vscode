@@ -299,7 +299,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    datasetProvider.checkCurrentProfile(parent);
+    await datasetProvider.checkCurrentProfile(parent);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         let label = parent.label.trim();
         if (contextually.isFavoritePds(parent) || contextually.isFavoriteDs(parent)) {
@@ -353,9 +353,6 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
             {}
         );
         panel.webview.html = webviewHTML;
-    } else {
-        vscode.window.showErrorMessage(localize("showDSAttributes.checkProfile", "Profile is invalid"));
-        return;
     }
 }
 
@@ -503,40 +500,43 @@ export async function submitMember(node: IZoweTreeNode) {
     let sessProfile;
     let regex;
     const profiles = Profiles.getInstance();
-    switch (true) {
-        case contextually.isFavoriteContext(node.getParent()):
-            regex = labelregex.exec(node.getLabel());
-            sesName = regex[1];
-            label = regex[2];
-            sessProfile = profiles.loadNamedProfile(sesName);
-            break;
-        case contextually.isFavoritePds(node.getParent()):
-            regex = labelregex.exec(node.getParent().getLabel());
-            sesName = regex[1];
-            label = regex[2] + "(" + node.label.trim()+ ")";
-            sessProfile = node.getParent().getProfile();
-            break;
-        case contextually.isSessionNotFav(node.getParent()):
-            sesName = node.getParent().getLabel();
-            label = node.label;
-            sessProfile = node.getParent().getProfile();
-            break;
-        case contextually.isPdsNotFav(node.getParent()):
-            sesName = node.getParent().getParent().getLabel();
-            label = node.getParent().getLabel() + "(" + node.label.trim()+ ")";
-            sessProfile = node.getParent().getParent().getProfile();
-            break;
-        default:
-            vscode.window.showErrorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
-            throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
-    }
-    try {
-        const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
-        const args = [sesName, job.jobid];
-        const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-        vscode.window.showInformationMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
-    } catch (error) {
-        errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
+    profiles.checkCurrentProfile(node.getProfile());
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        switch (true) {
+            case contextually.isFavoriteContext(node.getParent()):
+                regex = labelregex.exec(node.getLabel());
+                sesName = regex[1];
+                label = regex[2];
+                sessProfile = profiles.loadNamedProfile(sesName);
+                break;
+            case contextually.isFavoritePds(node.getParent()):
+                regex = labelregex.exec(node.getParent().getLabel());
+                sesName = regex[1];
+                label = regex[2] + "(" + node.label.trim()+ ")";
+                sessProfile = node.getParent().getProfile();
+                break;
+            case contextually.isSessionNotFav(node.getParent()):
+                sesName = node.getParent().getLabel();
+                label = node.label;
+                sessProfile = node.getParent().getProfile();
+                break;
+            case contextually.isPdsNotFav(node.getParent()):
+                sesName = node.getParent().getParent().getLabel();
+                label = node.getParent().getLabel() + "(" + node.label.trim()+ ")";
+                sessProfile = node.getParent().getParent().getProfile();
+                break;
+            default:
+                vscode.window.showErrorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
+                throw Error(localize("submitMember.error.invalidNode", "submitMember() called from invalid node."));
+        }
+        try {
+            const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
+            const args = [sesName, job.jobid];
+            const setJobCmd = `command:zowe.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+            vscode.window.showInformationMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
+        } catch (error) {
+            errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
+        }
     }
 }
 
@@ -640,11 +640,10 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
             default:
                 throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
-        datasetProvider.checkCurrentProfile(node);
+        await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).deleteDataSet(label);
         } else {
-            vscode.window.showErrorMessage(localize("deleteDataset.checkProfile", "Profile is invalid"));
             return;
         }
     } catch (err) {
@@ -861,48 +860,51 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     let beforeProfileName;
     let beforeMemberName;
 
-    if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
-        memberName = await vscode.window.showInputBox({placeHolder: localize("renameDataSet.name", "Name of Data Set Member")});
-        if (!memberName) {
-            return;
-        }
-    }
-
-    try {
-        ({
-            dataSetName: beforeDataSetName,
-            memberName: beforeMemberName,
-            profileName: beforeProfileName,
-        } = JSON.parse(await vscode.env.clipboard.readText()));
-    } catch (err) {
-        throw Error("Invalid clipboard. Copy from data set first");
-    }
-
-    if (beforeProfileName === profileName) {
-        if (memberName) {
-            const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(`${dataSetName}`);
-            if (responseItem.apiResponse.items.some( (singleItem) => singleItem.member === memberName.toUpperCase())) {
-                throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+        if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
+            memberName = await vscode.window.showInputBox({placeHolder: localize("renameDataSet.name", "Name of Data Set Member")});
+            if (!memberName) {
+                return;
             }
         }
-        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-            { dataSetName: beforeDataSetName, memberName: beforeMemberName },
-            { dataSetName, memberName }
-        );
 
-        if (memberName) {
-            datasetProvider.refreshElement(node);
-            let node2;
-            if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-                node2 = datasetProvider.findNonFavoritedNode(node);
+        try {
+            ({
+                dataSetName: beforeDataSetName,
+                memberName: beforeMemberName,
+                profileName: beforeProfileName,
+            } = JSON.parse(await vscode.env.clipboard.readText()));
+        } catch (err) {
+            throw Error("Invalid clipboard. Copy from data set first");
+        }
+
+        if (beforeProfileName === profileName) {
+            if (memberName) {
+                const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(`${dataSetName}`);
+                if (responseItem.apiResponse.items.some( (singleItem) => singleItem.member === memberName.toUpperCase())) {
+                    throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
+                }
+            }
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                { dataSetName: beforeDataSetName, memberName: beforeMemberName },
+                { dataSetName, memberName }
+            );
+
+            if (memberName) {
+                datasetProvider.refreshElement(node);
+                let node2;
+                if (node.contextValue.includes(globals.FAV_SUFFIX)) {
+                    node2 = datasetProvider.findNonFavoritedNode(node);
+                } else {
+                    node2 = datasetProvider.findFavoritedNode(node);
+                }
+                if (node2) {
+                    datasetProvider.refreshElement(node2);
+                }
             } else {
-                node2 = datasetProvider.findFavoritedNode(node);
+                refreshPS(node);
             }
-            if (node2) {
-                datasetProvider.refreshElement(node2);
-            }
-        } else {
-            refreshPS(node);
         }
     }
 }
