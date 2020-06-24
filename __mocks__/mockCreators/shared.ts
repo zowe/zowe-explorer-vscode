@@ -25,12 +25,12 @@ export function createPersistentConfig() {
             return {
                 sessions: ["sestest", "profile1", "profile2"],
                 favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"]
-            }
+            };
         },
         update: jest.fn(()=>{
             return {};
         })
-    }
+    };
 }
 
 export function createISession() {
@@ -161,15 +161,19 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         loadNamedProfile: jest.fn(),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
-        checkCurrentProfile: jest.fn(),
+        checkCurrentProfile: jest.fn(() => {
+            return {status: "active", name: "sestest"};
+        }),
+        profilesForValidation: [{status: "active", name: "sestest"}],
+        validateProfiles: jest.fn(),
+        editSession: jest.fn(),
         createNewConnection: jest.fn(() => {
             return { newprofile: "fake" };
         }),
         getProfiles: jest.fn(() => {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
-        editSession: jest.fn(),
-        refresh: jest.fn()
+        refresh: jest.fn(),
     } as any;
 }
 

@@ -55,6 +55,9 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             }
             break;
         default:
+            if (moreInfo === undefined) {
+                moreInfo = "Error:";
+            }
             vscode.window.showErrorMessage(moreInfo + " " +  errorDetails);
             break;
     }

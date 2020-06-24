@@ -263,13 +263,15 @@ describe("ZoweJobNode unit tests - Function flipState", () => {
     it("Tests that flipState is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
+        globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
 
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], false);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-closed.svg");
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
+        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
 
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
@@ -425,7 +427,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(blockMocks.testJobNodeNoCred);
 
-        expect(blockMocks.testJobNodeNoCred.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(blockMocks.testJobNodeNoCred.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(blockMocks.testJobNodeNoCred.owner).toEqual("MYHLQ");
         expect(blockMocks.testJobNodeNoCred.prefix).toEqual("*");
         expect(blockMocks.testJobNodeNoCred.searchId).toEqual("");
@@ -468,7 +470,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -483,7 +485,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -498,7 +500,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -513,7 +515,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
@@ -535,11 +537,11 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.qpItem = new utils.FilterItem("Owner:MEHLQ2 Prefix:*");
+        blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ2");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
     });
 
@@ -582,7 +584,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -599,7 +601,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -616,7 +618,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -633,7 +635,7 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + "_Active");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
@@ -659,12 +661,12 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.theia = true;
-        blockMocks.qpItem = new utils.FilterItem("Owner:MEHLQ Prefix:*");
+        blockMocks.qpItem = new utils.FilterItem("Owner:fake Prefix:*");
         globalMocks.mockShowQuickPick.mockReturnValueOnce(blockMocks.qpItem);
 
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
 
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].owner).toEqual("fake");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
     });
 
