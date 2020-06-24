@@ -339,71 +339,73 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         }
                     }
                 }
-                if (!searchCriteria) { // Do we have anything to search with yet?
-                    // if (searchCriteria === ZosJobsProvider.defaultDialogText) {
-                    let options: vscode.InputBoxOptions;
-                    let owner: string;
-                    let prefix: string;
-                    let jobid: string;
-                    // manually entering a search
-                    if (!hasHistory || choice === this.createOwner) { // User has selected owner/prefix option
-                        options = {
-                            prompt: localize("jobsFilterPrompt.option.prompt.owner",
-                                "Enter the Job Owner. Default is *."),
-                            validateInput: (value: string) => (value.match(/ /g) ? localize("jobs.enter.valid.owner",
-                                "Please enter a valid owner name (no spaces allowed).") : ""),
-                            value: node.owner
-                        };
-                        // get user input
-                        owner = await vscode.window.showInputBox(options);
-                        if (owner === undefined) {
-                            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                            return;
-                        }
-                        if (!owner) {
-                            owner = "*";
-                        }
-                        owner = owner.toUpperCase();
-                        options = {
-                            prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
-                            value: node.prefix
-                        };
-                        // get user input
-                        prefix = await vscode.window.showInputBox(options);
-                        if (prefix === undefined) {
-                            vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                            return;
-                        }
-                        if (!prefix) {
-                            prefix = "*";
-                        }
-                        prefix = prefix.toUpperCase();
-                        if (!hasHistory || choice === this.createId) {
-                            options = {
-                                prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
-                                value: node.searchId
-                            };
-                            // get user input
-                            jobid = await vscode.window.showInputBox(options);
-                            if (jobid === undefined) {
-                                vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
-                                return;
-                            }
-                        }
-                    } else { // User has selected JobId option
+                let options: vscode.InputBoxOptions;
+                let owner: string;
+                let prefix: string;
+                let jobid: string;
+                if (searchCriteria) {
+                    owner = searchCriteria.match(/Owner:/) ? searchCriteria.match(/(?<=Owner\:).*(?=\s)/)[0] : null;
+                    prefix = searchCriteria.match(/Prefix:/) ? searchCriteria.match(/(?<=Prefix\:).*$/)[0] : null;
+                    jobid = searchCriteria.match(/JobId:/) ? searchCriteria.match(/(?<=JobId\:).*$/)[0] : null;
+                }
+                // manually entering a search
+                if (!hasHistory || choice === this.createOwner || searchCriteria.match(/Owner:/)) { // User has selected owner/prefix option
+                    options = {
+                        prompt: localize("jobsFilterPrompt.option.prompt.owner",
+                            "Enter the Job Owner. Default is *."),
+                        validateInput: (value: string) => (value.match(/ /g) ? localize("jobs.enter.valid.owner",
+                            "Please enter a valid owner name (no spaces allowed).") : ""),
+                        value: owner
+                    };
+                    // get user input
+                    owner = await vscode.window.showInputBox(options);
+                    if (owner === undefined) {
+                        vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                        return;
+                    }
+                    if (!owner) {
+                        owner = "*";
+                    }
+                    owner = owner.toUpperCase();
+                    options = {
+                        prompt: localize("jobsFilterPrompt.option.prompt.prefix", "Enter a Job prefix. Default is *."),
+                        value: prefix
+                    };
+                    // get user input
+                    prefix = await vscode.window.showInputBox(options);
+                    if (prefix === undefined) {
+                        vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                        return;
+                    }
+                    if (!prefix) {
+                        prefix = "*";
+                    }
+                    prefix = prefix.toUpperCase();
+                    if (!hasHistory || choice === this.createId) {
                         options = {
                             prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
-                            value: node.searchId
+                            value: jobid
                         };
                         // get user input
                         jobid = await vscode.window.showInputBox(options);
-                        if (!jobid) {
+                        if (jobid === undefined) {
                             vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
                             return;
                         }
                     }
-                    searchCriteria = this.createSearchLabel(owner, prefix, jobid);
+                } else { // User has selected JobId option
+                    options = {
+                        prompt: localize("jobsFilterPrompt.option.prompt.jobid", "Enter a Job id"),
+                        value: jobid
+                    };
+                    // get user input
+                    jobid = await vscode.window.showInputBox(options);
+                    if (!jobid) {
+                        vscode.window.showInformationMessage(localize("jobsFilterPrompt.enterPrefix", "Search Cancelled"));
+                        return;
+                    }
                 }
+                searchCriteria = this.createSearchLabel(owner, prefix, jobid);
                 this.applySearchLabelToNode(node, searchCriteria);
             } else {
                 // executing search from saved search in favorites
@@ -510,12 +512,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             });
         }
         return this.createSearchLabel(owner, prefix, jobId);
-    }
-
-    public async checkCurrentProfile(node: IZoweJobTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
     }
 
     /**

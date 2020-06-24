@@ -531,6 +531,11 @@
           "group": "inline"
         },
         {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.all.profilelink",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
           "command": "zowe.uss.editFile",
           "group": "inline"
@@ -663,6 +668,11 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.all.profilelink",
           "group": "inline"
         },
         {
@@ -808,6 +818,11 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.all.profilelink",
           "group": "inline"
         },
         {

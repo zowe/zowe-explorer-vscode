@@ -67,6 +67,7 @@ function createGlobalMocks() {
         extensionPath: path.join(__dirname, "..", "..")
     } as vscode.ExtensionContext));
     const mock = new extensionMock();
+    const profilesForValidation = {status: "active", name: "fake"};
     globals.initLogger(mock);
 
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
@@ -101,7 +102,11 @@ function createGlobalMocks() {
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
                 validProfile: ValidProfileEnum.VALID,
-                checkCurrentProfile: jest.fn(),
+                checkCurrentProfile: jest.fn(() => {
+                    return profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile
             };
         })
@@ -198,6 +203,7 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
     it("Tests that refreshAllUSS() is executed successfully", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const profilesForValidation = {status: "active", name: "fake"};
 
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -211,6 +217,10 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
                         return [{name: globalMocks.testProfile.name, profile: globalMocks.testProfile},
                                 {name: globalMocks.testProfile.name, profile: globalMocks.testProfile}];
                     }),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     refresh: jest.fn(),
                 };
             })
