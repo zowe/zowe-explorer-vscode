@@ -9,12 +9,12 @@ jobs:
 
     services:
       theia:
-        image: heroku/nodejs-hello-world
-        # image: theiaide/theia
+        # image: heroku/nodejs-hello-world
+        image: theiaide/theia
         ports:
           - 3000:3000
-        # options: --init
-        options: --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
+        options: --init
+        # options: --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
 
     steps:
       - uses: actions/checkout@v2
@@ -31,13 +31,13 @@ jobs:
       - name: sleep
         run: sleep 300
 
-      - name: Verify Theia
-        run: firefox --screenshot screenshots/firefox-test.jpg http://localhost:3000/
+      # - name: Verify Theia
+      #   run: firefox --screenshot screenshots/firefox-test.jpg http://localhost:3000/
 
-      - name: Upload screenshot
-        uses: actions/upload-artifact@v1
-        with:
-          name: results
+      # - name: Upload screenshot
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: results
           path: screenshots/firefox-test.jpg
 
       - run: npm run test:theia
