@@ -10,12 +10,10 @@ jobs:
     services:
       theia:
         # image: heroku/nodejs-hello-world
-        image: theiaide/theia
+        image: theiaide/theia:next
         ports:
           - 3000:3000
-        options: -it --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
-        volumes:
-          - /:/home/project
+        options: -it --init --health-cmd "curl --fail localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
 
     steps:
       - uses: actions/checkout@v2
