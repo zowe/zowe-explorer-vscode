@@ -3,7 +3,6 @@ name: Theia Zowe Explorer CI
 
 on: [push]
 
-### NEED PRELIM JOB TO BUILD AND STORE VSIX
 # Variables for all jobs
 env:
   PACKAGING_DIRECTORY: temp
@@ -11,7 +10,9 @@ env:
 
 jobs:
 
+
   create_vsix:
+
 
     runs-on: ubuntu-latest
 
@@ -29,20 +30,24 @@ jobs:
       - run: yarn build
 
       - name: Create extension install directory
-        run: mkdir -p ${PACKAGING_DIRECTORY}/plugins && chmod -R 777 ${PACKAGING_DIRECTORY}
+        run: mkdir -p temp/plugins && chmod -R 777 temp
 
       - name: Build vsix
-        run: yarn vsce package -o ${PACKAGING_DIRECTORY}/plugins/${PACKAGE_NAME}
+        run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
 
       # upload for later download / deployment
       - name: Upload vsix
         uses: actions/upload-artifact@v1
         with:
-          name: ${PACKAGE_NAME}
-          path: ${PACKAGING_DIRECTORY}/plugins/${PACKAGE_NAME}
+          name: vscode-extension-for-zowe.vsix
+          path: temp/plugins/vscode-extension-for-zowe.vsix
+          
 
   # Build & test Zowe Explore in Theia
   build:
+
+    # wait until vsix is built
+    needs: create_vsix
 
     runs-on: ubuntu-latest
 
@@ -66,7 +71,6 @@ jobs:
       # equivalent to `npm ci`
       - run: yarn install --frozen-lockfile
 
-      # copy test data file needed for build :-(
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
 
@@ -77,8 +81,8 @@ jobs:
       - name: Download vsix
         uses: actions/download-artifact@v1
         with:
-          name: ${PACKAGE_NAME}
-          path: ${PACKAGING_DIRECTORY}/plugins/${PACKAGE_NAME}
+          name: vscode-extension-for-zowe.vsix
+          path: temp/plugins/vscode-extension-for-zowe.vsix
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
