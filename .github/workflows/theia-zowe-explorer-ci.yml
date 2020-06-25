@@ -3,6 +3,7 @@ name: Theia Zowe Explorer CI
 
 on: [push]
 
+
 jobs:
 
   # Build & test Zowe Explore in Theia
@@ -34,7 +35,8 @@ jobs:
       - uses: actions/checkout@v2
 
       # equivalent to `npm ci`
-      - run: yarn install --frozen-lockfile
+      - run: npm ci
+      # - run: yarn install --frozen-lockfile
 
       # copy test data file needed for build :-(
       - name: Create test data file
