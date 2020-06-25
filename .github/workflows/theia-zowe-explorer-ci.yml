@@ -18,7 +18,7 @@ jobs:
 
     steps:
       # - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=1s --health-timeout=1s --health-retries 180 -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
-      - run: docker run --init -d -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
+      - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 -d -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
 
       - uses: actions/checkout@v2
 
@@ -31,8 +31,8 @@ jobs:
 
       - run: yarn lint
 
-      - name: sleep
-        run: sleep 300
+      # - name: sleep
+      #   run: sleep 300
 
       # - name: Verify Theia
       #   run: firefox --screenshot screenshots/firefox-test.jpg http://localhost:3000/
