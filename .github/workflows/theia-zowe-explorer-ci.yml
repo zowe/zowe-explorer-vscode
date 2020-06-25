@@ -7,20 +7,21 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # services:
-      # theia:
+    services:
+      theia:
         # image: heroku/nodejs-hello-world
-        # image: theiaide/theia:next
+        image: theiaide/theia:next
         
-        # ports:
-          # - 3000:3000
+        ports:
+          - 3000:3000
+        options: --init
         # options: --init --health-cmd "curl --fail localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
 
     steps:
       # - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=1s --health-timeout=1s --health-retries 180 -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
       # - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 -d -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
       # - run: docker run --init -d -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
-      - run: docker run --init -d -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
+      # - run: docker run --init -d -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
 
       - uses: actions/checkout@v2
 
@@ -33,16 +34,10 @@ jobs:
 
       - run: yarn lint
 
-      - run: curl --fail http://localhost:3000
-      # - name: Verify Theia
-      #   run: firefox --screenshot screenshots/firefox-test.jpg http://localhost:3000/
+      # - name: Log service running
+      #   run: docker ps -a
 
-      - run: docker ps -a
-
-      # - name: Upload screenshot
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: results
-      #     path: screenshots/firefox-test.jpg
+      - name: Verify Theia accessible
+        run: curl --fail http://localhost:3000
 
       - run: yarn test:theia
