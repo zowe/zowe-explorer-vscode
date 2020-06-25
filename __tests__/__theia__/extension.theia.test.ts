@@ -31,7 +31,7 @@ describe("Extension Theia Tests", () => {
     it("should open Zowe Explorer and find the Favorites node", async () => {
         await driver.get("http://localhost:3000");
         const source = (await driver).getPageSource();
-        console.log(`@source is ${source}`);
+        process.stdout.write(`@source is ${source}`);
         await driver.sleep(SLEEPTIME);
         const button = driver.wait(until.elementLocated(By.id("shell-tab-plugin-view-container:zowe")));
         button.click();
