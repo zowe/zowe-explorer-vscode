@@ -28,20 +28,9 @@ jobs:
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
 
-      - run: docker ps -a
-
       - run: yarn build
 
       - run: yarn lint
-
-      - name: sleep
-        run: sleep 30
-
-      - run: docker ps -a
-      - run: curl --fail http://localhost:3000
-
-      - name: sleep
-        run: sleep 30
 
       - run: curl --fail http://localhost:3000
       # - name: Verify Theia
