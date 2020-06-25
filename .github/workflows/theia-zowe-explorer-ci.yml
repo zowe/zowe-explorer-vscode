@@ -13,20 +13,21 @@ jobs:
         image: theiaide/theia
         ports:
           - 3000:3000
-        options: --init
-        # options: --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
+        options: --it --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
+        volumes:
+          - $(pwd):/home/project
 
     steps:
       - uses: actions/checkout@v2
 
-      - run: npm ci
+      - run: yarn ci
 
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
 
-      - run: npm run build
+      - run: yarn build
 
-      - run: npm run lint
+      - run: yarn lint
 
       - name: sleep
         run: sleep 300
@@ -40,4 +41,4 @@ jobs:
       #     name: results
       #     path: screenshots/firefox-test.jpg
 
-      - run: npm run test:theia
+      - run: yarn test:theia
