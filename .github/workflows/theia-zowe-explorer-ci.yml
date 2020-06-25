@@ -10,7 +10,7 @@ jobs:
 
     # Variables for all steps
     env:
-      PACKAGING_DIRECTORY: .tmp
+      PACKAGING_DIRECTORY: temp
       PACKAGE_NAME: vscode-extension-for-zowe
 
     # Ubuntu for running containers
@@ -24,7 +24,7 @@ jobs:
         ports:
           - 3000:3000
         volumes:
-          - "${pwd}/${PACKAGING_DIRECTORY}:/home/theia/.theia"
+          - ${PACKAGING_DIRECTORY}:/home/theia/.theia
         # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 
         options: --init
 
