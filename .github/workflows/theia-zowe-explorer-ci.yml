@@ -1,43 +1,59 @@
+# Workflow name for GitHub Actions
 name: Theia Zowe Explorer CI
 
 on: [push]
 
 jobs:
+
+  # Build & test Zowe Explore in Theia
   build:
 
+    # Variables for all steps
+    env:
+      PACKAGING_DIRECTORY: .tmp
+      PACKAGE_NAME: vscode-extension-for-zowe
+
+    # Ubuntu for running containers
     runs-on: ubuntu-latest
 
+    # Theia service, you can alternative have a step like (but it seemed artificial timeouts were needed in testing):
+    # - run: docker run --init -d -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
     services:
       theia:
-        # image: heroku/nodejs-hello-world
         image: theiaide/theia:next
-        
         ports:
           - 3000:3000
+        volumes:
+          - "${PACKAGING_DIRECTORY}":/home/theia/.theia
+        # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 
         options: --init
-        # options: --init --health-cmd "curl --fail localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
 
     steps:
-      # - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=1s --health-timeout=1s --health-retries 180 -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
-      # - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 -d -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
-      # - run: docker run --init -d -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
-      # - run: docker run --init -d -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
 
+      # check out source
       - uses: actions/checkout@v2
 
+      # equivalent to `npm ci`
       - run: yarn install --frozen-lockfile
 
+      # copy test data file needed for build :-(
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
 
       - run: yarn build
-
       - run: yarn lint
 
-      # - name: Log service running
-      #   run: docker ps -a
+      - name: Create extension install directory
+        run: mkdir -p ${PACKAGING_DIRECTORY}/plugins && chmod -R 777 ${PACKAGING_DIRECTORY}
+
+      - name: Build vsix
+        run: yarn vsce package -o ${PACKAGING_DIRECTORY}/plugins/${PACKAGE_NAME}.vsix
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
 
       - run: yarn test:theia
+
+      # upload for later download / deployment
+      - name: Upload vsix
+        uses: actions/upload-artifact@v1
