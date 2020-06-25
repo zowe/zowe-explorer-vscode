@@ -17,7 +17,8 @@ jobs:
         # options: --init --health-cmd "curl --fail localhost:3000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries 180
 
     steps:
-      - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=1s --health-timeout=1s --health-retries 180 -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
+      # - run: docker run --init --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=1s --health-timeout=1s --health-retries 180 -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
+      - run: docker run --init -p 3000:3000 --expose 9229 -p 9229:9229 -v "$(pwd):/home/project:cached" theiaide/theia:next --inspect=0.0.0.0:9229
 
       - uses: actions/checkout@v2
 
