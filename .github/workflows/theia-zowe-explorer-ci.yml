@@ -38,6 +38,6 @@ jobs:
       #   uses: actions/upload-artifact@v1
       #   with:
       #     name: results
-          path: screenshots/firefox-test.jpg
+      #     path: screenshots/firefox-test.jpg
 
       - run: npm run test:theia
