@@ -3,16 +3,7 @@ name: Theia Zowe Explorer CI
 
 on: [push]
 
-
-##### NEED TO DOWNLOAD BEFORE SECOND JOB RUNS
-
-# Variables for all jobs
-env:
-  PACKAGING_DIRECTORY: temp
-  PACKAGE_NAME: vscode-extension-for-zowe.vsix
-
 jobs:
-
 
   build:
 
@@ -39,7 +30,13 @@ jobs:
       - name: Build vsix
         run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
 
-      - run: docker run --init -d -p 3000:3000 -v "temp:/home/theia/.theia" theiaide/theia:next
+      # Verify vsix
+      - run: ls -la temp/plugins
+
+      - name: Start Theia
+        run: docker run --name theia --init -d -p 3000:3000 -v "${PWD}/temp:/home/theia/.theia" theiaide/theia
+      # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload 
+      #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
       #   theia:
       #     image: theiaide/theia:next
@@ -57,6 +54,9 @@ jobs:
         with:
           name: vscode-extension-for-zowe.vsix
           path: temp/plugins/vscode-extension-for-zowe.vsix
+
+      - name: Verify plugin loaded
+        run: docker exec -i theia ls -la .theia/plugins
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
