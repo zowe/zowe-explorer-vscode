@@ -574,6 +574,103 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
     });
 });
 
+describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
+    function createBlockMocks() {
+        const session = createISessionWithoutCredentials();
+        const iJob = createIJobObject();
+        const iJobFile = createIJobFileObject();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const treeView = createTreeView();
+        const testJobTree = createJobsTree(session, iJob, imperativeProfile, treeView);
+        const jesApi = createJesApi(imperativeProfile);
+        bindJesApi(jesApi);
+
+        return {
+            session,
+            iJob,
+            iJobFile,
+            imperativeProfile,
+            datasetSessionNode,
+            profileInstance,
+            jesApi,
+            testJobTree
+        };
+    }
+
+    it("Checking common execution of function", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
+            blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        job.contextValue = globals.JOBS_SESSION_CONTEXT;
+        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+
+        await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
+
+        expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
+        expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
+    });
+    it("Checking failed attempt to execute the function", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
+            blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        job.contextValue = globals.JOBS_SESSION_CONTEXT;
+        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+        blockMocks.testJobTree.checkCurrentProfile.mockImplementationOnce(() => {
+            throw Error("test");
+        });
+
+        try {
+            await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
+        } catch (err) {
+            expect(err).toEqual(Error("test"));
+        }
+
+        expect(blockMocks.testJobTree.refreshElement).not.toHaveBeenCalled();
+    });
+    it("Checking execution of function with credential prompt", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
+            blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        job.contextValue = globals.JOBS_SESSION_CONTEXT;
+        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+
+        await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
+
+        expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
+        expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
+    });
+    it("Checking execution of function with credential prompt for favorite", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const job = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null,
+            blockMocks.session, blockMocks.iJob, blockMocks.imperativeProfile);
+        job.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        mocked(zowe.ZosmfSession.createBasicZosmfSession).mockReturnValueOnce(blockMocks.session);
+
+        await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
+
+        expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
+        expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
+    });
+    it("", async () => {
+    });
+});
+
 describe("refreshAll", () => {
     function createBlockMocks() {
         const newMocks = {
