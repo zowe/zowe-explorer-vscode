@@ -237,6 +237,25 @@ export function isSession(node: TreeItem): boolean {
  * @param node
  * @return true if a session, false otherwise
  */
+export function isSessionInactive(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+    + globals.DS_SESSION_CONTEXT + ")(.*" + globals.INACTIVE_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is a session but not a favorite
+ * @param node
+ * @return true if a session, false otherwise
+ */
+export function isSessionActive(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
+    + globals.DS_SESSION_CONTEXT + ")(.*" + globals.ACTIVE_CONTEXT + ")").test(node.contextValue);
+}
+/**
+ * Helper function which identifies if the node is a session but not a favorite
+ * @param node
+ * @return true if a session, false otherwise
+ */
 export function isSessionNotFav(node: TreeItem): boolean {
     return new RegExp("^((?!.*" + globals.FAV_SUFFIX + ")(" + globals.JOBS_SESSION_CONTEXT + "|" + globals.USS_SESSION_CONTEXT + "|"
                         + globals.DS_SESSION_CONTEXT + "))").test(node.contextValue);

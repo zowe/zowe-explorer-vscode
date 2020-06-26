@@ -42,9 +42,20 @@ export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
 export const VSAM_CONTEXT = "vsam";
+export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
+export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
+
+/**
+ * The types of persistence schemas wich are available in settings.json
+ */
+export enum PersistenceSchemaEnum {
+    Dataset = "Zowe-DS-Persistent",
+    USS = "Zowe-USS-Persistent",
+    Job = "Zowe-Jobs-Persistent"
+}
 
 /**
  * Defines all global variables

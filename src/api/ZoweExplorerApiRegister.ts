@@ -59,6 +59,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     }
 
     /**
+     * Static lookup of an API Common interface for a given profile for any of the registries supported.
+     * @param profile {IProfileLoaded} a profile to be used with this instance of the API returned
+     * @returns an instance of the Commin API that uses the profile provided; could be an instance any of its subclasses
+     */
+    public static getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
+        return ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
+    }
+
+    /**
      * Lookup for generic extender API implementation.
      * @returns an instance of the API
      */
@@ -219,6 +228,25 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             throw new Error(
                 localize("getJesApi.error", "Internal error: Tried to call a non-existing JES API in API register: ") + profile.type);
         }
+    }
+
+    public getCommonApi(profile: IProfileLoaded): ZoweExplorerApi.ICommon {
+        let result: ZoweExplorerApi.ICommon;
+        try {
+            result = this.getUssApi(profile);
+        } catch (error) {
+            try {
+                result = this.getMvsApi(profile);
+            } catch (error) {
+                try {
+                result = this.getJesApi(profile);
+                } catch (error) {
+                    throw new Error(
+                        localize("getCommonApi.error", "Internal error: Tried to call a non-existing Common API in API register: ") + profile.type);
+                }
+            }
+        }
+        return result;
     }
 
     /**
