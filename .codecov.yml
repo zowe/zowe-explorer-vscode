@@ -7,7 +7,14 @@ coverage:
   range: "80...100"
 
   status:
-    project: yes
+    project:
+      default:
+        against: parent
+        target: 90%
+        threshold: 1%
+        if_no_uploads: success
+        if_not_found: success
+        if_ci_failed: error
     patch:
       default:
         against: parent
