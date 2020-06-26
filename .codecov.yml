@@ -10,6 +10,10 @@ coverage:
     project: yes
     patch:
       default:
+        against: parent
         target: auto
-        threshold: 0%
+        threshold: 2%
+        if_no_uploads: success
+        if_not_found: success
+        if_ci_failed: error
     changes: no
