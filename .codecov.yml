@@ -9,17 +9,12 @@ coverage:
   status:
     project:
       default:
-        against: parent
-        target: auto
-        threshold: 2%
-        if_no_uploads: success
-        if_not_found: success
-        if_ci_failed: error
+        threshold: 1%
     patch:
       default:
         against: parent
         target: auto
-        threshold: 2%
+        threshold: 1%
         if_no_uploads: success
         if_not_found: success
         if_ci_failed: error
