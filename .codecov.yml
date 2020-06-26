@@ -8,5 +8,8 @@ coverage:
 
   status:
     project: yes
-    patch: no
+    patch:
+      default:
+        target: auto
+        threshold: 0%
     changes: no
