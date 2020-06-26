@@ -3,6 +3,9 @@ name: Theia Zowe Explorer CI
 
 on: [push]
 
+
+##### NEED TO DOWNLOAD BEFORE SECOND JOB RUNS
+
 # Variables for all jobs
 env:
   PACKAGING_DIRECTORY: temp
