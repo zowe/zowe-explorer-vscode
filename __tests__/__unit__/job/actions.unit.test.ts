@@ -667,8 +667,6 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
-    it("", async () => {
-    });
 });
 
 describe("refreshAll", () => {
