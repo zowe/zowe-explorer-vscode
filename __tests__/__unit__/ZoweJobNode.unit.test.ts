@@ -50,6 +50,8 @@ describe("Zos Jobs Unit Tests", () => {
         };
     });
 
+    const profilesForValidation = {status: "active", name: "fake"};
+
     beforeAll(() => {
         Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
     });
@@ -217,7 +219,10 @@ describe("Zos Jobs Unit Tests", () => {
                         getDefaultProfile: mockLoadDefaultProfile,
                         loadNamedProfile: mockLoadNamedProfile,
                         validProfile: profileLoader.ValidProfileEnum.VALID,
-                        checkCurrentProfile: jest.fn(),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                         promptCredentials: jest.fn(()=> {
                             return ["fakeUser","","fakeEncoding"];
                         }),
@@ -349,11 +354,11 @@ describe("Zos Jobs Unit Tests", () => {
             Object.defineProperty(testJobsProvider, "refresh", {value: refresh});
             refresh.mockReset();
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], false);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-closed.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
             await testJobsProvider.flipState(testJobsProvider.mSessionNodes[1], true);
-            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-default-open.svg");
+            expect(JSON.stringify(testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
 
             const job = new Job("JOB1283", vscode.TreeItemCollapsibleState.Collapsed, testJobsProvider.mSessionNodes[0],
                 testJobsProvider.mSessionNodes[1].getSession(), iJob, profileOne);
@@ -392,7 +397,11 @@ describe("Zos Jobs Unit Tests", () => {
                     return {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         getDefaultProfile: () => ({name: "firstName"}),
-                        promptCredentials: undefined
+                        promptCredentials: undefined,
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -447,7 +456,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("");
             showInputBox.mockReturnValueOnce("");
             await testJobsProvider.searchPrompt(newjobNode);
-            expect(newjobNode.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(newjobNode.contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(newjobNode.owner).toEqual("MYHLQ");
             expect(newjobNode.prefix).toEqual("*");
             expect(newjobNode.searchId).toEqual("");
@@ -544,7 +553,10 @@ describe("Zos Jobs Unit Tests", () => {
                         allProfiles: [{name: "firstName"}, {name: "secondName"}],
                         getDefaultProfile: () => ({name: "firstName"}),
                         validProfile: profileLoader.ValidProfileEnum.INVALID,
-                        checkCurrentProfile: jest.fn()
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
@@ -576,7 +588,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce(""); // need the jobId in this case
             // Assert choosing the new filter option followed by an owner
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQY");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -587,7 +599,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by a prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -598,7 +610,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by an owner and prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQX");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -612,7 +624,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO12345");
             // Assert choosing the new filter option followed by a Job id
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
@@ -629,6 +641,8 @@ describe("Zos Jobs Unit Tests", () => {
             showQuickPick.mockReset();
             qpItem = new utils.FilterItem("Owner:MEHLQ Prefix:*");
             showQuickPick.mockReturnValueOnce(qpItem);
+            showInputBox.mockReturnValueOnce("MEHLQ");
+            showInputBox.mockReturnValueOnce("*");
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
@@ -685,7 +699,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce(""); // need the jobId in this case
             // Assert choosing the new filter option followed by an owner
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -695,7 +709,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by a prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -704,7 +718,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO*");
             // Assert choosing the new filter option followed by an owner and prefix
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MYHLQ");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("STO*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("");
@@ -713,7 +727,7 @@ describe("Zos Jobs Unit Tests", () => {
             showInputBox.mockReturnValueOnce("STO12345");
             // Assert choosing the new filter option followed by a Job id
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
-            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT);
+            expect(testJobsProvider.mSessionNodes[1].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
             expect(testJobsProvider.mSessionNodes[1].searchId).toEqual("STO12345");
@@ -726,6 +740,8 @@ describe("Zos Jobs Unit Tests", () => {
             expect(showInformationMessage.mock.calls[0][0]).toBe("Search Cancelled");
 
             qpItem = new utils.FilterItem("Owner:MEHLQ2 Prefix:*");
+            showInputBox.mockReturnValueOnce("MEHLQ2");
+            showInputBox.mockReturnValueOnce("*");
             await testJobsProvider.searchPrompt(testJobsProvider.mSessionNodes[1]);
             expect(testJobsProvider.mSessionNodes[1].owner).toEqual("MEHLQ2");
             expect(testJobsProvider.mSessionNodes[1].prefix).toEqual("*");
@@ -862,11 +878,42 @@ describe("Zos Jobs Unit Tests", () => {
                         editSession: jest.fn(() => {
                             return profileLoad;
                         }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return profilesForValidation;
+                        }),
+                        validateProfiles: jest.fn(),
                     };
                 })
             });
             const testJobsProvider = await createJobsTree(Logger.getAppLogger());
             const checkSession = jest.spyOn(testJobsProvider, "editSession");
+            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            testJobsProvider.editSession(jobNode);
+            expect(checkSession).toHaveBeenCalled();
+        });
+
+        it("Test the editSession command with inactive profile ", async () => {
+            Object.defineProperty(profileLoader.Profiles, "getInstance", {
+                value: jest.fn(() => {
+                    return {
+                        allProfiles: [{name: "firstName"}, {name: "secondName"}],
+                        defaultProfile: {name: "firstName"},
+                        loadNamedProfile: mockLoadNamedProfile,
+                        getDefaultProfile: jest.fn(),
+                        editSession: jest.fn(() => {
+                            return profileLoad;
+                        }),
+                        checkCurrentProfile: jest.fn(() => {
+                            return {status: "inactive", name: profileOne.name};
+                        }),
+                        profilesForValidation: [{status: "inactive", name:profileOne.name}],
+                        validateProfiles: jest.fn(),
+                    };
+                })
+            });
+            const testJobsProvider = await createJobsTree(Logger.getAppLogger());
+            const checkSession = jest.spyOn(testJobsProvider, "editSession");
+            jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
             testJobsProvider.editSession(jobNode);
             expect(checkSession).toHaveBeenCalled();
         });
