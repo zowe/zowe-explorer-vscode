@@ -10,8 +10,8 @@ coverage:
     project:
       default:
         against: parent
-        target: 90%
-        threshold: 1%
+        target: auto
+        threshold: 2%
         if_no_uploads: success
         if_not_found: success
         if_ci_failed: error
