@@ -358,7 +358,6 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
 }
 
 /**
-
  * Submit the contents of the editor as JCL.
  *
  * @export
