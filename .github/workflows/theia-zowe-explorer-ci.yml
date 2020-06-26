@@ -14,8 +14,7 @@ env:
 jobs:
 
 
-  create_vsix:
-
+  build:
 
     runs-on: ubuntu-latest
 
@@ -24,6 +23,8 @@ jobs:
       - uses: actions/checkout@v2
 
       # install dependencies
+      #   equivalent to `npm ci`
+      #   - run: yarn install --frozen-lockfile
       - run: npm ci
 
       # copy test data file needed for build :-(
@@ -38,51 +39,21 @@ jobs:
       - name: Build vsix
         run: yarn vsce package -o temp/plugins/vscode-extension-for-zowe.vsix
 
-      # upload for later download / deployment
-      - name: Upload vsix
-        uses: actions/upload-artifact@v1
-        with:
-          name: vscode-extension-for-zowe.vsix
-          path: temp/plugins/vscode-extension-for-zowe.vsix
-          
-
-  # Build & test Zowe Explore in Theia
-  build:
-
-    # wait until vsix is built
-    needs: create_vsix
-
-    runs-on: ubuntu-latest
-
-    # Theia service, you can alternative have a step like (but it seemed artificial timeouts were needed in testing):
-    # - run: docker run --init -d -p 3000:3000 -v "$(pwd):/home/project:cached" theiaide/theia:next
-    services:
-      theia:
-        image: theiaide/theia:next
-        ports:
-          - 3000:3000
-        volumes:
-          - temp:/home/theia/.theia
-        # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 
-        options: --init
-
-    steps:
-
-      # check out source
-      - uses: actions/checkout@v2
-
-      # equivalent to `npm ci`
-      - run: yarn install --frozen-lockfile
-
-      - name: Create test data file
-        run: cp resources/testProfileData.example.ts resources/testProfileData.ts
-
-      - run: yarn build
+      - run: docker run --init -d -p 3000:3000 -v "temp:/home/theia/.theia" theiaide/theia:next
+      # services:
+      #   theia:
+      #     image: theiaide/theia:next
+      #     ports:
+      #       - 3000:3000
+      #     volumes:
+      #       - temp:/home/theia/.theia
+      #     # --health-cmd "curl --fail http://localhost:3000 || exit 1" --health-interval=5s --health-timeout=5s --health-retries 60 
+      #     options: --init
 
       - run: yarn lint
 
-      - name: Download vsix
-        uses: actions/download-artifact@v1
+      - name: Upload vsix
+        uses: actions/upload-artifact@v1
         with:
           name: vscode-extension-for-zowe.vsix
           path: temp/plugins/vscode-extension-for-zowe.vsix
