@@ -26,8 +26,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZowe
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { closeOpenedTextFile } from "../utils/workspace";
-import { setFileSaved } from "../utils/workspace";
+import { closeOpenedTextFile, setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
