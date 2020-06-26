@@ -1,7 +1,9 @@
 {
     "issueMvsCommand.outputchannel.title": "Zowe MVS Command",
     "issueMvsCommand.quickPickOption": "Select the Profile to use to submit the command",
+    "issueMvsCommand.undefined.profilename": "Operation Cancelled",
     "issueMvsCommand.noProfilesLoaded": "No profiles available",
+    "issueMvsCommand.checkProfile": "Profile is invalid",
     "issueMvsCommand.command.hostname": "Select a command to run immediately against ",
     "issueMvsCommand.command.edit": " (An option to edit will follow)",
     "issueMvsCommand.options.noselection": "No selection made.",

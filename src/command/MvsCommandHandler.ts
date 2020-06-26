@@ -13,11 +13,12 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { IProfileLoaded, ISession, Session, IProfile } from "@zowe/imperative";
 import * as globals from "../globals";
-import { Profiles } from "../Profiles";
+import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 
 import * as nls from "vscode-nls";
+import { IZoweTreeNode } from "../api/IZoweTreeNode";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -61,11 +62,9 @@ export class MvsCommandHandler {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueMvsCommand(session?: Session, command?: string) {
+    public async issueMvsCommand(session?: Session, command?: string, node?: IZoweTreeNode) {
+        let zosmfProfile: IProfileLoaded;
         if (!session) {
-            let usrNme: string;
-            let passWrd: string;
-            let baseEncd: string;
             const profiles = Profiles.getInstance();
             const allProfiles: IProfileLoaded[] = profiles.allProfiles;
             const profileNamesList = allProfiles.map((temprofile) => {
@@ -78,36 +77,32 @@ export class MvsCommandHandler {
                     canPickMany: false
                 };
                 const sesName = await vscode.window.showQuickPick(profileNamesList, quickPickOptions);
-                const zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                const updProfile = zosmfProfile.profile as ISession;
-                if ((!updProfile.user) || (!updProfile.password)) {
-                    try {
-                        const values = await Profiles.getInstance().promptCredentials(zosmfProfile.name);
-                        if (values !== undefined) {
-                            usrNme = values [0];
-                            passWrd = values [1];
-                            baseEncd = values [2];
-                        }
-                    } catch (error) {
-                        vscode.window.showErrorMessage(error.message);
-                    }
-                    if (usrNme !== undefined && passWrd !== undefined && baseEncd !== undefined) {
-                        updProfile.user = usrNme;
-                        updProfile.password = passWrd;
-                        updProfile.base64EncodedAuth = baseEncd;
-                    }
+                if (sesName === undefined) {
+                    vscode.window.showInformationMessage(localize("issueMvsCommand.undefined.profilename",
+                        "Operation Cancelled"));
+                    return;
                 }
-                session = zowe.ZosmfSession.createBasicZosmfSession(updProfile as IProfile);
+                zosmfProfile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
             } else {
                 vscode.window.showInformationMessage(localize("issueMvsCommand.noProfilesLoaded", "No profiles available"));
                 return;
             }
+        } else {
+            zosmfProfile = node.getProfile();
         }
-        let command1: string = command;
-        if (!command) {
-            command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
+        await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            const updProfile = zosmfProfile.profile as ISession;
+            session = zowe.ZosmfSession.createBasicZosmfSession(updProfile as IProfile);
+            let command1: string = command;
+            if (!command) {
+                command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");
+            }
+            await this.issueCommand(session, command1);
+        } else {
+            vscode.window.showErrorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
+            return;
         }
-        await this.issueCommand(session, command1);
     }
 
     private async getQuickPick(hostname: string) {

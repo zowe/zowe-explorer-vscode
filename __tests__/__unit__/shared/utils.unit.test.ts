@@ -31,6 +31,7 @@ async function createGlobalMocks() {
         profileOne: createIProfile(),
         mockLoadNamedProfile: jest.fn()
     };
+    const profilesForValidation = {status: "active", name: "fake"};
 
     Profiles.createInstance(Logger.getAppLogger());
     newVariables.mockLoadNamedProfile.mockReturnValue(newVariables.profileOne);
@@ -39,7 +40,12 @@ async function createGlobalMocks() {
             return {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 getDefaultProfile: {name: "firstName"},
-                loadNamedProfile: newVariables.mockLoadNamedProfile
+                loadNamedProfile: newVariables.mockLoadNamedProfile,
+                checkCurrentProfile: jest.fn(() => {
+                    return profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
             };
         }),
         configurable: true

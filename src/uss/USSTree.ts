@@ -145,7 +145,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -362,19 +361,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         }
                     }
                 }
-                if (!remotepath) {
-                    // manually entering a search - switch to an input box
-                    const options: vscode.InputBoxOptions = {
-                        prompt: localize("filterPrompt.option.prompt.search",
-                            "Create a new filter"),
-                        value: sessionNode.fullPath
-                    };
-                    // get user input
-                    remotepath = await vscode.window.showInputBox(options);
-                    if (!remotepath || remotepath.length === 0) {
-                        vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
-                        return;
-                    }
+                // manually entering a search - switch to an input box
+                const options: vscode.InputBoxOptions = {
+                    prompt: localize("filterPrompt.option.prompt.search",
+                        "Create a new filter"),
+                    value: remotepath
+                };
+                // get user input
+                remotepath = await vscode.window.showInputBox(options);
+                if (!remotepath || remotepath.length === 0) {
+                    vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
+                    return;
                 }
             } else {
                 // executing search from saved search in favorites
@@ -501,12 +498,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
             this.removeRecall(`[${sessionNode.getProfileName()}]: ${itemPath}`);
         }
-    }
-
-    public async checkCurrentProfile(node: IZoweUSSTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
     }
 
     /**
