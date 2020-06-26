@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { checkTextFileIsOpened, closeOpenedTextFile } from "../../../src/utils/workspace";
-import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants"
+import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants";
 
 function createGlobalMocks() {
     const activeTextEditor = jest.fn();
