@@ -11,6 +11,14 @@
 
 import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import * as zowe from "@zowe/cli";
+import { AbstractSession } from "@zowe/imperative";
+
+export declare enum TaskStage {
+    IN_PROGRESS = 0,
+    COMPLETE = 1,
+    NOT_STARTED = 2,
+    FAILED = 3
+}
 
 describe("Zosmf API tests", () => {
 
@@ -82,6 +90,24 @@ describe("Zosmf API tests", () => {
         expect(api.putContent).toBeCalledTimes(1);
         expect(api.putContent).toBeCalledWith("someLocalFile.txt", "/some/remote", {
             binary: true,
+        });
+
+    });
+
+    it("should test putContent method passes all options to Zowe api method", async () => {
+
+        const fileToUssFile = jest.fn(async (session: AbstractSession, inputFile: string, ussname: string, options?: zowe.IUploadOptions) => {
+            expect(options).toMatchSnapshot();
+            return { api: "", commandResponse: "", success: true };
+        });
+
+        (zowe as any).Upload = { fileToUssFile };
+
+        const api = new ZosmfUssApi();
+        api.getSession = jest.fn();
+
+        await api.putContent("someLocalFile.txt", "/some/remote", {
+            encoding: 285
         });
 
     });
