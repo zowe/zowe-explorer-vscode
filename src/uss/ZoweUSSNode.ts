@@ -27,7 +27,9 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { closeOpenedTextFile } from "../utils/workspace";
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -152,7 +154,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 location: vscode.ProgressLocation.Notification,
                 title: localize("ZoweUssNode.getList.progress", "Get USS file list command submitted.")
             }, () => {
-               return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
+                return ZoweExplorerApiRegister.getUssApi(this.getProfile()).fileList(this.fullPath);
             }));
         } catch (err) {
             await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
@@ -275,20 +277,32 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * helper method to change the node names in one go
-     * @param oldReference string
-     * @param revision string
+     * Helper method to change the node names in one go
+     * @param newFullPath string
      */
     public async rename(newFullPath: string) {
+        const currentFilePath = this.getUSSDocumentFilePath();
+        const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
 
+        return hasClosedInstance;
+    }
+
+    /**
+     * Refreshes node and reopens it.
+     * @param hasClosedInstance
+     */
+    public async refreshAndReopen(hasClosedInstance = false) {
         if (this.isFolder) {
             await vscode.commands.executeCommand("zowe.uss.refreshAll");
         } else {
             await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        }
+
+        if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
     }
@@ -297,7 +311,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: {light: string; dark: string}) {
+    public setIcon(iconPath: { light: string; dark: string }) {
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
@@ -309,7 +323,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             canPickMany: false
         };
         if (await vscode.window.showQuickPick([localize("deleteUSSNode.showQuickPick.delete", "Delete"),
-        localize("deleteUSSNode.showQuickPick.cancel", "Cancel")],
+            localize("deleteUSSNode.showQuickPick.cancel", "Cancel")],
             quickPickOptions) !== localize("deleteUSSNode.showQuickPick.delete", "Delete")) {
             return;
         }
@@ -320,8 +334,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
-            // tslint:disable-next-line: no-empty
-            } catch (err) { }
+                // tslint:disable-next-line: no-empty
+            } catch (err) {
+            }
         } catch (err) {
             vscode.window.showErrorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
             throw (err);
@@ -332,6 +347,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
         ussFileProvider.refresh();
     }
+
     /**
      * Returns the [etag] for this node
      *
@@ -436,7 +452,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
                 // Add document name to recently-opened files
                 ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
-                ussFileProvider.getTreeView().reveal(this, {select: true, focus: true, expand: false});
+                ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
             } catch (err) {
@@ -445,6 +461,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         }
     }
+
     /**
      * Refreshes the passed node with current mainframe data
      *
@@ -536,7 +553,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (previewFile === true) {
                     await vscode.window.showTextDocument(document);
                 } else {
-                    await vscode.window.showTextDocument(document, {preview: false});
+                    await vscode.window.showTextDocument(document, { preview: false });
                 }
             }
         } else {
