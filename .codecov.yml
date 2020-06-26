@@ -3,16 +3,18 @@ codecov:
     require_ci_to_pass: yes
 coverage:
   precision: 2
-  round: down
-  range: "80...100"
+  round: up
+  range: "50...100"
 
   status:
     project:
       default:
+        against: auto
+        target: 90%
         threshold: 1%
     patch:
       default:
-        against: parent
+        against: auto
         target: auto
         threshold: 1%
         if_no_uploads: success
