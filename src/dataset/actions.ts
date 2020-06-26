@@ -26,6 +26,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZowe
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
+import { closeOpenedTextFile, setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -355,60 +356,6 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
 }
 
 /**
- * Rename data sets
- *
- * @export
- * @param {IZoweDatasetTreeNode} node - The node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function renameDataSet(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    let beforeDataSetName = node.label.trim();
-    let favPrefix = "";
-    let isFavourite;
-
-    if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-        isFavourite = true;
-        favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
-        beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
-    }
-    const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
-    const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
-    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
-
-    globals.LOG.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
-    if (afterDataSetName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-            node.label = `${favPrefix}${afterDataSetName}`;
-
-            if (isFavourite) {
-                const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-                datasetProvider.renameNode(profile, beforeDataSetName, afterDataSetName);
-            } else {
-                const temp = node.label;
-                node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-                datasetProvider.renameFavorite(node, afterDataSetName);
-                node.label = temp;
-            }
-            datasetProvider.refreshElement(node);
-            datasetProvider.updateFavorites();
-
-            if (fs.existsSync(beforeFullPath)) {
-              fs.unlinkSync(beforeFullPath);
-            }
-
-            if (closedOpenedInstance) {
-                vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
-            }
-        } catch (err) {
-            globals.LOG.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            errorHandling(err, favPrefix, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
-        }
-    }
-}
-
-/**
  * Submit the contents of the editor as JCL.
  *
  * @export
@@ -520,64 +467,6 @@ export async function submitMember(node: IZoweTreeNode) {
         vscode.window.showInformationMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
     } catch (error) {
         errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed\n") + error.message);
-    }
-}
-
-/**
- * Rename data set members
- *
- * @export
- * @param {IZoweTreeNode} node - The node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function renameDataSetMember(node: IZoweTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const beforeMemberName = node.label.trim();
-    let dataSetName;
-    let profileLabel;
-
-    if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
-        profileLabel = node.getParent().getLabel().substring(0, node.getParent().getLabel().indexOf(":") + 2);
-        dataSetName = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 2);
-    } else {
-        dataSetName = node.getParent().getLabel();
-    }
-    const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
-    const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
-    const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
-
-    globals.LOG.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
-    if (afterMemberName) {
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-            node.label = afterMemberName;
-        } catch (err) {
-            globals.LOG.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-            errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
-            throw err;
-        }
-        let otherParent;
-
-        if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
-            otherParent = datasetProvider.findNonFavoritedNode(node.getParent());
-        } else {
-            otherParent = datasetProvider.findFavoritedNode(node.getParent());
-        }
-        if (otherParent) {
-            const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
-            if (otherMember) {
-                otherMember.label = afterMemberName;
-                datasetProvider.refreshElement(otherMember);
-            }
-        }
-        datasetProvider.refreshElement(node);
-
-        if (fs.existsSync(beforeFullPath)) {
-            fs.unlinkSync(beforeFullPath);
-        }
-
-        if (closedOpenedInstance) {
-            vscode.commands.executeCommand("zowe.ZoweNode.openPS", node);
-        }
     }
 }
 
@@ -980,6 +869,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
             // set local etag with the new etag from the updated file on mainframe
             if (node) {
                 node.setEtag(uploadResponse.apiResponse[0].etag);
+                setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes(
             localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
@@ -999,16 +889,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
                 }
                 vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                 "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-                // Store document in a separate variable, to be used on merge conflict
-                const startPosition = new vscode.Position(0, 0);
-                const endPosition = new vscode.Position(oldDoc.lineCount, 0);
-                const deleteRange = new vscode.Range(startPosition, endPosition);
-                await vscode.window.activeTextEditor.edit((editBuilder) => {
-                    // re-write the old content in the editor view
-                    editBuilder.delete(deleteRange);
-                    editBuilder.insert(startPosition, oldDocText);
-                });
-                await vscode.window.activeTextEditor.document.save();
+                if (vscode.window.activeTextEditor) {
+                    // Store document in a separate variable, to be used on merge conflict
+                    const startPosition = new vscode.Position(0, 0);
+                    const endPosition = new vscode.Position(oldDoc.lineCount, 0);
+                    const deleteRange = new vscode.Range(startPosition, endPosition);
+                    await vscode.window.activeTextEditor.edit((editBuilder) => {
+                        // re-write the old content in the editor view
+                        editBuilder.delete(deleteRange);
+                        editBuilder.insert(startPosition, oldDocText);
+                    });
+                    await vscode.window.activeTextEditor.document.save();
+                }
             }
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
@@ -1016,41 +908,4 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     } catch (err) {
         vscode.window.showErrorMessage(err.message);
     }
-}
-
-/**
- * Opens the next tab in editor with given delay
- */
-function openNextTab(delay: number) {
-    return new Promise((resolve) => {
-        vscode.commands.executeCommand("workbench.action.nextEditor");
-        setTimeout(() => resolve(), delay);
-    });
-}
-
-interface IExtTextEditor extends vscode.TextEditor { id: string; }
-
-/**
- * Closes opened file tab using iteration through the tabs
- * This kind of method is caused by incompleteness of VSCode API, which allows to close only currently selected editor
- * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
- */
-export async function closeOpenedTextFile(filePath: string) {
-    const tabSwitchDelay = 200;
-    const openedWindows = [] as IExtTextEditor[];
-
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    while (selectedEditor && !openedWindows.some((window) => window.id === selectedEditor.id)) {
-        openedWindows.push(selectedEditor);
-
-        await openNextTab(tabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-
-        if (selectedEditor && selectedEditor.document.fileName === filePath) {
-            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            return true;
-        }
-    }
-
-    return false;
 }

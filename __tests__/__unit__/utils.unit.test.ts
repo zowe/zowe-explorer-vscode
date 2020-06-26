@@ -51,7 +51,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
 
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for \n${label}\n are valid or this may lead to a lock-out.`, "Check Credentials");
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`, "Check Credentials");
     });
     it("Checking USS error handling", async () => {
         createGlobalMocks();
@@ -61,7 +61,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
 
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for \n${label}\n are valid or this may lead to a lock-out.`, "Check Credentials");
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`, "Check Credentials");
     });
     it("Checking common error handling - Theia", async () => {
         const globalMocks = createGlobalMocks();
@@ -74,6 +74,6 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
 
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for \n${label}\n are valid or this may lead to a lock-out.`);
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(`Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`);
     });
 });
