@@ -970,6 +970,9 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
+        const profile = blockMocks.imperativeProfile;
+        const mainframeCodePage = 1047;
+        profile.profile.encoding = mainframeCodePage;
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
