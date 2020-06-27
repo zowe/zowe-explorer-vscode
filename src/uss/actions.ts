@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { labelRefresh, refreshTree, concatChildNodes, willForceUpload } from "../shared/utils";
+import { labelRefresh, refreshTree, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
 import { errorHandling } from "../utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
@@ -289,20 +289,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            const prof = sesNode.getProfile();
-            // if new api method exists, use it
-            if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
-                return ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, remote, {
-                    binary,
-                    localEncoding: null,
-                    etag: etagToUpload,
-                    returnEtag,
-                    encoding: prof.profile.encoding
-                });
-            } else {
-                return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
-                    doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
-            }
+            return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, returnEtag);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
