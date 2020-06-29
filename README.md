@@ -41,7 +41,7 @@ Fixed bugs:
 * Fixed the **delete a connection** and **edit a connection** functions.
 * Fixed the issue that caused extra pop-ups to appear when canceling an edit session.
 * Fixed failure to load optional secure fields from profiles.
-* Fixed issue related to the manual edition/deletion of associated profiles.
+* Fixed the bug that appears when manually editing/deleting associated profiles.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
@@ -217,12 +217,12 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 * **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
 
-* **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option.
+* **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
 
 For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
 
 ## Extending Zowe Explorer
 
-You can extend the possibilities of Zowe Explorer by creating you own extensions. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
+You can extend the functionalities of Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Extending.md).
 
-**Tip:** View an example of Zowe Explorers extensions — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
+**Tip:** View an example of Zowe Explorer extensions — [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-ftp-extension#zowe-explorer-ftp-extension).
