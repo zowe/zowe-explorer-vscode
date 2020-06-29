@@ -1,0 +1,35 @@
+form.vscode-light {
+    color: black;
+}
+  
+form.vscode-dark {
+    color: white;
+}
+  
+form.vscode-high-contrast {
+    color: red;
+}
+
+input {
+    width: 100%;
+}
+
+input, select {
+    padding: 2px;
+    margin: 5px;
+}
+
+.left-column {
+    width: 45%;
+}
+
+.right-column {
+    width: 115%;
+    margin-right: 5px;
+    float: left;
+}
+
+.right-column-checkbox {
+    margin-right: 10px;
+    float: left;
+}
