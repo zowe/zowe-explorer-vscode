@@ -1041,6 +1041,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);
@@ -1050,7 +1051,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             session,
             datasetSessionNode,
             treeView,
-            mvsApi
+            mvsApi,
+            profileInstance
         };
     }
 
@@ -1058,7 +1060,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1075,7 +1077,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1095,7 +1097,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(zowe.Rename.dataSet).mockImplementation(() => {
             throw defaultError;
@@ -1121,7 +1123,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1141,7 +1143,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1163,7 +1165,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(zowe.Rename.dataSetMember).mockImplementation(() => {
             throw defaultError;
