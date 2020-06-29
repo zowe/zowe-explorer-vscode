@@ -87,7 +87,9 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
-    testJobsTree.addFavorite.mockImplementation((newFavorite) => { testJobsTree.mFavorites.push(newFavorite); });
+    testJobsTree.addFavorite.mockImplementation((newFavorite) => {
+        testJobsTree.mFavorites.push(newFavorite);
+    });
     testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
     testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
 
