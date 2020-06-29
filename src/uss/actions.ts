@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { labelRefresh, refreshTree, concatChildNodes, willForceUpload } from "../shared/utils";
+import { labelRefresh, refreshTree, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
 import { errorHandling } from "../utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
@@ -25,7 +25,9 @@ import { isBinaryFileSync } from "isbinaryfile";
 import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { setFileSaved } from "../utils/workspace";
+
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -108,19 +110,22 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
     const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
-    const newName = await vscode.window.showInputBox({value: oldLabel});
+    const newName = await vscode.window.showInputBox({ value: oldLabel });
     if (newName && newName !== oldLabel) {
         try {
             let newNamePath = path.join(parentPath + newName);
             newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            const oldNamePath = originalNode.fullPath;
+
+            const hasClosedTab = await originalNode.rename(newNamePath);
             await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
+                originalNode.getProfile()).rename(oldNamePath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
-            originalNode.rename(newNamePath);
+            await originalNode.refreshAndReopen(hasClosedTab);
 
             if (oldFavorite) {
                 ussFileProvider.removeFavorite(oldFavorite);
-                oldFavorite.rename(newNamePath);
+                await oldFavorite.rename(newNamePath);
                 ussFileProvider.addFavorite(oldFavorite);
             }
         } catch (err) {
@@ -184,7 +189,17 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(doc.fileName, ussName);
+        const prof = node.getProfile();
+
+        // if new api method exists, use it
+        if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, {
+                encoding: prof.profile.encoding
+            });
+        } else {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
+        }
+
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -254,8 +269,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     node = nodes.find((zNode) => {
         if (contextually.isText(zNode)) {
             return (zNode.fullPath.trim() === remote);
-        }
-        else {
+        } else {
             return false;
         }
     });
@@ -276,8 +290,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
-                doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+            return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, returnEtag);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
@@ -285,6 +298,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             if (node) {
                 node.setEtag(uploadResponse.apiResponse.etag);
             }
+            setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
             vscode.window.showErrorMessage(uploadResponse.commandResponse);
@@ -298,12 +312,14 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 // Store old document text in a separate variable, to be used on merge conflict
                 const oldDocText = doc.getText();
                 const oldDocLineCount = doc.lineCount;
-                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(node.getProfile()).getContents(
+                const prof = node.getProfile();
+                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(
                     node.fullPath, {
-                        file: node.getUSSDocumentFilePath(),
-                        binary,
-                        returnEtag: true
-                    });
+                    file: node.getUSSDocumentFilePath(),
+                    binary,
+                    returnEtag: true,
+                    encoding: prof.profile.encoding
+                });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
                 if (downloadEtag !== etagToUpload) {
@@ -313,15 +329,17 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
                 vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
                     "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
-                const startPosition = new vscode.Position(0, 0);
-                const endPosition = new vscode.Position(oldDocLineCount, 0);
-                const deleteRange = new vscode.Range(startPosition, endPosition);
-                await vscode.window.activeTextEditor.edit((editBuilder) => {
-                    // re-write the old content in the editor view
-                    editBuilder.delete(deleteRange);
-                    editBuilder.insert(startPosition, oldDocText);
-                });
-                await vscode.window.activeTextEditor.document.save();
+                if (vscode.window.activeTextEditor) {
+                    const startPosition = new vscode.Position(0, 0);
+                    const endPosition = new vscode.Position(oldDocLineCount, 0);
+                    const deleteRange = new vscode.Range(startPosition, endPosition);
+                    await vscode.window.activeTextEditor.edit((editBuilder) => {
+                        // re-write the old content in the editor view
+                        editBuilder.delete(deleteRange);
+                        editBuilder.insert(startPosition, oldDocText);
+                    });
+                    await vscode.window.activeTextEditor.document.save();
+                }
             }
         } else {
             globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));

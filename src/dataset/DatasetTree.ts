@@ -26,6 +26,7 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { closeOpenedTextFile } from "../utils/workspace";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -76,7 +77,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
+        }
     }
 
     public open(node: IZoweDatasetTreeNode, preview: boolean) {
@@ -323,6 +327,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
                 matchingNode.label = afterLabel;
+                matchingNode.tooltip = afterLabel;
                 this.refreshElement(matchingNode);
             }
         }
@@ -340,6 +345,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (matchingNode) {
             const prefix = matchingNode.label.substring(0, matchingNode.label.indexOf(":") + 2);
             matchingNode.label = prefix + newLabel;
+            matchingNode.tooltip = prefix + newLabel;
             this.refreshElement(matchingNode);
         }
     }
@@ -626,7 +632,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
         const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
-        const closedOpenedInstance = await dsActions.closeOpenedTextFile(beforeFullPath);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
         if (afterMemberName) {
@@ -679,13 +685,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
         const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
-        const closedOpenedInstance = await dsActions.closeOpenedTextFile(beforeFullPath);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
         if (afterDataSetName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
                 node.label = `${favPrefix}${afterDataSetName}`;
+                node.tooltip = `${favPrefix}${afterDataSetName}`;
 
                 if (isFavourite) {
                     const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
