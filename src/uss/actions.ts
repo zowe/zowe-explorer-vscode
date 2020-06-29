@@ -285,7 +285,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
 
     try {
-        binary = binary || await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote);
+        if (sesNode) {
+            binary = binary || await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote);
+        }
         const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
