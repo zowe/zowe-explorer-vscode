@@ -44,7 +44,7 @@ export function createIJobObject(): zowe.IJob {
     };
 }
 
-export function createIJobFileObject(): zowe.IJobFile {
+export function createIJobFile(): zowe.IJobFile {
     return {
         "byte-count": 128,
         "job-correlator": "correlator",

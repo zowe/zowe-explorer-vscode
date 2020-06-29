@@ -17,7 +17,7 @@ import {
     createIProfile,
     createTreeView, createISessionWithoutCredentials, createTextDocument, createInstanceOfProfile
 } from "../../../__mocks__/mockCreators/shared";
-import { createIJobFileObject, createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -503,7 +503,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
     function createBlockMocks() {
         const session = createISessionWithoutCredentials();
         const iJob = createIJobObject();
-        const iJobFile = createIJobFileObject();
+        const iJobFile = createIJobFile();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const profileInstance = createInstanceOfProfile(imperativeProfile);
@@ -582,7 +582,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     function createBlockMocks() {
         const session = createISessionWithoutCredentials();
         const iJob = createIJobObject();
-        const iJobFile = createIJobFileObject();
+        const iJobFile = createIJobFile();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const profileInstance = createInstanceOfProfile(imperativeProfile);
