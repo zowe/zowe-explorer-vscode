@@ -77,7 +77,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
+        }
     }
 
     public open(node: IZoweDatasetTreeNode, preview: boolean) {
