@@ -250,7 +250,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let documentSession: Session;
     let binary;
     let node: IZoweUSSTreeNode;
-    // TODO remove as
+
     const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
                                 child.getProfileName() && child.getProfileName() === sesName.trim()));
     if (sesNode) {
@@ -285,6 +285,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
 
     try {
+        if (sesNode) {
+            binary = binary || await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote);
+        }
         const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
@@ -294,7 +297,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
-            node.setEtag(uploadResponse.apiResponse.etag);
+            if (node) {
+                node.setEtag(uploadResponse.apiResponse.etag);
+            }
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
