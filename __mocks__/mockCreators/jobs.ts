@@ -47,19 +47,19 @@ export function createIJobObject(): zowe.IJob {
 export function createIJobFileObject(): zowe.IJobFile {
     return {
         "byte-count": 128,
-        "job-correlator": "",
+        "job-correlator": "correlator",
         "record-count": 1,
         "records-url": "fake/records",
         "class": "A",
         "ddname": "STDOUT",
-        "id": 100,
-        "jobid": "100",
+        "id": 101,
+        "jobid": "JOB1234",
         "jobname": "TESTJOB",
         "lrecl": 80,
         "procstep": "",
         "recfm": "FB",
-        "stepname": "",
-        "subsystem": ""
+        "stepname": "STEP",
+        "subsystem": "SYS"
     };
 }
 

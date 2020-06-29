@@ -80,14 +80,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
-    const newName = await vscode.window.showInputBox({value: oldLabel});
+    const newName = await vscode.window.showInputBox({value: oldLabel.replace(/^\[.+\]:\s/, "")});
     if (newName && newName !== oldLabel) {
         try {
             let newNamePath = path.join(parentPath + newName);
             newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            const oldNamePath = originalNode.fullPath;
+
+            const hasClosedTab = await originalNode.rename(newNamePath);
             await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
-            originalNode.rename(newNamePath);
+                originalNode.getProfile()).rename(oldNamePath, newNamePath);
+            await originalNode.refreshAndReopen(hasClosedTab);
 
             if (oldFavorite) {
                 this.removeFavorite(oldFavorite);
