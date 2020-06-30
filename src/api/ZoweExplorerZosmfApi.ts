@@ -42,6 +42,22 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         }
         return this.session;
     }
+
+    public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
+        // This API call is specific for z/OSMF profiles
+        if (profileType === "zosmf") {
+            const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+            const sessionStatus= await zowe.CheckStatus.getZosmfInfo(validateSession);
+
+            if (sessionStatus) {
+                return "active";
+            } else {
+                return "inactive";
+            }
+        } else {
+            return "unverified";
+        }
+    }
 }
 
 /**
@@ -62,15 +78,32 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
+
+    /**
+     * API method to wrap to the newer `putContent`.
+     * @deprecated
+     */
     public async putContents(inputFilePath: string, ussFilePath: string,
                              binary?: boolean, localEncoding?: string,
                              etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
+        return this.putContent(inputFilePath, ussFilePath, {
+            binary,
+            localEncoding,
+            etag,
+            returnEtag
+        });
+    }
+
+    public async putContent(inputFilePath: string, ussFilePath: string,
+                            options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const task: ITaskWithStatus = {
             percentComplete: 0,
             statusMessage: localize("api.zosmfUSSApi.putContents", "Uploading USS file"),
-            stageName: TaskStage.IN_PROGRESS
+            stageName: 0 // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
         };
-        return zowe.Upload.fileToUSSFile(this.getSession(), inputFilePath, ussFilePath, binary, localEncoding, task, etag, returnEtag);
+
+        options.task = task;
+        return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
     }
 
     public async uploadDirectory(

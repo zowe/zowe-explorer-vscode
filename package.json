@@ -531,6 +531,11 @@
           "group": "inline"
         },
         {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.all.profilelink",
+          "group": "inline"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/",
           "command": "zowe.uss.editFile",
           "group": "inline"
@@ -663,6 +668,11 @@
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
+          "command": "zowe.all.profilelink",
           "group": "inline"
         },
         {
@@ -808,6 +818,11 @@
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.editSession",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.all.profilelink",
           "group": "inline"
         },
         {
@@ -1240,7 +1255,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/cli": "6.14.0",
+    "@zowe/cli": "6.15.0",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

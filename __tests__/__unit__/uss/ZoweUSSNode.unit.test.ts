@@ -512,7 +512,10 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return globalMocks.profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: globalMocks.profileOne.name, profile: globalMocks.profileOne},
                                 {name: globalMocks.profileOne.name, profile: globalMocks.profileOne}];

@@ -4,5 +4,6 @@
     "registerJesApi.error": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
     "getUssApi.error": "Internal error: Tried to call a non-existing USS API in API register: ",
     "getMvsApi.error": "Internal error: Tried to call a non-existing MVS API in API register: ",
-    "getJesApi.error": "Internal error: Tried to call a non-existing JES API in API register: "
+    "getJesApi.error": "Internal error: Tried to call a non-existing JES API in API register: ",
+    "getCommonApi.error": "Internal error: Tried to call a non-existing Common API in API register: "
 }

@@ -24,8 +24,9 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconByNode } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
-
+import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
+
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -78,7 +79,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
+        }
     }
 
     public open(node: IZoweDatasetTreeNode, preview: boolean) {
@@ -142,7 +146,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             // validate line
             const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
-            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session\}$/;
+            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
@@ -278,6 +282,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
+
+            await this.checkCurrentProfile(node);
+
             temp.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             const icon = getIconByNode(temp);
             if (icon) {
@@ -322,6 +329,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
                 matchingNode.label = afterLabel;
+                matchingNode.tooltip = afterLabel;
                 this.refreshElement(matchingNode);
             }
         }
@@ -339,6 +347,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (matchingNode) {
             const prefix = matchingNode.label.substring(0, matchingNode.label.indexOf(":") + 2);
             matchingNode.label = prefix + newLabel;
+            matchingNode.tooltip = prefix + newLabel;
             this.refreshElement(matchingNode);
         }
     }
@@ -535,6 +544,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
+
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getHistory().length > 0) {
@@ -568,19 +578,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         } else { pattern = choice.label; }
                     }
                 }
+                const options2: vscode.InputBoxOptions = {
+                    prompt: localize("enterPattern.options.prompt",
+                        "Search data sets by entering patterns: use a comma to separate multiple patterns"),
+                    value: pattern,
+                };
+                // get user input
+                pattern = await vscode.window.showInputBox(options2);
                 if (!pattern) {
-                    // manually entering a search
-                    const options2: vscode.InputBoxOptions = {
-                        prompt: localize("enterPattern.options.prompt",
-                            "Search data sets by entering patterns: use a comma to separate multiple patterns"),
-                        value: node.pattern,
-                    };
-                    // get user input
-                    pattern = await vscode.window.showInputBox(options2);
-                    if (!pattern) {
-                        vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
-                        return;
-                    }
+                    vscode.window.showInformationMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
+                    return;
                 }
             } else {
                 // executing search from saved search in favorites
@@ -609,13 +616,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async checkCurrentProfile(node: IZoweDatasetTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
-    }
-
-
     /**
      * Rename data set member
      *
@@ -634,7 +634,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
         const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
-        const closedOpenedInstance = await dsActions.closeOpenedTextFile(beforeFullPath);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
         if (afterMemberName) {
@@ -687,13 +687,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
         const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
-        const closedOpenedInstance = await dsActions.closeOpenedTextFile(beforeFullPath);
+        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
         if (afterDataSetName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
                 node.label = `${favPrefix}${afterDataSetName}`;
+                node.tooltip = `${favPrefix}${afterDataSetName}`;
 
                 if (isFavourite) {
                     const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
