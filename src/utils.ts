@@ -90,10 +90,10 @@ export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.
 
 // tslint:disable-next-line: max-classes-per-file
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(private text: string, private desc?: string) { }
+    constructor(private text: string, private desc?: string, private showMe?: boolean) { }
     get label(): string { return this.text; }
     get description(): string { if (this.desc) { return this.desc; } else { return ""; } }
-    get alwaysShow(): boolean { return false; }
+    get alwaysShow(): boolean { return this.showMe; }
 }
 
 // tslint:disable-next-line: max-classes-per-file

@@ -15,8 +15,8 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
-import { errorHandling } from "../utils";
-import { labelRefresh, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import { errorHandling, FilterItem, resolveQuickPickHelper } from "../utils";
+import { labelRefresh, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload, filterTreeByString } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -211,12 +211,6 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
-    // let sesNamePrompt: string;
-    // if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-    //     sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-    // } else {
-    //     sesNamePrompt = node.label;
-    // }
 
     datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
@@ -454,6 +448,117 @@ export async function createFileFromWebview(node: IZoweDatasetTreeNode, context:
     </body>
     </html>`;
 }
+
+/**
+ * Creates a PDS member
+ *
+ * @export
+ * @param {IZoweDatasetTreeNode} parent - The parent Node
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function createFileNoWebview(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+    // The array of all the dataset's properties
+    let propertyArray = [
+        { label: `Node Label`, value: node.getLabel(), placeHolder: `Enter a new node label` },
+        { label: `Node Type`, value: `Data Set Binary`, placeHolder: `Select a node type` },
+    ]
+
+    if (await getUserSelection(propertyArray)) {
+        try {
+            let typeEnum;
+            let createOptions;
+            switch (propertyArray[1].value) {
+                case `Data Set Binary`:
+                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+                    break;
+                case `Data Set C`:
+                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+                    break;
+                case `Data Set Classic`:
+                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+                    break;
+                case `Data Set Partitioned`:
+                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+                    break;
+                case `Data Set Sequential`:
+                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+                    break;
+            }
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, propertyArray[0].value, createOptions);
+            node.dirty = true;
+
+            const theFilter = await datasetProvider.createFilterString(propertyArray[0].value, node);
+            datasetProvider.addHistory(theFilter);
+            datasetProvider.refresh();
+
+            // Show newly-created data set in expanded tree view
+            if (propertyArray[0].value) {
+                node.label = `${node.label} `;
+                node.label = node.label.trim();
+                node.tooltip = node.pattern = theFilter.toUpperCase();
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
+                node.dirty = true;
+
+                const newNode = await node.getChildren().then((children) => children.find((child) => child.label === propertyArray[0].value));
+                datasetProvider.getTreeView().reveal(newNode, { select: true });
+            }
+        } catch (err) {
+            globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+            errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
+                err.message);
+            throw (err);
+        }
+    }
+}
+
+async function getUserSelection(propertyArray): Promise<boolean> {
+    let pattern: string;
+
+    // Create the array of items in the quickpick list
+    let qpItems = [];
+    propertyArray.forEach((prop) => {
+        qpItems.push(new FilterItem(prop.label, prop.value));
+    });
+    qpItems.push(new FilterItem(`Allocate Data Set`, ``, true));
+    
+    const quickpick = vscode.window.createQuickPick();
+    quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list of options");
+    quickpick.ignoreFocusOut = true;
+    quickpick.items = [...qpItems];
+
+    quickpick.show();
+    const choice = await resolveQuickPickHelper(quickpick);
+    if (!choice) {
+        vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
+        return;
+    } else { pattern = choice.label; }
+    quickpick.dispose();
+
+    if (pattern) {
+        // Parse pattern for selected attribute
+        switch(pattern) {
+            case `Allocate Data Set`:
+                return Promise.resolve(true);
+            case `Node Label`:
+                propertyArray[0].value = await vscode.window.showInputBox({ placeHolder: propertyArray[0].placeHolder });
+                break;
+            case `Node Type`:
+                propertyArray[1].value = await vscode.window.showQuickPick([`Data Set Binary`, `Data Set C`, `Data Set Classic`, `Data Set Partitioned`, `Data Set Sequential`]);
+                break;
+        };
+        if (await getUserSelection(propertyArray)) { return Promise.resolve(true); }
+    }
+}
+
 
 
 

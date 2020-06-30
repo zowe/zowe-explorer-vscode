@@ -186,7 +186,8 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.editSession", async (node) => datasetProvider.editSession(node));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider));
     //vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFile(node, datasetProvider));
-    vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFileFromWebview(node, context, datasetProvider));
+    //vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFileFromWebview(node, context, datasetProvider));
+    vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFileNoWebview(node, datasetProvider));
     vscode.commands.registerCommand("zowe.all.profilelink", (node) => linkProfileDialog(node.getProfile()));
     vscode.commands.registerCommand("zowe.createMember", (node) => dsActions.createMember(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteDataset", (node) => dsActions.deleteDataset(node, datasetProvider));
