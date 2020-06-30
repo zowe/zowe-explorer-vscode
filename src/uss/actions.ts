@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { labelRefresh, refreshTree, concatChildNodes, willForceUpload } from "../shared/utils";
+import { labelRefresh, refreshTree, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
 import { errorHandling } from "../utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
@@ -189,7 +189,17 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(doc.fileName, ussName);
+        const prof = node.getProfile();
+
+        // if new api method exists, use it
+        if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, {
+                encoding: prof.profile.encoding
+            });
+        } else {
+            await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
+        }
+
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -240,9 +250,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let documentSession: Session;
     let binary;
     let node: IZoweUSSTreeNode;
-    // TODO remove as
+
     const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
-        child.getProfileName() && child.getProfileName() === sesName.trim()));
+                                child.getProfileName() && child.getProfileName() === sesName.trim()));
     if (sesNode) {
         documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
@@ -275,17 +285,21 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
 
     try {
+        if (sesNode) {
+            binary = binary || await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote);
+        }
         const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).putContents(
-                doc.fileName, remote, binary, null, etagToUpload, returnEtag);  // TODO MISSED TESTING
+            return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, returnEtag);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
-            node.setEtag(uploadResponse.apiResponse.etag);
+            if (node) {
+                node.setEtag(uploadResponse.apiResponse.etag);
+            }
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
@@ -300,12 +314,14 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 // Store old document text in a separate variable, to be used on merge conflict
                 const oldDocText = doc.getText();
                 const oldDocLineCount = doc.lineCount;
-                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(node.getProfile()).getContents(
+                const prof = node.getProfile();
+                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(
                     node.fullPath, {
-                        file: node.getUSSDocumentFilePath(),
-                        binary,
-                        returnEtag: true
-                    });
+                    file: node.getUSSDocumentFilePath(),
+                    binary,
+                    returnEtag: true,
+                    encoding: prof.profile.encoding
+                });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
                 if (downloadEtag !== etagToUpload) {

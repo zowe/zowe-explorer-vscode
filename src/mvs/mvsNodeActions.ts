@@ -68,7 +68,10 @@ export function getDatasetLabel(node: ZoweDatasetNode) {
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
     try {
         const datasetName = getDatasetLabel(node);
-        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).putContents(doc.fileName, datasetName);
+        const prof = node.getProfile();
+        await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+            encoding: prof.profile.encoding
+        });
     } catch (e) {
         await utils.errorHandling(e, node.getProfileName(), e.message);
     }
