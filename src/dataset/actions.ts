@@ -503,17 +503,16 @@ export async function editDataSetTemplate(datasetProvider: IZoweTree<IZoweDatase
             propertyArray[1].value = type;
         }
 
-        await getUserSelection2(propertyArray, datasetProvider);
+        await getUserSelection2(propertyArray, datasetProvider, {label: propertyArray[0].value, type: propertyArray[1].value});
     } else {
-        vscode.window.showInformationMessage(localize("editDSTemplate.noTemplates", "You do not have any templates. Create a new data set to create a template."));
+        vscode.window.showInformationMessage(localize("editDSTemplates.noTemplates", "You do not have any templates. Create a new data set to create a template."));
         return;
     }
 }
 
 
-async function getUserSelection2(propertyArray, datasetProvider): Promise<boolean> {
+async function getUserSelection2(propertyArray, datasetProvider, originalProperties): Promise<boolean> {
     let pattern: string;
-    const originalProperties = propertyArray;
 
     // Create the array of items in the quickpick list
     let qpItems2 = [];
@@ -540,7 +539,7 @@ async function getUserSelection2(propertyArray, datasetProvider): Promise<boolea
         // Parse pattern for selected attribute
         switch(pattern) {
             case `+ Save Template`:
-                datasetProvider.removeTemplate({label: originalProperties[0].value, type: getTypeEnumAndOptionsFromString(originalProperties[1].value).type});
+                datasetProvider.removeTemplate({label: originalProperties.label, type: getTypeEnumAndOptionsFromString(originalProperties.type).type});
                 datasetProvider.addTemplate({label: propertyArray[0].value, type: getTypeEnumAndOptionsFromString(propertyArray[1].value).type});
                 return Promise.resolve(true);
             case `Node Label`:
@@ -550,7 +549,7 @@ async function getUserSelection2(propertyArray, datasetProvider): Promise<boolea
                 propertyArray[1].value = await vscode.window.showQuickPick([`Data Set Binary`, `Data Set C`, `Data Set Classic`, `Data Set Partitioned`, `Data Set Sequential`]);
                 break;
         };
-        if (await getUserSelection2(propertyArray, datasetProvider)) { return Promise.resolve(true); }
+        if (await getUserSelection2(propertyArray, datasetProvider, originalProperties)) { return Promise.resolve(true); }
     }
 }
 
