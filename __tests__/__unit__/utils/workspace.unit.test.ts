@@ -10,31 +10,52 @@
 */
 
 import * as vscode from "vscode";
-import { closeOpenedTextFile } from "../../../src/dataset/actions";
+import { checkTextFileIsOpened, closeOpenedTextFile } from "../../../src/utils/workspace";
+import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants";
 
-jest.mock("vscode");
+function createGlobalMocks() {
+    const activeTextEditor = jest.fn();
+    const executeCommand = jest.fn();
 
-const activeTextEditor = jest.fn();
-const executeCommand = jest.fn();
+    Object.defineProperty(vscode.window, "activeTextEditor", { get: activeTextEditor, configurable: true });
+    Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
 
-Object.defineProperty(vscode.window, "activeTextEditor", {get: activeTextEditor});
-Object.defineProperty(vscode.commands, "executeCommand", {value: executeCommand});
+    return {
+        activeTextEditor,
+        executeCommand
+    };
+}
 
-describe("Workspace file status method", () => {
-    beforeEach(() => {
-        activeTextEditor.mockReset();
-        executeCommand.mockReset();
-    });
+/**
+ * Function which imitates looping through an array
+ */
+const generateCycledMock = (mock: any[]) => {
+    let currentIndex = 0;
 
-    it("Runs correctly with no tabs available", async () => {
+    return () => {
+        if (currentIndex === mock.length) {
+            currentIndex = 0;
+        }
+
+        const entry = mock[currentIndex];
+        currentIndex++;
+
+        return entry;
+    };
+};
+
+describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
+    it("Checking logic when no tabs available", async () => {
+        const globalMocks = createGlobalMocks();
         const targetTextFile = "/doc";
-        activeTextEditor.mockReturnValueOnce(null);
+        globalMocks.activeTextEditor.mockReturnValue(null);
 
         const result = await checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(false);
-        expect(executeCommand.mock.calls.length).toBe(0);
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(Array(workspaceUtilMaxEmptyWindowsInTheRow).fill("workbench.action.nextEditor"));
     });
-    it("Runs correctly with tabs and target document available", async () => {
+    it("Checking logic when target tab is available", async () => {
+        const globalMocks = createGlobalMocks();
         const targetTextFile = "/doc3";
         const mockDocuments = [
             {
@@ -56,14 +77,15 @@ describe("Workspace file status method", () => {
                 }
             }
         ];
-        mockDocuments.forEach((doc) => activeTextEditor.mockReturnValueOnce(doc));
+        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
         const result = await checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(true);
-        expect(executeCommand.mock.calls.map((call) => call[0]))
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
     });
-    it("Runs correctly with tabs available but no target document opened", async () => {
+    it("Checking logic when target tab is not available", async () => {
+        const globalMocks = createGlobalMocks();
         const targetTextFile = "/doc";
         const mockDocuments = [
             {
@@ -85,29 +107,26 @@ describe("Workspace file status method", () => {
                 }
             }
         ];
-        mockDocuments.forEach((doc) => activeTextEditor.mockReturnValueOnce(doc));
+        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
         const result = await checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(false);
-        expect(executeCommand.mock.calls.map((call) => call[0]))
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
     });
 });
-describe("Workspace file close method", () => {
-    beforeEach(() => {
-        activeTextEditor.mockReset();
-        executeCommand.mockReset();
-    });
-
-    it("Runs correctly with no tabs available", async () => {
+describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
+    it("Checking logic when no tabs available", async () => {
+        const globalMocks = createGlobalMocks();
         const targetTextFile = "/doc";
-        activeTextEditor.mockReturnValueOnce(null);
+        globalMocks.activeTextEditor.mockReturnValueOnce(null);
 
         const result = await closeOpenedTextFile(targetTextFile);
         expect(result).toBe(false);
-        expect(executeCommand.mock.calls.length).toBe(0);
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(Array(workspaceUtilMaxEmptyWindowsInTheRow).fill("workbench.action.nextEditor"));
     });
-    it("Runs correctly with tabs and target document available", async () => {
+    it("Checking logic when target tab is available", async () => {
+        const globalMocks = createGlobalMocks();
         const targetTextFile = "/doc3";
         const mockDocuments = [
             {
@@ -129,14 +148,15 @@ describe("Workspace file close method", () => {
                 }
             }
         ];
-        mockDocuments.forEach((doc) => activeTextEditor.mockReturnValueOnce(doc));
+        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
         const result = await closeOpenedTextFile(targetTextFile);
         expect(result).toBe(true);
-        expect(executeCommand.mock.calls.map((call) => call[0]))
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.closeActiveEditor"]);
     });
-    it("Runs correctly with tabs available but no target document opened", async () => {
+    it("Checking logic when target tab is not available", async () => {
+        const globalMocks = createGlobalMocks();
         const targetTextFile = "/doc";
         const mockDocuments = [
             {
@@ -158,49 +178,11 @@ describe("Workspace file close method", () => {
                 }
             }
         ];
-        mockDocuments.forEach((doc) => activeTextEditor.mockReturnValueOnce(doc));
+        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
 
         const result = await closeOpenedTextFile(targetTextFile);
         expect(result).toBe(false);
-        expect(executeCommand.mock.calls.map((call) => call[0]))
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
             .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
     });
 });
-
-/********************************************************************************************************************/
-/**************************************************HELPER FUNCTIONS**************************************************/
-/********************************************************************************************************************/
-
-interface IExtTextEditor extends vscode.TextEditor { id: string; }
-
-/**
- * Checks if file is opened using iteration through tabs
- * This kind of method is caused by incompleteness of VSCode API, which allows to check only buffered status of files
- * There's an issue on GitHub for such feature: https://github.com/Microsoft/vscode/issues/15178 let's track it
- * Idea of the approach was borrowed from the another extension: https://github.com/eamodio/vscode-restore-editors/blob/master/src/documentManager.ts
- * Also notice that timer delay as well as iteration through opened tabs can cause side-effects on slow machines
- */
-export async function checkTextFileIsOpened(path: string) {
-    const tabSwitchDelay = 200;
-    const openedWindows = [] as IExtTextEditor[];
-
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    while (selectedEditor && !openedWindows.some((window) => window.id === selectedEditor.id)) {
-        openedWindows.push(selectedEditor);
-
-        await openNextTab(tabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-    }
-
-    return openedWindows.some((window) => window.document.fileName === path);
-}
-
-/**
- * Opens the next tab in editor with given delay
- */
-function openNextTab(delay: number) {
-    return new Promise((resolve) => {
-        vscode.commands.executeCommand("workbench.action.nextEditor");
-        setTimeout(() => resolve(), delay);
-    });
-}

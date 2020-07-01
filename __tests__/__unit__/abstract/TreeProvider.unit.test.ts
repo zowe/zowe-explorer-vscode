@@ -17,6 +17,9 @@ import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
+import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { Job } from "../../../src/job/ZoweJobNode";
+import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -25,6 +28,7 @@ async function createGlobalMocks() {
         withProgress: jest.fn(),
         createTreeView: jest.fn(),
         mockAffects: jest.fn(),
+        mockEditSession: jest.fn(),
         getConfiguration: jest.fn(),
         refresh: jest.fn(),
         testProfile: createIProfile(),
@@ -58,7 +62,9 @@ async function createGlobalMocks() {
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(),
-                loadNamedProfile: globalMocks.mockLoadNamedProfile
+                validateProfiles: jest.fn(),
+                loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                editSession: globalMocks.mockEditSession
             };
         }),
         configurable: true
@@ -73,6 +79,7 @@ async function createGlobalMocks() {
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
     globalMocks.getConfiguration.mockReturnValue({
         get: (setting: string) => [
             "[test]: /u/aDir{directory}",
@@ -85,6 +92,32 @@ async function createGlobalMocks() {
 
     return globalMocks;
 }
+
+describe("ZoweJobNode unit tests - Function editSession", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testIJob: createIJobObject(),
+            testJobsProvider: await createJobsTree(Logger.getAppLogger()),
+            jobNode: null
+        };
+
+        newMocks.jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
+                                   null, globalMocks.testSession, newMocks.testIJob, globalMocks.testProfile);
+        newMocks.jobNode.contextValue = "job";
+        newMocks.jobNode.dirty = true;
+
+        return newMocks;
+    }
+
+    it("Tests that editSession is executed successfully ", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const checkSession = jest.spyOn(blockMocks.testJobsProvider, "editSession");
+
+        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
+        expect(globalMocks.mockEditSession).toHaveBeenCalled();
+    });
+});
 
 describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {

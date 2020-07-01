@@ -30,6 +30,11 @@ interface IUrlValidator {
     port: number;
 }
 
+interface IProfileValidation {
+    status: string;
+    name: string;
+}
+
 let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
@@ -49,6 +54,7 @@ export class Profiles {
 
     private static loader: Profiles;
 
+    public profilesForValidation: IProfileValidation[] = [];
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -65,6 +71,14 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
+
+        // Check what happens if there's an error
+        const profileStatus = await this.validateProfiles(theProfile);
+        if (profileStatus.status === "inactive") {
+            this.validProfile = ValidProfileEnum.INVALID;
+            return profileStatus;
+        }
+
         if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
@@ -75,20 +89,25 @@ export class Profiles {
                 }
             } catch (error) {
                 errorHandling(error, theProfile.name,
-                    localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
-                return;
+                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`);
+                return profileStatus;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
                 theProfile.profile.user = this.usrNme;
                 theProfile.profile.password = this.passWrd;
                 theProfile.profile.base64EncodedAuth = this.baseEncd;
                 this.validProfile = ValidProfileEnum.VALID;
+                return profileStatus;
             } else {
-                return;
+                // return invalid if credetials are not provided
+                this.validProfile = ValidProfileEnum.INVALID;
+                return profileStatus;
             }
         } else {
             this.validProfile = ValidProfileEnum.VALID;
+            return profileStatus;
         }
+
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -595,12 +614,13 @@ export class Profiles {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-        let repromptUser: any;
-        let repromptPass: any;
-        let loadProfile: any;
-        let loadSession: any;
-        let newUser: any;
-        let newPass: any;
+
+        let repromptUser: string;
+        let repromptPass: string;
+        let loadProfile: IProfileLoaded;
+        let loadSession: ISession;
+        let newUser: string;
+        let newPass: string;
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
@@ -622,7 +642,10 @@ export class Profiles {
         }
 
         if (newUser === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             if (!loadSession.password || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
@@ -633,11 +656,22 @@ export class Profiles {
         }
 
         if (newPass === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             try {
-                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
                 if (rePrompt) {
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", loadProfile.name);
+                    await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                        if (selection === saveButton) {
+                            rePrompt = false;
+                        }
+                    });
                     await this.updateProfile(loadProfile, rePrompt);
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
@@ -855,6 +889,69 @@ export class Profiles {
             }
         }
         return profileManager;
+    }
+
+    public async validateProfiles(theProfile: IProfileLoaded) {
+        let filteredProfile: IProfileValidation;
+        let profileStatus;
+        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+
+        // Filter profilesForValidation to check if the profile is already validated
+        this.profilesForValidation.filter((profile) => {
+            if (profile.name === theProfile.name) {
+                filteredProfile = {
+                    status: profile.status,
+                    name: profile.name
+                };
+            }
+        });
+
+        // If not yet validated, call getStatus and validate the profile
+        // status will be stored in profilesForValidation
+        if (filteredProfile === undefined) {
+            try {
+
+                if (getSessStatus.getStatus) {
+                    profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                } else {
+                    profileStatus = "unverified";
+                }
+
+                switch (profileStatus) {
+                    case "active":
+                        filteredProfile = {
+                            status: "active",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "inactive":
+                        filteredProfile = {
+                            status: "inactive",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "unverified":
+                        filteredProfile = {
+                            status: "unverified",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                    default:
+                }
+
+            } catch (error) {
+                this.log.debug("Validate Error - Invalid Profile: " + error);
+                filteredProfile = {
+                    status: "inactive",
+                    name: theProfile.name
+                };
+                this.profilesForValidation.push(filteredProfile);
+            }
+        }
+
+        return filteredProfile;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
@@ -1121,8 +1218,8 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
                 }
             } else {
                 OrigProfileInfo[value] = NewProfileInfo[value];

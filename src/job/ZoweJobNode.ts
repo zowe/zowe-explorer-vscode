@@ -15,7 +15,7 @@ import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
-import { errorHandling } from "../utils";
+import { errorHandling, refreshTree } from "../utils";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -197,6 +197,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     private async getJobs(owner, prefix, searchId): Promise<zowe.IJob[]> {
         let jobsInternal: zowe.IJob[] = [];
+        const sessNode = this.getSessionNode();
         if (this.searchId.length > 0 ) {
             jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJob(searchId));
         } else {
@@ -204,6 +205,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(this.getProfile()).getJobsByOwnerAndPrefix(owner, prefix);
             } catch (error) {
                 await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+                await refreshTree(sessNode);
             }
         }
         return jobsInternal;

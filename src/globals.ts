@@ -20,6 +20,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
+export const COMMAND_COUNT = 77;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
@@ -42,6 +43,8 @@ export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
 export const VSAM_CONTEXT = "vsam";
+export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
+export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
