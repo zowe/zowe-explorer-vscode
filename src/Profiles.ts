@@ -731,11 +731,11 @@ export class Profiles {
         }
 
         // Delete from Data Set Recall
-        const recallDs: string[] = datasetTree.getRecall();
+        const recallDs: string[] = datasetTree.getFileHistory();
         recallDs.slice().reverse()
             .filter((ds) => ds.substring(1, ds.indexOf("]")).trim() === deleteLabel.toUpperCase())
             .forEach((ds) => {
-                datasetTree.removeRecall(ds);
+                datasetTree.removeFileHistory(ds);
             });
 
         // Delete from Data Set Favorites
@@ -758,11 +758,11 @@ export class Profiles {
         });
 
         // Delete from USS Recall
-        const recallUSS: string[] = ussTree.getRecall();
+        const recallUSS: string[] = ussTree.getFileHistory();
         recallUSS.slice().reverse()
             .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel.toUpperCase())
             .forEach((uss) => {
-                ussTree.removeRecall(uss);
+                ussTree.removeFileHistory(uss);
             });
 
         // Delete from USS Favorites

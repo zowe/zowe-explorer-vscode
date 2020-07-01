@@ -1038,8 +1038,8 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testUSSTree = createUSSTree([], [newMocks.USSSessionNode], newMocks.treeView);
         newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
-        newMocks.testDatasetTree.addRecall("[profile1]: TEST.NODE");
-        newMocks.testUSSTree.addRecall("[profile1]: /u/myuser");
+        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
+        newMocks.testUSSTree.addFileHistory("[profile1]: /u/myuser");
         globalMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
 
         return newMocks;
@@ -1185,21 +1185,21 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
-        expect(blockMocks.testDatasetTree.getRecall()[0]).toBeUndefined();
+        expect(blockMocks.testDatasetTree.getFileHistory()[0]).toBeUndefined();
     });
 
     it("Tests that deleteProfile successfully deletes all related recall items for a USS tree", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testUSSTree.addRecall("[SESTEST]: /node1/node2/node3.txt");
+        blockMocks.testUSSTree.addFileHistory("[SESTEST]: /node1/node2/node3.txt");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
-        expect(blockMocks.testUSSTree.getRecall()[1]).toBeUndefined();
+        expect(blockMocks.testUSSTree.getFileHistory()[1]).toBeUndefined();
     });
 });
 

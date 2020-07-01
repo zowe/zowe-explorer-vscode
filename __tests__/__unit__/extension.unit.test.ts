@@ -217,10 +217,10 @@ describe("Extension Unit Tests", () => {
     const mockCheckCurrentProfile = jest.fn();
     const createQuickPick = jest.fn();
     const mockcreateZoweSession = jest.fn();
-    const mockAddHistory = jest.fn();
-    const mockGetHistory = jest.fn();
-    const mockGetRecall = jest.fn();
-    const mockUSSGetRecall = jest.fn();
+    const mockaddSearchHistory = jest.fn();
+    const mockgetSearchHistory = jest.fn();
+    const mockgetFileHistory = jest.fn();
+    const mockUSSgetFileHistory = jest.fn();
     const mockRefresh = jest.fn();
     const mockRefreshElement = jest.fn();
     const mockUSSRefresh = jest.fn();
@@ -229,7 +229,7 @@ describe("Extension Unit Tests", () => {
     const mockGetUSSChildren = jest.fn();
     const mockRemoveFavorite = jest.fn();
     const getConfiguration = jest.fn();
-    const mockRemoveRecall = jest.fn();
+    const mockremoveFileHistory = jest.fn();
     const onDidChangeConfiguration = jest.fn();
     const executeCommand = jest.fn();
     const activeTextEditor = jest.fn();
@@ -267,7 +267,7 @@ describe("Extension Unit Tests", () => {
     const renameDataSet = jest.fn();
     const renameDataSetMember = jest.fn();
     const mockRenameFavorite = jest.fn();
-    const mockAddRecall = jest.fn();
+    const mockaddFileHistory = jest.fn();
     const mockRemoveUSSRecall = jest.fn();
     const mockUpdateFavorites = jest.fn();
     const mockRenameNode = jest.fn();
@@ -325,10 +325,10 @@ describe("Extension Unit Tests", () => {
             mFavorites: [],
             treeView: new TreeView(),
             addSession: mockcreateZoweSession,
-            addHistory: mockAddHistory,
-            addRecall: mockAddRecall,
-            getHistory: mockGetHistory,
-            getRecall: mockGetRecall,
+            addSearchHistory: mockaddSearchHistory,
+            addFileHistory: mockaddFileHistory,
+            getSearchHistory: mockgetSearchHistory,
+            getFileHistory: mockgetFileHistory,
             refresh: mockRefresh,
             refreshElement: mockRefreshElement,
             checkCurrentProfile: mockCheckCurrentProfile,
@@ -338,7 +338,7 @@ describe("Extension Unit Tests", () => {
             getTreeView,
             searchInLoadedItems: jest.fn(),
             removeFavorite: mockRemoveFavorite,
-            removeRecall: mockRemoveRecall,
+            removeFileHistory: mockremoveFileHistory,
             enterPattern: mockPattern,
             initializeFavorites: mockInitialize,
             openItemFromPath: mockOpenItemFromPath,
@@ -357,12 +357,12 @@ describe("Extension Unit Tests", () => {
             mSessionNodes: [],
             addSession: mockcreateZoweSession,
             refresh: mockUSSRefresh,
-            addHistory: mockAddHistory,
-            getHistory: mockGetHistory,
-            addRecall: mockAddRecall,
-            getRecall: mockUSSGetRecall,
+            addSearchHistory: mockaddSearchHistory,
+            getSearchHistory: mockgetSearchHistory,
+            addFileHistory: mockaddFileHistory,
+            getFileHistory: mockUSSgetFileHistory,
             checkCurrentProfile: mockCheckCurrentProfile,
-            removeRecall: mockRemoveUSSRecall,
+            removeFileHistory: mockRemoveUSSRecall,
             openItemFromPath: mockUSSOpenItemFromPath,
             searchInLoadedItems: jest.fn(),
             setItem: jest.fn(),
@@ -997,7 +997,7 @@ describe("Extension Unit Tests", () => {
         dataSetCreate.mockReset();
         allMembers.mockReset();
         dataSetList.mockReset();
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
         mockCreateFilterString.mockReturnValue("NODE");
@@ -1005,7 +1005,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReturnValue("NODE");
         allMembers.mockReturnValue(uploadResponse);
         dataSetList.mockReturnValue(uploadResponse);
-        mockGetHistory.mockReturnValue([]);
+        mockgetSearchHistory.mockReturnValue([]);
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
@@ -1065,32 +1065,32 @@ describe("Extension Unit Tests", () => {
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(0);
 
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
         testTree.treeView.reveal.mockReset();
         mockCreateFilterString.mockReset();
         mockCreateFilterString.mockReturnValue("NODE1,NODE.*");
 
         // Testing the addition of new node to tree view
-        mockGetHistory.mockReturnValueOnce(["NODE1"]);
+        mockgetSearchHistory.mockReturnValueOnce(["NODE1"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await dsActions.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
+        expect(testTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
         expect(testTree.treeView.reveal.mock.calls.length).toBe(1);
 
-        testTree.addHistory.mockReset();
+        testTree.addSearchHistory.mockReset();
 
-        mockGetHistory.mockReturnValueOnce(["NODE"]);
+        mockgetSearchHistory.mockReturnValueOnce(["NODE"]);
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await dsActions.createFile(sessNode2, testTree);
-        expect(testTree.addHistory.mock.calls.length).toBe(1);
+        expect(testTree.addSearchHistory.mock.calls.length).toBe(1);
 
         mockCreateFilterString.mockReset();
 
-        mockGetHistory.mockReturnValueOnce([null]);
+        mockgetSearchHistory.mockReturnValueOnce([null]);
         mockCreateFilterString.mockReturnValueOnce("NODE");
         showQuickPick.mockResolvedValueOnce("Data Set Sequential");
         await dsActions.createFile(sessNode2, testTree);
-        expect(testTree.addHistory).toHaveBeenCalledWith("NODE");
+        expect(testTree.addSearchHistory).toHaveBeenCalledWith("NODE");
 
         allMembers.mockReset();
         dataSetList.mockReset();
@@ -1142,14 +1142,14 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         dataSetCreate.mockReset();
         dataSetList.mockReset();
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
         allMembers.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
         mockCreateFilterString.mockReturnValue("NODE");
         createTreeView.mockReturnValue(new TreeView());
         showInputBox.mockReturnValue("FakeName");
-        mockGetHistory.mockReturnValue(["mockHistory"]);
+        mockgetSearchHistory.mockReturnValue(["mockHistory"]);
         dataSetList.mockReturnValue(uploadResponse);
         allMembers.mockReturnValue(uploadResponse);
         testTree.getTreeView.mockReturnValue(new TreeView());
@@ -1185,7 +1185,7 @@ describe("Extension Unit Tests", () => {
         showInputBox.mockReset();
         dataSetCreate.mockReset();
         dataSetList.mockReset();
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
         allMembers.mockReset();
     });
 
@@ -1227,7 +1227,7 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReset();
         allMembers.mockReset();
         dataSet.mockReset();
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
 
         getConfiguration.mockReturnValue("FakeConfig");
         mockCreateFilterString.mockReturnValue("NODE");
@@ -1237,7 +1237,7 @@ describe("Extension Unit Tests", () => {
                                                                   null, undefined, undefined, profileOne), sessNode]);
         allMembers.mockReturnValue(defaultUploadResponse);
         dataSet.mockReturnValue(defaultUploadResponse);
-        mockGetHistory.mockReturnValue(["mockHistory1"]);
+        mockgetSearchHistory.mockReturnValue(["mockHistory1"]);
         testTree.getTreeView.mockReturnValue(new TreeView());
 
         showQuickPick.mockResolvedValueOnce("Data Set Binary");
@@ -1272,7 +1272,7 @@ describe("Extension Unit Tests", () => {
         testTree.getChildren.mockReset();
         allMembers.mockReset();
         dataSet.mockReset();
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
     });
 
     it("tests the createFile for prompt credentials error", async () => {
@@ -1308,14 +1308,14 @@ describe("Extension Unit Tests", () => {
         getConfiguration.mockReset();
         showInputBox.mockReset();
         dataSetCreate.mockReset();
-        mockGetHistory.mockReset();
+        mockgetSearchHistory.mockReset();
         allMembers.mockReset();
         dataSetList.mockReset();
 
         getConfiguration.mockReturnValueOnce("FakeConfig");
         mockCreateFilterString.mockReturnValue("NODE");
         showInputBox.mockReturnValueOnce("sestest");
-        mockGetHistory.mockReturnValueOnce(["mockHistory"]);
+        mockgetSearchHistory.mockReturnValueOnce(["mockHistory"]);
         allMembers.mockReturnValueOnce(defaultUploadResponse);
         dataSetList.mockReturnValue(defaultUploadResponse);
         testTree.getTreeView.mockReturnValue(new TreeView());
@@ -1454,8 +1454,8 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
-        mockGetRecall.mockReturnValueOnce([`[sessNode]: node(child)`]);
-        mockUSSGetRecall.mockReturnValueOnce([]);
+        mockgetFileHistory.mockReturnValueOnce([`[sessNode]: node(child)`]);
+        mockUSSgetFileHistory.mockReturnValueOnce([]);
 
         await sharedActions.openRecentMemberPrompt(testTree, testUSSTree);
         expect(testTree.openItemFromPath).toBeCalledWith(`[sessNode2]: node(child)`, sessNode2);
@@ -1497,8 +1497,8 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
-        mockGetRecall.mockReturnValueOnce([`[sessNode2]: node`]);
-        mockUSSGetRecall.mockReturnValueOnce([]);
+        mockgetFileHistory.mockReturnValueOnce([`[sessNode2]: node`]);
+        mockUSSgetFileHistory.mockReturnValueOnce([]);
 
         await sharedActions.openRecentMemberPrompt(testTree, testUSSTree);
         expect(testTree.openItemFromPath).toBeCalledWith(`[sessNode2]: node`, sessNode2);
@@ -1540,8 +1540,8 @@ describe("Extension Unit Tests", () => {
         showQuickPick.mockReset();
         showInputBox.mockReset();
 
-        mockGetRecall.mockReturnValueOnce([]);
-        mockUSSGetRecall.mockReturnValueOnce([`[testProf]: /node1/node2/node3.txt`]);
+        mockgetFileHistory.mockReturnValueOnce([]);
+        mockUSSgetFileHistory.mockReturnValueOnce([`[testProf]: /node1/node2/node3.txt`]);
 
         await sharedActions.openRecentMemberPrompt(testTree, testUSSTree);
         expect(testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, sessNode2);
@@ -1739,7 +1739,7 @@ describe("Extension Unit Tests", () => {
         it("Testing that searchForLoadedItems works for a PDS", async () => {
             showQuickPick.mockReset();
             testTree.getChildren.mockReset();
-            mockAddHistory.mockReset();
+            mockaddSearchHistory.mockReset();
 
             const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_PDS_CONTEXT);
             testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -1775,13 +1775,13 @@ describe("Extension Unit Tests", () => {
 
             await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
-            expect(mockAddHistory).toBeCalledTimes(0);
+            expect(mockaddSearchHistory).toBeCalledTimes(0);
         });
 
         it("Testing that searchForLoadedItems works for a member", async () => {
             showQuickPick.mockReset();
             testTree.getChildren.mockReset();
-            mockAddHistory.mockReset();
+            mockaddSearchHistory.mockReset();
 
             const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null, sessNode, session, globals.DS_DS_CONTEXT);
             testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -1822,7 +1822,7 @@ describe("Extension Unit Tests", () => {
 
             await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
-            expect(mockAddHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+            expect(mockaddSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
         });
 
         it("Testing that searchForLoadedItems works for a USS folder", async () => {
@@ -1893,7 +1893,7 @@ describe("Extension Unit Tests", () => {
             const openNode = jest.spyOn(file, "openUSS");
             await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
-            expect(mockAddHistory).toBeCalledWith("/folder/file");
+            expect(mockaddSearchHistory).toBeCalledWith("/folder/file");
             expect(openNode).toHaveBeenCalledWith(false, true, testUSSTree);
         });
 
@@ -1923,8 +1923,8 @@ describe("Extension Unit Tests", () => {
 
             await sharedActions.searchInAllLoadedItems(testTree, testUSSTree);
 
-            expect(mockAddHistory).toBeCalledTimes(0);
-            mockAddHistory.mockReset();
+            expect(mockaddSearchHistory).toBeCalledTimes(0);
+            mockaddSearchHistory.mockReset();
         });
         showQuickPick.mockReset();
         showInputBox.mockReset();

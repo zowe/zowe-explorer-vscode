@@ -144,6 +144,10 @@
         "title": "%createMember%"
       },
       {
+        "command": "zowe.editDSTemplates",
+        "title": "%editDSTemplates%"
+      },
+      {
         "command": "zowe.showDSAttributes",
         "title": "%showDSAttributes%"
       },
@@ -689,6 +693,11 @@
           "when": "view == zowe.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.uploadDialog",
           "group": "1_create@1"
+        },
+        {
+          "when": "view == zowe.explorer",
+          "command": "zowe.editDSTemplates",
+          "group": "1_create@2"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(pds|migr|ds|vsam).*/",

@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../globals";
+import * as zowe from "@zowe/cli";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -153,11 +154,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Adds a history(Recall) element to persisted settings.
      * @param node: the root node representing the operation
      */
-    addHistory(element: string);
+    addSearchHistory(element: string);
     /**
      * Retrieves history(Recall) elements from persisted settings.
      */
-    getHistory();
+    getSearchHistory();
     /**
      * Returns the type of the tree provider.
      * @returns {PersistenceSchemaEnum} the type of tree: Dataset, USS, or Job
@@ -210,19 +211,37 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      *
      * @param {string} criteria the member name to add
      */
-    addRecall?(criteria: string);
+    addFileHistory?(criteria: string);
     /**
      * Returns the array of recently-opened member names
      *
      * @returns {string[]} the array of recently-opened member names
      */
-    getRecall?();
+    getFileHistory?();
     /**
      * Removes a member name from the recently-opened members array
      *
      * @param {string} name the member to remove
      */
-    removeRecall?(name: string);
+    removeFileHistory?(name: string);
+    /**
+     * Adds a data set template to the persistent array
+     *
+     * @param {{label: string, type: zowe.CreateDataSetTypeEnum}} template the template to add
+     */
+    addTemplate?(template: {label: string, type: zowe.CreateDataSetTypeEnum});
+    /**
+     * Returns the array of data set templates
+     *
+     * @returns {{label: string, type: zowe.CreateDataSetTypeEnum}[]} the array of templates
+     */
+    getTemplates?();
+    /**
+     * Removes a template from the persistent templates array
+     *
+     * @param {{label: string, type: zowe.CreateDataSetTypeEnum}} template the template to remove
+     */
+    removeTemplate?(template: {label: string, type: zowe.CreateDataSetTypeEnum});
     /**
      * Returns a new dataset filter string, from an old filter and a new string
      *

@@ -185,6 +185,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.pattern", (node) => datasetProvider.filterPrompt(node));
     vscode.commands.registerCommand("zowe.editSession", async (node) => datasetProvider.editSession(node));
     vscode.commands.registerCommand("zowe.ZoweNode.openPS", (node) => dsActions.openPS(node, true, datasetProvider));
+    vscode.commands.registerCommand("zowe.editDSTemplate", (node) => dsActions.editDataSetTemplate(datasetProvider));
     //vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFile(node, datasetProvider));
     //vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFileFromWebview(node, context, datasetProvider));
     vscode.commands.registerCommand("zowe.createDataset", (node) => dsActions.createFileNoWebview(node, datasetProvider));

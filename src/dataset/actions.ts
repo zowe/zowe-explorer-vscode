@@ -180,7 +180,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             } else {
                 await vscode.window.showTextDocument(document, {preview: false});
             }
-            if (datasetProvider) { datasetProvider.addRecall(`[${node.getProfileName()}]: ${label}`); }
+            if (datasetProvider) { datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`); }
         } catch (err) {
             globals.LOG.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             errorHandling(err, node.getProfileName(), err.message);
@@ -258,7 +258,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 node.dirty = true;
 
                 const theFilter = await datasetProvider.createFilterString(name, node);
-                datasetProvider.addHistory(theFilter);
+                datasetProvider.addSearchHistory(theFilter);
                 datasetProvider.refresh();
 
                 // Show newly-created data set in expanded tree view
@@ -288,165 +288,55 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 
 
 
+function getTypeEnumAndOptionsFromString(typeString) {
+    // Decide the settings of the data set based on the user's selection
+    let typeEnum;
+    let createOptions;
+    switch (typeString) {
+        case `Data Set Binary`:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+            break;
+        case `Data Set C`:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+            break;
+        case `Data Set Classic`:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+            break;
+        case `Data Set Partitioned`:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+            break;
+        case `Data Set Sequential`:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+            break;
+    }
+    return {type: typeEnum, options: createOptions};
+}
 
-
-
-
-/**
- * Creates a PDS member
- *
- * @export
- * @param {IZoweDatasetTreeNode} parent - The parent Node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function createFileFromWebview(node: IZoweDatasetTreeNode, context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const panel = vscode.window.createWebviewPanel(
-        'createFileWebview', // Identifies the type of the webview. Used internally
-        'Create New Dataset', // Title of the panel displayed to the user
-        vscode.ViewColumn.One, // Editor column to show the new webview panel in.
-        {
-            enableScripts: true,
-            localResourceRoots: [
-                vscode.Uri.file(path.join(context.extensionPath, '/src/dataset'))
-        ]} // Webview options. More on these later.
-    );
-
-    const cssFile = vscode.Uri.file(path.join(context.extensionPath, '/src/dataset/newFileWebview.css')).with({ scheme: 'vscode-resource' });
-    const submitBgColor = new vscode.ThemeColor('button.background');
-    panel.webview.html = `<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none';
-            img-src https:;
-            script-src 'unsafe-eval' 'unsafe-inline' vscode-resource:;
-            style-src vscode-resource: 'unsafe-inline';">
-        <link rel="stylesheet" type="text/css" href="${cssFile}">
-        <title>Create New Dataset</title>
-    </head>
-    <body>
-        <h2>Allocate New Data Set</h2>
-        <table>
-            <tr>
-                <td class="left-column"><label for="dsName">Data Set Name:</label></td>
-                <td class="right-column"><input type="text" id="dsName" required></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsMgmtClass">Management Class:</label></td>
-                <td class="right-column"><input type="text" id="dsMgmtClass" placeholder="Blank for default management class"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsStorageClass">Storage Class:</label></td>
-                <td class="right-column"><input type="text" id="dsStorageClass" placeholder="Blank for default storage class"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsVolumeSerial">Volume Serial:</label></td>
-                <td class="right-column"><input type="text" id="dsVolumeSerial" placeholder="Blank for system default volume"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsDeviceType">Device Type:</label></td>
-                <td class="right-column"><input type="text" id="dsDeviceType" placeholder="Generic unit or device address"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsDataClass">Data Class:</label></td>
-                <td class="right-column"><input type="text" id="dsDataClass" placeholder="Blank for default data class"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsSpaceUnits">Space Units:</label></td>
-                <td class="right-column"><select id="dsSpaceUnits" required>
-                    <option value="CYLINDER">CYLINDER</option>
-                    <option value="BLKS">BLKS</option>
-                    <option value="TRKS">TRKS</option>
-                    <option value="CYLS">CYLS</option>
-                    <option value="KB">KB</option>
-                    <option value="MB">MB</option>
-                    <option value="BYTES">BYTES</option>
-                    <option value="RECORDS">RECORDS</option>
-                </select></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsAvgRecordUnit">Average Record Unit:</label></td>
-                <td class="right-column"><select id="dsAvgRecordUnit" required>
-                    <option value="M">M</option>
-                    <option value="K">K</option>
-                    <option value="U" default>U</option>
-                </select></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsPrimaryQuantity">Primary Quantity:</label></td>
-                <td class="right-column"><input type="number" id="dsPrimaryQuantity" min="0" placeholder="In above units" required></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsSecondaryQuantity">Secondary Quantity:</label></td>
-                <td class="right-column"><input type="number" id="dsSecondaryQuantity" min="0" placeholder="In above units"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsDirectoryBlocks">Directory Blocks:</label></td>
-                <td class="right-column"><input type="number" id="dsDirectoryBlocks" min="0" placeholder="Zero for sequential data set" required></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsRecordFormat">Record Format:</label></td>
-                <td class="right-column"><input type="text" id="dsRecordFormat" required></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsRecordLength">Record Length:</label></td>
-                <td class="right-column"><input type="number" id="dsRecordLength" required></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsBlockSize">Block Size:</label></td>
-                <td class="right-column"><input type="number" id="dsBlockSize" required></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsNameType">Data Set Name Type:</label></td>
-                <td class="right-column"><select id="dsNameType" required>
-                    <option value="LIBRARY">LIBRARY</option>
-                    <option value="HFS">HFS</option>
-                    <option value="PDS" default>PDS</option>
-                    <option value="LARGE">LARGE</option>
-                    <option value="BASIC">BASIC</option>
-                    <option value="*">*</option>
-                    <option value="EXTREQ">EXTREQ</option>
-                    <option value="EXTPREF">EXTPREF</option>
-                    <option value="blank"></option>
-                </select></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsVersion">Data Set Version:</label></td>
-                <td class="right-column"><input type="number" min="1" max="2" id="dsVersion" placeholder=""></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsNumGenerations">Number of Generations:</label></td>
-                <td class="right-column"><input type="number" min="0" id="dsNumGenerations" placeholder=""></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsExtendedAttrs">Extended Attributes:</label></td>
-                <td class="right-column"><select id="dsExtendedAttrs">
-                    <option value="NO" default>NO</option>
-                    <option value="OPT">OPT</option>
-                    <option value="blank"></option>
-                </select></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsExpirationDate">Expiration Date:</label></td>
-                <td class="right-column"><input type="date" id="dsExpirationDate"></td>
-                <td class="right-column"><label for="dsExpirationDateNever">Never Expires:</label></td>
-                <td class="right-column-checkbox"><input type="checkbox" id="dsExpirationDateNever"></td>
-            </tr>
-            <tr>
-                <td class="left-column"><label for="dsAllocateMultiple">Allocate Multiple Volumes:</label></td>
-                <td class="right-column-checkbox"><input type="checkbox" id="dsAllocateMultiple"></td>
-            </tr>
-            <tr>
-                <td>
-                <input type="submit" value="Allocate" style="background-color: ${submitBgColor};">
-                </td>
-            </tr>
-        </table>
-        </div>
-    </body>
-    </html>`;
+function getStringFromTypeEnum(typeEnum) {
+    let typeString;
+    switch (typeEnum) {
+        case 0:
+            typeString = `Data Set Binary`;
+            break;
+        case 1:
+            typeString = `Data Set C`;
+            break;
+        case 2:
+            typeString = `Data Set Classic`;
+            break;
+        case 3:
+            typeString = `Data Set Partitioned`;
+            break;
+        case 4:
+            typeString = `Data Set Sequential`;
+            break;
+    }
+    return typeString;
 }
 
 /**
@@ -463,37 +353,46 @@ export async function createFileNoWebview(node: IZoweDatasetTreeNode, datasetPro
         { label: `Node Type`, value: `Data Set Binary`, placeHolder: `Select a node type` },
     ]
 
+    let pattern: string;
+    let qpItems = [];
+    let storedTemplates = datasetProvider.getTemplates();
+    if (storedTemplates.length > 0) {
+        storedTemplates.forEach((template) => {
+            qpItems.push(new FilterItem(`label: ${template.label}, type: ${getStringFromTypeEnum(template.type)}`));
+        });
+        qpItems.push(new FilterItem(`+ Create without template`, ``, true));
+    
+        const quickpick = vscode.window.createQuickPick();
+        quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
+        quickpick.ignoreFocusOut = true;
+        quickpick.items = [...qpItems];
+        quickpick.title = "Select a template for allocating a new data set";
+        quickpick.matchOnDescription = false;
+    
+        quickpick.show();
+        const choice = await resolveQuickPickHelper(quickpick);
+        if (!choice) {
+            vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
+            return;
+        } else { pattern = choice.label; }
+        quickpick.dispose();
+    
+        if (pattern) {
+            const label = pattern.match(/(?<=label: )(.*?)(?=, t)/)[0];
+            const type = pattern.match(/(?<=type: )(.*?)$/)[0];
+            propertyArray[0].value = label;
+            propertyArray[1].value = type;
+        }
+    }
+
     if (await getUserSelection(propertyArray)) {
         try {
-            let typeEnum;
-            let createOptions;
-            switch (propertyArray[1].value) {
-                case `Data Set Binary`:
-                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
-                    break;
-                case `Data Set C`:
-                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
-                    break;
-                case `Data Set Classic`:
-                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
-                    break;
-                case `Data Set Partitioned`:
-                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
-                    break;
-                case `Data Set Sequential`:
-                    typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-                    createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
-                    break;
-            }
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, propertyArray[0].value, createOptions);
+            const typeAndOptions = getTypeEnumAndOptionsFromString(propertyArray[1].value);
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeAndOptions.type, propertyArray[0].value, typeAndOptions.options);
             node.dirty = true;
 
             const theFilter = await datasetProvider.createFilterString(propertyArray[0].value, node);
-            datasetProvider.addHistory(theFilter);
+            datasetProvider.addSearchHistory(theFilter);
             datasetProvider.refresh();
 
             // Show newly-created data set in expanded tree view
@@ -517,6 +416,9 @@ export async function createFileNoWebview(node: IZoweDatasetTreeNode, datasetPro
                 err.message);
             throw (err);
         }
+    } else {
+        const typeAndOptions = getTypeEnumAndOptionsFromString(propertyArray[1].value);
+        datasetProvider.addTemplate({label: propertyArray[0].value, type: typeAndOptions.type});
     }
 }
 
@@ -528,12 +430,14 @@ async function getUserSelection(propertyArray): Promise<boolean> {
     propertyArray.forEach((prop) => {
         qpItems.push(new FilterItem(prop.label, prop.value));
     });
-    qpItems.push(new FilterItem(`Allocate Data Set`, ``, true));
-    
+    qpItems.push(new FilterItem(`+ Allocate Data Set`, ``, true));
+    qpItems.push(new FilterItem(`+ Save as Template`, ``, true));
+
     const quickpick = vscode.window.createQuickPick();
     quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list of options");
     quickpick.ignoreFocusOut = true;
     quickpick.items = [...qpItems];
+    quickpick.matchOnDescription = false;
 
     quickpick.show();
     const choice = await resolveQuickPickHelper(quickpick);
@@ -546,10 +450,12 @@ async function getUserSelection(propertyArray): Promise<boolean> {
     if (pattern) {
         // Parse pattern for selected attribute
         switch(pattern) {
-            case `Allocate Data Set`:
+            case `+ Allocate Data Set`:
                 return Promise.resolve(true);
+            case `+ Save as Template`:
+                return Promise.resolve(false);
             case `Node Label`:
-                propertyArray[0].value = await vscode.window.showInputBox({ placeHolder: propertyArray[0].placeHolder });
+                propertyArray[0].value = await vscode.window.showInputBox({ value: propertyArray[0].value, placeHolder: propertyArray[0].placeHolder });
                 break;
             case `Node Type`:
                 propertyArray[1].value = await vscode.window.showQuickPick([`Data Set Binary`, `Data Set C`, `Data Set Classic`, `Data Set Partitioned`, `Data Set Sequential`]);
@@ -559,8 +465,94 @@ async function getUserSelection(propertyArray): Promise<boolean> {
     }
 }
 
+export async function editDataSetTemplate(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+    let pattern: string;
+    let propertyArray = [
+        { label: `Node Label`, value: '', placeHolder: `Enter a new node label` },
+        { label: `Node Type`, value: '', placeHolder: `Select a node type` },
+    ]
+
+    // Create the array of items in the quickpick list
+    let qpItems = [];
+    let storedTemplates = datasetProvider.getTemplates();
+    if (storedTemplates.length > 0) {
+        storedTemplates.forEach((template) => {
+            qpItems.push(new FilterItem(`label: ${template.label}, type: ${getStringFromTypeEnum(template.type)}`));
+        });
+        qpItems.push(new FilterItem(`+ Create without template`, ``, true));
+    
+        const quickpick = vscode.window.createQuickPick();
+        quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
+        quickpick.ignoreFocusOut = true;
+        quickpick.items = [...qpItems];
+        quickpick.title = "Select a template for editing";
+        quickpick.matchOnDescription = false;
+    
+        quickpick.show();
+        const choice = await resolveQuickPickHelper(quickpick);
+        if (!choice) {
+            vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select a template to edit."));
+            return;
+        } else { pattern = choice.label; }
+        quickpick.dispose();
+    
+        if (pattern) {
+            const label = pattern.match(/(?<=label: )(.*?)(?=, t)/)[0];
+            const type = pattern.match(/(?<=type: )(.*?)$/)[0];
+            propertyArray[0].value = label;
+            propertyArray[1].value = type;
+        }
+
+        await getUserSelection2(propertyArray, datasetProvider);
+    } else {
+        vscode.window.showInformationMessage(localize("editDSTemplate.noTemplates", "You do not have any templates. Create a new data set to create a template."));
+        return;
+    }
+}
 
 
+async function getUserSelection2(propertyArray, datasetProvider): Promise<boolean> {
+    let pattern: string;
+    const originalProperties = propertyArray;
+
+    // Create the array of items in the quickpick list
+    let qpItems2 = [];
+    propertyArray.forEach((prop) => {
+        qpItems2.push(new FilterItem(prop.label, prop.value));
+    });
+    qpItems2.push(new FilterItem(`+ Save Template`, ``, true));
+
+    const quickpick2 = vscode.window.createQuickPick();
+    quickpick2.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list of options");
+    quickpick2.ignoreFocusOut = true;
+    quickpick2.items = [...qpItems2];
+    quickpick2.matchOnDescription = false;
+
+    quickpick2.show();
+    const choice2 = await resolveQuickPickHelper(quickpick2);
+    if (!choice2) {
+        vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
+        return;
+    } else { pattern = choice2.label; }
+    quickpick2.dispose();
+
+    if (pattern) {
+        // Parse pattern for selected attribute
+        switch(pattern) {
+            case `+ Save Template`:
+                datasetProvider.removeTemplate({label: originalProperties[0].value, type: getTypeEnumAndOptionsFromString(originalProperties[1].value).type});
+                datasetProvider.addTemplate({label: propertyArray[0].value, type: getTypeEnumAndOptionsFromString(propertyArray[1].value).type});
+                return Promise.resolve(true);
+            case `Node Label`:
+                propertyArray[0].value = await vscode.window.showInputBox({ value: propertyArray[0].value, placeHolder: propertyArray[0].placeHolder });
+                break;
+            case `Node Type`:
+                propertyArray[1].value = await vscode.window.showQuickPick([`Data Set Binary`, `Data Set C`, `Data Set Classic`, `Data Set Partitioned`, `Data Set Sequential`]);
+                break;
+        };
+        if (await getUserSelection2(propertyArray, datasetProvider)) { return Promise.resolve(true); }
+    }
+}
 
 
 
@@ -936,7 +928,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     if (icon) {
         node.iconPath = icon.path;
     }
-    datasetProvider.addHistory(node.pattern);
+    datasetProvider.addSearchHistory(node.pattern);
 }
 
 /**
