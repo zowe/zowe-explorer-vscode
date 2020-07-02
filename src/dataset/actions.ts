@@ -189,155 +189,102 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
     }
 }
 
-/**
- * Creates a new file and uploads to the server
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * TODO: Consider changing configuration to allow "custom" data set specifications
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * @export
- * @param {IZoweDatasetTreeNode} node - Desired Zowe session
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
- */
-export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    const quickPickOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
-        ignoreFocusOut: true,
-        canPickMany: false
-    };
-    const types = [
-        localize("createFile.dataSetBinary", "Data Set Binary"),
-        localize("createFile.dataSetC", "Data Set C"),
-        localize("createFile.dataSetClassic", "Data Set Classic"),
-        localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
-        localize("createFile.dataSetSequential", "Data Set Sequential")
-    ];
+// /**
+//  * Creates a new file and uploads to the server
+//  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//  * TODO: Consider changing configuration to allow "custom" data set specifications
+//  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//  * @export
+//  * @param {IZoweDatasetTreeNode} node - Desired Zowe session
+//  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+//  */
+// export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+//     const quickPickOptions: vscode.QuickPickOptions = {
+//         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
+//         ignoreFocusOut: true,
+//         canPickMany: false
+//     };
+//     const types = [
+//         localize("createFile.dataSetBinary", "Data Set Binary"),
+//         localize("createFile.dataSetC", "Data Set C"),
+//         localize("createFile.dataSetClassic", "Data Set Classic"),
+//         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
+//         localize("createFile.dataSetSequential", "Data Set Sequential")
+//     ];
 
-    datasetProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-        // get data set type
-        const type = await vscode.window.showQuickPick(types, quickPickOptions);
-        if (type == null) {
-            globals.LOG.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
-            return;
-        } else {
-            globals.LOG.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
-        }
+//     datasetProvider.checkCurrentProfile(node);
+//     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+//         // get data set type
+//         const type = await vscode.window.showQuickPick(types, quickPickOptions);
+//         if (type == null) {
+//             globals.LOG.debug(localize("createFile.log.debug.noValidTypeSelected", "No valid data type selected"));
+//             return;
+//         } else {
+//             globals.LOG.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
+//         }
 
-        let typeEnum;
-        let createOptions;
-        switch (type) {
-            case localize("createFile.dataSetBinary", "Data Set Binary"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
-                break;
-            case localize("createFile.dataSetC", "Data Set C"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
-                break;
-            case localize("createFile.dataSetClassic", "Data Set Classic"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
-                break;
-            case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
-                break;
-            case localize("createFile.dataSetSequential", "Data Set Sequential"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
-                break;
-        }
+//         let typeEnum;
+//         let createOptions;
+//         switch (type) {
+//             case localize("createFile.dataSetBinary", "Data Set Binary"):
+//                 typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+//                 createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+//                 break;
+//             case localize("createFile.dataSetC", "Data Set C"):
+//                 typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+//                 createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+//                 break;
+//             case localize("createFile.dataSetClassic", "Data Set Classic"):
+//                 typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+//                 createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+//                 break;
+//             case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
+//                 typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+//                 createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+//                 break;
+//             case localize("createFile.dataSetSequential", "Data Set Sequential"):
+//                 typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+//                 createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+//                 break;
+//         }
 
-        // get name of data set
-        let name = await vscode.window.showInputBox({placeHolder: localize("dataset.name", "Name of Data Set")});
-        if (name) {
-            name = name.trim().toUpperCase();
+//         // get name of data set
+//         let name = await vscode.window.showInputBox({placeHolder: localize("dataset.name", "Name of Data Set")});
+//         if (name) {
+//             name = name.trim().toUpperCase();
 
-            try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
-                node.dirty = true;
+//             try {
+//                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
+//                 node.dirty = true;
 
-                const theFilter = await datasetProvider.createFilterString(name, node);
-                datasetProvider.addSearchHistory(theFilter);
-                datasetProvider.refresh();
+//                 const theFilter = await datasetProvider.createFilterString(name, node);
+//                 datasetProvider.addSearchHistory(theFilter);
+//                 datasetProvider.refresh();
 
-                // Show newly-created data set in expanded tree view
-                if (name) {
-                    node.label = `${node.label} `;
-                    node.label = node.label.trim();
-                    node.tooltip = node.pattern = theFilter.toUpperCase();
-                    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                    const icon = getIconByNode(node);
-                    if (icon) {
-                        node.iconPath = icon.path;
-                    }
-                    node.dirty = true;
+//                 // Show newly-created data set in expanded tree view
+//                 if (name) {
+//                     node.label = `${node.label} `;
+//                     node.label = node.label.trim();
+//                     node.tooltip = node.pattern = theFilter.toUpperCase();
+//                     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+//                     const icon = getIconByNode(node);
+//                     if (icon) {
+//                         node.iconPath = icon.path;
+//                     }
+//                     node.dirty = true;
 
-                    const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
-                    datasetProvider.getTreeView().reveal(newNode, { select: true });
-                }
-            } catch (err) {
-                globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-                errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
-                    err.message);
-                throw (err);
-            }
-        }
-    }
-}
-
-
-
-function getTypeEnumAndOptionsFromString(typeString) {
-    // Decide the settings of the data set based on the user's selection
-    let typeEnum;
-    let createOptions;
-    switch (typeString) {
-        case `Data Set Binary`:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
-            break;
-        case `Data Set C`:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
-            break;
-        case `Data Set Classic`:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
-            break;
-        case `Data Set Partitioned`:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
-            break;
-        case `Data Set Sequential`:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
-            break;
-    }
-    return {type: typeEnum, options: createOptions};
-}
-
-function getStringFromTypeEnum(typeEnum) {
-    let typeString;
-    switch (typeEnum) {
-        case 0:
-            typeString = `Data Set Binary`;
-            break;
-        case 1:
-            typeString = `Data Set C`;
-            break;
-        case 2:
-            typeString = `Data Set Classic`;
-            break;
-        case 3:
-            typeString = `Data Set Partitioned`;
-            break;
-        case 4:
-            typeString = `Data Set Sequential`;
-            break;
-    }
-    return typeString;
-}
+//                     const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
+//                     datasetProvider.getTreeView().reveal(newNode, { select: true });
+//                 }
+//             } catch (err) {
+//                 globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+//                 errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set! ") +
+//                     err.message);
+//                 throw (err);
+//             }
+//         }
+//     }
+// }
 
 /**
  * Creates a PDS member
@@ -346,29 +293,33 @@ function getStringFromTypeEnum(typeEnum) {
  * @param {IZoweDatasetTreeNode} parent - The parent Node
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
-export async function createFileNoWebview(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    // The array of all the dataset's properties
-    let propertyArray = [
-        { label: `Node Label`, value: node.getLabel(), placeHolder: `Enter a new node label` },
-        { label: `Node Type`, value: `Data Set Binary`, placeHolder: `Select a node type` },
-    ]
+export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+    // The array of the data set's properties
+    const propertyArray = [
+        { label: `Template Name`, value: ``, placeHolder: `Enter a template name`, alwaysShow: false },
+        { label: `Node Label`, value: ``, placeHolder: `Enter a node label`, alwaysShow: false },
+        { label: `Node Type`, value: ``, placeHolder: `Select a node type`, alwaysShow: false },
+        { label: `+ Allocate Data Set`, value: ``, placeHolder: ``, alwaysShow: true },
+        { label: `+ Save as Template`, value: ``, placeHolder: ``, alwaysShow: true }
+    ];
 
+    // If there are some existing templates, let the user choose a template to use (or not)
     let pattern: string;
-    let qpItems = [];
-    let storedTemplates = datasetProvider.getTemplates();
+    const qpItems = [];
+    const storedTemplates = datasetProvider.getTemplates();
     if (storedTemplates.length > 0) {
         storedTemplates.forEach((template) => {
-            qpItems.push(new FilterItem(`label: ${template.label}, type: ${getStringFromTypeEnum(template.type)}`));
+            qpItems.push(new FilterItem(`Template Name: ${template.templateName}, Node Label: ${template.label}, Node Type: ${dsUtils.getStringFromTypeEnum(template.type)}`));
         });
         qpItems.push(new FilterItem(`+ Create without template`, ``, true));
-    
+
         const quickpick = vscode.window.createQuickPick();
         quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
         quickpick.ignoreFocusOut = true;
         quickpick.items = [...qpItems];
         quickpick.title = "Select a template for allocating a new data set";
         quickpick.matchOnDescription = false;
-    
+
         quickpick.show();
         const choice = await resolveQuickPickHelper(quickpick);
         if (!choice) {
@@ -376,19 +327,31 @@ export async function createFileNoWebview(node: IZoweDatasetTreeNode, datasetPro
             return;
         } else { pattern = choice.label; }
         quickpick.dispose();
-    
-        if (pattern) {
-            const label = pattern.match(/(?<=label: )(.*?)(?=, t)/)[0];
-            const type = pattern.match(/(?<=type: )(.*?)$/)[0];
-            propertyArray[0].value = label;
-            propertyArray[1].value = type;
+
+        // Get the template's properties from the selected quickpick item
+        if (pattern && pattern !== `+ Create without template`) {
+            const templateName = pattern.match(/(?<=Template Name: )(.*?)(?=, N)/)[0];
+            const label = pattern.match(/(?<=Node Label: )(.*?)(?=, N)/)[0];
+            const type = pattern.match(/(?<=Node Type: )(.*?)$/)[0];
+            propertyArray.find((prop) => prop.label === `Template Name`).value = templateName;
+            propertyArray.find((prop) => prop.label === `Node Label`).value = label;
+            propertyArray.find((prop) => prop.label === `Node Type`).value = type;
         }
     }
 
-    if (await getUserSelection(propertyArray)) {
+    // Store the original template properties so we can find the old template in the persistent array (if we should need to replace it)
+    const originalProperties = {
+        templateName: propertyArray.find((prop) => prop.label === `Template Name`).value,
+        label: propertyArray.find((prop) => prop.label === `Node Label`).value,
+        type: propertyArray.find((prop) => prop.label === `Node Type`).value
+    };
+
+    // Allow the user to edit the data set's properties, and if they choose to allocate, that's what we will do :)
+    if (await handleUserSelection(propertyArray, datasetProvider, originalProperties) === `allocate`) {
         try {
-            const typeAndOptions = getTypeEnumAndOptionsFromString(propertyArray[1].value);
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeAndOptions.type, propertyArray[0].value, typeAndOptions.options);
+            const typeAndOptions = dsUtils.getTypeEnumAndOptionsFromString(propertyArray[1].value);
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeAndOptions.type, propertyArray[0].value,
+                                                                                     typeAndOptions.options);
             node.dirty = true;
 
             const theFilter = await datasetProvider.createFilterString(propertyArray[0].value, node);
@@ -416,146 +379,131 @@ export async function createFileNoWebview(node: IZoweDatasetTreeNode, datasetPro
                 err.message);
             throw (err);
         }
-    } else {
-        const typeAndOptions = getTypeEnumAndOptionsFromString(propertyArray[1].value);
-        datasetProvider.addTemplate({label: propertyArray[0].value, type: typeAndOptions.type});
     }
 }
 
-async function getUserSelection(propertyArray): Promise<boolean> {
-    let pattern: string;
+export async function editDataSetTemplate(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+    // The array of the data set's properties
+    const propertyArray = [
+        { label: `Template Name`, value: "", placeHolder: `Enter a template name`, alwaysShow: false },
+        { label: `Node Label`, value: "", placeHolder: `Enter a node label`, alwaysShow: false },
+        { label: `Node Type`, value: "", placeHolder: "", alwaysShow: false },
+        { label: `+ Save Template`, value: "", placeHolder: "", alwaysShow: true },
+        { label: `+ Delete Template`, value: "", placeHolder: "", alwaysShow: true },
+    ];
 
     // Create the array of items in the quickpick list
-    let qpItems = [];
-    propertyArray.forEach((prop) => {
-        qpItems.push(new FilterItem(prop.label, prop.value));
+    const qpItems = [];
+    const storedTemplates = datasetProvider.getTemplates();
+    storedTemplates.forEach((template) => {
+        qpItems.push(new FilterItem(`Template Name: ${template.templateName}, Node Label: ${template.label}, Node Type: ${dsUtils.getStringFromTypeEnum(template.type)}`));
     });
-    qpItems.push(new FilterItem(`+ Allocate Data Set`, ``, true));
-    qpItems.push(new FilterItem(`+ Save as Template`, ``, true));
+    qpItems.push(new FilterItem(`+ Create new template`, "", true));
 
+    const quickpick = vscode.window.createQuickPick();
+    quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
+    quickpick.ignoreFocusOut = true;
+    quickpick.items = [...qpItems];
+    quickpick.title = "Select a template for editing";
+    quickpick.matchOnDescription = false;
+
+    let pattern: string;
+    quickpick.show();
+    const choice = await resolveQuickPickHelper(quickpick);
+    if (!choice) {
+        vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select a template to edit."));
+        return;
+    } else { pattern = choice.label; }
+    quickpick.dispose();
+
+    // Get the template's properties from the selected quickpick item
+    if (pattern && pattern !== `+ Create new template`) {
+        const templateName = pattern.match(/(?<=Template Name: )(.*?)(?=, N)/)[0];
+        const label = pattern.match(/(?<=Node Label: )(.*?)(?=, N)/)[0];
+        const type = pattern.match(/(?<=Node Type: )(.*?)$/)[0];
+        propertyArray.find((prop) => prop.label === `Template Name`).value = templateName;
+        propertyArray.find((prop) => prop.label === `Node Label`).value = label;
+        propertyArray.find((prop) => prop.label === `Node Type`).value = type;
+    }
+
+    // Store the original template properties so we can find the old template in the persistent array (if we should need to replace it)
+    const originalProperties = {
+        templateName: propertyArray.find((prop) => prop.label === `Template Name`).value,
+        label: propertyArray.find((prop) => prop.label === `Node Label`).value,
+        type: propertyArray.find((prop) => prop.label === `Node Type`).value
+    };
+
+    await handleUserSelection(propertyArray, datasetProvider, originalProperties);
+}
+
+async function handleUserSelection(propertyArray, datasetProvider, originalProperties): Promise<string> {
+    // Create the array of items in the quickpick list
+    const qpItems = [];
+    propertyArray.forEach((prop) => {
+        qpItems.push(new FilterItem(prop.label, prop.value, prop.alwaysShow));
+    });
+
+    // Provide the settings for the quickpick's appearance & behavior
     const quickpick = vscode.window.createQuickPick();
     quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list of options");
     quickpick.ignoreFocusOut = true;
     quickpick.items = [...qpItems];
     quickpick.matchOnDescription = false;
 
+    // Show quickpick and store the user's input
     quickpick.show();
-    const choice = await resolveQuickPickHelper(quickpick);
-    if (!choice) {
+    let pattern: string;
+    const choice2 = await resolveQuickPickHelper(quickpick);
+    if (!choice2) {
         vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
         return;
-    } else { pattern = choice.label; }
+    } else { pattern = choice2.label; }
     quickpick.dispose();
 
     if (pattern) {
         // Parse pattern for selected attribute
         switch(pattern) {
             case `+ Allocate Data Set`:
-                return Promise.resolve(true);
-            case `+ Save as Template`:
-                return Promise.resolve(false);
-            case `Node Label`:
-                propertyArray[0].value = await vscode.window.showInputBox({ value: propertyArray[0].value, placeHolder: propertyArray[0].placeHolder });
-                break;
-            case `Node Type`:
-                propertyArray[1].value = await vscode.window.showQuickPick([`Data Set Binary`, `Data Set C`, `Data Set Classic`, `Data Set Partitioned`, `Data Set Sequential`]);
-                break;
-        };
-        if (await getUserSelection(propertyArray)) { return Promise.resolve(true); }
-    }
-}
-
-export async function editDataSetTemplate(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
-    let pattern: string;
-    let propertyArray = [
-        { label: `Node Label`, value: '', placeHolder: `Enter a new node label` },
-        { label: `Node Type`, value: '', placeHolder: `Select a node type` },
-    ]
-
-    // Create the array of items in the quickpick list
-    let qpItems = [];
-    let storedTemplates = datasetProvider.getTemplates();
-    if (storedTemplates.length > 0) {
-        storedTemplates.forEach((template) => {
-            qpItems.push(new FilterItem(`label: ${template.label}, type: ${getStringFromTypeEnum(template.type)}`));
-        });
-        qpItems.push(new FilterItem(`+ Create without template`, ``, true));
-    
-        const quickpick = vscode.window.createQuickPick();
-        quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
-        quickpick.ignoreFocusOut = true;
-        quickpick.items = [...qpItems];
-        quickpick.title = "Select a template for editing";
-        quickpick.matchOnDescription = false;
-    
-        quickpick.show();
-        const choice = await resolveQuickPickHelper(quickpick);
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select a template to edit."));
-            return;
-        } else { pattern = choice.label; }
-        quickpick.dispose();
-    
-        if (pattern) {
-            const label = pattern.match(/(?<=label: )(.*?)(?=, t)/)[0];
-            const type = pattern.match(/(?<=type: )(.*?)$/)[0];
-            propertyArray[0].value = label;
-            propertyArray[1].value = type;
-        }
-
-        await getUserSelection2(propertyArray, datasetProvider, {label: propertyArray[0].value, type: propertyArray[1].value});
-    } else {
-        vscode.window.showInformationMessage(localize("editDSTemplates.noTemplates", "You do not have any templates. Create a new data set to create a template."));
-        return;
-    }
-}
-
-
-async function getUserSelection2(propertyArray, datasetProvider, originalProperties): Promise<boolean> {
-    let pattern: string;
-
-    // Create the array of items in the quickpick list
-    let qpItems2 = [];
-    propertyArray.forEach((prop) => {
-        qpItems2.push(new FilterItem(prop.label, prop.value));
-    });
-    qpItems2.push(new FilterItem(`+ Save Template`, ``, true));
-
-    const quickpick2 = vscode.window.createQuickPick();
-    quickpick2.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list of options");
-    quickpick2.ignoreFocusOut = true;
-    quickpick2.items = [...qpItems2];
-    quickpick2.matchOnDescription = false;
-
-    quickpick2.show();
-    const choice2 = await resolveQuickPickHelper(quickpick2);
-    if (!choice2) {
-        vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
-        return;
-    } else { pattern = choice2.label; }
-    quickpick2.dispose();
-
-    if (pattern) {
-        // Parse pattern for selected attribute
-        switch(pattern) {
+                return Promise.resolve(`allocate`);
             case `+ Save Template`:
-                datasetProvider.removeTemplate({label: originalProperties.label, type: getTypeEnumAndOptionsFromString(originalProperties.type).type});
-                datasetProvider.addTemplate({label: propertyArray[0].value, type: getTypeEnumAndOptionsFromString(propertyArray[1].value).type});
-                return Promise.resolve(true);
+            case `+ Save as Template`:
+                // Replace original template with the edited version in the persistent array
+                datasetProvider.removeTemplate({templateName: originalProperties.templateName,
+                                                label: originalProperties.label,
+                                                type: dsUtils.getTypeEnumAndOptionsFromString(originalProperties.type).type});
+                datasetProvider.addTemplate({templateName: propertyArray.find((prop) => prop.label === `Template Name`).value,
+                                             label: propertyArray.find((prop) => prop.label === `Node Label`).value,
+                                             type: dsUtils.getTypeEnumAndOptionsFromString(propertyArray.find(
+                                                 (prop) => prop.label === `Node Type`).value).type});
+                return Promise.resolve(`saveTemplate`);
+            case `+ Delete Template`:
+                datasetProvider.removeTemplate({templateName: originalProperties.templateName,
+                                                label: originalProperties.label,
+                                                type: dsUtils.getTypeEnumAndOptionsFromString(originalProperties.type).type});
+                vscode.window.showInformationMessage(localize("removeTemplate.success", "Template {0} deleted successfully.",
+                                                          originalProperties.templateName));
+                return Promise.resolve(`deleteTemplate`);
+            case `Template Name`:
+                propertyArray.find((prop) => prop.label === `Template Name`).value =
+                    await vscode.window.showInputBox({ value: propertyArray.find((prop) => prop.label === `Template Name`).value,
+                                                       placeHolder: propertyArray.find((prop) => prop.label === `Template Name`).placeHolder });
+                break;
             case `Node Label`:
-                propertyArray[0].value = await vscode.window.showInputBox({ value: propertyArray[0].value, placeHolder: propertyArray[0].placeHolder });
+                propertyArray.find((prop) => prop.label === `Node Label`).value =
+                    await vscode.window.showInputBox({ value: propertyArray.find((prop) => prop.label === `Node Label`).value,
+                                                       placeHolder: propertyArray.find((prop) => prop.label === `Node Label`).placeHolder });
                 break;
             case `Node Type`:
-                propertyArray[1].value = await vscode.window.showQuickPick([`Data Set Binary`, `Data Set C`, `Data Set Classic`, `Data Set Partitioned`, `Data Set Sequential`]);
+                propertyArray.find((prop) => prop.label === `Node Type`).value = await vscode.window.showQuickPick([`Data Set Binary`,
+                                                                                                                    `Data Set C`,
+                                                                                                                    `Data Set Classic`,
+                                                                                                                    `Data Set Partitioned`,
+                                                                                                                    `Data Set Sequential`]);
                 break;
-        };
-        if (await getUserSelection2(propertyArray, datasetProvider, originalProperties)) { return Promise.resolve(true); }
+        }
+        return Promise.resolve(await handleUserSelection(propertyArray, datasetProvider, originalProperties));
     }
 }
-
-
-
-
 
 /**
  * Shows data set attributes in a new text editor

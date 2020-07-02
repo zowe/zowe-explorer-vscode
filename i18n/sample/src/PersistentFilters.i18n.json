@@ -1,0 +1,3 @@
+{
+    "addTemplate.success": "Template saved successfully. Template name: {0}, Node name: {1}, Node type: {2}"
+}

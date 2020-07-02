@@ -11,6 +11,9 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as nls from "vscode-nls";
+import { getStringFromTypeEnum } from "./dataset/utils";
+const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
  * Standard persistent values handling routines
@@ -40,47 +43,11 @@ export class PersistentFilters {
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
-    private mTemplates: {label: string, type: zowe.CreateDataSetTypeEnum}[] = [];
+    private mTemplates: Array<{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }> = [];
 
     constructor(schema: string, private maxSearchHistory = 5, private maxFileHistory = 10) {
         this.schema = schema;
         this.initialize();
-    }
-    
-    /**
-     * Initializes the search history and sessions sections by reading from a file
-     */
-    private async initialize() {
-        let searchHistoryLines: string[];
-        let sessionLines: string[];
-        let fileHistoryLines: string[];
-        let templateLines: {label: string, type: zowe.CreateDataSetTypeEnum}[];
-        if (vscode.workspace.getConfiguration(this.schema)) {
-            searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
-            sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
-            fileHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.fileHistory);
-            templateLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.templates);
-        }
-        if (searchHistoryLines) {
-            this.mSearchHistory = searchHistoryLines;
-        } else {
-            this.resetSearchHistory();
-        }
-        if (sessionLines) {
-            this.mSessions = sessionLines;
-        } else {
-            this.resetSessions();
-        }
-        if (fileHistoryLines) {
-            this.mFileHistory = fileHistoryLines;
-        } else {
-            this.resetFileHistory();
-        }
-        if (templateLines) {
-            this.mTemplates = templateLines;
-        } else {
-            this.resetTemplates();
-        }
     }
 
     /*********************************************************************************************************************************************/
@@ -177,86 +144,28 @@ export class PersistentFilters {
      * If the entry matches a previous entry it is removed from the list
      * at that position in the stack.
      *
-     * @param {{ label: string, type: zowe.CreateDataSetTypeEnum }} template - the template to add
+     * @param {{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }} template - the template to add
      */
-    public async addTemplate(template: { label: string, type: zowe.CreateDataSetTypeEnum }) {
+    public async addTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
         if (template) {
+            if (!template.templateName) { template.templateName = `Blank`; }
             template.label = template.label.toUpperCase();
             // Remove any entries that match
             this.mTemplates = this.mTemplates.filter((element) => {
-                if (element.label.trim() !== template.label.trim() || element.type !== template.type) {
-                    return element;
+                if (element.templateName.trim() !== template.templateName.trim() ||
+                    element.label.trim() !== template.label.trim() ||
+                    element.type !== template.type) {
+                        return element;
                 }
             });
 
             // Add value to front of stack
             this.mTemplates.unshift(template);
+            vscode.window.showInformationMessage(localize("addTemplate.success",
+                                                          "Template saved successfully. Template name: {0}, Node name: {1}, Node type: {2}",
+                                                          template.templateName, template.label, getStringFromTypeEnum(template.type)));
 
             this.updateTemplates();
-        }
-    }
-
-    /*********************************************************************************************************************************************/
-    /* Update functions, for updating the settings.json file in VSCode
-    /*********************************************************************************************************************************************/
-
-    /**
-     * Updates the search history array in settings.json
-     */
-    private async updateSearchHistory() {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
-        if (settings.persistence) {
-            settings.searchHistory = this.mSearchHistory;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
-        }
-    }
-
-    /**
-     * Updates the stored sessions array in settings.json
-     */
-    private async updateSessions() {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
-        if (settings.persistence) {
-            settings.sessions = this.mSessions;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
-        }
-    }
-
-    /**
-     * Updates the recently-opened file history array in settings.json
-     */
-    private async updateFileHistory() {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
-        if (settings.persistence) {
-            settings.fileHistory = this.mFileHistory;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
-        }
-    }
-
-    /**
-     * Updates the stored templates array in settings.json
-     */
-    private async updateTemplates() {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
-        if (settings.persistence) {
-            settings.templates = this.mTemplates;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
-        }
-    }
-
-    /**
-     * Updates the stored favorites array in settings.json
-     */
-    public async updateFavorites(favorites: string[]) {
-        // settings are read-only, so were cloned
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
-        if (settings.persistence) {
-            settings.favorites = favorites;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
         }
     }
 
@@ -294,7 +203,7 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent templates array
      *
-     * @returns {{ label: string, type: zowe.CreateDataSetTypeEnum }[]} persistent array of data set templates
+     * @returns {{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }[]} persistent array of data set templates
      */
     public getTemplates() {
         return this.mTemplates;
@@ -332,7 +241,8 @@ export class PersistentFilters {
     /**
      * Removes one file from the persistent recently-opened files array
      *
-     * @param {string} name - The name of the file to remove. Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
+     * @param {string} name - The name of the file to remove.
+     * Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
      */
     public async removeFileHistory(name: string) {
         const index = this.mFileHistory.findIndex((fileHistoryItem) => {
@@ -345,9 +255,9 @@ export class PersistentFilters {
     /**
      * Removes one template from the persistent templates array
      *
-     * @param {{ label: string, type: zowe.CreateDataSetTypeEnum }} template - The template to remove
+     * @param {{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }} template - The template to remove
      */
-    public async removeTemplate(template: { label: string, type: zowe.CreateDataSetTypeEnum }) {
+    public async removeTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
         const index = this.mTemplates.findIndex((item) => {
             if (item.label.toUpperCase() === template.label.toUpperCase() && item.type === template.type) {
                 return item;
@@ -399,5 +309,105 @@ export class PersistentFilters {
     public async resetTemplates() {
         this.mTemplates = [];
         this.updateTemplates();
+    }
+
+    /*********************************************************************************************************************************************/
+    /* Update functions, for updating the settings.json file in VSCode
+    /*********************************************************************************************************************************************/
+
+    /**
+     * Updates the stored favorites array in settings.json
+     */
+    public async updateFavorites(favorites: string[]) {
+        // settings are read-only, so were cloned
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.favorites = favorites;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Updates the search history array in settings.json
+     */
+    private async updateSearchHistory() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.searchHistory = this.mSearchHistory;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Updates the stored sessions array in settings.json
+     */
+    private async updateSessions() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.sessions = this.mSessions;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Updates the recently-opened file history array in settings.json
+     */
+    private async updateFileHistory() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.fileHistory = this.mFileHistory;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Updates the stored templates array in settings.json
+     */
+    private async updateTemplates() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.templates = this.mTemplates;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Initializes the search history and sessions sections by reading from a file
+     */
+    private async initialize() {
+        let searchHistoryLines: string[];
+        let sessionLines: string[];
+        let fileHistoryLines: string[];
+        let templateLines: Array<{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }>;
+        if (vscode.workspace.getConfiguration(this.schema)) {
+            searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
+            sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
+            fileHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.fileHistory);
+            templateLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.templates);
+        }
+        if (searchHistoryLines) {
+            this.mSearchHistory = searchHistoryLines;
+        } else {
+            this.resetSearchHistory();
+        }
+        if (sessionLines) {
+            this.mSessions = sessionLines;
+        } else {
+            this.resetSessions();
+        }
+        if (fileHistoryLines) {
+            this.mFileHistory = fileHistoryLines;
+        } else {
+            this.resetFileHistory();
+        }
+        if (templateLines) {
+            this.mTemplates = templateLines;
+        } else {
+            this.resetTemplates();
+        }
     }
 }

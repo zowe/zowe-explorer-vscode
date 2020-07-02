@@ -426,16 +426,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.mHistory.removeFileHistory(name);
     }
 
-    public async addTemplate(template: { label: string, type: zowe.CreateDataSetTypeEnum }) {
+    public async addTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
         this.mHistory.addTemplate(template);
         this.refresh();
     }
 
-    public getTemplates(): { label: string, type: zowe.CreateDataSetTypeEnum }[] {
+    public getTemplates(): Array<{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }> {
         return this.mHistory.getTemplates();
     }
 
-    public removeTemplate(template: { label: string, type: zowe.CreateDataSetTypeEnum }) {
+    public removeTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
         this.mHistory.removeTemplate(template);
     }
 
