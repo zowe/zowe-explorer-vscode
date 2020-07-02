@@ -663,13 +663,15 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const profile = createInstanceOfProfile(imperativeProfile);
+        const qpPlaceholder = "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer";
 
         return {
             session,
             imperativeProfile,
             datasetSessionNode,
             treeView,
-            profile
+            profile,
+            qpPlaceholder
         };
     }
 
@@ -793,7 +795,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         const quickPickItem = new utils.FilterDescriptor("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createQuickPick).mockReturnValueOnce(createQuickPickContent("HLQ.PROD1.STUFF", quickPickItem));
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(createQuickPickContent("HLQ.PROD1.STUFF", [quickPickItem],
+                                                                                         blockMocks.qpPlaceholder));
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -813,7 +816,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         const quickPickItem = undefined;
-        mocked(vscode.window.createQuickPick).mockReturnValueOnce(createQuickPickContent("HLQ.PROD1.STUFF", quickPickItem));
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(createQuickPickContent("HLQ.PROD1.STUFF", quickPickItem, blockMocks.qpPlaceholder));
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const resolveQuickPickSpy = jest.spyOn(utils, "resolveQuickPickHelper");
@@ -1041,6 +1044,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);
@@ -1050,7 +1054,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             session,
             datasetSessionNode,
             treeView,
-            mvsApi
+            mvsApi,
+            profileInstance
         };
     }
 
@@ -1058,7 +1063,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1075,7 +1080,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1095,7 +1100,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(zowe.Rename.dataSet).mockImplementation(() => {
             throw defaultError;
@@ -1121,7 +1126,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1141,7 +1146,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1163,7 +1168,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
-
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(zowe.Rename.dataSetMember).mockImplementation(() => {
             throw defaultError;

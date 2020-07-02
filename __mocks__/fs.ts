@@ -49,3 +49,7 @@ export function rmdirSync(path: string): void {}
 export function unlinkSync(path: string): void {}
 
 export function writeFileSync(path: string, data: any, encoding: string): void {}
+
+export function existsSync(path: string | Buffer): boolean {
+    return true;
+}

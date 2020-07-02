@@ -80,6 +80,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             imperativeProfile: createIProfile(),
             datasetSessionNode: null,
             quickPickItem: createQuickPickItem(),
+            qpPlaceholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
             profiles: null,
             testDatasetTree: null,
             profileInstance: null,
@@ -102,7 +103,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce(entered);
 
         // Assert edge condition user cancels the input path box
-        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
         await Profiles.getInstance().loadNamedProfile("profile1");
@@ -117,7 +118,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("fake");
 
         // Assert edge condition user cancels the input path box
-        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
         await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
@@ -131,7 +132,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const entered = "";
 
         // Assert edge condition user cancels the input path box
-        const quickPickContent = createQuickPickContent(entered, blockMocks.quickPickItem);
+        const quickPickContent = createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder);
         quickPickContent.label = "firstName";
         globalMocks.mockCreateQuickPick.mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
@@ -147,7 +148,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const entered = "fake";
 
-        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
         await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
@@ -160,7 +161,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const entered = "";
 
         // Assert edge condition user cancels the input path box
-        const quickPickContent = createQuickPickContent(entered, blockMocks.quickPickItem);
+        const quickPickContent = createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder);
         quickPickContent.label = undefined;
         globalMocks.mockCreateQuickPick.mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
@@ -176,7 +177,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         blockMocks.profileInstance.createNewConnection = jest.fn().mockRejectedValue(new Error("create connection error"));
         globalMocks.mockShowInputBox.mockResolvedValueOnce(entered);
 
-        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
 
@@ -192,7 +193,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const entered = "";
         const createZoweSessionSpy = jest.spyOn(blockMocks.profiles, "createZoweSession");
         Object.defineProperty(globals, "ISTHEIA", { get: () => true, configurable: true });
-        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
         await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);
@@ -206,7 +207,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const entered = null;
         const createZoweSessionSpy = jest.spyOn(blockMocks.profiles, "createZoweSession");
         Object.defineProperty(globals, "ISTHEIA", { get: () => true, configurable: true });
-        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
+        globalMocks.mockCreateQuickPick.mockReturnValue(createQuickPickContent(entered, [blockMocks.quickPickItem], blockMocks.qpPlaceholder));
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
 
         await blockMocks.profiles.createZoweSession(blockMocks.testDatasetTree);

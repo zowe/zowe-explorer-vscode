@@ -38,6 +38,10 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
         localEncoding?: string, etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
+    public putContent(
+        inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
     public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
@@ -75,6 +79,10 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public putContents(
         inputFilePath: string, ussFilePath: string, binary?: boolean,
         localEncoding?: string, etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    public putContent(
+        inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {

@@ -124,6 +124,69 @@ describe("Negative testing for ZoweJobTreeNode", () => {
     });
 });
 
+describe("Test uploadContents", () => {
+
+    it("should test with uss node that new API method is called if it exists", async () => {
+        const putContent = jest.fn();
+        ZoweExplorerApiRegister.getUssApi = jest.fn
+            <any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>
+            ((profile: IProfileLoaded) => {
+                return {
+                    putContent
+                };
+            });
+
+        await sharedUtils.uploadContent(new ZoweUSSNode(null, null, null, null, null), {
+            fileName: "whatever"
+        } as any,
+            null, {
+                profile: {
+                    encoding: 123
+                }
+            } as any);
+        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
+    });
+
+    it("should test with uss node that old API method is called", async () => {
+        const putContents = jest.fn();
+        ZoweExplorerApiRegister.getUssApi = jest.fn
+            <any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>
+            ((profile: IProfileLoaded) => {
+                return {
+                    putContents
+                };
+            });
+
+        await sharedUtils.uploadContent(new ZoweUSSNode(null, null, null, null, null), {
+            fileName: "whatever"
+        } as any,
+            null);
+        expect(ZoweExplorerApiRegister.getUssApi(null).putContents).toBeCalled();
+    });
+
+    it("should test with data set node that old API method is called", async () => {
+        const putContents = jest.fn();
+        ZoweExplorerApiRegister.getMvsApi = jest.fn
+            <any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>
+            ((profile: IProfileLoaded) => {
+                return {
+                    putContents
+                };
+            });
+
+        const session = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const codepage = 285;
+        imperativeProfile.profile.encoding = codepage;
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        await sharedUtils.uploadContent(datasetSessionNode, {
+            fileName: "whatever"
+        } as any,
+            null);
+        expect(ZoweExplorerApiRegister.getMvsApi(null).putContents).toBeCalled();
+    });
+});
+
 describe("Test force upload", () => {
     async function createBlockMocks() {
         const newVariables = {
