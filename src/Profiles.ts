@@ -912,7 +912,12 @@ export class Profiles {
             try {
 
                 if (getSessStatus.getStatus) {
-                    profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                    profileStatus = await vscode.window.withProgress({
+                        location: vscode.ProgressLocation.Notification,
+                        title: localize("Profiles.validateProfiles.validationProgress", "Validating Profile.")
+                    }, () => {
+                        return getSessStatus.getStatus(theProfile, theProfile.type);
+                    });
                 } else {
                     profileStatus = "unverified";
                 }
