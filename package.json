@@ -144,8 +144,8 @@
         "title": "%createMember%"
       },
       {
-        "command": "zowe.editDSTemplates",
-        "title": "%editDSTemplates%"
+        "command": "zowe.manageDSTemplates",
+        "title": "%manageDSTemplates%"
       },
       {
         "command": "zowe.showDSAttributes",
@@ -696,7 +696,7 @@
         },
         {
           "when": "view == zowe.explorer",
-          "command": "zowe.editDSTemplates",
+          "command": "zowe.manageDSTemplates",
           "group": "1_create@2"
         },
         {

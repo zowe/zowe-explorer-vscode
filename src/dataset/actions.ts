@@ -382,7 +382,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
     }
 }
 
-export async function editDataSetTemplate(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
+export async function manageDataSetTemplates(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     // The array of the data set's properties
     const propertyArray = [
         { label: `Template Name`, value: "", placeHolder: `Enter a template name`, alwaysShow: false },

@@ -16,7 +16,7 @@
     "createDataset": "Create New Data Set",
     "createMember": "Create New Member",
     "showDSAttributes": "Show Data Set Attributes",
-    "editDSTemplates": "Edit Data Set Templates",
+    "manageDSTemplates": "Manage Data Set Templates",
     "deleteDataset": "Delete Data Set",
     "deleteMember": "Delete Member",
     "deletePDS": "Delete PDS",
