@@ -33,8 +33,8 @@ More information:
 
 New features:
 
-* Added the credentials check feature that allows update credentials if a user gets an authorization error.
-* Added the star icon button that allows add data sets, USS files, or jobs to the corresponding list of favorites
+* Added a credentials check feature that allows users to update their credentials if they receive an authorization error.
+* Added a star icon which clearly denotes data sets, USS files, and jobs as favorites.
 * Added a profile validation feature that checks whether a profile is valid. The feature is triggered when any action is performed with the profile. Validated profiles are indicated by a green mark.
 * Disallowed case sensitivity for profiles with same names.
 
@@ -42,7 +42,7 @@ Improvements:
 
 * Enabled editing of search filters.
 * Enabled editing of ASCII files in USS.
-* Improved text in confirmation dialogues.
+* Improved text in confirmation dialogs.
 * Reorganized the Data Sets context menu to match the order of commands recommended by VSCode.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
