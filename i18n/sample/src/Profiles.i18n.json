@@ -30,6 +30,7 @@
     "deleteProfile.quickPickOption": "Delete {0}? This will permanently remove it from your system.",
     "deleteProfile.undefined.profilename": "Operation Cancelled",
     "deleteProfile.noSelected": "Operation Cancelled",
+    "Profiles.validateProfiles.validationProgress": "Validating Profile.",
     "deleteProfile.log.debug": "Deleting profile ",
     "deleteProfile.showQuickPick.delete": "Delete",
     "deleteProfile.showQuickPick.cancel": "Cancel",
