@@ -22,26 +22,28 @@ More information:
 
 ## Contents
 
-* [What's new in Zowe Explorer 1.6.0](#what's-new-in-zowe-explorer-1.6.0)
+* [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
 * [Prerequisites](#prerequisites)
 * [Getting Started](#getting-started)
 * [Credentials Security](#credentials-security)
 * [Usage Tips](#usage-tips)
 * [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.6.0
+## What's new in Zowe Explorer 1.7.0
 
 New features:
 
-* Create profiles with different, other than `zosmf`, profile types. For example, if you have the FTP plug-in installed, you can create a profile of the FTP type.
-* Improved user experience around adding new profiles. If the quick pick list does not contain any profiles, you will be prompted to create a new profile instead of picking the option to create a new profile from the empty list.
+* Added the credentials check feature that allows update credentials if a user gets an authorization error.
+* Added the star icon button that allows add data sets, USS files, or jobs to the corresponding list of favorites
+* Added a profile validation feature that checks whether a profile is valid. The feature is triggered when any action is performed with the profile. Validated profiles are indicated by a green mark.
+* Disallowed case sensitivity for profiles with same names.
 
-Fixed bugs:
+Improvements:
 
-* Fixed the **delete a connection** and **edit a connection** functions.
-* Fixed the issue that caused extra pop-ups to appear when canceling an edit session.
-* Fixed failure to load optional secure fields from profiles.
-* Fixed the bug that appears when manually editing/deleting associated profiles.
+* Enabled editing of search filters.
+* Enabled editing of ASCII files in USS.
+* Improved text in confirmation dialogues.
+* Reorganized the Data Sets context menu to match the order of commands recommended by VSCode.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
