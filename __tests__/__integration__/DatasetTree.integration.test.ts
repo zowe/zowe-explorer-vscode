@@ -238,8 +238,8 @@ describe("DatasetTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests that addFileHistory adds a recently-opened file to the list", async () => {
         testTree.addFileHistory(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
-        const fileHistoryArray = testTree.getFileHistory();
-        expect(fileHistoryArray[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        const fileHistory = testTree.getFileHistory();
+        expect(fileHistory[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
     });
 
     it("Tests that removeFileHistory removes a file from the file history list", async () => {
