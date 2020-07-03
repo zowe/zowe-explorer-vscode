@@ -140,12 +140,12 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
     let pattern: string;
 
-    const allRecall = [...datasetTree.getFileHistory(), ...ussTree.getFileHistory()];
+    const fileHistoryArray = [...datasetTree.getFileHistory(), ...ussTree.getFileHistory()];
 
     // Get user selection
-    if (allRecall.length > 0) {
+    if (fileHistoryArray.length > 0) {
         const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
-        const items: vscode.QuickPickItem[] = allRecall.map((element) => new FilterItem(element));
+        const items: vscode.QuickPickItem[] = fileHistoryArray.map((element) => new FilterItem(element));
         if (globals.ISTHEIA) {
             const options1: vscode.QuickPickOptions = {
                 placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open")

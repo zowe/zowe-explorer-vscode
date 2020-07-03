@@ -342,10 +342,10 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
 
         spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([]));
-        const recallSpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
+        const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(recallSpy).toBeCalledWith("[sestest]: /d.txt");
+        expect(fileHistorySpy).toBeCalledWith("[sestest]: /d.txt");
     });
 });
 
@@ -759,10 +759,10 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         const globalMocks = await createGlobalMocks();
 
         spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([]));
-        const recallSpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
+        const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(recallSpy).toBeCalledWith("[sestest]: /d.txt");
+        expect(fileHistorySpy).toBeCalledWith("[sestest]: /d.txt");
     });
 });
 

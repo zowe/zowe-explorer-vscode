@@ -730,9 +730,9 @@ export class Profiles {
             return;
         }
 
-        // Delete from Data Set Recall
-        const recallDs: string[] = datasetTree.getFileHistory();
-        recallDs.slice().reverse()
+        // Delete from data det file history
+        const fileHistory: string[] = datasetTree.getFileHistory();
+        fileHistory.slice().reverse()
             .filter((ds) => ds.substring(1, ds.indexOf("]")).trim() === deleteLabel.toUpperCase())
             .forEach((ds) => {
                 datasetTree.removeFileHistory(ds);
@@ -757,9 +757,9 @@ export class Profiles {
             }
         });
 
-        // Delete from USS Recall
-        const recallUSS: string[] = ussTree.getFileHistory();
-        recallUSS.slice().reverse()
+        // Delete from USS file history
+        const fileHistoryUSS: string[] = ussTree.getFileHistory();
+        fileHistoryUSS.slice().reverse()
             .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel.toUpperCase())
             .forEach((uss) => {
                 ussTree.removeFileHistory(uss);
