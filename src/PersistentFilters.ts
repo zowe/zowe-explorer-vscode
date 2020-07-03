@@ -138,9 +138,9 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent search history array
      *
-     * @returns {string[]} persistent array of search history items
+     * @returns persistent array of search history items
      */
-    public getSearchHistory() {
+    public getSearchHistory(): string[] {
         return this.mSearchHistory;
     }
 
