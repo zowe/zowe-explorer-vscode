@@ -147,9 +147,9 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent sessions array
      *
-     * @returns {string[]} persistent array of sessions and their settings
+     * @returns persistent array of sessions and their settings
      */
-    public getSessions() {
+    public getSessions(): string[] {
         return this.mSessions;
     }
 
