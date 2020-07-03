@@ -108,7 +108,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public checkCurrentProfile(node: IZoweUSSTreeNode) {}
 
     /**
-     * @param {string} name - The name to remove from the recall array
+     * @param {string} name - The name to remove from the file history array
      * @memberof USSTree
      */
     @MockMethod()
@@ -116,7 +116,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public removeFileHistory(name: string) {}
 
     /**
-     * @param {string} criteria - The name to add to the recall array
+     * @param {string} criteria - The name to add to the file history array
      * @memberof USSTree
      */
     @MockMethod()

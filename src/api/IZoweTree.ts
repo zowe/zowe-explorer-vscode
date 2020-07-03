@@ -152,12 +152,12 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     filterPrompt(node: IZoweNodeType);
 
     /**
-     * Adds a history(Recall) element to persisted settings.
+     * Adds a search history element to persisted settings.
      * @param node: the root node representing the operation
      */
     addSearchHistory(element: string);
     /**
-     * Retrieves history(Recall) elements from persisted settings.
+     * Retrieves search history elements from persisted settings.
      */
     getSearchHistory();
     /**
