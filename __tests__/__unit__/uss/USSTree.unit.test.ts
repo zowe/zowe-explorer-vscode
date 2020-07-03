@@ -127,7 +127,7 @@ async function createGlobalMocks() {
     globalMocks.testTree = new USSTree();
     const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
-    globalMocks.testTree.addHistory("/u/myuser");
+    globalMocks.testTree.addSearchHistory("/u/myuser");
 
     return globalMocks;
 }
@@ -245,21 +245,21 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall()", () => {
-    it("Tests that addRecall() & getRecall() are executed successfully", async () => {
+describe("USSTree Unit Tests - Functions USSTree.addFileHistory() & USSTree.getFileHistory()", () => {
+    it("Tests that addFileHistory() & getFileHistory() are executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testTree.addRecall("testHistory");
-        expect(globalMocks.testTree.getRecall()[0]).toEqual("TESTHISTORY");
+        globalMocks.testTree.addFileHistory("testHistory");
+        expect(globalMocks.testTree.getFileHistory()[0]).toEqual("TESTHISTORY");
     });
 });
 
-describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
-    it("Tests that removeRecall() is executed successfully", async () => {
+describe("USSTree Unit Tests - Functions USSTree.removeFileHistory()", () => {
+    it("Tests that removeFileHistory() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testTree.removeRecall("testHistory");
-        expect(globalMocks.testTree.getRecall().includes("TESTHISTORY")).toEqual(false);
+        globalMocks.testTree.removeFileHistory("testHistory");
+        expect(globalMocks.testTree.getFileHistory().includes("TESTHISTORY")).toEqual(false);
     });
 });
 
@@ -334,7 +334,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([file]));
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.getHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
+        expect(globalMocks.testTree.getSearchHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
     });
 
     it("Tests that openItemFromPath fails when the node no longer exists", async () => {
@@ -342,7 +342,7 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
 
         spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([]));
-        const recallSpy = jest.spyOn(globalMocks.testTree, "removeRecall");
+        const recallSpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
         expect(recallSpy).toBeCalledWith("[sestest]: /d.txt");
@@ -664,21 +664,21 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Functions USSTree.addRecall() & USSTree.getRecall()", () => {
-    it("Tests that addRecall() & getRecall() are executed successfully", async () => {
+describe("USSTree Unit Tests - Functions USSTree.addFileHistory() & USSTree.getFileHistory()", () => {
+    it("Tests that addFileHistory() & getFileHistory() are executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testTree.addRecall("testHistory");
-        expect(globalMocks.testTree.getRecall()[0]).toEqual("TESTHISTORY");
+        globalMocks.testTree.addFileHistory("testHistory");
+        expect(globalMocks.testTree.getFileHistory()[0]).toEqual("TESTHISTORY");
     });
 });
 
-describe("USSTree Unit Tests - Functions USSTree.removeRecall()", () => {
-    it("Tests that removeRecall() is executed successfully", async () => {
+describe("USSTree Unit Tests - Functions USSTree.removeFileHistory()", () => {
+    it("Tests that removeFileHistory() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.testTree.removeRecall("testHistory");
-        expect(globalMocks.testTree.getRecall().includes("TESTHISTORY")).toEqual(false);
+        globalMocks.testTree.removeFileHistory("testHistory");
+        expect(globalMocks.testTree.getFileHistory().includes("TESTHISTORY")).toEqual(false);
     });
 });
 
@@ -752,14 +752,14 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([file]));
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.getHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
+        expect(globalMocks.testTree.getSearchHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
     });
 
     it("Tests that openItemFromPath fails when the node no longer exists", async () => {
         const globalMocks = await createGlobalMocks();
 
         spyOn(globalMocks.testTree, "getChildren").and.returnValue(Promise.resolve([]));
-        const recallSpy = jest.spyOn(globalMocks.testTree, "removeRecall");
+        const recallSpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
         expect(recallSpy).toBeCalledWith("[sestest]: /d.txt");

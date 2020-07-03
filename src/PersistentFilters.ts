@@ -10,6 +10,7 @@
 */
 
 import * as vscode from "vscode";
+import * as zowe from "@zowe/cli";
 
 /**
  * Standard history and favorite persistance handling routines
@@ -30,39 +31,28 @@ export class PersistentFilters {
         return settings.get(key);
     }
     private static readonly favorites: string = "favorites";
-    private static readonly history: string = "history";
-    private static readonly recall: string = "recall";
+    private static readonly searchHistory: string = "searchHistory";
+    private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
 
     public schema: string;
-    private mHistory: string[] = [];
-    private mRecall: string[] = [];
+    private mSearchHistory: string[] = [];
+    private mFileHistory: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(schema: string, private maxHistory = 5, private maxRecall = 10) {
+    constructor(schema: string, private maxSearchHistory = 5, private maxFileHistory = 10) {
         this.schema = schema;
         this.initialize();
     }
 
-    public readFavorites(): string[] {
-        if (vscode.workspace.getConfiguration(this.schema)) {
-            return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
-        }
-        return [];
-    }
+    /*********************************************************************************************************************************************/
+    /* Add functions, for adding items to the persistent settings
+    /*********************************************************************************************************************************************/
 
-    public async updateFavorites(favorites: string[]) {
-        // settings are read-only, so were cloned
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
-        if (settings.persistence) {
-            settings.favorites = favorites;
-            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
-        }
-    }
     /**
-     * Adds one line of history to the local store and
+     * Adds one line of search history to the local store and
      * updates persistent store. The store contains a
-     * maximum number of entries as described by `maxHistory`
+     * maximum number of entries as described by `maxSearchHistory`
      *
      * If the entry matches a previous entry it is removed from the list
      * at that position in the stack.
@@ -71,28 +61,28 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addHistory(criteria: string) {
+    public async addSearchHistory(criteria: string) {
         if (criteria) {
             // Remove any entries that match
-            this.mHistory = this.mHistory.filter( (element) => {
+            this.mSearchHistory = this.mSearchHistory.filter( (element) => {
                 return element.trim() !== criteria.trim();
             });
 
             // Add value to front of stack
-            this.mHistory.unshift(criteria);
+            this.mSearchHistory.unshift(criteria);
 
             // If list getting too large remove last entry
-            if (this.mHistory.length > this.maxHistory) {
-                this.mHistory.pop();
+            if (this.mSearchHistory.length > this.maxSearchHistory) {
+                this.mSearchHistory.pop();
             }
-            this.updateHistory();
+            this.updateSearchHistory();
         }
     }
 
     /**
      * Adds the name of one recently-edited file to the local store and
      * updates persistent store. The store contains a
-     * maximum number of entries as described by `maxRecall`
+     * maximum number of entries as described by `maxFileHistory`
      *
      * If the entry matches a previous entry it is removed from the list
      * at that position in the stack.
@@ -101,47 +91,27 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addRecall(criteria: string) {
+    public async addFileHistory(criteria: string) {
         if (criteria) {
             criteria = criteria.toUpperCase();
             // Remove any entries that match
-            this.mRecall = this.mRecall.filter((element) => {
+            this.mFileHistory = this.mFileHistory.filter((element) => {
                 return element.trim() !== criteria.trim();
             });
 
             // Add value to front of stack
-            this.mRecall.unshift(criteria);
+            this.mFileHistory.unshift(criteria);
 
             // If list getting too large remove last entry
-            if (this.mRecall.length > this.maxRecall) {
-                this.mRecall.pop();
+            if (this.mFileHistory.length > this.maxFileHistory) {
+                this.mFileHistory.pop();
             }
-            this.updateRecall();
+            this.updateFileHistory();
         }
     }
 
-    public getHistory() {
-        return this.mHistory;
-    }
-
-    public getRecall() {
-        return this.mRecall;
-    }
-
-    public async removeRecall(name: string) {
-        const index = this.mRecall.findIndex((recallItem) => {
-            return recallItem.includes(name.toUpperCase());
-        });
-        if (index >= 0) { this.mRecall.splice(index, 1); }
-        await this.updateRecall();
-    }
-
-    public async resetHistory() {
-        this.mHistory = [];
-        this.updateHistory();
-    }
     /**
-     * Adds one line of history to the local store and
+     * Adds one line of session history to the local store and
      * updates persistent store.
      *
      * If the entry matches a previous entry it is removed from the list
@@ -160,74 +130,193 @@ export class PersistentFilters {
         this.mSessions.sort();
         this.updateSessions();
     }
-    public async removeSession(criteria: string) {
-        // Remove any entries that match
-        this.mSessions = this.mSessions.filter( (element) => {
-            return element.trim() !== criteria.trim();
-        });
-        this.updateSessions();
+
+    /*********************************************************************************************************************************************/
+    /* Get/read functions, for returning the values stored in the persistent arrays
+    /*********************************************************************************************************************************************/
+
+    /**
+     * Returns the current contents of the persistent search history array
+     *
+     * @returns {string[]} persistent array of search history items
+     */
+    public getSearchHistory() {
+        return this.mSearchHistory;
     }
+
+    /**
+     * Returns the current contents of the persistent sessions array
+     *
+     * @returns {string[]} persistent array of sessions and their settings
+     */
     public getSessions() {
         return this.mSessions;
     }
 
+    /**
+     * Returns the current contents of the persistent recently-opened file history array
+     *
+     * @returns {string[]} persistent array of recently-opened files
+     */
+    public getFileHistory() {
+        return this.mFileHistory;
+    }
+
+    /**
+     * Returns the current contents of the persistent favorites array
+     *
+     * @returns {string[]} persistent array of favorited data sets, USS files, and jobs
+     */
+    public readFavorites(): string[] {
+        if (vscode.workspace.getConfiguration(this.schema)) {
+            return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
+        }
+        return [];
+    }
+
+    /*********************************************************************************************************************************************/
+    /* Remove functions, for removing one item from the persistent arrays
+    /*********************************************************************************************************************************************/
+
+    /**
+     * Removes one session from the persistent sessions array
+     *
+     * @param {string} name - The name of the session to remove
+     */
+    public async removeSession(name: string) {
+        // Remove any entries that match
+        this.mSessions = this.mSessions.filter((element) => {
+            return element.trim() !== name.trim();
+        });
+        this.updateSessions();
+    }
+
+    /**
+     * Removes one file from the persistent recently-opened files array
+     *
+     * @param {string} name - The name of the file to remove.
+     * Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
+     */
+    public async removeFileHistory(name: string) {
+        const index = this.mFileHistory.findIndex((fileHistoryItem) => {
+            return fileHistoryItem.includes(name.toUpperCase());
+        });
+        if (index >= 0) { this.mFileHistory.splice(index, 1); }
+        await this.updateFileHistory();
+    }
+
+    /*********************************************************************************************************************************************/
+    /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
+    /*********************************************************************************************************************************************/
+
+    /**
+     * Empties the persistent search history array
+     * Sets the extension's searchHistory array to empty, and updates the array in settings.json
+     *
+     */
+    public async resetSearchHistory() {
+        this.mSearchHistory = [];
+        this.updateSearchHistory();
+    }
+
+    /**
+     * Empties the persistent sessions array
+     * Sets the extension's sessions array to empty, and updates the array in settings.json
+     *
+     */
     public async resetSessions() {
         this.mSessions = [];
         this.updateSessions();
     }
 
     /**
-     * Initializes the history and sessions sections by reading from a file
+     * Empties the persistent recently-opened files history array
+     * Sets the extension's fileHistory array to empty, and updates the array in settings.json
+     *
      */
-    private async initialize() {
-        let lines: string[];
-        let recallLines: string[];
-        if (vscode.workspace.getConfiguration(this.schema)) {
-            lines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.history);
-            recallLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.recall);
-        }
-        if (recallLines) {
-            this.mRecall = recallLines;
-        }
-        if (lines) {
-            this.mHistory = lines;
-        } else {
-            this.resetHistory();
-        }
-        if (vscode.workspace.getConfiguration(this.schema)) {
-            lines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
-        }
-        if (lines) {
-            this.mSessions = lines;
-        } else {
-            this.resetSessions();
-        }
+    public async resetFileHistory() {
+        this.mFileHistory = [];
+        this.updateFileHistory();
     }
 
-    private async updateHistory() {
-        // settings are read-only, so make a clone
+    /*********************************************************************************************************************************************/
+    /* Update functions, for updating the settings.json file in VSCode
+    /*********************************************************************************************************************************************/
+
+    /**
+     * Updates the stored favorites array in settings.json
+     */
+    public async updateFavorites(favorites: string[]) {
+        // settings are read-only, so were cloned
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
-            settings.history = this.mHistory;
+            settings.favorites = favorites;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
         }
     }
 
-    private async updateRecall() {
+    /**
+     * Updates the search history array in settings.json
+     */
+    private async updateSearchHistory() {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
-            settings.recall = this.mRecall;
+            settings.searchHistory = this.mSearchHistory;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
         }
     }
 
+    /**
+     * Updates the stored sessions array in settings.json
+     */
     private async updateSessions() {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.sessions = this.mSessions;
             await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Updates the recently-opened file history array in settings.json
+     */
+    private async updateFileHistory() {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.fileHistory = this.mFileHistory;
+            await vscode.workspace.getConfiguration().update(this.schema, settings, vscode.ConfigurationTarget.Global);
+        }
+    }
+
+    /**
+     * Initializes the search history and sessions sections by reading from a file
+     */
+    private async initialize() {
+        let searchHistoryLines: string[];
+        let sessionLines: string[];
+        let fileHistoryLines: string[];
+        if (vscode.workspace.getConfiguration(this.schema)) {
+            searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
+            sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
+            fileHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.fileHistory);
+        }
+        if (searchHistoryLines) {
+            this.mSearchHistory = searchHistoryLines;
+        } else {
+            this.resetSearchHistory();
+        }
+        if (sessionLines) {
+            this.mSessions = sessionLines;
+        } else {
+            this.resetSessions();
+        }
+        if (fileHistoryLines) {
+            this.mFileHistory = fileHistoryLines;
+        } else {
+            this.resetFileHistory();
         }
     }
 }

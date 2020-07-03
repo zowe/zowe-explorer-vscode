@@ -99,7 +99,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
             if (node.contextValue !== globals.USS_DIR_CONTEXT) {
                 // If selected item is file, open it in workspace
-                ussFileProvider.addHistory(node.fullPath);
+                ussFileProvider.addSearchHistory(node.fullPath);
                 const ussNode: IZoweUSSTreeNode = node;
                 ussNode.openUSS(false, true, ussFileProvider);
             }
@@ -118,7 +118,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
                 await datasetProvider.getTreeView().reveal(member, {select: true, focus: true, expand: false});
 
                 // Open in workspace
-                datasetProvider.addHistory(`${nodeName}(${memberName})`);
+                datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
                 openPS(member, true, datasetProvider);
             } else {
                 // PDS & SDS
@@ -126,7 +126,7 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
                 // If selected node was SDS, open it in workspace
                 if (contextually.isDs(node)) {
-                    datasetProvider.addHistory(nodeName);
+                    datasetProvider.addSearchHistory(nodeName);
                     openPS(node, true, datasetProvider);
                 }
             }
@@ -140,7 +140,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
     let pattern: string;
 
-    const allRecall = [...datasetTree.getRecall(), ...ussTree.getRecall()];
+    const allRecall = [...datasetTree.getFileHistory(), ...ussTree.getFileHistory()];
 
     // Get user selection
     if (allRecall.length > 0) {

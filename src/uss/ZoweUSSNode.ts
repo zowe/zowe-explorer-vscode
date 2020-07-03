@@ -344,7 +344,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
         ussFileProvider.refresh();
     }
 
@@ -452,7 +452,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
 
                 // Add document name to recently-opened files
-                ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                 await this.initializeFileOpening(documentFilePath, previewFile);
