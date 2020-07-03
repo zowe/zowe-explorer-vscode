@@ -165,7 +165,7 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent favorites array
      *
-     * @returns {string[]} persistent array of favorited data sets, USS files, and jobs
+     * @returns persistent array of favorited data sets, USS files, and jobs
      */
     public readFavorites(): string[] {
         if (vscode.workspace.getConfiguration(this.schema)) {
