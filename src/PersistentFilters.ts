@@ -156,9 +156,9 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent recently-opened file history array
      *
-     * @returns {string[]} persistent array of recently-opened files
+     * @returns persistent array of recently-opened files
      */
-    public getFileHistory() {
+    public getFileHistory(): string[] {
         return this.mFileHistory;
     }
 
