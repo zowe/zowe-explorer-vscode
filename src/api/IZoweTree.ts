@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../globals";
 import * as zowe from "@zowe/cli";
+import { ZoweDatasetNodeTemplate } from "../dataset/ZoweDatasetNodeTemplate";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -227,21 +228,21 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Adds a data set template to the persistent array
      *
-     * @param {{label: string, type: zowe.CreateDataSetTypeEnum}} template the template to add
+     * @param {ZoweDatasetNodeTemplate} template the template to add
      */
-    addTemplate?(template: {label: string, type: zowe.CreateDataSetTypeEnum});
+    addTemplate?(template: ZoweDatasetNodeTemplate);
     /**
      * Returns the array of data set templates
      *
-     * @returns {{label: string, type: zowe.CreateDataSetTypeEnum}[]} the array of templates
+     * @returns {ZoweDatasetNodeTemplate[]} the array of templates
      */
     getTemplates?();
     /**
      * Removes a template from the persistent templates array
      *
-     * @param {{label: string, type: zowe.CreateDataSetTypeEnum}} template the template to remove
+     * @param {string} templateName the name of the template to remove
      */
-    removeTemplate?(template: {label: string, type: zowe.CreateDataSetTypeEnum});
+    removeTemplate?(templateName: string);
     /**
      * Returns a new dataset filter string, from an old filter and a new string
      *

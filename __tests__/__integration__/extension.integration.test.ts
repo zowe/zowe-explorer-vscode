@@ -125,7 +125,7 @@ describe("Extension Integration Tests", () => {
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
 
-            await dsActions.createFile(sessionNode, testTree);
+            await dsActions.createFileOrTemplate(testTree, false, sessionNode);
 
             // Data set should be created
             const response = await zowe.List.dataSet(sessionNode.getSession(), testFileName, {});
@@ -141,10 +141,10 @@ describe("Extension Integration Tests", () => {
             const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
             inputBoxStub.returns(testFileName);
 
-            await dsActions.createFile(sessionNode, testTree);
+            await dsActions.createFileOrTemplate(testTree, false, sessionNode);
 
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await expect(dsActions.createFile(sessionNode, testTree)).to.eventually.be.rejectedWith(Error);
+            await expect(dsActions.createFileOrTemplate(testTree, false, sessionNode)).to.eventually.be.rejectedWith(Error);
             const gotCalled = showErrorStub.called;
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);

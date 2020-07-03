@@ -28,6 +28,7 @@ import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
 import { closeOpenedTextFile } from "../utils/workspace";
+import { ZoweDatasetNodeTemplate } from "./ZoweDatasetNodeTemplate";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -429,17 +430,17 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.mHistory.removeFileHistory(name);
     }
 
-    public async addTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
+    public async addTemplate(template: ZoweDatasetNodeTemplate) {
         this.mHistory.addTemplate(template);
         this.refresh();
     }
 
-    public getTemplates(): Array<{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }> {
+    public getTemplates(): ZoweDatasetNodeTemplate[] {
         return this.mHistory.getTemplates();
     }
 
-    public removeTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
-        this.mHistory.removeTemplate(template);
+    public removeTemplate(templateName: string) {
+        this.mHistory.removeTemplate(templateName);
     }
 
     public async createFilterString(newFilter: string, node: IZoweDatasetTreeNode) {

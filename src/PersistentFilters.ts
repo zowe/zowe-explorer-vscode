@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as nls from "vscode-nls";
 import { getStringFromTypeEnum } from "./dataset/utils";
+import { ZoweDatasetNodeTemplate } from "./dataset/ZoweDatasetNodeTemplate";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 /**
@@ -43,7 +44,7 @@ export class PersistentFilters {
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
-    private mTemplates: Array<{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }> = [];
+    private mTemplates: ZoweDatasetNodeTemplate[] = [];
 
     constructor(schema: string, private maxSearchHistory = 5, private maxFileHistory = 10) {
         this.schema = schema;
@@ -144,17 +145,14 @@ export class PersistentFilters {
      * If the entry matches a previous entry it is removed from the list
      * at that position in the stack.
      *
-     * @param {{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }} template - the template to add
+     * @param {ZoweDatasetNodeTemplate} template - the template to add
      */
-    public async addTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
-        if (template) {
-            if (!template.templateName) { template.templateName = `Blank`; }
-            template.label = template.label.toUpperCase();
+    public async addTemplate(template: ZoweDatasetNodeTemplate) {
+            template.nodeLabel = template.nodeLabel.toUpperCase();
+
             // Remove any entries that match
             this.mTemplates = this.mTemplates.filter((element) => {
-                if (element.templateName.trim() !== template.templateName.trim() ||
-                    element.label.trim() !== template.label.trim() ||
-                    element.type !== template.type) {
+                if (element.templateName.trim() === template.templateName.trim()) {
                         return element;
                 }
             });
@@ -163,10 +161,9 @@ export class PersistentFilters {
             this.mTemplates.unshift(template);
             vscode.window.showInformationMessage(localize("addTemplate.success",
                                                           "Template saved successfully. Template name: {0}, Node name: {1}, Node type: {2}",
-                                                          template.templateName, template.label, getStringFromTypeEnum(template.type)));
+                                                          template.templateName, template.nodeLabel, getStringFromTypeEnum(template.nodeType)));
 
             this.updateTemplates();
-        }
     }
 
     /*********************************************************************************************************************************************/
@@ -203,7 +200,7 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent templates array
      *
-     * @returns {{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }[]} persistent array of data set templates
+     * @returns {ZoweDatasetNodeTemplate[]} persistent array of data set templates
      */
     public getTemplates() {
         return this.mTemplates;
@@ -255,11 +252,11 @@ export class PersistentFilters {
     /**
      * Removes one template from the persistent templates array
      *
-     * @param {{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }} template - The template to remove
+     * @param {string} templateName - The name of the template to remove
      */
-    public async removeTemplate(template: { templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }) {
+    public async removeTemplate(templateName: string) {
         const index = this.mTemplates.findIndex((item) => {
-            if (item.label.toUpperCase() === template.label.toUpperCase() && item.type === template.type) {
+            if (item.nodeLabel.toUpperCase() === templateName.toUpperCase()) {
                 return item;
             }
         });
@@ -382,7 +379,7 @@ export class PersistentFilters {
         let searchHistoryLines: string[];
         let sessionLines: string[];
         let fileHistoryLines: string[];
-        let templateLines: Array<{ templateName: string, label: string, type: zowe.CreateDataSetTypeEnum }>;
+        let templateLines: ZoweDatasetNodeTemplate[];
         if (vscode.workspace.getConfiguration(this.schema)) {
             searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
             sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);

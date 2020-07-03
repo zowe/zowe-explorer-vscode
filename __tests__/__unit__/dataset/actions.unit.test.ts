@@ -29,7 +29,7 @@ import * as globals from "../../../src/globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
-import { Profiles } from "../../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import * as utils from "../../../src/utils";
 
 // Missing the definition of path module, because I need the original logic for tests
@@ -41,8 +41,13 @@ let clipboard;
 function createGlobalMocks() {
     clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
-        readText: jest.fn().mockImplementation(() => mockClipboardData),
+        readText: jest.fn().mockImplementation(() => mockClipboardData)
     };
+
+    const globalMocks = {
+        mockCreateQuickPick: jest.fn(),
+        profilesForValidation: { status: "active", name: "fake" }
+    }
 
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Upload", { value: jest.fn(), configurable: true });
@@ -51,6 +56,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.mockCreateQuickPick, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
@@ -69,12 +75,44 @@ function createGlobalMocks() {
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "List", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.List, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                defaultProfile: { name: "firstName" },
+                type: "zosmf",
+                validProfile: ValidProfileEnum.VALID,
+                checkCurrentProfile: jest.fn(() => {
+                    return globalMocks.profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: jest.fn(),
+                loadNamedProfile: jest.fn()
+            };
+        })
+    });
+
+    globalMocks.mockCreateQuickPick.mockReturnValue({
+        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+        activeItems: [],
+        ignoreFocusOut: true,
+        items: [],
+        value: undefined,
+        show: jest.fn(()=>{
+            return {};
+        }),
+        hide: jest.fn(()=>{
+            return {};
+        }),
+        onDidAccept: jest.fn(()=>{
+            return {};
+        })
+    });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -1620,7 +1658,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1629,23 +1667,23 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         getChildrenSpy.mockResolvedValue([]);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
-        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, blockMocks.datasetSessionNode);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
-        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, blockMocks.datasetSessionNode);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-C");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
-        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, blockMocks.datasetSessionNode);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
-        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, blockMocks.datasetSessionNode);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PDS");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, blockMocks.datasetSessionNode);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
 
         // tslint:disable-next-line:no-magic-numbers
@@ -1657,7 +1695,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1668,23 +1706,23 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         getChildrenSpy.mockResolvedValue([]);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-C");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PDS");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
 
         // tslint:disable-next-line:no-magic-numbers
@@ -1696,7 +1734,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1707,23 +1745,23 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         getChildrenSpy.mockResolvedValue([]);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Binary");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-C");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-Classic");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PDS");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
 
         // tslint:disable-next-line:no-magic-numbers
@@ -1734,7 +1772,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1743,7 +1781,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         node.contextValue = globals.DS_DS_CONTEXT;
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
 
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith("Zowe-Default-Datasets-PS");
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
@@ -1753,7 +1791,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1764,7 +1802,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         try {
-            await dsActions.createFile(node, blockMocks.testDatasetTree);
+            await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
         } catch (err) {
             // do nothing
         }
@@ -1778,7 +1816,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1787,7 +1825,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         node.contextValue = globals.DS_DS_CONTEXT;
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
 
         expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
@@ -1797,7 +1835,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue(["NODE1"]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue(["NODE1"]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1806,16 +1844,16 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         node.contextValue = globals.DS_DS_CONTEXT;
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
 
-        expect(blockMocks.testDatasetTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
+        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
     });
     it("Checking history was overwritten with new query if empty", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([null]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1824,9 +1862,9 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         node.contextValue = globals.DS_DS_CONTEXT;
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        await dsActions.createFileOrTemplate(blockMocks.testDatasetTree, false, node);
 
-        expect(blockMocks.testDatasetTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
+        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
     });
 });
 

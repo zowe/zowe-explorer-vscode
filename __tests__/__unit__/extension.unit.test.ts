@@ -105,6 +105,7 @@ async function createGlobalMocks() {
             "zowe.pattern",
             "zowe.editSession",
             "zowe.ZoweNode.openPS",
+            "zowe.manageDSTemplates",
             "zowe.createDataset",
             "zowe.all.profilelink",
             "zowe.createMember",
