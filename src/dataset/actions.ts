@@ -301,9 +301,9 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
 export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     // The array of the data set's properties
     const propertyArray = [
-        { label: `Template Name`, value: ``, placeHolder: `Enter a template name`, alwaysShow: false },
-        { label: `Node Label`, value: ``, placeHolder: `Enter a node label`, alwaysShow: false },
-        { label: `Node Type`, value: ``, placeHolder: `Select a node type`, alwaysShow: false },
+        { label: `Template Name`, value: `Undefined`, placeHolder: `Enter a template name`, alwaysShow: false },
+        { label: `Node Label`, value: `Undefined`, placeHolder: `Enter a node label`, alwaysShow: false },
+        { label: `Node Type`, value: `Undefined`, placeHolder: `Select a node type`, alwaysShow: false },
         { label: `+ Allocate Data Set`, value: ``, placeHolder: ``, alwaysShow: true },
         { label: `+ Save as Template`, value: ``, placeHolder: ``, alwaysShow: true }
     ];
@@ -390,9 +390,9 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 export async function manageDataSetTemplates(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     // The array of the data set's properties
     const propertyArray = [
-        { label: `Template Name`, value: "", placeHolder: `Enter a template name`, alwaysShow: false },
-        { label: `Node Label`, value: "", placeHolder: `Enter a node label`, alwaysShow: false },
-        { label: `Node Type`, value: "", placeHolder: "", alwaysShow: false },
+        { label: `Template Name`, value: "Undefined", placeHolder: `Enter a template name`, alwaysShow: false },
+        { label: `Node Label`, value: "Undefined", placeHolder: `Enter a node label`, alwaysShow: false },
+        { label: `Node Type`, value: "Undefined", placeHolder: "", alwaysShow: false },
         { label: `+ Save Template`, value: "", placeHolder: "", alwaysShow: true },
         { label: `+ Delete Template`, value: "", placeHolder: "", alwaysShow: true },
     ];
