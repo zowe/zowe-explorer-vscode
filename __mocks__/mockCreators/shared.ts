@@ -25,12 +25,12 @@ export function createPersistentConfig() {
             return {
                 sessions: ["sestest", "profile1", "profile2"],
                 favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"]
-            }
+            };
         },
         update: jest.fn(()=>{
             return {};
         })
-    }
+    };
 }
 
 export function createISession() {
@@ -51,6 +51,7 @@ export function createISessionWithoutCredentials() {
         hostname: "fake",
         protocol: "https",
         type: "basic",
+        base64EncodedAuth: "fakeEncoding"
     });
 }
 
@@ -68,8 +69,11 @@ export function createIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
+            host: "fake",
+            port: 999,
             user: undefined,
-            password: undefined
+            password: undefined,
+            rejectUnauthorize: false
         },
         type: "zosmf",
         message: "",
@@ -151,13 +155,18 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
         allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
-        defaultProfile: { name: "profile1" },
+        defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),
         loadNamedProfile: jest.fn(),
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
-        checkCurrentProfile: jest.fn(),
+        checkCurrentProfile: jest.fn(() => {
+            return {status: "active", name: "sestest"};
+        }),
+        profilesForValidation: [{status: "active", name: "sestest"}],
+        validateProfiles: jest.fn(),
+        editSession: jest.fn(),
         createNewConnection: jest.fn(() => {
             return { newprofile: "fake" };
         }),
@@ -165,7 +174,6 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return [{ name: profile.name, profile }, { name: profile.name, profile }];
         }),
         refresh: jest.fn(),
-        editSession: jest.fn()
     } as any;
 }
 
@@ -181,12 +189,12 @@ export function createQuickPickItem(): vscode.QuickPickItem {
     return new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
 }
 
-export function createQuickPickContent(entered: any, item: vscode.QuickPickItem): any {
+export function createQuickPickContent(entered: any, itemArray: vscode.QuickPickItem[], placeholderString: string): any {
     return {
-        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
-        activeItems: [item],
+        placeholder: placeholderString,
+        activeItems: itemArray,
         ignoreFocusOut: true,
-        items: [item],
+        items: itemArray,
         value: entered,
         show: jest.fn(),
         hide: jest.fn(),

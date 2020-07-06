@@ -20,7 +20,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../../../src/globals";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
-import { getIconByNode } from "../../../src/generators/icons";
 
 jest.mock("fs");
 jest.mock("path");
@@ -78,6 +77,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", { value: globalMocks.isFileTagBinOrAscii, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.ZosmfSession, "createBasicZosmfSession",
         { value: globalMocks.createBasicZosmfSession, configurable: true });
@@ -512,7 +512,10 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
                     validProfile: ValidProfileEnum.VALID,
-                    checkCurrentProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return globalMocks.profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
                     getProfiles: jest.fn(() => {
                         return [{name: globalMocks.profileOne.name, profile: globalMocks.profileOne},
                                 {name: globalMocks.profileOne.name, profile: globalMocks.profileOne}];

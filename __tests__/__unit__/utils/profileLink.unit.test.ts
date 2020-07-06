@@ -91,6 +91,7 @@ const testNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleStat
 const aBadNode: any = {
         dummy: test
      };
+const profilesForValidation = {status: "active", name: "fake"};
 
 describe("Profile link unit tests part 1", () => {
    //  writeYaml.mockReturnValue("secondaries:"+"\u000a" + "  zftp: azftp"+"\u000a" + "  tso: btso "+"\u000a");
@@ -104,7 +105,12 @@ describe("Profile link unit tests part 1", () => {
                     promptCredentials: jest.fn(),
                     getAllTypes: mockAllTypes,
                     getNamesForType: mockNamesForType,
-                    updateProfile: jest.fn()
+                    updateProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    profilesForValidation: [],
+                    validateProfiles: jest.fn(),
                 };
             })
         });
@@ -210,7 +216,12 @@ describe("Profile link unit tests part 2. No file for profile", () => {
                     promptCredentials: jest.fn(),
                     getAllTypes: mockAllTypes,
                     getNamesForType: mockNamesForType,
-                    updateProfile: jest.fn()
+                    updateProfile: jest.fn(),
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    profilesForValidation: [],
+                    validateProfiles: jest.fn(),
                 };
             })
         });

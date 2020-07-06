@@ -153,8 +153,9 @@ describe("Unit Tests (Jest)", () => {
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
             await rootNode.getChildren();
-            expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual("Retrieving response from zowe.List Error: Throwing an error to check error handling for unit tests!");
+            expect(showErrorMessage.mock.calls.length).toEqual(2);
+            expect(showErrorMessage.mock.calls[0][0]).toEqual(
+                "Retrieving response from zowe.List Error: Throwing an error to check error handling for unit tests!");
         });
 
     /*************************************************************************************************************
@@ -170,7 +171,7 @@ describe("Unit Tests (Jest)", () => {
             const subNode = new ZoweDatasetNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null,
                 undefined, undefined, profileOne);
             subNode.dirty = true;
-            await expect(subNode.getChildren()).rejects.toEqual(Error("The response from Zowe CLI was not successful"));
+            await expect(subNode.getChildren()).rejects.toThrow("The response from Zowe CLI was not successful");
         });
 
     /*************************************************************************************************************
