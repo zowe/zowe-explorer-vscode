@@ -46,3 +46,8 @@ jobs:
       with:
         name: results
         path: results/
+
+    - name: Upload Results to Codecov
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        env_vars: OS,NODE
