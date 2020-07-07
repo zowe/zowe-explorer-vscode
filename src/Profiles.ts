@@ -891,7 +891,7 @@ export class Profiles {
         return profileManager;
     }
 
-    public async validateProfiles(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+    public async validateProfiles(theProfile: IProfileLoaded) {
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
