@@ -84,7 +84,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             try {
                 await CredentialManagerFactory.initialize(
                     {
-                        service: service || "Zowe-Plugin",
+                        service: service?.trim() || "Zowe-Plugin",
                         Manager: KeytarCredentialManager,
                         displayName: localize("displayName", "Zowe Explorer")
                     }
@@ -298,23 +298,8 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
  * Imports the neccesary security modules
  */
 export function getSecurityModules(moduleName): NodeRequire | undefined {
-    let imperativeIsSecure: boolean = false;
-    try {
-        const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-        let settings: any;
-        if (fs.existsSync(fileName)) {
-            settings = JSON.parse(fs.readFileSync(fileName).toString());
-        }
-        const value1 = settings?.overrides.CredentialManager;
-        const value2 = settings?.overrides["credential-manager"];
-        imperativeIsSecure = ((typeof value1 === "string") && (value1.length > 0)) ||
-            ((typeof value2 === "string") && (value2.length > 0));
-    } catch (error) {
-        globals.LOG.warn(localize("profile.init.read.imperative", "Unable to read imperative file. ") + error.message);
-        vscode.window.showWarningMessage(error.message);
-        return undefined;
-    }
-    if (imperativeIsSecure) {
+    const isSecure: boolean = vscode.workspace.getConfiguration().get("Zowe Security: Secure Credential Storage");
+    if (isSecure) {
         // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
         const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
         try {

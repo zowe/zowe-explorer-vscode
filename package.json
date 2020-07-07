@@ -1121,13 +1121,19 @@
           "default": {
             "folderPath": ""
           },
-          "description": "Zowe-Temp-Folder-Loacation",
+          "description": "Zowe-Temp-Folder-Location",
           "scope": "window"
         },
         "Zowe Security: Credential Key": {
           "type": "string",
           "default": "",
           "description": "%Zowe-Builtin-Security%",
+          "scope": "window"
+        },
+        "Zowe Security: Secure Credential Storage": {
+          "type": "boolean",
+          "default": true,
+          "description": "%Zowe-Secure-Credential-Storage%",
           "scope": "window"
         },
         "Zowe-USS-Persistent": {
