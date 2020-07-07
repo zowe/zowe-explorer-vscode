@@ -238,13 +238,13 @@ describe("DatasetTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests that addFileHistory adds a recently-opened file to the list", async () => {
         testTree.addFileHistory(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
-        const recall = testTree.getFileHistory();
-        expect(recall[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        const fileHistory = testTree.getFileHistory();
+        expect(fileHistory[0]).toEqual(`[${sessNode.getLabel().toUpperCase()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
     });
 
-    it("Tests that removeFileHistory removes a file from the recall list", async () => {
+    it("Tests that removeFileHistory removes a file from the file history list", async () => {
         testTree.removeFileHistory(`[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS`);
-        const patternIndex = testTree.getFileHistory().findIndex((recall) => recall === `[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
+        const patternIndex = testTree.getFileHistory().findIndex((file) => file === `[${sessNode.getLabel()}]: ${pattern}.EXT.SAMPLE.PDS(TESTMEMB)`);
         expect(patternIndex).toEqual(-1);
     });
 

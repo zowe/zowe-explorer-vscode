@@ -321,9 +321,9 @@ describe("Dataset Tree Unit Tests - Function addFileHistory", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addFileHistory("testRecall");
+        testTree.addFileHistory("testFileHistory");
 
-        expect(testTree.getFileHistory()).toEqual(["TESTRECALL"]);
+        expect(testTree.getFileHistory()).toEqual(["TESTFILEHISTORY"]);
     });
 });
 describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
@@ -347,9 +347,9 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addFileHistory("testRecall");
-        expect(testTree.getFileHistory()).toEqual(["TESTRECALL"]);
-        testTree.removeFileHistory("testRecall");
+        testTree.addFileHistory("testFileHistory");
+        expect(testTree.getFileHistory()).toEqual(["TESTFILEHISTORY"]);
+        testTree.removeFileHistory("testFileHistory");
         expect(testTree.getFileHistory()).toEqual([]);
     });
 });

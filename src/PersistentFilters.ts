@@ -173,43 +173,34 @@ export class PersistentFilters {
     /**
      * Returns the current contents of the persistent search history array
      *
-     * @returns {string[]} persistent array of search history items
+     * @returns persistent array of search history items
      */
-    public getSearchHistory() {
+    public getSearchHistory(): string[] {
         return this.mSearchHistory;
     }
 
     /**
      * Returns the current contents of the persistent sessions array
      *
-     * @returns {string[]} persistent array of sessions and their settings
+     * @returns persistent array of sessions and their settings
      */
-    public getSessions() {
+    public getSessions(): string[] {
         return this.mSessions;
     }
 
     /**
      * Returns the current contents of the persistent recently-opened file history array
      *
-     * @returns {string[]} persistent array of recently-opened files
+     * @returns persistent array of recently-opened files
      */
-    public getFileHistory() {
+    public getFileHistory(): string[] {
         return this.mFileHistory;
-    }
-
-    /**
-     * Returns the current contents of the persistent templates array
-     *
-     * @returns {ZoweDatasetNodeTemplate[]} persistent array of data set templates
-     */
-    public getTemplates() {
-        return this.mTemplates;
     }
 
     /**
      * Returns the current contents of the persistent favorites array
      *
-     * @returns {string[]} persistent array of favorited data sets, USS files, and jobs
+     * @returns persistent array of favorited data sets, USS files, and jobs
      */
     public readFavorites(): string[] {
         if (vscode.workspace.getConfiguration(this.schema)) {

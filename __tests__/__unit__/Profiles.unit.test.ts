@@ -1175,11 +1175,11 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         expect(blockMocks.testJobTree.mFavorites.length).toEqual(favoriteLength);
     });
 
-    it("Tests that deleteProfile successfully deletes all related recall items for a dataset tree", async () => {
+    it("Tests that deleteProfile successfully deletes all related file history items for a dataset tree", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testDatasetTree.mRecall = ["[SESTEST]: TEST.DATA"];
+        blockMocks.testDatasetTree.mFileHistory = ["[SESTEST]: TEST.DATA"];
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
@@ -1189,7 +1189,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         expect(blockMocks.testDatasetTree.getFileHistory()[0]).toBeUndefined();
     });
 
-    it("Tests that deleteProfile successfully deletes all related recall items for a USS tree", async () => {
+    it("Tests that deleteProfile successfully deletes all related file history items for a USS tree", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
