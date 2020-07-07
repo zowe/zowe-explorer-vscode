@@ -207,77 +207,85 @@ export async function createFileOrTemplate(datasetProvider: IZoweTree<IZoweDatas
                                            node?: IZoweDatasetTreeNode) {
     // The array of the data set's properties
     let propertyArray = [
-        { label: `Template Name`, value: `Undefined`, placeHolder: `Enter a template name`, alwaysShow: false },
-        { label: `Node Label`, value: `Undefined`, placeHolder: `Enter a node label`, alwaysShow: false },
-        { label: `Block Size`, value: `27998`, placeHolder: `Enter a block size`, alwaysShow: false },
-        { label: `Data Class`, value: `Undefined`, placeHolder: `Enter an SMS data class`, alwaysShow: false },
-        { label: `Node Type`, value: `Undefined`, placeHolder: `Select a node type`, alwaysShow: false },
-        { label: `Device Type`, value: `Undefined`, placeHolder: `Enter a device type (unit)`, alwaysShow: false },
-        { label: `Directory Blocks`, value: `25`, placeHolder: `Enter the number of directory blocks`, alwaysShow: false },
-        { label: `Management Class`, value: `Undefined`, placeHolder: `Enter the SMS management class`, alwaysShow: false },
-        { label: `Primary Space`, value: `10`, placeHolder: `Enter the primary space allocation`, alwaysShow: false },
-        { label: `Record Format`, value: `U`, placeHolder: `Enter the data set's record format`, alwaysShow: false },
-        { label: `Record Length`, value: `27998`, placeHolder: `Enter the logical record length`, alwaysShow: false },
-        { label: `Secondary Space`, value: `1`, placeHolder: `Enter the secondary space allocation`, alwaysShow: false },
-        { label: `Show Attributes`, value: `false`, placeHolder: `Show the full allocation attributes?`, alwaysShow: false },
-        { label: `Size`, value: `Undefined`, placeHolder: `Enter the size of the data set`, alwaysShow: false },
-        { label: `Storage Class`, value: `Undefined`, placeHolder: `Enter the SMS storage class`, alwaysShow: false },
-        { label: `Volume Serial`, value: `Undefined`, placeHolder: `Enter the volume serial on which the data set should be placed`,
+        { key: `templateName`, label: `Template Name`, value: `Undefined`, placeHolder: `Enter a template name`, alwaysShow: false },
+        { key: `nodeLabel`, label: `Node Label`, value: `Undefined`, placeHolder: `Enter a node label`, alwaysShow: false },
+        { key: `blockSize`, label: `Block Size`, value: `27998`, placeHolder: `Enter a block size`, alwaysShow: false },
+        { key: `dataClass`, label: `Data Class`, value: `Undefined`, placeHolder: `Enter an SMS data class`, alwaysShow: false },
+        { key: `nodeType`, label: `Node Type`, value: `Undefined`, placeHolder: `Select a node type`, alwaysShow: false },
+        { key: `deviceType`, label: `Device Type`, value: `Undefined`, placeHolder: `Enter a device type (unit)`, alwaysShow: false },
+        { key: `directoryBlocks`, label: `Directory Blocks`, value: `25`, placeHolder: `Enter the number of directory blocks`, alwaysShow: false },
+        { key: `managementClass`, label: `Management Class`, value: `Undefined`, placeHolder: `Enter the SMS management class`, alwaysShow: false },
+        { key: `primarySpace`, label: `Primary Space`, value: `10`, placeHolder: `Enter the primary space allocation`, alwaysShow: false },
+        { key: `recordFormat`, label: `Record Format`, value: `U`, placeHolder: `Enter the data set's record format`, alwaysShow: false },
+        { key: `recordLength`, label: `Record Length`, value: `27998`, placeHolder: `Enter the logical record length`, alwaysShow: false },
+        { key: `secondarySpace`, label: `Secondary Space`, value: `1`, placeHolder: `Enter the secondary space allocation`, alwaysShow: false },
+        { key: `showAttributes`, label: `Show Attributes`, value: `false`, placeHolder: `Show the full allocation attributes?`, alwaysShow: false },
+        { key: `size`, label: `Size`, value: `Undefined`, placeHolder: `Enter the size of the data set`, alwaysShow: false },
+        { key: `storageClass`, label: `Storage Class`, value: `Undefined`, placeHolder: `Enter the SMS storage class`, alwaysShow: false },
+        { key: `volumeSerial`, label: `Volume Serial`, value: `Undefined`, placeHolder: `Enter the volume serial on which the data set should be placed`,
           alwaysShow: false },
     ];
 
     // Add the proper additional commands, based on how the user got here (Manage Data Set Templates button or Create New Data Set button)
     if (shouldManageTemplates) {
         propertyArray = propertyArray.concat([
-            { label: `+ Save Template`, value: "", placeHolder: "", alwaysShow: true },
-            { label: `+ Delete Template`, value: "", placeHolder: "", alwaysShow: true },
+            { key: `saveTemplate`, label: `+ Save Template`, value: "", placeHolder: "", alwaysShow: true },
+            { key: `deleteTemplate`, label: `+ Delete Template`, value: "", placeHolder: "", alwaysShow: true },
         ]);
     } else {
         propertyArray = propertyArray.concat([
-            { label: `+ Allocate Data Set`, value: ``, placeHolder: ``, alwaysShow: true },
-            { label: `+ Save as Template`, value: ``, placeHolder: ``, alwaysShow: true }
+            { key: `allocateDataSet`, label: `+ Allocate Data Set`, value: ``, placeHolder: ``, alwaysShow: true },
+            { key: `saveAsTemplate`, label: `+ Save as Template`, value: ``, placeHolder: ``, alwaysShow: true }
         ]);
     }
 
     // If there are some existing templates, let the user choose a template to use (or not)
     let pattern: string;
     const qpItems = [];
-    let originalTemplateName = "Undefined";
-    const storedTemplates = datasetProvider.getTemplates();
+    let originalTemplate = new ZoweDatasetNodeTemplate("No Template");
+    let storedTemplates = [];
+    if (!shouldManageTemplates) { storedTemplates = globals.DATASET_TEMPLATES; }
+    storedTemplates = storedTemplates.concat(datasetProvider.getTemplates());
     if (storedTemplates.length > 0) {
         storedTemplates.forEach((template) => {
-            qpItems.push(new FilterItem(`Template Name: ${template.templateName}, Node Label: ${template.label}, Node Type: ${dsUtils.getStringFromTypeEnum(template.type)}`));
+            qpItems.push(new FilterItem(`Template Name: ${template.templateName}, Node Type: ${dsUtils.getStringFromTypeEnum(template.nodeType)}`));
         });
-        if (shouldManageTemplates) { qpItems.push(new FilterItem(`+ Create new template`, "", true)); }
-        else { qpItems.push(new FilterItem(`+ Create without template`, ``, true)); }
+    }
+    if (shouldManageTemplates) { qpItems.push(new FilterItem(`+ Create new template`, "", true)); }
 
-        const quickpick = vscode.window.createQuickPick();
-        quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
-        quickpick.ignoreFocusOut = true;
-        quickpick.items = [...qpItems];
-        quickpick.matchOnDescription = false;
-        if (shouldManageTemplates) { quickpick.title = "Select a template for editing"; }
-        else { quickpick.title = "Select a template for allocating a new data set"; }
+    const quickpick = vscode.window.createQuickPick();
+    quickpick.placeholder = localize("createFileNoWebview.options.prompt", "Type here to filter the list");
+    quickpick.ignoreFocusOut = true;
+    quickpick.items = [...qpItems];
+    quickpick.matchOnDescription = false;
+    if (shouldManageTemplates) { quickpick.title = "Select a template for editing"; }
+    else { quickpick.title = "Select a template for allocating a new data set"; }
 
-        quickpick.show();
-        const choice = await resolveQuickPickHelper(quickpick);
-        if (!choice) {
-            vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
-            return;
-        } else { pattern = choice.label; }
-        quickpick.dispose();
+    quickpick.show();
+    const choice = await resolveQuickPickHelper(quickpick);
+    if (!choice) {
+        vscode.window.showInformationMessage(localize("createFileNoWebview.enterPattern", "You must select an option to edit."));
+        return;
+    } else { pattern = choice.label; }
+    quickpick.dispose();
 
-        // Get the template's properties from the selected quickpick item
-        if (pattern && pattern !== `+ Create without template`) {
-            const templateName = pattern.match(/(?<=Template Name: )(.*?)(?=, N)/)[0];
+    // Get the template's properties from the selected quickpick item
+    if (pattern && (pattern !== `+ Create without template` && pattern !== `+ Create new template`)) {
+        const templateName = pattern.match(/(?<=Template Name: )(.*?)(?=,)/)[0];
 
-            // Store the original template name so we can find it in the persistent list, even if the user has changed the name
-            originalTemplateName = storedTemplates.find((template) => template.templateName === templateName);
+        // Store the original template name so we can find it in the persistent list, even if the user has changed the name
+        if (storedTemplates.length > 0) {
+            originalTemplate = storedTemplates.find((template) => template.templateName === templateName);
+            Object.keys(originalTemplate).forEach((key) => {
+                const ind = propertyArray.findIndex((prop) => prop.key === key);
+                propertyArray[ind].value = originalTemplate[key];
+                if (key === `nodeType`) { originalTemplate[key] = dsUtils.getTypeEnumAndOptionsFromString(propertyArray[ind].value).type }
+            });
         }
     }
 
     // Allow the user to edit the data set's properties, and if they choose to allocate, that's what we will do :)
-    if (await handleUserSelection(propertyArray, datasetProvider, originalTemplateName) === `allocate`) {
+    if (await handleUserSelection(propertyArray, datasetProvider, originalTemplate.templateName) === `allocate`) {
         try {
             const typeAndOptions = dsUtils.getTypeEnumAndOptionsFromString(propertyArray[1].value);
             await ZoweExplorerApiRegister.getMvsApi(node.getProfile())
@@ -287,7 +295,7 @@ export async function createFileOrTemplate(datasetProvider: IZoweTree<IZoweDatas
             node.dirty = true;
 
             const theFilter = await datasetProvider.createFilterString(propertyArray.find((prop) => prop.label === `Node Label`)
-                                                                                    .value.toString(), node);
+                                                   .value.toString(), node);
             datasetProvider.addSearchHistory(theFilter);
             datasetProvider.refresh();
 
@@ -319,7 +327,8 @@ async function handleUserSelection(propertyArray, datasetProvider, originalTempl
     // Create the array of items in the quickpick list
     const qpItems = [];
     propertyArray.forEach((prop) => {
-        qpItems.push(new FilterItem(prop.label, prop.value, prop.alwaysShow));
+        if (prop.key === `nodeType`) { qpItems.push(new FilterItem(prop.label, dsUtils.getStringFromTypeEnum(prop.value), prop.alwaysShow)) }
+        else { qpItems.push(new FilterItem(prop.label, prop.value, prop.alwaysShow)) }
     });
 
     // Provide the settings for the quickpick's appearance & behavior
@@ -348,9 +357,10 @@ async function handleUserSelection(propertyArray, datasetProvider, originalTempl
             case `+ Save as Template`:
                 // Replace original template with the edited version in the persistent array
                 const newTemplate = new ZoweDatasetNodeTemplate("New Template");
-                for (let i = 0; i < propertyArray.length; ++i) {
-                    newTemplate[Object.keys(newTemplate)[i]].value = propertyArray[i].value;
-                }
+                Object.keys(newTemplate).forEach((key) => {
+                    const ind = propertyArray.findIndex((prop) => prop.key === key);
+                    newTemplate[key] = propertyArray[ind].value;
+                });
                 datasetProvider.removeTemplate(originalTemplateName);
                 datasetProvider.addTemplate(newTemplate);
                 return Promise.resolve(`saveTemplate`);
@@ -359,11 +369,12 @@ async function handleUserSelection(propertyArray, datasetProvider, originalTempl
                 vscode.window.showInformationMessage(localize("removeTemplate.success", "Template {0} deleted successfully.", originalTemplateName));
                 return Promise.resolve(`deleteTemplate`);
             case `Node Type`:
-                propertyArray.find((prop) => prop.label === pattern).value = await vscode.window.showQuickPick([`Data Set Binary`,
-                                                                                                                    `Data Set C`,
-                                                                                                                    `Data Set Classic`,
-                                                                                                                    `Data Set Partitioned`,
-                                                                                                                    `Data Set Sequential`]);
+                const qpVal = await vscode.window.showQuickPick([`Data Set Binary`,
+                                                                 `Data Set C`,
+                                                                 `Data Set Classic`,
+                                                                 `Data Set Partitioned`,
+                                                                 `Data Set Sequential`]);
+                propertyArray.find((prop) => prop.label === pattern).value = dsUtils.getTypeEnumAndOptionsFromString(qpVal).type;
                 break;
             case `Show Attributes`:
                 propertyArray.find((prop) => prop.label === pattern).value = await vscode.window.showQuickPick([`True`, `False`]);

@@ -12,6 +12,7 @@
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
+import { ZoweDatasetNodeTemplate } from "./dataset/ZoweDatasetNodeTemplate";
 
 // Globals
 export let ZOWETEMPFOLDER;
@@ -20,6 +21,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
+export let DATASET_TEMPLATES: ZoweDatasetNodeTemplate[];
 export const COMMAND_COUNT = 78;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
@@ -75,6 +77,12 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+
+    const pdsTemplate = new ZoweDatasetNodeTemplate("(Default) PDS Data Set", "ABCDEF.NEW.PDS.TEST");
+    const bdsTemplate = new ZoweDatasetNodeTemplate("(Default) Sequential Data Set", "ABCDEF.NEW.SDS.TEST");
+    const sdsTemplate = new ZoweDatasetNodeTemplate("(Default) Binary Data Set", "ABCDEF.NEW.BDS.TEST");
+
+    DATASET_TEMPLATES = [pdsTemplate, bdsTemplate, sdsTemplate];
 }
 
 /**

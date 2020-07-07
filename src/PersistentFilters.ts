@@ -160,8 +160,8 @@ export class PersistentFilters {
             // Add value to front of stack
             this.mTemplates.unshift(template);
             vscode.window.showInformationMessage(localize("addTemplate.success",
-                                                          "Template saved successfully. Template name: {0}, Node name: {1}, Node type: {2}",
-                                                          template.templateName, template.nodeLabel, getStringFromTypeEnum(template.nodeType)));
+                                                          "Template saved successfully. Template name: {0}, Node type: {1}",
+                                                          template.templateName, getStringFromTypeEnum(template.nodeType)));
 
             this.updateTemplates();
     }
@@ -256,7 +256,7 @@ export class PersistentFilters {
      */
     public async removeTemplate(templateName: string) {
         const index = this.mTemplates.findIndex((item) => {
-            if (item.nodeLabel.toUpperCase() === templateName.toUpperCase()) {
+            if (item.templateName.toUpperCase() === templateName.toUpperCase()) {
                 return item;
             }
         });
