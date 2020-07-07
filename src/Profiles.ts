@@ -891,7 +891,7 @@ export class Profiles {
         return profileManager;
     }
 
-    public async validateProfiles(theProfile: IProfileLoaded) {
+    public async validateProfiles(theProfile: IProfileLoaded): Promise<IProfileValidation> {
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
@@ -947,8 +947,6 @@ export class Profiles {
                 }
 
             } catch (error) {
-                // tslint:disable-next-line:no-console
-                console.log(error);
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
                     status: "inactive",
