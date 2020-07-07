@@ -914,7 +914,7 @@ export class Profiles {
                 if (getSessStatus.getStatus) {
                     profileStatus = await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,
-                        title: localize("Profiles.validateProfiles.validationProgress", "Validating Profile.")
+                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name)
                     }, () => {
                         return getSessStatus.getStatus(theProfile, theProfile.type);
                     });
@@ -947,6 +947,8 @@ export class Profiles {
                 }
 
             } catch (error) {
+                // tslint:disable-next-line:no-console
+                console.log(error);
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
                     status: "inactive",
