@@ -70,9 +70,19 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * might want to request that profiles should get reloaded
      * to make them automatically appears in the Explorer drop-
      * down dialogs.
+     *
+     * @param profileType optional profile type that the extender can specify
      */
-    public async reloadProfiles(): Promise<void> {
+    public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
+        await ZoweExplorerExtender.refreshProfilesQueue.add(() => Profiles.getInstance().refresh());
+
+        // Get all profiles for profile type:
+        const profilesForType = Profiles.getInstance().getProfiles(profileType);
+
+        // tslint:disable-next-line: no-console
+        console.log(profilesForType);
+
+        // Re-initialize ..
     }
 }
