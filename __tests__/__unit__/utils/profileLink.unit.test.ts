@@ -128,13 +128,13 @@ describe("Profile link unit tests part 1", () => {
     });
 
     it("Test get profile via the API", async () => {
-        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi("test");
         expect((await extenderApi.getProfile(testNode)).name).toEqual("azbox");
     });
 
     it("Test get profile via the API - Bad input", async () => {
         let response = "";
-        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi("test");
         try {
             await extenderApi.getProfile(aBadNode as IZoweDatasetTreeNode);
         } catch (error) {
@@ -146,14 +146,14 @@ describe("Profile link unit tests part 1", () => {
     it("Test get linked profile via the API", async () => {
         mockdirectLoad.mockReturnValue(profileOne);
         profileOne.name = "btso";
-        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi("test");
         const pr1 = await extenderApi.getLinkedProfile(testNode, "tso");
         expect(pr1.name).toEqual("btso");
     });
 
     it("Test get linked profile directly - Bad input", async () => {
         let response = "";
-        ZoweExplorerApiRegister.getExplorerExtenderApi();
+        ZoweExplorerApiRegister.getExplorerExtenderApi("test");
         try {
          await getLinkedProfile(aBadNode as IZoweDatasetTreeNode, "tso", Logger.getAppLogger());
         } catch (error) {
@@ -164,7 +164,7 @@ describe("Profile link unit tests part 1", () => {
 
     it("Test get linked profile via the API - Bad input", async () => {
         let response = "";
-        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi("test");
         try {
             await extenderApi.getLinkedProfile(aBadNode as IZoweDatasetTreeNode, "tso");
         } catch (error) {
@@ -176,7 +176,7 @@ describe("Profile link unit tests part 1", () => {
     it("Test get linked profile via the API - Bad output found", async () => {
         let response = "";
         mockdirectLoad.mockRejectedValue(new Error("An Error"));
-        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi();
+        const extenderApi = ZoweExplorerApiRegister.getExplorerExtenderApi("test");
         try {
             const pr1 = await extenderApi.getLinkedProfile(testNode, "tso");
         } catch (error) {

@@ -11,12 +11,11 @@
 
 import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
-import { IZoweTreeNode } from "./api/IZoweTreeNode";
+import { IZoweTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
 import { ZoweExplorerApi } from "./api/ZoweExplorerApi";
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./utils/profileLink";
-import { DatasetTree, createDatasetTree } from "./dataset/DatasetTree";
-import * as globals from "./globals";
+import { IZoweTree } from "./api/IZoweTree";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -24,14 +23,26 @@ import * as globals from "./globals";
  * @export
  */
 export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender {
+    datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+    ZoweExplorerExtenderInst: ZoweExplorerExtender;
+    static ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
     /**
      * Access the singleton instance.
      * @static
      * @returns {ZoweExplorerExtender} the ZoweExplorerExtender singleton instance
      */
-    public static getInstance(): ZoweExplorerExtender {
-        return ZoweExplorerExtender.instance;
+    public static createInstance(datasetTree: IZoweTree<IZoweDatasetTreeNode>): ZoweExplorerExtender {
+      this.ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
+      this.ZoweExplorerExtenderInst.datasetTree = datasetTree;
+      return this.ZoweExplorerExtenderInst;
+    }
+
+    public static getInstance(datasetTree?: IZoweTree<IZoweDatasetTreeNode>): ZoweExplorerExtender {
+      if (datasetTree || !this.ZoweExplorerExtenderInst) {
+        return this.createInstance(datasetTree);
+      }
+      return this.ZoweExplorerExtenderInst;
     }
 
     // Queue of promises to process sequentially when multiple extension register in parallel
@@ -77,16 +88,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
-        await ZoweExplorerExtender.refreshProfilesQueue.add(() => Profiles.getInstance().refresh());
-
-        if (profileType) {
-            // Get all profiles for profile type (settings do not specify types for saved profiles):
-            const profilesForType = Profiles.getInstance().getProfiles(profileType);
-            // tslint:disable-next-line: no-console
-            console.log(profilesForType);
-
-            // Re-initialize ..Or, see addZoweSession in extension.ts for example use
-            // await createDatasetTree(globals.LOG);
-        }
+        await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
+        const profilesForType = Profiles.getInstance().getProfiles('rse');
+        // tslint:disable-next-line: no-console
+        console.log(profilesForType);
+        // this.ZoweExplorerExtenderInst.datasetTree.addSession();
+        this.datasetTree.addSession();
     }
 }
