@@ -15,6 +15,8 @@ import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import { ZoweExplorerApi } from "./api/ZoweExplorerApi";
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./utils/profileLink";
+import { DatasetTree, createDatasetTree } from "./dataset/DatasetTree";
+import * as globals from "./globals";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -77,12 +79,14 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(() => Profiles.getInstance().refresh());
 
-        // Get all profiles for profile type:
-        const profilesForType = Profiles.getInstance().getProfiles(profileType);
+        if (profileType) {
+            // Get all profiles for profile type (settings do not specify types for saved profiles):
+            const profilesForType = Profiles.getInstance().getProfiles(profileType);
+            // tslint:disable-next-line: no-console
+            console.log(profilesForType);
 
-        // tslint:disable-next-line: no-console
-        console.log(profilesForType);
-
-        // Re-initialize ..
+            // Re-initialize ..Or, see addZoweSession in extension.ts for example use
+            // await createDatasetTree(globals.LOG);
+        }
     }
 }
