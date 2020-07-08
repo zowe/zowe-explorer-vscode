@@ -103,7 +103,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
         // Initialize dataset provider
-        datasetProvider = await createDatasetTree(globals.LOG);
+        datasetProvider = await createDatasetTree(globals.LOG); // start creating profile here
         // Initialize uss provider
         ussFileProvider = await createUSSTree(globals.LOG);
         // Initialize Jobs provider with the created session and the selected pattern
@@ -174,7 +174,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     // return the Extension's API to other extensions that want to register their APIs.
-    return ZoweExplorerApiRegister.getInstance();
+    return ZoweExplorerApiRegister.getInstance(datasetProvider); // here
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
