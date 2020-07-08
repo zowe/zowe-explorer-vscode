@@ -11,7 +11,7 @@
 
 import * as PromiseQueue from "promise-queue";
 import { IProfileLoaded } from "@zowe/imperative";
-import { IZoweTreeNode, IZoweDatasetTreeNode } from "./api/IZoweTreeNode";
+import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./api/IZoweTreeNode";
 import { ZoweExplorerApi } from "./api/ZoweExplorerApi";
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./utils/profileLink";
@@ -23,7 +23,10 @@ import { IZoweTree } from "./api/IZoweTree";
  * @export
  */
 export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender {
+   // not all extenders will need to refresh trees
     datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+    jobsProvider: IZoweTree<IZoweJobTreeNode>;
     ZoweExplorerExtenderInst: ZoweExplorerExtender;
     static ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
@@ -32,15 +35,23 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @static
      * @returns {ZoweExplorerExtender} the ZoweExplorerExtender singleton instance
      */
-    public static createInstance(datasetTree: IZoweTree<IZoweDatasetTreeNode>): ZoweExplorerExtender {
+    public static createInstance(
+      datasetTree: IZoweTree<IZoweDatasetTreeNode>,
+      ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
+      jobsProvider: IZoweTree<IZoweJobTreeNode>
+    ): ZoweExplorerExtender {
       this.ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
       this.ZoweExplorerExtenderInst.datasetTree = datasetTree;
       return this.ZoweExplorerExtenderInst;
     }
 
-    public static getInstance(datasetTree?: IZoweTree<IZoweDatasetTreeNode>): ZoweExplorerExtender {
+    public static getInstance(
+      datasetTree?: IZoweTree<IZoweDatasetTreeNode>,
+      ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
+      jobsProvider?: IZoweTree<IZoweJobTreeNode>
+    ): ZoweExplorerExtender {
       if (datasetTree || !this.ZoweExplorerExtenderInst) {
-        return this.createInstance(datasetTree);
+        return this.createInstance(datasetTree, ussFileProvider, jobsProvider);
       }
       return this.ZoweExplorerExtenderInst;
     }
@@ -94,5 +105,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         console.log(profilesForType);
         // this.ZoweExplorerExtenderInst.datasetTree.addSession();
         this.datasetTree.addSession();
+        this.ussFileProvider.addSession();
+        this.jobsProvider.addSession();
     }
 }

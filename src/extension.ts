@@ -174,7 +174,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     }
 
     // return the Extension's API to other extensions that want to register their APIs.
-    return ZoweExplorerApiRegister.getInstance(datasetProvider); // here
+    // let datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
+    // let ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+    // let jobsProvider: IZoweTree<IZoweJobTreeNode>;
+    return ZoweExplorerApiRegister.getInstance(datasetProvider, ussFileProvider, jobsProvider); // here
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
