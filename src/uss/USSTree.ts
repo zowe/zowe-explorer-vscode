@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
-import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 import { FilterItem, FilterDescriptor, resolveQuickPickHelper, errorHandling } from "../utils";
 import { sortTreeItems, getAppName } from "../shared/utils";
 import { IZoweTree } from "../api/IZoweTree";
@@ -48,7 +48,7 @@ export async function createUSSTree(log: Logger) {
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
     public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
-    private static readonly persistenceSchema: string = "Zowe-USS-Persistent";
+    private static readonly persistenceSchema: globals.PersistenceSchemaEnum = globals.PersistenceSchemaEnum.USS;
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
     public mFavorites: IZoweUSSTreeNode[] = [];
@@ -80,14 +80,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
         (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
     );
-    const newName = await vscode.window.showInputBox({value: oldLabel});
+    const newName = await vscode.window.showInputBox({value: oldLabel.replace(/^\[.+\]:\s/, "")});
     if (newName && newName !== oldLabel) {
         try {
             let newNamePath = path.join(parentPath + newName);
             newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+            const oldNamePath = originalNode.fullPath;
+
+            const hasClosedTab = await originalNode.rename(newNamePath);
             await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(originalNode.fullPath, newNamePath);
-            originalNode.rename(newNamePath);
+                originalNode.getProfile()).rename(oldNamePath, newNamePath);
+            await originalNode.refreshAndReopen(hasClosedTab);
 
             if (oldFavorite) {
                 this.removeFavorite(oldFavorite);
@@ -142,7 +145,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -359,19 +361,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         }
                     }
                 }
-                if (!remotepath) {
-                    // manually entering a search - switch to an input box
-                    const options: vscode.InputBoxOptions = {
-                        prompt: localize("filterPrompt.option.prompt.search",
-                            "Create a new filter"),
-                        value: sessionNode.fullPath
-                    };
-                    // get user input
-                    remotepath = await vscode.window.showInputBox(options);
-                    if (!remotepath || remotepath.length === 0) {
-                        vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
-                        return;
-                    }
+                // manually entering a search - switch to an input box
+                const options: vscode.InputBoxOptions = {
+                    prompt: localize("filterPrompt.option.prompt.search",
+                        "Create a new filter"),
+                    value: remotepath
+                };
+                // get user input
+                remotepath = await vscode.window.showInputBox(options);
+                if (!remotepath || remotepath.length === 0) {
+                    vscode.window.showInformationMessage(localize("filterPrompt.enterPath", "You must enter a path."));
+                    return;
                 }
             } else {
                 // executing search from saved search in favorites
@@ -503,12 +503,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             vscode.window.showInformationMessage(localize("findUSSItem.unsuccessful", "File does not exist. It may have been deleted."));
             this.removeRecall(`[${sessionNode.getProfileName()}]: ${itemPath}`);
         }
-    }
-
-    public async checkCurrentProfile(node: IZoweUSSTreeNode) {
-        const profile = node.getProfile();
-        await Profiles.getInstance().checkCurrentProfile(profile);
-        await this.refresh();
     }
 
     /**

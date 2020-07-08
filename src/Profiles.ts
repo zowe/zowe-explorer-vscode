@@ -14,11 +14,13 @@ import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as globals from "./globals";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
-import { errorHandling, getZoweDir } from "./utils";
+import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
-import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode } from "./api/IZoweTreeNode";
+import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
+
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 interface IUrlValidator {
@@ -26,6 +28,11 @@ interface IUrlValidator {
     protocol: string;
     host: string;
     port: number;
+}
+
+interface IProfileValidation {
+    status: string;
+    name: string;
 }
 
 let InputBoxOptions: vscode.InputBoxOptions;
@@ -47,6 +54,7 @@ export class Profiles {
 
     private static loader: Profiles;
 
+    public profilesForValidation: IProfileValidation[] = [];
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -63,6 +71,14 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
+
+        // Check what happens if there's an error
+        const profileStatus = await this.validateProfiles(theProfile);
+        if (profileStatus.status === "inactive") {
+            this.validProfile = ValidProfileEnum.INVALID;
+            return profileStatus;
+        }
+
         if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
                 const values = await Profiles.getInstance().promptCredentials(theProfile.name);
@@ -73,20 +89,25 @@ export class Profiles {
                 }
             } catch (error) {
                 errorHandling(error, theProfile.name,
-                    localize("ussNodeActions.error", "Error encountered in ") + `createUSSNodeDialog.optionalProfiles!`);
-                return;
+                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`);
+                return profileStatus;
             }
             if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
                 theProfile.profile.user = this.usrNme;
                 theProfile.profile.password = this.passWrd;
                 theProfile.profile.base64EncodedAuth = this.baseEncd;
                 this.validProfile = ValidProfileEnum.VALID;
+                return profileStatus;
             } else {
-                return;
+                // return invalid if credetials are not provided
+                this.validProfile = ValidProfileEnum.INVALID;
+                return profileStatus;
             }
         } else {
             this.validProfile = ValidProfileEnum.VALID;
+            return profileStatus;
         }
+
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -161,7 +182,7 @@ export class Profiles {
     }
 
     public async getUrl(urlInputBox): Promise<string | undefined> {
-        return new Promise<string | undefined> ((resolve, reject) => {
+        return new Promise<string | undefined>((resolve, reject) => {
             urlInputBox.onDidHide(() => {
                 reject(undefined);
                 resolve(urlInputBox.value);
@@ -186,6 +207,121 @@ export class Profiles {
                 }
             });
         });
+    }
+
+    /**
+     * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
+     * selecting which profile you would like to add from the drop-down that appears.
+     * The profiles that are in the tree view already will not appear in the
+     * drop-down.
+     *
+     * @export
+     * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
+     */
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+        const allProfiles = (await Profiles.getInstance()).allProfiles;
+        const createNewProfile = "Create a New Connection to z/OS";
+        let chosenProfile: string = "";
+
+        // Get all profiles
+        let profileNamesList = allProfiles.map((profile) => {
+            return profile.name;
+        });
+        // Filter to list of the APIs available for current tree explorer
+        profileNamesList = profileNamesList.filter((profileName) => {
+            const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.USS) {
+                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                return ussProfileTypes.includes(profile.type);
+            }
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.Dataset) {
+                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                return mvsProfileTypes.includes(profile.type);
+            }
+            if (zoweFileProvider.getTreeType() === globals.PersistenceSchemaEnum.Job) {
+                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                return jesProfileTypes.includes(profile.type);
+            }
+        });
+        if (profileNamesList) {
+            profileNamesList = profileNamesList.filter((profileName) =>
+                // Find all cases where a profile is not already displayed
+                !zoweFileProvider.mSessionNodes.find((sessionNode) => sessionNode.getProfileName() === profileName)
+            );
+        }
+        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
+        const items: vscode.QuickPickItem[] = profileNamesList.map((element) => new FilterItem(element));
+        const quickpick = vscode.window.createQuickPick();
+        const placeholder = localize("addSession.quickPickOption",
+            "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the USS Explorer");
+
+        if (globals.ISTHEIA) {
+            const options: vscode.QuickPickOptions = {
+                placeHolder: placeholder
+            };
+            // get user selection
+            const choice = (await vscode.window.showQuickPick([createPick, ...items], options));
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            chosenProfile = choice === createPick ? "" : choice.label;
+        } else {
+            quickpick.items = [createPick, ...items];
+            quickpick.placeholder = placeholder;
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await resolveQuickPickHelper(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                vscode.window.showInformationMessage(localize("enterPattern.pattern", "No selection made."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                chosenProfile = "";
+            } else {
+                chosenProfile = choice.label;
+            }
+        }
+
+        if (chosenProfile === "") {
+            let newprofile: any;
+            let profileName: string;
+            if (quickpick.value) {
+                profileName = quickpick.value;
+            }
+
+            const options = {
+                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection"),
+                value: profileName
+            };
+            profileName = await vscode.window.showInputBox(options);
+            if (!profileName) {
+                vscode.window.showInformationMessage(localize("createNewConnection.enterprofileName",
+                    "Profile Name was not supplied. Operation Cancelled"));
+                return;
+            }
+            chosenProfile = profileName.trim();
+            globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
+            try {
+                newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
+            } catch (error) { await errorHandling(error, chosenProfile, error.message); }
+            if (newprofile) {
+                try {
+                    await Profiles.getInstance().refresh();
+                } catch (error) {
+                    await errorHandling(error, newprofile, error.message);
+                }
+                await zoweFileProvider.addSession(newprofile);
+                await zoweFileProvider.refresh();
+            }
+        } else if (chosenProfile) {
+            globals.LOG.debug(localize("createZoweSession.log.debug.selectProfile", "User selected profile ") + chosenProfile);
+            await zoweFileProvider.addSession(chosenProfile);
+        } else {
+            globals.LOG.debug(localize("createZoweSession.log.debug.cancelledSelection", "User cancelled profile selection"));
+        }
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
@@ -482,12 +618,12 @@ export class Profiles {
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
 
-        let repromptUser: any;
-        let repromptPass: any;
-        let loadProfile: any;
-        let loadSession: any;
-        let newUser: any;
-        let newPass: any;
+        let repromptUser: string;
+        let repromptPass: string;
+        let loadProfile: IProfileLoaded;
+        let loadSession: ISession;
+        let newUser: string;
+        let newPass: string;
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
@@ -502,27 +638,43 @@ export class Profiles {
         }
 
         if (!loadSession.user || rePrompt) {
-
             newUser = await this.userInfo(repromptUser);
-
             loadSession.user = loadProfile.profile.user = newUser;
+        } else {
+            newUser = loadSession.user = loadProfile.profile.user;
         }
 
         if (newUser === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             if (!loadSession.password || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
                 loadSession.password = loadProfile.profile.password = newPass;
+            } else {
+                newPass = loadSession.password = loadProfile.profile.password;
             }
         }
 
         if (newPass === undefined) {
-            return;
+            vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
+                        "Operation Cancelled"));
+            await this.refresh();
+            return undefined;
         } else {
             try {
-                const updSession = await zowe.ZosmfSession.createBasicZosmfSession(loadSession as IProfile);
+                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
                 if (rePrompt) {
+                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", loadProfile.name);
+                    await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                        if (selection === saveButton) {
+                            rePrompt = false;
+                        }
+                    });
                     await this.updateProfile(loadProfile, rePrompt);
                 }
                 return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
@@ -590,15 +742,14 @@ export class Profiles {
             });
 
         // Delete from Data Set Favorites
-        const favoriteDs = datasetTree.mFavorites;
-        for (let i = favoriteDs.length - 1; i >= 0; i--) {
-            const findNode = favoriteDs[i].label.substring(1, favoriteDs[i].label.indexOf("]")).trim();
+        datasetTree.mFavorites.forEach((favNode) => {
+            const findNode = favNode.label.substring(1, favNode.label.indexOf("]")).trim();
             if (findNode === deleteLabel) {
-                datasetTree.removeFavorite(favoriteDs[i]);
-                favoriteDs[i].dirty = true;
+                datasetTree.removeFavorite(favNode);
+                favNode.dirty = true;
                 datasetTree.refresh();
             }
-        }
+        });
 
         // Delete from Data Set Tree
         datasetTree.mSessionNodes.forEach((sessNode) => {
@@ -743,18 +894,82 @@ export class Profiles {
         return profileManager;
     }
 
+    public async validateProfiles(theProfile: IProfileLoaded) {
+        let filteredProfile: IProfileValidation;
+        let profileStatus;
+        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
+
+        // Filter profilesForValidation to check if the profile is already validated
+        this.profilesForValidation.filter((profile) => {
+            if (profile.name === theProfile.name) {
+                filteredProfile = {
+                    status: profile.status,
+                    name: profile.name
+                };
+            }
+        });
+
+        // If not yet validated, call getStatus and validate the profile
+        // status will be stored in profilesForValidation
+        if (filteredProfile === undefined) {
+            try {
+
+                if (getSessStatus.getStatus) {
+                    profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                } else {
+                    profileStatus = "unverified";
+                }
+
+                switch (profileStatus) {
+                    case "active":
+                        filteredProfile = {
+                            status: "active",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "inactive":
+                        filteredProfile = {
+                            status: "inactive",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                        break;
+                    case "unverified":
+                        filteredProfile = {
+                            status: "unverified",
+                            name: theProfile.name
+                        };
+                        this.profilesForValidation.push(filteredProfile);
+                    default:
+                }
+
+            } catch (error) {
+                this.log.debug("Validate Error - Invalid Profile: " + error);
+                filteredProfile = {
+                    status: "inactive",
+                    name: theProfile.name
+                };
+                this.profilesForValidation.push(filteredProfile);
+            }
+        }
+
+        return filteredProfile;
+    }
+
     private async deletePrompt(deletedProfile: IProfileLoaded) {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: localize("deleteProfile.quickPickOption", "Are you sure you want to permanently delete ") + profileName,
+            placeHolder: localize("deleteProfile.quickPickOption", "Delete {0}? This will permanently remove it from your system.", profileName),
             ignoreFocusOut: true,
             canPickMany: false
         };
         // confirm that the user really wants to delete
-        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.yes", "Yes"),
-            localize("deleteProfile.showQuickPick.no", "No")], quickPickOptions) !== localize("deleteProfile.showQuickPick.yes", "Yes")) {
-            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked no. Cancelling delete of profile"));
+        if (await vscode.window.showQuickPick([localize("deleteProfile.showQuickPick.delete", "Delete"),
+                                               localize("deleteProfile.showQuickPick.cancel", "Cancel")], quickPickOptions) !==
+                                               localize("deleteProfile.showQuickPick.delete", "Delete")) {
+            this.log.debug(localize("deleteProfile.showQuickPick.log.debug", "User picked Cancel. Cancelling delete of profile"));
             return;
         }
 
@@ -804,9 +1019,7 @@ export class Profiles {
             return undefined;
         }
 
-        const zosmfUrlParsed = this.validateAndParseUrl(zosURL);
-
-        return zosmfUrlParsed;
+        return this.validateAndParseUrl(zosURL);
     }
 
     private async portInfo(input: string, schema: {}){
@@ -854,7 +1067,7 @@ export class Profiles {
             return undefined;
         }
 
-        return userName;
+        return userName.trim();
     }
 
     private async passwordInfo(input?) {
@@ -880,7 +1093,7 @@ export class Profiles {
             return undefined;
         }
 
-        return passWord;
+        return passWord.trim();
     }
 
     private async ruInfo(input?) {
@@ -1008,8 +1221,8 @@ export class Profiles {
         for (const value of profileArray) {
             if (value === "user" || value === "password") {
                 if (!rePrompt) {
-                    OrigProfileInfo.user = NewProfileInfo.user;
-                    OrigProfileInfo.password = NewProfileInfo.password;
+                        OrigProfileInfo.user = NewProfileInfo.user;
+                        OrigProfileInfo.password = NewProfileInfo.password;
                 }
             } else {
                 OrigProfileInfo[value] = NewProfileInfo[value];

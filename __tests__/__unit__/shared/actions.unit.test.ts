@@ -15,7 +15,6 @@ import {
     createIProfile,
     createISessionWithoutCredentials, createQuickPickContent, createQuickPickItem, createTreeView
 } from "../../../__mocks__/mockCreators/shared";
-import * as extension from "../../../src/extension";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils";
@@ -25,11 +24,13 @@ import * as sharedActions from "../../../src/shared/actions";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { create } from "domain";
-import { DatasetTree } from "../../../src/dataset/DatasetTree";
-import { USSTree } from "../../../src/uss/USSTree";
 
-function createGlobalMocks() {
+async function createGlobalMocks() {
+    const globalMocks = {
+        qpPlaceholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer"
+    };
+
+    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
@@ -39,154 +40,43 @@ function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+
+    return globalMocks;
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
-describe("Shared Actions Unit Tests - Function addZoweSession", () => {
-    let blockMocks;
-
-    function createBlockMocks() {
-        const session = createISessionWithoutCredentials();
-        const treeView = createTreeView();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const quickPickItem = createQuickPickItem();
-
-        return {
-            session,
-            imperativeProfile,
-            profileInstance,
-            datasetSessionNode,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView),
-            quickPickItem
-        };
-    }
-
-    afterAll(() => jest.restoreAllMocks());
-
-    it("Checking that addSession will cancel if there is no profile name", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-        const entered = undefined;
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce(entered);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        // Assert edge condition user cancels the input path box
-        mocked(vscode.window.createQuickPick)
-            .mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
-
-        await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(mocked(vscode.window.showInformationMessage).mock.calls[0][0]).toEqual("Profile Name was not supplied. Operation Cancelled");
-    });
-    it("Checking that addSession works correctly with supplied profile name", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-        const entered = undefined;
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("fake");
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        // Assert edge condition user cancels the input path box
-        mocked(vscode.window.createQuickPick).mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
-
-        await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).toBeCalled();
-        expect(blockMocks.testDatasetTree.addSession.mock.calls[0][0]).toEqual({ newprofile: "fake" });
-    });
-    it("Checking that addSession works correctly with existing profile", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-        const entered = "";
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        // Assert edge condition user cancels the input path box
-        const quickPickContent = createQuickPickContent(entered, blockMocks.quickPickItem);
-        quickPickContent.label = "firstName";
-        mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
-
-        await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
-    });
-    it("Checking that addSession works correctly with supplied resolveQuickPickHelper", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-        const entered = "fake";
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        mocked(vscode.window.createQuickPick).mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
-
-        await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
-    });
-    it("Checking that addSession works correctly with undefined profile", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-        const entered = "";
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        // Assert edge condition user cancels the input path box
-        const quickPickContent = createQuickPickContent(entered, blockMocks.quickPickItem);
-        quickPickContent.label = undefined;
-        mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(quickPickContent);
-
-        await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).not.toBeCalled();
-    });
-    it("Checking that addSession works correctly if createNewConnection is invalid", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
-        const entered = "fake";
-        blockMocks.profileInstance.createNewConnection = jest.fn().mockRejectedValue(new Error("create connection error"));
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce(entered);
-
-        mocked(vscode.window.createQuickPick).mockReturnValue(createQuickPickContent(entered, blockMocks.quickPickItem));
-        jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(blockMocks.quickPickItem);
-        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
-
-        await extension.addZoweSession(blockMocks.testDatasetTree);
-        expect(errorHandlingSpy).toBeCalled();
-        expect(errorHandlingSpy.mock.calls[0][0]).toEqual(new Error("create connection error"));
-    });
-});
-
 describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
-    let blockMocks;
-
     function createBlockMocks() {
-        const session = createISessionWithoutCredentials();
-        const treeView = createTreeView();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-
-        // It's required to have proper mock of profile for USS Node generation
-        mocked(Profiles.getInstance).mockReturnValue(profileInstance);
-        const ussSessionNode = createUSSSessionNode(session, imperativeProfile);
-
-        return {
-            session,
-            imperativeProfile,
-            profileInstance,
-            datasetSessionNode,
-            ussSessionNode,
-            testDatasetTree: createDatasetTree(datasetSessionNode, treeView),
-            testUssTree: createUSSTree([], [ussSessionNode], treeView)
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            datasetSessionNode: null,
+            ussSessionNode: null,
+            testDatasetTree: null,
+            testUssTree: null
         };
+
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        // It's required to have proper mock of profile for USS Node generation
+        mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.testUssTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+
+        return newMocks;
     }
 
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking that searchForLoadedItems works for a PDS", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
             blockMocks.datasetSessionNode, blockMocks.session, globals.DS_PDS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -201,7 +91,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         });
 
         const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF");
-        const quickPickContent = createQuickPickContent(qpItem, qpItem);
+        const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
@@ -210,8 +100,9 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(blockMocks.testDatasetTree.addHistory).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a member", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
         const testNode = new ZoweDatasetNode("HLQ.PROD2.STUFF", null,
             blockMocks.datasetSessionNode, blockMocks.session, globals.DS_DS_CONTEXT);
         testNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -234,7 +125,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             }
         });
         const qpItem = new utils.FilterItem("[sestest]: HLQ.PROD2.STUFF(TESTMEMB)");
-        const quickPickContent = createQuickPickContent(qpItem, qpItem);
+        const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
@@ -243,8 +134,9 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(blockMocks.testDatasetTree.addHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
     });
     it("Checking that searchForLoadedItems works for a USS folder", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.ussSessionNode, null, "/");
         blockMocks.testDatasetTree.getChildren.mockReturnValue([blockMocks.ussSessionNode]);
 
@@ -254,7 +146,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folder]);
 
         const qpItem = new utils.FilterItem("[sestest]: /folder");
-        const quickPickContent = createQuickPickContent(qpItem, qpItem);
+        const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
@@ -264,8 +156,9 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(openNode).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a USS file", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.ussSessionNode, null, "/");
         const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
@@ -277,7 +170,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(folder, "getChildren").mockResolvedValueOnce([file]);
 
         const qpItem = new utils.FilterItem("[sestest]: /folder/file");
-        const quickPickContent = createQuickPickContent(qpItem, qpItem);
+        const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
@@ -289,12 +182,13 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(openNode).toHaveBeenCalledWith(false, true, blockMocks.testUssTree);
     });
     it("Checking that searchForLoadedItems fails when no pattern is entered", async () => {
-        createGlobalMocks();
-        blockMocks = createBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
         blockMocks.testDatasetTree.searchInLoadedItems.mockResolvedValueOnce([]);
         blockMocks.testUssTree.searchInLoadedItems.mockResolvedValueOnce([]);
         const qpItem = null;
-        const quickPickContent = createQuickPickContent(qpItem, qpItem);
+        const quickPickContent = createQuickPickContent(qpItem, qpItem, globalMocks.qpPlaceholder);
         quickPickContent.placeholder = "Select a filter";
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
@@ -325,19 +219,21 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
+        Object.defineProperty(newMocks.testUSSTree, "getRecall", { value: jest.fn(), configurable: true });
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
 
         return newMocks;
     }
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a PDS", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
+
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, blockMocks.dsNode, blockMocks.session);
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         child.pattern = child.label;
         const qpItem = new utils.FilterDescriptor(child.label);
-        const quickPickContent = createQuickPickContent("[sestest]: node(child)", qpItem);
+        const quickPickContent = createQuickPickContent("[sestest]: node(child)", [qpItem], globalMocks.qpPlaceholder);
 
         mocked(blockMocks.testDatasetTree.getRecall).mockReturnValueOnce([`[sestest]: node(child)`]);
         mocked(blockMocks.testUSSTree.getRecall).mockReturnValueOnce([]);
@@ -349,11 +245,12 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
+
         blockMocks.dsNode.contextValue = globals.DS_DS_CONTEXT;
         const qpItem = new utils.FilterDescriptor(blockMocks.dsNode.label);
-        const quickPickContent = createQuickPickContent("[sestest]: node", qpItem);
+        const quickPickContent = createQuickPickContent("[sestest]: node", [qpItem], globalMocks.qpPlaceholder);
 
         mocked(blockMocks.testDatasetTree.getRecall).mockReturnValueOnce([`[sestest]: node`]);
         mocked(blockMocks.testUSSTree.getRecall).mockReturnValueOnce([]);
@@ -365,12 +262,13 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a USS file", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
+
         const node = new ZoweUSSNode("node3.txt", vscode.TreeItemCollapsibleState.None, blockMocks.ussSessionNode, null, "/node1/node2");
         node.contextValue = globals.DS_DS_CONTEXT;
         const qpItem = new utils.FilterDescriptor(node.label);
-        const quickPickContent = createQuickPickContent("[sestest]: /node1/node2/node3.txt", qpItem);
+        const quickPickContent = createQuickPickContent("[sestest]: /node1/node2/node3.txt", [qpItem], globalMocks.qpPlaceholder);
 
         mocked(blockMocks.testDatasetTree.getRecall).mockReturnValueOnce([]);
         mocked(blockMocks.testUSSTree.getRecall).mockReturnValueOnce([`[sestest]: /node1/node2/node3.txt`]);

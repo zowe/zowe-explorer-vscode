@@ -43,6 +43,15 @@ export namespace ZoweExplorerApi {
          * @returns {Session} a Zowe CLI Session
          */
         getSession(profile?: IProfileLoaded): Session;
+
+        /**
+         * Create a session for the specific profile type.
+         *
+         * @param {IProfileLoaded} profile
+         *      will use the profile the API was retrieved with by default
+         * @returns {IZosmfInfoResponse} z/OSMF Check Status response
+         */
+        getStatus?(profile: IProfileLoaded, profileType?): Promise<string>;
     }
 
     /**
@@ -87,6 +96,7 @@ export namespace ZoweExplorerApi {
         /**
          * Uploads the file at the given path. Use for Save.
          *
+         * @deprecated
          * @param {string} inputFilePath
          * @param {string} ussFilePath
          * @param {boolean} [binary]
@@ -104,6 +114,20 @@ export namespace ZoweExplorerApi {
             localEncoding?: string,
             etag?: string,
             returnEtag?: boolean
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Uploads the file at the given path. Use for Save.
+         *
+         * @param {string} inputFilePath
+         * @param {string} ussFilePath
+         * @param {zowe.IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        putContent?(
+            inputFilePath: string,
+            ussFilePath: string,
+            options?: zowe.IUploadOptions
         ): Promise<zowe.IZosFilesResponse>;
 
         /**

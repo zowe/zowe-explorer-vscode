@@ -2,6 +2,22 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.7.0`
+
+- Disallow multiple profiles with same name but different capitalizations. Thanks @katelynienaber
+- Improvements for Optional Credentials. Thanks @crawr @jellypuno
+- Reorganize Data Sets context menu. Thanks @katelynienaber
+- Adding star icon for favorites. Thanks @katelynienaber
+- Profile Validation. Thanks @jellypuno
+- Updating Credentials via Check Credentials. Thanks @JillieBeanSim
+- Favorites get loaded and opened into new files. Thanks @phaumer
+- Improve messaging of confirmation dialogues. Thanks @crawr
+- Enable editing of filters. Thanks @katelynienaber
+- Update Codecov settings. Thanks @jellypuno
+- Handle encoding value from z/OSMF Profiles. Thanks @dkelosky
+- Enable editing of ASCII files in USS. Thanks @Colin-Stone
+- Refactor unit test and add more integration tests. Thanks @katelynienaber
+
 ## `1.6.0`
 
 - Create connections with any registered profile type. Thanks @JillieBeanSim

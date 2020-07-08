@@ -16,7 +16,7 @@ import { isSessionNotFav } from "../../../shared/context";
 const icon: IIconItem = {
     id: IconId.session,
     type: IconHierarchyType.base,
-    path: getIconPathInResources("folder-root-default-closed.svg"),
+    path: getIconPathInResources("folder-root-unverified-closed.svg"),
     check: (node) => isSessionNotFav(node)
 };
 
