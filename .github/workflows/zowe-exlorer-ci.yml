@@ -41,7 +41,7 @@ jobs:
         CI: true
         NODE_OPTIONS: --max_old_space_size=4096
 
-    - name: Upload test results from Windows / Node 12.x
+    - name: Upload test results
       uses: actions/upload-artifact@v1
       # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       with:
@@ -49,7 +49,7 @@ jobs:
         path: results/
 
     # Run codecov upload for only one run
-    - name: Upload Results to Codecov
+    - name: Upload Results to Codecov from Windows / Node 12.x
       if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
       uses: codecov/codecov-action@v1.0.7
       with:
