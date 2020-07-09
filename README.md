@@ -1,5 +1,6 @@
 # Zowe Explorer
 
+![Node.js CI](https://img.shields.io/github/workflow/status/zowe/vscode-extension-for-zowe/Node.js%20CI.svg?logo=github)
 [![version](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/version-short/Zowe.vscode-extension-for-zowe.png)
 [![downloads](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)](https://vsmarketplacebadge.apphb.com/downloads-short/Zowe.vscode-extension-for-zowe.png)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
@@ -90,7 +91,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 2. Open the **DATA SETS** bar.
 3. Hover over the profile that you want to apply the filter to.
 4. Click the **magnifying glass** icon.
-5. Enter a pattern you want to create a filter for.  
+5. Enter a pattern you want to create a filter for.
   The data sets that match your pattern(s) are displayed in the explorer tree.
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
@@ -130,7 +131,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 
 1. Navigate to the explorer tree.
 2. Open the **DATA SETS** bar.
-3. Open a profile.  
+3. Open a profile.
 4. Click the PDS member (or PS) that you want to download.
 
     **Note:** To view the members of a PDS, click the PDS to expand the tree.
@@ -139,7 +140,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 5. Edit the document.
 6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
 
-Your PDS member (or PS) is uploaded.  
+Your PDS member (or PS) is uploaded.
 
 **Note:** If someone else has made changes to the PDS member (or PS) while you were editing it, you can merge your conflicts before uploading to the mainframe.
 

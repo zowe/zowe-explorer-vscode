@@ -274,7 +274,7 @@ describe("Dataset Tree Unit Tests - Function getParent", () => {
         expect(testTree.getParent(node)).toMatchObject(blockMocks.datasetSessionNode);
     });
 });
-describe("Dataset Tree Unit Tests - Function getHistory", () => {
+describe("Dataset Tree Unit Tests - Function getSearchHistory", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -295,12 +295,12 @@ describe("Dataset Tree Unit Tests - Function getHistory", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addHistory("testHistory");
+        testTree.addSearchHistory("testHistory");
 
-        expect(testTree.getHistory()).toEqual(["testHistory"]);
+        expect(testTree.getSearchHistory()).toEqual(["testHistory"]);
     });
 });
-describe("Dataset Tree Unit Tests - Function addRecall", () => {
+describe("Dataset Tree Unit Tests - Function addFileHistory", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -321,12 +321,12 @@ describe("Dataset Tree Unit Tests - Function addRecall", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addRecall("testRecall");
+        testTree.addFileHistory("testFileHistory");
 
-        expect(testTree.getRecall()).toEqual(["TESTRECALL"]);
+        expect(testTree.getFileHistory()).toEqual(["TESTFILEHISTORY"]);
     });
 });
-describe("Dataset Tree Unit Tests - Function removeRecall", () => {
+describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -347,10 +347,10 @@ describe("Dataset Tree Unit Tests - Function removeRecall", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addRecall("testRecall");
-        expect(testTree.getRecall()).toEqual(["TESTRECALL"]);
-        testTree.removeRecall("testRecall");
-        expect(testTree.getRecall()).toEqual([]);
+        testTree.addFileHistory("testFileHistory");
+        expect(testTree.getFileHistory()).toEqual(["TESTFILEHISTORY"]);
+        testTree.removeFileHistory("testFileHistory");
+        expect(testTree.getFileHistory()).toEqual([]);
     });
 });
 describe("Dataset Tree Unit Tests - Function addSession", () => {
@@ -719,7 +719,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.addHistory("test");
+        testTree.addSearchHistory("test");
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -735,7 +735,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.addHistory("test");
+        testTree.addSearchHistory("test");
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -804,7 +804,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.addHistory("test");
+        testTree.addSearchHistory("test");
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -823,7 +823,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.addHistory("test");
+        testTree.addSearchHistory("test");
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -1019,7 +1019,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
 
         await testTree.openItemFromPath(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`, blockMocks.datasetSessionNode);
 
-        expect(testTree.getHistory()).toEqual([node.label]);
+        expect(testTree.getSearchHistory()).toEqual([node.label]);
     });
     it("Checking opening of PDS Member", async () => {
         createGlobalMocks();
@@ -1037,7 +1037,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
 
         await testTree.openItemFromPath(`[${blockMocks.datasetSessionNode.label}]: ${parent.label}(${child.label})`, blockMocks.datasetSessionNode);
 
-        expect(testTree.getHistory()).toEqual([`${parent.label}(${child.label})`]);
+        expect(testTree.getSearchHistory()).toEqual([`${parent.label}(${child.label})`]);
     });
 });
 describe("Dataset Tree Unit Tests - Function rename", () => {
