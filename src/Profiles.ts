@@ -730,12 +730,12 @@ export class Profiles {
             return;
         }
 
-        // Delete from Data Set Recall
-        const recallDs: string[] = datasetTree.getRecall();
-        recallDs.slice().reverse()
+        // Delete from data det file history
+        const fileHistory: string[] = datasetTree.getFileHistory();
+        fileHistory.slice().reverse()
             .filter((ds) => ds.substring(1, ds.indexOf("]")).trim() === deleteLabel.toUpperCase())
             .forEach((ds) => {
-                datasetTree.removeRecall(ds);
+                datasetTree.removeFileHistory(ds);
             });
 
         // Delete from Data Set Favorites
@@ -757,12 +757,12 @@ export class Profiles {
             }
         });
 
-        // Delete from USS Recall
-        const recallUSS: string[] = ussTree.getRecall();
-        recallUSS.slice().reverse()
+        // Delete from USS file history
+        const fileHistoryUSS: string[] = ussTree.getFileHistory();
+        fileHistoryUSS.slice().reverse()
             .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel.toUpperCase())
             .forEach((uss) => {
-                ussTree.removeRecall(uss);
+                ussTree.removeFileHistory(uss);
             });
 
         // Delete from USS Favorites
