@@ -36,7 +36,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem('test'));
     newTree.getTreeType = jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS);
     newTree.setItem = jest.fn();
-    newTree.addHistory = jest.fn();
+    newTree.addSearchHistory = jest.fn();
 
     return newTree;
 }

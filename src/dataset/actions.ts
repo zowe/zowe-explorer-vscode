@@ -185,7 +185,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             } else {
                 await vscode.window.showTextDocument(document, {preview: false});
             }
-            if (datasetProvider) { datasetProvider.addRecall(`[${node.getProfileName()}]: ${label}`); }
+            if (datasetProvider) { datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`); }
         } catch (err) {
             globals.LOG.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             errorHandling(err, node.getProfileName(), err.message);
@@ -269,7 +269,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 node.dirty = true;
 
                 const theFilter = await datasetProvider.createFilterString(name, node);
-                datasetProvider.addHistory(theFilter);
+                datasetProvider.addSearchHistory(theFilter);
                 datasetProvider.refresh();
 
                 // Show newly-created data set in expanded tree view
@@ -685,7 +685,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     if (icon) {
         node.iconPath = icon.path;
     }
-    datasetProvider.addHistory(node.pattern);
+    datasetProvider.addSearchHistory(node.pattern);
 }
 
 /**
