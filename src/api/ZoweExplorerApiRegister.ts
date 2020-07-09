@@ -24,10 +24,7 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  * extensions to contribute their implementations.
  */
 export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClient {
-  datasetTree: IZoweTree<IZoweDatasetTreeNode>;
-  ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-  jobsProvider: IZoweTree<IZoweJobTreeNode>;
-  public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
+    public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
 
     /**
      * Access the singleton instance.
@@ -106,6 +103,9 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * of retrieving files and data from z/OS.
      */
     private static register: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
+    public datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+    public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+    public jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
     // These are the different API registries currently available to extenders
     private ussApiImplementations = new Map<string, ZoweExplorerApi.IUss>();
