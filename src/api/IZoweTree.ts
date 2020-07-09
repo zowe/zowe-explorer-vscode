@@ -150,14 +150,14 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     filterPrompt(node: IZoweNodeType);
 
     /**
-     * Adds a history(Recall) element to persisted settings.
+     * Adds a search history element to persisted settings.
      * @param node: the root node representing the operation
      */
-    addHistory(element: string);
+    addSearchHistory(element: string);
     /**
-     * Retrieves history(Recall) elements from persisted settings.
+     * Retrieves search history elements from persisted settings.
      */
-    getHistory();
+    getSearchHistory();
     /**
      * Returns the type of the tree provider.
      * @returns {PersistenceSchemaEnum} the type of tree: Dataset, USS, or Job
@@ -210,19 +210,19 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      *
      * @param {string} criteria the member name to add
      */
-    addRecall?(criteria: string);
+    addFileHistory?(criteria: string);
     /**
      * Returns the array of recently-opened member names
      *
      * @returns {string[]} the array of recently-opened member names
      */
-    getRecall?();
+    getFileHistory?();
     /**
      * Removes a member name from the recently-opened members array
      *
      * @param {string} name the member to remove
      */
-    removeRecall?(name: string);
+    removeFileHistory?(name: string);
     /**
      * Returns a new dataset filter string, from an old filter and a new string
      *

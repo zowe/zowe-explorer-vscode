@@ -89,7 +89,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     // tslint:disable-next-line:no-empty
-    public addHistory(criteria: string) {}
+    public addSearchHistory(criteria: string) {}
 
     /**
      * @param {IZoweDatasetTreeNode} element
@@ -108,20 +108,20 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public checkCurrentProfile(node: IZoweUSSTreeNode) {}
 
     /**
-     * @param {string} name - The name to remove from the recall array
+     * @param {string} name - The name to remove from the file history array
      * @memberof USSTree
      */
     @MockMethod()
     // tslint:disable-next-line:no-empty
-    public removeRecall(name: string) {}
+    public removeFileHistory(name: string) {}
 
     /**
-     * @param {string} criteria - The name to add to the recall array
+     * @param {string} criteria - The name to add to the file history array
      * @memberof USSTree
      */
     @MockMethod()
     // tslint:disable-next-line:no-empty
-    public addRecall(criteria: string) {}
+    public addFileHistory(criteria: string) {}
 
     /**
      * @returns {string[]}
@@ -129,7 +129,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
      */
     @MockMethod()
     // tslint:disable-next-line:no-empty
-    public getRecall(): string[] {
+    public getFileHistory(): string[] {
         return null;
     }
 

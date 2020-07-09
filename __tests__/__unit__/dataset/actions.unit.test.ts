@@ -1620,7 +1620,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1657,7 +1657,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1696,7 +1696,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1734,7 +1734,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1753,7 +1753,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1778,7 +1778,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1797,7 +1797,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue(["NODE1"]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue(["NODE1"]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1808,14 +1808,14 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(blockMocks.testDatasetTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
+        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
     });
     it("Checking history was overwritten with new query if empty", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
-        blockMocks.testDatasetTree.getHistory.mockReturnValue([null]);
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -1826,7 +1826,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(blockMocks.testDatasetTree.addHistory).toHaveBeenCalledWith("NODE1,NODE.*");
+        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
     });
 });
 
