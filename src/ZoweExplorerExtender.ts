@@ -23,12 +23,7 @@ import { IZoweTree } from "./api/IZoweTree";
  * @export
  */
 export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender {
-   // not all extenders will need to refresh trees
-    datasetTree: IZoweTree<IZoweDatasetTreeNode>;
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-    jobsProvider: IZoweTree<IZoweJobTreeNode>;
-    ZoweExplorerExtenderInst: ZoweExplorerExtender;
-    static ZoweExplorerExtenderInst: ZoweExplorerExtender;
+    public static ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
     /**
      * Access the singleton instance.
@@ -58,15 +53,20 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
       return this.ZoweExplorerExtenderInst;
     }
 
-    // Queue of promises to process sequentially when multiple extension register in parallel
+   // Queue of promises to process sequentially when multiple extension register in parallel
     private static refreshProfilesQueue = new PromiseQueue(1, Infinity);
-
     /**
      * This object represents a collection of the APIs that get exposed to other VS Code
      * extensions that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
      */
     private static instance: ZoweExplorerExtender = new ZoweExplorerExtender();
+   // not all extenders will need to refresh trees
+    public datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+    public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+    public jobsProvider: IZoweTree<IZoweJobTreeNode>;
+    public ZoweExplorerExtenderInst: ZoweExplorerExtender;
+
 
     /**
      * This method can be used by other VS Code Extensions to access the primary profile.
@@ -102,18 +102,9 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
-        const profilesForType = Profiles.getInstance().getProfiles('rse'); // TO-DO
-        // tslint:disable-next-line: no-console
-        console.log(profilesForType);
-        // this.ZoweExplorerExtenderInst.datasetTree.addSession();
-        if (this.datasetTree) {
-          this.datasetTree.addSession();
-        }
-        if (this.ussFileProvider) {
-          this.ussFileProvider.addSession();
-        }
-       if (this.jobsProvider) {
-        this.jobsProvider.addSession();
-       }
+        const profilesForType = Profiles.getInstance().getProfiles("rse"); // TO-DO
+        this.datasetTree?.addSession();
+        this.ussFileProvider?.addSession();
+        this.jobsProvider?.addSession();
     }
 }

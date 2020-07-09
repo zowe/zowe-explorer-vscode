@@ -24,13 +24,10 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  * extensions to contribute their implementations.
  */
 export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClient {
-  static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
-  static datasetTree: IZoweTree<IZoweDatasetTreeNode>;
-  static ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-  static jobsProvider: IZoweTree<IZoweJobTreeNode>;
   datasetTree: IZoweTree<IZoweDatasetTreeNode>;
   ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
   jobsProvider: IZoweTree<IZoweJobTreeNode>;
+  public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
 
     /**
      * Access the singleton instance.
