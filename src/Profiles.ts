@@ -44,7 +44,6 @@ export class Profiles {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log);
-        await Profiles.loader.refresh();
         return Profiles.loader;
     }
 
