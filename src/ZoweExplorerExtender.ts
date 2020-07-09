@@ -42,6 +42,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     ): ZoweExplorerExtender {
       this.ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
       this.ZoweExplorerExtenderInst.datasetTree = datasetTree;
+      this.ZoweExplorerExtenderInst.ussFileProvider = ussFileProvider;
+      this.ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
       return this.ZoweExplorerExtenderInst;
     }
 

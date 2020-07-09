@@ -43,9 +43,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     ): ZoweExplorerApiRegister {
         this.ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.register;
         this.ZoweExplorerApiRegisterInst.datasetTree = datasetTree;
-        this.datasetTree = datasetTree;
-        this.ussFileProvider = ussFileProvider;
-        this.jobsProvider = jobsProvider;
+        this.ZoweExplorerApiRegisterInst.ussFileProvider = ussFileProvider;
+        this.ZoweExplorerApiRegisterInst.jobsProvider = jobsProvider;
         return this.ZoweExplorerApiRegisterInst;
     }
 
