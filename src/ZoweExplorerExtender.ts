@@ -30,27 +30,16 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @static
      * @returns {ZoweExplorerExtender} the ZoweExplorerExtender singleton instance
      */
-    public static createInstance(
-      datasetTree: IZoweTree<IZoweDatasetTreeNode>,
-      ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
-      jobsProvider: IZoweTree<IZoweJobTreeNode>
-    ): ZoweExplorerExtender {
-      this.ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
-      this.ZoweExplorerExtenderInst.datasetTree = datasetTree;
-      this.ZoweExplorerExtenderInst.ussFileProvider = ussFileProvider;
-      this.ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
-      return this.ZoweExplorerExtenderInst;
-    }
-
     public static getInstance(
-      datasetTree?: IZoweTree<IZoweDatasetTreeNode>,
+      datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerExtender {
-      if (datasetTree || ussFileProvider || jobsProvider || !this.ZoweExplorerExtenderInst) {
-        return this.createInstance(datasetTree, ussFileProvider, jobsProvider);
-      }
-      return this.ZoweExplorerExtenderInst;
+        this.ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
+        this.ZoweExplorerExtenderInst.datasetProvider = datasetProvider;
+        this.ZoweExplorerExtenderInst.ussFileProvider = ussFileProvider;
+        this.ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
+        return this.ZoweExplorerExtenderInst;
     }
 
    // Queue of promises to process sequentially when multiple extension register in parallel
@@ -62,7 +51,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     private static instance: ZoweExplorerExtender = new ZoweExplorerExtender();
    // not all extenders will need to refresh trees
-    public datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+    public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
     public jobsProvider: IZoweTree<IZoweJobTreeNode>;
     public ZoweExplorerExtenderInst: ZoweExplorerExtender;
@@ -103,7 +92,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
         const profilesForType = Profiles.getInstance().getProfiles("rse"); // TO-DO
-        this.datasetTree?.addSession();
+        this.datasetProvider?.addSession();
         this.ussFileProvider?.addSession();
         this.jobsProvider?.addSession();
     }

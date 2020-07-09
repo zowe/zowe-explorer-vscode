@@ -31,12 +31,12 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns {ZoweExplorerApiRegister} the ZoweExplorerApiRegister singleton instance
      */
     public static getInstance(
-      datasetTree?: IZoweTree<IZoweDatasetTreeNode>,
+      datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerApiRegister {
-        this.ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.register;
-        this.ZoweExplorerApiRegisterInst.datasetTree = datasetTree;
+        this.ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.registerInstance;
+        this.ZoweExplorerApiRegisterInst.datasetProvider = datasetProvider;
         this.ZoweExplorerApiRegisterInst.ussFileProvider = ussFileProvider;
         this.ZoweExplorerApiRegisterInst.jobsProvider = jobsProvider;
         return this.ZoweExplorerApiRegisterInst;
@@ -82,8 +82,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * Lookup for generic extender API implementation.
      * @returns an instance of the API
      */
-    public static getExplorerExtenderApi(datasetTree): ZoweExplorerApi.IApiExplorerExtender {
-        return ZoweExplorerApiRegister.getInstance(datasetTree).getExplorerExtenderApi();
+    public static getExplorerExtenderApi(datasetProvider): ZoweExplorerApi.IApiExplorerExtender {
+        return ZoweExplorerApiRegister.getInstance(datasetProvider).getExplorerExtenderApi();
     }
 
     /**
@@ -91,8 +91,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * extensions that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
      */
-    private static register: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
-    public datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+    private static registerInstance: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
+    public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
     public jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
@@ -268,6 +268,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns the instance of the API for the profile provided
      */
     public getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
-        return ZoweExplorerExtender.getInstance(this.datasetTree, this.ussFileProvider, this.jobsProvider);
+        return ZoweExplorerExtender.getInstance(this.datasetProvider, this.ussFileProvider, this.jobsProvider);
     }
 }
