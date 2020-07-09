@@ -1,5 +1,6 @@
 # Zowe Explorer
 
+![Node.js CI](https://img.shields.io/github/workflow/status/zowe/vscode-extension-for-zowe/Node.js%20CI.svg?logo=github)
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/master/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
