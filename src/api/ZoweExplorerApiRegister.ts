@@ -35,11 +35,11 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerApiRegister {
-        this.ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.registerInstance;
-        this.ZoweExplorerApiRegisterInst.datasetProvider = datasetProvider;
-        this.ZoweExplorerApiRegisterInst.ussFileProvider = ussFileProvider;
-        this.ZoweExplorerApiRegisterInst.jobsProvider = jobsProvider;
-        return this.ZoweExplorerApiRegisterInst;
+        const ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.registerInstance;
+        ZoweExplorerApiRegisterInst.datasetProvider = datasetProvider;
+        ZoweExplorerApiRegisterInst.ussFileProvider = ussFileProvider;
+        ZoweExplorerApiRegisterInst.jobsProvider = jobsProvider;
+        return ZoweExplorerApiRegisterInst;
   }
 
     /**

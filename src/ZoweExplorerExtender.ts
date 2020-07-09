@@ -35,11 +35,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerExtender {
-        this.ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
-        this.ZoweExplorerExtenderInst.datasetProvider = datasetProvider;
-        this.ZoweExplorerExtenderInst.ussFileProvider = ussFileProvider;
-        this.ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
-        return this.ZoweExplorerExtenderInst;
+        const ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
+        ZoweExplorerExtenderInst.datasetProvider = datasetProvider;
+        ZoweExplorerExtenderInst.ussFileProvider = ussFileProvider;
+        ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
+        return ZoweExplorerExtenderInst;
     }
 
    // Queue of promises to process sequentially when multiple extension register in parallel
@@ -92,8 +92,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
         const profilesForType = Profiles.getInstance().getProfiles("rse"); // TO-DO
-        this.datasetProvider?.addSession();
-        this.ussFileProvider?.addSession();
-        this.jobsProvider?.addSession();
+        this.datasetProvider?.addSession(); // TO-DO add profileType param to load non-zosmf default profiles
+        this.ussFileProvider?.addSession(); // TO-DO add profileType param to load non-zosmf default profiles
+        this.jobsProvider?.addSession(); // TO-DO add profileType param to load non-zosmf default profiles
     }
 }
