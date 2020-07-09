@@ -24,11 +24,13 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  * extensions to contribute their implementations.
  */
 export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClient {
-  datasetTree: IZoweTree<IZoweDatasetTreeNode>;
   static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
   static datasetTree: IZoweTree<IZoweDatasetTreeNode>;
   static ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
   static jobsProvider: IZoweTree<IZoweJobTreeNode>;
+  datasetTree: IZoweTree<IZoweDatasetTreeNode>;
+  ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
+  jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
     /**
      * Access the singleton instance.
@@ -40,6 +42,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerApiRegister {
         this.ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.register;
+        this.ZoweExplorerApiRegisterInst.datasetTree = datasetTree;
         this.datasetTree = datasetTree;
         this.ussFileProvider = ussFileProvider;
         this.jobsProvider = jobsProvider;
@@ -52,7 +55,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerApiRegister {
       if (datasetTree || ussFileProvider || jobsProvider || !this.ZoweExplorerApiRegisterInst) {
-        this.createInstance(datasetTree);
+        this.createInstance(datasetTree, ussFileProvider, jobsProvider);
       }
       return this.ZoweExplorerApiRegisterInst;
   }

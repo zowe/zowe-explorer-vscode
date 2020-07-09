@@ -50,7 +50,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerExtender {
-      if (datasetTree || !this.ZoweExplorerExtenderInst) {
+      if (datasetTree || ussFileProvider || jobsProvider || !this.ZoweExplorerExtenderInst) {
         return this.createInstance(datasetTree, ussFileProvider, jobsProvider);
       }
       return this.ZoweExplorerExtenderInst;
@@ -100,12 +100,18 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
-        const profilesForType = Profiles.getInstance().getProfiles('rse');
+        const profilesForType = Profiles.getInstance().getProfiles('rse'); // TO-DO
         // tslint:disable-next-line: no-console
         console.log(profilesForType);
         // this.ZoweExplorerExtenderInst.datasetTree.addSession();
-        this.datasetTree.addSession();
-        this.ussFileProvider.addSession();
+        if (this.datasetTree) {
+          this.datasetTree.addSession();
+        }
+        if (this.ussFileProvider) {
+          this.ussFileProvider.addSession();
+        }
+       if (this.jobsProvider) {
         this.jobsProvider.addSession();
+       }
     }
 }
