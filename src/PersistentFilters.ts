@@ -170,38 +170,18 @@ export class PersistentFilters {
     /* Get/read functions, for returning the values stored in the persistent arrays
     /*********************************************************************************************************************************************/
 
-    /**
-     * Returns the current contents of the persistent search history array
-     *
-     * @returns persistent array of search history items
-     */
     public getSearchHistory(): string[] {
         return this.mSearchHistory;
     }
 
-    /**
-     * Returns the current contents of the persistent sessions array
-     *
-     * @returns persistent array of sessions and their settings
-     */
     public getSessions(): string[] {
         return this.mSessions;
     }
 
-    /**
-     * Returns the current contents of the persistent recently-opened file history array
-     *
-     * @returns persistent array of recently-opened files
-     */
     public getFileHistory(): string[] {
         return this.mFileHistory;
     }
 
-    /**
-     * Returns the current contents of the persistent favorites array
-     *
-     * @returns persistent array of favorited data sets, USS files, and jobs
-     */
     public readFavorites(): string[] {
         if (vscode.workspace.getConfiguration(this.schema)) {
             return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
@@ -213,11 +193,6 @@ export class PersistentFilters {
     /* Remove functions, for removing one item from the persistent arrays
     /*********************************************************************************************************************************************/
 
-    /**
-     * Removes one session from the persistent sessions array
-     *
-     * @param {string} name - The name of the session to remove
-     */
     public async removeSession(name: string) {
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
@@ -227,10 +202,7 @@ export class PersistentFilters {
     }
 
     /**
-     * Removes one file from the persistent recently-opened files array
-     *
-     * @param {string} name - The name of the file to remove.
-     * Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
+     * @param name - Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
      */
     public async removeFileHistory(name: string) {
         const index = this.mFileHistory.findIndex((fileHistoryItem) => {
@@ -240,11 +212,6 @@ export class PersistentFilters {
         await this.updateFileHistory();
     }
 
-    /**
-     * Removes one template from the persistent templates array
-     *
-     * @param {string} templateName - The name of the template to remove
-     */
     public async removeTemplate(templateName: string) {
         const index = this.mTemplates.findIndex((item) => {
             if (item.templateName.toUpperCase() === templateName.toUpperCase()) {
@@ -259,41 +226,21 @@ export class PersistentFilters {
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
 
-    /**
-     * Empties the persistent search history array
-     * Sets the extension's searchHistory array to empty, and updates the array in settings.json
-     *
-     */
     public async resetSearchHistory() {
         this.mSearchHistory = [];
         this.updateSearchHistory();
     }
 
-    /**
-     * Empties the persistent sessions array
-     * Sets the extension's sessions array to empty, and updates the array in settings.json
-     *
-     */
     public async resetSessions() {
         this.mSessions = [];
         this.updateSessions();
     }
 
-    /**
-     * Empties the persistent recently-opened files history array
-     * Sets the extension's fileHistory array to empty, and updates the array in settings.json
-     *
-     */
     public async resetFileHistory() {
         this.mFileHistory = [];
         this.updateFileHistory();
     }
 
-    /**
-     * Empties the persistent templates array
-     * Sets the extension's templates array to empty, and updates the array in settings.json
-     *
-     */
     public async resetTemplates() {
         this.mTemplates = [];
         this.updateTemplates();
@@ -303,9 +250,6 @@ export class PersistentFilters {
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
 
-    /**
-     * Updates the stored favorites array in settings.json
-     */
     public async updateFavorites(favorites: string[]) {
         // settings are read-only, so were cloned
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
@@ -315,9 +259,6 @@ export class PersistentFilters {
         }
     }
 
-    /**
-     * Updates the search history array in settings.json
-     */
     private async updateSearchHistory() {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
@@ -327,9 +268,6 @@ export class PersistentFilters {
         }
     }
 
-    /**
-     * Updates the stored sessions array in settings.json
-     */
     private async updateSessions() {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
@@ -339,9 +277,6 @@ export class PersistentFilters {
         }
     }
 
-    /**
-     * Updates the recently-opened file history array in settings.json
-     */
     private async updateFileHistory() {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
@@ -351,9 +286,6 @@ export class PersistentFilters {
         }
     }
 
-    /**
-     * Updates the stored templates array in settings.json
-     */
     private async updateTemplates() {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
@@ -363,9 +295,6 @@ export class PersistentFilters {
         }
     }
 
-    /**
-     * Initializes the search history and sessions sections by reading from a file
-     */
     private async initialize() {
         let searchHistoryLines: string[];
         let sessionLines: string[];
