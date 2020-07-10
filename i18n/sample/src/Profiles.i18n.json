@@ -31,6 +31,7 @@
     "deleteProfile.undefined.profilename": "Operation Cancelled",
     "deleteProfile.noSelected": "Operation Cancelled",
     "Profiles.validateProfiles.validationProgress": "Validating {0} Profile.",
+    "Profiles.validateProfiles.validationCancelled": "Validating {0} was cancelled.",
     "deleteProfile.log.debug": "Deleting profile ",
     "deleteProfile.showQuickPick.delete": "Delete",
     "deleteProfile.showQuickPick.cancel": "Cancel",

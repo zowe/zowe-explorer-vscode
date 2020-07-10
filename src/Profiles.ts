@@ -914,8 +914,13 @@ export class Profiles {
                 if (getSessStatus.getStatus) {
                     profileStatus = await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,
-                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name)
-                    }, () => {
+                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
+                        cancellable: true
+                    }, (progress, token) => {
+                        token.onCancellationRequested(() => {
+                            // will be returned as undefined
+                            vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
+                        });
                         return getSessStatus.getStatus(theProfile, theProfile.type);
                     });
                 } else {
@@ -937,13 +942,14 @@ export class Profiles {
                         };
                         this.profilesForValidation.push(filteredProfile);
                         break;
-                    case "unverified":
+                    // default will cover "unverified" and undefined
+                    default:
                         filteredProfile = {
                             status: "unverified",
                             name: theProfile.name
                         };
                         this.profilesForValidation.push(filteredProfile);
-                    default:
+                        break;
                 }
 
             } catch (error) {
