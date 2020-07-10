@@ -226,7 +226,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (sessionName) {
             const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (zosmfProfile) {
-                this.addSingleSession(zosmfProfile);
+                await this.addSingleSession(zosmfProfile);
             }
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
@@ -237,12 +237,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === zosmfProfile.name) {
-                        this.addSingleSession(zosmfProfile);
+                        await this.addSingleSession(zosmfProfile);
                     }
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile());
             }
         }
         this.refresh();
@@ -725,24 +725,24 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Adds a single session to the data set tree
      *
      */
-    private addSingleSession(profile: IProfileLoaded) {
-        if (profile) {
+    private async addSingleSession(profileLoaded: IProfileLoaded) {
+        if (profileLoaded) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profileLoaded.name)) {
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
-            const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            const session = await Profiles.getInstance().getValidSession(profileLoaded.profile);
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
-                profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
+                profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileLoaded);
             node.contextValue = globals.DS_SESSION_CONTEXT;
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
             }
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
+            this.mHistory.addSession(profileLoaded.name);
         }
     }
 }

@@ -14,6 +14,7 @@ import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imper
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 import * as nls from "vscode-nls";
+import { Profiles } from "../Profiles";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
 // tslint:disable: max-classes-per-file
@@ -44,8 +45,9 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
-            const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
-            const sessionStatus= await zowe.CheckStatus.getZosmfInfo(validateSession);
+            const validateSession = await (Profiles.getInstance().getValidSession(validateProfile.profile));
+            //const validateSession = await zowe.ZosmfSession.createBasicZosmfSession(validateProfile.profile);
+            const sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession);
 
             if (sessionStatus) {
                 return "active";

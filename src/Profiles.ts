@@ -110,22 +110,23 @@ export class Profiles {
 
     }
 
-    public async getValidSession(serviceProfile, baseProfile?) {
+    public async getValidSession(serviceProfile: IProfile, baseProfile?: IProfile) {
         const profileManager = await this.getCliProfileManager("base");
-        baseProfile = (await profileManager.load({ loadDefault: true }));
+        if (this.getDefaultProfile("base")) { baseProfile = this.getDefaultProfile("base").profile }
+        else { baseProfile = (await profileManager.load({ loadDefault: true })).profile; }
 
         const sessCfg: ISession = {
             rejectUnauthorized: false,
-            basePath: serviceProfile.profile.basePath,
-            hostname: baseProfile.profile.host,
-            port: baseProfile.profile.port,
+            basePath: serviceProfile.basePath,
+            hostname: baseProfile.host,
+            port: baseProfile.port,
         };
 
         const cmdArgs: ICommandArguments = {
             $0: "zowe",
             _: [""],
             tokenType: SessConstants.TOKEN_TYPE_APIML,
-            tokenValue: baseProfile.profile.tokenValue
+            tokenValue: baseProfile.tokenValue
         };
         const connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
                                                                                               cmdArgs,
@@ -936,7 +937,6 @@ export class Profiles {
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
             try {
-
                 if (getSessStatus.getStatus) {
                     profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
                 } else {
@@ -1266,24 +1266,8 @@ export class Profiles {
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
         let newProfile: IProfile;
-        const profileManager = this.profileManagerByType.get(ProfileType);
-        const baseProfileName = (await this.getCliProfileManager("base")).getDefaultProfileName();
-        const baseProfile = await (await this.getCliProfileManager("base")).load({name: baseProfileName});
         try {
             newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
-            if (newProfile.profile.host === "") {
-                delete newProfile.profile.host;
-            }
-            if (newProfile.profile.port === 0) {
-                delete newProfile.profile.port;
-            }
-            const profM = profileManager.mergeProfiles(baseProfile.profile, newProfile.profile);
-            const mergedProfile = {
-                profile: profM,
-                name: ProfileName,
-                type: ProfileType
-            };
-            newProfile = await (await this.getCliProfileManager(ProfileType)).update(mergedProfile);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }

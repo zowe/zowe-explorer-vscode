@@ -504,17 +504,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Adds a single session to the USS tree
      *
      */
-    private async addSingleSession(profile: IProfileLoaded) {
-        if (profile) {
+    private async addSingleSession(profileLoaded: IProfileLoaded) {
+        if (profileLoaded) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profileLoaded.name)) {
                 return;
             }
             // Uses loaded profile to create a session with the USS API
-            const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+            const session = await Profiles.getInstance().getValidSession(profileLoaded.profile);
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweUSSNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
-                             profile.name);
+            const node = new ZoweUSSNode(profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
+                             profileLoaded.name);
             node.contextValue = globals.USS_SESSION_CONTEXT;
             const icon = getIconByNode(node);
             if (icon) {
@@ -522,7 +522,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             node.dirty = true;
             this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
+            this.mHistory.addSession(profileLoaded.name);
         }
     }
 }
