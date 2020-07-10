@@ -9,7 +9,8 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfileFromCliArgs } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfileFromCliArgs,
+         ICommandArguments, Session, ConnectionPropsForSessCfg, SessConstants } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
 import * as vscode from "vscode";
@@ -71,7 +72,6 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-
         // Check what happens if there's an error
         const profileStatus = await this.validateProfiles(theProfile);
         if (profileStatus.status === "inactive") {
@@ -110,6 +110,29 @@ export class Profiles {
 
     }
 
+    public async getValidSession(serviceProfile, baseProfile?) {
+        const profileManager = await this.getCliProfileManager("base");
+        baseProfile = (await profileManager.load({ loadDefault: true }));
+
+        const sessCfg: ISession = {
+            rejectUnauthorized: false,
+            basePath: serviceProfile.profile.basePath,
+            hostname: baseProfile.profile.host,
+            port: baseProfile.profile.port,
+        };
+
+        const cmdArgs: ICommandArguments = {
+            $0: "zowe",
+            _: [""],
+            tokenType: SessConstants.TOKEN_TYPE_APIML,
+            tokenValue: baseProfile.profile.tokenValue
+        };
+        const connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                                                                                              cmdArgs,
+                                                                                              { requestToken: false, doPrompting: true });
+        return new Session(connectableSessCfg);
+    }
+
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (type ? profile.type === type : true)) {
@@ -131,6 +154,7 @@ export class Profiles {
     public async refresh(): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
+        const baseProfile = (await this.getCliProfileManager("base")).load({loadDefault: true});
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             const profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
@@ -166,6 +190,13 @@ export class Profiles {
             port: null
         };
 
+        if (newUrl === "https://") {
+            validationResult.host = "";
+            validationResult.port = 0;
+            validationResult.valid = true;
+            return validationResult;
+        }
+
         try {
             url = new URL(newUrl);
         } catch (error) {
@@ -181,7 +212,6 @@ export class Profiles {
     public async getUrl(urlInputBox): Promise<string | undefined> {
         return new Promise<string | undefined>((resolve, reject) => {
             urlInputBox.onDidHide(() => {
-                reject(undefined);
                 resolve(urlInputBox.value);
             });
             urlInputBox.onDidAccept(() => {
@@ -509,11 +539,6 @@ export class Profiles {
             switch (value) {
             case "host" :
                 newUrl = await this.urlInfo();
-                if (newUrl === undefined) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                        "No valid value for z/OS URL. Operation Cancelled"));
-                    return undefined;
-                }
                 schemaValues[value] = newUrl.host;
                 if (newUrl.port !== 0) {
                     schemaValues.port = newUrl.port;
@@ -527,7 +552,8 @@ export class Profiles {
                             "Invalid Port number provided or operation was cancelled"));
                         return undefined;
                     }
-                    schemaValues[value] = newPort;
+                    if (schemaValues.host === "") { schemaValues[value] = 0; }
+                    else { schemaValues[value] = newPort; }
                     break;
                 }
                 break;
@@ -1004,17 +1030,13 @@ export class Profiles {
             urlInputBox.value = input;
         }
         urlInputBox.ignoreFocusOut = true;
-        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "https://url:port");
+        urlInputBox.placeholder = localize("createNewConnection.option.prompt.url.placeholder", "Optional: https://url:port");
         urlInputBox.prompt = localize("createNewConnection.option.prompt.url",
             "Enter a z/OS URL in the format 'https://url:port'.");
 
         urlInputBox.show();
         zosURL = await this.getUrl(urlInputBox);
         urlInputBox.dispose();
-
-        if (!zosURL) {
-            return undefined;
-        }
 
         return this.validateAndParseUrl(zosURL);
     }
@@ -1044,7 +1066,6 @@ export class Profiles {
     }
 
     private async userInfo(input?) {
-
         let userName: string;
 
         if (input) {
@@ -1245,8 +1266,24 @@ export class Profiles {
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
         let newProfile: IProfile;
+        const profileManager = this.profileManagerByType.get(ProfileType);
+        const baseProfileName = (await this.getCliProfileManager("base")).getDefaultProfileName();
+        const baseProfile = await (await this.getCliProfileManager("base")).load({name: baseProfileName});
         try {
             newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
+            if (newProfile.profile.host === "") {
+                delete newProfile.profile.host;
+            }
+            if (newProfile.profile.port === 0) {
+                delete newProfile.profile.port;
+            }
+            const profM = profileManager.mergeProfiles(baseProfile.profile, newProfile.profile);
+            const mergedProfile = {
+                profile: profM,
+                name: ProfileName,
+                type: ProfileType
+            };
+            newProfile = await (await this.getCliProfileManager(ProfileType)).update(mergedProfile);
         } catch (error) {
             vscode.window.showErrorMessage(error.message);
         }
