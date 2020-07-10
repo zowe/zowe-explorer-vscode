@@ -206,12 +206,11 @@ export async function uploadContent(node: IZoweDatasetTreeNode | IZoweUSSTreeNod
                                     etagToUpload?: string,
                                     returnEtag?: boolean): Promise<IZosFilesResponse> {
 
-    // Upload without passing the etag to force upload
-    const uploadOptions: IUploadOptions = {
-        returnEtag: true
-    };
-
     if (isZoweDatasetTreeNode(node)) {
+        // Upload without passing the etag to force upload
+        const uploadOptions: IUploadOptions = {
+            returnEtag: true
+        };
         const prof = node.getProfile();
         if (prof.profile.encoding) {
             uploadOptions.encoding = prof.profile.encoding;
