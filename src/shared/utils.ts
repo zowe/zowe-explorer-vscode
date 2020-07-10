@@ -205,6 +205,7 @@ export async function uploadContent(node: IZoweDatasetTreeNode | IZoweUSSTreeNod
                                     remotePath: string,
                                     profile?: IProfileLoaded,
                                     binary?: boolean,
+                                    etagToUpload?: string,
                                     returnEtag?: boolean): Promise<IZosFilesResponse> {
 
     // Upload without passing the etag to force upload
@@ -229,13 +230,13 @@ export async function uploadContent(node: IZoweDatasetTreeNode | IZoweUSSTreeNod
                 {
                     binary,
                     localEncoding: null,
-                    etag: null,
+                    etag: etagToUpload,
                     returnEtag,
                     encoding: profile.profile.encoding
                 });
         } else {
             return ZoweExplorerApiRegister.getUssApi(profile).putContents(
-                doc.fileName, remotePath, binary, null, null, returnEtag);
+                doc.fileName, remotePath, binary, null, etagToUpload, returnEtag);
         }
     }
 }
@@ -270,7 +271,7 @@ export async function willForceUpload(node: IZoweDatasetTreeNode | IZoweUSSTreeN
                 location: vscode.ProgressLocation.Notification,
                 title
             }, () => {
-                return uploadContent(node, doc, remotePath, profile, binary, returnEtag);
+                return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
             });
             uploadResponse.then((response) => {
                 if (response.success) {

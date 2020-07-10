@@ -294,7 +294,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             location: vscode.ProgressLocation.Notification,
             title: localize("saveUSSFile.response.title", "Saving file...")
         }, () => {
-            return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, returnEtag);
+            return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, etagToUpload, returnEtag);
         });
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
