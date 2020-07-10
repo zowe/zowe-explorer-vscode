@@ -108,9 +108,9 @@ export class MvsCommandHandler {
     private async getQuickPick(hostname: string) {
         let response = "";
         const alwaysEdit = PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
-        if (this.history.getHistory().length > 0) {
+        if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history.getHistory().map((element) => new FilterItem(element));
+            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem(element));
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("issueMvsCommand.command.hostname", "Select a command to run against ") + hostname +
@@ -194,6 +194,6 @@ export class MvsCommandHandler {
         } catch (error) {
             await errorHandling(error, null, error.message);
         }
-        this.history.addHistory(command);
+        this.history.addSearchHistory(command);
     }
 }

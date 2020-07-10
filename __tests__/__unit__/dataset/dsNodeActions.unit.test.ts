@@ -37,8 +37,8 @@ const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const refreshAll = jest.fn();
 const mockcreateZoweSession = jest.fn();
-const mockAddHistory  = jest.fn();
-const mockGetHistory = jest.fn();
+const mockaddSearchHistory  = jest.fn();
+const mockgetSearchHistory = jest.fn();
 const mockRefresh = jest.fn();
 const mockRefreshElement  = jest.fn();
 const mockGetChildren = jest.fn();
@@ -88,8 +88,8 @@ function getDSTree() {
             mSessionNodes: [],
             mFavorites: [],
             addSession: mockcreateZoweSession,
-            addHistory: mockAddHistory,
-            getHistory: mockGetHistory,
+            addSearchHistory: mockaddSearchHistory,
+            getSearchHistory: mockgetSearchHistory,
             refresh: mockRefresh,
             refreshAll: mockRefresh,
             refreshElement: mockRefreshElement,
