@@ -13,8 +13,8 @@ import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateP
          ICommandArguments, Session, ConnectionPropsForSessCfg, SessConstants } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
-import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
+import * as vscode from "vscode";
 import * as globals from "./globals";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
@@ -111,8 +111,8 @@ export class Profiles {
     }
 
     public async getValidSession(serviceProfile: IProfile, baseProfile?: IProfile) {
-        const profileManager = await this.getCliProfileManager("base");
-        if (this.getDefaultProfile("base")) {
+        let a = this.getDefaultProfile("base").profile;
+        if (this.getDefaultProfile("base") && this.getDefaultProfile("base").profile.tokenValue) {
             baseProfile = this.getDefaultProfile("base").profile;
 
             const sessCfg: ISession = {
@@ -132,6 +132,8 @@ export class Profiles {
                                                                                                 cmdArgs,
                                                                                                 { requestToken: false, doPrompting: true });
             return new Session(connectableSessCfg);
+        } else {
+            return (await zowe.ZosmfSession.createBasicZosmfSession(serviceProfile));
         }
     }
 
@@ -472,7 +474,7 @@ export class Profiles {
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createBasicZosmfSession(updSchemaValues);
+            const updSession = await Profiles.getInstance().getValidSession(updSchemaValues);
             updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
@@ -649,6 +651,8 @@ export class Profiles {
     public async promptCredentials(sessName, rePrompt?: boolean) {
         let repromptUser: string;
         let repromptPass: string;
+        let repromptTokenType: SessConstants.TOKEN_TYPE_CHOICES;
+        let repromptTokenValue: string;
         let loadProfile: IProfileLoaded;
         let loadSession: ISession;
         let newUser: string;
@@ -656,7 +660,7 @@ export class Profiles {
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
-            loadSession = loadProfile.profile as ISession;
+            loadSession = await (await this.getValidSession(loadProfile)).ISession;
         } catch (error) {
             await errorHandling(error.message);
         }
@@ -664,11 +668,13 @@ export class Profiles {
         if (rePrompt) {
             repromptUser = loadSession.user;
             repromptPass = loadSession.password;
+            repromptTokenType = loadSession.tokenType;
+            repromptTokenValue = loadSession.tokenValue;
         }
 
-        if (!loadSession.user || rePrompt) {
+        if ((!loadSession.user && !loadSession.tokenValue) || rePrompt) {
             newUser = await this.userInfo(repromptUser);
-            loadSession.user = loadProfile.profile.user = newUser;
+            loadProfile.profile.user = newUser;
         } else {
             newUser = loadSession.user = loadProfile.profile.user;
         }
@@ -679,9 +685,9 @@ export class Profiles {
             await this.refresh();
             return undefined;
         } else {
-            if (!loadSession.password || rePrompt) {
+            if ((!loadSession.password && !loadSession.tokenValue) || rePrompt) {
                 newPass = await this.passwordInfo(repromptPass);
-                loadSession.password = loadProfile.profile.password = newPass;
+                loadProfile.profile.password = newPass;
             } else {
                 newPass = loadSession.password = loadProfile.profile.password;
             }

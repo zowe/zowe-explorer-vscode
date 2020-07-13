@@ -93,7 +93,7 @@ export class MvsCommandHandler {
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             const updProfile = zosmfProfile.profile as ISession;
-            session = zowe.ZosmfSession.createBasicZosmfSession(updProfile as IProfile);
+            session = await Profiles.getInstance().getValidSession(updProfile as IProfile);
             let command1: string = command;
             if (!command) {
                 command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");

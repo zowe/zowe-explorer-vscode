@@ -202,7 +202,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
         const lines: string[] = this.mHistory.readFavorites();
-        lines.forEach((line) => {
+        for (const line of lines) {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
@@ -211,7 +211,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 let favJob: Job;
                 if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")).startsWith(globals.JOBS_JOB_CONTEXT)) {
                     favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
-                        ZosmfSession.createBasicZosmfSession(zosmfProfile.profile), new JobDetail(nodeName), zosmfProfile);
+                    (await Profiles.getInstance().getValidSession(zosmfProfile.profile)), new JobDetail(nodeName), zosmfProfile);
                     favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
                     favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
                 } else { // for search
@@ -219,7 +219,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         line.substring(0, line.indexOf("{")),
                         vscode.TreeItemCollapsibleState.None,
                         this.mFavoriteSession,
-                        ZosmfSession.createBasicZosmfSession(zosmfProfile.profile),
+                        (await Profiles.getInstance().getValidSession(zosmfProfile.profile)),
                         null, zosmfProfile
                     );
                     favJob.command = {command: "zowe.jobs.search", title: "", arguments: [favJob]};
@@ -242,7 +242,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 errorHandling(e, null, errMessage);
                 return;
             }
-        });
+        };
     }
 
     /**
