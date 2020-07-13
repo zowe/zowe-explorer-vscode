@@ -149,7 +149,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
                     const profile = Profiles.getInstance().loadNamedProfile(sesName);
-                    const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                    const session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     let node: ZoweDatasetNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === globals.DS_PDS_CONTEXT) {
                         node = new ZoweDatasetNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
@@ -191,7 +191,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     await errorHandling(error, null, errMessage);
                     continue;
                 }
-                const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                const session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 const node = new ZoweDatasetNode(line.substring(0, line.lastIndexOf("{")),
                     vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session, undefined, undefined, profile);
                 node.command = {command: "zowe.pattern", title: "", arguments: [node]};

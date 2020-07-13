@@ -409,13 +409,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{ussSession\}$/;
         const directorySearchPattern = /^\[.+\]\:\s.*\{directory\}$/;
         const lines: string[] = this.mHistory.readFavorites();
-        lines.forEach((line) => {
+        for (const line of lines) {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
                 const profile = Profiles.getInstance().loadNamedProfile(sesName);
-                const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+                const session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
                     node = new ZoweUSSNode(nodeName,
@@ -457,7 +457,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 errorHandling(e, null, errMessage);
                 return;
             }
-        });
+        }
     }
 
     public async addFileHistory(criteria: string) {

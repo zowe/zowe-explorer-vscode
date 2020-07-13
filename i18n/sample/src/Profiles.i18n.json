@@ -39,9 +39,9 @@
     "createNewConnection.option.prompt.url": "Enter a z/OS URL in the format 'https://url:port'.",
     "createNewConnection.option.prompt.port.placeholder": "Port Number",
     "createNewConnection.option.prompt.username.placeholder": "Optional: User Name",
-    "createNewConnection.option.prompt.username": "Enter the user name for the connection. Leave blank to not store.",
+    "createNewConnection.option.prompt.username": "Enter the user name for the connection.",
     "createNewConnection.undefined.passWord": "Operation Cancelled",
     "createNewConnection.option.prompt.password.placeholder": "Optional: Password",
-    "createNewConnection.option.prompt.password": "Enter the password for the connection. Leave blank to not store.",
+    "createNewConnection.option.prompt.password": "Enter the password for the connection.",
     "createNewConnection.option.prompt.ru.placeholder": "Reject Unauthorized Connections"
 }

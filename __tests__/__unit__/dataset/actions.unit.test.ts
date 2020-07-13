@@ -677,7 +677,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([nodeWithoutSession]);
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const getSessionSpy = jest.spyOn(blockMocks.mvsApi, "getSession").mockReturnValueOnce(blockMocks.sessionWithoutCredentials);
+        const getSessionSpy = jest.spyOn(blockMocks.mvsApi, "getSession").mockResolvedValueOnce(blockMocks.sessionWithoutCredentials);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 

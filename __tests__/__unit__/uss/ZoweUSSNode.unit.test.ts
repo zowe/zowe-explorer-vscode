@@ -47,6 +47,7 @@ async function createGlobalMocks() {
         Utilities: jest.fn(),
         withProgress: jest.fn(),
         createBasicZosmfSession: jest.fn(),
+        mockGetValidSession: jest.fn(),
         ZosmfSession: jest.fn(),
         getUssApiMock: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -510,6 +511,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                    getValidSession: globalMocks.mockGetValidSession,
                     usesSecurity: true,
                     validProfile: ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(() => {

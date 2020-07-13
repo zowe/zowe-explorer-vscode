@@ -836,7 +836,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     } else {
         // if saving from favorites, a session might not exist for this node
         globals.LOG.debug(localize("saveFile.log.debug.sessionNode", "couldn't find session node, loading profile with CLI profile manager"));
-        documentSession = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+        documentSession = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
     }
 
     // If not a member

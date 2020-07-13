@@ -112,26 +112,27 @@ export class Profiles {
 
     public async getValidSession(serviceProfile: IProfile, baseProfile?: IProfile) {
         const profileManager = await this.getCliProfileManager("base");
-        if (this.getDefaultProfile("base")) { baseProfile = this.getDefaultProfile("base").profile }
-        else { baseProfile = (await profileManager.load({ loadDefault: true })).profile; }
+        if (this.getDefaultProfile("base")) {
+            baseProfile = this.getDefaultProfile("base").profile;
 
-        const sessCfg: ISession = {
-            rejectUnauthorized: false,
-            basePath: serviceProfile.basePath,
-            hostname: baseProfile.host,
-            port: baseProfile.port,
-        };
+            const sessCfg: ISession = {
+                rejectUnauthorized: false,
+                basePath: serviceProfile.basePath,
+                hostname: baseProfile.host,
+                port: baseProfile.port,
+            };
 
-        const cmdArgs: ICommandArguments = {
-            $0: "zowe",
-            _: [""],
-            tokenType: SessConstants.TOKEN_TYPE_APIML,
-            tokenValue: baseProfile.tokenValue
-        };
-        const connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-                                                                                              cmdArgs,
-                                                                                              { requestToken: false, doPrompting: true });
-        return new Session(connectableSessCfg);
+            const cmdArgs: ICommandArguments = {
+                $0: "zowe",
+                _: [""],
+                tokenType: SessConstants.TOKEN_TYPE_APIML,
+                tokenValue: baseProfile.tokenValue
+            };
+            const connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
+                                                                                                cmdArgs,
+                                                                                                { requestToken: false, doPrompting: true });
+            return new Session(connectableSessCfg);
+        }
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -155,9 +156,14 @@ export class Profiles {
     public async refresh(): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
-        const baseProfile = (await this.getCliProfileManager("base")).load({loadDefault: true});
+
+        // Set the default base profile (base is not a type included in registeredApiTypes)
+        let profileManager = await this.getCliProfileManager("base");
+        this.defaultProfileByType.set("base", (await profileManager.load({ loadDefault: true })));
+
+        // Handle all API profiles
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
-            const profileManager = await this.getCliProfileManager(type);
+            profileManager = await this.getCliProfileManager(type);
             const profilesForType = (await profileManager.loadAll()).filter((profile) => {
                 return profile.type === type;
             });
@@ -641,7 +647,6 @@ export class Profiles {
     }
 
     public async promptCredentials(sessName, rePrompt?: boolean) {
-
         let repromptUser: string;
         let repromptPass: string;
         let loadProfile: IProfileLoaded;
@@ -966,7 +971,6 @@ export class Profiles {
                         this.profilesForValidation.push(filteredProfile);
                     default:
                 }
-
             } catch (error) {
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
@@ -1074,7 +1078,7 @@ export class Profiles {
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
             prompt: localize("createNewConnection.option.prompt.username",
-                                     "Enter the user name for the connection. Leave blank to not store."),
+                                     "Enter the user name for the connection."),
             value: userName
         };
         userName = await vscode.window.showInputBox(InputBoxOptions);
@@ -1099,7 +1103,7 @@ export class Profiles {
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
             prompt: localize("createNewConnection.option.prompt.password",
-                                     "Enter the password for the connection. Leave blank to not store."),
+                                     "Enter the password for the connection."),
             password: true,
             value: passWord
         };
