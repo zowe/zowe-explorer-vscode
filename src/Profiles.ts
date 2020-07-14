@@ -730,12 +730,12 @@ export class Profiles {
             return;
         }
 
-        // Delete from Data Set Recall
-        const recallDs: string[] = datasetTree.getRecall();
-        recallDs.slice().reverse()
+        // Delete from data det file history
+        const fileHistory: string[] = datasetTree.getFileHistory();
+        fileHistory.slice().reverse()
             .filter((ds) => ds.substring(1, ds.indexOf("]")).trim() === deleteLabel.toUpperCase())
             .forEach((ds) => {
-                datasetTree.removeRecall(ds);
+                datasetTree.removeFileHistory(ds);
             });
 
         // Delete from Data Set Favorites
@@ -757,12 +757,12 @@ export class Profiles {
             }
         });
 
-        // Delete from USS Recall
-        const recallUSS: string[] = ussTree.getRecall();
-        recallUSS.slice().reverse()
+        // Delete from USS file history
+        const fileHistoryUSS: string[] = ussTree.getFileHistory();
+        fileHistoryUSS.slice().reverse()
             .filter((uss) => uss.substring(1, uss.indexOf("]")).trim()  === deleteLabel.toUpperCase())
             .forEach((uss) => {
-                ussTree.removeRecall(uss);
+                ussTree.removeFileHistory(uss);
             });
 
         // Delete from USS Favorites
@@ -912,7 +912,17 @@ export class Profiles {
             try {
 
                 if (getSessStatus.getStatus) {
-                    profileStatus = await getSessStatus.getStatus(theProfile, theProfile.type);
+                    profileStatus = await vscode.window.withProgress({
+                        location: vscode.ProgressLocation.Notification,
+                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
+                        cancellable: true
+                    }, (progress, token) => {
+                        token.onCancellationRequested(() => {
+                            // will be returned as undefined
+                            vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
+                        });
+                        return getSessStatus.getStatus(theProfile, theProfile.type);
+                    });
                 } else {
                     profileStatus = "unverified";
                 }
@@ -932,13 +942,14 @@ export class Profiles {
                         };
                         this.profilesForValidation.push(filteredProfile);
                         break;
-                    case "unverified":
+                    // default will cover "unverified" and undefined
+                    default:
                         filteredProfile = {
                             status: "unverified",
                             name: theProfile.name
                         };
                         this.profilesForValidation.push(filteredProfile);
-                    default:
+                        break;
                 }
 
             } catch (error) {

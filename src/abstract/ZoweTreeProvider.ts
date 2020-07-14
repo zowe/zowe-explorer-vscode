@@ -110,17 +110,17 @@ export class ZoweTreeProvider {
         }
     }
 
-    public getHistory() {
-        return this.mHistory.getHistory();
+    public getSearchHistory() {
+        return this.mHistory.getSearchHistory();
     }
 
     public getTreeType() {
         return this.persistenceSchema;
     }
 
-    public async addHistory(criteria: string) {
+    public async addSearchHistory(criteria: string) {
         if (criteria) {
-            this.mHistory.addHistory(criteria);
+            this.mHistory.addSearchHistory(criteria);
             this.refresh();
         }
     }
