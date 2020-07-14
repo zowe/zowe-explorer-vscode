@@ -46,7 +46,8 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
             const validateSession = await (Profiles.getInstance().getValidSession(validateProfile.profile));
-            const sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession);
+            let sessionStatus;
+            if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 
             if (sessionStatus) {
                 return "active";

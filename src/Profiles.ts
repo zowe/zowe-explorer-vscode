@@ -72,12 +72,12 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-        // Check what happens if there's an error
+        // // Check what happens if there's an error
         const profileStatus = await this.validateProfiles(theProfile);
-        if (profileStatus.status === "inactive") {
-            this.validProfile = ValidProfileEnum.INVALID;
-            return profileStatus;
-        }
+        // if (profileStatus.status === "inactive") {
+        //     this.validProfile = ValidProfileEnum.INVALID;
+        //     return profileStatus;
+        // }
 
         if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
             try {
@@ -107,16 +107,14 @@ export class Profiles {
             this.validProfile = ValidProfileEnum.VALID;
             return profileStatus;
         }
-
     }
 
     public async getValidSession(serviceProfile: IProfile, baseProfile?: IProfile) {
-        let a = this.getDefaultProfile("base").profile;
         if (this.getDefaultProfile("base") && this.getDefaultProfile("base").profile.tokenValue) {
             baseProfile = this.getDefaultProfile("base").profile;
 
-            const sessCfg: ISession = {
-                rejectUnauthorized: false,
+            const sessCfg = {
+                rejectUnauthorized: serviceProfile.rejectUnauthorized,
                 basePath: serviceProfile.basePath,
                 hostname: baseProfile.host,
                 port: baseProfile.port,
@@ -133,7 +131,10 @@ export class Profiles {
                                                                                                 { requestToken: false, doPrompting: true });
             return new Session(connectableSessCfg);
         } else {
-            return (await zowe.ZosmfSession.createBasicZosmfSession(serviceProfile));
+            if (!serviceProfile.user || !serviceProfile.password) {
+                return undefined;
+            }
+            return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile);
         }
     }
 
@@ -660,62 +661,67 @@ export class Profiles {
 
         try {
             loadProfile = this.loadNamedProfile(sessName.trim());
-            loadSession = await (await this.getValidSession(loadProfile)).ISession;
+            const validSession = await this.getValidSession(loadProfile);
+            if (validSession) {
+                loadSession = await validSession.ISession;
+            } else {
+                return validSession;
+            }
+
+            if (rePrompt) {
+                repromptUser = loadSession.user;
+                repromptPass = loadSession.password;
+                repromptTokenType = loadSession.tokenType;
+                repromptTokenValue = loadSession.tokenValue;
+            }
+
+            if ((!loadSession.user && !loadSession.tokenValue) || rePrompt) {
+                newUser = await this.userInfo(repromptUser);
+                loadProfile.profile.user = newUser;
+            } else {
+                newUser = loadSession.user = loadProfile.profile.user;
+            }
+
+            if (newUser === undefined) {
+                vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
+                            "Operation Cancelled"));
+                await this.refresh();
+                return undefined;
+            } else {
+                if ((!loadSession.password && !loadSession.tokenValue) || rePrompt) {
+                    newPass = await this.passwordInfo(repromptPass);
+                    loadProfile.profile.password = newPass;
+                } else {
+                    newPass = loadSession.password = loadProfile.profile.password;
+                }
+            }
+
+            if (newPass === undefined) {
+                vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
+                            "Operation Cancelled"));
+                await this.refresh();
+                return undefined;
+            } else {
+                try {
+                    const updSession = await this.getValidSession(loadProfile);
+                    if (rePrompt) {
+                        const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
+                        const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
+                        const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", loadProfile.name);
+                        await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
+                            if (selection === saveButton) {
+                                rePrompt = false;
+                            }
+                        });
+                        await this.updateProfile(loadProfile, rePrompt);
+                    }
+                    return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
+                } catch (error) {
+                    await errorHandling(error.message);
+                }
+            }
         } catch (error) {
             await errorHandling(error.message);
-        }
-
-        if (rePrompt) {
-            repromptUser = loadSession.user;
-            repromptPass = loadSession.password;
-            repromptTokenType = loadSession.tokenType;
-            repromptTokenValue = loadSession.tokenValue;
-        }
-
-        if ((!loadSession.user && !loadSession.tokenValue) || rePrompt) {
-            newUser = await this.userInfo(repromptUser);
-            loadProfile.profile.user = newUser;
-        } else {
-            newUser = loadSession.user = loadProfile.profile.user;
-        }
-
-        if (newUser === undefined) {
-            vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
-                        "Operation Cancelled"));
-            await this.refresh();
-            return undefined;
-        } else {
-            if ((!loadSession.password && !loadSession.tokenValue) || rePrompt) {
-                newPass = await this.passwordInfo(repromptPass);
-                loadProfile.profile.password = newPass;
-            } else {
-                newPass = loadSession.password = loadProfile.profile.password;
-            }
-        }
-
-        if (newPass === undefined) {
-            vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
-                        "Operation Cancelled"));
-            await this.refresh();
-            return undefined;
-        } else {
-            try {
-                const updSession = await ZoweExplorerApiRegister.getMvsApi(loadProfile).getSession();
-                if (rePrompt) {
-                    const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-                    const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                    const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", loadProfile.name);
-                    await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
-                        if (selection === saveButton) {
-                            rePrompt = false;
-                        }
-                    });
-                    await this.updateProfile(loadProfile, rePrompt);
-                }
-                return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
-            } catch (error) {
-                await errorHandling(error.message);
-            }
         }
     }
 

@@ -242,7 +242,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 errorHandling(e, null, errMessage);
                 return;
             }
-        };
+        }
     }
 
     /**
