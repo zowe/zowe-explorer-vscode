@@ -116,7 +116,8 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
  */
 export async function downloadJcl(job: Job) {
     try {
-        const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
+        const theApi = ZoweExplorerApiRegister.getJesApi(job.getProfile());
+        const jobJcl = await theApi.getJclForJob(job.job);
         const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {

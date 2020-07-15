@@ -37,7 +37,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Profiles, "createInstance", { value: jest.fn(), configurable: true });
+    // Object.defineProperty(Profiles, "createInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
@@ -86,7 +86,7 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 describe("Dataset Tree Unit Tests - Initialisation", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
 
@@ -112,7 +112,7 @@ describe("Dataset Tree Unit Tests - Initialisation", () => {
 describe("Dataset Tree Unit Tests - Function getTreeItem", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
 
@@ -376,12 +376,12 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.profile.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
-        mocked(Profiles.createInstance).mockReturnValue(blockMocks.profile);
+        // mocked(Profiles.createInstance).mockReturnValue(blockMocks.profile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
 
-        testTree.addSession("test");
+        await testTree.addSession("sestest");
 
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
