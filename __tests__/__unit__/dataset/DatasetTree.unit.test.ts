@@ -22,7 +22,7 @@ import {
     createInstanceOfProfile,
     createIProfile,
     createISession, createISessionWithoutCredentials, createQuickPickContent,
-    createTreeView, createWorkspaceConfiguration
+    createTreeView, createWorkspaceConfiguration, createValidIProfile
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
@@ -37,6 +37,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Profiles, "createInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
@@ -138,8 +139,8 @@ describe("Dataset Tree Unit Tests - Function getTreeItem", () => {
 describe("Dataset Tree Unit Tests - Function getChildren", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profile = createInstanceOfProfile(imperativeProfile, session);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
 
@@ -356,10 +357,10 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
 describe("Dataset Tree Unit Tests - Function addSession", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile, session);
 
         return {
             session,
@@ -375,6 +376,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.profile.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
+        mocked(Profiles.createInstance).mockReturnValue(blockMocks.profile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -403,7 +405,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile, session);
 
         return {
             session,
@@ -662,7 +664,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile, session);
         const qpPlaceholder = "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer";
 
         return {
@@ -836,7 +838,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile, session);
 
         return {
             session,
@@ -1044,7 +1046,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);

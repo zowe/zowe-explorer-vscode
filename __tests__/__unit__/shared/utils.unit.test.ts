@@ -41,6 +41,7 @@ async function createGlobalMocks() {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 getDefaultProfile: {name: "firstName"},
                 loadNamedProfile: newVariables.mockLoadNamedProfile,
+                getValidSession: jest.fn(() => { return newVariables.session }),
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),

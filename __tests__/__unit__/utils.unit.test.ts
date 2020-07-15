@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as utils from "../../src/utils";
 import * as globals from "../../src/globals";
-import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
 
 function createGlobalMocks() {
@@ -36,7 +36,8 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 describe("Utils Unit Tests - Function errorHandling", () => {
     function createBlockMocks() {
         const imperativeProfile = createIProfile();
-        const profile = createInstanceOfProfile(imperativeProfile);
+        const testSession = createISessionWithoutCredentials();
+        const profile = createInstanceOfProfile(imperativeProfile, testSession);
 
         return {
             profile

@@ -103,6 +103,7 @@ describe("Profile link unit tests part 1", () => {
                     defaultProfile: {name: "firstName"},
                     directLoad: mockdirectLoad,
                     promptCredentials: jest.fn(),
+                    getValidSession: session,
                     getAllTypes: mockAllTypes,
                     getNamesForType: mockNamesForType,
                     updateProfile: jest.fn(),
@@ -205,7 +206,6 @@ describe("Profile link unit tests part 1", () => {
 });
 
 describe("Profile link unit tests part 2. No file for profile", () => {
-
     beforeEach(() => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -214,6 +214,7 @@ describe("Profile link unit tests part 2. No file for profile", () => {
                     defaultProfile: {name: "firstName"},
                     directLoad: mockdirectLoad,
                     promptCredentials: jest.fn(),
+                    getValidSession: session,
                     getAllTypes: mockAllTypes,
                     getNamesForType: mockNamesForType,
                     updateProfile: jest.fn(),

@@ -55,14 +55,14 @@ async function createGlobalMocks() {
                 Notification: 15
             };
         }),
-        session: createISession(),
+        session: createISessionWithoutCredentials(),
         profileOne: createIProfile(),
         profileOps: null,
         response: createFileResponse({etag: "123"}),
         ussApi: null
     };
 
-    globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
+    globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne, globalMocks.session);
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
@@ -499,6 +499,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         globalMocks.withProgress.mockReturnValue(globalMocks.response);
         globalMocks.openTextDocument.mockResolvedValue("test.doc");
         globalMocks.showInputBox.mockReturnValue("fake");
+        globalMocks.mockGetValidSession.mockReturnValue(globalMocks.session);
         globals.defineGlobals("/test/path/");
 
         Object.defineProperty(Profiles, "getInstance", {
@@ -545,7 +546,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
         expect(globalMocks.isFileTagBinOrAscii.mock.calls.length).toBe(1);
-        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toBe(globalMocks.session);
+        expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][0]).toStrictEqual(globalMocks.session);
         expect(globalMocks.isFileTagBinOrAscii.mock.calls[0][1]).toBe(node.fullPath);
         expect(globalMocks.withProgress).toBeCalledWith(
             {

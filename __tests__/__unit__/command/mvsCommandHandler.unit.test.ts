@@ -93,6 +93,8 @@ describe("mvsCommandActions unit testing", () => {
         protocol: "https",
         type: "basic",
     });
+    const mockGetValidSession = jest.fn();
+    mockGetValidSession.mockResolvedValue(session);
 
     const profileOne: IProfileLoaded = {
         name: "aProfile",
@@ -140,6 +142,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -179,6 +182,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -217,6 +221,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -255,6 +260,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -290,6 +296,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -326,6 +333,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -376,6 +384,7 @@ describe("mvsCommandActions unit testing", () => {
                 return {
                     allProfiles: [],
                     defaultProfile: undefined,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
@@ -395,6 +404,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
+                    getValidSession: mockGetValidSession,
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -434,6 +444,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
+                    getValidSession: mockGetValidSession,
                     promptCredentials: jest.fn(()=> {
                         return ["fake", "fake", "fake"];
                     }),
@@ -473,6 +484,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validateProfiles: jest.fn(),
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(()=> {
                         return profileLoader.ValidProfileEnum.INVALID;
                     }),
@@ -500,6 +512,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile
                 };
@@ -521,6 +534,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     validProfile: profileLoader.ValidProfileEnum.VALID,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile
                 };

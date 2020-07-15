@@ -15,7 +15,8 @@ import {
     createBasicZosmfSession, createInstanceOfProfile,
     createIProfile,
     createISession, createISessionWithoutCredentials, createTextDocument,
-    createTreeView
+    createTreeView,
+    createValidIProfile
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetAttributes,
@@ -83,9 +84,10 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 describe("Dataset Actions Unit Tests - Function createMember", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const mvsApi = createMvsApi(imperativeProfile);
@@ -95,6 +97,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session,
             zosmfSession,
             treeView,
+            profileInstance,
             imperativeProfile,
             datasetSessionNode,
             mvsApi,
@@ -111,6 +114,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             blockMocks.datasetSessionNode, blockMocks.session);
 
         mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -126,7 +130,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         expect(mocked(vscode.window.showInputBox)).toBeCalledWith({ placeHolder: "Name of Member" });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
-            blockMocks.zosmfSession,
+            blockMocks.session,
             Buffer.from(""),
             parent.label + "(testMember)",
             undefined
@@ -139,6 +143,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             blockMocks.datasetSessionNode, blockMocks.session);
 
         mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Upload.bufferToDataSet).mockRejectedValueOnce(Error("test"));
 
         try {
@@ -170,6 +175,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -185,7 +191,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         expect(mocked(vscode.window.showInputBox)).toBeCalledWith({ placeHolder: "Name of Member" });
         expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(
-            blockMocks.zosmfSession,
+            blockMocks.session,
             Buffer.from(""),
             nonFavoriteLabel + "(testMember)",
             undefined
@@ -196,17 +202,19 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
         return {
             session,
             zosmfSession,
+            profileInstance,
             treeView,
             imperativeProfile,
             datasetSessionNode,
@@ -224,6 +232,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -235,7 +244,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         await dsActions.refreshPS(node);
 
         expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
-            blockMocks.zosmfSession,
+            blockMocks.session,
             node.label,
             {
                 file: path.join(globals.DS_DIR, node.getSessionNode().label, node.label),
@@ -254,6 +263,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: false } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -273,6 +283,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error("not found"));
 
         await dsActions.refreshPS(node);
@@ -288,12 +299,13 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error(""));
 
         await dsActions.refreshPS(child);
 
         expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
-            blockMocks.zosmfSession,
+            blockMocks.session,
             child.getParent().getLabel() + "(" + child.label + ")",
             {
                 file: path.join(globals.DS_DIR, child.getSessionNode().label, `${child.getParent().label}(${child.label})`),
@@ -310,6 +322,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -332,6 +345,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -354,6 +368,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         parent.contextValue = globals.FAVORITE_CONTEXT;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -372,12 +387,12 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -579,7 +594,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 describe("Dataset Actions Unit Tests - Function enterPattern", () => {
     function createBlockMocks() {
         const session = createISession();
-        const imperativeProfile = createIProfile();
+        const imperativeProfile = createValidIProfile();
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -642,8 +657,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1004,8 +1019,8 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1176,8 +1191,8 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1269,8 +1284,8 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1489,8 +1504,8 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1541,8 +1556,8 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1593,8 +1608,8 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
@@ -1834,8 +1849,8 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     function createBlockMocks() {
         const session = createISession();
         const sessionWithoutCredentials = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const imperativeProfile = createValidIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);

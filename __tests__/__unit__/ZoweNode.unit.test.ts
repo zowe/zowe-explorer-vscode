@@ -16,42 +16,60 @@ jest.mock("@zowe/cli");
 jest.mock("Session");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { Session, IProfileLoaded } from "@zowe/imperative";
+import { ValidProfileEnum, Profiles } from "../../src/Profiles";
 import { List } from "@zowe/cli";
 import { DS_PDS_CONTEXT, DS_SESSION_CONTEXT, INFORMATION_CONTEXT, DS_MEMBER_CONTEXT,
     DS_MIGRATED_FILE_CONTEXT, DS_DS_CONTEXT, VSAM_CONTEXT } from "../../src/globals";
+import { createISession, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
-    const session = new Session({
-        user: "fake",
-        password: "fake",
-        hostname: "fake",
-        protocol: "https",
-        type: "basic",
-    });
-    const profileOne: IProfileLoaded = { name: "profile1", profile: {}, type: "zosmf", message: "", failNotFound: false };
-    const ProgressLocation = jest.fn().mockImplementation(() => {
-        return {
-            Notification: 15
-        };
-    });
-
-    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
-        return callback();
-    });
-
-    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
-    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    const session = createISession();
+    const profileOne = createValidIProfile();
+    const profilesForValidation = {status: "active", name: "sestest"};
+    const mockLoadNamedProfile = jest.fn();
+    const showErrorMessage = jest.fn();
+    const mockGetValidSession = jest.fn();
+    const withProgress = jest.fn();
+    const mockCheckCurrentProfile = jest.fn();
+    const getMvsApiMock = jest.fn();
+    const mockGetInstance = jest.fn();
+    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne)
+    const mockInstance = {
+        allProfiles: [profileOne, { name: "profile1" }, { name: "secondName" }],
+        defaultProfile: jest.fn(() => profileOne),
+        type: "zosmf",
+        validProfile: ValidProfileEnum.VALID,
+        getValidSession: mockGetValidSession,
+        checkCurrentProfile: jest.fn(() => profilesForValidation),
+        profilesForValidation: [],
+        validateProfiles: jest.fn(),
+        loadNamedProfile: mockLoadNamedProfile
+    };
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
-    });
+        mockLoadNamedProfile.mockReturnValue(profileOne);
+        mockCheckCurrentProfile.mockReturnValue(profilesForValidation);
+        mockGetValidSession.mockResolvedValue(session);
+        mockGetInstance.mockResolvedValue(mockInstance);
+        getMvsApiMock.mockReturnValue(mvsApi);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        const ProgressLocation = jest.fn().mockImplementation(() => {
+            return {
+                Notification: 15
+            };
+        });
 
-    const showErrorMessage = jest.fn();
-    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
+        Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation, configurable: true});
+        Object.defineProperty(vscode.window, "withProgress", {value: withProgress, configurable: true});
+        Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage, configurable: true});
+        Object.defineProperty(Profiles, "createInstance", { value: jest.fn(() => mockInstance), configurable: true });
+        Object.defineProperty(Profiles, "getInstance", { value: mockGetInstance, configurable: true });
+    });
 
     afterEach(() => {
         jest.resetAllMocks();
@@ -145,7 +163,6 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
         "it throws an error and the catch block is reached", async () => {
-
             showErrorMessage.mockReset();
             // Creating a rootNode
             const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);

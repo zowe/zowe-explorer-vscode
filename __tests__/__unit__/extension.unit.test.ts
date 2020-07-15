@@ -90,6 +90,7 @@ async function createGlobalMocks() {
             allProfiles: [{name: "firstName"}, {name: "secondName"}],
             defaultProfile: {name: "firstName"},
             getDefaultProfile: null,
+            getValidSession: null,
             loadNamedProfile: null,
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),
@@ -233,6 +234,7 @@ async function createGlobalMocks() {
     globalMocks.mockCreateTreeView.mockReturnValue(createTreeView());
     globalMocks.mockReadFileSync.mockReturnValue("");
     globalMocks.testProfileOps.getDefaultProfile = globalMocks.mockLoadNamedProfile;
+    globalMocks.testProfileOps.getValidSession = jest.fn().mockResolvedValue(globalMocks.testSession);
     globalMocks.testProfileOps.loadNamedProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.testTreeView = jest.fn().mockImplementation(() => {
         return {

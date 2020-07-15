@@ -134,6 +134,7 @@ describe("dsNodeActions", () => {
                 defaultProfile: {name: "firstName"},
                 type: "zosmf",
                 loadNamedProfile: mockLoadNamedProfile,
+                getValidSession: jest.fn(() => { return session }),
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),
@@ -173,6 +174,7 @@ describe("dsNodeActions", () => {
                     return {
                         getDefaultProfile: mockLoadNamedProfile,
                         loadNamedProfile: mockLoadNamedProfile,
+                        getValidSession: jest.fn(() => { return session }),
                         usesSecurity: true,
                         getProfiles: jest.fn(() => {
                             return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];

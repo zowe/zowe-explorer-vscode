@@ -23,12 +23,15 @@ import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
+import { Logger } from "@zowe/imperative";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
 
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
+    Profiles.createInstance(Logger.getAppLogger());
+
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
@@ -311,7 +314,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const textDocument = createTextDocument("HLQ.TEST.AFILE(mem)", datasetSessionNode);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const jesApi = createJesApi(imperativeProfile);
         bindJesApi(jesApi);
 
@@ -380,7 +383,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         const iJob = createIJobObject();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const jesApi = createJesApi(imperativeProfile);
         bindJesApi(jesApi);
 
@@ -506,7 +509,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         const iJobFile = createIJobFile();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const treeView = createTreeView();
         const testJobTree = createJobsTree(session, iJob, imperativeProfile, treeView);
         const jesApi = createJesApi(imperativeProfile);
@@ -585,7 +588,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         const iJobFile = createIJobFile();
         const imperativeProfile = createIProfile();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const treeView = createTreeView();
         const testJobTree = createJobsTree(session, iJob, imperativeProfile, treeView);
         const jesApi = createJesApi(imperativeProfile);
@@ -685,7 +688,7 @@ describe("refreshAll", () => {
             jesApi: null
         };
         newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
         newMocks.jobsTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
         bindJesApi(newMocks.jesApi);
 

@@ -60,7 +60,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             testUssTree: null
         };
 
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
         // It's required to have proper mock of profile for USS Node generation
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -213,7 +213,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
             quickPickItem: createQuickPickItem()
         };
 
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
         newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);

@@ -14,6 +14,7 @@ import * as zowe from "@zowe/cli";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
+import { createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {
@@ -49,12 +50,14 @@ describe("SpoolProvider Unit Tests", () => {
         toJSON: jest.fn(),
     };
     const profilesForValidation = {status: "active", name: "fake"};
+    const testSession = createISessionWithoutCredentials();
 
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
                 allProfiles: [{name: "firstName"}, {name: "secondName"}],
                 defaultProfile: {name: "firstName"},
+                getValidSession: jest.fn(() => { return testSession }),
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),
@@ -114,6 +117,7 @@ describe("SpoolProvider Unit Tests", () => {
             message: "",
             failNotFound: false
         };
+        const testSession = createISessionWithoutCredentials();
         const mockLoadNamedProfile = jest.fn();
         mockLoadNamedProfile.mockReturnValue(profileOne);
         Object.defineProperty(Profiles, "getInstance", {
@@ -121,6 +125,7 @@ describe("SpoolProvider Unit Tests", () => {
                 return {
                     allProfiles: [profileOne, {name: "secondName"}],
                     defaultProfile: profileOne,
+                    getValidSession: jest.fn(() => { return testSession }),
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),

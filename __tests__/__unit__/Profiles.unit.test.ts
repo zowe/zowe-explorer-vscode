@@ -86,7 +86,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             profileInstance: null,
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
@@ -236,7 +236,7 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
         newMocks.imperativeProfile.profile.user = "fake";
         newMocks.imperativeProfile.profile.password = "1234";
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         newMocks.profileInstance.loadNamedProfile = newMocks.mockLoadNamedProfile;
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
@@ -496,13 +496,14 @@ describe("Profiles Unit Tests - Function promptCredentials", () => {
             mockLoadNamedProfile: jest.fn(),
             imperativeProfile: createIProfile(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.imperativeProfile.name = "profile1";
         newMocks.imperativeProfile.profile.user = "fake";
         newMocks.imperativeProfile.profile.password = "1234";
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile, newMocks.session);
         newMocks.profiles.allProfiles[1].profile = {user: "test", password: "test"};
         newMocks.profiles.loadNamedProfile = newMocks.mockLoadNamedProfile;
 
@@ -619,10 +620,11 @@ describe("Profiles Unit Tests - Function validateAndParseUrl", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
 
         return newMocks;
     }
@@ -671,10 +673,11 @@ describe("Profiles Unit Tests - Function getProfileType", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
 
         return newMocks;
     }
@@ -704,11 +707,12 @@ describe("Profiles Unit Tests - Function getSchema", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             testSchemas: createTestSchemas(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
 
         return newMocks;
     }
@@ -730,12 +734,13 @@ describe("Profiles Unit Tests - Function updateProfile", () => {
             imperativeProfile: createIProfile(),
             changedImperativeProfile: createIProfile(),
             profileInfo: null,
+            session: createISessionWithoutCredentials(),
             log: Logger.getAppLogger(),
             profiles: null,
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.changedImperativeProfile.profile = { user: "test2", password: "test2" };
         newMocks.profileInfo = newMocks.changedImperativeProfile;
         Object.defineProperty(globalMocks.mockCliProfileManager, "load", {
@@ -785,7 +790,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
         newMocks.imperativeProfile.profile.user = "fake";
         newMocks.imperativeProfile.profile.password = "1234";
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockCreateInputBox.mockReturnValue(newMocks.inputBox);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -1031,7 +1036,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
             { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.session = createBasicZosmfSession(newMocks.imperativeProfile);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -1209,6 +1214,7 @@ describe("Profiles Unit Tests - Function createInstance", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             mockJSONParse: jest.spyOn(JSON, "parse"),
             profileInstance: null,
             testProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
@@ -1231,7 +1237,7 @@ describe("Profiles Unit Tests - Function createInstance", () => {
             }
         });
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1280,10 +1286,11 @@ describe("Profiles Unit Tests - Property allProfiles", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1306,10 +1313,12 @@ describe("Profiles Unit Tests - Function getDefaultProfile", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            validProfile: createValidIProfile(),
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1321,7 +1330,7 @@ describe("Profiles Unit Tests - Function getDefaultProfile", () => {
 
         const profiles = await Profiles.createInstance(blockMocks.log);
         const loadedProfiles = profiles.getDefaultProfile();
-        expect(loadedProfiles).toEqual({ name: "profile1", profile: {}, type: "zosmf" });
+        expect(loadedProfiles).toEqual(blockMocks.validProfile);
     });
 });
 
@@ -1330,10 +1339,11 @@ describe("Profiles Unit Tests - Function getProfiles", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1356,10 +1366,11 @@ describe("Profiles Unit Tests - Function directLoad", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1380,10 +1391,11 @@ describe("Profiles Unit Tests - Function getNamesForType", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1403,10 +1415,11 @@ describe("Profiles Unit Tests - Function getAllTypes", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1428,10 +1441,11 @@ describe("Profiles Unit Tests - Function loadNamedProfile", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1467,12 +1481,13 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
@@ -1553,18 +1568,19 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         const newMocks = {
             log: Logger.getAppLogger(),
             profiles: null,
+            session: createISessionWithoutCredentials(),
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
             profileInstance: null
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
     }
 
-    it("Tests that validaterofiles handles inactive profiles", async () => {
+    it("Tests that validateProfiles handles inactive profiles", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 

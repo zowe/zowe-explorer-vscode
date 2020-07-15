@@ -9,9 +9,12 @@
 *                                                                                 *
 */
 
+jest.mock("Session");
+
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as profileLoader from "../../../src/Profiles";
+import { Session } from "@zowe/imperative";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
@@ -22,6 +25,7 @@ describe("mvsCommandActions unit testing", () => {
     const showInformationMessage = jest.fn();
     const showQuickPick = jest.fn();
     const IssueCommand = jest.fn();
+    const mockGetValidSession = jest.fn();
     const getConfiguration = jest.fn();
     const createOutputChannel = jest.fn();
 
@@ -47,6 +51,16 @@ describe("mvsCommandActions unit testing", () => {
             };
         })
     });
+
+    const session = new Session({
+        user: "fake",
+        password: "fake",
+        hostname: "fake",
+        port: 443,
+        protocol: "https",
+        type: "basic",
+    });
+    mockGetValidSession.mockResolvedValue(session);
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
@@ -99,6 +113,7 @@ describe("mvsCommandActions unit testing", () => {
                     allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
                     defaultProfile: {name: "firstName"},
                     zosmfProfile: mockLoadNamedProfile,
+                    getValidSession: mockGetValidSession,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
