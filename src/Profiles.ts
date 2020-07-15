@@ -898,9 +898,9 @@ export class Profiles {
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        // Filter profilesForValidation to check if the profile is already validated
+        // Filter profilesForValidation to check if the profile is already validated as active
         this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name) {
+            if ((profile.name === theProfile.name) && (profile.status === "active")){
                 filteredProfile = {
                     status: profile.status,
                     name: profile.name
