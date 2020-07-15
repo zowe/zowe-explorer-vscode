@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## `1.7.1`
+
+- Fix USS save operation. Thanks @JillieBeanSim
+- Add validation information message. Thanks @JillieBeanSim
+- Restructure Readme. Thanks @IgorCATech
+
 ## `1.7.0`
 
 - Disallow multiple profiles with same name but different capitalizations. Thanks @katelynienaber
