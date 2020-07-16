@@ -157,8 +157,6 @@ export class Profiles {
             }
         }
         while (this.profilesForValidation.length > 0) {
-            // tslint:disable-next-line:no-console
-            console.log(this.profilesForValidation);
             this.profilesForValidation.pop();
         }
     }

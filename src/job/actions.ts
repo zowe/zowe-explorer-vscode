@@ -21,7 +21,6 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
 import { returnIconState } from "../shared/actions";
-
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 
