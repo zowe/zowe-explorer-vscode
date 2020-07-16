@@ -195,11 +195,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-// tslint:disable-next-line:max-line-length
 export async function returnIconState(node: IZoweNodeType) {
-    // tslint:disable-next-line:no-console
-    console.log(getIconByNode(node));
-
     if (getIconByNode(node) !== getIconById(IconId.sessionFavourite)) {
         if (getIconByNode(node) !== getIconById(IconId.sessionFavouriteOpen)) {
             const sessionIcon = getIconById(IconId.session);
