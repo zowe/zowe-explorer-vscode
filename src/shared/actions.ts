@@ -13,12 +13,13 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweJobTreeNode, IZoweTreeNode } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
+import { getIconByNode, getIconById, IconId } from "../generators/icons";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -191,5 +192,25 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     } else {
         vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
         return;
+    }
+}
+
+// tslint:disable-next-line:max-line-length
+export async function returnIconState(node: IZoweNodeType) {
+    // tslint:disable-next-line:no-console
+    console.log(getIconByNode(node));
+
+    if (getIconByNode(node) !== getIconById(IconId.sessionFavourite)) {
+        if (getIconByNode(node) !== getIconById(IconId.sessionFavouriteOpen)) {
+            const sessionIcon = getIconById(IconId.session);
+            if (sessionIcon) {
+                node.iconPath = sessionIcon.path;
+            }
+        } else {
+            const sessionIcon = getIconById(IconId.sessionFavourite);
+            if (sessionIcon) {
+                node.iconPath = sessionIcon.path;
+            }
+        }
     }
 }

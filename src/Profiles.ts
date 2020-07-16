@@ -156,6 +156,11 @@ export class Profiles {
                 }
             }
         }
+        while (this.profilesForValidation.length > 0) {
+            // tslint:disable-next-line:no-console
+            console.log(this.profilesForValidation);
+            this.profilesForValidation.pop();
+        }
     }
 
     public validateAndParseUrl(newUrl: string): IUrlValidator {
@@ -908,7 +913,7 @@ export class Profiles {
             }
         });
 
-        // If not yet validated, call getStatus and validate the profile
+        // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
             try {
