@@ -26,6 +26,7 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
+import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -515,7 +516,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async searchInLoadedItems() {
+    public async searchInLoadedItems(nodeToMatch?: string): Promise<IZoweDatasetTreeNode[]> {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedItems: IZoweDatasetTreeNode[] = [];
         const sessions = await this.getChildren();
@@ -526,10 +527,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (session.children) {
                     for (const node of session.children) {
                         if (node.contextValue !== globals.INFORMATION_CONTEXT) {
-                            loadedItems.push(node);
+                            if (!nodeToMatch || node.label === nodeToMatch) {
+                                loadedItems.push(node);
+                            }
                             for (const member of node.children) {
                                 if (member.contextValue !== globals.INFORMATION_CONTEXT) {
-                                    loadedItems.push(member);
+                                    if (!nodeToMatch || node.label === nodeToMatch) {
+                                        loadedItems.push(member);
+                                    }
                                 }
                             }
                         }

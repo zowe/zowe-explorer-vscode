@@ -15,8 +15,8 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
-import { errorHandling } from "../utils";
-import { labelRefresh, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload } from "../shared/utils";
+import { errorHandling, FilterItem, resolveQuickPickHelper } from "../utils";
+import { labelRefresh, refreshTree, getDocumentFilePath, concatChildNodes, checkForAddedSuffix, willForceUpload, filterTreeByString } from "../shared/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IZoweTree } from "../api/IZoweTree";
@@ -48,6 +48,95 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
             refreshTree(sessNode);
         }
     });
+    datasetProvider.refresh();
+}
+
+/**
+ * Allocates a copy of a data set or member
+ *
+ */
+export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNode>, node?: IZoweDatasetTreeNode) {
+    if (!node) {
+        const items: IZoweNodeType[] = [];
+        const qpItems = [];
+        const quickpick = vscode.window.createQuickPick();
+        quickpick.placeholder = localize("allocateLike.options.prompt", "Select a data set from which to copy attributes");
+        quickpick.ignoreFocusOut = true;
+        quickpick.onDidChangeValue(async (value) => {
+            if (value) {
+                quickpick.items = filterTreeByString(value, qpItems);
+            } else { quickpick.items = [...qpItems]; }
+        });
+
+        // Get loaded items from Dataset Provider
+        const newItems = await datasetProvider.searchInLoadedItems();
+        items.push(...newItems);
+        if (items.length === 0) {
+            vscode.window.showInformationMessage(localize("allocateLike.noneLoaded", "No items are loaded in the tree."));
+            return;
+        }
+
+        let qpItem: vscode.QuickPickItem;
+        for (const item of items) {
+            if (contextually.isDsMember(item)) {
+                qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`, "Data Set Member");
+            } else {
+                qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
+            }
+            qpItems.push(qpItem);
+        }
+        quickpick.items = [...qpItems];
+
+        quickpick.show();
+        const oldDS = await resolveQuickPickHelper(quickpick);
+        if (!oldDS) {
+            vscode.window.showInformationMessage(localize("allocateLike.noSelection", "You must select a data set."));
+            return;
+        } else {
+            let strippedLabel = oldDS.label.replace(/\[.*?\]: /, "");
+            if (strippedLabel.includes("(")) {
+                strippedLabel = strippedLabel.substr(strippedLabel.indexOf("("), strippedLabel.indexOf(")"));
+            }
+            node = (await datasetProvider.searchInLoadedItems(strippedLabel))[0];
+        }
+        quickpick.dispose();
+    }
+    let newDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
+                                                         placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set") });
+    if (contextually.isDsMember(node)) {
+        // Allocating a copy of a member
+        newDSName = `${node.getParent().label}(${newDSName})`;
+        try {
+            ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSetMember(newDSName);
+        } catch (err) {
+            globals.LOG.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
+            errorHandling(err, newDSName, localize("createMember.error", "Unable to create member: ") + err.message);
+            throw (err);
+        }
+    } else {
+        // Allocating a copy of a data set
+        const dsType = contextually.isPdsNotFav(node) ? zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED : zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+        const options = this.getDataSetTypeAndOptions(this.getDataSetTypeAsString(dsType));
+        try {
+            await (ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSet(dsType, newDSName.toUpperCase(), options.createOptions));
+        } catch (err) {
+            globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+            errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+            throw (err);
+        }
+    }
+
+    // Refresh tree and open new node, if applicable
+    node.getParent().dirty = true;
+    datasetProvider.refreshElement(node.getParent());
+    if (contextually.isDs(node) || contextually.isDsMember(node)) {
+        if (newDSName.includes("(")) {
+            newDSName = newDSName.substr(newDSName.indexOf("("), newDSName.indexOf(")"));
+        }
+        openPS(
+            new ZoweDatasetNode(newDSName, vscode.TreeItemCollapsibleState.None, node.getParent(), null, undefined, undefined, node.getProfile()),
+            true, datasetProvider);
+    }
     datasetProvider.refresh();
 }
 
@@ -137,12 +226,6 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
  * @param {IZoweDatasetTreeNode} node
  */
 export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean, datasetProvider?: IZoweTree<IZoweDatasetTreeNode>) {
-    // let sesNamePrompt: string;
-    // if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-    //     sesNamePrompt = node.getLabel().substring(1, node.getLabel().indexOf("]"));
-    // } else {
-    //     sesNamePrompt = node.getLabel();
-    // }
     if (datasetProvider) { await datasetProvider.checkCurrentProfile(node); }
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         try {
@@ -196,6 +279,52 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
     }
 }
 
+export function getDataSetTypeAndOptions(type: string) {
+    let typeEnum;
+    let createOptions;
+    switch (type) {
+        case localize("createFile.dataSetBinary", "Data Set Binary"):
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
+            break;
+        case localize("createFile.dataSetC", "Data Set C"):
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
+            break;
+        case localize("createFile.dataSetClassic", "Data Set Classic"):
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
+            break;
+        case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
+            break;
+        case localize("createFile.dataSetSequential", "Data Set Sequential"):
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+            createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
+            break;
+    }
+    return {
+        typeEnum,
+        createOptions
+    };
+}
+
+export function getDataSetTypeAsString(type: zowe.CreateDataSetTypeEnum) {
+    switch (type) {
+        case zowe.CreateDataSetTypeEnum.DATA_SET_BINARY:
+            return "Data Set Binary";
+        case zowe.CreateDataSetTypeEnum.DATA_SET_C:
+            return "Data Set C";
+        case zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC:
+            return "Data Set Classic";
+        case zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED:
+            return "Data Set Partitioned";
+        case zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL:
+            return "Data Set Sequential";
+    }
+}
+
 /**
  * Creates a new file and uploads to the server
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -218,12 +347,6 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
         localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
         localize("createFile.dataSetSequential", "Data Set Sequential")
     ];
-    // let sesNamePrompt: string;
-    // if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-    //     sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-    // } else {
-    //     sesNamePrompt = node.label;
-    // }
 
     datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
@@ -236,30 +359,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             globals.LOG.debug(localize("createFile.log.debug.creatingNewDataSet", "Creating new data set"));
         }
 
-        let typeEnum;
-        let createOptions;
-        switch (type) {
-            case localize("createFile.dataSetBinary", "Data Set Binary"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Binary");
-                break;
-            case localize("createFile.dataSetC", "Data Set C"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-C");
-                break;
-            case localize("createFile.dataSetClassic", "Data Set Classic"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-Classic");
-                break;
-            case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PDS");
-                break;
-            case localize("createFile.dataSetSequential", "Data Set Sequential"):
-                typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
-                createOptions = vscode.workspace.getConfiguration("Zowe-Default-Datasets-PS");
-                break;
-        }
+        const typeEnumAndOptions = this.getDataSetTypeAndOptions(type);
 
         // get name of data set
         let name = await vscode.window.showInputBox({placeHolder: localize("dataset.name", "Name of Data Set")});
@@ -267,7 +367,9 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
             name = name.trim().toUpperCase();
 
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnum, name, createOptions);
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(typeEnumAndOptions.typeEnum,
+                                                                                         name,
+                                                                                         typeEnumAndOptions.createOptions);
                 node.dirty = true;
 
                 const theFilter = await datasetProvider.createFilterString(name, node);

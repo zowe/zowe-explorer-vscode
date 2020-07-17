@@ -19,6 +19,7 @@
     "deleteDataset": "Delete Data Set",
     "deleteMember": "Delete Member",
     "deletePDS": "Delete PDS",
+    "allocateLike": "Allocate Like",
     "editMember": "Edit",
     "issueCmd": "Issue Command",
     "uploadDialog": "Upload Member...",

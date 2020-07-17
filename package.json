@@ -184,6 +184,10 @@
         "title": "%deletePDS%"
       },
       {
+        "command": "zowe.allocateLike",
+        "title": "%allocateLike%"
+      },
+      {
         "command": "zowe.uploadDialog",
         "title": "%uploadDialog%"
       },
@@ -746,14 +750,19 @@
           "group": "5_workspace@3"
         },
         {
+          "when": "view == zowe.explorer && viewItem =~ /^(member|ds|pds).*/",
+          "command": "zowe.allocateLike",
+          "group": "6_cutCopyPaste@0"
+        },
+        {
           "when": "view == zowe.explorer && viewItem =~ /^(member|ds).*/",
           "command": "zowe.copyDataSet",
-          "group": "6_cutCopyPaste@0"
+          "group": "6_cutCopyPaste@1"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(ds.*|^pds.*)/",
           "command": "zowe.pasteDataSet",
-          "group": "6_cutCopyPaste@1"
+          "group": "6_cutCopyPaste@2"
         },
         {
           "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -935,6 +944,9 @@
         {
           "command": "zowe.deletePDS",
           "when": "never"
+        },
+        {
+          "command": "zowe.allocateLike"
         },
         {
           "command": "zowe.deleteMember",

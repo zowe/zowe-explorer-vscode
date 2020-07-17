@@ -268,6 +268,32 @@ export namespace ZoweExplorerApi {
         ): Promise<zowe.IZosFilesResponse>;
 
         /**
+         * Allocates a copy of a data set with the specified options.
+         *
+         * @param {zowe.CreateDataSetTypeEnum} dataSetType
+         * @param {string} dataSetName
+         * @param {Partial<zowe.ICreateDataSetOptions>} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        allocateLikeDataSet(
+            dataSetType: zowe.CreateDataSetTypeEnum,
+            dataSetName: string,
+            options?: Partial<zowe.ICreateDataSetOptions>
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Allocates a copy of a data set member with given name.
+         *
+         * @param {string} dataSetName
+         * @param {zowe.IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        allocateLikeDataSetMember(
+            dataSetName: string,
+            options?: zowe.IUploadOptions
+        ): Promise<zowe.IZosFilesResponse>;
+
+        /**
          * Copies a data set member.
          *
          * @param {zowe.IDataSet} { dataSetName: fromDataSetName, memberName: fromMemberName }
