@@ -208,4 +208,5 @@ export async function returnIconState(node: IZoweNodeType) {
             node.iconPath = sessionIcon.path;
         }
     }
+    return node;
 }
