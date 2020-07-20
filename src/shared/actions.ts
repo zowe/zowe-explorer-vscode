@@ -196,17 +196,16 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
 }
 
 export async function returnIconState(node: IZoweNodeType) {
-    if (getIconByNode(node) !== getIconById(IconId.sessionFavourite)) {
-        if (getIconByNode(node) !== getIconById(IconId.sessionFavouriteOpen)) {
+    if (getIconByNode(node) === getIconById(IconId.sessionActive)) {
             const sessionIcon = getIconById(IconId.session);
             if (sessionIcon) {
                 node.iconPath = sessionIcon.path;
             }
-        } else {
-            const sessionIcon = getIconById(IconId.sessionFavourite);
-            if (sessionIcon) {
-                node.iconPath = sessionIcon.path;
-            }
+    }
+    if (getIconByNode(node) === getIconById(IconId.sessionInactive)) {
+        const sessionIcon = getIconById(IconId.session);
+        if (sessionIcon) {
+            node.iconPath = sessionIcon.path;
         }
     }
 }
