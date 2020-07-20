@@ -102,12 +102,12 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
         quickpick.dispose();
     }
     let newDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
-                                                         placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set") });
+                                                       placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set") });
     if (contextually.isDsMember(node)) {
         // Allocating a copy of a member
         newDSName = `${node.getParent().label}(${newDSName})`;
         try {
-            ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSetMember(newDSName);
+            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSetMember(newDSName);
         } catch (err) {
             globals.LOG.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
             errorHandling(err, newDSName, localize("createMember.error", "Unable to create member: ") + err.message);
@@ -116,9 +116,9 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     } else {
         // Allocating a copy of a data set
         const dsType = contextually.isPdsNotFav(node) ? zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED : zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-        const options = this.getDataSetTypeAndOptions(this.getDataSetTypeAsString(dsType));
+        let options = this.getDataSetTypeAndOptions(this.getDataSetTypeAsString(dsType));
         try {
-            await (ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSet(dsType, newDSName.toUpperCase(), options.createOptions));
+            await (ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSet(dsType, newDSName.toUpperCase(), {like: node.label}));
         } catch (err) {
             globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
             errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
@@ -131,7 +131,7 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     datasetProvider.refreshElement(node.getParent());
     if (contextually.isDs(node) || contextually.isDsMember(node)) {
         if (newDSName.includes("(")) {
-            newDSName = newDSName.substr(newDSName.indexOf("("), newDSName.indexOf(")"));
+            newDSName = newDSName.match(/(?<=\().*?(?=\))/)[0];
         }
         openPS(
             new ZoweDatasetNode(newDSName, vscode.TreeItemCollapsibleState.None, node.getParent(), null, undefined, undefined, node.getProfile()),
