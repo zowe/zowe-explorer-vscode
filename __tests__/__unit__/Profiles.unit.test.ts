@@ -1498,6 +1498,15 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "active",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return ["test", "test", "test"];
         });
@@ -1511,6 +1520,14 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "active",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         theProfiles.validProfile = -1;
         await theProfiles.checkCurrentProfile(blockMocks.validProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
@@ -1521,6 +1538,14 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "active",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
@@ -1529,15 +1554,18 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
     });
 
     it("Tests that checkCurrentProfile will handle inactive profiles", async () => {
-        Object.defineProperty(CheckStatus, "getZosmfInfo", {
-            value: jest.fn(() => {
-                return undefined;
-            })
-        });
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "inactive",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
@@ -1546,15 +1574,18 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
     });
 
     it("Tests that checkCurrentProfile will handle inactive profiles", async () => {
-        Object.defineProperty(CheckStatus, "getZosmfInfo", {
-            value: jest.fn(() => {
-                return undefined;
-            })
-        });
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "inactive",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
@@ -1571,7 +1602,7 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
             session: createISessionWithoutCredentials(),
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
-            profileInstance: null
+            profileInstance: null,
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);

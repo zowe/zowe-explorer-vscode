@@ -24,10 +24,12 @@ import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
-import * as nls from "vscode-nls";
 import { setFileSaved } from "../utils/workspace";
+import * as nls from "vscode-nls";
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path

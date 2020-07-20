@@ -15,7 +15,10 @@ import { ZoweExplorerApi } from "./ZoweExplorerApi";
 
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable: max-classes-per-file
 

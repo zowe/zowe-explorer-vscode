@@ -1176,8 +1176,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && npm run lint && npm run update",
-    "build": "gulp build && npm run license && tsc --build --pretty",
+    "vscode:prepublish": "gulp build && npm run license && npm run lint && webpack --mode production --vscode-nls && npm run update",
+    "build": "gulp build && npm run license && webpack --mode development --vscode-nls",
+    "build:integration": "gulp build && npm run license && tsc --build --pretty",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
@@ -1187,7 +1188,7 @@
     "update": "node scripts/stringUpdateScript.js",
     "package": "vsce package",
     "license": "node ./scripts/license.js",
-    "watch": "tsc -b --watch --pretty",
+    "watch": "gulp build && webpack --mode development --vscode-nls --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "npm run lint:src && npm run lint:tests  && npm run markdown",
@@ -1243,12 +1244,15 @@
     "selenium-webdriver": "^3.6.0",
     "sinon": "^6.1.0",
     "ts-jest": "^25.3.0",
+    "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
     "tslint": "^5.17.0",
     "typescript": "^3.7.2",
     "vsce": "^1.70.0",
     "vscode": "^1.1.36",
-    "vscode-nls-dev": "^3.2.6"
+    "vscode-nls-dev": "^3.2.6",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "@zowe/cli": "^6.17.2",

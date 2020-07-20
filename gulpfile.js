@@ -1,25 +1,25 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+/*
+* This program and the accompanying materials are made available under the terms of the *
+* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+* https://www.eclipse.org/legal/epl-v20.html                                      *
+*                                                                                 *
+* SPDX-License-Identifier: EPL-2.0                                                *
+*                                                                                 *
+* Copyright Contributors to the Zowe Project.                                     *
+*                                                                                 *
+*/
 
 const gulp = require('gulp');
-const path = require('path');
+const filter = require('gulp-filter');
 
 const ts = require('gulp-typescript');
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const del = require('del');
-const runSequence = require('run-sequence');
-const es = require('event-stream');
-const vsce = require('vsce');
 const nls = require('vscode-nls-dev');
 
 const tsProject = ts.createProject('./tsconfig.json', { typescript });
-
-const inlineMap = true;
-const inlineSource = false;
-const outDest = 'out';
+const outDest = 'out/src';
 
 // If all VS Code languages are supported, you can use nls.coreLanguages
 // For new languages, add { folderName: 'ISO-639-3-Code-for-language', id: 'vscode-locale-id' } to array below
@@ -31,59 +31,34 @@ const cleanTask = function() {
 	return del(['out/**', 'package.nls.*.json', 'vscode-extension-for-zowe*.vsix']);
 }
 
-const internalCompileTask = function() {
-	return doCompile(false);
-};
-
-const internalNlsCompileTask = function() {
-	return doCompile(true);
-};
-
-const addI18nTask = function() {
+const generateI18nTask = function() {
 	return gulp.src(['package.nls.json'])
 		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
 		.pipe(gulp.dest('.'));
 };
 
-const buildTask = gulp.series(cleanTask, internalNlsCompileTask, addI18nTask);
-
-const doCompile = function (buildNls) {
-	var r = tsProject.src()
+const generateLocalizationBundle = () => {
+	// Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize
+	// PROJECT ID is "<PUBLISHER>.<NAME>" (found in package.json)
+	return tsProject.src()
 		.pipe(sourcemaps.init())
-		.pipe(tsProject()).js
-		.pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
-		.pipe(buildNls ? nls.createAdditionalLanguageFiles(languages, 'i18n') : es.through());
-
-	if (inlineMap && inlineSource) {
-		r = r.pipe(sourcemaps.write());
-	} else {
-		r = r.pipe(sourcemaps.write("../out", {
-			// no inlined source
-			includeContent: inlineSource,
-			// Return relative source map root directories per file.
-			sourceRoot: "../src"
-		}));
-	}
-
-	return r.pipe(gulp.dest(outDest));
+        .pipe(tsProject()).js
+        .pipe(nls.createMetaDataFiles())
+        .pipe(nls.createAdditionalLanguageFiles(languages, "i18n"))
+		.pipe(nls.bundleMetaDataFiles('Zowe.vscode-extension-for-zowe', outDest))
+		.pipe(nls.bundleLanguageFiles())
+		.pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
+		.pipe(gulp.dest(outDest));
 }
 
-const vscePublishTask = function() {
-	return vsce.publish();
-};
+const localizationTask = gulp.series(cleanTask, generateLocalizationBundle, generateI18nTask);
 
-const vscePackageTask = function() {
-	return vsce.createVSIX();
-};
+const buildTask = gulp.series(localizationTask);
 
 gulp.task('default', buildTask);
 
 gulp.task('clean', cleanTask);
 
-gulp.task('compile', gulp.series(cleanTask, internalCompileTask));
+gulp.task('localization', localizationTask);
 
 gulp.task('build', buildTask);
-
-gulp.task('publish', gulp.series(buildTask, vscePublishTask));
-
-gulp.task('package', gulp.series(buildTask, vscePackageTask));

@@ -16,10 +16,12 @@ import * as globals from "../globals";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
-
-import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Provides a class that manages submitting a command on the server
