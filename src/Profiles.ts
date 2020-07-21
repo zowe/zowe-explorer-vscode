@@ -654,7 +654,7 @@ export class Profiles {
     public async promptCredentials(sessName, rePrompt?: boolean) {
         let repromptUser: string;
         let repromptPass: string;
-        let repromptTokenType: SessConstants.TOKEN_TYPE_CHOICES;
+        const repromptTokenType: SessConstants.TOKEN_TYPE_CHOICES = SessConstants.TOKEN_TYPE_APIML;
         let repromptTokenValue: string;
         let loadProfile: IProfileLoaded;
         let loadSession: ISession;
@@ -673,7 +673,7 @@ export class Profiles {
             if (rePrompt) {
                 repromptUser = loadSession.user;
                 repromptPass = loadSession.password;
-                repromptTokenType = loadSession.tokenType;
+                // repromptTokenType = loadSession.tokenType;
                 repromptTokenValue = loadSession.tokenValue;
             }
 

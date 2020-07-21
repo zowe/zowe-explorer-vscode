@@ -35,7 +35,7 @@ describe("Unit Tests (Jest)", () => {
     const mockCheckCurrentProfile = jest.fn();
     const getMvsApiMock = jest.fn();
     const mockGetInstance = jest.fn();
-    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne)
+    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne);
     const mockInstance = {
         allProfiles: [profileOne, { name: "profile1" }, { name: "secondName" }],
         defaultProfile: jest.fn(() => profileOne),

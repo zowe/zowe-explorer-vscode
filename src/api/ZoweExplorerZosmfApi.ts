@@ -39,7 +39,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
     public async getSession(profile?: IProfileLoaded): Promise<Session> {
         if (!this.session) {
-            let a = await Profiles.getInstance();
+            const a = await Profiles.getInstance();
             this.session = await a.getValidSession((profile||this.profile).profile);
         }
         return this.session;

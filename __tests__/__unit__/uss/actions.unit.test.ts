@@ -108,7 +108,7 @@ function createGlobalMocks() {
                 defaultProfile: { name: "firstName" },
                 type: "zosmf",
                 validProfile: ValidProfileEnum.VALID,
-                getValidSession: jest.fn(() => { return globalMocks.testSession }),
+                getValidSession: jest.fn(() => globalMocks.testSession),
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),
@@ -219,7 +219,7 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
                     defaultProfile: { name: "firstName" },
                     getDefaultProfile: globalMocks.mockLoadNamedProfile,
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    getValidSession: jest.fn(() => { return globalMocks.testSession }),
+                    getValidSession: jest.fn(() => globalMocks.testSession),
                     usesSecurity: true,
                     getProfiles: jest.fn(() => {
                         return [{ name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
