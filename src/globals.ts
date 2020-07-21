@@ -49,7 +49,6 @@ export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
-export const EXTRA_USS_FAVS: string[] = [];
 export const ROOTPATH = path.join(__dirname, "..", "..");
 
 /**

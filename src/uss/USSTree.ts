@@ -417,8 +417,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             const profile = Profiles.getInstance().loadNamedProfile(sesName);
             if (!profile) {
-                // Store favorites that didn't return a profile on initialization
-                globals.EXTRA_USS_FAVS.push(line);
+                // Case for extenders' profiles
                 return;
             }
             try {

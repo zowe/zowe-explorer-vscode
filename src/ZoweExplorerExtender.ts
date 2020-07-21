@@ -102,7 +102,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
-        const profilesForType = Profiles.getInstance().getProfiles("rse"); // TO-DO
         this.datasetProvider?.addSession(); // TO-DO add profileType param to load non-zosmf default profiles
         this.ussFileProvider?.addSession(); // TO-DO add profileType param to load non-zosmf default profiles
         this.jobsProvider?.addSession(); // TO-DO add profileType param to load non-zosmf default profiles
