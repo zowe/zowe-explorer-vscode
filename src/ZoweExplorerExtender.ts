@@ -30,7 +30,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @static
      * @returns {ZoweExplorerExtender} the ZoweExplorerExtender singleton instance
      */
-    public static getInstance(
+    public static createInstance(
       datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
@@ -41,6 +41,17 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
         return ZoweExplorerExtenderInst;
     }
+
+    public static getInstance(
+        datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
+        ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
+        jobsProvider?: IZoweTree<IZoweJobTreeNode>
+      ): ZoweExplorerExtender {
+        if (datasetProvider || ussFileProvider || jobsProvider || !this.ZoweExplorerExtenderInst) {
+            return this.createInstance(datasetProvider, ussFileProvider, jobsProvider);
+          }
+        return this.ZoweExplorerExtenderInst;
+      }
 
    // Queue of promises to process sequentially when multiple extension register in parallel
     private static refreshProfilesQueue = new PromiseQueue(1, Infinity);
