@@ -95,8 +95,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * Lookup for generic extender API implementation.
      * @returns an instance of the API
      */
-    public static getExplorerExtenderApi(datasetProvider): ZoweExplorerApi.IApiExplorerExtender {
-        return ZoweExplorerApiRegister.getInstance(datasetProvider).getExplorerExtenderApi();
+    public static getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
+        return ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
     }
 
     /**
