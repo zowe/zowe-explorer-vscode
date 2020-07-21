@@ -20,8 +20,10 @@ import { setProfile, setSession, errorHandling } from "../utils";
 import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
 
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
@@ -110,17 +112,17 @@ export class ZoweTreeProvider {
         }
     }
 
-    public getHistory() {
-        return this.mHistory.getHistory();
+    public getSearchHistory() {
+        return this.mHistory.getSearchHistory();
     }
 
     public getTreeType() {
         return this.persistenceSchema;
     }
 
-    public async addHistory(criteria: string) {
+    public async addSearchHistory(criteria: string) {
         if (criteria) {
-            this.mHistory.addHistory(criteria);
+            this.mHistory.addSearchHistory(criteria);
             this.refresh();
         }
     }

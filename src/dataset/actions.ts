@@ -29,7 +29,9 @@ import * as contextually from "../shared/context";
 import { closeOpenedTextFile, setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Refreshes treeView
@@ -185,7 +187,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
             } else {
                 await vscode.window.showTextDocument(document, {preview: false});
             }
-            if (datasetProvider) { datasetProvider.addRecall(`[${node.getProfileName()}]: ${label}`); }
+            if (datasetProvider) { datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`); }
         } catch (err) {
             globals.LOG.error(localize("openPS.log.error.openDataSet", "Error encountered when opening data set! ") + JSON.stringify(err));
             errorHandling(err, node.getProfileName(), err.message);
@@ -269,7 +271,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
                 node.dirty = true;
 
                 const theFilter = await datasetProvider.createFilterString(name, node);
-                datasetProvider.addHistory(theFilter);
+                datasetProvider.addSearchHistory(theFilter);
                 datasetProvider.refresh();
 
                 // Show newly-created data set in expanded tree view
@@ -685,7 +687,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
     if (icon) {
         node.iconPath = icon.path;
     }
-    datasetProvider.addHistory(node.pattern);
+    datasetProvider.addSearchHistory(node.pattern);
 }
 
 /**

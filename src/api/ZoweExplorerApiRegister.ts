@@ -13,11 +13,12 @@ import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
-
-import * as nls from "vscode-nls";
 import { IZoweTree } from "./IZoweTree";
 import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./IZoweTreeNode";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import * as nls from "vscode-nls";
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code

@@ -25,11 +25,12 @@ import { injectAdditionalDataToTooltip } from "../uss/utils";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
-
-import * as nls from "vscode-nls";
 import { closeOpenedTextFile } from "../utils/workspace";
+import * as nls from "vscode-nls";
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -344,7 +345,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeRecall(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label}`);
         ussFileProvider.refresh();
     }
 
@@ -452,7 +453,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
 
                 // Add document name to recently-opened files
-                ussFileProvider.addRecall(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                 await this.initializeFileOpening(documentFilePath, previewFile);

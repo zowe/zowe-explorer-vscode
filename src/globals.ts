@@ -12,6 +12,7 @@
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
+import * as loggerConfig from "../log4jsconfig.json";
 
 // Globals
 export let ZOWETEMPFOLDER;
@@ -49,6 +50,7 @@ export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
 export const EXTRA_USS_FAVS: string[] = [];
+export const ROOTPATH = path.join(__dirname, "..", "..");
 
 /**
  * The types of persistence schemas wich are available in settings.json
@@ -83,10 +85,10 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
-    loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
-    loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
-    loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
+    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)){
+        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
+            context.extensionPath, loggerConfig.log4jsConfig.appenders[appenderName].filename);
+    }
     Logger.initLogger(loggerConfig);
     this.LOG = Logger.getAppLogger();
 }
