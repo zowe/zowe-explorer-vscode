@@ -79,7 +79,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode) {
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
@@ -124,7 +124,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            await Profiles.getInstance().checkCurrentProfile(element.getProfile(), true);
             return element.getChildren();
         }
         return this.mSessionNodes;
@@ -283,7 +283,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
 
-            await this.checkCurrentProfile(node);
+            await this.checkCurrentProfile(node, true);
 
             temp.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             const icon = getIconByNode(temp);
@@ -543,7 +543,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode) {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
-        await this.checkCurrentProfile(node);
+        await this.checkCurrentProfile(node, true);
 
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) {
@@ -734,7 +734,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
-            const session = await Profiles.getInstance().getValidSession(profileLoaded.profile);
+            const session = await Profiles.getInstance().getValidSession(profileLoaded.profile, profileLoaded.name);
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileLoaded);

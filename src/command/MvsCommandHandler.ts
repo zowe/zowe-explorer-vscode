@@ -92,10 +92,10 @@ export class MvsCommandHandler {
         } else {
             zosmfProfile = node.getProfile();
         }
-        await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
+        await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             const updProfile = zosmfProfile.profile as ISession;
-            session = await Profiles.getInstance().getValidSession(updProfile as IProfile);
+            session = await Profiles.getInstance().getValidSession(updProfile as IProfile, zosmfProfile.name);
             let command1: string = command;
             if (!command) {
                 command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");

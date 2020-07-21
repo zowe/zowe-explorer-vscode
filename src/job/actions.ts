@@ -81,7 +81,7 @@ export async function downloadSpool(job: IZoweJobTreeNode){
 export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>, session: string, spool: zowe.IJobFile) {
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
-    await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
+    await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         try {
             const uri = encodeJobFile(session, spool);

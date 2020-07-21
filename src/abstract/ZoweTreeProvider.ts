@@ -86,9 +86,6 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
-        if (element.contextValue.includes("session")) {
-            this.checkCurrentProfile(element);
-        }
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
@@ -143,7 +140,7 @@ export class ZoweTreeProvider {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         // Check what happens is inactive
-        await Profiles.getInstance().validateProfiles(profile);
+        await Profiles.getInstance().checkCurrentProfile(profile, true);
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
@@ -162,17 +159,17 @@ export class ZoweTreeProvider {
                 }
             });
 
-            await this.checkCurrentProfile(node);
+            await this.checkCurrentProfile(node, true);
         } catch (error) {
             await errorHandling(error);
         }
 
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode) {
+    public async checkCurrentProfile(node: IZoweTreeNode, prompt?: boolean) {
         const profile = node.getProfile();
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
-        if (profileStatus.status === "inactive") {
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, prompt);
+        if (profileStatus === "inactive") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word inactive is not there
                 if (node.contextValue.toLowerCase().indexOf("inactive") === -1) {
@@ -192,7 +189,7 @@ export class ZoweTreeProvider {
                 (node.getProfileName()) +
                 localize("validateProfiles.invalid2",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-        } else if (profileStatus.status === "active") {
+        } else if (profileStatus === "active") {
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word active is not there
                 if (node.contextValue.toLowerCase().indexOf("active") === -1) {

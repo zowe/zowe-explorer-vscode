@@ -47,11 +47,15 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 
             if (globals.ISTHEIA) {
                 vscode.window.showErrorMessage(errMsg);
-                Profiles.getInstance().promptCredentials(label.trim());
+                const profileInstance = Profiles.getInstance();
+                const profileLoaded = profileInstance.loadNamedProfile(label.trim());
+                profileInstance.getValidSession(profileLoaded.profile, label.trim(), null, true);
             } else {
                 vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
-                        await Profiles.getInstance().promptCredentials(label.trim(), true);
+                        const profileInstance = Profiles.getInstance();
+                        const profileLoaded = profileInstance.loadNamedProfile(label.trim());
+                        await profileInstance.getValidSession(profileLoaded.profile, label.trim(), null, true);
                     }
                 });
             }

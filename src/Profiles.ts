@@ -51,9 +51,7 @@ export class Profiles {
         return Profiles.loader;
     }
 
-    public static getInstance(): Profiles {
-        return Profiles.loader;
-    }
+    public static getInstance(): Profiles { return Profiles.loader; }
 
     private static loader: Profiles;
 
@@ -68,50 +66,29 @@ export class Profiles {
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
-    private usrNme: string;
-    private passWrd: string;
-    private baseEncd: string;
     private constructor(private log: Logger) {}
 
-    public async checkCurrentProfile(theProfile: IProfileLoaded) {
-        // // Check what happens if there's an error
-        const profileStatus = await this.validateProfiles(theProfile);
-        // if (profileStatus.status === "inactive") {
-        //     this.validProfile = ValidProfileEnum.INVALID;
-        //     return profileStatus;
-        // }
+    public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean) {
+        try {
+            const validSession = await (Profiles.getInstance().getValidSession(profileLoaded.profile, profileLoaded.name, null, prompt));
 
-        if ((!theProfile.profile.user) || (!theProfile.profile.password)) {
-            try {
-                const values = await Profiles.getInstance().promptCredentials(theProfile.name);
-                if (values !== undefined) {
-                    this.usrNme = values[0];
-                    this.passWrd = values[1];
-                    this.baseEncd = values[2];
-                }
-            } catch (error) {
-                errorHandling(error, theProfile.name,
-                    localize("checkCurrentProfile.error", "Error encountered in ") + `checkCurrentProfile.optionalProfiles!`);
-                return profileStatus;
-            }
-            if (this.usrNme !== undefined && this.passWrd !== undefined && this.baseEncd !== undefined) {
-                theProfile.profile.user = this.usrNme;
-                theProfile.profile.password = this.passWrd;
-                theProfile.profile.base64EncodedAuth = this.baseEncd;
-                this.validProfile = ValidProfileEnum.VALID;
-                return profileStatus;
-            } else {
-                // return invalid if credetials are not provided
+            if ((!profileLoaded.profile.user || !profileLoaded.profile.password) && !validSession) {
+                // Credentials are invalid
                 this.validProfile = ValidProfileEnum.INVALID;
-                return profileStatus;
+                return "inactive";
+            } else {
+                // Credentials are valid
+                this.validProfile = ValidProfileEnum.VALID;
+                return "active";
             }
-        } else {
-            this.validProfile = ValidProfileEnum.VALID;
-            return profileStatus;
+        } catch (error) {
+            errorHandling(error, profileLoaded.name,
+                localize("checkCurrentProfile.error", "Error encountered in {0}", `checkCurrentProfile.optionalProfiles!`));
+            return "inactive";
         }
     }
 
-    public async getValidSession(serviceProfile: IProfile, baseProfile?: IProfile) {
+    public async getValidSession(serviceProfile: IProfile, profileName: string, baseProfile?: IProfile, prompt?: boolean) {
         if (this.getDefaultProfile("base") && this.getDefaultProfile("base").profile.tokenValue) {
             baseProfile = this.getDefaultProfile("base").profile;
 
@@ -128,35 +105,49 @@ export class Profiles {
                 tokenType: SessConstants.TOKEN_TYPE_APIML,
                 tokenValue: baseProfile.tokenValue
             };
-            const connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg,
-                                                                                                cmdArgs,
-                                                                                                { requestToken: false, doPrompting: true });
-            return new Session(connectableSessCfg);
+
+            try {
+                let connectableSessCfg: ISession;
+                if (prompt) {
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                                                                                                        { requestToken: false, doPrompting: true });
+                }
+                else {
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                                                                                                        { requestToken: false, doPrompting: true });
+                }
+                return new Session(connectableSessCfg);
+            } catch (error) { await errorHandling(error.message); }
         } else {
-            if (!serviceProfile.user || !serviceProfile.password) {
-                return undefined;
+            // No baseProfile exists
+            const schemaArray = [];
+            if (prompt) {
+                // Select for prompting only fields which are not defined
+                if (!serviceProfile.user) { schemaArray.push("user"); }
+                if (!serviceProfile.password) { schemaArray.push("password"); }
+                if (!serviceProfile.host) {
+                    schemaArray.push("host");
+                    if (!serviceProfile.port) { schemaArray.push("port"); }
+                    if (!serviceProfile.basePath) { schemaArray.push("basePath"); }
+                }
+                const newDetails = await this.collectProfileDetails(profileName, null, schemaArray);
+                for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
             }
-            return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile);
+            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile); }
+            catch (error) { await errorHandling(error.message); }
         }
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
-            if (profile.name === name && (type ? profile.type === type : true)) {
-                return profile;
-            }
+            if (profile.name === name && (type ? profile.type === type : true)) { return profile; }
         }
-        throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
-            + name + localize("loadNamedProfile.error.period", "."));
+        throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: {0}.", name));
     }
 
-    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded {
-        return this.defaultProfileByType.get(type);
-    }
+    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded { return this.defaultProfileByType.get(type); }
 
-    public getProfiles(type: string = "zosmf"): IProfileLoaded[] {
-        return this.profilesByType.get(type);
-    }
+    public getProfiles(type: string = "zosmf"): IProfileLoaded[] { return this.profilesByType.get(type); }
 
     public async refresh(): Promise<void> {
         this.allProfiles = [];
@@ -169,25 +160,20 @@ export class Profiles {
         // Handle all API profiles
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             profileManager = await this.getCliProfileManager(type);
-            const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-                return profile.type === type;
-            });
+            const profilesForType = (await profileManager.loadAll()).filter((profile) => profile.type === type);
             if (profilesForType && profilesForType.length > 0) {
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
                 let defaultProfile: IProfileLoaded;
-                try {
-                    defaultProfile = await profileManager.load({ loadDefault: true });
-                } catch (error) {
-                    vscode.window.showInformationMessage(error.message);
-                }
+
+                try { defaultProfile = await profileManager.load({ loadDefault: true }); }
+                catch (error) { vscode.window.showInformationMessage(error.message); }
+
                 this.defaultProfileByType.set(type, defaultProfile);
             }
             // This is in the loop because I need an instantiated profile manager config
             if (profileManager.configurations && this.allTypes.length === 0) {
-                for (const element of profileManager.configurations) {
-                    this.allTypes.push(element.type);
-                }
+                for (const element of profileManager.configurations) { this.allTypes.push(element.type); }
             }
         }
     }
@@ -209,11 +195,8 @@ export class Profiles {
             return validationResult;
         }
 
-        try {
-            url = new URL(newUrl);
-        } catch (error) {
-            return validationResult;
-        }
+        try { url = new URL(newUrl); }
+        catch (error) { return validationResult; }
 
         validationResult.port = Number(url.port);
         validationResult.host = url.hostname;
@@ -326,9 +309,7 @@ export class Profiles {
         if (chosenProfile === "") {
             let newprofile: any;
             let profileName: string;
-            if (quickpick.value) {
-                profileName = quickpick.value;
-            }
+            if (quickpick.value) { profileName = quickpick.value; }
 
             const options = {
                 placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
@@ -343,15 +324,11 @@ export class Profiles {
             }
             chosenProfile = profileName.trim();
             globals.LOG.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
-            try {
-                newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
-            } catch (error) { await errorHandling(error, chosenProfile, error.message); }
+            try { newprofile = await Profiles.getInstance().createNewConnection(chosenProfile); }
+            catch (error) { await errorHandling(error, chosenProfile, error.message); }
             if (newprofile) {
-                try {
-                    await Profiles.getInstance().refresh();
-                } catch (error) {
-                    await errorHandling(error, newprofile, error.message);
-                }
+                try { await Profiles.getInstance().refresh(); }
+                catch (error) { await errorHandling(error, newprofile, error.message); }
                 await zoweFileProvider.addSession(newprofile);
                 await zoweFileProvider.refresh();
             }
@@ -364,138 +341,25 @@ export class Profiles {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
-        const editSession = profileLoaded.profile;
-        const editURL = editSession.host+ ":" + editSession.port;
-        const editUser = editSession.user;
-        const editPass = editSession.password;
-        const editrej = editSession.rejectUnauthorized;
-        let updUser: string;
-        let updPass: string;
-        let updRU: boolean;
-        let updPort: number;
-        let updUrl: any;
-
-        const schema: {} = await this.getSchema(profileLoaded.type);
-        const schemaArray = Object.keys(schema);
-
-        const updSchemaValues: any = {};
+        const updSchemaValues = await this.collectProfileDetails(profileName, profileLoaded.type);
         updSchemaValues.name = profileName;
 
-        // Go through array of schema for input values
-        for (const value of schemaArray) {
-            switch (value) {
-            case "host" :
-                updUrl = await this.urlInfo(editURL);
-                if (updUrl === undefined) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL",
-                        "No valid value for z/OS URL. Operation Cancelled"));
-                    return undefined;
-                }
-                updSchemaValues[value] = updUrl.host;
-                if (updUrl.port !== 0) {
-                    updSchemaValues.port = updUrl.port;
-                } else if (editSession.port === Number("443")) {
-                    updSchemaValues.port = editSession.port;
-                }
-                break;
-            case "port" :
-                if (updSchemaValues[value] === undefined) {
-                    updPort = await this.portInfo(value, schema);
-                    if (Number.isNaN(updPort)) {
-                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.port",
-                            "Invalid Port number provided or operation was cancelled"));
-                        return undefined;
-                    }
-                    updSchemaValues[value] = updPort;
-                    break;
-                }
-                break;
-            case "user" :
-                updUser = await this.userInfo(editUser);
-                if (updUser === undefined) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
-                        "Operation Cancelled"));
-                    return undefined;
-                }
-                updSchemaValues[value] = updUser;
-                break;
-            case "password" :
-                updPass = await this.passwordInfo(editPass);
-                if (updPass === undefined) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.undefined.username",
-                        "Operation Cancelled"));
-                    return undefined;
-                }
-                updSchemaValues[value] = updPass;
-                break;
-            case "rejectUnauthorized" :
-                updRU = await this.ruInfo(editrej);
-                if (updRU === undefined) {
-                    vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize",
-                    "Operation Cancelled"));
-                    return undefined;
-                }
-                updSchemaValues[value] = updRU;
-                break;
-            default:
-                let options: vscode.InputBoxOptions;
-                const response = await this.checkType(schema[value].type);
-                switch (response) {
-                    case "number" :
-                        options = await this.optionsValue(value, schema, editSession[value]);
-                        const updValue = await vscode.window.showInputBox(options);
-                        if (!Number.isNaN(Number(updValue))) {
-                            updSchemaValues[value] = Number(updValue);
-                            } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")){
-                                    updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
-                                } else {
-                                    break;
-                                }
-                            }
-                        break;
-                    case "boolean" :
-                        let updIsTrue: boolean;
-                        updIsTrue = await this.boolInfo(value, schema);
-                        if (updIsTrue === undefined) {
-                            vscode.window.showInformationMessage(localize("createNewConnection.booleanValue",
-                            "Operation Cancelled"));
-                            return undefined;
-                        }
-                        updSchemaValues[value] = updIsTrue;
-                        break;
-                    default :
-                        options = await this.optionsValue(value, schema, editSession[value]);
-                        const updDefValue = await vscode.window.showInputBox(options);
-                        if (updDefValue === "") {
-                            break;
-                        }
-                        updSchemaValues[value] = updDefValue;
-                        break;
-                }
-            }
-        }
-
         try {
-            const updSession = await Profiles.getInstance().getValidSession(updSchemaValues);
+            const updSession = await Profiles.getInstance().getValidSession(updSchemaValues, profileName);
             updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
             return updSchemaValues;
-
-        } catch (error) {
-            await errorHandling(error.message);
-        }
+        } catch (error) { await errorHandling(error.message); }
     }
 
     public async getProfileType(): Promise<string> {
         let profileType: string;
         const profTypes = ZoweExplorerApiRegister.getInstance().registeredApiTypes();
         const typeOptions = Array.from(profTypes);
-        if (typeOptions.length === 1 && typeOptions[0] === "zosmf") {
-            profileType = typeOptions[0];
-        } else {
+        if (typeOptions.length === 1 && typeOptions[0] === "zosmf") { profileType = typeOptions[0]; }
+        else {
             const quickPickTypeOptions: vscode.QuickPickOptions = {
                 placeHolder: localize("createNewConnection.option.prompt.type.placeholder", "Profile Type"),
                 ignoreFocusOut: true,
@@ -519,32 +383,44 @@ export class Profiles {
     }
 
     public async createNewConnection(profileName: string, requestedProfileType?: string): Promise<string | undefined> {
-        let newUser: string;
-        let newPass: string;
-        let newRU: boolean;
-        let newUrl: any;
-        let newPort: number;
-
         const newProfileName = profileName.trim();
-
         if (newProfileName === undefined || newProfileName === "") {
             vscode.window.showInformationMessage(localize("createNewConnection.profileName",
                 "Profile name was not supplied. Operation Cancelled"));
             return undefined;
         }
 
-        const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
-        if (profileType === undefined) {
-            vscode.window.showInformationMessage(localize("createNewConnection.profileType",
-                "No profile type was chosen. Operation Cancelled"));
-            return undefined;
-        }
+        const newProfileDetails = await this.collectProfileDetails(newProfileName, requestedProfileType);
+        newProfileDetails.name = newProfileName;
 
-        const schema: {} = await this.getSchema(profileType);
-        const schemaArray = Object.keys(schema);
+        try {
+            for (const profile of this.allProfiles) {
+                if (profile.name.toLowerCase() === profileName.toLowerCase()) {
+                    vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
+                        "Profile name already exists. Please create a profile using a different name"));
+                    return undefined;
+                }
+            }
+            await this.saveProfile(newProfileDetails, newProfileDetails.name, newProfileDetails.type);
+            vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
+            return newProfileDetails.name;
+        } catch (error) { await errorHandling(error.message); }
+    }
+
+    public async collectProfileDetails(profileName: string, profileType?: string, schemaArray?: string[]): Promise<any> {
+        let newUser: string;
+        let newPass: string;
+        let newRU: boolean;
+        let newUrl: any;
+        let newPort: number;
+
+        if (!profileType) { profileType = await this.getProfileType(); }
+        const schema = await this.getSchema(profileType);
+        if (!schemaArray) { schemaArray = Object.keys(schema); }
 
         const schemaValues: any = {};
-        schemaValues.name = newProfileName;
+        schemaValues.name = profileName;
+        schemaValues.type = profileType;
 
         // Go through array of schema for input values
         for (const value of schemaArray) {
@@ -552,9 +428,7 @@ export class Profiles {
             case "host" :
                 newUrl = await this.urlInfo();
                 schemaValues[value] = newUrl.host;
-                if (newUrl.port !== 0) {
-                    schemaValues.port = newUrl.port;
-                }
+                if (newUrl.port !== 0) { schemaValues.port = newUrl.port; }
                 break;
             case "port" :
                 if (schemaValues[value] === undefined) {
@@ -635,96 +509,7 @@ export class Profiles {
             }
         }
 
-        try {
-            for (const profile of this.allProfiles) {
-                if (profile.name.toLowerCase() === profileName.toLowerCase()) {
-                    vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
-                        "Profile name already exists. Please create a profile using a different name"));
-                    return undefined;
-                }
-            }
-            await this.saveProfile(schemaValues, schemaValues.name, profileType);
-            vscode.window.showInformationMessage("Profile " + newProfileName + " was created.");
-            return newProfileName;
-        } catch (error) {
-            await errorHandling(error.message);
-        }
-    }
-
-    public async promptCredentials(sessName, rePrompt?: boolean) {
-        let repromptUser: string;
-        let repromptPass: string;
-        const repromptTokenType: SessConstants.TOKEN_TYPE_CHOICES = SessConstants.TOKEN_TYPE_APIML;
-        let repromptTokenValue: string;
-        let loadProfile: IProfileLoaded;
-        let loadSession: ISession;
-        let newUser: string;
-        let newPass: string;
-
-        try {
-            loadProfile = this.loadNamedProfile(sessName.trim());
-            const validSession = await this.getValidSession(loadProfile);
-            if (validSession) {
-                loadSession = await validSession.ISession;
-            } else {
-                return validSession;
-            }
-
-            if (rePrompt) {
-                repromptUser = loadSession.user;
-                repromptPass = loadSession.password;
-                // repromptTokenType = loadSession.tokenType;
-                repromptTokenValue = loadSession.tokenValue;
-            }
-
-            if ((!loadSession.user && !loadSession.tokenValue) || rePrompt) {
-                newUser = await this.userInfo(repromptUser);
-                loadProfile.profile.user = newUser;
-            } else {
-                newUser = loadSession.user = loadProfile.profile.user;
-            }
-
-            if (newUser === undefined) {
-                vscode.window.showInformationMessage(localize("promptCredentials.undefined.username",
-                            "Operation Cancelled"));
-                await this.refresh();
-                return undefined;
-            } else {
-                if ((!loadSession.password && !loadSession.tokenValue) || rePrompt) {
-                    newPass = await this.passwordInfo(repromptPass);
-                    loadProfile.profile.password = newPass;
-                } else {
-                    newPass = loadSession.password = loadProfile.profile.password;
-                }
-            }
-
-            if (newPass === undefined) {
-                vscode.window.showInformationMessage(localize("promptCredentials.undefined.password",
-                            "Operation Cancelled"));
-                await this.refresh();
-                return undefined;
-            } else {
-                try {
-                    const updSession = await this.getValidSession(loadProfile);
-                    if (rePrompt) {
-                        const saveButton = localize("promptCredentials.saveCredentials.button", "Save Credentials");
-                        const doNotSaveButton = localize("promptCredentials.doNotSave.button", "Do Not Save");
-                        const infoMsg = localize("promptCredentials.saveCredentials.infoMessage", "Save entered credentials for future use with profile: {0}? Saving credentials will update the local yaml file.", loadProfile.name);
-                        await vscode.window.showInformationMessage(infoMsg, ...[saveButton, doNotSaveButton]).then((selection) => {
-                            if (selection === saveButton) {
-                                rePrompt = false;
-                            }
-                        });
-                        await this.updateProfile(loadProfile, rePrompt);
-                    }
-                    return [updSession.ISession.user, updSession.ISession.password, updSession.ISession.base64EncodedAuth];
-                } catch (error) {
-                    await errorHandling(error.message);
-                }
-            }
-        } catch (error) {
-            await errorHandling(error.message);
-        }
+        return schemaValues;
     }
 
     public async getDeleteProfile() {
@@ -759,14 +544,10 @@ export class Profiles {
 
         let deleteLabel: string;
         let deletedProfile: IProfileLoaded;
-        if (!node){
-            deletedProfile = await this.getDeleteProfile();
-        } else {
-            deletedProfile = node.getProfile();
-        }
-        if (!deletedProfile) {
-            return;
-        }
+        if (!node){ deletedProfile = await this.getDeleteProfile(); }
+        else { deletedProfile = node.getProfile(); }
+
+        if (!deletedProfile) { return; }
         deleteLabel = deletedProfile.name;
 
         const deleteSuccess = await this.deletePrompt(deletedProfile);
@@ -898,9 +679,7 @@ export class Profiles {
         if (index >= 0) { this.allProfiles.splice(index, 1); }
     }
 
-    public getAllTypes() {
-        return this.allTypes;
-    }
+    public getAllTypes() { return this.allTypes; }
 
     public async getNamesForType(type: string) {
         const profileManager = await this.getCliProfileManager(type);
@@ -915,9 +694,8 @@ export class Profiles {
     public async directLoad(type: string, name: string): Promise<IProfileLoaded> {
         let directProfile: IProfileLoaded;
         const profileManager = await this.getCliProfileManager(type);
-        if (profileManager) {
-            directProfile = await profileManager.load({ name });
-        }
+        if (profileManager) { directProfile = await profileManager.load({ name }); }
+
         return directProfile;
     }
 
@@ -928,85 +706,10 @@ export class Profiles {
                 profileRootDirectory: path.join(getZoweDir(), "profiles"),
                 type
             });
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
+            if (profileManager) { this.profileManagerByType.set(type, profileManager); }
+            else { return undefined; }
         }
         return profileManager;
-    }
-
-    public async validateProfiles(theProfile: IProfileLoaded) {
-        let filteredProfile: IProfileValidation;
-        let profileStatus;
-        const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
-
-        // Filter profilesForValidation to check if the profile is already validated
-        this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name) {
-                filteredProfile = {
-                    status: profile.status,
-                    name: profile.name
-                };
-            }
-        });
-
-        // If not yet validated, call getStatus and validate the profile
-        // status will be stored in profilesForValidation
-        if (filteredProfile === undefined) {
-            try {
-                if (getSessStatus.getStatus) {
-                    profileStatus = await vscode.window.withProgress({
-                        location: vscode.ProgressLocation.Notification,
-                        title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
-                        cancellable: true
-                    }, (progress, token) => {
-                        token.onCancellationRequested(() => {
-                            // will be returned as undefined
-                            vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
-                        });
-                        return getSessStatus.getStatus(theProfile, theProfile.type);
-                    });
-                } else {
-                    profileStatus = "unverified";
-                }
-
-                switch (profileStatus) {
-                    case "active":
-                        filteredProfile = {
-                            status: "active",
-                            name: theProfile.name
-                        };
-                        this.profilesForValidation.push(filteredProfile);
-                        break;
-                    case "inactive":
-                        filteredProfile = {
-                            status: "inactive",
-                            name: theProfile.name
-                        };
-                        this.profilesForValidation.push(filteredProfile);
-                        break;
-                    // default will cover "unverified" and undefined
-                    default:
-                        filteredProfile = {
-                            status: "unverified",
-                            name: theProfile.name
-                        };
-                        this.profilesForValidation.push(filteredProfile);
-                        break;
-                }
-            } catch (error) {
-                this.log.debug("Validate Error - Invalid Profile: " + error);
-                filteredProfile = {
-                    status: "inactive",
-                    name: theProfile.name
-                };
-                this.profilesForValidation.push(filteredProfile);
-            }
-        }
-
-        return filteredProfile;
     }
 
     private async deletePrompt(deletedProfile: IProfileLoaded) {
@@ -1042,16 +745,14 @@ export class Profiles {
         try {
             zosmfProfile = await (await this.getCliProfileManager(ProfileInfo.type))
             .delete({ profile: ProfileInfo, name: ProfileInfo.name, type: ProfileInfo.type });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
+        } catch (error) { vscode.window.showErrorMessage(error.message); }
+
         return zosmfProfile.profile;
     }
 
     // ** Functions for handling Profile Information */
 
     private async urlInfo(input?) {
-
         let zosURL: string;
 
         const urlInputBox = vscode.window.createInputBox();
@@ -1121,9 +822,7 @@ export class Profiles {
 
         let passWord: string;
 
-        if (input) {
-            passWord = input;
-        }
+        if (input) { passWord = input; }
 
         InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.password.placeholder", "Optional: Password"),
@@ -1147,9 +846,7 @@ export class Profiles {
 
         let rejectUnauthorize: boolean;
 
-        if (input !== undefined) {
-            rejectUnauthorize = input;
-        }
+        if (input !== undefined) { rejectUnauthorize = input; }
 
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: localize("createNewConnection.option.prompt.ru.placeholder", "Reject Unauthorized Connections"),
@@ -1187,13 +884,9 @@ export class Profiles {
         };
         const selectBoolean = ["True", "False"];
         const chosenValue = await vscode.window.showQuickPick(selectBoolean, quickPickBooleanOptions);
-        if (chosenValue === selectBoolean[0]) {
-            isTrue = true;
-        } else if (chosenValue === selectBoolean[1]) {
-            isTrue = false;
-        } else {
-            return undefined;
-        }
+        if (chosenValue === selectBoolean[0]) { isTrue = true; }
+        else if (chosenValue === selectBoolean[1]) { isTrue = false; }
+        else { return undefined; }
         return isTrue;
     }
 
@@ -1242,9 +935,7 @@ export class Profiles {
                 test = input[index];
                 return test;
             }
-        } else {
-            test = input;
-        }
+        } else { test = input; }
         return test;
     }
 
@@ -1271,9 +962,7 @@ export class Profiles {
                         OrigProfileInfo.user = NewProfileInfo.user;
                         OrigProfileInfo.password = NewProfileInfo.password;
                 }
-            } else {
-                OrigProfileInfo[value] = NewProfileInfo[value];
-            }
+            } else { OrigProfileInfo[value] = NewProfileInfo[value]; }
 
         }
 
@@ -1286,20 +975,15 @@ export class Profiles {
             // profile: OrigProfileInfo as IProfile
             args: OrigProfileInfo as any
         };
-        try {
-            (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms);
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
+        try { (await this.getCliProfileManager(this.loadedProfile.type)).update(updateParms); }
+        catch (error) { vscode.window.showErrorMessage(error.message); }
     }
 
     private async saveProfile(ProfileInfo, ProfileName, ProfileType) {
         let newProfile: IProfile;
         try {
             newProfile = await (await this.getCliProfileManager(ProfileType)).save({ profile: ProfileInfo, name: ProfileName, type: ProfileType });
-        } catch (error) {
-            vscode.window.showErrorMessage(error.message);
-        }
+        } catch (error) { vscode.window.showErrorMessage(error.message); }
         return newProfile.profile;
     }
 }

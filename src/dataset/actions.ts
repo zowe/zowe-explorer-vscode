@@ -419,7 +419,7 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
         globals.LOG.error(localize("submitJcl.log.error.nullSession", "Session for submitting JCL was null or undefined!"));
         return;
     }
-    await Profiles.getInstance().checkCurrentProfile(sessProfile);
+    await Profiles.getInstance().checkCurrentProfile(sessProfile, true);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
@@ -448,7 +448,7 @@ export async function submitMember(node: IZoweTreeNode) {
     let sessProfile;
     let regex;
     const profiles = Profiles.getInstance();
-    profiles.checkCurrentProfile(node.getProfile());
+    profiles.checkCurrentProfile(node.getProfile(), true);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         switch (true) {
             case contextually.isFavoriteContext(node.getParent()):
@@ -707,7 +707,7 @@ export async function copyDataSet(node: IZoweNodeType) {
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hMigrateDataSet(node: ZoweDatasetNode) {
-    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         vscode.window.showInformationMessage(localize("hMigrate.requestSent1", "Migration of dataset: ") + dataSetName +
@@ -726,7 +726,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode) {
  * @param {IZoweDatasetTreeNode} node - The node to paste to
  */
 export async function hRecallDataSet(node: ZoweDatasetNode) {
-    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         const { dataSetName } = dsUtils.getNodeLabels(node);
         vscode.window.showInformationMessage(localize("hRecall.requestSent1", "Recall of dataset: ") + dataSetName +
@@ -752,7 +752,7 @@ export async function pasteDataSet(node: IZoweDatasetTreeNode, datasetProvider: 
     let beforeProfileName;
     let beforeMemberName;
 
-    await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+    await Profiles.getInstance().checkCurrentProfile(node.getProfile(), true);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
             memberName = await vscode.window.showInputBox({placeHolder: localize("renameDataSet.name", "Name of Data Set Member")});
