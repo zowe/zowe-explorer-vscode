@@ -27,7 +27,7 @@ describe("SpoolProvider Unit Tests", () => {
         scheme: "zosspool",
         authority: "",
         path: "TESTJOB.100.STDOUT",
-        query: "[\"sessionName\",{\"byte-count\":128,\"job-correlator\":\"correlator\"," +
+        query: "[\"sestest\",{\"byte-count\":128,\"job-correlator\":\"correlator\"," +
             "\"record-count\":1,\"records-url\":\"fake/records\",\"class\":\"A\",\"ddname\":\"STDOUT\",\"id\":101,\"job" +
             "id\":\"JOB1234\",\"jobname\":\"TESTJOB\",\"lrecl\":80,\"procstep\":\"\",\"recfm\":\"FB\",\"stepname\":\"STEP\",\"subsystem\":\"SYS\"}]",
         fragment: "",
@@ -46,23 +46,22 @@ describe("SpoolProvider Unit Tests", () => {
     const mockParse = jest.fn();
     const mockQuery = jest.fn();
     const getSpoolContentById = jest.fn();
-    const mockLoadNamedProfile = jest.fn();
     const mockProfileInstance = createInstanceOfProfile(testProfile, testSession);
 
-    Object.defineProperty(Profiles, "getInstance", { value: mockGetInstance });
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(mockProfileInstance)});
     Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
-    Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
-    Object.defineProperty(Profiles, "loadNamedProfile", { value: mockLoadNamedProfile });
-    Object.defineProperty(Profiles, "getDefaultProfile", { value: jest.fn(() => testProfile )});
+    Object.defineProperty(jesApi, "getSpoolContentById", { value: getSpoolContentById });
+    Object.defineProperty(mockProfileInstance, "getDefaultProfile", { value: jest.fn(() => testProfile )});
     Object.defineProperty(vscode, "Uri", {value: mockUri});
     Object.defineProperty(mockUri, "parse", {value: mockParse});
     Object.defineProperty(mockUri, "query", {value: mockQuery});
 
     bindJesApi(jesApi);
+    mockProfileInstance.loadNamedProfile.mockReturnValue(testProfile);
 
-    afterEach(() => {
-        jest.resetAllMocks();
-    });
+    // afterEach(() => {
+    //     jest.resetAllMocks();
+    // });
 
     it("Tests that the URI is encoded", () => {
         mockGetInstance.mockReturnValue(mockProfileInstance);
@@ -80,16 +79,14 @@ describe("SpoolProvider Unit Tests", () => {
 
     it("Tests that the spool content is returned", () => {
         mockGetInstance.mockReturnValue(mockProfileInstance);
-        mockLoadNamedProfile.mockReturnValue(testProfile);
         getSpoolContentById.mockReturnValue("spool content");
 
         const provider = new spoolprovider.default();
         const content = provider.provideTextDocumentContent(uriObj);
         expect(content).toBe("spool content");
         expect(getSpoolContentById.mock.calls.length).toEqual(1);
-        expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobname);
-        expect(getSpoolContentById.mock.calls[0][2]).toEqual(iJobFile.jobid);
-        // tslint:disable-next-line:no-magic-numbers
-        expect(getSpoolContentById.mock.calls[0][3]).toEqual(iJobFile.id);
+        expect(getSpoolContentById.mock.calls[0][0]).toEqual(iJobFile.jobname);
+        expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobid);
+        expect(getSpoolContentById.mock.calls[0][2]).toEqual(iJobFile.id);
     });
 });

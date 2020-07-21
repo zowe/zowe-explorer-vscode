@@ -10,9 +10,8 @@
 */
 
 import * as zowe from "@zowe/cli";
-import { Session, IProfileLoaded, ITaskWithStatus, TaskStage } from "@zowe/imperative";
+import { Session, IProfileLoaded, ITaskWithStatus } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 

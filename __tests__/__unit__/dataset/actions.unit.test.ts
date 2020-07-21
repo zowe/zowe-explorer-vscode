@@ -692,13 +692,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([nodeWithoutSession]);
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const getSessionSpy = jest.spyOn(blockMocks.mvsApi, "getSession").mockResolvedValueOnce(blockMocks.sessionWithoutCredentials);
+        const getSessionSpy = jest.spyOn(blockMocks.mvsApi, "getSession");
+        jest.spyOn(blockMocks.mvsApi, "getSession").mockResolvedValue(blockMocks.sessionWithoutCredentials);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(getSessionSpy).toReturnWith(blockMocks.sessionWithoutCredentials);
+        expect(getSessionSpy).toHaveBeenCalledTimes(2);
     });
     it("Checking common dataset saving failed attempt due to inability to locate session and profile", async () => {
         globals.defineGlobals("");

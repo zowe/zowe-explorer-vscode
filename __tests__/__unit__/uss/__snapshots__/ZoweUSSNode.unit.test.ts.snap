@@ -47,12 +47,12 @@ ZoweUSSNode {
       "profileName": "",
       "session": Session {
         "ISession": Object {
+          "base64EncodedAuth": "fakeEncoding",
           "hostname": "fake",
-          "password": "fake",
-          "port": 1443,
+          "password": "",
           "protocol": "https",
           "type": "basic",
-          "user": "fake",
+          "user": "",
         },
       },
       "shortLabel": "",

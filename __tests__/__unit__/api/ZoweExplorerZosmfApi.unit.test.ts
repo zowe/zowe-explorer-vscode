@@ -12,9 +12,6 @@
 import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import * as zowe from "@zowe/cli";
 import { AbstractSession } from "@zowe/imperative";
-import { createValidIProfile, createInstanceOfProfile, createISession } from "../../../__mocks__/mockCreators/shared";
-import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
-import { Profiles } from "../../../src/Profiles";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
