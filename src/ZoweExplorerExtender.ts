@@ -49,7 +49,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
       ): ZoweExplorerExtender {
         if (datasetProvider || ussFileProvider || jobsProvider || !this.ZoweExplorerExtenderInst) {
             return this.createInstance(datasetProvider, ussFileProvider, jobsProvider);
-          }
+        }
         return this.ZoweExplorerExtenderInst;
       }
 
