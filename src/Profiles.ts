@@ -89,14 +89,34 @@ export class Profiles {
     }
 
     public async getValidSession(serviceProfile: IProfile, profileName: string, baseProfile?: IProfile, prompt?: boolean) {
-        if (this.getDefaultProfile("base") && this.getDefaultProfile("base").profile.tokenValue) {
-            baseProfile = this.getDefaultProfile("base").profile;
+        // Check if any baseProfile can be found
+        if (!baseProfile) { baseProfile = this.getDefaultProfile("base").profile; }
 
+        // Prompt for missing details, if necessary
+        const schemaArray = [];
+        if (prompt) {
+            // Select for prompting only fields which are not defined
+            if (!serviceProfile.user && (baseProfile && !baseProfile.user)) { schemaArray.push("user"); }
+            if (!serviceProfile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
+            if (!serviceProfile.host && (baseProfile && !baseProfile.host)) {
+                schemaArray.push("host");
+                if (!serviceProfile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
+                if (!serviceProfile.basePath) { schemaArray.push("basePath"); }
+            }
+            const newDetails = await this.collectProfileDetails(profileName, null, schemaArray);
+            for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
+        }
+        if (serviceProfile.user) {
+            // User exists in serviceProfile. serviceProfile has precedence over baseProfile so use serviceProfile to login
+            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile); }
+            catch (error) { await errorHandling(error.message); }
+        } else if (baseProfile) {
+            // baseProfile exists, so APIML login is possible
             const sessCfg = {
-                rejectUnauthorized: serviceProfile.rejectUnauthorized,
+                rejectUnauthorized: serviceProfile.rejectUnauthorized ? serviceProfile.rejectUnauthorized : baseProfile.rejectUnauthorized,
                 basePath: serviceProfile.basePath,
-                hostname: baseProfile.host,
-                port: baseProfile.port,
+                hostname: serviceProfile.host ? serviceProfile.host : baseProfile.host,
+                port: serviceProfile.port ? serviceProfile.port : baseProfile.port,
             };
 
             const cmdArgs: ICommandArguments = {
@@ -108,33 +128,13 @@ export class Profiles {
 
             try {
                 let connectableSessCfg: ISession;
-                if (prompt) {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
                                                                                                         { requestToken: false, doPrompting: true });
-                }
-                else {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
-                                                                                                        { requestToken: false, doPrompting: true });
-                }
                 return new Session(connectableSessCfg);
             } catch (error) { await errorHandling(error.message); }
         } else {
-            // No baseProfile exists
-            const schemaArray = [];
-            if (prompt) {
-                // Select for prompting only fields which are not defined
-                if (!serviceProfile.user) { schemaArray.push("user"); }
-                if (!serviceProfile.password) { schemaArray.push("password"); }
-                if (!serviceProfile.host) {
-                    schemaArray.push("host");
-                    if (!serviceProfile.port) { schemaArray.push("port"); }
-                    if (!serviceProfile.basePath) { schemaArray.push("basePath"); }
-                }
-                const newDetails = await this.collectProfileDetails(profileName, null, schemaArray);
-                for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
-            }
-            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile); }
-            catch (error) { await errorHandling(error.message); }
+            // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
+            throw new Error(localize("getValidSession.loginImpossible", "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
     }
 
