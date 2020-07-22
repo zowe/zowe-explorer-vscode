@@ -35,11 +35,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerExtender {
-        const ZoweExplorerExtenderInst = ZoweExplorerExtender.instance;
-        ZoweExplorerExtenderInst.datasetProvider = datasetProvider;
-        ZoweExplorerExtenderInst.ussFileProvider = ussFileProvider;
-        ZoweExplorerExtenderInst.jobsProvider = jobsProvider;
-        return ZoweExplorerExtenderInst;
+        ZoweExplorerExtender.loader = ZoweExplorerExtender.registerInstance;
+        ZoweExplorerExtender.loader.datasetProvider = datasetProvider;
+        ZoweExplorerExtender.loader.ussFileProvider = ussFileProvider;
+        ZoweExplorerExtender.loader.jobsProvider = jobsProvider;
+        return ZoweExplorerExtender.loader;
     }
 
     public static getInstance(
@@ -47,10 +47,10 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         jobsProvider?: IZoweTree<IZoweJobTreeNode>
       ): ZoweExplorerExtender {
-        if (datasetProvider || ussFileProvider || jobsProvider || !this.ZoweExplorerExtenderInst) {
+        if (datasetProvider || ussFileProvider || jobsProvider || !ZoweExplorerExtender.loader) {
             return this.createInstance(datasetProvider, ussFileProvider, jobsProvider);
         }
-        return this.ZoweExplorerExtenderInst;
+        return ZoweExplorerExtender.loader;
       }
 
    // Queue of promises to process sequentially when multiple extension register in parallel
@@ -60,8 +60,9 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * extensions that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
      */
-    private static instance: ZoweExplorerExtender = new ZoweExplorerExtender();
-   // not all extenders will need to refresh trees
+    private static registerInstance: ZoweExplorerExtender = new ZoweExplorerExtender();
+    private static loader: ZoweExplorerExtender;
+    // not all extenders will need to refresh trees
     public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
     public jobsProvider: IZoweTree<IZoweJobTreeNode>;
