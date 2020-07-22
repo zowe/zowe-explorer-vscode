@@ -14,6 +14,7 @@ import { Profiles } from "../Profiles";
 import { IZoweTree } from "../api/IZoweTree";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { labelRefresh, refreshTree } from "../shared/utils";
+import { returnIconState } from "../shared/actions";
 
 /**
  * Refreshes treeView
@@ -29,6 +30,7 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
             sessNode.dirty = true;
             refreshTree(sessNode);
         }
+        returnIconState(sessNode);
     });
     await datasetProvider.refresh();
 }

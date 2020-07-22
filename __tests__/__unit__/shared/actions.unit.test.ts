@@ -24,6 +24,8 @@ import * as sharedActions from "../../../src/shared/actions";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
+import { IZoweNodeType } from "../../../src/api/IZoweTreeNode";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -277,5 +279,53 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
         expect(blockMocks.testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function returnIconState", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            dsNode: null,
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            datasetSessionNode: null,
+        };
+
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        return newMocks;
+    }
+
+    it("Tests that returnIconState is resetting active icons", async () => {
+        const blockMocks = createBlockMocks();
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const resultIcon = getIconById(IconId.session);
+        resultNode.iconPath = resultIcon.path;
+
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const sessionIcon = getIconById(IconId.sessionActive);
+        testNode.iconPath = sessionIcon.path;
+
+        const response = await sharedActions.returnIconState(testNode);
+        expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
+    });
+
+    it("Tests that returnIconState is resetting inactive icons", async () => {
+        const blockMocks = createBlockMocks();
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const resultIcon = getIconById(IconId.session);
+        resultNode.iconPath = resultIcon.path;
+
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const sessionIcon = getIconById(IconId.sessionInactive);
+        testNode.iconPath = sessionIcon.path;
+
+        const response = await sharedActions.returnIconState(testNode);
+        expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
     });
 });
