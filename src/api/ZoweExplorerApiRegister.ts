@@ -36,11 +36,11 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerApiRegister {
-        const ZoweExplorerApiRegisterInst = ZoweExplorerApiRegister.registerInstance;
-        ZoweExplorerApiRegisterInst.datasetProvider = datasetProvider;
-        ZoweExplorerApiRegisterInst.ussFileProvider = ussFileProvider;
-        ZoweExplorerApiRegisterInst.jobsProvider = jobsProvider;
-        return ZoweExplorerApiRegisterInst;
+        ZoweExplorerApiRegister.loader = ZoweExplorerApiRegister.registerInstance;
+        ZoweExplorerApiRegister.loader.datasetProvider = datasetProvider;
+        ZoweExplorerApiRegister.loader.ussFileProvider = ussFileProvider;
+        ZoweExplorerApiRegister.loader.jobsProvider = jobsProvider;
+        return ZoweExplorerApiRegister.loader;
     }
 
     public static getInstance(
@@ -48,10 +48,10 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
         jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerApiRegister {
-        if (datasetProvider || ussFileProvider || jobsProvider || !this.ZoweExplorerApiRegisterInst) {
+        if (datasetProvider || ussFileProvider || jobsProvider || !ZoweExplorerApiRegister.loader) {
             return this.createInstance(datasetProvider, ussFileProvider, jobsProvider);
         }
-        return this.ZoweExplorerApiRegisterInst;
+        return ZoweExplorerApiRegister.loader;
     }
 
     /**
@@ -104,6 +104,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * of retrieving files and data from z/OS.
      */
     private static registerInstance: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
+    private static loader: ZoweExplorerApiRegister;
     public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
     public jobsProvider: IZoweTree<IZoweJobTreeNode>;

@@ -177,7 +177,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     }
 
-    return ZoweExplorerApiRegister.getInstance(datasetProvider, ussFileProvider, jobsProvider); // here
+    return ZoweExplorerApiRegister.getInstance(datasetProvider, ussFileProvider, jobsProvider);
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
