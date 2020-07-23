@@ -118,11 +118,8 @@ export class Profiles {
                 return profile;
             }
         }
-
-        // tslint:disable-next-line: no-console
-        // console.log(name);
-        // throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
-        //     + name + localize("loadNamedProfile.error.period", "."));
+        throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: ")
+            + name + localize("loadNamedProfile.error.period", "."));
     }
 
     public getDefaultProfile(type: string = "zosmf"): IProfileLoaded {

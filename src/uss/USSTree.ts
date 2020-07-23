@@ -415,12 +415,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-            const profile = Profiles.getInstance().loadNamedProfile(sesName);
-            if (!profile) {
-                // Case for extenders' profiles
-                return;
-            }
             try {
+                const profile = Profiles.getInstance().loadNamedProfile(sesName);
                 const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {
