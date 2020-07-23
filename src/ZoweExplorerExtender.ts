@@ -35,22 +35,14 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
       ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
       jobsProvider?: IZoweTree<IZoweJobTreeNode>
     ): ZoweExplorerExtender {
-        ZoweExplorerExtender.loader = ZoweExplorerExtender.registerInstance;
-        ZoweExplorerExtender.loader.datasetProvider = datasetProvider;
-        ZoweExplorerExtender.loader.ussFileProvider = ussFileProvider;
-        ZoweExplorerExtender.loader.jobsProvider = jobsProvider;
-        return ZoweExplorerExtender.loader;
+        ZoweExplorerExtender.instance.datasetProvider = datasetProvider;
+        ZoweExplorerExtender.instance.ussFileProvider = ussFileProvider;
+        ZoweExplorerExtender.instance.jobsProvider = jobsProvider;
+        return ZoweExplorerExtender.instance;
     }
 
-    public static getInstance(
-        datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-        ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider?: IZoweTree<IZoweJobTreeNode>
-      ): ZoweExplorerExtender {
-        if (datasetProvider || ussFileProvider || jobsProvider || !ZoweExplorerExtender.loader) {
-            return this.createInstance(datasetProvider, ussFileProvider, jobsProvider);
-        }
-        return ZoweExplorerExtender.loader;
+    public static getInstance(): ZoweExplorerExtender {
+        return ZoweExplorerExtender.instance;
       }
 
    // Queue of promises to process sequentially when multiple extension register in parallel
@@ -60,8 +52,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * extensions that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
      */
-    private static registerInstance: ZoweExplorerExtender = new ZoweExplorerExtender();
-    private static loader: ZoweExplorerExtender;
+    private static instance = new ZoweExplorerExtender();
     // not all extenders will need to refresh trees
     public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;

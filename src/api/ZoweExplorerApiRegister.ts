@@ -11,10 +11,8 @@
 
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { ZosmfUssApi as ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
+import { ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
-import { IZoweTree } from "./IZoweTree";
-import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "./IZoweTreeNode";
 import * as nls from "vscode-nls";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -31,27 +29,8 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * Access the singleton instance.
      * @returns {ZoweExplorerApiRegister} the ZoweExplorerApiRegister singleton instance
      */
-    public static createInstance(
-      datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-      ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-      jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ): ZoweExplorerApiRegister {
-        ZoweExplorerApiRegister.loader = ZoweExplorerApiRegister.registerInstance;
-        ZoweExplorerApiRegister.loader.datasetProvider = datasetProvider;
-        ZoweExplorerApiRegister.loader.ussFileProvider = ussFileProvider;
-        ZoweExplorerApiRegister.loader.jobsProvider = jobsProvider;
-        return ZoweExplorerApiRegister.loader;
-    }
-
-    public static getInstance(
-        datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-        ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider?: IZoweTree<IZoweJobTreeNode>
-    ): ZoweExplorerApiRegister {
-        if (datasetProvider || ussFileProvider || jobsProvider || !ZoweExplorerApiRegister.loader) {
-            return this.createInstance(datasetProvider, ussFileProvider, jobsProvider);
-        }
-        return ZoweExplorerApiRegister.loader;
+    public static getInstance(): ZoweExplorerApiRegister {
+        return ZoweExplorerApiRegister.register;
     }
 
     /**
@@ -103,11 +82,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * extensions that want to contribute alternative implementations such as alternative ways
      * of retrieving files and data from z/OS.
      */
-    private static registerInstance: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
-    private static loader: ZoweExplorerApiRegister;
-    public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
-    public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-    public jobsProvider: IZoweTree<IZoweJobTreeNode>;
+    private static register: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
 
     // These are the different API registries currently available to extenders
     private ussApiImplementations = new Map<string, ZoweExplorerApi.IUss>();
@@ -281,6 +256,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns the instance of the API for the profile provided
      */
     public getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
-        return ZoweExplorerExtender.getInstance(this.datasetProvider, this.ussFileProvider, this.jobsProvider);
+        return ZoweExplorerExtender.getInstance();
     }
 }

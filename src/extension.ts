@@ -31,6 +31,7 @@ import { Profiles } from "./Profiles";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
 import * as nls from "vscode-nls";
@@ -177,7 +178,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     }
 
-    return ZoweExplorerApiRegister.getInstance(datasetProvider, ussFileProvider, jobsProvider);
+    ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
+    return ZoweExplorerApiRegister.getInstance();
 }
 
 function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
