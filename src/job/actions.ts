@@ -20,7 +20,7 @@ import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
-
+import { returnIconState } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 
@@ -42,6 +42,7 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
             jobNode.dirty = true;
             refreshTree(jobNode);
         }
+        returnIconState(jobNode);
     });
     await jobsProvider.refresh();
 }
