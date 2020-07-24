@@ -57,8 +57,9 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
     public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
     public jobsProvider: IZoweTree<IZoweJobTreeNode>;
-    public ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
+    // Instances will be created via createInstance()
+    private constructor() {}
 
     /**
      * This method can be used by other VS Code Extensions to access the primary profile.
