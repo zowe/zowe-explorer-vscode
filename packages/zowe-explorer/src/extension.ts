@@ -232,6 +232,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.allocateLike", (node) => dsActions.allocateLike(datasetProvider, node));
     vscode.commands.registerCommand("zowe.uploadDialog", (node) => dsActions.uploadDialog(node, datasetProvider));
     vscode.commands.registerCommand("zowe.deleteMember", (node) => dsActions.deleteDataset(node, datasetProvider));
+    vscode.commands.registerCommand("zowe.editDataSet", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.editMember", (node) => dsActions.openPS(node, false, datasetProvider));
     vscode.commands.registerCommand("zowe.removeSession", async (node) => datasetProvider.deleteSession(node));
     vscode.commands.registerCommand("zowe.removeFavorite", async (node) => datasetProvider.removeFavorite(node));
@@ -244,6 +245,7 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     );
     vscode.commands.registerCommand("zowe.renameDataSet", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.copyDataSet", (node) => dsActions.copyDataSet(node));
+    vscode.commands.registerCommand("zowe.copyMember", (node) => dsActions.copyDataSet(node));
     vscode.commands.registerCommand("zowe.pasteDataSet", (node) => dsActions.pasteDataSet(node, datasetProvider));
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
@@ -306,9 +308,6 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     );
     vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) =>
         ussActions.uploadDialog(node, ussFileProvider)
-    );
-    vscode.commands.registerCommand("zowe.uss.createNode", async (node: IZoweUSSTreeNode) =>
-        ussActions.createUSSNodeDialog(node, ussFileProvider)
     );
     vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node));
     vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) =>

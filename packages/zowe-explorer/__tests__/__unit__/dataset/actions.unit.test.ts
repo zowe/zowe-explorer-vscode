@@ -2292,6 +2292,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const mvsApi = createMvsApi(imperativeProfile);
         const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
+        mocked(treeView.reveal).mockReturnValue(new Promise((resolve) => resolve(null)));
 
         return {
             session,

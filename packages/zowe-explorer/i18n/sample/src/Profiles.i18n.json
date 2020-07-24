@@ -38,6 +38,7 @@
   "deleteProfile.success.info": "Profile {0} was deleted.",
   "createNewConnection.option.prompt.url.placeholder": "https://url:port",
   "createNewConnection.option.prompt.url": "Enter a z/OS URL in the format 'https://url:port'.",
+  "createNewConnection.invalidzosURL": "Please enter a valid host URL in the format 'company.com'.",
   "createNewConnection.option.prompt.port.placeholder": "Port Number",
   "createNewConnection.option.prompt.username.placeholder": "Optional: User Name",
   "createNewConnection.option.prompt.username": "Enter the user name for the connection. Leave blank to not store.",

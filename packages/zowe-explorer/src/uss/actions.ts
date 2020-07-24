@@ -25,6 +25,7 @@ import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
+import { getIconByNode } from "../generators/icons";
 import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { PersistentFilters } from "../PersistentFilters";
 
@@ -48,18 +49,41 @@ export async function createUSSNode(
     nodeType: string,
     isTopLevel?: boolean
 ) {
+    await ussFileProvider.checkCurrentProfile(node);
+    let filePath;
+    if (contextually.isSession(node)) {
+        filePath = await vscode.window.showInputBox({
+            placeHolder: localize("createUSSNode.fileLocation.placeholder", "{0} location", nodeType),
+            prompt: localize("createUSSNode.fileLocation.prompt", "Choose a location to create the {0}", nodeType),
+            value: node.tooltip,
+        });
+    } else {
+        filePath = node.fullPath;
+    }
     const name = await vscode.window.showInputBox({
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
     });
     if (name) {
         try {
-            const filePath = `${node.fullPath}/${name}`;
+            filePath = `${filePath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
-            if (isTopLevel) {
-                refreshAllUSS(ussFileProvider);
+            if (contextually.isSession(node)) {
+                const parentPath = filePath.substr(0, filePath.indexOf(`/${name}`));
+                node.tooltip = node.fullPath = parentPath;
+                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
+                node.label = `${node.getProfileName()} [${parentPath}]`;
+                node.dirty = true;
+                ussFileProvider.refresh();
             } else {
                 ussFileProvider.refreshElement(node);
             }
+            const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
+            await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
+            ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
         } catch (err) {
             errorHandling(
                 err,
