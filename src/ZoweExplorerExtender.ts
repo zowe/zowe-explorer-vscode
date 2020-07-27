@@ -53,13 +53,14 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * of retrieving files and data from z/OS.
      */
     private static instance = new ZoweExplorerExtender();
-    // not all extenders will need to refresh trees
-    public datasetProvider: IZoweTree<IZoweDatasetTreeNode>;
-    public ussFileProvider: IZoweTree<IZoweUSSTreeNode>;
-    public jobsProvider: IZoweTree<IZoweJobTreeNode>;
 
     // Instances will be created via createInstance()
-    private constructor() {}
+    private constructor(
+        // Not all extenders will need to refresh trees
+        public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
+        public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
+        public jobsProvider?: IZoweTree<IZoweJobTreeNode>
+    ) {}
 
     /**
      * This method can be used by other VS Code Extensions to access the primary profile.
@@ -96,6 +97,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
         // profileType is used to load a default extender profile if no other profiles are populating the trees
+        profileType = "zftp";
         this.datasetProvider?.addSession(undefined, profileType);
         this.ussFileProvider?.addSession(undefined, profileType);
         this.jobsProvider?.addSession(undefined, profileType);
