@@ -21,7 +21,9 @@ import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
@@ -42,8 +44,8 @@ export function filterTreeByString(value: string, treeItems: vscode.QuickPickIte
  */
 export function getIconPathInResources(iconFileName: string) {
     return {
-        light: path.join(__dirname, "..", "..", "..", "resources", "light", iconFileName),
-        dark: path.join(__dirname, "..", "..", "..", "resources", "dark", iconFileName)
+        light: path.join(globals.ROOTPATH, "resources", "light", iconFileName),
+        dark: path.join(globals.ROOTPATH, "resources", "dark", iconFileName)
     };
 }
 
@@ -206,12 +208,11 @@ export async function uploadContent(node: IZoweDatasetTreeNode | IZoweUSSTreeNod
                                     etagToUpload?: string,
                                     returnEtag?: boolean): Promise<IZosFilesResponse> {
 
-    // Upload without passing the etag to force upload
-    const uploadOptions: IUploadOptions = {
-        returnEtag: true
-    };
-
     if (isZoweDatasetTreeNode(node)) {
+        // Upload without passing the etag to force upload
+        const uploadOptions: IUploadOptions = {
+            returnEtag: true
+        };
         const prof = node.getProfile();
         if (prof.profile.encoding) {
             uploadOptions.encoding = prof.profile.encoding;

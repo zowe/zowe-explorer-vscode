@@ -23,12 +23,14 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--verbose"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "npm: watch"
+            "preLaunchTask": "build dev watch",
+            "smartStep": true
         },
         {
             "name": "Integration Tests (Mocha)",
@@ -42,7 +44,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/__tests__/**/*.js"
             ],
-            "preLaunchTask": "npm: watch"
+            "preLaunchTask": "Pretest"
         }
     ]
 }
