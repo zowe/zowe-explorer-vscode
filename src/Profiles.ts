@@ -156,6 +156,9 @@ export class Profiles {
                 }
             }
         }
+        while (this.profilesForValidation.length > 0) {
+            this.profilesForValidation.pop();
+        }
     }
 
     public validateAndParseUrl(newUrl: string): IUrlValidator {
@@ -898,9 +901,9 @@ export class Profiles {
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        // Filter profilesForValidation to check if the profile is already validated
+        // Filter profilesForValidation to check if the profile is already validated as active
         this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name) {
+            if ((profile.name === theProfile.name) && (profile.status === "active")){
                 filteredProfile = {
                     status: profile.status,
                     name: profile.name
@@ -908,7 +911,7 @@ export class Profiles {
             }
         });
 
-        // If not yet validated, call getStatus and validate the profile
+        // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
             try {

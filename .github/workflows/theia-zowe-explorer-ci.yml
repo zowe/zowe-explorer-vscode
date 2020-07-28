@@ -22,8 +22,6 @@ jobs:
       - name: Create test data file
         run: cp resources/testProfileData.example.ts resources/testProfileData.ts
 
-      - run: yarn build
-
       - name: Create extension install directory
         run: mkdir -p temp/plugins && chmod -R 777 temp
 
@@ -60,6 +58,9 @@ jobs:
 
       - name: Verify Theia accessible
         run: curl --fail http://localhost:3000
+
+      - name: Prep integration test files
+        run: yarn build:integration
 
       - run: yarn test:theia
 
