@@ -1080,6 +1080,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
@@ -1089,6 +1090,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const node = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label}]: HLQ.TEST.RENAME.NODE`,
             vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], blockMocks.session);
         node.contextValue = "ds_fav";
+        testTree.mSessionNodes[1].children.push(node);
         const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
 
         await testTree.rename(node);

@@ -75,35 +75,40 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} filePath
      */
     public async rename(originalNode: IZoweUSSTreeNode) {
-    // Could be a favorite or regular entry always deal with the regular entry
-    const oldLabel = originalNode.label;
-    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
-    // Check if an old favorite exists for this node
-    const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
-        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
-    );
-    const newName = await vscode.window.showInputBox({value: oldLabel.replace(/^\[.+\]:\s/, "")});
-    if (newName && newName !== oldLabel) {
-        try {
-            let newNamePath = path.join(parentPath + newName);
-            newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
-            const oldNamePath = originalNode.fullPath;
-
-            const hasClosedTab = await originalNode.rename(newNamePath);
-            await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(oldNamePath, newNamePath);
-            await originalNode.refreshAndReopen(hasClosedTab);
-
-            if (oldFavorite) {
-                this.removeFavorite(oldFavorite);
-                oldFavorite.rename(newNamePath);
-                this.addFavorite(oldFavorite);
-            }
-        } catch (err) {
-            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
-            throw (err);
+        // Get the favorited & non-favorited versions of the node, if available
+        let oldFavorite;
+        if (contextually.isFavorite(originalNode)) {
+            oldFavorite = originalNode;
+            originalNode = this.findNonFavoritedNode(originalNode);
+        } else {
+            oldFavorite = this.mFavorites.find((temp) => temp.fullPath.includes(originalNode.label));
         }
-    }
+
+        // Get new label & path
+        const originalFullPath = originalNode.fullPath;
+        const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(originalNode.label));
+        const newName = await vscode.window.showInputBox({ value: originalNode.label.replace(/^\[.+\]:\s/, "") });
+        let newNamePath = path.join(parentPath + newName);
+        newNamePath = newNamePath.replace(/\\/g, "/"); // Added to cover Windows backslash issue
+
+        if (newName && newNamePath !== originalNode.fullPath) {
+            try {
+                // Rename original node
+                const hasClosedTab = await originalNode.rename(newNamePath);
+                await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(originalFullPath, newNamePath);
+                await originalNode.refreshAndReopen(hasClosedTab);
+
+                // Rename favorite, if available
+                if (oldFavorite) {
+                    this.removeFavorite(oldFavorite);
+                    await oldFavorite.rename(newNamePath);
+                    this.addFavorite(oldFavorite);
+                }
+            } catch (err) {
+                errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
+                throw (err);
+            }
+        }
     }
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
@@ -125,6 +130,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
     public uploadDialog(node: IZoweUSSTreeNode) {
         throw new Error("Method not implemented.");
+    }
+    /**
+     * Finds the equivalent node not as a favorite
+     *
+     * @param node
+     */
+    public findNonFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
+        const profileLabel = node.label.substring(1, node.label.indexOf("]"));
+        const nodeLabel = node.label.match(/(?<=\[(.*)\]: )(.*)/)[0];
+        const sessionNode = this.mSessionNodes.find((session) => session.label.includes(profileLabel));
+        return sessionNode.children.find((temp) => temp.label === nodeLabel);
     }
 
     /**

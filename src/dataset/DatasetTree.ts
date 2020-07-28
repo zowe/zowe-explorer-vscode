@@ -372,7 +372,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const profileLabel = node.label.substring(1, node.label.indexOf("]"));
         const nodeLabel = node.label.substring(node.label.indexOf(":") + 2);
         const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profileLabel);
-        return sessionNode.children.find((temp) => temp.label === nodeLabel);
+        return sessionNode.children.find((temp) => temp.label.includes(nodeLabel));
     }
 
     /**
@@ -647,7 +647,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 throw err;
             }
             let otherParent;
-            if (contextually.isFavorite(node)) {
+            if (contextually.isFavorite(node.getParent())) {
                 otherParent = this.findNonFavoritedNode(node.getParent());
             } else {
                 otherParent = this.findFavoritedNode(node.getParent());
@@ -678,10 +678,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSet(node: IZoweDatasetTreeNode) {
         let beforeDataSetName = node.label.trim();
         let favPrefix = "";
-        let isFavourite;
+        let isFavorite;
 
         if (contextually.isFavorite(node)) {
-            isFavourite = true;
+            isFavorite = true;
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
         }
@@ -696,16 +696,23 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node.label = `${favPrefix}${afterDataSetName}`;
                 node.tooltip = `${favPrefix}${afterDataSetName}`;
 
-                if (isFavourite) {
+                let nodeAsFavorite;
+                let nodeAsNonFavorite;
+                if (isFavorite) {
+                    nodeAsFavorite = node;
+                    nodeAsNonFavorite = this.findNonFavoritedNode(node);
                     const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
                     this.renameNode(profile, beforeDataSetName, afterDataSetName);
                 } else {
+                    nodeAsFavorite = this.findFavoritedNode(node);
+                    nodeAsNonFavorite = node;
                     const temp = node.label;
                     node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
                     this.renameFavorite(node, afterDataSetName);
                     node.label = temp;
                 }
-                this.refreshElement(node);
+                if (nodeAsFavorite) { this.refreshElement(nodeAsFavorite); }
+                this.refreshElement(nodeAsNonFavorite);
                 this.updateFavorites();
 
                 if (fs.existsSync(beforeFullPath)) {
