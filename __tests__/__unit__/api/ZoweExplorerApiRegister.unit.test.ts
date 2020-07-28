@@ -20,7 +20,8 @@ import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegiste
 import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
-import { createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
+import { createISession, createAltTypeIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -110,41 +111,6 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
-}
-
-export function createDatasetSessionNode(session: Session, profile: IProfileLoaded) {
-  const datasetNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
-      null, session, undefined, undefined, profile);
-  datasetNode.contextValue = globals.DS_SESSION_CONTEXT;
-
-  return datasetNode;
-}
-
-export function createISession() { // copied from Session!
-  return new Session({
-      user: "fake",
-      password: "fake",
-      hostname: "fake",
-      port: 1443,
-      protocol: "https",
-      type: "basic",
-  });
-}
-
-export function createIProfile(): IProfileLoaded { // copy from shard mocks!!!
-  return {
-      name: "sestest",
-      profile: {
-          host: "fake",
-          port: 999,
-          user: undefined,
-          password: undefined,
-          rejectUnauthorize: false
-      },
-      type: "zosmf",
-      message: "",
-      failNotFound: false
-  };
 }
 
 describe("ZoweExplorerApiRegister unit testing", () => {
@@ -245,15 +211,15 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(() => {ZoweExplorerApiRegister.getCommonApi(profileUnused);}).toThrow();
     });
 
-    it("has tree reference", () => {
+    it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
       const session = createISession();
-      const imperativeProfile = createIProfile();
+      const imperativeProfile = createAltTypeIProfile();
       const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
       const datasetTree = createDatasetTree(datasetSessionNode, imperativeProfile);
       ZoweExplorerExtender.createInstance(datasetTree);
       const instTest  = ZoweExplorerExtender.getInstance();
       jest.spyOn(instTest.datasetProvider, "addSession");
-      instTest.reloadProfiles();
+      await instTest.reloadProfiles();
       expect(instTest.datasetProvider.addSession).toHaveBeenCalled();
     });
 });
