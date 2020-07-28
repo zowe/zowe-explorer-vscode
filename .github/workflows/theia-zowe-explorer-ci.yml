@@ -5,7 +5,7 @@ on: [push, pull_request]
 
 jobs:
 
-  thiea-build:
+  theia-build:
 
     runs-on: ubuntu-latest
 
