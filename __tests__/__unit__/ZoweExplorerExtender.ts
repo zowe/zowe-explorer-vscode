@@ -55,6 +55,8 @@ describe("ZoweExplorerExtender unit tests", () => {
         // const nameProfileLastAdded = this.mSessionNodes[this.mSessionNodes.length - 1].label
         // expect(nameProfileLastAdded).toEqual(extenderProfile.name);
 
+        expect().toHaveBeenCalled()
+
     });
 
     // Does not add an unloaded non-zosmf profile to the Data Sets tree view
