@@ -56,83 +56,57 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
  *
  */
 export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNode>, node?: IZoweDatasetTreeNode) {
+    let profile;
+    let likeDSName;
+
+    // User called allocateLike from the command palette
     if (!node) {
-        const items: IZoweNodeType[] = [];
+        // The user must choose a session
         const qpItems = [];
         const quickpick = vscode.window.createQuickPick();
-        quickpick.placeholder = localize("allocateLike.options.prompt", "Select a data set from which to copy attributes");
+        quickpick.placeholder = localize("allocateLike.options.prompt", "Select the profile to which the original data set belongs");
         quickpick.ignoreFocusOut = true;
-        quickpick.onDidChangeValue(async (value) => {
-            if (value) {
-                quickpick.items = filterTreeByString(value, qpItems);
-            } else { quickpick.items = [...qpItems]; }
-        });
 
-        // Get loaded items from Dataset Provider
-        const newItems = await datasetProvider.searchInLoadedItems();
-        items.push(...newItems);
-        if (items.length === 0) {
-            vscode.window.showInformationMessage(localize("allocateLike.noneLoaded", "No items are loaded in the tree."));
-            return;
-        }
-
-        let qpItem: vscode.QuickPickItem;
-        for (const item of items) {
-            if (contextually.isDsMember(item)) {
-                qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.getParent().label.trim()}(${item.label.trim()})`, "Data Set Member");
-            } else {
-                qpItem = new FilterItem(`[${item.getSessionNode().label.trim()}]: ${item.label.trim()}`, "Data Set");
-            }
-            qpItems.push(qpItem);
-        }
+        for (const session of datasetProvider.mSessionNodes) { qpItems.push(new FilterItem(session.label.trim())); }
         quickpick.items = [...qpItems];
 
         quickpick.show();
-        const oldDS = await resolveQuickPickHelper(quickpick);
-        if (!oldDS) {
+        const selection = await resolveQuickPickHelper(quickpick);
+        if (!selection) {
             vscode.window.showInformationMessage(localize("allocateLike.noSelection", "You must select a data set."));
             return;
         } else {
-            let strippedLabel = oldDS.label.replace(/\[.*?\]: /, "");
-            if (strippedLabel.includes("(")) {
-                strippedLabel = strippedLabel.substr(strippedLabel.indexOf("("), strippedLabel.indexOf(")"));
-            }
-            node = (await datasetProvider.searchInLoadedItems(strippedLabel))[0];
+            const session = datasetProvider.mSessionNodes.find((session) => session.label === selection.label);
+            profile = session.getProfile();
         }
         quickpick.dispose();
+
+        // The user must enter the name of a data set to copy
+        likeDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
+            placeHolder: localize("allocateLike.enterLikePattern", "Enter the name of the data set to \"allocate like\" from") });
+    } else {
+        // User called allocateLike by right-clicking a node
+        profile = node.getProfile();
+        likeDSName = node.label;
     }
+
+    // Get new data set name
     let newDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
                                                        placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set") });
-    if (contextually.isDsMember(node)) {
-        // Allocating a copy of a member
-        newDSName = `${node.getParent().label}(${newDSName})`;
-        try {
-            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSetMember(newDSName);
-        } catch (err) {
-            globals.LOG.error(localize("createMember.log.error", "Error encountered when creating member! ") + JSON.stringify(err));
-            errorHandling(err, newDSName, localize("createMember.error", "Unable to create member: ") + err.message);
-            throw (err);
-        }
-    } else {
-        // Allocating a copy of a data set
-        const dsType = contextually.isPdsNotFav(node) ? zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED : zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
-        let options = this.getDataSetTypeAndOptions(this.getDataSetTypeAsString(dsType));
-        try {
-            await (ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allocateLikeDataSet(dsType, newDSName.toUpperCase(), {like: node.label}));
-        } catch (err) {
-            globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
-            throw (err);
-        }
+
+    // Allocate the data set, or throw an error
+    try {
+        await (ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName));
+    } catch (err) {
+        globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+        errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+        throw (err);
     }
 
     // Refresh tree and open new node, if applicable
     node.getParent().dirty = true;
     datasetProvider.refreshElement(node.getParent());
     if (contextually.isDs(node) || contextually.isDsMember(node)) {
-        if (newDSName.includes("(")) {
-            newDSName = newDSName.match(/(?<=\().*?(?=\))/)[0];
-        }
         openPS(
             new ZoweDatasetNode(newDSName, vscode.TreeItemCollapsibleState.None, node.getParent(), null, undefined, undefined, node.getProfile()),
             true, datasetProvider);

@@ -170,14 +170,8 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
         return zowe.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, options);
     }
 
-    public async allocateLikeDataSet(dataSetType: zowe.CreateDataSetTypeEnum, dataSetName: string, options?: Partial<zowe.ICreateDataSetOptions>
-        ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Create.dataSet(this.getSession(), dataSetType, dataSetName, options);
-    }
-
-    public async allocateLikeDataSetMember(dataSetName: string, options?: zowe.IUploadOptions
-        ): Promise<zowe.IZosFilesResponse> {
-        return zowe.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, options);
+    public async allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
+        return zowe.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName);
     }
 
     public async copyDataSetMember(
