@@ -97,7 +97,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add( () => Profiles.getInstance().refresh());
         // profileType is used to load a default extender profile if no other profiles are populating the trees
-        profileType = "zftp";
         this.datasetProvider?.addSession(undefined, profileType);
         this.ussFileProvider?.addSession(undefined, profileType);
         this.jobsProvider?.addSession(undefined, profileType);
