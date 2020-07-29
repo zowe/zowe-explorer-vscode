@@ -1,11 +1,11 @@
 # Workflow name for GitHub Actions
 name: Theia Zowe Explorer CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
 
-  build:
+  theia-build:
 
     runs-on: ubuntu-latest
 
