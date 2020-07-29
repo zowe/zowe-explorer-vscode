@@ -1073,6 +1073,59 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
     });
 });
 
+describe("Dataset Tree Unit Tests - Function createFilterString", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const node = new ZoweDatasetNode("HLQ.TEST.RENAME.NODE", vscode.TreeItemCollapsibleState.None, datasetSessionNode, session);
+        const testTree = new DatasetTree();
+        const historySpy = jest.spyOn(testTree, "getSearchHistory");
+
+        node.pattern = "filter1,filter2";
+        datasetSessionNode.children.push(node);
+        testTree.mSessionNodes.push(datasetSessionNode);
+        jest.spyOn(datasetSessionNode, "getChildren").mockReturnValue(Promise.resolve([node]));
+        historySpy.mockReturnValue(["filter1, filter2"]);
+
+        return {
+            imperativeProfile,
+            node,
+            testTree,
+            historySpy
+        };
+    }
+
+    it("Tests that createFilterString() creates a new filter from a string and a node's old filter", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const newFilterString = await blockMocks.testTree.createFilterString("newFilter", blockMocks.node);
+
+        expect(newFilterString).toEqual("filter1,filter2,newFilter");
+    });
+
+    it("Tests that createFilterString() doesn't add a filter twice", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const newFilterString = await blockMocks.testTree.createFilterString("filter2", blockMocks.node);
+
+        expect(newFilterString).toEqual("filter1,filter2");
+    });
+
+    it("Tests that createFilterString() works if the node has no filter applied", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.node.pattern = "";
+        blockMocks.historySpy.mockReturnValue([]);
+
+        const newFilterString = await blockMocks.testTree.createFilterString("newFilter", blockMocks.node);
+
+        expect(newFilterString).toEqual("newFilter");
+    });
+});
+
 describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -1093,7 +1146,7 @@ describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
         };
     }
 
-    it("Checking opening of PS Dataset", async () => {
+    it("Tests that renameFavorite() renames a favorited node", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1122,7 +1175,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         };
     }
 
-    it("Checking function with PS Dataset", async () => {
+    it("Tests that rename() renames a node", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
