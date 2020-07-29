@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
         // Initialize dataset provider
-        datasetProvider = await createDatasetTree(globals.LOG); // start creating profile here
+        datasetProvider = await createDatasetTree(globals.LOG);
         // Initialize uss provider
         ussFileProvider = await createUSSTree(globals.LOG);
         // Initialize Jobs provider with the created session and the selected pattern

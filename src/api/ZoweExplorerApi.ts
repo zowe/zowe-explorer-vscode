@@ -563,6 +563,6 @@ export namespace ZoweExplorerApi {
          * Lookup of an API for the generic extender API.
          * @returns the registered API instance
          */
-        getExplorerExtenderApi(): IApiExplorerExtender; // should we pass in arg?
+        getExplorerExtenderApi(): IApiExplorerExtender;
     }
 }

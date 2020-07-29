@@ -14,7 +14,7 @@ import { Logger } from "@zowe/imperative";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { createISession, createAltTypeIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
+// import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 
 describe("ZoweExplorerExtender unit tests", () => {
