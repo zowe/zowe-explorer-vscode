@@ -194,6 +194,8 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
         getUssApiMock.mockReturnValue(newMocks.mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 
+        jest.spyOn(newMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
+
         return newMocks;
     }
 
@@ -307,7 +309,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         globalMocks.mockShowInputBox.mockReturnValueOnce("");
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
-        expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.getTreeView).not.toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 

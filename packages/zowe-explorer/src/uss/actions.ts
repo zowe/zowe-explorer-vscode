@@ -63,7 +63,7 @@ export async function createUSSNode(
     const name = await vscode.window.showInputBox({
         placeHolder: localize("createUSSNode.name", "Name of file or directory"),
     });
-    if (name) {
+    if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
@@ -92,7 +92,6 @@ export async function createUSSNode(
             );
             throw err;
         }
-        ussFileProvider.refresh();
     }
 }
 
