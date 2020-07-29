@@ -18,47 +18,6 @@ import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import { Profiles } from "../../../src/Profiles";
-import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
-import { createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import { createJobsTree } from "../../../__mocks__/mockCreators/jobs";
-
-async function createGlobalMocks() {
-    const newMocks = {
-        mockShowInputBox: jest.fn(),
-        mockGetConfiguration: jest.fn(),
-        mockCreateQuickPick: jest.fn(),
-        mockShowQuickPick: jest.fn(),
-        mockShowInformationMessage: jest.fn(),
-        mockGetInstance: jest.fn(),
-        mockShowErrorMessage: jest.fn(),
-        mockCreateInputBox: jest.fn(),
-        mockLog: jest.fn(),
-        mockDebug: jest.fn(),
-        mockError: jest.fn(),
-        mockConfigurationTarget: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
-        mockCliProfileManager: createProfileManager()
-    };
-    Profiles.createInstance(Logger.getAppLogger());
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.mockShowInformationMessage, configurable: true });
-    Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: newMocks.mockShowErrorMessage, configurable: true });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
-    Object.defineProperty(vscode.window, "createQuickPick", { value: newMocks.mockCreateQuickPick, configurable: true });
-    Object.defineProperty(Profiles, "getInstance", { value: newMocks.mockGetInstance, configurable: true });
-    Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
-    Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: newMocks.mockDebug, configurable: true });
-    Object.defineProperty(ZosmfSession, "createBasicZosmfSession", { value: newMocks.mockCreateBasicZosmfSession });
-    Object.defineProperty(globals.LOG, "error", { value: newMocks.mockError, configurable: true });
-    Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: newMocks.mockGetConfiguration, configurable: true });
-    Object.defineProperty(vscode, "ConfigurationTarget", { value: newMocks.mockConfigurationTarget, configurable: true });
-
-    return newMocks;
-}
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -242,48 +201,5 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
         expect(() => {ZoweExplorerApiRegister.getCommonApi(profileUnused);}).toThrow();
-    });
-
-    it("calls DatasetTree addSession when extender profiles are reloaded", () => {
-        async function createBlockMocks(globalMocks) {
-            const newMocks = {
-                log: Logger.getAppLogger(),
-                profiles: null,
-                testDatasetTree: null,
-                testUSSTree: null,
-                testJobTree: null,
-                mockLoadNamedProfile: jest.fn(),
-                treeView: createTreeView(),
-                datasetSessionNode: null,
-                USSSessionNode: null,
-                iJob: createIJobObject(),
-                imperativeProfile: createIProfile(),
-                session: null,
-                testSchemas: createTestSchemas(),
-                profileInstance: null
-            };
-            globalMocks.mockCreateBasicZosmfSession.mockReturnValue(
-                { ISession: { user: "fake", password: "fake", base64EncodedAuth: "fake" } });
-            newMocks.profiles = await Profiles.createInstance(newMocks.log);
-            newMocks.session = createBasicZosmfSession(newMocks.imperativeProfile);
-            newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
-            newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
-            globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
-            newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
-            newMocks.USSSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
-            newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
-            newMocks.testUSSTree = createUSSTree([], [newMocks.USSSessionNode], newMocks.treeView);
-            newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
-            newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
-            newMocks.testUSSTree.addFileHistory("[profile1]: /u/myuser");
-            globalMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
-    
-            return newMocks;
-        }
-
-
-        // const testUssFileProvider = new USSTree();
-        // const testJobsProvider = new ZosJobsProvider();
-        const explorerExtenderInstance = ZoweExplorerExtender.createInstance(testDatasetProvider);
     });
 });
