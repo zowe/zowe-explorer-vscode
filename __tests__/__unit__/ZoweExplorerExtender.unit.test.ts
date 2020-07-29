@@ -12,23 +12,31 @@
 import { Profiles } from "../../src/Profiles";
 import { Logger } from "@zowe/imperative";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
-import { createISession, createAltTypeIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { createISession, createAltTypeIProfile, createTreeView, createIProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-// import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
+import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 
-describe("ZoweExplorerExtender unit tests", () => {
+describe("ZoweExplorerExtender unit tests", async () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const altTypeProfile = createAltTypeIProfile();
+        const treeView = createTreeView();
+        return { session, imperativeProfile, altTypeProfile, treeView };
+    }
+
     const log = Logger.getAppLogger();
     let profiles: Profiles;
     beforeEach(async () => {
+        jest.resetAllMocks();
         profiles = await Profiles.createInstance(log);
     });
 
     it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
-        const session = createISession();
-        const imperativeProfile = createAltTypeIProfile();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const datasetTree = createDatasetTree(datasetSessionNode, imperativeProfile);
+        const blockMocks = createBlockMocks();
+        const datasetSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.altTypeProfile);
+        const datasetTree = createDatasetTree(datasetSessionNode, blockMocks.altTypeProfile);
         ZoweExplorerExtender.createInstance(datasetTree, undefined, undefined);
         const instTest  = ZoweExplorerExtender.getInstance();
         jest.spyOn(instTest.datasetProvider, "addSession");
@@ -38,10 +46,9 @@ describe("ZoweExplorerExtender unit tests", () => {
 
     // Working on this unit test, but currently running into some mocking issues
     // it("calls USSTree addSession when extender profiles are reloaded", async () => {
-    //     const session = createISession();
-    //     const imperativeProfile = createAltTypeIProfile();
-    //     const ussSessionNode = createUSSSessionNode(session, imperativeProfile);
-    //     const ussTree = createUSSTree([], [ussSessionNode]);
+    //     const blockMocks = createBlockMocks();
+    //     const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+    //     const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
     //     ZoweExplorerExtender.createInstance(undefined, ussTree, undefined);
     //     const instTest  = ZoweExplorerExtender.getInstance();
     //     jest.spyOn(instTest.ussFileProvider, "addSession");
@@ -50,11 +57,9 @@ describe("ZoweExplorerExtender unit tests", () => {
     // });
 
     it("calls ZosJobsProvider addSession when extender profiles are reloaded", async () => {
-        const session = createISession();
+        const blockMocks = createBlockMocks();
         const testJob = createIJobObject();
-        const treeView = createTreeView();
-        const imperativeProfile = createAltTypeIProfile();
-        const jobsTree = createJobsTree(session, testJob, imperativeProfile, treeView);
+        const jobsTree = createJobsTree(blockMocks.session, testJob, blockMocks.altTypeProfile, blockMocks.treeView);
         ZoweExplorerExtender.createInstance(undefined, undefined, jobsTree);
         const instTest  = ZoweExplorerExtender.getInstance();
         jest.spyOn(instTest.jobsProvider, "addSession");
