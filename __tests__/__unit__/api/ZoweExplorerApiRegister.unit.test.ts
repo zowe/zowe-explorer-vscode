@@ -13,19 +13,11 @@
 
 jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
-import * as vscode from "vscode";
 import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
 import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import { Profiles } from "../../../src/Profiles";
-import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
-import { createISession, createAltTypeIProfile } from "../../../__mocks__/mockCreators/shared";
-import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import { createJobsTree } from "../../../__mocks__/mockCreators/jobs";
-import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import * as globals from "../../../src/globals";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -209,17 +201,5 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
         expect(() => {ZoweExplorerApiRegister.getCommonApi(profileUnused);}).toThrow();
-    });
-
-    it("calls DatasetTree addSession when extender profiles are reloaded", async () => {
-      const session = createISession();
-      const imperativeProfile = createAltTypeIProfile();
-      const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-      const datasetTree = createDatasetTree(datasetSessionNode, imperativeProfile);
-      ZoweExplorerExtender.createInstance(datasetTree);
-      const instTest  = ZoweExplorerExtender.getInstance();
-      jest.spyOn(instTest.datasetProvider, "addSession");
-      await instTest.reloadProfiles();
-      expect(instTest.datasetProvider.addSession).toHaveBeenCalled();
     });
 });
