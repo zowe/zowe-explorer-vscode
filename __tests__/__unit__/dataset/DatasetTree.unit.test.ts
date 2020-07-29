@@ -991,6 +991,7 @@ describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
         expect(foundNode).toBe(node);
     });
 });
+
 describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -1021,6 +1022,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
 
         expect(testTree.getSearchHistory()).toEqual([node.label]);
     });
+
     it("Checking opening of PDS Member", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1040,6 +1042,67 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         expect(testTree.getSearchHistory()).toEqual([`${parent.label}(${child.label})`]);
     });
 });
+
+describe("Dataset Tree Unit Tests - Function renameNode", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const node = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, datasetSessionNode, null);
+        const testTree = new DatasetTree();
+
+        datasetSessionNode.children.push(node);
+        testTree.mSessionNodes.push(datasetSessionNode);
+        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
+
+        return {
+            imperativeProfile,
+            node,
+            datasetSessionNode,
+            testTree
+        };
+    }
+
+    it("Checking opening of PS Dataset", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        await blockMocks.testTree.renameNode(blockMocks.imperativeProfile.name, blockMocks.node.label, "newLabel");
+
+        expect(blockMocks.node.label).toEqual("newLabel");
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const favoriteNode = new ZoweDatasetNode("[sestest]: TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, null, null);
+        favoriteNode.contextValue = globals.DS_FAV_CONTEXT;
+        const testTree = new DatasetTree();
+
+        testTree.mFavorites.push(favoriteNode);
+        testTree.mSessionNodes.push(datasetSessionNode);
+        spyOn(datasetSessionNode, "getChildren").and.returnValue(Promise.resolve([datasetSessionNode]));
+
+        return {
+            imperativeProfile,
+            favoriteNode,
+            testTree
+        };
+    }
+
+    it("Checking opening of PS Dataset", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        await blockMocks.testTree.renameFavorite(blockMocks.favoriteNode, "newLabel");
+
+        expect(blockMocks.favoriteNode.label).toEqual("[sestest]: newLabel");
+    });
+});
+
 describe("Dataset Tree Unit Tests - Function rename", () => {
     function createBlockMocks() {
         const session = createISession();
