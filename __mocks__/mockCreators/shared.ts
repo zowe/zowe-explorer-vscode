@@ -123,7 +123,7 @@ export function createAltTypeIProfile(): imperative.IProfileLoaded {
         profile: {
             type: "alternativeType",
             host: "test",
-            port: 21,
+            port: 999,
             user: "test",
             password: "test",
             rejectUnauthorized: false,
