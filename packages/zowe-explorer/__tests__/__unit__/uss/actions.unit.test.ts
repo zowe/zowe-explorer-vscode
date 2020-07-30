@@ -194,7 +194,7 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
         getUssApiMock.mockReturnValue(newMocks.mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 
-        jest.spyOn(newMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
+        jest.spyOn(newMocks.testUSSNode, "getChildren").mockResolvedValueOnce([]);
 
         return newMocks;
     }
