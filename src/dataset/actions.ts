@@ -58,8 +58,9 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
  *
  */
 export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNode>, node?: IZoweDatasetTreeNode) {
-    let profile;
-    let likeDSName;
+    let profile: IProfileLoaded;
+    let likeDSName: string;
+    let currSession: IZoweDatasetTreeNode;
 
     // User called allocateLike from the command palette
     if (!node) {
@@ -69,23 +70,23 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
         quickpick.placeholder = localize("allocateLike.options.prompt", "Select the profile to which the original data set belongs");
         quickpick.ignoreFocusOut = true;
 
-        for (const session of datasetProvider.mSessionNodes) { qpItems.push(new FilterItem(session.label.trim())); }
+        for (const thisSession of datasetProvider.mSessionNodes) { qpItems.push(new FilterItem(thisSession.label.trim())); }
         quickpick.items = [...qpItems];
 
         quickpick.show();
         const selection = await resolveQuickPickHelper(quickpick);
         if (!selection) {
-            vscode.window.showInformationMessage(localize("allocateLike.noSelection", "You must select a data set."));
+            vscode.window.showInformationMessage(localize("allocateLike.noSelection", "You must select a profile."));
             return;
         } else {
-            const session = datasetProvider.mSessionNodes.find((session) => session.label === selection.label);
-            profile = session.getProfile();
+            currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
+            profile = currSession.getProfile();
         }
         quickpick.dispose();
 
         // The user must enter the name of a data set to copy
         likeDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
-            placeHolder: localize("allocateLike.enterLikePattern", "Enter the name of the data set to \"allocate like\" from") });
+                                                        placeHolder: localize("allocateLike.enterLikePattern", "Enter the name of the data set to \"allocate like\" from") });
     } else {
         // User called allocateLike by right-clicking a node
         profile = node.getProfile();
@@ -93,27 +94,31 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     }
 
     // Get new data set name
-    let newDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
-                                                       placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set") });
-
-    // Allocate the data set, or throw an error
-    try {
-        await (ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName));
-    } catch (err) {
-        globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-        errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
-        throw (err);
+    const newDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
+                                                         placeHolder: localize("allocateLike.enterPattern", "Enter a name for the new data set")
+    });
+    if (!newDSName) {
+        vscode.window.showInformationMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
+        return;
+    } else {
+        // Allocate the data set, or throw an error
+        try {
+            await (ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName));
+        } catch (err) {
+            globals.LOG.error(localize("createDataSet.log.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+            errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+            throw (err);
+        }
     }
 
     // Refresh tree and open new node, if applicable
-    node.getParent().dirty = true;
-    datasetProvider.refreshElement(node.getParent());
-    if (contextually.isDs(node) || contextually.isDsMember(node)) {
-        openPS(
-            new ZoweDatasetNode(newDSName, vscode.TreeItemCollapsibleState.None, node.getParent(), null, undefined, undefined, node.getProfile()),
-            true, datasetProvider);
-    }
+    if (!currSession) { currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === profile.name); }
+    const theFilter = await datasetProvider.createFilterString(newDSName, currSession);
+    currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
+    datasetProvider.addSearchHistory(theFilter);
     datasetProvider.refresh();
+    currSession.dirty = true;
+    datasetProvider.refreshElement(currSession);
 }
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
