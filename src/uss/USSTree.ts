@@ -284,7 +284,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Searches the loaded USS tree for items whose name contains a search string
      *
      */
-    public async searchInLoadedItems() {
+    public async searchInLoadedItems(): Promise<IZoweUSSTreeNode[]> {
         if (this.log) {
             this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         }
