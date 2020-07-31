@@ -136,11 +136,12 @@ export class Profiles {
                 connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
                                                                                                         { requestToken: false, doPrompting: true });
                 return new Session(connectableSessCfg);
-            } catch (error) { 
+            } catch (error) {
                 await errorHandling(error.message); }
         } else {
             // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
-            throw new Error(localize("getValidSession.loginImpossible", "Profile {0} is invalid. Please check your login details and try again.", profileName));
+            throw new Error(localize("getValidSession.loginImpossible",
+                                     "Profile {0} is invalid. Please check your login details and try again.", profileName));
         }
     }
 
@@ -166,7 +167,7 @@ export class Profiles {
         // Handle all API profiles
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             profileManager = await this.getCliProfileManager(type);
-            const profilesForType = (await profileManager.loadAll()).filter((profile) => profile.type === type);
+            const profilesForType = await profileManager.loadAll({ typeOnly: true });
             if (profilesForType && profilesForType.length > 0) {
                 this.allProfiles.push(...profilesForType);
                 this.profilesByType.set(type, profilesForType);
@@ -689,9 +690,7 @@ export class Profiles {
 
     public async getNamesForType(type: string) {
         const profileManager = await this.getCliProfileManager(type);
-        const profilesForType = (await profileManager.loadAll()).filter((profile) => {
-            return profile.type === type;
-        });
+        const profilesForType = await profileManager.loadAll({ typeOnly: true });
         return profilesForType.map((profile)=> {
             return profile.name;
         });
