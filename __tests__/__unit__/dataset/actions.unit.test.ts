@@ -1993,6 +1993,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         mocked(Profiles.getInstance).mockReturnValue(profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
+        jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
         testDatasetTree.createFilterString.mockResolvedValue("test");
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValue(quickPickItem);
         jest.spyOn(dsActions, "openPS").mockImplementation(() => null);

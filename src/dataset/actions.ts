@@ -112,13 +112,16 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
     }
 
     // Refresh tree and open new node, if applicable
-    if (!currSession) { currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === profile.name); }
+    if (!currSession) { currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label.trim() === profile.name); }
     const theFilter = await datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
     datasetProvider.addSearchHistory(theFilter);
     datasetProvider.refresh();
     currSession.dirty = true;
     datasetProvider.refreshElement(currSession);
+    const newNode = (await currSession.getChildren()).find((child) => child.label.trim() === newDSName.toUpperCase());
+    await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
+    datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 }
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
