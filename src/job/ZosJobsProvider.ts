@@ -158,7 +158,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(sessionName?: string) {
+    public async addSession(sessionName?: string, profileType?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -179,7 +179,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
