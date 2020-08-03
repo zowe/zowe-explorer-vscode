@@ -2,6 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## '1.8.0'
+
+- Webpack working with localization and logging. Thanks @lauren-li
+- Allow extenders to load their saved profile sessions upon their activation. Thanks @lauren-li
+- Provide a re-validation for invalid profiles automatically. Thanks @JillieBeanSim
+- Bug fix related to saving USS files. Thanks @JillieBeanSim.
+- Bug fix related to the deletion of datasets. Thanks @katelynienaber
+
 ## `1.7.0`
 
 - Disallow multiple profiles with same name but different capitalizations. Thanks @katelynienaber
