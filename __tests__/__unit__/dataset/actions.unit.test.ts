@@ -1993,7 +1993,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         blockMocks.datasetSessionNode.contextValue = "aieieiieeeeooooo";
 
         try {
-            await dsActions.openPS(node, true, blockMocks.testDatasetTree)
+            await dsActions.openPS(node, true, blockMocks.testDatasetTree);
             // tslint:disable-next-line:no-empty
         } catch (err) { }
 
