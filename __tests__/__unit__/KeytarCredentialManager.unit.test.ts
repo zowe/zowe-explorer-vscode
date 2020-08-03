@@ -27,7 +27,7 @@ describe("KeytarCredentialManager Unit Tests", () => {
     let credentialMgr = new KeytarCredentialManager("Awesome-Service", "");
 
     // Mock the Keytar module
-    KeytarCredentialManager.keytar = {
+    (KeytarCredentialManager as any).keytar = {
         getPassword: jest.fn(async (service: string, account: string): Promise<string> => {
             return credentialStore[`${service}_${account}`] || null;
         }),
@@ -51,19 +51,19 @@ describe("KeytarCredentialManager Unit Tests", () => {
 
     it("Test loading passwords from credential store", async () => {
         let secret = await credentialMgr.load("user1");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Zowe-Plugin", "user1");
+        expect((KeytarCredentialManager as any).keytar.getPassword).toHaveBeenLastCalledWith("Zowe-Plugin", "user1");
         expect(secret).toBe("cupcake");
 
         secret = await credentialMgr.load("user2_pass");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("@brightside/core", "user2_password");
+        expect((KeytarCredentialManager as any).keytar.getPassword).toHaveBeenLastCalledWith("@brightside/core", "user2_password");
         expect(secret).toBe("donut");
 
         secret = await credentialMgr.load("user3");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("@zowe/cli", "user3");
+        expect((KeytarCredentialManager as any).keytar.getPassword).toHaveBeenLastCalledWith("@zowe/cli", "user3");
         expect(secret).toBe("eclair");
 
         secret = await credentialMgr.load("user4_username");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Broadcom-Plugin", "user4_user");
+        expect((KeytarCredentialManager as any).keytar.getPassword).toHaveBeenLastCalledWith("Broadcom-Plugin", "user4_user");
         expect(secret).toBe("froyo");
     });
 
@@ -95,7 +95,7 @@ describe("KeytarCredentialManager Unit Tests", () => {
     it("Test deleting passwords from credential store", async () => {
         await credentialMgr.delete("user3");
         // tslint:disable-next-line no-magic-numbers
-        expect(KeytarCredentialManager.keytar.deletePassword).toHaveBeenCalledTimes(5);
+        expect((KeytarCredentialManager as any).keytar.deletePassword).toHaveBeenCalledTimes(5);
 
         let error;
         try {
@@ -120,12 +120,12 @@ describe("KeytarCredentialManager Unit Tests", () => {
     it("Test saving passwords to credential store", async () => {
         expect(credentialStore["Zowe-Plugin_user1"]).toBeDefined();
         await credentialMgr.save("user1", "cupcake");
-        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenCalledTimes(1);
-        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1", b64Encode("cupcake"));
+        expect((KeytarCredentialManager as any).keytar.setPassword).toHaveBeenCalledTimes(1);
+        expect((KeytarCredentialManager as any).keytar.setPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1", b64Encode("cupcake"));
         expect(credentialStore["Zowe-Plugin_user1"]).toBeUndefined();
 
         const secret = await credentialMgr.load("user1");
-        expect(KeytarCredentialManager.keytar.getPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1");
+        expect((KeytarCredentialManager as any).keytar.getPassword).toHaveBeenLastCalledWith("Awesome-Service", "user1");
         expect(secret).toBe("cupcake");
     });
 
@@ -134,8 +134,8 @@ describe("KeytarCredentialManager Unit Tests", () => {
 
         expect(credentialStore["@zowe/cli_user5"]).toBeUndefined();
         await credentialMgr.save("user5", "gingerbread");
-        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenCalledTimes(1);
-        expect(KeytarCredentialManager.keytar.setPassword).toHaveBeenLastCalledWith("@zowe/cli", "user5", b64Encode("gingerbread"));
+        expect((KeytarCredentialManager as any).keytar.setPassword).toHaveBeenCalledTimes(1);
+        expect((KeytarCredentialManager as any).keytar.setPassword).toHaveBeenLastCalledWith("@zowe/cli", "user5", b64Encode("gingerbread"));
         expect(credentialStore["@zowe/cli_user5"]).toBeDefined();
     });
 });

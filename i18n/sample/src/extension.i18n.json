@@ -9,7 +9,6 @@
     "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
     "activate.didSaveText.file": "File ",
     "activate.didSaveText.notDataSet": " is not a data set or USS file ",
-    "profile.init.read.imperative": "Unable to read imperative file. ",
     "initialize.module.load": "Credentials not managed, unable to load security file: ",
     "moveTempFolder.error": "Error encountered when creating temporary folder! ",
     "deactivate.error": "Unable to delete temporary folder. "

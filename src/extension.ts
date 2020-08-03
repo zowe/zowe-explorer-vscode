@@ -22,13 +22,13 @@ import * as sharedActions from "./shared/actions";
 import { moveSync } from "fs-extra";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweUSSTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import { IZoweTree } from "./api/IZoweTree";
-import { CredentialManagerFactory, ImperativeError, CliProfileManager } from "@zowe/imperative";
-import { DatasetTree, createDatasetTree } from "./dataset/DatasetTree";
-import { ZosJobsProvider, createJobsTree } from "./job/ZosJobsProvider";
-import { createUSSTree, USSTree } from "./uss/USSTree";
+import { CliProfileManager } from "@zowe/imperative";
+import { createDatasetTree } from "./dataset/DatasetTree";
+import { createJobsTree } from "./job/ZosJobsProvider";
+import { createUSSTree } from "./uss/USSTree";
 import { MvsCommandHandler } from "./command/MvsCommandHandler";
 import { Profiles } from "./Profiles";
-import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir } from "./utils";
+import { errorHandling, getZoweDir } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
@@ -76,23 +76,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         globals.initLogger(context);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
 
-        const keytar = getSecurityModules("keytar");
-        if (keytar) {
-            KeytarCredentialManager.keytar = keytar;
-            const service: string = vscode.workspace.getConfiguration().get("Zowe Security: Credential Key");
-
-            try {
-                await CredentialManagerFactory.initialize(
-                    {
-                        service: service?.trim() || "Zowe-Plugin",
-                        Manager: KeytarCredentialManager,
-                        displayName: localize("displayName", "Zowe Explorer")
-                    }
-                );
-            } catch (err) {
-                throw new ImperativeError({ msg: err.toString() });
-            }
-        }
+        // Load Keytar if secure credential storage enabled
+        await KeytarCredentialManager.initialize();
 
         // Ensure that ~/.zowe folder exists
         await CliProfileManager.initialize({
@@ -121,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     context.subscriptions.push(spoolProvider, providerRegistration);
 
     // Register functions & event listeners
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
         // If the temp folder location has been changed, update current temp folder preference
         if (e.affectsConfiguration("Zowe-Temp-Folder-Location")) {
             const updatedPreferencesTempPath: string = vscode.workspace.getConfiguration()
@@ -129,6 +114,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                 .get("Zowe-Temp-Folder-Location")["folderPath"];
             moveTempFolder(preferencesTempPath, updatedPreferencesTempPath);
             preferencesTempPath = updatedPreferencesTempPath;
+        }
+
+        if (e.affectsConfiguration("Zowe Security: Credential Key") ||
+            e.affectsConfiguration("Zowe Security: Secure Credential Storage"))
+        {
+            const response = await vscode.window.showInformationMessage(localize("onDidChangeConfiguration.reloadMessage", "VS Code must be reloaded for changes to Zowe Explorer security settings to take effect."),
+                localize("onDidChangeConfiguration.reload", "Reload"));
+            if (response != null) {
+                vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
         }
     });
     if (datasetProvider) {
@@ -290,30 +285,6 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
             await theProvider.flipState(e.element, true);
         });
     }
-}
-
-/**
- * function to check if imperative.json contains
- * information about security or not and then
- * Imports the neccesary security modules
- */
-export function getSecurityModules(moduleName): NodeRequire | undefined {
-    const isSecure: boolean = vscode.workspace.getConfiguration().get("Zowe Security: Secure Credential Storage");
-    if (isSecure) {
-        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
-        const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
-        try {
-            return require(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) { /* Do nothing */
-        }
-        try {
-            return require(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) { /* Do nothing */
-        }
-        vscode.window.showWarningMessage(localize("initialize.module.load",
-            "Credentials not managed, unable to load security file: ") + moduleName);
-    }
-    return undefined;
 }
 
 /**

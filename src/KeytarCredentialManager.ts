@@ -9,7 +9,9 @@
 *                                                                                 *
 */
 
-import { AbstractCredentialManager, ImperativeError, SecureCredential } from "@zowe/imperative";
+import { AbstractCredentialManager, CredentialManagerFactory, ImperativeError, SecureCredential } from "@zowe/imperative";
+import { workspace } from "vscode";
+import { getSecurityModules } from "./utils";
 
 import * as nls from "vscode-nls";
 const localize = nls.config({messageFormat: nls.MessageFormat.file})();
@@ -21,12 +23,32 @@ const localize = nls.config({messageFormat: nls.MessageFormat.file})();
  * @class KeytarCredentialManager
  */
 export class KeytarCredentialManager extends AbstractCredentialManager {
+    public static async initialize() {
+        KeytarCredentialManager.keytar = getSecurityModules("keytar");
+
+        if (KeytarCredentialManager.keytar) {
+            const service: string = workspace.getConfiguration().get("Zowe Security: Credential Key");
+
+            try {
+                await CredentialManagerFactory.initialize(
+                    {
+                        service: service?.trim() || "Zowe-Plugin",
+                        Manager: KeytarCredentialManager,
+                        displayName: localize("displayName", "Zowe Explorer")
+                    }
+                );
+            } catch (err) {
+                throw new ImperativeError({ msg: err.toString() });
+            }
+        }
+    }
+
     /**
      * Reference to the lazily loaded keytar module.
      *
      * @public
      */
-    public static keytar: any;
+    private static keytar: any;
 
     /**
      * Combined list of services that credentials may be stored under

@@ -168,7 +168,7 @@ All localized strings must be string literals, you cannot include variables or u
 
     - If you want to add a new string to a typescript file, you will need to include the following library in your file (if not already included). `import * as nls from 'vscode-nls';` You will also need to include the following function `const localize = nls.config({ messageFormat: nls.MessageFormat.file })();` Next wrap your string with the localize function in this format `localize('key', 'string') i.e. localize('addEntry','Successfully called add entry.')`
 
-3. After adding/updating/removing any string, run `npm run package`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
+3. After adding/updating/removing any string, run `npm run update`. This will update the sample directory under the i18n folder with the newly added strings. Upload these files to Zanata or email a maintainer to do so.
 
 Maintainers: Evann Wu (evannw@andrew.cmu.edu), Lauren Li (lauren.li@ibm.com), Kristina Mayo (ktopchi@us.ibm.com)
 

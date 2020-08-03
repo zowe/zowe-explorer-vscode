@@ -105,6 +105,29 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 }
 
 /**
+ * Checks if secure credential storage is enabled. If it is, then imports and
+ * returns the necessary security modules.
+ */
+export function getSecurityModules(moduleName): NodeRequire | undefined {
+    const isSecure: boolean = vscode.workspace.getConfiguration().get("Zowe Security: Secure Credential Storage");
+    if (isSecure) {
+        // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+        const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
+        try {
+            return require(`${appRoot}/node_modules/${moduleName}`);
+        } catch (err) { /* Do nothing */
+        }
+        try {
+            return require(`${appRoot}/node_modules.asar/${moduleName}`);
+        } catch (err) { /* Do nothing */
+        }
+        vscode.window.showWarningMessage(localize("initialize.module.load",
+            "Credentials not managed, unable to load security file: ") + moduleName);
+    }
+    return undefined;
+}
+
+/**
  * Function to retrieve the home directory. In the situation Imperative has
  * not initialized it we mock a default value.
  */
