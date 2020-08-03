@@ -161,20 +161,23 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async addSession(sessionName?: string, profileType?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (zosmfProfile) {
-                this.addSingleSession(zosmfProfile);
+            const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (theProfile) {
+                this.addSingleSession(theProfile);
             }
         } else {
-            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const zosmfProfile of zosmfProfiles) {
+            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            for (const profile of allProfiles) {
+                await Profiles.getInstance().checkProfileValidationSetting(profile);
+            }
+            for (const sessionProfile of allProfiles) {
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === zosmfProfile.name) {
-                        this.addSingleSession(zosmfProfile);
+                    if (session === sessionProfile.name) {
+                        this.addSingleSession(sessionProfile);
                     }
                 }
             }

@@ -20,6 +20,7 @@ import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPi
 import { IZoweTree } from "./api/IZoweTree";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
+import { PersistentFilters } from "./PersistentFilters";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -73,9 +74,20 @@ export class Profiles {
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
-
-        // Check what happens if there's an error
-        const profileStatus = await this.validateProfiles(theProfile);
+        let profileStatus: IProfileValidation;
+        // this.checkProfileValidationSetting(theProfile);
+        // tslint:disable-next-line:no-console
+        console.log(theProfile.validation);
+        // Check that validation is disabled
+        if (!theProfile.validation) {
+            profileStatus = {
+                status: "unverified",
+                name: theProfile.name
+            };
+        } else {
+            // Check what happens if there's an error
+            profileStatus = await this.validateProfiles(theProfile);
+        }
         if (profileStatus.status === "inactive") {
             this.validProfile = ValidProfileEnum.INVALID;
             return profileStatus;
@@ -110,6 +122,57 @@ export class Profiles {
             return profileStatus;
         }
 
+    }
+
+    public async disableValidation(node: any){
+        // to be called if Profile Validation Setting
+        // is true and user wants to disable validation via right-click action.
+        // will also need to update settings and theProfile.validation with choice.
+        // do something
+        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
+        const theProfile: IProfileLoaded = node.getProfile();
+        // tslint:disable-next-line:no-console
+        console.log(validationSetting);
+        // tslint:disable-next-line:no-console
+        console.log(theProfile.name);
+        if (!validationSetting){
+            return;
+        } else {
+            theProfile.validation = false;
+        }
+        // tslint:disable-next-line:no-console
+        console.log(theProfile.validation);
+    }
+
+    public async enableValidation(node: any){
+        // to be called if Profile Validation Setting
+        // is false and user wants to enable validation via right-click action.
+        // will also need to update settings and theProfile.validation with choice.
+        // do something
+        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
+        const theProfile: IProfileLoaded = node.getProfile();
+        // tslint:disable-next-line:no-console
+        console.log(validationSetting);
+        // tslint:disable-next-line:no-console
+        console.log(theProfile.name);
+        if (validationSetting){
+            return;
+        } else {
+            theProfile.validation = true;
+        }
+        // tslint:disable-next-line:no-console
+        console.log(theProfile.validation);
+    }
+
+    public async checkProfileValidationSetting(theProfile: IProfileLoaded) {
+        // Needs to be called during activation to set theProfile.validation
+        // Gets validation settings from settings.json
+        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
+        if (!validationSetting) {
+            theProfile.validation = false;
+        } else {
+            theProfile.validation = true;
+        }
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -155,6 +218,13 @@ export class Profiles {
                     this.allTypes.push(element.type);
                 }
             }
+        }
+        // tslint:disable-next-line:no-console
+        console.log(this.allProfiles);
+        for (const profile of this.allProfiles){
+            this.checkProfileValidationSetting(profile);
+            // tslint:disable-next-line:no-console
+            console.log(profile.validation);
         }
         while (this.profilesForValidation.length > 0) {
             this.profilesForValidation.pop();

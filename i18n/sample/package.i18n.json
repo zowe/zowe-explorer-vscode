@@ -68,6 +68,7 @@
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
+    "Zowe-Automatic-Profile-Validation": "Allow validation of profiles.",
     "issueMvsCmd": "Zowe: Issue MVS Command...",
     "deleteProfile": "Delete Profile",
     "cmd.deleteProfile": "Zowe: Delete a Profile Permanently...",

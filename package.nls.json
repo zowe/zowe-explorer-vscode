@@ -68,6 +68,7 @@
     "Zowe-Default-Jobs-Persistent-Favorites": "Toggle if Jobs favorite files persist locally",
     "Zowe-Default-Commands-Persistent-Favorites": "Toggle if Commands persist locally",
     "Zowe-Environment": "Environment where the extension is running, default is VSCode",
+    "Zowe-Automatic-Profile-Validation": "Allow validation of profiles.",
     "issueMvsCmd" : "Zowe: Issue MVS Command...",
     "deleteProfile" : "Delete Profile",
     "cmd.deleteProfile" : "Zowe: Delete a Profile Permanently...",
@@ -80,5 +81,11 @@
     "profile.configuration.name": "Profile Name",
     "profile.configuration.url": "z/OSMF URL",
     "profile.configuration.user": "z/OSMF User Name",
-    "profile.configuration.ru": "Profile Reject Unauthorize"
+    "profile.configuration.ru": "Profile Reject Unauthorize",
+    "disableValidation": "Disable Validation",
+    "uss.disableValidation": "Disable Validation",
+    "jobs.disableValidation": "Disable Validation",
+    "enableValidation": "Enable Validation",
+    "uss.enableValidation": "Enable Validation",
+    "jobs.enableValidation": "Enable Validation"
   }

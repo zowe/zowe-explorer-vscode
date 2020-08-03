@@ -450,7 +450,7 @@ export async function submitMember(node: IZoweTreeNode) {
     let sessProfile;
     let regex;
     const profiles = Profiles.getInstance();
-    profiles.checkCurrentProfile(node.getProfile());
+    await profiles.checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         switch (true) {
             case contextually.isFavoriteContext(node.getParent()):
