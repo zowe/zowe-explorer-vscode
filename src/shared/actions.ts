@@ -19,7 +19,11 @@ import { filterTreeByString } from "../shared/utils";
 import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import { getIconByNode, getIconById, IconId } from "../generators/icons";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Search for matching items loaded in data set or USS tree
@@ -189,4 +193,14 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
         vscode.window.showInformationMessage(localize("getRecentMembers.empty", "No recent members found."));
         return;
     }
+}
+
+export async function returnIconState(node: IZoweNodeType) {
+    if ((getIconByNode(node) === getIconById(IconId.sessionActive)) || (getIconByNode(node) === getIconById(IconId.sessionInactive))) {
+            const sessionIcon = getIconById(IconId.session);
+            if (sessionIcon) {
+                node.iconPath = sessionIcon.path;
+            }
+    }
+    return node;
 }

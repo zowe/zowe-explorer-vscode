@@ -14,7 +14,9 @@ import { workspace } from "vscode";
 import { getSecurityModules } from "./utils";
 
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Keytar - Securely store user credentials in the system keychain

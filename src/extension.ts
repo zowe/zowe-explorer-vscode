@@ -31,11 +31,14 @@ import { Profiles } from "./Profiles";
 import { errorHandling, getZoweDir } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
 import * as nls from "vscode-nls";
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The function that runs when the extension is loaded
@@ -168,7 +171,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     }
 
-    // return the Extension's API to other extensions that want to register their APIs.
+    ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     return ZoweExplorerApiRegister.getInstance();
 }
 

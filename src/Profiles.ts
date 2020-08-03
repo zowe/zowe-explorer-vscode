@@ -21,7 +21,9 @@ import { IZoweTree } from "./api/IZoweTree";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 interface IUrlValidator {
     valid: boolean;
@@ -153,6 +155,9 @@ export class Profiles {
                     this.allTypes.push(element.type);
                 }
             }
+        }
+        while (this.profilesForValidation.length > 0) {
+            this.profilesForValidation.pop();
         }
     }
 
@@ -896,9 +901,9 @@ export class Profiles {
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        // Filter profilesForValidation to check if the profile is already validated
+        // Filter profilesForValidation to check if the profile is already validated as active
         this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name) {
+            if ((profile.name === theProfile.name) && (profile.status === "active")){
                 filteredProfile = {
                     status: profile.status,
                     name: profile.name
@@ -906,7 +911,7 @@ export class Profiles {
             }
         });
 
-        // If not yet validated, call getStatus and validate the profile
+        // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
         if (filteredProfile === undefined) {
             try {

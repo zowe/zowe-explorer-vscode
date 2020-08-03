@@ -20,10 +20,13 @@ import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
-
+import { returnIconState } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Refresh all jobs in the job tree
@@ -39,6 +42,7 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
             jobNode.dirty = true;
             refreshTree(jobNode);
         }
+        returnIconState(jobNode);
     });
     await jobsProvider.refresh();
 }
