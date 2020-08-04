@@ -294,21 +294,6 @@ export function getDataSetTypeAndOptions(type: string) {
     };
 }
 
-export function getDataSetTypeAsString(type: zowe.CreateDataSetTypeEnum) {
-    switch (type) {
-        case zowe.CreateDataSetTypeEnum.DATA_SET_BINARY:
-            return "Data Set Binary";
-        case zowe.CreateDataSetTypeEnum.DATA_SET_C:
-            return "Data Set C";
-        case zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC:
-            return "Data Set Classic";
-        case zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED:
-            return "Data Set Partitioned";
-        case zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL:
-            return "Data Set Sequential";
-    }
-}
-
 /**
  * Creates a new file and uploads to the server
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -598,18 +583,23 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     let label = "";
     let fav = false;
     try {
-        if (node.getParent().contextValue.includes(globals.FAVORITE_CONTEXT)) {
-            label = node.label.substring(node.label.indexOf(":") + 1).trim();
-            fav = true;
-        } else if (node.getParent().contextValue.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
-            label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel() + ")";
-            fav = true;
-        } else if (node.getParent().contextValue.includes(globals.DS_SESSION_CONTEXT)) {
-            label = node.getLabel();
-        } else if (node.getParent().contextValue.includes(globals.DS_PDS_CONTEXT)) {
-            label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
-        } else {
-            throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
+        switch (node.getParent().contextValue) {
+            case (globals.FAVORITE_CONTEXT):
+                label = node.label.substring(node.label.indexOf(":") + 1).trim();
+                fav = true;
+                break;
+            case (globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX):
+                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
+                fav = true;
+                break;
+            case (globals.DS_SESSION_CONTEXT):
+                label = node.getLabel();
+                break;
+            case (globals.DS_PDS_CONTEXT):
+                label = node.getParent().getLabel()+ "(" + node.getLabel()+ ")";
+                break;
+            default:
+                throw Error(localize("deleteDataSet.invalidNode.error", "deleteDataSet() called from invalid node."));
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {

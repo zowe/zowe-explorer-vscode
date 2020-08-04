@@ -2063,4 +2063,21 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalledWith("You must enter a new data set name.");
     });
+    it("Tests that allocateLike fails if error is thrown", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        const errorMessage = new Error("Test error");
+        jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValue(errorMessage);
+
+        try {
+            await dsActions.allocateLike(blockMocks.testDatasetTree);
+        } catch (err) {
+            // do nothing
+        }
+
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set: Test error");
+    });
 });
