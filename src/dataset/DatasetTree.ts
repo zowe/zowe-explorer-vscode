@@ -38,7 +38,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function createDatasetTree(log: Logger) {
     const tree = new DatasetTree();
-    await tree.initialize(log);
+    // await tree.initialize(log);
     await tree.addSession();
     return tree;
 }
@@ -122,6 +122,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
         if (element) {
             if (contextually.isFavoriteContext(element)) {
+                this.initializeFavorites(this.log);
                 return this.mFavorites;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -130,6 +131,55 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mSessionNodes;
     }
 
+    /**
+     * Initializes the tree based on favorites held in persistent store
+     *
+     * @param log
+     */
+    public async initializeFavorites(log: Logger) {
+        const lines: string[] = this.mHistory.readFavorites();
+        if (lines.length === 0) {
+            return;
+        }
+        this.log = log;
+        this.log.debug(localize("initializeFavorites.log.debug", "initializing profiles with favorites"));
+        const profilesWithFavs = new Set();
+        // validate line
+        const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
+        const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
+        for (const line of lines) {
+            if (!(favoriteDataSetPattern.test(line) || favoriteSearchPattern.test(line))){
+                vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
+            }
+            const profileName = line.substring(1, line.lastIndexOf("]")).trim();
+            profilesWithFavs.add(profileName);
+        }
+        profilesWithFavs.forEach((profileName: string) => {
+            try {
+                const loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
+                const session = ZoweExplorerApiRegister.getMvsApi(loadedProfile).getSession();
+                const node = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
+                        this.mFavoriteSession, session, undefined, undefined, loadedProfile);
+
+                node.contextValue = contextually.asFavorite(node);
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
+                this.mFavorites.push(node);
+            } catch(e) {
+                const errMessage: string =
+                        localize("initializeFavorites.error.profile1",
+                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + profileName +
+                        localize("intializeFavorites.error.profile2",
+                            ". To resolve this, you can create a profile with this name, ") +
+                        localize("initializeFavorites.error.profile3",
+                            "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
+                        getAppName(globals.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
+                errorHandling(e, null, errMessage);
+            }
+        });
+    }
 
     /**
      * Initializes the tree based on favorites held in persistent store
