@@ -162,9 +162,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getChildren(element?: IZoweUSSTreeNode | undefined): Promise<IZoweUSSTreeNode[]> {
         if (element) {
-            if (contextually.isFavoriteContext(element)) {
-                return this.mFavorites;
-            }
+            if (contextually.isFavoriteContext(element)) { return this.mFavorites; }
             return element.getChildren();
         }
         return this.mSessionNodes;
