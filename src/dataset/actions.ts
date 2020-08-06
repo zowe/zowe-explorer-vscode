@@ -86,7 +86,7 @@ export async function allocateLike(datasetProvider: IZoweTree<IZoweDatasetTreeNo
 
         // The user must enter the name of a data set to copy
         likeDSName = await vscode.window.showInputBox({ ignoreFocusOut: true,
-                                                        placeHolder: localize("allocateLike.enterLikePattern", "Enter the name of the data set to \"allocate like\" from") });
+                                                        placeHolder: localize("allocateLike.enterLikePattern", "Enter the name of the data set to copy attributes from") });
     } else {
         // User called allocateLike by right-clicking a node
         profile = node.getProfile();
