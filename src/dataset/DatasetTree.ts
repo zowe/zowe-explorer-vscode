@@ -38,7 +38,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function createDatasetTree(log: Logger) {
     const tree = new DatasetTree();
-    // await tree.initialize(log);
+    await tree.initializeFavorites(log);
     await tree.addSession();
     return tree;
 }
@@ -122,7 +122,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
         if (element) {
             if (contextually.isFavoriteContext(element)) {
-                this.initializeFavorites(this.log);
+                // this.initializeFavorites(this.log);
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === "profile_fav"){
@@ -160,11 +160,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
         profilesWithFavs.forEach((profileName: string) => {
             try {
-                const loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
-                const session = ZoweExplorerApiRegister.getMvsApi(loadedProfile).getSession();
                 const node = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
-                        this.mFavoriteSession, session, undefined, undefined, loadedProfile);
-                // May need to set up the shared/context.ts to add contextually isProfileFav, or isProfile, etc...
+                        this.mFavoriteSession, null, undefined, undefined);
+                // TODO: May need to set up the shared/context.ts to add contextually isProfileFav, or isProfile, etc...
                 node.contextValue = "profile_fav";
                 const icon = getIconByNode(node);
                 if (icon) {
@@ -203,14 +201,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             return sesName === parentNode.label;
         });
         for (const line of filteredLines) {
-            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
+            const profileName = line.substring(1, line.lastIndexOf("]")).trim();
+            // const loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
+            // const session = ZoweExplorerApiRegister.getMvsApi(loadedProfile).getSession();
             // validate line
             const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
             const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
             if (favoriteDataSetPattern.test(line)) {
                 // const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
-                    const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
                     const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     let node: ZoweDatasetNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === globals.DS_PDS_CONTEXT) {
@@ -230,7 +230,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 } catch (e) {
                     const errMessage: string =
                         localize("initializeFavorites.error.profile1",
-                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + sesName +
+                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + profileName +
                         localize("intializeFavorites.error.profile2",
                             ". To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
@@ -242,12 +242,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } else if (favoriteSearchPattern.test(line)) {
                 let profile: IProfileLoaded;
                 try {
-                    profile = Profiles.getInstance().loadNamedProfile(sesName);
+                    profile = Profiles.getInstance().loadNamedProfile(profileName);
                 } catch (error) {
                     const errMessage: string =
                         localize("loadNamedProfile.error.profileName",
                             "Initialization Error: Could not find profile named: ") +
-                        +sesName +
+                        +profileName +
                         localize("loadNamedProfile.error.period", ".");
                     await errorHandling(error, null, errMessage);
                     continue;
