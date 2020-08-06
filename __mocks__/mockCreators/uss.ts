@@ -31,7 +31,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.removeFavorite = jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
     newTree.openItemFromPath = jest.fn();
     newTree.deleteSession = jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
-    newTree.searchInLoadedItems = jest.fn();
+    newTree.getAllLoadedItems = jest.fn();
     newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
     newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem('test'));
     newTree.getTreeType = jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.USS);

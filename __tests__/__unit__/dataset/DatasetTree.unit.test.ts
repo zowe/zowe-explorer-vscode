@@ -863,7 +863,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
         expect(node.getProfile().profile).toBe("testProfile");
     });
 });
-describe("Dataset Tree Unit Tests - Function searchInLoadedItems", () => {
+describe("Dataset Tree Unit Tests - Function getAllLoadedItems", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -888,7 +888,7 @@ describe("Dataset Tree Unit Tests - Function searchInLoadedItems", () => {
             testTree.mSessionNodes[1], blockMocks.session, globals.DS_DS_CONTEXT);
         testTree.mSessionNodes[1].children.push(node);
 
-        const items = await testTree.searchInLoadedItems();
+        const items = await testTree.getAllLoadedItems();
 
         expect(items).toEqual([node]);
     });
