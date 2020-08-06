@@ -45,6 +45,7 @@ async function createGlobalMocks() {
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
         createBasicZosmfSession: jest.fn(),
+        mockValidationSetting: jest.fn(),
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -103,7 +104,8 @@ async function createGlobalMocks() {
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
-                loadNamedProfile: globalMocks.mockLoadNamedProfile
+                loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                checkProfileValidationSetting: globalMocks.mockValidationSetting
             };
         }),
         configurable: true
@@ -114,6 +116,7 @@ async function createGlobalMocks() {
     globalMocks.getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.getConfiguration.mockReturnValue({
         get: (setting: string) => [
             "[test]: /u/aDir{directory}",

@@ -650,12 +650,12 @@
           "group": "6_modification@2"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && config.Zowe-Automatic-Profile-Validation == true",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && config.Zowe-Automatic-Validation == true",
           "command": "zowe.uss.disableValidation",
           "group": "6_modification@4"
         },
         {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && config.Zowe-Automatic-Profile-Validation == false",
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && config.Zowe-Automatic-Validation == false",
           "command": "zowe.uss.enableValidation",
           "group": "6_modification@5"
         },
@@ -840,12 +840,12 @@
           "group": "7_modification@5"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && config.Zowe-Automatic-Profile-Validation == true",
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && config.Zowe-Automatic-Validation == true",
           "command": "zowe.jobs.disableValidation",
           "group": "7_modification@6"
         },
         {
-          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && config.Zowe-Automatic-Profile-Validation == false",
+          "when": "view == zowe.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && config.Zowe-Automatic-Validation == false",
           "command": "zowe.jobs.enableValidation",
           "group": "7_modification@7"
         },
@@ -943,12 +943,12 @@
           "group": "3_modification@2"
         },
         {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/ && config.Zowe-Automatic-Profile-Validation == true",
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/ && config.Zowe-Automatic-Validation == true",
           "command": "zowe.disableValidation",
           "group": "3_modification@3"
         },
         {
-          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/ && config.Zowe-Automatic-Profile-Validation == false",
+          "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/ && config.Zowe-Automatic-Validation == false",
           "command": "zowe.enableValidation",
           "group": "3_modification@4"
         }
@@ -1242,10 +1242,10 @@
           "description": "%Zowe-Default-Commands-Persistent-Favorites%",
           "scope": "window"
         },
-        "Zowe-Automatic-Profile-Validation": {
+        "Zowe-Automatic-Validation": {
           "type": "boolean",
           "default": true,
-          "description": "Allow automatic validation of profiles.",
+          "description": "A global setting to allow automatic validation of profiles.",
           "scope": "window"
         },
         "Zowe-Environment": {

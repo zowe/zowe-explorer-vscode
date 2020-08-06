@@ -53,6 +53,7 @@ async function createGlobalMocks() {
         testJobNode: null,
         mockIJobFile: createIJobFile(),
         mockProfileInstance: null,
+        mockValidationSetting: jest.fn(),
         withProgress: jest.fn().mockImplementation((progLocation, callback) => {
             return callback();
         }),
@@ -95,6 +96,7 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.loadNamedProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
+    globalMocks.mockProfileInstance.checkProfileValidationSetting = globalMocks.mockValidationSetting.mockReturnValue(true);
 
     // Jes API mocks
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);

@@ -48,6 +48,7 @@ async function createGlobalMocks() {
         mockError: jest.fn(),
         mockConfigurationTarget: jest.fn(),
         mockCreateBasicZosmfSession: jest.fn(),
+        // mockValidationSetting: jest.fn(),
         mockCliProfileManager: createProfileManager()
     };
     Profiles.createInstance(Logger.getAppLogger());
@@ -1600,7 +1601,7 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-
+        blockMocks.validProfile.validation = true;
         Object.defineProperty(CheckStatus, "getZosmfInfo", {
             value: jest.fn(() => {
                 return undefined;

@@ -29,6 +29,7 @@ async function createGlobalMocks() {
         createTreeView: jest.fn(),
         mockAffects: jest.fn(),
         mockEditSession: jest.fn(),
+        mockValidationSetting: jest.fn(),
         getConfiguration: jest.fn(),
         refresh: jest.fn(),
         testProfile: createIProfile(),
@@ -64,7 +65,8 @@ async function createGlobalMocks() {
                 checkCurrentProfile: jest.fn(),
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                editSession: globalMocks.mockEditSession
+                editSession: globalMocks.mockEditSession,
+                checkProfileValidationSetting: globalMocks.mockValidationSetting
             };
         }),
         configurable: true
@@ -80,6 +82,7 @@ async function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
+    globalMocks.mockValidationSetting.mockReturnValue(true);
     globalMocks.getConfiguration.mockReturnValue({
         get: (setting: string) => [
             "[test]: /u/aDir{directory}",

@@ -168,8 +168,6 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const profile of allProfiles) {
                 await Profiles.getInstance().checkProfileValidationSetting(profile);
-            }
-            for (const profile of allProfiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
                     continue;

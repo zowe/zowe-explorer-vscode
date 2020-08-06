@@ -124,48 +124,39 @@ export class Profiles {
 
     }
 
-    public async disableValidation(node: any){
-        // to be called if Profile Validation Setting
-        // is true and user wants to disable validation via right-click action.
-        // will also need to update settings and theProfile.validation with choice.
-        // do something
+    public async disableValidation(node: any): Promise<boolean>{
         const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
         const theProfile: IProfileLoaded = node.getProfile();
         // tslint:disable-next-line:no-console
         console.log(validationSetting);
         // tslint:disable-next-line:no-console
         console.log(theProfile.name);
-        if (!validationSetting){
+        if ((!validationSetting) || (!theProfile.validation)){
             return;
         } else {
             theProfile.validation = false;
         }
         // tslint:disable-next-line:no-console
         console.log(theProfile.validation);
+        return theProfile.validation;
     }
 
-    public async enableValidation(node: any){
-        // to be called if Profile Validation Setting
-        // is false and user wants to enable validation via right-click action.
-        // will also need to update settings and theProfile.validation with choice.
-        // do something
+    public async enableValidation(node: any): Promise<boolean>{
         const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
         const theProfile: IProfileLoaded = node.getProfile();
         // tslint:disable-next-line:no-console
         console.log(validationSetting);
         // tslint:disable-next-line:no-console
         console.log(theProfile.name);
-        if (validationSetting){
-            return;
-        } else {
+        if ((!validationSetting) || (!theProfile.validation)){
             theProfile.validation = true;
         }
         // tslint:disable-next-line:no-console
         console.log(theProfile.validation);
+        return theProfile.validation;
     }
 
-    public async checkProfileValidationSetting(theProfile: IProfileLoaded) {
-        // Needs to be called during activation to set theProfile.validation
+    public async checkProfileValidationSetting(theProfile: IProfileLoaded): Promise<boolean> {
         // Gets validation settings from settings.json
         const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
         if (!validationSetting) {
@@ -173,6 +164,7 @@ export class Profiles {
         } else {
             theProfile.validation = true;
         }
+        return theProfile.validation;
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {

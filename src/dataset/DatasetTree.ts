@@ -232,17 +232,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const profile of profiles) {
-                await Profiles.getInstance().checkProfileValidationSetting(profile);
-            }
-            for (const zosmfProfile of profiles) {
+            for (const theProfile of profiles) {
+                await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === zosmfProfile.name) {
-                        this.addSingleSession(zosmfProfile);
+                    if (session === theProfile.name) {
+                        this.addSingleSession(theProfile);
                     }
                 }
             }
