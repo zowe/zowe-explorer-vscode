@@ -540,8 +540,8 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.searchInLoadedItems()", () => {
-    it("Testing that searchInLoadedItems() returns the correct array", async () => {
+describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
+    it("Testing that getAllLoadedItems() returns the correct array", async () => {
         const globalMocks = await createGlobalMocks();
 
         const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/");
@@ -556,7 +556,7 @@ describe("USSTree Unit Tests - Function USSTree.searchInLoadedItems()", () => {
             () => Promise.resolve(globalMocks.testTree.mSessionNodes[1].children)
         );
 
-        const loadedItems = await globalMocks.testTree.searchInLoadedItems();
+        const loadedItems = await globalMocks.testTree.getAllLoadedItems();
         expect(loadedItems).toStrictEqual([file, folder]);
     });
 });

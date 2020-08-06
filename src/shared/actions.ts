@@ -44,11 +44,11 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
 
     // Get loaded items from Tree Providers
     if (datasetProvider) {
-        const newItems = await datasetProvider.searchInLoadedItems();
+        const newItems = await datasetProvider.getAllLoadedItems();
         items.push(...newItems);
     }
     if (ussFileProvider) {
-        const newItems = await ussFileProvider.searchInLoadedItems();
+        const newItems = await ussFileProvider.getAllLoadedItems();
         items.push(...newItems);
     }
 
