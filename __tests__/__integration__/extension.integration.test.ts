@@ -857,7 +857,7 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await testTree.initialize(log);
+            await testTree.initializeFavorites(log);
             const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
             `[${profileName}]: ${pattern}.EXT.PS`,
             `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
