@@ -193,33 +193,23 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param log
      */
     public async getFavoritesForProfile(log: Logger, parentNode: IZoweDatasetTreeNode) {
-        this.log = log;
-        this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
+        const profileName = parentNode.label;
         const favsForProfile: IZoweDatasetTreeNode[] = [];
-        const lines: string[] = this.mHistory.readFavorites();
-        // Filter to only process favorites with the parentNode's profile label.
-        const filteredLines = lines.filter((line) => {
-            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-            return sesName === parentNode.label;
-        });
-        for (const line of filteredLines) {
-            const profileName = line.substring(1, line.lastIndexOf("]")).trim();
-            // const loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
-            // const session = ZoweExplorerApiRegister.getMvsApi(loadedProfile).getSession();
-            // validate line
-            const favoriteDataSetPattern = /^\[.+\]\:\s[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*\{p?ds\}$/;
-            const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
-            if (favoriteDataSetPattern.test(line)) {
-                // const sesName = line.substring(1, line.lastIndexOf("]")).trim();
+        this.log = log;
+        this.log.debug(localize("getFavoritesForProfile.log.debug", "Getting favorites for profile: {0}", profileName));
+        // Only process favorites with the parentNode's profile label.
+        const favInfoForProfile = this.mFavoritesByProfile[profileName];
+        for (const favInfo of favInfoForProfile) {
+            if (favInfo.contextValue === globals.DS_PDS_CONTEXT || favInfo.contextValue === globals.DS_DS_CONTEXT) {
                 try {
                     const profile = Profiles.getInstance().loadNamedProfile(profileName);
                     const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     let node: ZoweDatasetNode;
-                    if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === globals.DS_PDS_CONTEXT) {
-                        node = new ZoweDatasetNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed,
+                    if (favInfo.contextValue === globals.DS_PDS_CONTEXT) {
+                        node = new ZoweDatasetNode(favInfo.label, vscode.TreeItemCollapsibleState.Collapsed,
                             parentNode, session, undefined, undefined, profile);
                     } else {
-                        node = new ZoweDatasetNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
+                        node = new ZoweDatasetNode(favInfo.label, vscode.TreeItemCollapsibleState.None,
                             parentNode, session, undefined, undefined, profile);
                         node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
                     }
@@ -232,30 +222,28 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 } catch (e) {
                     const errMessage: string =
                         localize("initializeFavorites.error.profile1",
-                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: ") + profileName +
+                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.", profileName) +
                         localize("intializeFavorites.error.profile2",
-                            ". To resolve this, you can create a profile with this name, ") +
+                            " To resolve this, you can create a profile with this name, ") +
                         localize("initializeFavorites.error.profile3",
                             "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
                         getAppName(globals.ISTHEIA) + localize("initializeFavorites.error.profile4", " user settings.");
                     await errorHandling(e, null, errMessage);
                     continue;
                 }
-            } else if (favoriteSearchPattern.test(line)) {
+            } else if (favInfo.contextValue === globals.DS_SESSION_CONTEXT) {
                 let profile: IProfileLoaded;
                 try {
                     profile = Profiles.getInstance().loadNamedProfile(profileName);
                 } catch (error) {
                     const errMessage: string =
                         localize("loadNamedProfile.error.profileName",
-                            "Initialization Error: Could not find profile named: ") +
-                        +profileName +
-                        localize("loadNamedProfile.error.period", ".");
+                            "Initialization Error: Could not find profile named: {0}.", profileName);
                     await errorHandling(error, null, errMessage);
                     continue;
                 }
                 const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                const node = new ZoweDatasetNode(line.substring(0, line.lastIndexOf("{")),
+                const node = new ZoweDatasetNode(favInfo.label,
                     vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session, undefined, undefined, profile);
                 node.command = {command: "zowe.pattern", title: "", arguments: [node]};
                 node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
@@ -265,7 +253,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 favsForProfile.push(node);
             } else {
-                vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
+                vscode.window.showErrorMessage(
+                    localize("getFavoritesForProfile.loadError", "Error loading favorite: {0} for profile {1}.", favInfo.label, profileName)
+                );
             }
         }
         return favsForProfile;

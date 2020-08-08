@@ -307,4 +307,5 @@ export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode 
 export interface IFavoriteInfo {
     label: string;
     contextValue: string;
+    favoritePattern?: string;
 }
