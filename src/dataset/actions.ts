@@ -144,7 +144,7 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
         try {
             let label: string;
             switch (true) {
-                case contextually.isFavoriteContext(node.getParent()):
+                case contextually.isFavorite(node):
                     label = node.label.substring(node.label.indexOf(":") + 1).trim();
                     break;
                 case contextually.isFavoritePds(node.getParent()):
