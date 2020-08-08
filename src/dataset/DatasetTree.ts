@@ -174,7 +174,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const node = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
                     this.mFavoriteSession, null, undefined, undefined);
                 // TODO: May need to set up the shared/context.ts to add contextually isProfileFav, or isProfile, etc...
-                // TODO: Clean up DS
+                // TODO: Fix openPS in shared/dataset/actions
                 // TODO: Try to port to USS and jobs
                 // TODO: Fix add, rename, delete favorite. Others?
                 node.contextValue = "profile_fav";
@@ -210,7 +210,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             parentNode, session, undefined, undefined, profile);
                     } else {
                         node = new ZoweDatasetNode(favInfo.label, vscode.TreeItemCollapsibleState.None,
-                            parentNode, session, undefined, undefined, profile);
+                            parentNode, session, favInfo.contextValue, undefined, profile);
                         node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
                     }
                     node.contextValue = contextually.asFavorite(node);
@@ -254,7 +254,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 favsForProfile.push(node);
             } else {
                 vscode.window.showErrorMessage(
-                    localize("getFavoritesForProfile.loadError", "Error loading favorite: {0} for profile {1}.", favInfo.label, profileName)
+                    localize("getFavoritesForProfile.loadError", "Error loading data set favorite: {0} for profile {1}.", favInfo.label, profileName)
                 );
             }
         }

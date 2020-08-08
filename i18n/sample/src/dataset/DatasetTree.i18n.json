@@ -9,7 +9,7 @@
     "initializeFavorites.error.profile3": "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ",
     "initializeFavorites.error.profile4": " user settings.",
     "loadNamedProfile.error.profileName": "Initialization Error: Could not find profile named: {0}.",
-    "getFavoritesForProfile.loadError": "Error loading favorite: {0} for profile {1}.",
+    "getFavoritesForProfile.loadError": "Error loading data set favorite: {0} for profile {1}.",
     "addFavorite": "PDS already in favorites",
     "findParentNode.unsuccessful": "Node does not exist. It may have been deleted.",
     "enterPattern.log.debug.prompt": "Prompting the user for a data set pattern",

@@ -139,12 +139,6 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
  * @param {IZoweDatasetTreeNode} node
  */
 export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean, datasetProvider?: IZoweTree<IZoweDatasetTreeNode>) {
-    // let sesNamePrompt: string;
-    // if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
-    //     sesNamePrompt = node.getLabel().substring(1, node.getLabel().indexOf("]"));
-    // } else {
-    //     sesNamePrompt = node.getLabel();
-    // }
     if (datasetProvider) { await datasetProvider.checkCurrentProfile(node); }
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         try {
