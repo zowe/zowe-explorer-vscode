@@ -26,7 +26,6 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -251,10 +250,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-
-                // TODO: set these
-                // favorite.profile = profile;
-                // favorite.session = session;
+                favorite.setProfileToChoice(profile);
+                favorite.setSessionToChoice(session);
                 updatedFavsForProfile.push(favorite);
             } catch (error) {
                 const errMessage: string =
