@@ -57,14 +57,14 @@ export interface IZoweTreeNode {
      * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
      */
     contextValue?: string;
-    /**
-     * Loaded profile for the tree node
-     */
-    profile?: IProfileLoaded;
-    /**
-     * Session for the tree node
-     */
-    session?: Session;
+    // /**
+    //  * Loaded profile for the tree node
+    //  */
+    // profile?: IProfileLoaded;
+    // /**
+    //  * Session for the tree node
+    //  */
+    // session?: Session;
     /**
      * Retrieves the node label
      */

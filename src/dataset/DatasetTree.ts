@@ -170,7 +170,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const profileName = line.substring(1, line.lastIndexOf("]")).trim();
             const favLabel = line.substring(0, line.indexOf("{"));
             const favContextValue = line.substring(line.indexOf("{") + 1, line.lastIndexOf("}"));
-            const favForProfile = {label: favLabel, contextValue: favContextValue};
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
             // const profileNodeInFavorites = this.mFavorites.find((mFavorite) => mFavorite.label === profileName );
             const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
@@ -252,8 +251,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                favorite.profile = profile;
-                favorite.session = session;
+
+                // TODO: set these
+                // favorite.profile = profile;
+                // favorite.session = session;
                 updatedFavsForProfile.push(favorite);
             } catch (error) {
                 const errMessage: string =
