@@ -21,6 +21,7 @@ import { IZoweTree } from "./api/IZoweTree";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { PersistentFilters } from "./PersistentFilters";
+import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -75,10 +76,6 @@ export class Profiles {
 
     public async checkCurrentProfile(theProfile: IProfileLoaded) {
         let profileStatus: IProfileValidation;
-        // this.checkProfileValidationSetting(theProfile);
-        // tslint:disable-next-line:no-console
-        console.log(theProfile.validation);
-        // Check that validation is disabled
         if (!theProfile.validation) {
             profileStatus = {
                 status: "unverified",
@@ -127,32 +124,30 @@ export class Profiles {
     public async disableValidation(node: any): Promise<boolean>{
         const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
         const theProfile: IProfileLoaded = node.getProfile();
-        // tslint:disable-next-line:no-console
-        console.log(validationSetting);
-        // tslint:disable-next-line:no-console
-        console.log(theProfile.name);
         if ((!validationSetting) || (!theProfile.validation)){
             return;
         } else {
             theProfile.validation = false;
+            const context = node.context.toString();
+            // tslint:disable-next-line:no-console
+            console.log(context);
+            if (context.includes(globals.TO_VALIDATE)) {
+                context.replace(globals.TO_VALIDATE, "");
+            }
         }
-        // tslint:disable-next-line:no-console
-        console.log(theProfile.validation);
         return theProfile.validation;
     }
 
     public async enableValidation(node: any): Promise<boolean>{
         const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
         const theProfile: IProfileLoaded = node.getProfile();
-        // tslint:disable-next-line:no-console
-        console.log(validationSetting);
-        // tslint:disable-next-line:no-console
-        console.log(theProfile.name);
         if ((!validationSetting) || (!theProfile.validation)){
             theProfile.validation = true;
+            node.context += globals.TO_VALIDATE;
+            const context = node.context.toString();
+            // tslint:disable-next-line:no-console
+            console.log(context);
         }
-        // tslint:disable-next-line:no-console
-        console.log(theProfile.validation);
         return theProfile.validation;
     }
 

@@ -166,15 +166,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
-            for (const profile of allProfiles) {
-                await Profiles.getInstance().checkProfileValidationSetting(profile);
+            for (const theProfile of allProfiles) {
+                const validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
-                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
                 }
                 for (const session of this.mHistory.getSessions()) {
-                    if (session === profile.name) {
-                        this.addSingleSession(profile);
+                    if (session === theProfile.name) {
+                        this.addSingleSession(theProfile);
                     }
                 }
             }

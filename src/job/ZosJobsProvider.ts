@@ -168,7 +168,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const sessionProfile of allProfiles) {
-                await Profiles.getInstance().checkProfileValidationSetting(sessionProfile);
+                const validate = await Profiles.getInstance().checkProfileValidationSetting(sessionProfile);
+                // if (validate) {
+                    // this.mSessionNodes.context += this.mSessionNodes.context + globals.TO_VALIDATE;
+                // }
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionProfile.name)) {
                     continue;

@@ -25,6 +25,7 @@ export const COMMAND_COUNT = 83;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
+export const TO_VALIDATE = CONTEXT_PREFIX + "validate";
 export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";
 export const DS_FAV_CONTEXT = "ds_fav";

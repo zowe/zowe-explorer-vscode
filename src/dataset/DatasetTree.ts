@@ -226,14 +226,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async addSession(sessionName?: string, profileType?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (zosmfProfile) {
-                this.addSingleSession(zosmfProfile);
+            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            if (profile) {
+                this.addSingleSession(profile);
             }
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
-                await Profiles.getInstance().checkProfileValidationSetting(theProfile);
+                const validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
