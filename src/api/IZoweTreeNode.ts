@@ -58,6 +58,14 @@ export interface IZoweTreeNode {
      */
     contextValue?: string;
     /**
+     * Loaded profile for the tree node
+     */
+    profile?: IProfileLoaded;
+    /**
+     * Session for the tree node
+     */
+    session?: Session;
+    /**
      * Retrieves the node label
      */
     getLabel(): string;

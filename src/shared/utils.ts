@@ -301,11 +301,3 @@ export function isZoweJobTreeNode(node: IZoweDatasetTreeNode | IZoweUSSTreeNode 
     return (node as IZoweJobTreeNode).job !== undefined;
 }
 
-/**
- * Interface to be used in the process of displaying favorited data sets, USS, and job nodes, grouped by profile.
- */
-export interface IFavoriteInfo {
-    label: string;
-    contextValue: string;
-    favoritePattern?: string;
-}

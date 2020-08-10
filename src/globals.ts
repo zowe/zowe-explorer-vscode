@@ -29,6 +29,7 @@ export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";
 export const DS_FAV_CONTEXT = "ds_fav";
 export const PDS_FAV_CONTEXT = "pds_fav";
+export const DS_SESSION_FAV_CONTEXT = "session_fav";
 export const DS_SESSION_CONTEXT = "session";
 export const DS_PDS_CONTEXT = "pds";
 export const DS_DS_CONTEXT = "ds";
