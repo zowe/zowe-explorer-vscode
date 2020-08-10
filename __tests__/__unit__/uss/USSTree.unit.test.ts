@@ -13,6 +13,7 @@ import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
 import { createUSSTree, USSTree } from "../../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { Logger, IProfileLoaded } from "@zowe/imperative";
+import * as contextually from "../../../src/shared/context";
 import * as utils from "../../../src/utils";
 import {
     createIProfile,
@@ -194,6 +195,18 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
+    });
+
+    it("Tests that USSTree.rename() prevents the user from naming two folders the same", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testUSSNode.label = "test";
+        globalMocks.testUSSNode.shortLabel = "test";
+        const contextuallySpy = jest.spyOn(contextually, "isFolder");
+
+        globalMocks.showInputBox.mockReturnValueOnce("test");
+
+        await globalMocks.testTree.rename(globalMocks.testUSSNode);
+        expect(contextuallySpy.mock.calls.length).toBe(1);
     });
 
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
