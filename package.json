@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
