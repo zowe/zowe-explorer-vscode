@@ -69,7 +69,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = vscode.window.createTreeView("zowe.explorer", {treeDataProvider: this});
+        this.treeView = vscode.window.createTreeView("zowe.explorer", { treeDataProvider: this });
     }
 
     /**
@@ -159,7 +159,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     } else {
                         node = new ZoweDatasetNode(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.None,
                             this.mFavoriteSession, session, undefined, undefined, profile);
-                        node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
+                        node.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [node] };
                     }
                     node.contextValue = contextually.asFavorite(node);
                     const icon = getIconByNode(node);
@@ -196,7 +196,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 const node = new ZoweDatasetNode(line.substring(0, line.lastIndexOf("{")),
                     vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, session, undefined, undefined, profile);
-                node.command = {command: "zowe.pattern", title: "", arguments: [node]};
+                node.command = { command: "zowe.pattern", title: "", arguments: [node] };
                 node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
                 const icon = getIconByNode(node);
                 if (icon) {
@@ -291,13 +291,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 temp.iconPath = icon.path;
             }
             // add a command to execute the search
-            temp.command = {command: "zowe.pattern", title: "", arguments: [temp]};
+            temp.command = { command: "zowe.pattern", title: "", arguments: [temp] };
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
                 this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteDs(temp)) {
-                temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
+                temp.command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [temp] };
             }
 
             const icon = getIconByNode(temp);
@@ -391,7 +391,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async updateFavorites() {
         const settings = this.mFavorites.map((fav) =>
-        fav.label + "{" + contextually.getBaseContext(fav) + "}"
+            fav.label + "{" + contextually.getBaseContext(fav) + "}"
         );
         this.mHistory.updateFavorites(settings);
     }
@@ -399,7 +399,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async onDidChangeConfiguration(e) {
         // Empties the persistent favorites & history arrays, if the user has set persistence to False
         if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
-            const setting: any = {...vscode.workspace.getConfiguration().get(DatasetTree.persistenceSchema)};
+            const setting: any = { ...vscode.workspace.getConfiguration().get(DatasetTree.persistenceSchema) };
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
@@ -632,9 +632,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {
             dataSetName = node.getParent().getLabel();
         }
-        const afterMemberName = await vscode.window.showInputBox({value: beforeMemberName});
+        const afterMemberName = (await vscode.window.showInputBox({ value: beforeMemberName })).toUpperCase();
         const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
+
+        if (!afterMemberName || afterMemberName == beforeMemberName) {
+            throw new Error("New member name empty or unchanged.");
+        }
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
         if (afterMemberName) {
@@ -685,9 +689,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
         }
-        const afterDataSetName = await vscode.window.showInputBox({value: beforeDataSetName});
+        const afterDataSetName = (await vscode.window.showInputBox({ value: beforeDataSetName })).toUpperCase();
         const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
+
+        if (!afterDataSetName || afterDataSetName == beforeDataSetName) {
+            throw new Error("New dataset name empty or unchanged.");
+        }
 
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
         if (afterDataSetName) {
@@ -709,7 +717,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 this.updateFavorites();
 
                 if (fs.existsSync(beforeFullPath)) {
-                  fs.unlinkSync(beforeFullPath);
+                    fs.unlinkSync(beforeFullPath);
                 }
 
                 if (closedOpenedInstance) {

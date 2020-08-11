@@ -358,6 +358,30 @@ describe("DatasetTree Integration Tests", async () => {
                     expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
                     expectChai(afterList.apiResponse.returnedRows).to.equal(1);
                 }).timeout(TIMEOUT);
+                it("should rename a data set in uppercase when given lowercase name", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    const lowercaseAfterDataSetName = `${pattern}.RENAME.after.TEST`;
+
+                    try {
+                        const testNode = new ZoweDatasetNode(beforeDataSetName, vscode.TreeItemCollapsibleState.None, sessNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(lowercaseAfterDataSetName);
+
+                        await testTree.rename(testNode);
+                        beforeList = await zowe.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expectChai(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
             });
         });
         describe("Failure Scenarios", () => {
@@ -389,6 +413,27 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns("mem2");
 
                         await testTree.rename(childNode);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).not.to.be.equal(undefined);
+                }).timeout(TIMEOUT);
+                it("should throw an error if the new dataset name is the same as the original", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    const sameBeforeDataSetName = `${pattern}.RENAME.AFTER.TEST`;
+
+                    try {
+                        const testNode = new ZoweDatasetNode(sameBeforeDataSetName, vscode.TreeItemCollapsibleState.None, sessNode, session);
+                        const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
+                        inputBoxStub.returns(afterDataSetName);
+
+                        await testTree.rename(testNode);
+                        beforeList = await zowe.List.dataSet(sessNode.getSession(), sameBeforeDataSetName);
+                        afterList = await zowe.List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
