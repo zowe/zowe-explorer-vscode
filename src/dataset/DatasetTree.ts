@@ -341,10 +341,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let temp: ZoweDatasetNode;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
-        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        let profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            this.createProfileNodeForFavs(profileName);
+            profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
         }
         if (contextually.isDsMember(node)) {
             if (contextually.isFavoritePds(node.getParent())) { // This does not work in v1.8.0 - is always false.
@@ -455,7 +455,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public async removeFavorite(node: IZoweDatasetTreeNode) {
-        this.mFavorites = this.mFavorites.filter((temp) =>
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        profileNodeInFavorites.children = profileNodeInFavorites.children.filter((temp) =>
             !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue)))
         );
         this.refresh();
