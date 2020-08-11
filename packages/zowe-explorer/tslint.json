@@ -39,7 +39,7 @@
     "no-implicit-dependencies": [
       true,
       "dev",
-      ["@zowe/imperative"]
+      ["@zowe/imperative", "vscode"]
     ],
     "no-namespace": false
   },

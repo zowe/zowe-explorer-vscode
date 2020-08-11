@@ -12,6 +12,9 @@ vscode-extension-for-zowe*.vsix
 .history
 .DS_Store
 .idea
-
+temp
+*.zip
+*.vsix
+*.tgz
 # used as workspace for theia test
 .tmp

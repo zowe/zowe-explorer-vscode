@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-zowe-explorer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Custom ESLint Rules for ZOWE Explorer",
   "keywords": [
     "eslint",
@@ -10,6 +10,7 @@
   "author": "",
   "main": "lib/index.js",
   "scripts": {
+    "build": "echo \"eslint-plugin done\"",
     "test": "jest"
   },
   "dependencies": {

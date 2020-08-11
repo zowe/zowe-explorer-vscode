@@ -66,11 +66,11 @@ const config = {
         ]},
     ]},
     plugins: [
-        new webpack.BannerPlugin(fs.readFileSync('./.vscode/banner.txt', 'utf8'))
+        new webpack.BannerPlugin(fs.readFileSync('../../.vscode/banner.txt', 'utf8'))
     ]
 }
 
-// Generates source code folder hierarchy nls metadata files in the output folder (e.g. out/src) 
+// Generates source code folder hierarchy nls metadata files in the output folder (e.g. out/src)
 if (process.argv.includes('--vscode-nls')) {
 	// rewrite nls call when being asked for
 	config.module.rules.unshift({
