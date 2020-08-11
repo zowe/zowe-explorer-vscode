@@ -24,6 +24,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    # install yarn
     - run: npm install -g yarn
 
     - run: yarn install --frozen-lockfile
