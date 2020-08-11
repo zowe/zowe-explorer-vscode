@@ -10,8 +10,12 @@
   "author": "",
   "main": "lib/index.js",
   "scripts": {
-    "build": "echo \"eslint-plugin done\"",
-    "test": "jest"
+    "test": "jest",
+    "build": "echo \"eslint-plugin: nothing to build.\"",
+    "lint": "echo \"eslint-plugin: nothing to lint.\"",
+    "lintErrors": "echo \"eslint-plugin: nothing to lint.\"",
+    "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
+    "package": "echo \"eslint-plugin: nothing to package.\""
   },
   "dependencies": {
     "requireindex": "^1.1.0"

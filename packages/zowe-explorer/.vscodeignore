@@ -16,6 +16,8 @@ src/**
 tsconfig.json
 tslint.json
 *.vsix
+*.zip
+*.tgz
 logs/**
 .markdownlint.json
 CODEOWNERS
@@ -28,4 +30,4 @@ docs
 i18n
 scripts
 node_modules/**
-!node_modules/vscode-nls/** 
+!node_modules/vscode-nls/**

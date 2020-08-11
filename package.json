@@ -15,9 +15,7 @@
     ],
     "nohoist": [
       "**/vscode-nls",
-      "**/vscode-nls/**",
-      "**/vscode-languageclient",
-      "**/vscode-languageclient/**"
+      "**/vscode-nls/**"
     ]
   },
   "engines": {
@@ -31,7 +29,8 @@
     "vscode": "^1.1.37",
     "vscode-test": "^1.4.0",
     "vscode-nls-dev": "^3.3.2",
-    "vsce": "^1.77.0"
+    "vsce": "^1.77.0",
+    "adm-zip": "0.4.16"
   },
   "scripts": {
     "prepare": "yarn build",
@@ -39,7 +38,6 @@
     "lintErrors": "yarn workspaces run lintErrors",
     "pretty": "yarn workspaces run pretty",
     "build": "yarn workspaces run build",
-    "build:nls": "yarn workspaces run build:nls",
     "test": "yarn workspaces run test",
     "package": "yarn workspaces run package"
   }

@@ -22,9 +22,11 @@
             "group": "build",
             "isBackground": true,
             "type":"shell",
-            "command": "npm",
+            "options": {
+                "cwd": "packages/zowe-explorer",
+            },
+            "command": "yarn",
             "args": [
-                "run",
                 "watch"
             ],
             "problemMatcher":[
@@ -63,9 +65,11 @@
             "group": "build",
             "isBackground": false,
             "type": "shell",
-            "command":"npm",
+            "options": {
+                "cwd": "packages/zowe-explorer",
+            },
+            "command":"yarn",
             "args": [
-                "run",
                 "build:integration"
             ]
         }
