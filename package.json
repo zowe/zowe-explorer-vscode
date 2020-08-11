@@ -12,10 +12,6 @@
   "workspaces": {
     "packages": [
       "packages/*"
-    ],
-    "nohoist": [
-      "**/vscode-nls",
-      "**/vscode-nls/**"
     ]
   },
   "engines": {

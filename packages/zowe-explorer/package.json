@@ -1185,7 +1185,7 @@
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
     "update": "node ../../scripts/stringUpdateScript.js",
-    "package": "vsce package --yarn && node ../../scripts/patch-vsix.js vscode-extension-for-zowe && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
+    "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
     "watch": "gulp build && webpack --mode development --vscode-nls --watch --info-verbosity verbose",
     "compile": "tsc -b",

@@ -30,4 +30,3 @@ docs
 i18n
 scripts
 node_modules/**
-!node_modules/vscode-nls/**
