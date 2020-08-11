@@ -87,13 +87,13 @@ export interface IZoweTreeNode {
     getProfile(): IProfileLoaded;
     /**
      * Set the profile to use for this node to be the one chosen in the parameters
-     * 
+     *
      * @param profileObj The profile you will set the node to use
      */
     setProfileToChoice(profileObj: IProfileLoaded): void;
     /**
      * Set the session to use for this node to be the one chosen in the parameters
-     * 
+     *
      * @param sessionObj The session you will set the node to use
      */
     setSessionToChoice(sessionObj: Session): void;

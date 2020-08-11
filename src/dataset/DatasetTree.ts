@@ -135,12 +135,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Find matching profile node in this.mFavorites
+     * Find matching profile node in this.mFavorites.
      *
      * @param favoritesNodes - The array of favorite nodes to search through (e.g. this.mFavorites)
      * @param profileName - The name of the profile you are looking for
+     * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
-    public findMatchingProfileInFavs(favoritesNodes: IZoweDatasetTreeNode[], profileName: string) {
+    public findMatchingProfileInFavs(favoritesNodes: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode|undefined {
         return favoritesNodes.find((mFavorite) => mFavorite.label === profileName );
     }
 
@@ -152,7 +153,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async initializeFavorites(log: Logger) {
         this.log = log;
         this.log.debug(localize("initializeDsFavorites.log.debug", "Initializing profiles with data set favorites."));
-        let favProfileNode: ZoweDatasetNode|IZoweDatasetTreeNode; // This should be ZoweDatasetTreeNode
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             this.log.debug(localize("initializeDsFavorites.no.favorites", "No data set favorites found."));
@@ -170,29 +170,35 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const favLabel = line.substring(0, line.indexOf("{"));
             const favContextValue = line.substring(line.indexOf("{") + 1, line.lastIndexOf("}"));
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            // const profileNodeInFavorites = this.mFavorites.find((mFavorite) => mFavorite.label === profileName );
-            const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+            let profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
             if (profileNodeInFavorites === undefined) {
                 // If favorite node for profile doesn't exist yet, create a new one for it
-                favProfileNode = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
-                    this.mFavoriteSession, null, undefined, undefined);
-                favProfileNode.contextValue = "profile_fav";
-                const icon = getIconByNode(favProfileNode);
-                if (icon) {
-                    favProfileNode.iconPath = icon.path;
-                }
-                this.mFavorites.push(favProfileNode);
-            } else {
-                // Establish pre-existing profile node to use
-                favProfileNode = profileNodeInFavorites;
+                profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
             }
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = await this.createFavChildNodeForProfile(favLabel, favContextValue, favProfileNode);
-            this.findMatchingProfileInFavs(this.mFavorites, profileName).children.push(favChildNodeForProfile);
+            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
+            profileNodeInFavorites.children.push(favChildNodeForProfile);
         }
     }
 
-    public async createFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode){
+    /**
+     * Creates and returns new profile node, and pushes it to mFavorites
+     * @param profileName Name of profile
+     * @returns {ZoweDatasetNode}
+     */
+    public createProfileNodeForFavs(profileName: string): ZoweDatasetNode {
+        const favProfileNode = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
+            this.mFavoriteSession, null, undefined, undefined);
+        favProfileNode.contextValue = "profile_fav";
+        const icon = getIconByNode(favProfileNode);
+        if (icon) {
+            favProfileNode.iconPath = icon.path;
+        }
+        this.mFavorites.push(favProfileNode);
+        return favProfileNode;
+    }
+
+    public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode){
         const profileName = parentNode.label;
         let node: ZoweDatasetNode;
         if (contextValue === globals.DS_PDS_CONTEXT || contextValue === globals.DS_DS_CONTEXT) {
@@ -266,6 +272,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 continue;
             }
         }
+        // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
     }
 
@@ -332,6 +339,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public async addFavorite(node: IZoweDatasetTreeNode) {
         let temp: ZoweDatasetNode;
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        if (profileNodeInFavorites === undefined) {
+            // If favorite node for profile doesn't exist yet, create a new one for it
+            this.createProfileNodeForFavs(profileName);
+        }
         if (contextually.isDsMember(node)) {
             if (contextually.isFavoritePds(node.getParent())) {
                 vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
@@ -341,7 +355,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             return;
         } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.pattern, vscode.TreeItemCollapsibleState.None,
-                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
+                profileNodeInFavorites, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
 
             await this.checkCurrentProfile(node);
 
@@ -354,7 +368,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             temp.command = {command: "zowe.pattern", title: "", arguments: [temp]};
         } else {    // pds | ds
             temp = new ZoweDatasetNode("[" + node.getSessionNode().label.trim() + "]: " + node.label, node.collapsibleState,
-                this.mFavoriteSession, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
+                profileNodeInFavorites, node.getSession(), node.contextValue, node.getEtag(), node.getProfile());
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteDs(temp)) {
                 temp.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [temp]};
@@ -368,6 +382,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (!this.mFavorites.find((tempNode) =>
             (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
+            // HERE
             this.mFavorites.push(temp);
             sortTreeItems(this.mFavorites, globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             await this.updateFavorites();
@@ -451,15 +466,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async updateFavorites() {
         const settings = [];
-        for (const profileName in this.mFavorites) {
-            if (this.mFavorites.hasOwnProperty(profileName)) {
-                // Here
-                const favoriteEntry = "";
-                // fav.label + "{" + contextually.getBaseContext(fav) + "}"
-                // const favoriteEntry = fav.label + "{" + fav.contextValue + "}";
+        this.mFavorites.forEach( (profileNode) => {
+            profileNode.children.forEach( (favorite) => {
+                const favoriteEntry = favorite.label + "{" + contextually.getBaseContext(favorite) + "}";
                 settings.push(favoriteEntry);
-            }
-        }
+            });
+        });
         this.mHistory.updateFavorites(settings);
     }
 
