@@ -347,7 +347,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.createProfileNodeForFavs(profileName);
         }
         if (contextually.isDsMember(node)) {
-            if (contextually.isFavoritePds(node.getParent())) {
+            if (contextually.isFavoritePds(node.getParent())) { // This does not work in v1.8.0 - is always false.
                 vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
@@ -379,12 +379,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 temp.iconPath = icon.path;
             }
         }
-        if (!this.mFavorites.find((tempNode) =>
+        if (!profileNodeInFavorites.children.find((tempNode) =>
             (tempNode.label === temp.label) && (tempNode.contextValue === temp.contextValue)
         )) {
-            // HERE
-            this.mFavorites.push(temp);
-            sortTreeItems(this.mFavorites, globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX);
+            profileNodeInFavorites.children.push(temp);
+            sortTreeItems(profileNodeInFavorites.children, globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
