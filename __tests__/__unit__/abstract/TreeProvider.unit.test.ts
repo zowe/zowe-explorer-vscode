@@ -30,6 +30,8 @@ async function createGlobalMocks() {
         mockAffects: jest.fn(),
         mockEditSession: jest.fn(),
         mockValidationSetting: jest.fn(),
+        mockDisableValidationContext: jest.fn(),
+        mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
         refresh: jest.fn(),
         testProfile: createIProfile(),
@@ -66,7 +68,9 @@ async function createGlobalMocks() {
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 editSession: globalMocks.mockEditSession,
-                checkProfileValidationSetting: globalMocks.mockValidationSetting
+                checkProfileValidationSetting: globalMocks.mockValidationSetting,
+                disableValidationContext: globalMocks.mockDisableValidationContext,
+                enableValidationContext: globalMocks.mockEnableValidationContext
             };
         }),
         configurable: true

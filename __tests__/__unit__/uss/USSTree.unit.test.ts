@@ -46,6 +46,8 @@ async function createGlobalMocks() {
         ZosmfSession: jest.fn(),
         createBasicZosmfSession: jest.fn(),
         mockValidationSetting: jest.fn(),
+        mockDisableValidationContext: jest.fn(),
+        mockEnableValidationContext: jest.fn(),
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -105,7 +107,9 @@ async function createGlobalMocks() {
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                checkProfileValidationSetting: globalMocks.mockValidationSetting
+                checkProfileValidationSetting: globalMocks.mockValidationSetting,
+                disableValidationContext: globalMocks.mockDisableValidationContext,
+                enableValidationContext: globalMocks.mockEnableValidationContext
             };
         }),
         configurable: true
