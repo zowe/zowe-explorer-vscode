@@ -176,6 +176,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
+
+        vscode.commands.registerCommand("zowe.disableValidation", async (node) =>
+            Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.enableValidation", async (node) =>
+            Profiles.getInstance().enableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) =>
+            Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) =>
+            Profiles.getInstance().enableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) =>
+            Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) =>
+            Profiles.getInstance().enableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
+        vscode.workspace.onDidChangeConfiguration(async (e) => {
+            await dsActions.refreshAll(datasetProvider);
+            await ussActions.refreshAllUSS(ussFileProvider);
+            await jobActions.refreshAllJobs(jobsProvider);
+        });
     }
 
     ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
@@ -211,9 +229,10 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.renameDataSetMember", (node) => datasetProvider.rename(node));
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
     vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
-    vscode.commands.registerCommand("zowe.disableValidation", async (node) => Profiles.getInstance().disableValidation(node));
-    vscode.commands.registerCommand("zowe.enableValidation", async (node) => Profiles.getInstance().enableValidation(node));
-    vscode.workspace.onDidChangeConfiguration(async (e) => { datasetProvider.onDidChangeConfiguration(e); });
+    vscode.workspace.onDidChangeConfiguration((e) => {
+        // dsActions.refreshAll(datasetProvider);
+        datasetProvider.onDidChangeConfiguration(e);
+    });
 
     initSubscribers(context, datasetProvider);
 }
@@ -242,9 +261,8 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider));
     vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
-    vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) => Profiles.getInstance().disableValidation(node));
-    vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) => Profiles.getInstance().enableValidation(node));
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
+    vscode.workspace.onDidChangeConfiguration((e) => {
+        // ussActions.refreshAllUSS(ussFileProvider);
         ussFileProvider.onDidChangeConfiguration(e);
     });
 
@@ -281,9 +299,8 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.removeFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
-    vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) => Profiles.getInstance().disableValidation(node));
-    vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) => Profiles.getInstance().enableValidation(node));
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
+    vscode.workspace.onDidChangeConfiguration((e) => {
+        // jobActions.refreshAllJobs(jobsProvider);
         jobsProvider.onDidChangeConfiguration(e);
     });
 

@@ -158,6 +158,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
+        let validate: boolean;
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -167,7 +168,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const theProfile of allProfiles) {
-                const validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
+                // Call to get validation setting from settings.json
+                validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
@@ -180,6 +182,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            }
+            for (const node of this.mSessionNodes) {
+                if (validate) {
+                    Profiles.getInstance().enableValidationContext(node);
+                } else {
+                    Profiles.getInstance().disableValidationContext(node);
+                }
             }
         }
         this.refresh();

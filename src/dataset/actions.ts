@@ -26,7 +26,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweNodeType } from "../api/IZowe
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
-import { returnIconState } from "../shared/actions";
+import { returnIconState, resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile, setFileSaved } from "../utils/workspace";
 
 import * as nls from "vscode-nls";
@@ -46,6 +46,7 @@ export async function refreshAll(datasetProvider: IZoweTree<IZoweDatasetTreeNode
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            resetValidationSettings(sessNode);
             refreshTree(sessNode);
         }
         returnIconState(sessNode);

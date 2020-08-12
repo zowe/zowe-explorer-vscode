@@ -12,6 +12,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
+import { IProfileLoaded } from "@zowe/imperative";
 import { openPS } from "../dataset/actions";
 import { IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
 import { IZoweTree } from "../api/IZoweTree";
@@ -20,6 +21,7 @@ import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
+import { Profiles } from "../Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -203,4 +205,14 @@ export async function returnIconState(node: IZoweNodeType) {
             }
     }
     return node;
+}
+
+export async function resetValidationSettings(node: IZoweNodeType) {
+    const profile: IProfileLoaded = node.getProfile();
+    const setting = await Profiles.getInstance().checkProfileValidationSetting(profile);
+    if (setting){
+        Profiles.getInstance().enableValidationContext(node);
+    } else {
+        Profiles.getInstance().disableValidationContext(node);
+    }
 }

@@ -159,6 +159,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
+        let validate: boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const theProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -168,10 +169,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const sessionProfile of allProfiles) {
-                const validate = await Profiles.getInstance().checkProfileValidationSetting(sessionProfile);
-                // if (validate) {
-                    // this.mSessionNodes.context += this.mSessionNodes.context + globals.TO_VALIDATE;
-                // }
+                // Call to get validation setting from settings.json
+                validate = await Profiles.getInstance().checkProfileValidationSetting(sessionProfile);
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionProfile.name)) {
                     continue;
@@ -184,6 +183,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            }
+            for (const node of this.mSessionNodes) {
+                if (validate) {
+                    Profiles.getInstance().enableValidationContext(node);
+                } else {
+                    Profiles.getInstance().disableValidationContext(node);
+                }
             }
         }
         this.refresh();

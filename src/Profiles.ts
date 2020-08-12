@@ -22,6 +22,7 @@ import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode
 import * as nls from "vscode-nls";
 import { PersistentFilters } from "./PersistentFilters";
 import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
+import { util } from "chai";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -121,40 +122,92 @@ export class Profiles {
 
     }
 
-    public async disableValidation(node: any): Promise<boolean>{
-        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
+    public async disableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
+                                   jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
         const theProfile: IProfileLoaded = node.getProfile();
-        if ((!validationSetting) || (!theProfile.validation)){
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             return;
         } else {
             theProfile.validation = false;
-            const context = node.context.toString();
-            // tslint:disable-next-line:no-console
-            console.log(context);
-            if (context.includes(globals.TO_VALIDATE)) {
-                context.replace(globals.TO_VALIDATE, "");
-            }
+            // Disable validation for profile in uss tree
+            ussTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === theProfile.name) {
+                    this.disableValidationContext(sessNode);
+                    ussTree.refresh();
+                }
+            });
+            // Disable validation for profile in data set tree
+            datasetTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === theProfile.name) {
+                    this.disableValidationContext(sessNode);
+                    datasetTree.refresh();
+                }
+            });
+            // Disable validation for profile in jobs tree
+            jobsProvider.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === theProfile.name) {
+                    this.disableValidationContext(sessNode);
+                    jobsProvider.refresh();
+                }
+            });
         }
-        return theProfile.validation;
+        return node;
     }
 
-    public async enableValidation(node: any): Promise<boolean>{
-        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
-        const theProfile: IProfileLoaded = node.getProfile();
-        if ((!validationSetting) || (!theProfile.validation)){
-            theProfile.validation = true;
-            node.context += globals.TO_VALIDATE;
-            const context = node.context.toString();
-            // tslint:disable-next-line:no-console
-            console.log(context);
+    public async disableValidationContext(node: IZoweNodeType) {
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
+            node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
+            node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
+        } else {
+            node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
         }
-        return theProfile.validation;
+    }
+
+    public async enableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
+                                  jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
+        const theProfile: IProfileLoaded = node.getProfile();
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)){
+            theProfile.validation = true;
+            // Disable validation for profile in uss tree
+            ussTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === theProfile.name) {
+                    this.enableValidationContext(sessNode);
+                    ussTree.refresh();
+                }
+            });
+            // Disable validation for profile in data set tree
+            datasetTree.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === theProfile.name) {
+                    this.enableValidationContext(sessNode);
+                    datasetTree.refresh();
+                }
+            });
+            // Disable validation for profile in jobs tree
+            jobsProvider.mSessionNodes.forEach((sessNode) => {
+                if (sessNode.getProfileName() === theProfile.name) {
+                    this.enableValidationContext(sessNode);
+                    jobsProvider.refresh();
+                }
+            });
+        } else {
+            return;
+        }
+        return node;
+    }
+
+    public async enableValidationContext(node: IZoweNodeType) {
+        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
+            node.contextValue = node.contextValue.replace(/(_validate=false)/g, "");
+            node.contextValue += `${globals.VALIDATE_SUFFIX}true`;
+        } else {
+            node.contextValue += `${globals.VALIDATE_SUFFIX}true`;
+        }
     }
 
     public async checkProfileValidationSetting(theProfile: IProfileLoaded): Promise<boolean> {
-        // Gets validation settings from settings.json
-        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Profile-Validation") as boolean;
-        if (!validationSetting) {
+        // Gets global validation settings from settings.json
+        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+        if (validationSetting === false) {
             theProfile.validation = false;
         } else {
             theProfile.validation = true;
@@ -205,13 +258,6 @@ export class Profiles {
                     this.allTypes.push(element.type);
                 }
             }
-        }
-        // tslint:disable-next-line:no-console
-        console.log(this.allProfiles);
-        for (const profile of this.allProfiles){
-            this.checkProfileValidationSetting(profile);
-            // tslint:disable-next-line:no-console
-            console.log(profile.validation);
         }
         while (this.profilesForValidation.length > 0) {
             this.profilesForValidation.pop();
@@ -978,12 +1024,12 @@ export class Profiles {
                         location: vscode.ProgressLocation.Notification,
                         title: localize("Profiles.validateProfiles.validationProgress", "Validating {0} Profile.", theProfile.name),
                         cancellable: true
-                    }, (progress, token) => {
+                    }, async (progress, token) => {
                         token.onCancellationRequested(() => {
                             // will be returned as undefined
                             vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
                         });
-                        return getSessStatus.getStatus(theProfile, theProfile.type);
+                        await getSessStatus.getStatus(theProfile, theProfile.type);
                     });
                 } else {
                     profileStatus = "unverified";

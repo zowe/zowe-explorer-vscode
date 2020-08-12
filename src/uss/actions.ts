@@ -26,7 +26,7 @@ import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
 import { setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { returnIconState } from "../shared/actions";
+import { returnIconState, resetValidationSettings } from "../shared/actions";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -91,6 +91,7 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
             labelRefresh(sessNode);
             sessNode.children = [];
             sessNode.dirty = true;
+            resetValidationSettings(sessNode);
             refreshTree(sessNode);
         }
         returnIconState(sessNode);

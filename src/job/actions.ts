@@ -20,7 +20,7 @@ import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
-import { returnIconState } from "../shared/actions";
+import { returnIconState, resetValidationSettings } from "../shared/actions";
 import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 
@@ -40,6 +40,7 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
             labelRefresh(jobNode);
             jobNode.children = [];
             jobNode.dirty = true;
+            resetValidationSettings(jobNode);
             refreshTree(jobNode);
         }
         returnIconState(jobNode);

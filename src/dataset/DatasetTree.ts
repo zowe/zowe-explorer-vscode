@@ -224,6 +224,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
     public async addSession(sessionName?: string, profileType?: string) {
+        let validate: boolean;
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -233,7 +234,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {
             const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
             for (const theProfile of profiles) {
-                const validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
+                // Call to get validation setting from settings.json
+                validate = await Profiles.getInstance().checkProfileValidationSetting(theProfile);
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === theProfile.name)) {
                     continue;
@@ -246,6 +248,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             if (this.mSessionNodes.length === 1) {
                 this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+            }
+            for (const node of this.mSessionNodes) {
+                if (validate) {
+                    Profiles.getInstance().enableValidationContext(node);
+                } else {
+                    Profiles.getInstance().disableValidationContext(node);
+                }
             }
         }
         this.refresh();
