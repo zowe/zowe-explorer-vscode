@@ -16,10 +16,12 @@ import * as globals from "../globals";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
-
-import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -108,9 +110,9 @@ export class MvsCommandHandler {
     private async getQuickPick(hostname: string) {
         let response = "";
         const alwaysEdit = PersistentFilters.getDirectValue("Zowe Commands: Always edit") as boolean;
-        if (this.history.getHistory().length > 0) {
+        if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(MvsCommandHandler.defaultDialogText);
-            const items: vscode.QuickPickItem[] = this.history.getHistory().map((element) => new FilterItem(element));
+            const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem(element));
             if (globals.ISTHEIA) {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder: localize("issueMvsCommand.command.hostname", "Select a command to run against ") + hostname +
@@ -194,6 +196,6 @@ export class MvsCommandHandler {
         } catch (error) {
             await errorHandling(error, null, error.message);
         }
-        this.history.addHistory(command);
+        this.history.addSearchHistory(command);
     }
 }

@@ -1,0 +1,56 @@
+name: Zowe Explorer CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Continue to run tests on the other systems if one fails
+      fail-fast: false
+      matrix:
+        node-version: [10.x, 12.x]
+        # order operating systems from best to worst
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - run: npm install
+
+    # run audit on 1 system to avoid overloading the audit API
+    - name: Audit from Windows / Node 12.x
+      run: npm audit --audit-level=moderate
+      if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
+
+    - name: Create test data file
+      run: cp resources/testProfileData.example.ts resources/testProfileData.ts
+
+    - run: npm run build --if-present
+
+    - run: npm test
+      env:
+        CI: true
+        NODE_OPTIONS: --max_old_space_size=4096
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v1
+      # if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
+      with:
+        name: results
+        path: results/
+
+    # Run codecov upload for only one run
+    - name: Upload Results to Codecov from Windows / Node 12.x
+      if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        env_vars: OS,NODE

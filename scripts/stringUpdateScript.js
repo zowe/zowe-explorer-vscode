@@ -28,7 +28,7 @@ for (const metadataJson of require("glob").sync("./out/src/**/*.nls.metadata.jso
     }
 
     // Write to i18n sample folder to create template for new languages
-    const i18nJson = metadataJson.replace("./out/", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
+    const i18nJson = metadataJson.replace("./out/src", "./i18n/sample/").replace(".nls.metadata.json", ".i18n.json");
     fse.ensureDirSync(path.dirname(i18nJson));
     fse.writeFileSync(i18nJson, JSON.stringify(keysPairsData, null, 4));
 }

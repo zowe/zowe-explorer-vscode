@@ -17,10 +17,12 @@ import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
 import { Profiles } from "./Profiles";
-
-import * as nls from "vscode-nls";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /*************************************************************************************************************
  * Error Handling

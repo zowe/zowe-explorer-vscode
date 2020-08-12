@@ -24,6 +24,8 @@ import * as sharedActions from "../../../src/shared/actions";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
+import { IZoweNodeType } from "../../../src/api/IZoweTreeNode";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -97,7 +99,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
-        expect(blockMocks.testDatasetTree.addHistory).not.toBeCalled();
+        expect(blockMocks.testDatasetTree.addSearchHistory).not.toBeCalled();
     });
     it("Checking that searchForLoadedItems works for a member", async () => {
         const globalMocks = await createGlobalMocks();
@@ -131,7 +133,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
-        expect(blockMocks.testDatasetTree.addHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+        expect(blockMocks.testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
     });
     it("Checking that searchForLoadedItems works for a USS folder", async () => {
         const globalMocks = await createGlobalMocks();
@@ -178,7 +180,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const openNode = jest.spyOn(file, "openUSS");
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
 
-        expect(blockMocks.testUssTree.addHistory).toBeCalledWith("/folder/file");
+        expect(blockMocks.testUssTree.addSearchHistory).toBeCalledWith("/folder/file");
         expect(openNode).toHaveBeenCalledWith(false, true, blockMocks.testUssTree);
     });
     it("Checking that searchForLoadedItems fails when no pattern is entered", async () => {
@@ -194,7 +196,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(blockMocks.testDatasetTree, blockMocks.testUssTree);
-        expect(blockMocks.testUssTree.addHistory).not.toBeCalled();
+        expect(blockMocks.testUssTree.addSearchHistory).not.toBeCalled();
     });
 });
 
@@ -219,7 +221,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
-        Object.defineProperty(newMocks.testUSSTree, "getRecall", { value: jest.fn(), configurable: true });
+        Object.defineProperty(newMocks.testUSSTree, "getFileHistory", { value: jest.fn(), configurable: true });
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
 
         return newMocks;
@@ -235,8 +237,8 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const qpItem = new utils.FilterDescriptor(child.label);
         const quickPickContent = createQuickPickContent("[sestest]: node(child)", [qpItem], globalMocks.qpPlaceholder);
 
-        mocked(blockMocks.testDatasetTree.getRecall).mockReturnValueOnce([`[sestest]: node(child)`]);
-        mocked(blockMocks.testUSSTree.getRecall).mockReturnValueOnce([]);
+        mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node(child)`]);
+        mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
 
@@ -252,8 +254,8 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const qpItem = new utils.FilterDescriptor(blockMocks.dsNode.label);
         const quickPickContent = createQuickPickContent("[sestest]: node", [qpItem], globalMocks.qpPlaceholder);
 
-        mocked(blockMocks.testDatasetTree.getRecall).mockReturnValueOnce([`[sestest]: node`]);
-        mocked(blockMocks.testUSSTree.getRecall).mockReturnValueOnce([]);
+        mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([`[sestest]: node`]);
+        mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
 
@@ -270,12 +272,60 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const qpItem = new utils.FilterDescriptor(node.label);
         const quickPickContent = createQuickPickContent("[sestest]: /node1/node2/node3.txt", [qpItem], globalMocks.qpPlaceholder);
 
-        mocked(blockMocks.testDatasetTree.getRecall).mockReturnValueOnce([]);
-        mocked(blockMocks.testUSSTree.getRecall).mockReturnValueOnce([`[sestest]: /node1/node2/node3.txt`]);
+        mocked(blockMocks.testDatasetTree.getFileHistory).mockReturnValueOnce([]);
+        mocked(blockMocks.testUSSTree.getFileHistory).mockReturnValueOnce([`[sestest]: /node1/node2/node3.txt`]);
         mocked(vscode.window.createQuickPick).mockReturnValue(quickPickContent);
         jest.spyOn(utils, "resolveQuickPickHelper").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(blockMocks.testDatasetTree, blockMocks.testUSSTree);
         expect(blockMocks.testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
+    });
+});
+
+describe("Shared Actions Unit Tests - Function returnIconState", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            session: createISessionWithoutCredentials(),
+            treeView: createTreeView(),
+            dsNode: null,
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            datasetSessionNode: null,
+        };
+
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+        newMocks.dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, newMocks.datasetSessionNode, null);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+
+        return newMocks;
+    }
+
+    it("Tests that returnIconState is resetting active icons", async () => {
+        const blockMocks = createBlockMocks();
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const resultIcon = getIconById(IconId.session);
+        resultNode.iconPath = resultIcon.path;
+
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const sessionIcon = getIconById(IconId.sessionActive);
+        testNode.iconPath = sessionIcon.path;
+
+        const response = await sharedActions.returnIconState(testNode);
+        expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
+    });
+
+    it("Tests that returnIconState is resetting inactive icons", async () => {
+        const blockMocks = createBlockMocks();
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const resultIcon = getIconById(IconId.session);
+        resultNode.iconPath = resultIcon.path;
+
+        const testNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        const sessionIcon = getIconById(IconId.sessionInactive);
+        testNode.iconPath = sessionIcon.path;
+
+        const response = await sharedActions.returnIconState(testNode);
+        expect(getIconByNode(response)).toEqual(getIconByNode(resultNode));
     });
 });

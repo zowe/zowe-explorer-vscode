@@ -31,11 +31,16 @@ import { Profiles } from "./Profiles";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, getZoweDir } from "./utils";
 import SpoolProvider from "./SpoolProvider";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
 import * as nls from "vscode-nls";
+declare const __webpack_require__: typeof require;
+declare const __non_webpack_require__: typeof require;
 
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * The function that runs when the extension is loaded
@@ -173,7 +178,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
     }
 
-    // return the Extension's API to other extensions that want to register their APIs.
+    ZoweExplorerExtender.createInstance(datasetProvider, ussFileProvider, jobsProvider);
     return ZoweExplorerApiRegister.getInstance();
 }
 
@@ -299,6 +304,7 @@ function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTre
  */
 export function getSecurityModules(moduleName): NodeRequire | undefined {
     let imperativeIsSecure: boolean = false;
+    const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     try {
         const fileName = path.join(getZoweDir(), "settings", "imperative.json");
         let settings: any;
@@ -318,13 +324,11 @@ export function getSecurityModules(moduleName): NodeRequire | undefined {
         // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
         const appRoot = globals.ISTHEIA ? process.cwd() : vscode.env.appRoot;
         try {
-            return require(`${appRoot}/node_modules/${moduleName}`);
-        } catch (err) { /* Do nothing */
-        }
+            return r(`${appRoot}/node_modules/${moduleName}`);
+        } catch (err) { /* Do nothing */ }
         try {
-            return require(`${appRoot}/node_modules.asar/${moduleName}`);
-        } catch (err) { /* Do nothing */
-        }
+            return r(`${appRoot}/node_modules.asar/${moduleName}`);
+        } catch (err) { /* Do nothing */ }
         vscode.window.showWarningMessage(localize("initialize.module.load",
             "Credentials not managed, unable to load security file: ") + moduleName);
     }

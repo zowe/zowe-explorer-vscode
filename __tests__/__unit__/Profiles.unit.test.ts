@@ -1039,8 +1039,8 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testUSSTree = createUSSTree([], [newMocks.USSSessionNode], newMocks.treeView);
         newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.profileInstance, newMocks.treeView);
-        newMocks.testDatasetTree.addRecall("[profile1]: TEST.NODE");
-        newMocks.testUSSTree.addRecall("[profile1]: /u/myuser");
+        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
+        newMocks.testUSSTree.addFileHistory("[profile1]: /u/myuser");
         globalMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
 
         return newMocks;
@@ -1175,32 +1175,32 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         expect(blockMocks.testJobTree.mFavorites.length).toEqual(favoriteLength);
     });
 
-    it("Tests that deleteProfile successfully deletes all related recall items for a dataset tree", async () => {
+    it("Tests that deleteProfile successfully deletes all related file history items for a dataset tree", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testDatasetTree.mRecall = ["[SESTEST]: TEST.DATA"];
+        blockMocks.testDatasetTree.mFileHistory = ["[SESTEST]: TEST.DATA"];
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
-        expect(blockMocks.testDatasetTree.getRecall()[0]).toBeUndefined();
+        expect(blockMocks.testDatasetTree.getFileHistory()[0]).toBeUndefined();
     });
 
-    it("Tests that deleteProfile successfully deletes all related recall items for a USS tree", async () => {
+    it("Tests that deleteProfile successfully deletes all related file history items for a USS tree", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testUSSTree.addRecall("[SESTEST]: /node1/node2/node3.txt");
+        blockMocks.testUSSTree.addFileHistory("[SESTEST]: /node1/node2/node3.txt");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("sestest");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("Delete");
 
         await blockMocks.profiles.deleteProfile(blockMocks.testDatasetTree, blockMocks.testUSSTree, blockMocks.testJobTree);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile sestest was deleted.");
-        expect(blockMocks.testUSSTree.getRecall()[1]).toBeUndefined();
+        expect(blockMocks.testUSSTree.getFileHistory()[1]).toBeUndefined();
     });
 });
 
@@ -1483,6 +1483,15 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "active",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return ["test", "test", "test"];
         });
@@ -1496,6 +1505,14 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "active",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         theProfiles.validProfile = -1;
         await theProfiles.checkCurrentProfile(blockMocks.validProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.VALID);
@@ -1506,6 +1523,14 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "active",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
@@ -1514,15 +1539,18 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
     });
 
     it("Tests that checkCurrentProfile will handle inactive profiles", async () => {
-        Object.defineProperty(CheckStatus, "getZosmfInfo", {
-            value: jest.fn(() => {
-                return undefined;
-            })
-        });
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "inactive",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
@@ -1531,15 +1559,18 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
     });
 
     it("Tests that checkCurrentProfile will handle inactive profiles", async () => {
-        Object.defineProperty(CheckStatus, "getZosmfInfo", {
-            value: jest.fn(() => {
-                return undefined;
-            })
-        });
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "validateProfiles", {
+            value: jest.fn(() => {
+                return {
+                    status: "inactive",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
         blockMocks.profiles.promptCredentials = jest.fn(() => {
             return undefined;
         });
@@ -1555,7 +1586,7 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
             profiles: null,
             invalidProfile: createInvalidIProfile(),
             validProfile: createValidIProfile(),
-            profileInstance: null
+            profileInstance: null,
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
@@ -1564,7 +1595,7 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         return newMocks;
     }
 
-    it("Tests that validaterofiles handles inactive profiles", async () => {
+    it("Tests that validateProfiles handles inactive profiles", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -1578,6 +1609,33 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
 
         await theProfiles.checkCurrentProfile(blockMocks.validProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+});
+
+describe("Profiles Unit Tests - Function refresh", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            invalidProfile: createInvalidIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null,
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that Profile refresh empties profilesForValidation[]", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesForValidation.push({status: "active", name: blockMocks.validProfile.name});
+        await theProfiles.refresh();
+        expect(theProfiles.profilesForValidation.length).toBe(0);
     });
 });
 

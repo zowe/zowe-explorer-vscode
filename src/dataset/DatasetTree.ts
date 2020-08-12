@@ -24,10 +24,12 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconByNode } from "../generators/icons";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
-
-import * as nls from "vscode-nls";
 import { closeOpenedTextFile } from "../utils/workspace";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Creates the Dataset tree that contains nodes of sessions and data sets
@@ -221,7 +223,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(sessionName?: string) {
+    public async addSession(sessionName?: string, profileType?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -242,7 +244,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -406,31 +408,31 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async addHistory(criteria: string) {
-        this.mHistory.addHistory(criteria);
+    public async addSearchHistory(criteria: string) {
+        this.mHistory.addSearchHistory(criteria);
         this.refresh();
     }
 
-    public getHistory() {
-        return this.mHistory.getHistory();
+    public getSearchHistory() {
+        return this.mHistory.getSearchHistory();
     }
 
-    public async addRecall(criteria: string) {
-        this.mHistory.addRecall(criteria);
+    public async addFileHistory(criteria: string) {
+        this.mHistory.addFileHistory(criteria);
         this.refresh();
     }
 
-    public getRecall(): string[] {
-        return this.mHistory.getRecall();
+    public getFileHistory(): string[] {
+        return this.mHistory.getFileHistory();
     }
 
-    public removeRecall(name: string) {
-        this.mHistory.removeRecall(name);
+    public removeFileHistory(name: string) {
+        this.mHistory.removeFileHistory(name);
     }
 
     public async createFilterString(newFilter: string, node: IZoweDatasetTreeNode) {
         // Store previous filters (before refreshing)
-        let theFilter = this.getHistory()[0] || null;
+        let theFilter = this.getSearchHistory()[0] || null;
 
         // Check if filter is currently applied
         if (node.pattern !== "" && theFilter) {
@@ -487,7 +489,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             parentNode.dirty = true;
         } else {
             vscode.window.showInformationMessage(localize("findParentNode.unsuccessful", "Node does not exist. It may have been deleted."));
-            this.removeRecall(itemPath);
+            this.removeFileHistory(itemPath);
             return;
         }
 
@@ -498,17 +500,17 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             memberNode = children.find((child) => child.label.trim() === memberName);
             if (!memberNode) {
                 vscode.window.showInformationMessage(localize("findParentNode.unsuccessful", "Node does not exist. It may have been deleted."));
-                this.removeRecall(itemPath);
+                this.removeFileHistory(itemPath);
                 return;
             } else {
                 memberNode.getParent().label = memberNode.getParent().label.trim() + " ";
                 memberNode.getParent().label = memberNode.getParent().label.trim();
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                this.addHistory(`${parentName}(${memberName})`);
+                this.addSearchHistory(`${parentName}(${memberName})`);
                 dsActions.openPS(memberNode, true, this);
             }
         } else {
-            this.addHistory(parentName);
+            this.addSearchHistory(parentName);
             dsActions.openPS(parentNode, true, this);
         }
     }
@@ -545,9 +547,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) {
-                if (this.mHistory.getHistory().length > 0) {
+                if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem(element));
                     if (globals.ISTHEIA) {
                         const options1: vscode.QuickPickOptions = {
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter")
@@ -610,7 +612,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (icon) {
                 node.iconPath = icon.path;
             }
-            this.addHistory(node.pattern);
+            this.addSearchHistory(node.pattern);
         }
     }
 

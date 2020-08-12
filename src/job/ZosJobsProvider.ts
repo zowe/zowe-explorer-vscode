@@ -26,7 +26,9 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
-const localize = nls.config({messageFormat: nls.MessageFormat.file})();
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Creates the Job tree that contains nodes of sessions, jobs and spool items
@@ -156,7 +158,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {string} [sessionName] - optional; loads default profile if not passed
      */
-    public async addSession(sessionName?: string) {
+    public async addSession(sessionName?: string, profileType?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
             const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
@@ -177,7 +179,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -295,7 +297,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async searchPrompt(node: IZoweJobTreeNode) {
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
-        const hasHistory = this.mHistory.getHistory().length > 0;
+        const hasHistory = this.mHistory.getSearchHistory().length > 0;
         let sesNamePrompt: string;
         if (contextually.isFavorite(node)) {
             sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
@@ -306,7 +308,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) { // This is the profile object context
                 if (hasHistory) { // Check if user has created some history
-                    const items: vscode.QuickPickItem[] = this.mHistory.getHistory().map((element) => new FilterItem(element));
+                    const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem(element));
                     if (globals.ISTHEIA) { // Theia doesn't work properly when directly creating a QuickPick
                         const options1: vscode.QuickPickOptions = {
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter")
@@ -429,7 +431,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             labelRefresh(node);
             node.dirty = true;
             this.refreshElement(node);
-            this.addHistory(searchCriteria);
+            this.addSearchHistory(searchCriteria);
         }
     }
 
@@ -472,7 +474,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return revisedCriteria.trim();
     }
 
-    public async addRecall(criteria: string) {
+    public async addFileHistory(criteria: string) {
         throw new Error("Method not implemented.");
     }
 
