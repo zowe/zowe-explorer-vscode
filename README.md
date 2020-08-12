@@ -33,14 +33,14 @@ More information:
 
 New features and improvements:
 
-- Added a webpack that works with localization and logging.
-- Allowed extenders to load the saved profile sessions upon activation.
-- Added an automatic re-validation for invalid profiles.
+* Added a webpack that works with localization and logging.
+* Allowed extenders to load the saved profile sessions upon activation.
+* Added an automatic re-validation for invalid profiles.
 
 Bug Fixes:
 
-- Fixed the bug related to saving USS files.
-- Fixed the bug related to the deletion of datasets.
+* Fixed the bug related to saving USS files.
+* Fixed the bug related to the deletion of datasets.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
