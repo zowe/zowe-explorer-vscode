@@ -347,7 +347,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
         }
         if (contextually.isDsMember(node)) {
-            if (contextually.isFavoritePds(node.getParent())) { // This does not work in v1.8.0 - is always false.
+            if (contextually.isFavoritePds(node.getParent())) {
+                // This only returns true for members whose PDS **node** is literally already in the Favorites section.
                 vscode.window.showInformationMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
@@ -415,7 +416,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public async renameFavorite(node: IZoweDatasetTreeNode, newLabel: string) {
-        const matchingNode = this.mFavorites.find(
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        const matchingNode = profileNodeInFavorites.children.find(
             (temp) => (temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))
         );
         if (matchingNode) {
@@ -427,7 +431,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Finds the equivalent node as a favorite
+     * Finds the equivalent node as a favorite.
+     * Used to ensure functions like delete, rename are synced between non-favorite nodes and their favorite equivalents.
      *
      * @param node
      */
@@ -438,7 +443,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Finds the equivalent node not as a favorite
+     * Finds the equivalent node not as a favorite.
+     * Used to ensure functions like delete, rename are synced between favorite nodes and their non-favorite equivalents.
      *
      * @param node
      */
@@ -729,6 +735,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             let otherParent;
             if (contextually.isFavorite(node)) {
+                // This may never get called if node is always a PDS member. In addFavorite, only the parent PDS is given fav contextValue.
                 otherParent = this.findNonFavoritedNode(node.getParent());
             } else {
                 otherParent = this.findFavoritedNode(node.getParent());
