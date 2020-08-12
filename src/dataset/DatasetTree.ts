@@ -632,19 +632,18 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {
             dataSetName = node.getParent().getLabel();
         }
-        const afterMemberName = (await vscode.window.showInputBox({ value: beforeMemberName })).toUpperCase();
+        const afterMemberName = await vscode.window.showInputBox({ value: beforeMemberName });
         const beforeFullPath = getDocumentFilePath(`${node.getParent().getLabel()}(${node.getLabel()})`, node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
-        if (!afterMemberName || afterMemberName == beforeMemberName) {
-            throw new Error("New member name empty or unchanged.");
-        }
-
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
-        if (afterMemberName) {
+        if (afterMemberName && afterMemberName.toUpperCase() !== beforeMemberName) {
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-                node.label = afterMemberName;
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(
+                    dataSetName,
+                    beforeMemberName,
+                    afterMemberName.toUpperCase());
+                node.label = afterMemberName.toUpperCase();
             } catch (err) {
                 this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
                 await errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
@@ -659,7 +658,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
                 if (otherMember) {
-                    otherMember.label = afterMemberName;
+                    otherMember.label = afterMemberName.toUpperCase();
                     this.refreshElement(otherMember);
                 }
             }
@@ -689,28 +688,24 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
         }
-        const afterDataSetName = (await vscode.window.showInputBox({ value: beforeDataSetName })).toUpperCase();
+        const afterDataSetName = await vscode.window.showInputBox({ value: beforeDataSetName });
         const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
-        if (!afterDataSetName || afterDataSetName == beforeDataSetName) {
-            throw new Error("New dataset name empty or unchanged.");
-        }
-
         this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
-        if (afterDataSetName) {
+        if (afterDataSetName && afterDataSetName.toUpperCase() !== beforeDataSetName) {
             try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-                node.label = `${favPrefix}${afterDataSetName}`;
-                node.tooltip = `${favPrefix}${afterDataSetName}`;
+                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName.toUpperCase());
+                node.label = `${favPrefix}${afterDataSetName.toUpperCase()}`;
+                node.tooltip = `${favPrefix}${afterDataSetName.toUpperCase()}`;
 
                 if (isFavourite) {
                     const profile = favPrefix.substring(1, favPrefix.indexOf("]"));
-                    this.renameNode(profile, beforeDataSetName, afterDataSetName);
+                    this.renameNode(profile, beforeDataSetName, afterDataSetName.toUpperCase());
                 } else {
                     const temp = node.label;
                     node.label = "[" + node.getSessionNode().label.trim() + "]: " + beforeDataSetName;
-                    this.renameFavorite(node, afterDataSetName);
+                    this.renameFavorite(node, afterDataSetName.toUpperCase());
                     node.label = temp;
                 }
                 this.refreshElement(node);
