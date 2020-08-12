@@ -39,6 +39,7 @@ async function createGlobalMocks() {
         mockRegisterCommand: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
+        mockOnDidChangeConfiguration: jest.fn(),
         mockOnDidChangeVisibility: jest.fn(),
         mockOnDidCollapseElement: jest.fn(),
         mockOnDidExpandElement: jest.fn(),
@@ -55,7 +56,6 @@ async function createGlobalMocks() {
         mockUtilities: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockGetConfiguration: jest.fn(),
-        mockOnDidChangeConfiguration: jest.fn(),
         mockIsFile: jest.fn(),
         mockLoad: jest.fn(),
         mockRegisterTextDocumentContentProvider: jest.fn(),
@@ -94,7 +94,11 @@ async function createGlobalMocks() {
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),
             usesSecurity: jest.fn().mockReturnValue(true),
-            checkProfileValidationSetting: jest.fn().mockReturnValue(true)
+            checkProfileValidationSetting: jest.fn().mockReturnValue(true),
+            disableValidation: jest.fn(),
+            enableValidation: jest.fn(),
+            disableValidationContext: jest.fn(),
+            enableValidationContext: jest.fn()
         },
         mockExtension: null,
         appName: vscode.env.appName,
@@ -249,7 +253,7 @@ async function createGlobalMocks() {
             selection: [],
             onDidChangeSelection: globalMocks.mockOnDidChangeSelection,
             visible: true,
-            onDidChangeVisibility: globalMocks.mockOnDidChangeVisibility
+            onDidChangeVisibility: globalMocks.mockOnDidChangeVisibility,
         };
     });
 

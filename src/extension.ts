@@ -176,7 +176,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
         vscode.commands.registerCommand("zowe.jobs.deleteProfile", async (node) =>
             Profiles.getInstance().deleteProfile(datasetProvider, ussFileProvider, jobsProvider, node));
-
         vscode.commands.registerCommand("zowe.disableValidation", async (node) =>
             Profiles.getInstance().disableValidation(datasetProvider, ussFileProvider, jobsProvider, node));
         vscode.commands.registerCommand("zowe.enableValidation", async (node) =>
@@ -230,7 +229,6 @@ function initDatasetProvider(context: vscode.ExtensionContext, datasetProvider: 
     vscode.commands.registerCommand("zowe.hMigrateDataSet", (node) => dsActions.hMigrateDataSet(node));
     vscode.commands.registerCommand("zowe.hRecallDataSet", (node) => dsActions.hRecallDataSet(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
-        // dsActions.refreshAll(datasetProvider);
         datasetProvider.onDidChangeConfiguration(e);
     });
 
@@ -262,7 +260,6 @@ function initUSSProvider(context: vscode.ExtensionContext, ussFileProvider: IZow
     vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
-        // ussActions.refreshAllUSS(ussFileProvider);
         ussFileProvider.onDidChangeConfiguration(e);
     });
 
@@ -300,7 +297,6 @@ function initJobsProvider(context: vscode.ExtensionContext, jobsProvider: IZoweT
     vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node));
     vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node));
     vscode.workspace.onDidChangeConfiguration((e) => {
-        // jobActions.refreshAllJobs(jobsProvider);
         jobsProvider.onDidChangeConfiguration(e);
     });
 
