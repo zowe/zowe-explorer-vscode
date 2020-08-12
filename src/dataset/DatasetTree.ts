@@ -437,7 +437,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public findFavoritedNode(node: IZoweDatasetTreeNode) {
-        return this.mFavorites.find(
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        return profileNodeInFavorites.children.find(
             (temp) => (temp.label === `[${node.getParent().getLabel()}]: ${node.label}`) && (temp.contextValue.includes(node.contextValue))
         );
     }
@@ -728,14 +731,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
                 node.label = afterMemberName;
+                node.tooltip = afterMemberName;
             } catch (err) {
                 this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
                 await errorHandling(err, profileLabel, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
                 throw err;
             }
             let otherParent;
-            if (contextually.isFavorite(node)) {
-                // This may never get called if node is always a PDS member. In addFavorite, only the parent PDS is given fav contextValue.
+            if (contextually.isFavorite(node.getParent())) {
                 otherParent = this.findNonFavoritedNode(node.getParent());
             } else {
                 otherParent = this.findFavoritedNode(node.getParent());
@@ -744,6 +747,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
                 if (otherMember) {
                     otherMember.label = afterMemberName;
+                    otherMember.tooltip = afterMemberName;
                     this.refreshElement(otherMember);
                 }
             }
