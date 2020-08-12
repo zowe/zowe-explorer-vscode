@@ -24,6 +24,7 @@ export let LOG: Logger;
 export const COMMAND_COUNT = 77;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
+export const FAV_PROFILE_CONTEXT = "profile_fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
 export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";

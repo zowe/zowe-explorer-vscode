@@ -124,7 +124,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
-            if (element.contextValue && element.contextValue === "profile_fav"){
+            if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT){
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
@@ -136,7 +136,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     /**
      * Find matching profile node in this.mFavorites.
-     *
      * @param favoritesNodes - The array of favorite nodes to search through (e.g. this.mFavorites)
      * @param profileName - The name of the profile you are looking for
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
@@ -146,16 +145,32 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Initializes the tree based on favorites held in persistent store. Creates nodes for only for profile grouping.
-     *
+     * Creates and returns new profile node, and pushes it to mFavorites
+     * @param profileName Name of profile
+     * @returns {ZoweDatasetNode}
+     */
+    public createProfileNodeForFavs(profileName: string): ZoweDatasetNode {
+        const favProfileNode = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
+            this.mFavoriteSession, null, undefined, undefined);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const icon = getIconByNode(favProfileNode);
+        if (icon) {
+            favProfileNode.iconPath = icon.path;
+        }
+        this.mFavorites.push(favProfileNode);
+        return favProfileNode;
+    }
+
+    /**
+     * Initializes the Favorites tree based on favorites held in persistent store.
      * @param log
      */
     public async initializeFavorites(log: Logger) {
         this.log = log;
-        this.log.debug(localize("initializeDsFavorites.log.debug", "Initializing profiles with data set favorites."));
+        this.log.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            this.log.debug(localize("initializeDsFavorites.no.favorites", "No data set favorites found."));
+            this.log.debug(localize("initializeFavorites.no.favorites", "No data set favorites found."));
             return;
         }
         // Line validation
@@ -163,7 +178,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{session}$/;
         for (const line of lines) {
             if (!(favoriteDataSetPattern.test(line) || favoriteSearchPattern.test(line))){
-                vscode.window.showErrorMessage(localize("initializeFavorites.fileCorrupted", "Favorites file corrupted: ") + line);
+                this.log.debug(localize("initializeFavorites.invalidDsFavorite1", "Invalid Data Sets favorite: {0}.", line) +
+                localize("initializeFavorites.invalidDsFavorite2",
+                " Please check formatting of the Zowe-DS-Persistent 'favorites' settings in the {0} user settings.", getAppName(globals.ISTHEIA)));
+                continue;
             }
             // Parse line
             const profileName = line.substring(1, line.lastIndexOf("]")).trim();
@@ -182,22 +200,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Creates and returns new profile node, and pushes it to mFavorites
-     * @param profileName Name of profile
-     * @returns {ZoweDatasetNode}
+     * Creates an individual favorites node WITHOUT profiles or sessions, to be added to the specified profile node in Favorites during activation.
+     * This allows label and contextValue to be passed into these child nodes.
+     * @param label The favorited data set's label
+     * @param contextValue The favorited data set's context value
+     * @param parentNode The profile node in this.mFavorites that the favorite belongs to
+     * @returns IZoweDatasetTreeNode
      */
-    public createProfileNodeForFavs(profileName: string): ZoweDatasetNode {
-        const favProfileNode = new ZoweDatasetNode(profileName, vscode.TreeItemCollapsibleState.Collapsed,
-            this.mFavoriteSession, null, undefined, undefined);
-        favProfileNode.contextValue = "profile_fav";
-        const icon = getIconByNode(favProfileNode);
-        if (icon) {
-            favProfileNode.iconPath = icon.path;
-        }
-        this.mFavorites.push(favProfileNode);
-        return favProfileNode;
-    }
-
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode){
         const profileName = parentNode.label;
         let node: ZoweDatasetNode;
@@ -225,6 +234,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node.iconPath = icon.path;
             }
         } else {
+            // This case should not happen if the regex for initializeFavorites is defined correctly, but is here as a catch-all just in case.
             vscode.window.showErrorMessage(
                 localize("getFavoritesForProfile.loadError", "Error creating data set favorite node: {0} for profile {1}.", label, profileName)
             );
@@ -234,7 +244,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     /**
      * Loads favorites for the Favorites profile that was clicked on.
-     *
      * @param log
      */
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweDatasetTreeNode) {
@@ -261,13 +270,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 updatedFavsForProfile.push(favorite);
             } catch (error) {
                 const errMessage: string =
-                        localize("loadProfilesForFavorites.error.profile1",
-                            "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.", profileName) +
-                        localize("loadProfilesForFavorites.error.profile2",
-                            " To resolve this, you can create a profile with this name, ") +
-                        localize("loadProfilesForFavorites.error.profile3",
-                            "or remove the favorites with this profile name from the Zowe-DS-Persistent setting, which can be found in your ") +
-                        getAppName(globals.ISTHEIA) + localize("loadProfilesForFavorites.error.profile4", " user settings.");
+                    localize("loadProfilesForFavorites.error.profile1",
+                        "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.", profileName) +
+                    localize("loadProfilesForFavorites.error.profile2",
+                        " To resolve this, you can create a profile with this name, ") +
+                    localize("loadProfilesForFavorites.error.profile3",
+                        "or remove the favorites with this profile name from the Zowe-DS-Persistent setting in your {0} user settings.",
+                        getAppName(globals.ISTHEIA));
                 await errorHandling(error, null, errMessage);
                 continue;
             }
