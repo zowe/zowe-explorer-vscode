@@ -226,7 +226,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
         } else if (contextValue === globals.DS_SESSION_CONTEXT) {
             node = new ZoweDatasetNode(label,
-                vscode.TreeItemCollapsibleState.None, this.mFavoriteSession, undefined, undefined, undefined);
+                vscode.TreeItemCollapsibleState.None, parentNode , undefined, undefined, undefined);
             node.command = {command: "zowe.pattern", title: "", arguments: [node]};
             node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             const icon = getIconByNode(node);
