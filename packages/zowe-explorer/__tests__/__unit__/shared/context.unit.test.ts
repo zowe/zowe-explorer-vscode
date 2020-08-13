@@ -43,18 +43,48 @@ describe("Context helper tests", () => {
     const DS_SESSION_CONTEXT_FAV = "session_fav";
 
     const testList: string[] = [
-        INFORMATION_CONTEXT, FAVORITE_CONTEXT, DS_FAV_CONTEXT, PDS_FAV_CONTEXT, DS_SESSION_CONTEXT, DS_PDS_CONTEXT, DS_DS_CONTEXT, DS_MEMBER_CONTEXT,
-        DS_TEXT_FILE_CONTEXT, DS_FAV_TEXT_FILE_CONTEXT, DS_BINARY_FILE_CONTEXT, DS_MIGRATED_FILE_CONTEXT, USS_SESSION_CONTEXT, USS_DIR_CONTEXT,
-        USS_FAV_DIR_CONTEXT, JOBS_SESSION_CONTEXT, JOBS_JOB_CONTEXT, JOBS_SPOOL_CONTEXT, ICON_STATE_OPEN, ICON_STATE_CLOSED, JOBS_JOB_FAVORITE1,
-        JOBS_JOB_FAVORITE2, JOBS_JOB_FAVORITE3
+        INFORMATION_CONTEXT,
+        FAVORITE_CONTEXT,
+        DS_FAV_CONTEXT,
+        PDS_FAV_CONTEXT,
+        DS_SESSION_CONTEXT,
+        DS_PDS_CONTEXT,
+        DS_DS_CONTEXT,
+        DS_MEMBER_CONTEXT,
+        DS_TEXT_FILE_CONTEXT,
+        DS_FAV_TEXT_FILE_CONTEXT,
+        DS_BINARY_FILE_CONTEXT,
+        DS_MIGRATED_FILE_CONTEXT,
+        USS_SESSION_CONTEXT,
+        USS_DIR_CONTEXT,
+        USS_FAV_DIR_CONTEXT,
+        JOBS_SESSION_CONTEXT,
+        JOBS_JOB_CONTEXT,
+        JOBS_SPOOL_CONTEXT,
+        ICON_STATE_OPEN,
+        ICON_STATE_CLOSED,
+        JOBS_JOB_FAVORITE1,
+        JOBS_JOB_FAVORITE2,
+        JOBS_JOB_FAVORITE3,
     ];
 
     const testListA: string[] = [
-        DS_FAV_CONTEXT, PDS_FAV_CONTEXT, DS_FAV_TEXT_FILE_CONTEXT, USS_FAV_DIR_CONTEXT, JOBS_JOB_FAVORITE3
+        DS_FAV_CONTEXT,
+        PDS_FAV_CONTEXT,
+        DS_FAV_TEXT_FILE_CONTEXT,
+        USS_FAV_DIR_CONTEXT,
+        JOBS_JOB_FAVORITE3,
     ];
     const testListB: string[] = [
-        DS_SESSION_CONTEXT, DS_PDS_CONTEXT, DS_DS_CONTEXT, DS_MEMBER_CONTEXT,
-        DS_TEXT_FILE_CONTEXT, DS_BINARY_FILE_CONTEXT, DS_MIGRATED_FILE_CONTEXT, USS_SESSION_CONTEXT, USS_DIR_CONTEXT
+        DS_SESSION_CONTEXT,
+        DS_PDS_CONTEXT,
+        DS_DS_CONTEXT,
+        DS_MEMBER_CONTEXT,
+        DS_TEXT_FILE_CONTEXT,
+        DS_BINARY_FILE_CONTEXT,
+        DS_MIGRATED_FILE_CONTEXT,
+        USS_SESSION_CONTEXT,
+        USS_DIR_CONTEXT,
     ];
 
     const treeItem = new TreeItem("Test", 0);
@@ -144,7 +174,9 @@ describe("Context helper tests", () => {
     it("Test Non Favorite PDS", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
-            expect(contextually.isPdsNotFav(treeItem)).toBe(treeItem.contextValue === DS_PDS_CONTEXT);
+            expect(contextually.isPdsNotFav(treeItem)).toBe(
+                treeItem.contextValue === DS_PDS_CONTEXT
+            );
         }
     });
     it("Test Favorite text or Binary", async () => {
@@ -156,7 +188,9 @@ describe("Context helper tests", () => {
                     expect(contextually.isFavoriteTextOrBinary(treeItem)).toBe(true);
                     break;
                 default:
-                    expect(contextually.isFavoriteTextOrBinary(treeItem)).toBe(false);
+                    expect(contextually.isFavoriteTextOrBinary(treeItem)).toBe(
+                        false
+                    );
             }
         }
     });

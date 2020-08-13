@@ -79,9 +79,9 @@ function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     // Mock the logger
     globals.defineGlobals("/test/path/");
-    // tslint:disable-next-line: no-object-literal-type-assertion
     const extensionMock = jest.fn(
         () =>
+            // tslint:disable-next-line: no-object-literal-type-assertion
             ({
                 subscriptions: [],
                 extensionPath: path.join(__dirname, "..", ".."),

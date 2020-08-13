@@ -1195,7 +1195,7 @@
     "lint:tests": "tslint --format stylish \"**/__tests__/**/*.ts\" --exclude \"node_modules/**/*\" && eslint \"__tests__/**\"",
     "clean": "gulp clean",
     "lintErrors": "echo \"zowe-explorer: lintErrors coming soon with eslint.\"",
-    "pretty": "echo \"zowe-explorer: pretty coming soon with eslint.\""
+    "pretty": "prettier --write ."
   },
   "engines": {
     "vscode": "^1.43.0"

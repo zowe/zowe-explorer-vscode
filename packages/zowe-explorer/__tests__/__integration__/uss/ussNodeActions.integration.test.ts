@@ -30,7 +30,7 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 describe("ussNodeActions integration test", async () => {
@@ -38,20 +38,27 @@ describe("ussNodeActions integration test", async () => {
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
-        null, session, null, false, testProfile.name);
+    const sessionNode = new ZoweUSSNode(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        null,
+        false,
+        testProfile.name
+    );
     sessionNode.contextValue = DS_SESSION_CONTEXT;
     const testTree = new USSTree();
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
     });
 
-    afterEach(async function() {
+    afterEach(async function () {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
@@ -59,7 +66,13 @@ describe("ussNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace
+            .getConfiguration()
+            .update(
+                "Zowe-USS-Persistent",
+                oldSettings,
+                vscode.ConfigurationTarget.Global
+            );
     });
 
     describe("Initialize USS Favorites", async () => {
@@ -68,21 +81,32 @@ describe("ussNodeActions integration test", async () => {
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
             // Then, update
-            const favorites = [`[${profileName}]: /u/tester1{directory}`,
+            const favorites = [
+                `[${profileName}]: /u/tester1{directory}`,
                 `[${profileName}]: /u/tester1/testfile1{textfile}`,
                 `['badProfileName']: /u/tester1{directory}`,
                 `[${profileName}]: /u/tester2{directory}`,
-                `[${profileName}]: /u/tester2/testfile2{textfile}`];
-            await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent",
-                {persistence: true, favorites}, vscode.ConfigurationTarget.Global);
+                `[${profileName}]: /u/tester2/testfile2{textfile}`,
+            ];
+            await vscode.workspace
+                .getConfiguration()
+                .update(
+                    "Zowe-USS-Persistent",
+                    { persistence: true, favorites },
+                    vscode.ConfigurationTarget.Global
+                );
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await testTree.initialize(Logger.getAppLogger());
-            const ussFavoritesArray = [`[${profileName}]: tester1`,
+            const ussFavoritesArray = [
+                `[${profileName}]: tester1`,
                 `[${profileName}]: testfile1`,
                 `[${profileName}]: tester2`,
-                `[${profileName}]: testfile2`];
+                `[${profileName}]: testfile2`,
+            ];
             const gotCalledOnce = showErrorStub.calledOnce;
-            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(ussFavoritesArray);
+            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(
+                ussFavoritesArray
+            );
             expect(gotCalledOnce).to.equal(true);
         }).timeout(TIMEOUT);
     });
@@ -92,10 +116,12 @@ describe("ussNodeActions integration test", async () => {
         const afterFileName = `${path}/filetest1rename`;
 
         afterEach(async () => {
-            await Promise.all([
-                zowe.Delete.ussFile(sessionNode.getSession(), beforeFileName),
-                zowe.Delete.ussFile(sessionNode.getSession(), afterFileName),
-            ].map((p) => p.catch((err) => err)));
+            await Promise.all(
+                [
+                    zowe.Delete.ussFile(sessionNode.getSession(), beforeFileName),
+                    zowe.Delete.ussFile(sessionNode.getSession(), afterFileName),
+                ].map((p) => p.catch((err) => err))
+            );
         });
         beforeEach(async () => {
             await zowe.Create.uss(
@@ -112,16 +138,32 @@ describe("ussNodeActions integration test", async () => {
             const afterNameBase = afterFileName.split("/").pop();
 
             try {
-                const testFolder = new ZoweUSSNode(path, vscode.TreeItemCollapsibleState.Expanded,
-                    sessionNode, session, null, false, testProfile.name);
-                const testNode = new ZoweUSSNode(beforeNameBase, vscode.TreeItemCollapsibleState.None,
-                    testFolder, session, testFolder.label, false, testProfile.name);
+                const testFolder = new ZoweUSSNode(
+                    path,
+                    vscode.TreeItemCollapsibleState.Expanded,
+                    sessionNode,
+                    session,
+                    null,
+                    false,
+                    testProfile.name
+                );
+                const testNode = new ZoweUSSNode(
+                    beforeNameBase,
+                    vscode.TreeItemCollapsibleState.None,
+                    testFolder,
+                    session,
+                    testFolder.label,
+                    false,
+                    testProfile.name
+                );
                 const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                 inputBoxStub.returns(afterNameBase);
 
                 await testTree.rename(testNode);
                 list = await zowe.List.fileList(sessionNode.getSession(), path);
-                list = list.apiResponse.items ? list.apiResponse.items.map((entry) => entry.name) : [];
+                list = list.apiResponse.items
+                    ? list.apiResponse.items.map((entry) => entry.name)
+                    : [];
             } catch (err) {
                 error = err;
             }

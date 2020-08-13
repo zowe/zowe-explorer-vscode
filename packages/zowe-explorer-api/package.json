@@ -14,12 +14,13 @@
     "src"
   ],
   "scripts": {
-    "build": "yarn clean && tsc -p ./",
+    "build": "yarn clean && yarn license && tsc -p ./",
     "test": "echo \"zowe-explorer-api: coming soon.\"",
     "lint": "echo \"zowe-explorer-api: coming soon.\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
-    "pretty": "echo \"zowe-explorer-api: coming soon.\"",
+    "pretty": "prettier --write .",
     "clean": "rimraf lib",
+    "license": "node ../../scripts/license.js",
     "package": "yarn build && npm pack"
   }
 }

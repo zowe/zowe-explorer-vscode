@@ -9,7 +9,12 @@
  *                                                                                 *
  */
 
-import { getMessageById, getMessageByNode, MessageCategoryId, MessageContentType } from "../../../src/generators/messages";
+import {
+    getMessageById,
+    getMessageByNode,
+    MessageCategoryId,
+    MessageContentType,
+} from "../../../src/generators/messages";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { IProfileLoaded, Session } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
@@ -22,8 +27,12 @@ describe("Checking message generator's basics", () => {
         const createTreeView = jest.fn();
         const getConfiguration = jest.fn();
 
-        Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-        Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: createTreeView,
+        });
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: getConfiguration,
+        });
     };
     const generateTestSessionNode = () => {
         const session = new Session({
@@ -40,16 +49,37 @@ describe("Checking message generator's basics", () => {
             profile: {},
             type: "zosmf",
             message: "",
-            failNotFound: false
+            failNotFound: false,
         };
-        return new ZoweDatasetNode("session", vscode.TreeItemCollapsibleState.Collapsed,
-            null, session, undefined, undefined, profile);
+        return new ZoweDatasetNode(
+            "session",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            null,
+            session,
+            undefined,
+            undefined,
+            profile
+        );
     };
     const generateTestDatasetMemberNode = (session: ZoweDatasetNode) => {
-        const parent = new ZoweDatasetNode("pds", vscode.TreeItemCollapsibleState.Collapsed,
-            session, session.getSession(), undefined, undefined, session.getProfile());
-        return new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None,
-            parent, parent.getSession(), undefined, undefined, parent.getProfile());
+        const parent = new ZoweDatasetNode(
+            "pds",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            session.getSession(),
+            undefined,
+            undefined,
+            session.getProfile()
+        );
+        return new ZoweDatasetNode(
+            "member",
+            vscode.TreeItemCollapsibleState.None,
+            parent,
+            parent.getSession(),
+            undefined,
+            undefined,
+            parent.getProfile()
+        );
     };
 
     setGlobalMocks();
@@ -63,13 +93,19 @@ describe("Checking message generator's basics", () => {
     });
     it("Testing that you can't get Message with not existing ID", () => {
         const targetId = "some-not-existing-id";
-        const resultMessage = getMessageById(targetId as any, MessageContentType.upload);
+        const resultMessage = getMessageById(
+            targetId as any,
+            MessageContentType.upload
+        );
 
         expect(resultMessage).toBeNull();
     });
     it("Testing that you can correctly get Generic Message by Node", () => {
         const sessionNode = generateTestSessionNode();
-        const resultMessage = getMessageByNode(sessionNode, MessageContentType.upload);
+        const resultMessage = getMessageByNode(
+            sessionNode,
+            MessageContentType.upload
+        );
 
         expect(resultMessage).not.toBeNull();
         expect(resultMessage).toBe("Saving dataset...");
@@ -77,14 +113,20 @@ describe("Checking message generator's basics", () => {
     it("Testing that you can correctly get Specific Message By Node", () => {
         const sessionNode = generateTestSessionNode();
         const memberNode = generateTestDatasetMemberNode(sessionNode);
-        const resultMessage = getMessageByNode(memberNode, MessageContentType.upload);
+        const resultMessage = getMessageByNode(
+            memberNode,
+            MessageContentType.upload
+        );
 
         expect(resultMessage).not.toBeNull();
         expect(resultMessage).toBe("Saving dataset member...");
     });
     it("Testing that you can't get Specific Message using incorrect Node", () => {
         const randomNode = {};
-        const resultMessage = getMessageByNode(randomNode, MessageContentType.upload);
+        const resultMessage = getMessageByNode(
+            randomNode,
+            MessageContentType.upload
+        );
         expect(resultMessage).toBeNull();
     });
 });

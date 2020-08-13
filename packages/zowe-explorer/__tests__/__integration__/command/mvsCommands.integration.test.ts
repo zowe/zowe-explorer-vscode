@@ -17,7 +17,6 @@ import * as testConst from "../../../resources/testProfileData";
 
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 
-
 describe("mvsCommands integration test", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
@@ -36,7 +35,7 @@ describe("mvsCommands integration test", async () => {
 
     describe("Submit an MVS command", async () => {
         it("should submit a command", async () => {
-            const spy = sandbox.spy( zowe.IssueCommand, "issueSimple");
+            const spy = sandbox.spy(zowe.IssueCommand, "issueSimple");
             MvsCommandHandler.getInstance().issueMvsCommand(session, TEST_CMD);
             expect(spy.called).to.equal(true);
             expect(spy.args[0][1]).to.equal("d iplinfo");

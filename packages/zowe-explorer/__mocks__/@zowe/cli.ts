@@ -39,8 +39,8 @@ export namespace CheckStatus {
             zosmf_saf_realm: "fake",
             zosmf_full_version: "fake",
             api_version: "fake",
-            plugins: "fake"
-        }
+            plugins: "fake",
+        };
     }
 }
 
@@ -54,8 +54,12 @@ export declare const enum sampleCreateDataSetTypeEnum {
 
 // tslint:disable-next-line:no-namespace
 export namespace List {
-    export function dataSet(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
-        if(hlq.toUpperCase() === "THROW ERROR") {
+    export function dataSet(
+        session: Session,
+        hlq: string,
+        options: IListOptions
+    ): Promise<IZosFilesResponse> {
+        if (hlq.toUpperCase() === "THROW ERROR") {
             throw Error("Throwing an error to check error handling for unit tests!");
         }
 
@@ -70,21 +74,25 @@ export namespace List {
                         new Items("BRTVS99.DDIR", "PO", null),
                         new Items("BRTVS99.VS1", "VS", null),
                         new Items("BRTVS99.VS1.INDEX", "VS", null),
-                        new Items("BRTVS99.VS1.DATA", "VS", null)
-                    ]
-                }
+                        new Items("BRTVS99.VS1.DATA", "VS", null),
+                    ],
+                },
             };
             resolve(response);
         });
     }
 
-    export function allMembers(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
-        if(hlq === "Throw Error") {
+    export function allMembers(
+        session: Session,
+        hlq: string,
+        options: IListOptions
+    ): Promise<IZosFilesResponse> {
+        if (hlq === "Throw Error") {
             throw Error("Throwing an error to check error handling for unit tests!");
         }
 
         return new Promise((resolve) => {
-            if(hlq === "Response Fail") {
+            if (hlq === "Response Fail") {
                 resolve({ success: false });
                 return;
             }
@@ -93,21 +101,29 @@ export namespace List {
                 apiResponse: {
                     items: [
                         new Items(null, "PS", "BRTVS99"),
-                        new Items(null, "PS", "BRTVS99.DDIR")
-                    ]
-                }
+                        new Items(null, "PS", "BRTVS99.DDIR"),
+                    ],
+                },
             };
             resolve(response);
         });
     }
 
     export class Items {
-        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) {
-        }
+        constructor(
+            public dsname: string,
+            public dsorg: string,
+            public member: string,
+            public migr?: string
+        ) {}
     }
 
-    export function fileList(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
-        if(hlq.toUpperCase() === "THROW ERROR") {
+    export function fileList(
+        session: Session,
+        hlq: string,
+        options: IListOptions
+    ): Promise<IZosFilesResponse> {
+        if (hlq.toUpperCase() === "THROW ERROR") {
             throw Error("Throwing an error to check error handling for unit tests!");
         }
 
@@ -117,15 +133,30 @@ export namespace List {
                 apiResponse: {
                     items: [
                         {
-                            name: "aDir", mode: "drw-r--r--", size: 20, uid: 0, user: "WSADMIN", gid: 1,
-                            group: "OMVSGRP", mtime: "2015-11-24T02:12:04"
+                            name: "aDir",
+                            mode: "drw-r--r--",
+                            size: 20,
+                            uid: 0,
+                            user: "WSADMIN",
+                            gid: 1,
+                            group: "OMVSGRP",
+                            mtime: "2015-11-24T02:12:04",
                         },
                         {
-                            name: "myFile.txt", mode: "-rw-r--r--", size: 20, uid: 0, user: "WSADMIN", gid: 1,
-                            group: "OMVSGRP", mtime: "2015-11-24T02:12:04"
-                        }
-                ],  returnedRows: 2, totalRows: 2, JSONversion: 1
-                }
+                            name: "myFile.txt",
+                            mode: "-rw-r--r--",
+                            size: 20,
+                            uid: 0,
+                            user: "WSADMIN",
+                            gid: 1,
+                            group: "OMVSGRP",
+                            mtime: "2015-11-24T02:12:04",
+                        },
+                    ],
+                    returnedRows: 2,
+                    totalRows: 2,
+                    JSONversion: 1,
+                },
             };
             resolve(response);
         });

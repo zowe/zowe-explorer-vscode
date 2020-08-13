@@ -31,7 +31,7 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 describe("jobNodeActions integration test", async () => {
@@ -39,20 +39,26 @@ describe("jobNodeActions integration test", async () => {
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new Job(testConst.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null,
-        session, null, null);
+    const sessionNode = new Job(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Collapsed,
+        null,
+        session,
+        null,
+        null
+    );
     sessionNode.contextValue = JOBS_SESSION_CONTEXT;
     const testTree = new ZosJobsProvider();
     testTree.mSessionNodes.push(sessionNode);
 
     let sandbox;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
     });
 
-    afterEach(async function() {
+    afterEach(async function () {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
@@ -60,7 +66,13 @@ describe("jobNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace
+            .getConfiguration()
+            .update(
+                "Zowe-DS-Persistent",
+                oldSettings,
+                vscode.ConfigurationTarget.Global
+            );
     });
 
     describe("Refresh ALL", async () => {

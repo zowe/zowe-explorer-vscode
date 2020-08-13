@@ -1,0 +1,6 @@
+dist
+out
+lib
+yarn.lock
+*.js
+results

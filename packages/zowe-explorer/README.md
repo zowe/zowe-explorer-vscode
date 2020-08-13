@@ -10,49 +10,49 @@
 
 The Zowe Explorer extension modernizes the way developers and system administrators interact with z/OS mainframes by:
 
-* Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
-* Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
-* Providing a more streamlined way to access data sets, uss files and jobs.
-* Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
-* Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
+- Enabling you to create, modify, rename, copy, and upload data sets directly to a z/OS mainframe.
+- Enabling you to create, modify, rename, and upload USS files directly to a z/OS mainframe.
+- Providing a more streamlined way to access data sets, uss files and jobs.
+- Letting you create, edit, and delete Zowe CLI `zosmf` compatible profiles.
+- Letting you use the Secure Credential Store plug-in to store your credentials securely in the settings.
 
 More information:
 
-* For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
-* Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
+- For the complete Zowe Explorer documentation, see [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-install.html).
+- Join the **#zowe-explorer** channel on [Slack](https://openmainframeproject.slack.com/) to stay in touch with the Zowe community.
 
 ## Contents
 
-* [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
-* [Prerequisites](#prerequisites)
-* [Getting Started](#getting-started)
-* [Credentials Security](#credentials-security)
-* [Usage Tips](#usage-tips)
-* [Extending Zowe Explorer](#extending-zowe-explorer)
+- [What's new in Zowe Explorer 1.7.0](#what's-new-in-zowe-explorer-1.7.0)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Credentials Security](#credentials-security)
+- [Usage Tips](#usage-tips)
+- [Extending Zowe Explorer](#extending-zowe-explorer)
 
 ## What's new in Zowe Explorer 1.7.0
 
 New features:
 
-* Added a credentials check feature that allows users to update their credentials if they receive an authorization error.
-* Added a star icon which clearly denotes data sets, USS files, and jobs as favorites.
-* Added a profile validation feature that checks whether a profile is valid. The feature is triggered when any action is performed with the profile. Validated profiles are indicated by a green mark.
-* Disallowed case sensitivity for profiles with same names.
+- Added a credentials check feature that allows users to update their credentials if they receive an authorization error.
+- Added a star icon which clearly denotes data sets, USS files, and jobs as favorites.
+- Added a profile validation feature that checks whether a profile is valid. The feature is triggered when any action is performed with the profile. Validated profiles are indicated by a green mark.
+- Disallowed case sensitivity for profiles with same names.
 
 Improvements:
 
-* Enabled editing of search filters.
-* Enabled editing of ASCII files in USS.
-* Improved text in confirmation dialogs.
-* Reorganized the Data Sets context menu to match the order of commands recommended by VSCode.
+- Enabled editing of search filters.
+- Enabled editing of ASCII files in USS.
+- Improved text in confirmation dialogs.
+- Reorganized the Data Sets context menu to match the order of commands recommended by VSCode.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 
 ## Prerequisites
 
-* Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
-* Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
-* Create a Zowe Explorer profile.
+- Install [Node.js](https://nodejs.org/en/download/) v8.0 or later.
+- Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
+- Create a Zowe Explorer profile.
 
 ## Getting Started
 
@@ -75,15 +75,15 @@ You can now use all the functionalities of the extension.
 
 Review the following use cases to understand how to work with data sets in Zowe Explorer. For the complete list of features including USS and jobs, see [Zowe Explorer Sample Use Cases](https://docs.zowe.org/stable/user-guide/ze-usage.html#sample-use-cases).
 
-* [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
-* [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
-* [Rename data sets](#rename-data-sets): Rename specified data sets.
-* [Copy data sets](#copy-data-sets): Copy specified data sets and members.
-* [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
-* [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
-* [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
-* [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
-* [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
+- [View data sets and use multiple filters](#view-data-sets-and-use-multiple-filters): View multiple data sets simultaneously and apply filters to show specified data sets.
+- [Refresh the data set list](#refresh-the-list-of-data-sets): Refresh the list of pre-filtered data sets.
+- [Rename data sets](#rename-data-sets): Rename specified data sets.
+- [Copy data sets](#copy-data-sets): Copy specified data sets and members.
+- [Download, edit, and upload existing PDS members](#download-edit-and-upload-existing-pds-members): You can instantly pull data sets and data set members from the mainframe, edit them, and upload back.
+- [Prevent merge conflicts](#use-the-save-option-to-prevent-merge-conflicts): The save option includes a **compare** mechanism letting you resolve potential merge conflicts.
+- [Create data sets and data set members](#create-a-new-pds-and-a-pds-member): Create a new data set and data set members.
+- [Delete data set member and a data set](#delete-a-pds-member-and-pds): Delete a chosen data set member or an entire data set.
+- [View and access multiple profiles simultaneously](#view-and-access-multiple-profiles-simultaneously): Work with data sets from multiple profiles.
 
 #### View data sets and use multiple filters
 
@@ -92,7 +92,7 @@ Review the following use cases to understand how to work with data sets in Zowe 
 3. Hover over the profile that you want to apply the filter to.
 4. Click the **magnifying glass** icon.
 5. Enter a pattern you want to create a filter for.
-  The data sets that match your pattern(s) are displayed in the explorer tree.
+   The data sets that match your pattern(s) are displayed in the explorer tree.
 
 **Tip:** To provide multiple filters, separate entries with a comma. You can append or postpend any filter with an \*, which indicates wildcard searching. You cannot enter an \* as the entire pattern.
 
@@ -134,9 +134,10 @@ Review the following use cases to understand how to work with data sets in Zowe 
 3. Open a profile.
 4. Click the PDS member (or PS) that you want to download.
 
-    **Note:** To view the members of a PDS, click the PDS to expand the tree.
+   **Note:** To view the members of a PDS, click the PDS to expand the tree.
 
-    The PDS member is displayed in the text editor window of VSC.
+   The PDS member is displayed in the text editor window of VSC.
+
 5. Edit the document.
 6. Navigate back to the PDS member (or PS) in the explorer tree, and click the **Save** button.
 
@@ -182,10 +183,11 @@ Your PDS member (or PS) is uploaded.
 4. Right-click on the PDS member that you want to delete and select **Delete Member**.
 5. Confirm the deletion by clicking **Yes** on the drop-down menu.
 
-    **Note:** Alternatively, you can select 'No' to cancel the deletion.
+   **Note:** Alternatively, you can select 'No' to cancel the deletion.
+
 6. To delete a PDS, right-click the PDS and click **Delete PDS**, then confirm the deletion.
 
-    **Note:** You can delete a PDS before you delete its members.
+   **Note:** You can delete a PDS before you delete its members.
 
 ![Delete](docs/images/ZE-del-pds-member.gif?raw=true "Delete")
 <br /><br />
@@ -212,15 +214,15 @@ For more information about SCS, see [Secure Credential Store Plug-in for Zowe Ex
 
 ## Usage tips
 
-* Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
+- Use the **Add Favorite** feature to permanently store chosen data sets, USS files, and jobs in the **Favorites** folder. Right-click on a data set, USS file or jobs and select **Add Favorite**.
 
-* **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
+- **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. Fox example, you can use such extensions as [COBOL Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.cobol-language-support) or [HLASM Language Support](https://marketplace.visualstudio.com/items?itemName=broadcomMFD.hlasm-language-support).
 
-* **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
+- **Edit a profile**: Click the **pencil** icon next to the **magnifying glass** icon in the explorer tree, and modify the information inside your profile.
 
-* **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
+- **Delete a profile**: Right-click a chosen profile and select **Delete Profile** to permanently delete the profile. The functionality deletes a profile from your `.zowe` folder.
 
-* **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
+- **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To add the profile back, click the **+** button and select the profile from the quick pick list.
 
 For information how to configure Zowe Explorer, see [Zowe Explorer Configuration guidelines](https://docs.zowe.org/stable/user-guide/ze-install.html#configuration).
 
