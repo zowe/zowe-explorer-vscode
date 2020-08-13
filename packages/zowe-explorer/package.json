@@ -1176,8 +1176,8 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "gulp build && yarn license && yarn lint && webpack --mode production --vscode-nls && yarn update",
-    "build": "gulp build && yarn license && webpack --mode development --vscode-nls",
+    "vscode:prepublish": "gulp build && yarn license && yarn lint && webpack --mode production && yarn update",
+    "build": "gulp build && yarn license && webpack --mode development",
     "build:integration": "gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000",
@@ -1187,7 +1187,7 @@
     "update": "node ../../scripts/stringUpdateScript.js",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
-    "watch": "gulp build && webpack --mode development --vscode-nls --watch --info-verbosity verbose",
+    "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "yarn lint:src && yarn lint:tests  && yarn markdown",
@@ -1201,6 +1201,7 @@
     "vscode": "^1.43.0"
   },
   "devDependencies": {
+    "eslint-plugin-zowe-explorer": "0.1.0",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.31.0",
     "eslint": "^6.8.0",

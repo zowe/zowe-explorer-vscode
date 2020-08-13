@@ -22,7 +22,6 @@
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
-    "eslint-plugin-zowe-explorer": "0.1.0",
     "typescript": "^3.8.3",
     "@types/node": "^10.17.17",
     "@types/vscode": "^1.43.0",

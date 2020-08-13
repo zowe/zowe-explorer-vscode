@@ -13,10 +13,11 @@ jobs:
       # check out source
       - uses: actions/checkout@v2
 
+      # install yarn
+      - run: npm install -g yarn
+
       # install dependencies
-      #   equivalent to `npm ci`
-      #   - run: yarn install --frozen-lockfile
-      - run: npm ci
+      - run: yarn install --frozen-lockfile
 
       # copy test data file needed for build :-(
       - name: Create test data file
