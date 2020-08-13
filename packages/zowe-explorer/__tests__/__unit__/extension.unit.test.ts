@@ -1,13 +1,13 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import * as path from "path";
@@ -18,7 +18,7 @@ import * as fsextra from "fs-extra";
 import * as imperative from "@zowe/imperative";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
-import { Profiles, ValidProfileEnum } from "../../src/Profiles";
+import { Profiles, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 
@@ -66,16 +66,19 @@ async function createGlobalMocks() {
         mockIcInstance: jest.fn(),
         mockImperativeConfig: jest.fn(),
         mockInitialize: jest.fn(),
-        mockGetImperativeConfig: jest.fn().mockReturnValue({profiles: []}),
+        mockGetImperativeConfig: jest.fn().mockReturnValue({ profiles: [] }),
         mockCliProfileManager: jest.fn().mockImplementation(() => {
-            return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
+            return {
+                GetAllProfileNames: globalMocks.mockGetAllProfileNames,
+                Load: globalMocks.mockLoad,
+            };
         }),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
             return {
                 Global: 1,
                 Workspace: 2,
-                WorkspaceFolder: 3
+                WorkspaceFolder: 3,
             };
         }),
         testSession: new imperative.Session({
@@ -87,13 +90,13 @@ async function createGlobalMocks() {
         }),
         testProfile: createIProfile(),
         testProfileOps: {
-            allProfiles: [{name: "firstName"}, {name: "secondName"}],
-            defaultProfile: {name: "firstName"},
+            allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+            defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
             loadNamedProfile: null,
             validProfile: ValidProfileEnum.VALID,
             checkCurrentProfile: jest.fn(),
-            usesSecurity: jest.fn().mockReturnValue(true)
+            usesSecurity: jest.fn().mockReturnValue(true),
         },
         mockExtension: null,
         appName: vscode.env.appName,
@@ -174,58 +177,157 @@ async function createGlobalMocks() {
             "zowe.deleteProfile",
             "zowe.cmd.deleteProfile",
             "zowe.uss.deleteProfile",
-            "zowe.jobs.deleteProfile"
-        ]
+            "zowe.jobs.deleteProfile",
+        ],
     };
 
-    Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
-    Object.defineProperty(imperative, "CliProfileManager", { value: globalMocks.mockCliProfileManager, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.mockCreateTreeView, configurable: true });
-    Object.defineProperty(vscode, "Uri", { value: globalMocks.mockUri, configurable: true });
-    Object.defineProperty(vscode.commands, "registerCommand", { value: globalMocks.mockRegisterCommand, configurable: true });
-    Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: globalMocks.mockOnDidSaveTextDocument, configurable: true });
-    Object.defineProperty(vscode.window, "onDidCollapseElement", { value: globalMocks.mockOnDidCollapseElement, configurable: true });
-    Object.defineProperty(vscode.window, "onDidExpandElement", { value: globalMocks.mockOnDidExpandElement, configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.mockGetConfiguration, configurable: true });
-    Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: globalMocks.mockOnDidChangeConfiguration, configurable: true });
-    Object.defineProperty(fs, "readdirSync", { value: globalMocks.mockReaddirSync, configurable: true });
-    Object.defineProperty(fs, "createReadStream", { value: globalMocks.mockCreateReadStream, configurable: true });
-    Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
-    Object.defineProperty(fs, "existsSync", { value: globalMocks.mockExistsSync, configurable: true });
-    Object.defineProperty(fs, "unlinkSync", { value: globalMocks.mockUnlinkSync, configurable: true});
-    Object.defineProperty(fs, "rmdirSync", { value: globalMocks.mockRmdirSync, configurable: true });
-    Object.defineProperty(fs, "readFileSync", { value: globalMocks.mockReadFileSync, configurable: true });
-    Object.defineProperty(fsextra, "moveSync", { value: globalMocks.mockMoveSync, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.mockShowErrorMessage, configurable: true });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.mockShowWarningMessage, configurable: true });
-    Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession",
-                         { value: globalMocks.mockCreateBasicZosmfSession, configurable: true });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.mockShowInformationMessage, configurable: true });
-    Object.defineProperty(zowe, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
-    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider",
-                         { value: globalMocks.mockRegisterTextDocumentContentProvider, configurable: true });
-    Object.defineProperty(vscode.Disposable, "from", { value: globalMocks.mockFrom, configurable: true });
-    Object.defineProperty(ZoweDatasetNode, "getProfileName", { value: globalMocks.mockGetProfileName, configurable: true });
-    Object.defineProperty(globalMocks.mockCliProfileManager, "initialize", { value: globalMocks.mockInitialize, configurable: true });
-    Object.defineProperty(zowe, "getImperativeConfig", { value: globalMocks.mockGetImperativeConfig, configurable: true });
-    Object.defineProperty(imperative, "ImperativeConfig", { value: globalMocks.mockImperativeConfig, configurable: true });
-    Object.defineProperty(globalMocks.mockImperativeConfig, "instance", { value: globalMocks.mockIcInstance, configurable: true });
-    Object.defineProperty(globalMocks.mockIcInstance, "cliHome", { get: globalMocks.mockCliHome });
-    Object.defineProperty(vscode.env, "appName", { value: globalMocks.appName, configurable: true });
+    Object.defineProperty(fs, "mkdirSync", {
+        value: globalMocks.mockMkdirSync,
+        configurable: true,
+    });
+    Object.defineProperty(imperative, "CliProfileManager", {
+        value: globalMocks.mockCliProfileManager,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: globalMocks.mockCreateTreeView,
+        configurable: true,
+    });
+    Object.defineProperty(vscode, "Uri", {
+        value: globalMocks.mockUri,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.commands, "registerCommand", {
+        value: globalMocks.mockRegisterCommand,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
+        value: globalMocks.mockOnDidSaveTextDocument,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "onDidCollapseElement", {
+        value: globalMocks.mockOnDidCollapseElement,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "onDidExpandElement", {
+        value: globalMocks.mockOnDidExpandElement,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: globalMocks.mockGetConfiguration,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
+        value: globalMocks.mockOnDidChangeConfiguration,
+        configurable: true,
+    });
+    Object.defineProperty(fs, "readdirSync", {
+        value: globalMocks.mockReaddirSync,
+        configurable: true,
+    });
+    Object.defineProperty(fs, "createReadStream", {
+        value: globalMocks.mockCreateReadStream,
+        configurable: true,
+    });
+    Object.defineProperty(vscode, "ConfigurationTarget", {
+        value: globalMocks.enums,
+        configurable: true,
+    });
+    Object.defineProperty(fs, "existsSync", {
+        value: globalMocks.mockExistsSync,
+        configurable: true,
+    });
+    Object.defineProperty(fs, "unlinkSync", {
+        value: globalMocks.mockUnlinkSync,
+        configurable: true,
+    });
+    Object.defineProperty(fs, "rmdirSync", {
+        value: globalMocks.mockRmdirSync,
+        configurable: true,
+    });
+    Object.defineProperty(fs, "readFileSync", {
+        value: globalMocks.mockReadFileSync,
+        configurable: true,
+    });
+    Object.defineProperty(fsextra, "moveSync", {
+        value: globalMocks.mockMoveSync,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showErrorMessage", {
+        value: globalMocks.mockShowErrorMessage,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: globalMocks.mockShowWarningMessage,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "ZosmfSession", {
+        value: globalMocks.mockZosmfSession,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.mockZosmfSession, "createBasicZosmfSession", {
+        value: globalMocks.mockCreateBasicZosmfSession,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showInformationMessage", {
+        value: globalMocks.mockShowInformationMessage,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "Utilities", {
+        value: globalMocks.mockUtilities,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", {
+        value: globalMocks.mockRegisterTextDocumentContentProvider,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.Disposable, "from", {
+        value: globalMocks.mockFrom,
+        configurable: true,
+    });
+    Object.defineProperty(ZoweDatasetNode, "getProfileName", {
+        value: globalMocks.mockGetProfileName,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.mockCliProfileManager, "initialize", {
+        value: globalMocks.mockInitialize,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "getImperativeConfig", {
+        value: globalMocks.mockGetImperativeConfig,
+        configurable: true,
+    });
+    Object.defineProperty(imperative, "ImperativeConfig", {
+        value: globalMocks.mockImperativeConfig,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.mockImperativeConfig, "instance", {
+        value: globalMocks.mockIcInstance,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.mockIcInstance, "cliHome", {
+        get: globalMocks.mockCliHome,
+    });
+    Object.defineProperty(vscode.env, "appName", {
+        value: globalMocks.appName,
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "createInstance", {
-        value: jest.fn(() => globalMocks.testProfileOps)
+        value: jest.fn(() => globalMocks.testProfileOps),
     });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => globalMocks.testProfileOps)
+        value: jest.fn(() => globalMocks.testProfileOps),
     });
 
     // Create a mocked extension context
     // tslint:disable-next-line: no-object-literal-type-assertion
-    const mockExtensionCreator = jest.fn(() => ({
-        subscriptions: [],
-        extensionPath: path.join(__dirname, "..")
-    } as vscode.ExtensionContext));
+    const mockExtensionCreator = jest.fn(
+        () =>
+            ({
+                subscriptions: [],
+                extensionPath: path.join(__dirname, ".."),
+            } as vscode.ExtensionContext)
+    );
     globalMocks.mockExtension = new mockExtensionCreator();
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
@@ -242,7 +344,7 @@ async function createGlobalMocks() {
             selection: [],
             onDidChangeSelection: globalMocks.mockOnDidChangeSelection,
             visible: true,
-            onDidChangeVisibility: globalMocks.mockOnDidChangeVisibility
+            onDidChangeVisibility: globalMocks.mockOnDidChangeVisibility,
         };
     });
 
@@ -254,12 +356,18 @@ describe("Extension Unit Tests", () => {
         const globalMocks = await createGlobalMocks();
 
         // tslint:disable-next-line: no-object-literal-type-assertion
-        globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
+        globalMocks.mockReadFileSync.mockReturnValueOnce(
+            '{ "overrides": { "CredentialManager": "Managed by ANO" }}'
+        );
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
-        globalMocks.mockReaddirSync.mockReturnValueOnce(["firstFile.txt", "secondFile.txt", "firstDir"]);
+        globalMocks.mockReaddirSync.mockReturnValueOnce([
+            "firstFile.txt",
+            "secondFile.txt",
+            "firstDir",
+        ]);
         globalMocks.mockReaddirSync.mockReturnValueOnce(["thirdFile.txt"]);
         globalMocks.mockReaddirSync.mockReturnValue([]);
         globalMocks.mockIsFile.mockReturnValueOnce(true);
@@ -273,7 +381,10 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u{session}",
             ],
             // tslint:disable-next-line: no-empty
-            update: jest.fn(()=>{ {} })
+            update: jest.fn(() => {
+                {
+                }
+            }),
         });
 
         await extension.activate(globalMocks.mockExtension);
@@ -281,37 +392,57 @@ describe("Extension Unit Tests", () => {
         // Check that deactivate() is called successfully
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockExistsSync.mock.calls.length).toBe(4);
-        expect(globalMocks.mockExistsSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
+        expect(globalMocks.mockExistsSync.mock.calls[0][0]).toBe(
+            globals.ZOWETEMPFOLDER
+        );
         expect(globalMocks.mockReaddirSync.mock.calls.length).toBe(1);
-        expect(globalMocks.mockReaddirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
+        expect(globalMocks.mockReaddirSync.mock.calls[0][0]).toBe(
+            globals.ZOWETEMPFOLDER
+        );
         expect(globalMocks.mockUnlinkSync.mock.calls.length).toBe(2);
-        expect(globalMocks.mockUnlinkSync.mock.calls[0][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/firstFile.txt"));
-        expect(globalMocks.mockUnlinkSync.mock.calls[1][0]).toBe(path.join(globals.ZOWETEMPFOLDER + "/secondFile.txt"));
+        expect(globalMocks.mockUnlinkSync.mock.calls[0][0]).toBe(
+            path.join(globals.ZOWETEMPFOLDER + "/firstFile.txt")
+        );
+        expect(globalMocks.mockUnlinkSync.mock.calls[1][0]).toBe(
+            path.join(globals.ZOWETEMPFOLDER + "/secondFile.txt")
+        );
         expect(globalMocks.mockRmdirSync.mock.calls.length).toBe(1);
-        expect(globalMocks.mockRmdirSync.mock.calls[0][0]).toBe(globals.ZOWETEMPFOLDER);
+        expect(globalMocks.mockRmdirSync.mock.calls[0][0]).toBe(
+            globals.ZOWETEMPFOLDER
+        );
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
 
         // Check that tree providers are initialized successfully
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
-        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.explorer");
-        expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
+        expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe(
+            "zowe.explorer"
+        );
+        expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe(
+            "zowe.uss.explorer"
+        );
 
         // Check that CLI Profile Manager is initialized successfully
         expect(globalMocks.mockInitialize.mock.calls.length).toBe(1);
         expect(globalMocks.mockInitialize.mock.calls[0][0]).toStrictEqual({
             configuration: [],
-            profileRootDirectory: path.join(globalMocks.mockCliHome(), "profiles")
+            profileRootDirectory: path.join(globalMocks.mockCliHome(), "profiles"),
         });
 
         // Checking if commands are registered properly
-        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i ) => {
-            expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);
+        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(
+            globals.COMMAND_COUNT
+        );
+        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
+            expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(
+                Function
+            );
         });
         const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => { actualCommands.push(call[0]); });
+        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
+            actualCommands.push(call[0]);
+        });
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 
@@ -324,9 +455,12 @@ describe("Extension Unit Tests", () => {
         // tslint:disable-next-line: no-empty
         globalMocks.mockRmdirSync.mockImplementationOnce(() => {});
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
-            get: (setting: string) => [ "", ],
+            get: (setting: string) => [""],
             // tslint:disable-next-line: no-empty
-            update: jest.fn(()=>{ {} })
+            update: jest.fn(() => {
+                {
+                }
+            }),
         });
 
         await extension.activate(globalMocks.mockExtension);
@@ -344,13 +478,22 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
         globalMocks.mockExistsSync.mockReturnValueOnce(true);
         globalMocks.mockReaddirSync.mockReturnValueOnce(["firstFile", "secondFile"]);
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => { return; });
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => { return; });
-        globalMocks.mockUnlinkSync.mockImplementationOnce(() => { throw (Error("testError")); });
+        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
+            return;
+        });
+        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
+            return;
+        });
+        globalMocks.mockUnlinkSync.mockImplementationOnce(() => {
+            throw Error("testError");
+        });
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
             // tslint:disable-next-line: no-empty
-            update: jest.fn(()=>{ {} })
+            update: jest.fn(() => {
+                {
+                }
+            }),
         });
 
         await extension.activate(globalMocks.mockExtension);
@@ -358,12 +501,18 @@ describe("Extension Unit Tests", () => {
         expect(globals.ISTHEIA).toEqual(true);
         // tslint:disable-next-line: no-magic-numbers
         expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(4);
-        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i ) => {
-            expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(Function);
+        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(
+            globals.COMMAND_COUNT
+        );
+        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
+            expect(globalMocks.mockRegisterCommand.mock.calls[i][1]).toBeInstanceOf(
+                Function
+            );
         });
         const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => { actualCommands.push(call[0]); });
+        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
+            actualCommands.push(call[0]);
+        });
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
 });

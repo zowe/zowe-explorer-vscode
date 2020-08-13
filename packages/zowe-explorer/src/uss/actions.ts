@@ -1,13 +1,13 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
@@ -15,12 +15,21 @@ import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { ZoweUSSNode } from "./ZoweUSSNode";
-import { labelRefresh, refreshTree, concatChildNodes, willForceUpload, uploadContent } from "../shared/utils";
-import { errorHandling } from "../utils";
-import { Profiles, ValidProfileEnum } from "../Profiles";
-import { IZoweTree } from "../api/IZoweTree";
-import { IZoweUSSTreeNode } from "../api/IZoweTreeNode";
-import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import {
+    labelRefresh,
+    refreshTree,
+    concatChildNodes,
+    willForceUpload,
+    uploadContent,
+} from "../shared/utils";
+import { errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
+import {
+    Profiles,
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweUSSTreeNode,
+    ZoweExplorerApiRegister,
+} from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { Session } from "@zowe/imperative";
 import * as contextually from "../shared/context";
@@ -29,7 +38,10 @@ import * as nls from "vscode-nls";
 import { returnIconState } from "../shared/actions";
 
 // Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
@@ -39,41 +51,62 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
-export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nodeType: string, isTopLevel?: boolean) {
+export async function createUSSNode(
+    node: IZoweUSSTreeNode,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
+    nodeType: string,
+    isTopLevel?: boolean
+) {
     const name = await vscode.window.showInputBox({
-        placeHolder:
-            localize("createUSSNode.name", "Name of file or directory")
+        placeHolder: localize("createUSSNode.name", "Name of file or directory"),
     });
     if (name) {
         try {
             const filePath = `${node.fullPath}/${name}`;
-            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(
+                filePath,
+                nodeType
+            );
             if (isTopLevel) {
                 refreshAllUSS(ussFileProvider);
             } else {
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
-            errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
-            throw (err);
+            errorHandling(
+                err,
+                node.mProfileName,
+                localize("createUSSNode.error.create", "Unable to create node: ") +
+                    err.message
+            );
+            throw err;
         }
         ussFileProvider.refresh();
     }
 }
 
-export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+export async function refreshUSSInTree(
+    node: IZoweUSSTreeNode,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
     await ussFileProvider.refreshElement(node);
 }
 
-export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+export async function createUSSNodeDialog(
+    node: IZoweUSSTreeNode,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
     await ussFileProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: `What would you like to create at ${node.fullPath}?`,
             ignoreFocusOut: true,
-            canPickMany: false
+            canPickMany: false,
         };
-        const type = await vscode.window.showQuickPick([globals.USS_DIR_CONTEXT, "File"], quickPickOptions);
+        const type = await vscode.window.showQuickPick(
+            [globals.USS_DIR_CONTEXT, "File"],
+            quickPickOptions
+        );
         const isTopLevel = true;
         return createUSSNode(node, ussFileProvider, type, isTopLevel);
     }
@@ -105,15 +138,27 @@ export async function refreshAllUSS(ussFileProvider: IZoweTree<IZoweUSSTreeNode>
  * @param {USSTree} ussFileProvider
  * @param {string} filePath
  */
-export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string) {
+export async function renameUSSNode(
+    originalNode: IZoweUSSTreeNode,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
+    filePath: string
+) {
     // Could be a favorite or regular entry always deal with the regular entry
     const isFav = originalNode.contextValue.endsWith(globals.FAV_SUFFIX);
     const oldLabel = originalNode.label;
-    const parentPath = originalNode.fullPath.substr(0, originalNode.fullPath.indexOf(oldLabel));
-    // Check if an old favorite exists for this node
-    const oldFavorite: IZoweUSSTreeNode = isFav ? originalNode : ussFileProvider.mFavorites.find((temp: ZoweUSSNode) =>
-        (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
+    const parentPath = originalNode.fullPath.substr(
+        0,
+        originalNode.fullPath.indexOf(oldLabel)
     );
+    // Check if an old favorite exists for this node
+    const oldFavorite: IZoweUSSTreeNode = isFav
+        ? originalNode
+        : ussFileProvider.mFavorites.find(
+              (temp: ZoweUSSNode) =>
+                  temp.shortLabel === oldLabel &&
+                  temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) ===
+                      parentPath
+          );
     const newName = await vscode.window.showInputBox({ value: oldLabel });
     if (newName && newName !== oldLabel) {
         try {
@@ -123,7 +168,8 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
 
             const hasClosedTab = await originalNode.rename(newNamePath);
             await ZoweExplorerApiRegister.getUssApi(
-                originalNode.getProfile()).rename(oldNamePath, newNamePath);
+                originalNode.getProfile()
+            ).rename(oldNamePath, newNamePath);
             await deleteFromDisk(originalNode, filePath);
             await originalNode.refreshAndReopen(hasClosedTab);
 
@@ -133,8 +179,13 @@ export async function renameUSSNode(originalNode: IZoweUSSTreeNode, ussFileProvi
                 ussFileProvider.addFavorite(oldFavorite);
             }
         } catch (err) {
-            errorHandling(err, originalNode.mProfileName, localize("renameUSSNode.error", "Unable to rename node: ") + err.message);
-            throw (err);
+            errorHandling(
+                err,
+                originalNode.mProfileName,
+                localize("renameUSSNode.error", "Unable to rename node: ") +
+                    err.message
+            );
+            throw err;
         }
     }
 }
@@ -149,33 +200,35 @@ export async function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string) {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
-    }
+    } catch (err) {
         // tslint:disable-next-line: no-empty
-    catch (err) {
     }
 }
 
-export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+export async function uploadDialog(
+    node: IZoweUSSTreeNode,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
     const fileOpenOptions = {
         canSelectFiles: true,
         openLabel: "Upload Files",
-        canSelectMany: true
+        canSelectMany: true,
     };
 
     const value = await vscode.window.showOpenDialog(fileOpenOptions);
 
     await Promise.all(
         value.map(async (item) => {
-                const isBinary = isBinaryFileSync(item.fsPath);
+            const isBinary = isBinaryFileSync(item.fsPath);
 
-                if (isBinary) {
-                    await uploadBinaryFile(node, item.fsPath);
-                } else {
-                    const doc = await vscode.workspace.openTextDocument(item);
-                    await uploadFile(node, doc);
-                }
+            if (isBinary) {
+                await uploadBinaryFile(node, item.fsPath);
+            } else {
+                const doc = await vscode.workspace.openTextDocument(item);
+                await uploadFile(node, doc);
             }
-        ));
+        })
+    );
     ussFileProvider.refresh();
 }
 
@@ -183,7 +236,11 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(
+            filePath,
+            ussName,
+            true
+        );
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -197,13 +254,19 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
-            await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, {
-                encoding: prof.profile.encoding
-            });
+            await ZoweExplorerApiRegister.getUssApi(prof).putContent(
+                doc.fileName,
+                ussName,
+                {
+                    encoding: prof.profile.encoding,
+                }
+            );
         } else {
-            await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
+            await ZoweExplorerApiRegister.getUssApi(prof).putContents(
+                doc.fileName,
+                ussName
+            );
         }
-
     } catch (e) {
         errorHandling(e, node.mProfileName, e.message);
     }
@@ -217,7 +280,12 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 export async function copyPath(node: IZoweUSSTreeNode) {
     if (globals.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
-        vscode.window.showInformationMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
+        vscode.window.showInformationMessage(
+            localize(
+                "copyPath.infoMessage",
+                "Copy Path is not yet supported in Theia."
+            )
+        );
         return;
     }
     vscode.env.clipboard.writeText(node.fullPath);
@@ -230,7 +298,11 @@ export async function copyPath(node: IZoweUSSTreeNode) {
  * @param binary Whether the file should be downloaded as binary or not
  * @param ussFileProvider Our USSTree object
  */
-export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+export async function changeFileType(
+    node: IZoweUSSTreeNode,
+    binary: boolean,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
     node.setBinary(binary);
     await node.openUSS(true, true, ussFileProvider);
     ussFileProvider.refresh();
@@ -243,8 +315,16 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
  * @param {Session} session - Desired session
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
-export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
-    globals.LOG.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
+export async function saveUSSFile(
+    doc: vscode.TextDocument,
+    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+) {
+    globals.LOG.debug(
+        localize(
+            "saveUSSFile.log.debug.saveRequest",
+            "save requested for USS file "
+        ) + doc.fileName
+    );
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
@@ -255,11 +335,15 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     let binary;
     let node: IZoweUSSTreeNode;
 
-    const sesNode: IZoweUSSTreeNode = (ussFileProvider.mSessionNodes.find((child) =>
-                                child.getProfileName() && child.getProfileName() === sesName.trim()));
+    const sesNode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find(
+        (child) =>
+            child.getProfileName() && child.getProfileName() === sesName.trim()
+    );
     if (sesNode) {
         documentSession = sesNode.getSession();
-        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
+        binary =
+            Object.keys(sesNode.binaryFiles).find((child) => child === remote) !==
+            undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
     let nodes: IZoweUSSTreeNode[];
@@ -272,7 +356,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
     node = nodes.find((zNode) => {
         if (contextually.isText(zNode)) {
-            return (zNode.fullPath.trim() === remote);
+            return zNode.fullPath.trim() === remote;
         } else {
             return false;
         }
@@ -290,14 +374,29 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
     try {
         if (sesNode) {
-            binary = binary || await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote);
+            binary =
+                binary ||
+                (await ZoweExplorerApiRegister.getUssApi(
+                    sesNode.getProfile()
+                ).isFileTagBinOrAscii(remote));
         }
-        const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: localize("saveUSSFile.response.title", "Saving file...")
-        }, () => {
-            return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, etagToUpload, returnEtag);
-        });
+        const uploadResponse: zowe.IZosFilesResponse = await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("saveUSSFile.response.title", "Saving file..."),
+            },
+            () => {
+                return uploadContent(
+                    sesNode,
+                    doc,
+                    remote,
+                    sesNode.getProfile(),
+                    binary,
+                    etagToUpload,
+                    returnEtag
+                );
+            }
+        );
         if (uploadResponse.success) {
             vscode.window.showInformationMessage(uploadResponse.commandResponse);
             // set local etag with the new etag from the updated file on mainframe
@@ -311,20 +410,35 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
-        if (err.message.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))) {
+        if (
+            err.message.includes(
+                localize(
+                    "saveFile.error.ZosmfEtagMismatchError",
+                    "Rest API failure with HTTP(S) status 412"
+                )
+            )
+        ) {
             if (globals.ISTHEIA) {
-                await willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
+                await willForceUpload(
+                    node,
+                    doc,
+                    remote,
+                    node.getProfile(),
+                    binary,
+                    returnEtag
+                );
             } else {
                 // Store old document text in a separate variable, to be used on merge conflict
                 const oldDocText = doc.getText();
                 const oldDocLineCount = doc.lineCount;
                 const prof = node.getProfile();
-                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(
-                    node.fullPath, {
+                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(
+                    prof
+                ).getContents(node.fullPath, {
                     file: node.getUSSDocumentFilePath(),
                     binary,
                     returnEtag: true,
-                    encoding: prof.profile.encoding
+                    encoding: prof.profile.encoding,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
                 const downloadEtag = downloadResponse.apiResponse.etag;
@@ -333,8 +447,12 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
                 this.downloaded = true;
 
-                vscode.window.showWarningMessage(localize("saveFile.error.etagMismatch",
-                    "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."));
+                vscode.window.showWarningMessage(
+                    localize(
+                        "saveFile.error.etagMismatch",
+                        "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
+                    )
+                );
                 if (vscode.window.activeTextEditor) {
                     const startPosition = new vscode.Position(0, 0);
                     const endPosition = new vscode.Position(oldDocLineCount, 0);
@@ -348,7 +466,12 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
             }
         } else {
-            globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
+            globals.LOG.error(
+                localize(
+                    "saveUSSFile.log.error.save",
+                    "Error encountered when saving USS file: "
+                ) + JSON.stringify(err)
+            );
             await errorHandling(err, sesName, err.message);
         }
     }

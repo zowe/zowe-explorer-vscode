@@ -1,19 +1,23 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { createIProfile, createISession, createFileResponse } from "../../../__mocks__/mockCreators/shared";
+import {
+    createIProfile,
+    createISession,
+    createFileResponse,
+} from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
-import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
+import { ValidProfileEnum, Profiles } from "@zowe/zowe-explorer-api";
 import { Logger } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
@@ -33,49 +37,76 @@ async function createGlobalMocks() {
         refresh: jest.fn(),
         testProfile: createIProfile(),
         testSession: createISession(),
-        testResponse: createFileResponse({items: []}),
+        testResponse: createFileResponse({ items: [] }),
         testUSSTree: null,
         testSessionNode: null,
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
-                Notification: 15
+                Notification: 15,
             };
         }),
         enums: jest.fn().mockImplementation(() => {
             return {
                 Global: 1,
                 Workspace: 2,
-                WorkspaceFolder: 3
+                WorkspaceFolder: 3,
             };
-        })
+        }),
     };
 
-    Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: globalMocks.getConfiguration, configurable: true });
+    Object.defineProperty(vscode, "ConfigurationTarget", {
+        value: globalMocks.enums,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: globalMocks.createTreeView,
+        configurable: true,
+    });
+    Object.defineProperty(vscode, "ProgressLocation", {
+        value: globalMocks.ProgressLocation,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "withProgress", {
+        value: globalMocks.withProgress,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: globalMocks.getConfiguration,
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
-                allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
+                allProfiles: [
+                    globalMocks.testProfile,
+                    { name: "firstName" },
+                    { name: "secondName" },
+                ],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(),
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                editSession: globalMocks.mockEditSession
+                editSession: globalMocks.mockEditSession,
             };
         }),
-        configurable: true
+        configurable: true,
     });
 
     globalMocks.mockAffects.mockReturnValue(true);
-    globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+    globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+        callback()
+    );
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
-    globalMocks.testSessionNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+    globalMocks.testSessionNode = createUSSSessionNode(
+        globalMocks.testSession,
+        globalMocks.testProfile
+    );
     globalMocks.testUSSTree = await createUSSTree(Logger.getAppLogger());
-    Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
+    Object.defineProperty(globalMocks.testUSSTree, "refresh", {
+        value: globalMocks.refresh,
+        configurable: true,
+    });
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
@@ -85,9 +116,9 @@ async function createGlobalMocks() {
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
         ],
-        update: jest.fn(()=>{
+        update: jest.fn(() => {
             return {};
-        })
+        }),
     });
 
     return globalMocks;
@@ -98,11 +129,17 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         const newMocks = {
             testIJob: createIJobObject(),
             testJobsProvider: await createJobsTree(Logger.getAppLogger()),
-            jobNode: null
+            jobNode: null,
         };
 
-        newMocks.jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
-                                   null, globalMocks.testSession, newMocks.testIJob, globalMocks.testProfile);
+        newMocks.jobNode = new Job(
+            "jobtest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            null,
+            globalMocks.testSession,
+            newMocks.testIJob,
+            globalMocks.testProfile
+        );
         newMocks.jobNode.contextValue = "job";
         newMocks.jobNode.dirty = true;
 
@@ -122,9 +159,16 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
 describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {
         const globalMocks = await createGlobalMocks();
-        const sampleElement = new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None,
-            null, null, null);
-        expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
+        const sampleElement = new ZoweUSSNode(
+            "/u/myUser",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            null,
+            null
+        );
+        expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(
+            vscode.TreeItem
+        );
     });
 });
 
@@ -143,10 +187,17 @@ describe("Tree Provider unit tests, function getParent", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating child of session node
-        const sampleChild: ZoweUSSNode = new ZoweUSSNode("/u/myUser/zowe1", vscode.TreeItemCollapsibleState.None,
-        globalMocks.testUSSTree.mSessionNodes[1], globalMocks.testSession, null);
+        const sampleChild: ZoweUSSNode = new ZoweUSSNode(
+            "/u/myUser/zowe1",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.testUSSTree.mSessionNodes[1],
+            globalMocks.testSession,
+            null
+        );
 
-        expect(globalMocks.testUSSTree.getParent(sampleChild)).toBe(globalMocks.testUSSTree.mSessionNodes[1]);
+        expect(globalMocks.testUSSTree.getParent(sampleChild)).toBe(
+            globalMocks.testUSSTree.mSessionNodes[1]
+        );
     });
 });
 
@@ -156,7 +207,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 
         const Event = jest.fn().mockImplementation(() => {
             return {
-                affectsConfiguration: globalMocks.mockAffects
+                affectsConfiguration: globalMocks.mockAffects,
             };
         });
         const e = new Event();
@@ -171,8 +222,13 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Testing that expand tree is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const folder = new ZoweUSSNode("/u/myuser", vscode.TreeItemCollapsibleState.Collapsed,
-                                       globalMocks.testUSSTree.mSessionNodes[0], globalMocks.testSession, null);
+        const folder = new ZoweUSSNode(
+            "/u/myuser",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testUSSTree.mSessionNodes[0],
+            globalMocks.testSession,
+            null
+        );
         folder.contextValue = globals.USS_DIR_CONTEXT;
 
         // Testing flipState to open

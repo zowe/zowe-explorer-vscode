@@ -1,23 +1,27 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 // tslint:disable: max-classes-per-file
 
 jest.mock("@zowe/imperative");
 import * as zowe from "@zowe/cli";
 import { Logger, IProfileLoaded, Session } from "@zowe/imperative";
-import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
-import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
-import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
-import { Profiles } from "../../../src/Profiles";
+import {
+    ZoweExplorerApi,
+    ZoweExplorerApiRegister,
+    ZosmfUssApi,
+    ZosmfJesApi,
+    ZosmfMvsApi,
+    Profiles,
+} from "@zowe/zowe-explorer-api";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -30,28 +34,53 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public getContents(
+        ussFilePath: string,
+        options: zowe.IDownloadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContents(
-        inputFilePath: string, ussFilePath: string, binary?: boolean,
-        localEncoding?: string, etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
+        inputFilePath: string,
+        ussFilePath: string,
+        binary?: boolean,
+        localEncoding?: string,
+        etag?: string,
+        returnEtag?: boolean
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContent(
-        inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        inputFilePath: string,
+        ussFilePath: string,
+        options: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
+        options: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
+    public create(
+        ussPath: string,
+        type: string,
+        mode?: string
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+    public delete(
+        ussPath: string,
+        recursive?: boolean
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
+    public rename(
+        currentUssPath: string,
+        newUssPath: string
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public getSession(profile?: IProfileLoaded): Session {
@@ -73,28 +102,53 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public getContents(
+        ussFilePath: string,
+        options: zowe.IDownloadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContents(
-        inputFilePath: string, ussFilePath: string, binary?: boolean,
-        localEncoding?: string, etag?: string, returnEtag?: boolean): Promise<zowe.IZosFilesResponse> {
+        inputFilePath: string,
+        ussFilePath: string,
+        binary?: boolean,
+        localEncoding?: string,
+        etag?: string,
+        returnEtag?: boolean
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContent(
-        inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        inputFilePath: string,
+        ussFilePath: string,
+        options: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
+        options: zowe.IUploadOptions
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
+    public create(
+        ussPath: string,
+        type: string,
+        mode?: string
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+    public delete(
+        ussPath: string,
+        recursive?: boolean
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
+    public rename(
+        currentUssPath: string,
+        newUssPath: string
+    ): Promise<zowe.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public getSession(profile?: IProfileLoaded): Session {
@@ -106,7 +160,6 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
 }
 
 describe("ZoweExplorerApiRegister unit testing", () => {
-
     const log = Logger.getAppLogger();
     let profiles: Profiles;
     beforeEach(async () => {
@@ -135,8 +188,12 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     });
 
     it("registers multiple API instances in parallel", async () => {
-        const mockRefresh = jest.fn(async (): Promise<void> => {return;});
-        const profilesForValidation = {status: "active", name: "fake"};
+        const mockRefresh = jest.fn(
+            async (): Promise<void> => {
+                return;
+            }
+        );
+        const profilesForValidation = { status: "active", name: "fake" };
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -146,7 +203,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                 };
-            })
+            }),
         });
 
         const api1 = new MockUssApi1();
@@ -164,24 +221,42 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const api1 = new MockUssApi1();
         const mockGetProfileTypeName = jest.fn(() => undefined);
         api1.getProfileTypeName = mockGetProfileTypeName;
-        expect(() => {registry.registerUssApi(api1);}).toThrow();
-        expect(() => {registry.registerUssApi(undefined);}).toThrow();
+        expect(() => {
+            registry.registerUssApi(api1);
+        }).toThrow();
+        expect(() => {
+            registry.registerUssApi(undefined);
+        }).toThrow();
 
         const mvsApi = new ZosmfMvsApi();
         mvsApi.getProfileTypeName = mockGetProfileTypeName;
-        expect(() => {registry.registerMvsApi(mvsApi);}).toThrow();
-        expect(() => {registry.registerMvsApi(undefined);}).toThrow();
+        expect(() => {
+            registry.registerMvsApi(mvsApi);
+        }).toThrow();
+        expect(() => {
+            registry.registerMvsApi(undefined);
+        }).toThrow();
 
         const jesApi = new ZosmfJesApi();
         jesApi.getProfileTypeName = mockGetProfileTypeName;
-        expect(() => {registry.registerJesApi(jesApi);}).toThrow();
-        expect(() => {registry.registerJesApi(undefined);}).toThrow();
+        expect(() => {
+            registry.registerJesApi(jesApi);
+        }).toThrow();
+        expect(() => {
+            registry.registerJesApi(undefined);
+        }).toThrow();
     });
 
     it("throws errors when invalid APIs requested", () => {
-        expect(() => {registry.getUssApi(undefined);}).toThrow();
-        expect(() => {registry.getMvsApi(undefined);}).toThrow();
-        expect(() => {registry.getJesApi(undefined);}).toThrow();
+        expect(() => {
+            registry.getUssApi(undefined);
+        }).toThrow();
+        expect(() => {
+            registry.getMvsApi(undefined);
+        }).toThrow();
+        expect(() => {
+            registry.getJesApi(undefined);
+        }).toThrow();
     });
 
     it("provides access to the common api for a profile registered to any api regsitry", () => {
@@ -191,15 +266,19 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             name: "profileUnused",
             profile: {
                 user: undefined,
-                password: undefined
+                password: undefined,
             },
             type: "zftp",
             message: "",
-            failNotFound: false
+            failNotFound: false,
         };
 
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
-        expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
-        expect(() => {ZoweExplorerApiRegister.getCommonApi(profileUnused);}).toThrow();
+        expect(
+            ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()
+        ).toEqual(defaultProfile.type);
+        expect(() => {
+            ZoweExplorerApiRegister.getCommonApi(profileUnused);
+        }).toThrow();
     });
 });

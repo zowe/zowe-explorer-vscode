@@ -1,21 +1,34 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 jest.mock("fs");
 
 import * as ussNodeActions from "../../../src/uss/actions";
-import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
-import { createIProfile, createISession, createTreeView, createTextDocument, createFileResponse } from "../../../__mocks__/mockCreators/shared";
-import { ValidProfileEnum, Profiles } from "../../../src/Profiles";
-import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import {
+    createUSSTree,
+    createUSSNode,
+    createFavoriteUSSNode,
+} from "../../../__mocks__/mockCreators/uss";
+import {
+    createIProfile,
+    createISession,
+    createTreeView,
+    createTextDocument,
+    createFileResponse,
+} from "../../../__mocks__/mockCreators/shared";
+import {
+    ValidProfileEnum,
+    Profiles,
+    ZoweExplorerApiRegister,
+} from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../../../src/globals";
@@ -58,7 +71,7 @@ function createGlobalMocks() {
         testProfile: createIProfile(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
-                Notification: 15
+                Notification: 15,
             };
         }),
     };
@@ -67,40 +80,121 @@ function createGlobalMocks() {
     // Mock the logger
     globals.defineGlobals("/test/path/");
     // tslint:disable-next-line: no-object-literal-type-assertion
-    const extensionMock = jest.fn(() => ({
-        subscriptions: [],
-        extensionPath: path.join(__dirname, "..", "..")
-    } as vscode.ExtensionContext));
+    const extensionMock = jest.fn(
+        () =>
+            ({
+                subscriptions: [],
+                extensionPath: path.join(__dirname, "..", ".."),
+            } as vscode.ExtensionContext)
+    );
     const mock = new extensionMock();
     const profilesForValidation = { status: "active", name: "fake" };
     globals.initLogger(mock);
 
-    Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
-    Object.defineProperty(zowe, "Create", { value: globalMocks.Create, configurable: true });
-    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.showWarningMessage, configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(sharedUtils, "concatChildNodes", { value: globalMocks.concatChildNodes, configurable: true });
-    Object.defineProperty(globalMocks.Create, "uss", { value: globalMocks.uss, configurable: true });
-    Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog, configurable: true });
-    Object.defineProperty(vscode.workspace, "openTextDocument", { value: globalMocks.openTextDocument, configurable: true });
-    Object.defineProperty(globalMocks.Upload, "fileToUSSFile", { value: globalMocks.fileToUSSFile, configurable: true });
-    Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
-    Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument, configurable: true });
-    Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
-    Object.defineProperty(globalMocks.Utilities, "renameUSSFile", { value: globalMocks.renameUSSFile, configurable: true });
-    Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
-    Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", { value: globalMocks.isFileTagBinOrAscii, configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage, configurable: true });
-    Object.defineProperty(globalMocks.List, "fileList", { value: globalMocks.fileList, configurable: true });
-    Object.defineProperty(zowe, "Upload", { value: globalMocks.Upload, configurable: true });
-    Object.defineProperty(globalMocks.Upload, "fileToUSSFile", { value: globalMocks.fileToUSSFile, configurable: true });
-    Object.defineProperty(isbinaryfile, "isBinaryFileSync", { value: globalMocks.isBinaryFileSync, configurable: true });
-    Object.defineProperty(vscode.env.clipboard, "writeText", { value: globalMocks.writeText, configurable: true });
-    Object.defineProperty(globals, "ISTHEIA", { get: () => globalMocks.theia, configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.window, "showInputBox", {
+        value: globalMocks.showInputBox,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showQuickPick", {
+        value: globalMocks.showQuickPick,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "Create", {
+        value: globalMocks.Create,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.commands, "executeCommand", {
+        value: globalMocks.executeCommand,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showWarningMessage", {
+        value: globalMocks.showWarningMessage,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "withProgress", {
+        value: globalMocks.withProgress,
+        configurable: true,
+    });
+    Object.defineProperty(sharedUtils, "concatChildNodes", {
+        value: globalMocks.concatChildNodes,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.Create, "uss", {
+        value: globalMocks.uss,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showOpenDialog", {
+        value: globalMocks.showOpenDialog,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "openTextDocument", {
+        value: globalMocks.openTextDocument,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.Upload, "fileToUSSFile", {
+        value: globalMocks.fileToUSSFile,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "Download", {
+        value: globalMocks.Download,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showTextDocument", {
+        value: globalMocks.showTextDocument,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.Download, "ussFile", {
+        value: globalMocks.ussFile,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.Utilities, "renameUSSFile", {
+        value: globalMocks.renameUSSFile,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "Utilities", {
+        value: globalMocks.Utilities,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: globalMocks.createTreeView,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", {
+        value: globalMocks.isFileTagBinOrAscii,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showErrorMessage", {
+        value: globalMocks.showErrorMessage,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.List, "fileList", {
+        value: globalMocks.fileList,
+        configurable: true,
+    });
+    Object.defineProperty(zowe, "Upload", {
+        value: globalMocks.Upload,
+        configurable: true,
+    });
+    Object.defineProperty(globalMocks.Upload, "fileToUSSFile", {
+        value: globalMocks.fileToUSSFile,
+        configurable: true,
+    });
+    Object.defineProperty(isbinaryfile, "isBinaryFileSync", {
+        value: globalMocks.isBinaryFileSync,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.env.clipboard, "writeText", {
+        value: globalMocks.writeText,
+        configurable: true,
+    });
+    Object.defineProperty(globals, "ISTHEIA", {
+        get: () => globalMocks.theia,
+        configurable: true,
+    });
+    Object.defineProperty(vscode, "ProgressLocation", {
+        value: globalMocks.ProgressLocation,
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -113,9 +207,9 @@ function createGlobalMocks() {
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
-                loadNamedProfile: globalMocks.mockLoadNamedProfile
+                loadNamedProfile: globalMocks.mockLoadNamedProfile,
             };
-        })
+        }),
     });
 
     return globalMocks;
@@ -125,10 +219,18 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
 
         return newMocks;
     }
@@ -140,7 +242,10 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         globalMocks.showQuickPick.mockResolvedValueOnce("File");
         globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
 
-        await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.createUSSNodeDialog(
+            blockMocks.ussNode,
+            blockMocks.testUSSTree
+        );
         expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
@@ -150,10 +255,18 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
 
         return newMocks;
     }
@@ -164,7 +277,11 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
 
         globalMocks.showInputBox.mockReturnValueOnce("USSFolder");
 
-        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        await ussNodeActions.createUSSNode(
+            blockMocks.ussNode,
+            blockMocks.testUSSTree,
+            "file"
+        );
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
@@ -175,7 +292,11 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
 
         globalMocks.showInputBox.mockReturnValueOnce("");
 
-        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        await ussNodeActions.createUSSNode(
+            blockMocks.ussNode,
+            blockMocks.testUSSTree,
+            "file"
+        );
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
@@ -188,7 +309,12 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const isTopLevel = false;
         spyOn(ussNodeActions, "refreshAllUSS");
 
-        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
+        await ussNodeActions.createUSSNode(
+            blockMocks.ussNode,
+            blockMocks.testUSSTree,
+            "folder",
+            isTopLevel
+        );
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         expect(ussNodeActions.refreshAllUSS).not.toHaveBeenCalled();
     });
@@ -198,10 +324,18 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
 
         return newMocks;
     }
@@ -220,8 +354,16 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
                     getProfiles: jest.fn(() => {
-                        return [{ name: globalMocks.testProfile.name, profile: globalMocks.testProfile },
-                        { name: globalMocks.testProfile.name, profile: globalMocks.testProfile }];
+                        return [
+                            {
+                                name: globalMocks.testProfile.name,
+                                profile: globalMocks.testProfile,
+                            },
+                            {
+                                name: globalMocks.testProfile.name,
+                                profile: globalMocks.testProfile,
+                            },
+                        ];
                     }),
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -229,7 +371,7 @@ describe("USS Action Unit Tests - Function refreshAllUSS", () => {
                     validateProfiles: jest.fn(),
                     refresh: jest.fn(),
                 };
-            })
+            }),
         });
         const spy = jest.spyOn(ussNodeActions, "refreshAllUSS");
 
@@ -242,19 +384,33 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
 
         return newMocks;
     }
 
     it("should call unlink if file exists", () => {
-        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((filePath: string) => {
+        (fs.existsSync as any) = jest.fn<
+            ReturnType<typeof fs.existsSync>,
+            Parameters<typeof fs.existsSync>
+        >((filePath: string) => {
             return true;
         });
-        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((filePath: string) => {
+        (fs.unlinkSync as any) = jest.fn<
+            ReturnType<typeof fs.unlinkSync>,
+            Parameters<typeof fs.unlinkSync>
+        >((filePath: string) => {
             // do nothing
         });
 
@@ -265,11 +421,16 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
     });
 
     it("should call not unlink if file doesn't exists", () => {
-
-        (fs.existsSync as any) = jest.fn<ReturnType<typeof fs.existsSync>, Parameters<typeof fs.existsSync>>((filePath: string) => {
+        (fs.existsSync as any) = jest.fn<
+            ReturnType<typeof fs.existsSync>,
+            Parameters<typeof fs.existsSync>
+        >((filePath: string) => {
             return false;
         });
-        (fs.unlinkSync as any) = jest.fn<ReturnType<typeof fs.unlinkSync>, Parameters<typeof fs.unlinkSync>>((filePath: string) => {
+        (fs.unlinkSync as any) = jest.fn<
+            ReturnType<typeof fs.unlinkSync>,
+            Parameters<typeof fs.unlinkSync>
+        >((filePath: string) => {
             // do nothing
         });
 
@@ -278,13 +439,12 @@ describe("USS Action Unit Tests - Function renameUSSNode", () => {
         expect(fs.existsSync).toBeCalledTimes(1);
         expect(fs.unlinkSync).toBeCalledTimes(0);
     });
-
 });
 
 describe("USS Action Unit Tests - Function copyPath", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
 
         return newMocks;
@@ -318,15 +478,33 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             mockGetEtag: null,
             testUSSTree: null,
             testResponse: createFileResponse({ items: [] }),
-            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")),
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            testDoc: createTextDocument(
+                path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")
+            ),
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
 
-        newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
+        newMocks.node = new ZoweUSSNode(
+            "u/myuser/testFile",
+            vscode.TreeItemCollapsibleState.None,
+            newMocks.ussNode,
+            null,
+            "/"
+        );
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
-        newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
+        newMocks.mockGetEtag = jest
+            .spyOn(newMocks.node, "getEtag")
+            .mockImplementation(() => "123");
 
         return newMocks;
     }
@@ -335,16 +513,30 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+            callback()
+        );
         globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        blockMocks.testResponse.apiResponse.items = [{ name: "testFile", mode: "-rwxrwx" }];
+        globalMocks.concatChildNodes.mockReturnValue([
+            blockMocks.ussNode.children[0],
+        ]);
+        blockMocks.testResponse.apiResponse.items = [
+            { name: "testFile", mode: "-rwxrwx" },
+        ];
         blockMocks.testResponse.success = true;
 
         globalMocks.fileList.mockResolvedValueOnce(blockMocks.testResponse);
         globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
         blockMocks.testUSSTree.getChildren.mockReturnValueOnce([
-            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, "/"), globalMocks.testSession]);
+            new ZoweUSSNode(
+                "testFile",
+                vscode.TreeItemCollapsibleState.None,
+                blockMocks.ussNode,
+                null,
+                "/"
+            ),
+            globalMocks.testSession,
+        ]);
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.concatChildNodes.mock.calls.length).toBe(1);
@@ -356,9 +548,13 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+            callback()
+        );
         globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
+        globalMocks.concatChildNodes.mockReturnValue([
+            blockMocks.ussNode.children[0],
+        ]);
         blockMocks.testResponse.success = false;
         blockMocks.testResponse.commandResponse = "Save failed";
 
@@ -373,34 +569,54 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+            callback()
+        );
         globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
+        globalMocks.concatChildNodes.mockReturnValue([
+            blockMocks.ussNode.children[0],
+        ]);
         globalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe(
+            "Test Error Error: Test Error"
+        );
     });
 
     it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+            callback()
+        );
         globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
+        globalMocks.concatChildNodes.mockReturnValue([
+            blockMocks.ussNode.children[0],
+        ]);
         const downloadResponse = createFileResponse({ etag: "" });
         blockMocks.testResponse.success = false;
-        blockMocks.testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
+        blockMocks.testResponse.commandResponse =
+            "Rest API failure with HTTP(S) status 412";
 
-        globalMocks.withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
+        globalMocks.withProgress.mockRejectedValueOnce(
+            Error("Rest API failure with HTTP(S) status 412")
+        );
         globalMocks.ussFile.mockResolvedValueOnce(downloadResponse);
 
         try {
-            await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        } catch (e) { expect(e.message).toBe("vscode.Position is not a constructor"); }
-        expect(globalMocks.showWarningMessage.mock.calls[0][0]).toBe("Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.");
+            await ussNodeActions.saveUSSFile(
+                blockMocks.testDoc,
+                blockMocks.testUSSTree
+            );
+        } catch (e) {
+            expect(e.message).toBe("vscode.Position is not a constructor");
+        }
+        expect(globalMocks.showWarningMessage.mock.calls[0][0]).toBe(
+            "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
+        );
     });
 });
 
@@ -412,14 +628,30 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
             testUSSTree: null,
             testResponse: createFileResponse({ items: [] }),
             testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile())
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
 
-        newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
+        newMocks.node = new ZoweUSSNode(
+            "u/myuser/testFile",
+            vscode.TreeItemCollapsibleState.None,
+            newMocks.ussNode,
+            null,
+            "/"
+        );
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
-        newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
+        newMocks.mockGetEtag = jest
+            .spyOn(newMocks.node, "getEtag")
+            .mockImplementation(() => "123");
 
         return newMocks;
     }
@@ -433,7 +665,10 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
-        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.uploadDialog(
+            blockMocks.ussNode,
+            blockMocks.testUSSTree
+        );
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();
@@ -448,7 +683,10 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
         globalMocks.isBinaryFileSync.mockReturnValueOnce(true);
 
-        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.uploadDialog(
+            blockMocks.ussNode,
+            blockMocks.testUSSTree
+        );
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();
     });
@@ -460,16 +698,19 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         globalMocks.fileToUSSFile.mockImplementationOnce(() => {
-            throw (Error("testError"));
+            throw Error("testError");
         });
         const fileUri = { fsPath: "/tmp/foo.txt" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         try {
-            await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+            await ussNodeActions.uploadDialog(
+                blockMocks.ussNode,
+                blockMocks.testUSSTree
+            );
             // tslint:disable-next-line:no-empty
-        } catch (err) { }
+        } catch (err) {}
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
@@ -483,17 +724,35 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
             testResponse: createFileResponse({ etag: "132" }),
             testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile)
+            mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile),
         };
 
-        newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
+        newMocks.node = new ZoweUSSNode(
+            "u/myuser/testFile",
+            vscode.TreeItemCollapsibleState.None,
+            newMocks.ussNode,
+            null,
+            "/"
+        );
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
         globalMocks.ussFile.mockResolvedValueOnce(newMocks.testResponse);
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+            callback()
+        );
         newMocks.getMvsApiMock.mockReturnValue(newMocks.mvsApi);
-        ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
+        ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(
+            ZoweExplorerApiRegister
+        );
 
         return newMocks;
     }
@@ -501,7 +760,13 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
     it("Tests that changeFileType() runs successfully", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, null);
+        const node = new ZoweUSSNode(
+            "node",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.ussNode,
+            null,
+            null
+        );
 
         node.binary = true;
         node.contextValue = globals.DS_BINARY_FILE_CONTEXT;
@@ -521,17 +786,35 @@ describe("USS Action Unit Tests - function uploadFile", () => {
             testResponse: createFileResponse({ etag: "132" }),
             testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile)
+            mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile),
         };
 
-        newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
+        newMocks.node = new ZoweUSSNode(
+            "u/myuser/testFile",
+            vscode.TreeItemCollapsibleState.None,
+            newMocks.ussNode,
+            null,
+            "/"
+        );
         newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = createUSSTree([createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode], createTreeView());
+        newMocks.testUSSTree = createUSSTree(
+            [
+                createFavoriteUSSNode(
+                    globalMocks.testSession,
+                    globalMocks.testProfile
+                ),
+            ],
+            [newMocks.ussNode],
+            createTreeView()
+        );
         globalMocks.ussFile.mockResolvedValueOnce(newMocks.testResponse);
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
+        globalMocks.withProgress.mockImplementation((progLocation, callback) =>
+            callback()
+        );
         newMocks.getMvsApiMock.mockReturnValue(newMocks.mvsApi);
-        ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
+        ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(
+            ZoweExplorerApiRegister
+        );
 
         return newMocks;
     }
@@ -540,15 +823,18 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const putContents = jest.fn();
-        ZoweExplorerApiRegister.getUssApi = jest.fn
-            <any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>
-            ((profile: IProfileLoaded) => {
-                return {
-                    putContents,
-                };
-            });
+        ZoweExplorerApiRegister.getUssApi = jest.fn<
+            any,
+            Parameters<typeof ZoweExplorerApiRegister.getUssApi>
+        >((profile: IProfileLoaded) => {
+            return {
+                putContents,
+            };
+        });
 
-        await ussNodeActions.uploadFile(blockMocks.ussNode, { fileName: "madeup" } as any);
+        await ussNodeActions.uploadFile(blockMocks.ussNode, {
+            fileName: "madeup",
+        } as any);
         expect(ZoweExplorerApiRegister.getUssApi(null).putContents).toBeCalled();
     });
 
@@ -556,16 +842,18 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const putContent = jest.fn();
-        ZoweExplorerApiRegister.getUssApi = jest.fn
-            <any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>
-            ((profile: IProfileLoaded) => {
-                return {
-                    putContent,
-                };
-            });
+        ZoweExplorerApiRegister.getUssApi = jest.fn<
+            any,
+            Parameters<typeof ZoweExplorerApiRegister.getUssApi>
+        >((profile: IProfileLoaded) => {
+            return {
+                putContent,
+            };
+        });
 
-        await ussNodeActions.uploadFile(blockMocks.ussNode, { fileName: "madeup" } as any);
+        await ussNodeActions.uploadFile(blockMocks.ussNode, {
+            fileName: "madeup",
+        } as any);
         expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
     });
-
 });

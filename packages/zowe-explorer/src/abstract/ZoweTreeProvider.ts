@@ -1,43 +1,61 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Logger, IProfile, ISession  } from "@zowe/imperative";
+import { Logger, IProfile, ISession } from "@zowe/imperative";
 import { PersistentFilters } from "../PersistentFilters";
 import { OwnerFilterDescriptor } from "../job/utils";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
-import { Profiles } from "../Profiles";
-import { setProfile, setSession, errorHandling } from "../utils";
-import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType } from "../api/IZoweTreeNode";
-import { IZoweTree } from "../api/IZoweTree";
+import {
+    Profiles,
+    IZoweTreeNode,
+    IZoweDatasetTreeNode,
+    IZoweNodeType,
+    IZoweTree,
+    PersistenceSchemaEnum,
+} from "@zowe/zowe-explorer-api";
+import {
+    setProfile,
+    setSession,
+    errorHandling,
+} from "@zowe/zowe-explorer-api/lib/Utils";
 import * as nls from "vscode-nls";
 
 // Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // tslint:disable-next-line: max-classes-per-file
 export class ZoweTreeProvider {
-
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | undefined> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | undefined> = this.mOnDidChangeTreeData.event;
+    public mOnDidChangeTreeData: vscode.EventEmitter<
+        IZoweTreeNode | undefined
+    > = new vscode.EventEmitter<IZoweTreeNode | undefined>();
+    public readonly onDidChangeTreeData: vscode.Event<
+        IZoweTreeNode | undefined
+    > = this.mOnDidChangeTreeData.event;
     public createOwner = new OwnerFilterDescriptor();
 
     protected mHistory: PersistentFilters;
     protected log: Logger = Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    constructor(protected persistenceSchema: globals.PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
+    constructor(
+        protected persistenceSchema: PersistenceSchemaEnum,
+        public mFavoriteSession: IZoweTreeNode
+    ) {
         this.mHistory = new PersistentFilters(this.persistenceSchema);
     }
 
@@ -47,7 +65,9 @@ export class ZoweTreeProvider {
      * @param {IZoweTreeNode} element
      * @returns {vscode.TreeItem}
      */
-    public getTreeItem(element: IZoweTreeNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    public getTreeItem(
+        element: IZoweTreeNode
+    ): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
     }
 
@@ -61,7 +81,7 @@ export class ZoweTreeProvider {
      * @param {IZoweTreeNode}
      */
     public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode) {
-        treeView.reveal(item, {select: true, focus: true});
+        treeView.reveal(item, { select: true, focus: true });
     }
 
     /**
@@ -91,7 +111,9 @@ export class ZoweTreeProvider {
         if (element.contextValue.includes("session")) {
             this.checkCurrentProfile(element);
         }
-        element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
+        element.collapsibleState = isOpen
+            ? vscode.TreeItemCollapsibleState.Expanded
+            : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
             element.iconPath = icon.path;
@@ -100,14 +122,21 @@ export class ZoweTreeProvider {
         this.mOnDidChangeTreeData.fire(element);
     }
 
-
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
         if (e.affectsConfiguration(this.persistenceSchema)) {
-            const setting: any = {...vscode.workspace.getConfiguration().get(this.persistenceSchema)};
+            const setting: any = {
+                ...vscode.workspace.getConfiguration().get(this.persistenceSchema),
+            };
             if (!setting.persistence) {
                 setting.favorites = [];
                 setting.history = [];
-                await vscode.workspace.getConfiguration().update(this.persistenceSchema, setting, vscode.ConfigurationTarget.Global);
+                await vscode.workspace
+                    .getConfiguration()
+                    .update(
+                        this.persistenceSchema,
+                        setting,
+                        vscode.ConfigurationTarget.Global
+                    );
             }
         }
     }
@@ -137,7 +166,11 @@ export class ZoweTreeProvider {
     public renameFavorite(node: IZoweTreeNode, newLabel: string) {
         return undefined;
     }
-    public renameNode(profile: string, beforeDataSetName: string, afterDataSetName: string) {
+    public renameNode(
+        profile: string,
+        beforeDataSetName: string,
+        afterDataSetName: string
+    ) {
         return undefined;
     }
 
@@ -146,7 +179,10 @@ export class ZoweTreeProvider {
         const profileName = node.getProfileName();
         // Check what happens is inactive
         await Profiles.getInstance().validateProfiles(profile);
-        const EditSession = await Profiles.getInstance().editSession(profile, profileName);
+        const EditSession = await Profiles.getInstance().editSession(
+            profile,
+            profileName
+        );
         if (EditSession) {
             node.getProfile().profile = EditSession as IProfile;
             await setProfile(node, EditSession as IProfile);
@@ -155,27 +191,36 @@ export class ZoweTreeProvider {
         }
         try {
             // refresh profilesForValidation to check the profile status again
-            Profiles.getInstance().profilesForValidation.forEach((checkProfile, index) => {
-                if (index === 0) {
-                    Profiles.getInstance().profilesForValidation = [];
+            Profiles.getInstance().profilesForValidation.forEach(
+                (checkProfile, index) => {
+                    if (index === 0) {
+                        Profiles.getInstance().profilesForValidation = [];
+                    }
+                    if (checkProfile.name === profileName) {
+                        Profiles.getInstance().profilesForValidation.splice(
+                            index,
+                            1
+                        );
+                    }
                 }
-                if (checkProfile.name === profileName) {
-                    Profiles.getInstance().profilesForValidation.splice(index,1);
-                }
-            });
+            );
 
             await this.checkCurrentProfile(node);
         } catch (error) {
             await errorHandling(error);
         }
-
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode) {
         const profile = node.getProfile();
-        const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
+        const profileStatus = await Profiles.getInstance().checkCurrentProfile(
+            profile
+        );
         if (profileStatus.status === "inactive") {
-            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
+            if (
+                node.contextValue.toLowerCase().includes("session") ||
+                node.contextValue.toLowerCase().includes("server")
+            ) {
                 // change contextValue only if the word inactive is not there
                 if (node.contextValue.toLowerCase().indexOf("inactive") === -1) {
                     node.contextValue = node.contextValue + globals.INACTIVE_CONTEXT;
@@ -186,16 +231,27 @@ export class ZoweTreeProvider {
                 }
             }
 
-            await errorHandling(localize("validateProfiles.invalid1", "Profile Name ") +
-                (profile.name) +
-                localize("validateProfiles.invalid2",
-                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
-            this.log.debug(localize("validateProfiles.invalid1", "Profile Name ") +
-                (node.getProfileName()) +
-                localize("validateProfiles.invalid2",
-                " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
+            await errorHandling(
+                localize("validateProfiles.invalid1", "Profile Name ") +
+                    profile.name +
+                    localize(
+                        "validateProfiles.invalid2",
+                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+                    )
+            );
+            this.log.debug(
+                localize("validateProfiles.invalid1", "Profile Name ") +
+                    node.getProfileName() +
+                    localize(
+                        "validateProfiles.invalid2",
+                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+                    )
+            );
         } else if (profileStatus.status === "active") {
-            if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
+            if (
+                node.contextValue.toLowerCase().includes("session") ||
+                node.contextValue.toLowerCase().includes("server")
+            ) {
                 // change contextValue only if the word active is not there
                 if (node.contextValue.toLowerCase().indexOf("active") === -1) {
                     node.contextValue = node.contextValue + globals.ACTIVE_CONTEXT;
@@ -220,5 +276,4 @@ export class ZoweTreeProvider {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
-
 }

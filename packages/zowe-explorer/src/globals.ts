@@ -1,13 +1,13 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
@@ -52,27 +52,20 @@ export const THEIA = "Eclipse Theia";
 export const ROOTPATH = path.join(__dirname, "..", "..");
 
 /**
- * The types of persistence schemas wich are available in settings.json
- */
-export enum PersistenceSchemaEnum {
-    Dataset = "Zowe-DS-Persistent",
-    USS = "Zowe-USS-Persistent",
-    Job = "Zowe-Jobs-Persistent"
-}
-
-/**
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
  */
 export function defineGlobals(tempPath: string | undefined) {
     // Set app name
     const appName: string = vscode.env.appName;
-    if (appName && appName === this.THEIA) { this.ISTHEIA = true; }
+    if (appName && appName === this.THEIA) {
+        this.ISTHEIA = true;
+    }
 
     // Set temp path & folder paths
-    tempPath !== "" && tempPath !== undefined ?
-        ZOWETEMPFOLDER = path.join(tempPath, "temp") :
-        ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp");
+    tempPath !== "" && tempPath !== undefined
+        ? (ZOWETEMPFOLDER = path.join(tempPath, "temp"))
+        : (ZOWETEMPFOLDER = path.join(__dirname, "..", "..", "resources", "temp"));
 
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
@@ -84,9 +77,11 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)){
+    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            context.extensionPath, loggerConfig.log4jsConfig.appenders[appenderName].filename);
+            context.extensionPath,
+            loggerConfig.log4jsConfig.appenders[appenderName].filename
+        );
     }
     Logger.initLogger(loggerConfig);
     this.LOG = Logger.getAppLogger();

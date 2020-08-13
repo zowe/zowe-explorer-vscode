@@ -1,0 +1,13 @@
+root = true
+
+[*]
+insert_final_newline = true
+end_of_line = lf
+indent_style = space
+max_line_length = 85
+
+[*.{js,ts,css}]
+indent_size = 4
+
+[*.{json,yml}]
+indent_size = 2

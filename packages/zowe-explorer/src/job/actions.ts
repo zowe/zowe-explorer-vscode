@@ -1,23 +1,26 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as zowe from "@zowe/cli";
-import { errorHandling } from "../utils";
+import { errorHandling } from "@zowe/zowe-explorer-api/lib/Utils";
 import { labelRefresh, refreshTree } from "../shared/utils";
-import { Profiles, ValidProfileEnum } from "../Profiles";
-import { IZoweTree } from "../api/IZoweTree";
-import { IZoweJobTreeNode } from "../api/IZoweTreeNode";
-import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import {
+    Profiles,
+    ValidProfileEnum,
+    IZoweTree,
+    IZoweJobTreeNode,
+    ZoweExplorerApiRegister,
+} from "@zowe/zowe-explorer-api";
 import { Job } from "./ZoweJobNode";
 import * as contextually from "../shared/context";
 import { returnIconState } from "../shared/actions";
@@ -25,7 +28,10 @@ import * as nls from "vscode-nls";
 import { encodeJobFile } from "../SpoolProvider";
 
 // Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
@@ -52,25 +58,26 @@ export async function refreshAllJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>) 
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(job: IZoweJobTreeNode){
+export async function downloadSpool(job: IZoweJobTreeNode) {
     try {
         const dirUri = await vscode.window.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
             canSelectFolders: true,
             canSelectFiles: false,
-            canSelectMany: false
+            canSelectMany: false,
         });
         if (dirUri !== undefined) {
-            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
-                jobid: job.job.jobid,
-                jobname: job.job.jobname,
-                outDir: dirUri[0].fsPath
-            });
+            ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent(
+                {
+                    jobid: job.job.jobid,
+                    jobname: job.job.jobname,
+                    outDir: dirUri[0].fsPath,
+                }
+            );
         }
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
-
 }
 
 /**
@@ -79,7 +86,11 @@ export async function downloadSpool(job: IZoweJobTreeNode){
  * @param session The session to which the job belongs
  * @param spool The IJobFile to get the spool content for
  */
-export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>, session: string, spool: zowe.IJobFile) {
+export async function getSpoolContent(
+    jobsProvider: IZoweTree<IZoweJobTreeNode>,
+    session: string,
+    spool: zowe.IJobFile
+) {
     const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
     // This has a direct access to Profiles checkcurrentProfile() because I am able to get the profile now.
     await Profiles.getInstance().checkCurrentProfile(zosmfProfile);
@@ -100,7 +111,10 @@ export async function getSpoolContent(jobsProvider: IZoweTree<IZoweJobTreeNode>,
  * @param node The node to refresh
  * @param jobsProvider The tree to which the refreshed node belongs
  */
-export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+export async function refreshJobsServer(
+    node: IZoweJobTreeNode,
+    jobsProvider: IZoweTree<IZoweJobTreeNode>
+) {
     let sesNamePrompt: string;
     if (node.contextValue.endsWith(globals.FAV_SUFFIX)) {
         sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
@@ -120,8 +134,13 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
  */
 export async function downloadJcl(job: Job) {
     try {
-        const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
-        const jclDoc = await vscode.workspace.openTextDocument({language: "jcl", content: jobJcl});
+        const jobJcl = await ZoweExplorerApiRegister.getJesApi(
+            job.getProfile()
+        ).getJclForJob(job.job);
+        const jclDoc = await vscode.workspace.openTextDocument({
+            language: "jcl",
+            content: jobJcl,
+        });
         await vscode.window.showTextDocument(jclDoc);
     } catch (error) {
         await errorHandling(error, null, error.message);
@@ -135,10 +154,18 @@ export async function downloadJcl(job: Job) {
  */
 export async function modifyCommand(job: Job) {
     try {
-        const command = await vscode.window.showInputBox({prompt: localize("modifyCommand.command.prompt", "Modify Command")});
+        const command = await vscode.window.showInputBox({
+            prompt: localize("modifyCommand.command.prompt", "Modify Command"),
+        });
         if (command !== undefined) {
-            const response = await zowe.IssueCommand.issueSimple(job.getSession(), `f ${job.job.jobname},${command}`);
-            vscode.window.showInformationMessage(localize("modifyCommand.response", "Command response: ") + response.commandResponse);
+            const response = await zowe.IssueCommand.issueSimple(
+                job.getSession(),
+                `f ${job.job.jobname},${command}`
+            );
+            vscode.window.showInformationMessage(
+                localize("modifyCommand.response", "Command response: ") +
+                    response.commandResponse
+            );
         }
     } catch (error) {
         await errorHandling(error, null, error.message);
@@ -152,8 +179,14 @@ export async function modifyCommand(job: Job) {
  */
 export async function stopCommand(job: Job) {
     try {
-        const response = await zowe.IssueCommand.issueSimple(job.getSession(), `p ${job.job.jobname}`);
-        vscode.window.showInformationMessage(localize("stopCommand.response", "Command response: ") + response.commandResponse);
+        const response = await zowe.IssueCommand.issueSimple(
+            job.getSession(),
+            `p ${job.job.jobname}`
+        );
+        vscode.window.showInformationMessage(
+            localize("stopCommand.response", "Command response: ") +
+                response.commandResponse
+        );
     } catch (error) {
         await errorHandling(error, null, error.message);
     }
@@ -165,8 +198,13 @@ export async function stopCommand(job: Job) {
  * @param job The job to set the owner of
  * @param jobsProvider The tree to which the updated node belongs
  */
-export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newOwner = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.owner", "Owner") });
+export async function setOwner(
+    job: IZoweJobTreeNode,
+    jobsProvider: IZoweTree<IZoweJobTreeNode>
+) {
+    const newOwner = await vscode.window.showInputBox({
+        prompt: localize("setOwner.newOwner.prompt.owner", "Owner"),
+    });
     job.owner = newOwner;
     jobsProvider.refreshElement(job);
 }
@@ -177,8 +215,13 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
  * @param job The job to set the prefix of
  * @param jobsProvider The tree to which the updated node belongs
  */
-export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
-    const newPrefix = await vscode.window.showInputBox({ prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix") });
+export async function setPrefix(
+    job: IZoweJobTreeNode,
+    jobsProvider: IZoweTree<IZoweJobTreeNode>
+) {
+    const newPrefix = await vscode.window.showInputBox({
+        prompt: localize("setOwner.newOwner.prompt.prefix", "Prefix"),
+    });
     job.prefix = newPrefix;
     jobsProvider.refreshElement(job);
 }

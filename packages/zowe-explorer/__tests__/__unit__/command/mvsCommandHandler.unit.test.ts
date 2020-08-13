@@ -1,22 +1,22 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 jest.mock("Session");
 jest.mock("@zowe/imperative");
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as profileLoader from "../../../src/Profiles";
+import * as profileLoader from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
-import * as utils from "../../../src/utils";
+import * as utils from "@zowe/zowe-explorer-api/lib/Utils";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
@@ -39,49 +39,52 @@ describe("mvsCommandActions unit testing", () => {
         clear: jest.fn(),
         show: jest.fn(),
         hide: jest.fn(),
-        dispose: jest.fn()
+        dispose: jest.fn(),
     };
     createOutputChannel.mockReturnValue(outputChannel);
-    const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("\uFF0B " + "Create a new filter");
+    const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor(
+        "\uFF0B " + "Create a new filter"
+    );
     const qpItem2 = new utils.FilterItem("/d iplinfo0");
 
     const mockLoadNamedProfile = jest.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
         value: jest.fn(() => {
             return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"}
+                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                defaultProfile: { name: "firstName" },
             };
-        })
+        }),
     });
 
     createQuickPick.mockReturnValue({
-        placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+        placeholder:
+            'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
         activeItems: [qpItem2],
         ignoreFocusOut: true,
         items: [qpItem, qpItem2],
         value: undefined,
-        show: jest.fn(()=>{
+        show: jest.fn(() => {
             return {};
         }),
-        hide: jest.fn(()=>{
+        hide: jest.fn(() => {
             return {};
         }),
-        onDidAccept: jest.fn(()=>{
+        onDidAccept: jest.fn(() => {
             return {};
-        })
+        }),
     });
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
-            Notification: 15
+            Notification: 15,
         };
     });
 
     const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
         return {
             success: true,
-            commandResponse: callback()
+            commandResponse: callback(),
         };
     });
 
@@ -99,60 +102,84 @@ describe("mvsCommandActions unit testing", () => {
         profile: {},
         type: "zosmf",
         message: "",
-        failNotFound: false
+        failNotFound: false,
     };
 
-    const testNode = new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, null,
-    session, undefined, undefined, profileOne);
+    const testNode = new ZoweDatasetNode(
+        "BRTVS99.DDIR",
+        vscode.TreeItemCollapsibleState.Collapsed,
+        null,
+        session,
+        undefined,
+        undefined,
+        profileOne
+    );
 
-    Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage});
-    Object.defineProperty(vscode.window, "showInputBox", {value: showInputBox});
-    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-    Object.defineProperty(vscode.window, "showQuickPick", {value: showQuickPick});
-    Object.defineProperty(vscode.window, "createQuickPick", {value: createQuickPick});
-    Object.defineProperty(vscode.workspace, "getConfiguration", {value: getConfiguration});
-    Object.defineProperty(zowe, "IssueCommand", {value: IssueCommand});
-    Object.defineProperty(IssueCommand, "issueSimple", {value: issueSimple});
-    Object.defineProperty(vscode.window, "createOutputChannel", {value: createOutputChannel});
-    Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation});
-    Object.defineProperty(vscode.window, "withProgress", {value: withProgress});
+    Object.defineProperty(vscode.window, "showErrorMessage", {
+        value: showErrorMessage,
+    });
+    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "showInformationMessage", {
+        value: showInformationMessage,
+    });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "createQuickPick", {
+        value: createQuickPick,
+    });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: getConfiguration,
+    });
+    Object.defineProperty(zowe, "IssueCommand", { value: IssueCommand });
+    Object.defineProperty(IssueCommand, "issueSimple", { value: issueSimple });
+    Object.defineProperty(vscode.window, "createOutputChannel", {
+        value: createOutputChannel,
+    });
+    Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
+    Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 
-    mockLoadNamedProfile.mockReturnValue({profile: {name:"aProfile", type:"zosmf"}});
+    mockLoadNamedProfile.mockReturnValue({
+        profile: { name: "aProfile", type: "zosmf" },
+    });
     getConfiguration.mockReturnValue({
         get: (setting: string) => undefined,
-        update: jest.fn(()=>{
+        update: jest.fn(() => {
             return {};
-        })
+        }),
     });
 
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-
     const mvsActions = MvsCommandHandler.getInstance();
-    const profilesForValidation = {status: "active", name: "fake"};
+    const profilesForValidation = { status: "active", name: "fake" };
 
     it("tests the issueMvsCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
         issueSimple.mockReturnValueOnce("iplinfo1");
 
@@ -163,7 +190,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -176,21 +203,27 @@ describe("mvsCommandActions unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem2)
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem2)
         );
         issueSimple.mockReturnValueOnce("iplinfo0");
 
@@ -201,7 +234,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
@@ -214,24 +247,30 @@ describe("mvsCommandActions unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
         issueSimple.mockRejectedValueOnce(Error("fake testError"));
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
 
         await mvsActions.issueMvsCommand();
@@ -241,32 +280,40 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError Error: fake testError");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(
+            "fake testError Error: fake testError"
+        );
     });
 
     it("tests the issueMvsCommand function user escapes the quick pick box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(undefined)
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(undefined)
         );
 
         await mvsActions.issueMvsCommand();
@@ -277,32 +324,40 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made.");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "No selection made."
+        );
     });
 
     it("tests the issueMvsCommand function user escapes the command box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce(undefined);
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
 
         await mvsActions.issueMvsCommand();
@@ -312,50 +367,59 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "No command entered."
+        );
     });
 
     it("tests the issueMvsCommand function user starts typing a value in quick pick", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    validProfile: profileLoader.ValidProfileEnum.VALID
+                    validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
         createQuickPick.mockReturnValueOnce({
-            placeholder: "Choose \"Create new...\" to define a new profile or select an existing profile to Add to the Data Set Explorer",
+            placeholder:
+                'Choose "Create new..." to define a new profile or select an existing profile to Add to the Data Set Explorer',
             activeItems: [qpItem2],
             ignoreFocusOut: true,
             items: [qpItem, qpItem2],
             value: "/d m=cpu",
-            show: jest.fn(()=>{
+            show: jest.fn(() => {
                 return {};
             }),
-            hide: jest.fn(()=>{
+            hide: jest.fn(() => {
                 return {};
             }),
-            onDidAccept: jest.fn(()=>{
+            onDidAccept: jest.fn(() => {
                 return {};
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce(undefined);
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
 
         await mvsActions.issueMvsCommand();
@@ -365,7 +429,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
@@ -382,20 +446,28 @@ describe("mvsCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     validProfile: profileLoader.ValidProfileEnum.VALID,
                 };
-            })
+            }),
         });
         await mvsActions.issueMvsCommand();
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "No profiles available"
+        );
     });
 
     it("tests the issueMvsCommand prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    promptCredentials: jest.fn(()=> {
+                    promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
                     }),
                     checkCurrentProfile: jest.fn(() => {
@@ -403,16 +475,16 @@ describe("mvsCommandActions unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("/d iplinfo");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
 
         await mvsActions.issueMvsCommand();
@@ -422,7 +494,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
@@ -431,10 +503,16 @@ describe("mvsCommandActions unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     validProfile: profileLoader.ValidProfileEnum.VALID,
-                    promptCredentials: jest.fn(()=> {
+                    promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
                     }),
                     checkCurrentProfile: jest.fn(() => {
@@ -442,15 +520,15 @@ describe("mvsCommandActions unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("/d iplinfo5");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
 
         await mvsActions.issueMvsCommand();
@@ -460,32 +538,37 @@ describe("mvsCommandActions unit testing", () => {
         expect(showQuickPick.mock.calls[0][1]).toEqual({
             canPickMany: false,
             ignoreFocusOut: true,
-            placeHolder: "Select the Profile to use to submit the command"
+            placeHolder: "Select the Profile to use to submit the command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
     it("tests the issueMvsCommand error in prompt credentials", async () => {
-
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:undefined, password: undefined}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: undefined, password: undefined },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     validateProfiles: jest.fn(),
-                    checkCurrentProfile: jest.fn(()=> {
+                    checkCurrentProfile: jest.fn(() => {
                         return profileLoader.ValidProfileEnum.INVALID;
                     }),
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
         showInputBox.mockReturnValueOnce("/d iplinfo");
 
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(
-            () => Promise.resolve(qpItem)
+        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() =>
+            Promise.resolve(qpItem)
         );
 
         await mvsActions.issueMvsCommand();
@@ -497,13 +580,19 @@ describe("mvsCommandActions unit testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     validProfile: profileLoader.ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
                 };
-            })
+            }),
         });
 
         showQuickPick.mockReturnValueOnce(undefined);
@@ -511,29 +600,36 @@ describe("mvsCommandActions unit testing", () => {
         await mvsActions.issueMvsCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+        expect(showInformationMessage.mock.calls[0][0]).toEqual(
+            "Operation Cancelled"
+        );
     });
 
     it("tests the issueMvsCommand function from a session", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [{name: "firstName", profile: {user:"firstName", password: "12345"}}, {name: "secondName"}],
-                    defaultProfile: {name: "firstName"},
+                    allProfiles: [
+                        {
+                            name: "firstName",
+                            profile: { user: "firstName", password: "12345" },
+                        },
+                        { name: "secondName" },
+                    ],
+                    defaultProfile: { name: "firstName" },
                     validProfile: profileLoader.ValidProfileEnum.VALID,
                     checkCurrentProfile: jest.fn(),
-                    zosmfProfile: mockLoadNamedProfile
+                    zosmfProfile: mockLoadNamedProfile,
                 };
-            })
+            }),
         });
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        issueSimple.mockReturnValueOnce({commandResponse: "fake response"});
+        issueSimple.mockReturnValueOnce({ commandResponse: "fake response" });
 
         await mvsActions.issueMvsCommand(session, null, testNode);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
-
 });

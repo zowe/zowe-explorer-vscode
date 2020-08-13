@@ -1,13 +1,13 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 jest.mock("@zowe/imperative");
 jest.mock("@zowe/cli");
@@ -16,8 +16,12 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as brtimperative from "@zowe/imperative";
 import * as zowe from "@zowe/cli";
 import * as dsNodeActions from "../../../src/dataset/actions";
-import { Profiles } from "../../../src/Profiles";
-import { FAVORITE_CONTEXT, DS_SESSION_CONTEXT, FAV_SUFFIX } from "../../../src/globals";
+import { Profiles } from "@zowe/zowe-explorer-api";
+import {
+    FAVORITE_CONTEXT,
+    DS_SESSION_CONTEXT,
+    FAV_SUFFIX,
+} from "../../../src/globals";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -37,10 +41,10 @@ const existsSync = jest.fn();
 const createBasicZosmfSession = jest.fn();
 const refreshAll = jest.fn();
 const mockcreateZoweSession = jest.fn();
-const mockaddSearchHistory  = jest.fn();
+const mockaddSearchHistory = jest.fn();
 const mockgetSearchHistory = jest.fn();
 const mockRefresh = jest.fn();
-const mockRefreshElement  = jest.fn();
+const mockRefreshElement = jest.fn();
 const mockGetChildren = jest.fn();
 const mockGetTreeView = jest.fn();
 const mockPattern = jest.fn();
@@ -59,21 +63,52 @@ const profileOne: brtimperative.IProfileLoaded = {
     profile: {},
     type: "zosmf",
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 function getDSNode() {
-    const mParent = new ZoweDatasetNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    const dsNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, undefined, undefined, profileOne);
+    const mParent = new ZoweDatasetNode(
+        "parentNode",
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        undefined,
+        undefined,
+        profileOne
+    );
+    const dsNode = new ZoweDatasetNode(
+        "sestest",
+        vscode.TreeItemCollapsibleState.Expanded,
+        mParent,
+        session,
+        undefined,
+        undefined,
+        profileOne
+    );
     dsNode.contextValue = DS_SESSION_CONTEXT;
     dsNode.pattern = "test hlq";
     return dsNode;
 }
 
 function getFavoriteDSNode() {
-    const mParent = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    const dsNodeF = new ZoweDatasetNode("[sestest]: sestest", vscode.TreeItemCollapsibleState.Expanded,
-            mParent, session, undefined, undefined, profileOne);
+    const mParent = new ZoweDatasetNode(
+        "Favorites",
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        undefined,
+        undefined,
+        profileOne
+    );
+    const dsNodeF = new ZoweDatasetNode(
+        "[sestest]: sestest",
+        vscode.TreeItemCollapsibleState.Expanded,
+        mParent,
+        session,
+        undefined,
+        undefined,
+        profileOne
+    );
     mParent.contextValue = FAVORITE_CONTEXT;
     dsNodeF.contextValue = DS_SESSION_CONTEXT + FAV_SUFFIX;
     return dsNodeF;
@@ -105,7 +140,7 @@ function getDSTree() {
             findNonFavoritedNode: mockFindNonFavoritedNode,
             getProfileName: mockGetProfileName,
             getSession: mockGetSession,
-            getProfiles: mockGetProfiles
+            getProfiles: mockGetProfiles,
         };
     });
     const testDSTree1 = DatasetTree();
@@ -121,17 +156,16 @@ const session = new brtimperative.Session({
     protocol: "https",
     type: "basic",
 });
-const profilesForValidation = {status: "active", name: "fake"};
+const profilesForValidation = { status: "active", name: "fake" };
 
 describe("dsNodeActions", () => {
-
     const mockLoadNamedProfile = jest.fn();
     mockLoadNamedProfile.mockReturnValue(profileOne);
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
+                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                defaultProfile: { name: "firstName" },
                 type: "zosmf",
                 loadNamedProfile: mockLoadNamedProfile,
                 checkCurrentProfile: jest.fn(() => {
@@ -140,7 +174,7 @@ describe("dsNodeActions", () => {
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
             };
-        })
+        }),
     });
     const dsNode = getDSNode();
     const dsFavNode = getFavoriteDSNode();
@@ -148,11 +182,19 @@ describe("dsNodeActions", () => {
 
     Object.defineProperty(dsNodeActions, "RefreshAll", { value: refreshAll });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+    Object.defineProperty(vscode.window, "showErrorMessage", {
+        value: showErrorMessage,
+    });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-    Object.defineProperty(vscode.window, "showInformationMessage", {value: showInformationMessage});
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession});
+    Object.defineProperty(vscode.window, "showInformationMessage", {
+        value: showInformationMessage,
+    });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: getConfiguration,
+    });
+    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", {
+        value: createBasicZosmfSession,
+    });
 
     beforeEach(() => {
         showErrorMessage.mockReset();
@@ -175,7 +217,10 @@ describe("dsNodeActions", () => {
                         loadNamedProfile: mockLoadNamedProfile,
                         usesSecurity: true,
                         getProfiles: jest.fn(() => {
-                            return [{name: profileOne.name, profile: profileOne}, {name: profileOne.name, profile: profileOne}];
+                            return [
+                                { name: profileOne.name, profile: profileOne },
+                                { name: profileOne.name, profile: profileOne },
+                            ];
                         }),
                         refresh: jest.fn(),
                         checkCurrentProfile: jest.fn(() => {
@@ -184,7 +229,7 @@ describe("dsNodeActions", () => {
                         profilesForValidation: [],
                         validateProfiles: jest.fn(),
                     };
-                })
+                }),
             });
             const spy = jest.spyOn(dsNodeActions, "refreshAll");
             dsNodeActions.refreshAll(testDSTree);

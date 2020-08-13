@@ -1,18 +1,18 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { IProfileLoaded, IProfile } from "@zowe/imperative";
-import { Profiles } from "../../src/Profiles";
+import { Profiles } from "@zowe/zowe-explorer-api";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as testConst from "../../resources/testProfileData";
@@ -21,13 +21,13 @@ declare var it: Mocha.ITestDefinition;
 const TIMEOUT = 45000;
 
 const testProfile: IProfile = {
-    type : "zosmf",
+    type: "zosmf",
     host: "testHost",
     port: 1443,
     user: "testUser",
     password: "testPass",
     rejectUnauthorized: false,
-    name: "testProfileIntegration" // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
+    name: "testProfileIntegration", // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
 
 const testProfileLoaded: IProfileLoaded = {
@@ -35,7 +35,7 @@ const testProfileLoaded: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 describe("Create profiles integration tests", async () => {
@@ -44,12 +44,12 @@ describe("Create profiles integration tests", async () => {
     const profiles = Profiles.getInstance();
     let sandbox;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
     });
 
-    afterEach(async function() {
+    afterEach(async function () {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
@@ -63,11 +63,15 @@ describe("Create profiles integration tests", async () => {
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-        showQuickPickStub.returns("True - Reject connections with self-signed certificates");
+        showQuickPickStub.returns(
+            "True - Reject connections with self-signed certificates"
+        );
         const saveProfileStub = sandbox.stub(profiles, "saveProfile");
         saveProfileStub.returns(testProfile);
 
-        const response = await profiles.createNewConnection("testProfileIntegration");
+        const response = await profiles.createNewConnection(
+            "testProfileIntegration"
+        );
         expect(response).to.deep.equal("testProfileIntegration");
     }).timeout(TIMEOUT);
 
@@ -78,9 +82,13 @@ describe("Create profiles integration tests", async () => {
         const getUrlStub = sandbox.stub(profiles, "getUrl");
         getUrlStub.returns(undefined);
 
-        const response = await profiles.createNewConnection("testProfileIntegration");
+        const response = await profiles.createNewConnection(
+            "testProfileIntegration"
+        );
         expect(response).to.equal(undefined);
-        const messageSent = showInfoSpy.calledWith("No valid value for z/OS URL. Operation Cancelled");
+        const messageSent = showInfoSpy.calledWith(
+            "No valid value for z/OS URL. Operation Cancelled"
+        );
         expect(messageSent).to.equal(true);
     }).timeout(TIMEOUT);
 
@@ -93,7 +101,9 @@ describe("Create profiles integration tests", async () => {
         const showInputStub = sandbox.stub(vscode.window, "showInputBox");
         showInputStub.returns(undefined);
 
-        const response = await profiles.createNewConnection("testProfileIntegration");
+        const response = await profiles.createNewConnection(
+            "testProfileIntegration"
+        );
         expect(response).to.equal(undefined);
         const messageSent = showInfoSpy.calledWith("Operation Cancelled");
         expect(messageSent).to.equal(true);
@@ -109,7 +119,9 @@ describe("Create profiles integration tests", async () => {
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns(undefined);
 
-        const response = await profiles.createNewConnection("testProfileIntegration");
+        const response = await profiles.createNewConnection(
+            "testProfileIntegration"
+        );
         expect(response).to.equal(undefined);
         const messageSent = showInfoSpy.calledWith("Operation Cancelled");
         expect(messageSent).to.equal(true);
@@ -127,7 +139,9 @@ describe("Create profiles integration tests", async () => {
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
         showQuickPickStub.returns(undefined);
 
-        const response = await profiles.createNewConnection("testProfileIntegration");
+        const response = await profiles.createNewConnection(
+            "testProfileIntegration"
+        );
         expect(response).to.equal(undefined);
         const messageSent = showInfoSpy.calledWith("Operation Cancelled");
         expect(messageSent).to.equal(true);
@@ -144,12 +158,15 @@ describe("Create profiles integration tests", async () => {
         showInputStub.onCall(0).returns("testUser");
         showInputStub.onCall(1).returns("testPass");
         const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-        showQuickPickStub.returns("True - Reject connections with self-signed certificates");
+        showQuickPickStub.returns(
+            "True - Reject connections with self-signed certificates"
+        );
 
         const response = await profiles.createNewConnection(testConst.profile.name);
         expect(response).to.equal(undefined);
-        const messageSent = showErrorSpy.calledWith("Profile name already exists. Please create a profile using a different name");
+        const messageSent = showErrorSpy.calledWith(
+            "Profile name already exists. Please create a profile using a different name"
+        );
         expect(messageSent).to.equal(true);
     }).timeout(TIMEOUT);
-
 });

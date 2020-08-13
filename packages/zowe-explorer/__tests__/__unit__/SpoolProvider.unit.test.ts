@@ -1,19 +1,19 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as spoolprovider from "../../src/SpoolProvider";
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
-import { Profiles } from "../../src/Profiles";
+import { Profiles } from "@zowe/zowe-explorer-api";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {
@@ -21,61 +21,63 @@ describe("SpoolProvider Unit Tests", () => {
         "job-correlator": "",
         "record-count": 1,
         "records-url": "fake/records",
-        "class": "A",
-        "ddname": "STDOUT",
-        "id": 100,
-        "jobid": "100",
-        "jobname": "TESTJOB",
-        "lrecl": 80,
-        "procstep": "",
-        "recfm": "FB",
-        "stepname": "",
-        "subsystem": ""
+        class: "A",
+        ddname: "STDOUT",
+        id: 100,
+        jobid: "100",
+        jobname: "TESTJOB",
+        lrecl: 80,
+        procstep: "",
+        recfm: "FB",
+        stepname: "",
+        subsystem: "",
     };
-    const uriString = "zosspool:TESTJOB.100.STDOUT?[\"sessionName\",{\"byte-count\":128,\"job-correlator\":\"\","+
-        "\"record-count\":1,\"records-url\":\"fake/records\",\"class\":\"A\",\"ddname\":\"STDOUT\",\"id\":100,\"job"+
-        "id\":\"100\",\"jobname\":\"TESTJOB\",\"lrecl\":80,\"procstep\":\"\",\"recfm\":\"FB\",\"stepname\":\"\",\"subsystem\":\"\"}]";
+    const uriString =
+        'zosspool:TESTJOB.100.STDOUT?["sessionName",{"byte-count":128,"job-correlator":"",' +
+        '"record-count":1,"records-url":"fake/records","class":"A","ddname":"STDOUT","id":100,"job' +
+        'id":"100","jobname":"TESTJOB","lrecl":80,"procstep":"","recfm":"FB","stepname":"","subsystem":""}]';
 
     const uriObj: vscode.Uri = {
         scheme: "zosspool",
         authority: "",
         path: "TESTJOB.100.STDOUT",
-        query: "[\"sessionName\",{\"byte-count\":128,\"job-correlator\":\"\"," +
-            "\"record-count\":1,\"records-url\":\"fake/records\",\"class\":\"A\",\"ddname\":\"STDOUT\",\"id\":100,\"job" +
-            "id\":\"100\",\"jobname\":\"TESTJOB\",\"lrecl\":80,\"procstep\":\"\",\"recfm\":\"FB\",\"stepname\":\"\",\"subsystem\":\"\"}]",
+        query:
+            '["sessionName",{"byte-count":128,"job-correlator":"",' +
+            '"record-count":1,"records-url":"fake/records","class":"A","ddname":"STDOUT","id":100,"job' +
+            'id":"100","jobname":"TESTJOB","lrecl":80,"procstep":"","recfm":"FB","stepname":"","subsystem":""}]',
         fragment: "",
         fsPath: "",
         with: jest.fn(),
         toJSON: jest.fn(),
     };
-    const profilesForValidation = {status: "active", name: "fake"};
+    const profilesForValidation = { status: "active", name: "fake" };
 
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
-                allProfiles: [{name: "firstName"}, {name: "secondName"}],
-                defaultProfile: {name: "firstName"},
+                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                defaultProfile: { name: "firstName" },
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
             };
-        })
+        }),
     });
     Object.defineProperty(Profiles, "getDefaultProfile", {
         value: jest.fn(() => {
             return {
-                name: "firstName"
+                name: "firstName",
             };
-        })
+        }),
     });
     Object.defineProperty(Profiles, "loadNamedProfile", {
         value: jest.fn(() => {
             return {
-                name: "firstName"
+                name: "firstName",
             };
-        })
+        }),
     });
 
     afterEach(() => {
@@ -84,11 +86,11 @@ describe("SpoolProvider Unit Tests", () => {
 
     it("Tests that the URI is encoded", () => {
         const uriMock = jest.fn();
-        Object.defineProperty(vscode, "Uri", {value: uriMock});
+        Object.defineProperty(vscode, "Uri", { value: uriMock });
         const parse = jest.fn();
-        Object.defineProperty(uriMock, "parse", {value: parse});
+        Object.defineProperty(uriMock, "parse", { value: parse });
         const query = jest.fn();
-        Object.defineProperty(uriMock, "query", {value: query});
+        Object.defineProperty(uriMock, "query", { value: query });
 
         const uri = spoolprovider.encodeJobFile("sessionName", iJobFile);
         expect(parse.mock.calls.length).toEqual(1);
@@ -107,30 +109,32 @@ describe("SpoolProvider Unit Tests", () => {
         const profileOne: IProfileLoaded = {
             name: "sessionName",
             profile: {
-                user:undefined,
-                password: undefined
+                user: undefined,
+                password: undefined,
             },
             type: "zosmf",
             message: "",
-            failNotFound: false
+            failNotFound: false,
         };
         const mockLoadNamedProfile = jest.fn();
         mockLoadNamedProfile.mockReturnValue(profileOne);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    allProfiles: [profileOne, {name: "secondName"}],
+                    allProfiles: [profileOne, { name: "secondName" }],
                     defaultProfile: profileOne,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    loadNamedProfile: mockLoadNamedProfile
+                    loadNamedProfile: mockLoadNamedProfile,
                 };
-            })
+            }),
         });
         Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
-        Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
+        Object.defineProperty(GetJobs, "getSpoolContentById", {
+            value: getSpoolContentById,
+        });
         getSpoolContentById.mockReturnValue("spool content");
 
         const provider = new spoolprovider.default();
@@ -142,5 +146,4 @@ describe("SpoolProvider Unit Tests", () => {
         // tslint:disable-next-line:no-magic-numbers
         expect(getSpoolContentById.mock.calls[0][3]).toEqual(iJobFile.id);
     });
-
 });
