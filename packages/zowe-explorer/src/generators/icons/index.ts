@@ -1,17 +1,17 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import { TreeItem } from "vscode";
 import { ZoweUSSNode } from "../../uss/ZoweUSSNode";
-import { ZoweTreeNode } from "../../abstract/ZoweTreeNode";
+import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 export enum IconId {
     "document" = "document",
@@ -28,18 +28,18 @@ export enum IconId {
     "folder" = "folder",
     "folderOpen" = "folderOpen",
     "migrated" = "migrated",
-    "vsam" = "vsam"
+    "vsam" = "vsam",
 }
 export enum IconHierarchyType {
     "base" = "base",
-    "derived" = "derived"
+    "derived" = "derived",
 }
 
 type CombinedNode = TreeItem | ZoweUSSNode | ZoweTreeNode;
 export interface IIconItem {
     id: IconId;
     type: IconHierarchyType;
-    path: { light: string; dark: string; };
+    path: { light: string; dark: string };
     check: (node: CombinedNode) => boolean;
 }
 
@@ -58,7 +58,7 @@ const items = [
     require("./items/folder"),
     require("./items/folderOpen"),
     require("./items/migrated"),
-    require("./items/vsam")
+    require("./items/vsam"),
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {
@@ -69,7 +69,9 @@ export function getIconByNode(node: CombinedNode) {
     const targetItems = items.filter((item) => item.check(node));
 
     if (targetItems.some((item) => item.type === IconHierarchyType.derived)) {
-        return targetItems.filter((item) => item.type === IconHierarchyType.derived).pop();
+        return targetItems
+            .filter((item) => item.type === IconHierarchyType.derived)
+            .pop();
     } else {
         return targetItems.pop();
     }

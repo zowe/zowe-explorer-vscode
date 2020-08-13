@@ -17,6 +17,10 @@
   "engines": {
     "vscode": "^1.43.0"
   },
+  "dependencies": {
+    "@zowe/cli": "6.15.0",
+    "vscode-nls": "4.1.2"
+  },
   "devDependencies": {
     "eslint-plugin-zowe-explorer": "0.1.0",
     "typescript": "^3.8.3",
@@ -26,6 +30,7 @@
     "vscode-test": "^1.4.0",
     "vscode-nls-dev": "^3.3.2",
     "vsce": "^1.77.0",
+    "rimraf": "^3.0.2",
     "adm-zip": "0.4.16"
   },
   "scripts": {

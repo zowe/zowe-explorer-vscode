@@ -1,15 +1,15 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
-import { ZosmfUssApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
+import { ZosmfUssApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import * as zowe from "@zowe/cli";
 import { AbstractSession } from "@zowe/imperative";
 
@@ -17,13 +17,11 @@ export declare enum TaskStage {
     IN_PROGRESS = 0,
     COMPLETE = 1,
     NOT_STARTED = 2,
-    FAILED = 3
+    FAILED = 3,
 }
 
 describe("Zosmf API tests", () => {
-
     it("should test that copy data set uses default options", async () => {
-
         const dataSet = jest.fn(async (session, toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
@@ -33,12 +31,13 @@ describe("Zosmf API tests", () => {
 
         const api = new ZosmfMvsApi();
         api.getSession = jest.fn();
-        await api.copyDataSetMember({ dataSetName: "IBM.FROM", memberName: "IEFBR14" }, { dataSetName: "IBM.TO", memberName: "IEFBR15" });
-
+        await api.copyDataSetMember(
+            { dataSetName: "IBM.FROM", memberName: "IEFBR14" },
+            { dataSetName: "IBM.TO", memberName: "IEFBR15" }
+        );
     });
 
     it("should test that copy data set uses enq", async () => {
-
         const dataSet = jest.fn(async (session, toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
@@ -48,13 +47,14 @@ describe("Zosmf API tests", () => {
 
         const api = new ZosmfMvsApi();
         api.getSession = jest.fn();
-        await api.copyDataSetMember({ dataSetName: "IBM.FROM", memberName: "IEFBR14" }, { dataSetName: "IBM.TO", memberName: "IEFBR15" },
-            { enq: "SHR", fromDataSet: { dataSetName: "BROADCOM.FROM" } });
-
+        await api.copyDataSetMember(
+            { dataSetName: "IBM.FROM", memberName: "IEFBR14" },
+            { dataSetName: "IBM.TO", memberName: "IEFBR15" },
+            { enq: "SHR", fromDataSet: { dataSetName: "BROADCOM.FROM" } }
+        );
     });
 
     it("should test that copy data set uses enq only", async () => {
-
         const dataSet = jest.fn(async (session, toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
@@ -64,26 +64,34 @@ describe("Zosmf API tests", () => {
 
         const api = new ZosmfMvsApi();
         api.getSession = jest.fn();
-        await api.copyDataSetMember({ dataSetName: "IBM.FROM", memberName: "IEFBR14" }, { dataSetName: "IBM.TO", memberName: "IEFBR15" },
-            { enq: "SHR" } as any);
-
+        await api.copyDataSetMember(
+            { dataSetName: "IBM.FROM", memberName: "IEFBR14" },
+            { dataSetName: "IBM.TO", memberName: "IEFBR15" },
+            { enq: "SHR" } as any
+        );
     });
 
     it("should test that common putContent is called by putContents", async () => {
-
         const api = new ZosmfUssApi();
 
-        (api.putContent as any) = jest.fn<ReturnType<typeof api.putContents>, Parameters<typeof api.putContents>>(
-            async (inputFilePath: string, ussFilePath: string,
-                   binary?: boolean, localEncoding?: string,
-                   etag?: string, returnEtag?: boolean) => {
-
+        (api.putContent as any) = jest.fn<
+            ReturnType<typeof api.putContents>,
+            Parameters<typeof api.putContents>
+        >(
+            async (
+                inputFilePath: string,
+                ussFilePath: string,
+                binary?: boolean,
+                localEncoding?: string,
+                etag?: string,
+                returnEtag?: boolean
+            ) => {
                 return {
                     success: true,
-                    commandResponse: "whatever"
+                    commandResponse: "whatever",
                 };
-
-            });
+            }
+        );
 
         await api.putContents("someLocalFile.txt", "/some/remote", true);
 
@@ -91,15 +99,20 @@ describe("Zosmf API tests", () => {
         expect(api.putContent).toBeCalledWith("someLocalFile.txt", "/some/remote", {
             binary: true,
         });
-
     });
 
     it("should test putContent method passes all options to Zowe api method", async () => {
-
-        const fileToUssFile = jest.fn(async (session: AbstractSession, inputFile: string, ussname: string, options?: zowe.IUploadOptions) => {
-            expect(options).toMatchSnapshot();
-            return { api: "", commandResponse: "", success: true };
-        });
+        const fileToUssFile = jest.fn(
+            async (
+                session: AbstractSession,
+                inputFile: string,
+                ussname: string,
+                options?: zowe.IUploadOptions
+            ) => {
+                expect(options).toMatchSnapshot();
+                return { api: "", commandResponse: "", success: true };
+            }
+        );
 
         (zowe as any).Upload = { fileToUssFile };
 
@@ -107,9 +120,7 @@ describe("Zosmf API tests", () => {
         api.getSession = jest.fn();
 
         await api.putContent("someLocalFile.txt", "/some/remote", {
-            encoding: 285
+            encoding: 285,
         });
-
     });
-
 });

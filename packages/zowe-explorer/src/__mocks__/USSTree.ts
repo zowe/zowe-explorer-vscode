@@ -1,18 +1,22 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { MockMethod } from "../decorators/MockMethod";
-import { IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweTreeNode } from "../api/IZoweTreeNode";
+import {
+    IZoweUSSTreeNode,
+    IZoweDatasetTreeNode,
+    IZoweTreeNode,
+} from "@zowe/zowe-explorer-api";
 import { createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 
@@ -27,8 +31,11 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     public mSessionNodes: ZoweUSSNode[] = [];
 
     // Event Emitters used to notify subscribers that the refresh event has fired
-    public mOnDidChangeTreeData: vscode.EventEmitter<ZoweUSSNode | undefined> = new vscode.EventEmitter<ZoweUSSNode | undefined>();
-    public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this.mOnDidChangeTreeData.event;
+    public mOnDidChangeTreeData: vscode.EventEmitter<
+        ZoweUSSNode | undefined
+    > = new vscode.EventEmitter<ZoweUSSNode | undefined>();
+    public readonly onDidChangeTreeData: vscode.Event<ZoweUSSNode | undefined> = this
+        .mOnDidChangeTreeData.event;
     public mFavorites: ZoweUSSNode[];
 
     /**

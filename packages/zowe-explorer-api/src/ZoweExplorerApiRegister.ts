@@ -1,21 +1,24 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
 import { ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
-import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
+import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as nls from "vscode-nls";
 // Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
@@ -112,7 +115,11 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             this.ussApiImplementations.set(ussApi.getProfileTypeName(), ussApi);
         } else {
             throw new Error(
-                localize("registerUssApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid USS API."));
+                localize(
+                    "registerUssApi.error",
+                    "Internal error: A Zowe Explorer extension client tried to register an invalid USS API."
+                )
+            );
         }
     }
 
@@ -125,7 +132,11 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             this.mvsApiImplementations.set(mvsApi.getProfileTypeName(), mvsApi);
         } else {
             throw new Error(
-                localize("registerMvsApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API."));
+                localize(
+                    "registerMvsApi.error",
+                    "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API."
+                )
+            );
         }
     }
 
@@ -138,7 +149,11 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             this.jesApiImplementations.set(jesApi.getProfileTypeName(), jesApi);
         } else {
             throw new Error(
-                localize("registerJesApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid JES API."));
+                localize(
+                    "registerJesApi.error",
+                    "Internal error: A Zowe Explorer extension client tried to register an invalid JES API."
+                )
+            );
         }
     }
 
@@ -148,7 +163,13 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns {string[]}
      */
     public registeredApiTypes(): string[] {
-        return [...new Set([...this.registeredUssApiTypes(), ...this.registeredMvsApiTypes(), ...this.registeredJesApiTypes()])];
+        return [
+            ...new Set([
+                ...this.registeredUssApiTypes(),
+                ...this.registeredMvsApiTypes(),
+                ...this.registeredJesApiTypes(),
+            ]),
+        ];
     }
 
     /**
@@ -184,15 +205,22 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns an instance of the API for the profile provided
      */
     public getUssApi(profile: IProfileLoaded): ZoweExplorerApi.IUss {
-        if (profile && profile.type && this.registeredUssApiTypes().includes(profile.type)) {
+        if (
+            profile &&
+            profile.type &&
+            this.registeredUssApiTypes().includes(profile.type)
+        ) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.ussApiImplementations.get(profile.type));
             api.profile = profile;
             return api;
-        }
-        else {
+        } else {
             throw new Error(
-                localize("getUssApi.error", "Internal error: Tried to call a non-existing USS API in API register: ") + profile.type);
+                localize(
+                    "getUssApi.error",
+                    "Internal error: Tried to call a non-existing USS API in API register: "
+                ) + profile.type
+            );
         }
     }
 
@@ -202,15 +230,22 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns an instance of the API for the profile provided
      */
     public getMvsApi(profile: IProfileLoaded): ZoweExplorerApi.IMvs {
-        if (profile && profile.type && this.registeredMvsApiTypes().includes(profile.type)) {
+        if (
+            profile &&
+            profile.type &&
+            this.registeredMvsApiTypes().includes(profile.type)
+        ) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.mvsApiImplementations.get(profile.type));
             api.profile = profile;
             return api;
-        }
-        else {
+        } else {
             throw new Error(
-                localize("getMvsApi.error", "Internal error: Tried to call a non-existing MVS API in API register: ") + profile.type);
+                localize(
+                    "getMvsApi.error",
+                    "Internal error: Tried to call a non-existing MVS API in API register: "
+                ) + profile.type
+            );
         }
     }
 
@@ -220,15 +255,22 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * @returns an instance of the API for the profile provided
      */
     public getJesApi(profile: IProfileLoaded): ZoweExplorerApi.IJes {
-        if (profile && profile.type && this.registeredJesApiTypes().includes(profile.type)) {
+        if (
+            profile &&
+            profile.type &&
+            this.registeredJesApiTypes().includes(profile.type)
+        ) {
             // create a clone of the API object that remembers the profile with which it was created
             const api = Object.create(this.jesApiImplementations.get(profile.type));
             api.profile = profile;
             return api;
-        }
-        else {
+        } else {
             throw new Error(
-                localize("getJesApi.error", "Internal error: Tried to call a non-existing JES API in API register: ") + profile.type);
+                localize(
+                    "getJesApi.error",
+                    "Internal error: Tried to call a non-existing JES API in API register: "
+                ) + profile.type
+            );
         }
     }
 
@@ -241,10 +283,14 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
                 result = this.getMvsApi(profile);
             } catch (error) {
                 try {
-                result = this.getJesApi(profile);
+                    result = this.getJesApi(profile);
                 } catch (error) {
                     throw new Error(
-                        localize("getCommonApi.error", "Internal error: Tried to call a non-existing Common API in API register: ") + profile.type);
+                        localize(
+                            "getCommonApi.error",
+                            "Internal error: Tried to call a non-existing Common API in API register: "
+                        ) + profile.type
+                    );
                 }
             }
         }

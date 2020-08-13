@@ -1,17 +1,17 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import { IZoweTreeNode } from "../api/IZoweTreeNode";
+import { IZoweTreeNode } from "./IZoweTreeNode";
 
 /**
  * Common implementation of functions and methods associated with the
@@ -39,11 +39,13 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @param {Session} session
      * @param {string} etag
      */
-    constructor(label: string,
-                collapsibleState: vscode.TreeItemCollapsibleState,
-                private mParent: IZoweTreeNode,
-                protected session: Session,
-                protected profile: IProfileLoaded) {
+    constructor(
+        label: string,
+        collapsibleState: vscode.TreeItemCollapsibleState,
+        private mParent: IZoweTreeNode,
+        protected session: Session,
+        protected profile: IProfileLoaded
+    ) {
         super(label, collapsibleState);
         // TODO Check this
         if (!profile && mParent && mParent.getProfile()) {
@@ -66,7 +68,10 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {Session}
      */
     public getSession(): Session {
-        return this.session || (this.getParent() ? this.getParent().getSession(): undefined);
+        return (
+            this.session ||
+            (this.getParent() ? this.getParent().getSession() : undefined)
+        );
     }
 
     /**
@@ -75,7 +80,11 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {IProfileLoaded}
      */
     public getProfile(): IProfileLoaded {
-        return (this.profile) ? this.profile : this.getParent() ? this.getParent().getProfile() : undefined;
+        return this.profile
+            ? this.profile
+            : this.getParent()
+            ? this.getParent().getProfile()
+            : undefined;
     }
 
     /**
