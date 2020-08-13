@@ -20,7 +20,7 @@ export interface ICliOptions {
     type: string;
 }
 export interface IConfigLogging {
-    "log4jsConfig"?: any;
+    log4jsConfig?: any;
 }
 
 export interface ILoadOptions {
@@ -36,26 +36,25 @@ export interface ISessionOptions {
     type: string;
 }
 
-
 export class BrightProfile {
-    constructor(public profile: Profile) { }
+    constructor(public profile: Profile) {}
 }
 
 // tslint:disable-next-line:max-classes-per-file
 export class Session {
-    constructor(public ISession: ISessionOptions) { }
+    constructor(public ISession: ISessionOptions) {}
 }
 
 // tslint:disable-next-line:class-name
 // tslint:disable-next-line:max-classes-per-file
 export class Profile {
-    constructor(public name: string, public type: string) { }
+    constructor(public name: string, public type: string) {}
 }
 
 // tslint:disable-next-line:max-classes-per-file
 export class CliProfileManager {
     // tslint:disable-next-line:no-empty
-    constructor(options: ICliOptions) { }
+    constructor(options: ICliOptions) {}
 
     public load(opts: ILoadOptions) {
         return { name: "profile1", profile: {}, type: "zosmf" };
@@ -64,49 +63,52 @@ export class CliProfileManager {
         return [
             { name: "sestest", profile: {}, type: "zosmf" },
             { name: "profile1", profile: {}, type: "zosmf" },
-            { name: "profile2", profile: {}, type: "zosmf" }];
+            { name: "profile2", profile: {}, type: "zosmf" },
+        ];
     }
-    public getAllProfileNames(){
+    public getAllProfileNames() {
         return ["name1", "name2"];
     }
-    public save(){
+    public save() {
         return { name: "profile1", profile: {}, type: "zosmf" };
     }
-    public update(){
+    public update() {
         return { name: "profile1", profile: {}, type: "zosmf" };
     }
-    public delete(){
+    public delete() {
         return { name: "profile1", profile: {}, type: "zosmf" };
     }
     public get configurations() {
-        return [{
-            type: "zosmf",
-            schema: {
-                type: "object",
-                title: "test profile",
-                description: "test profile",
-                properties: {
-                    sum: {
-                        type: "number"
-                         }
+        return [
+            {
+                type: "zosmf",
+                schema: {
+                    type: "object",
+                    title: "test profile",
+                    description: "test profile",
+                    properties: {
+                        sum: {
+                            type: "number",
+                        },
+                    },
+                    required: ["sum"],
                 },
-                required: ["sum"]
             },
-        },
-        {
-            type: "banana",
-            schema: {
-                type: "object",
-                title: "test banana",
-                description: "test banana",
-                properties: {
-                    sum: {
-                        type: "number"
-                         }
+            {
+                type: "banana",
+                schema: {
+                    type: "object",
+                    title: "test banana",
+                    description: "test banana",
+                    properties: {
+                        sum: {
+                            type: "number",
+                        },
+                    },
+                    required: ["sum"],
                 },
-                required: ["sum"]
             },
-        }];
+        ];
     }
 }
 
@@ -114,33 +116,29 @@ export class CliProfileManager {
 export class ImperativeConfig {
     public static instance = {
         cliHome: "./__tests__/.zowe",
-        loadedConfig: {}
+        loadedConfig: {},
     };
     public loadedConfig = {
         defaultHome: "./__tests__/.zowe",
-        envVariablePrefix: "ZOWE"
+        envVariablePrefix: "ZOWE",
     };
     public cliHome: "./__tests__/.zowe";
-
 }
 
 // tslint:disable-next-line:max-classes-per-file
-export class CredentialManagerFactory {
-}
+export class CredentialManagerFactory {}
 
 // tslint:disable-next-line:max-classes-per-file
 export class DefaultCredentialManager {
-     public test: "test";
+    public test: "test";
 }
 
 // tslint:disable-next-line:max-classes-per-file
-export class AbstractCredentialManager {
-}
+export class AbstractCredentialManager {}
 
 // tslint:disable-next-line:max-classes-per-file
 export class Logger {
-    public static initLogger(loggingConfig: IConfigLogging): any {
-    }
+    public static initLogger(loggingConfig: IConfigLogging): any {}
     public static getAppLogger(): Logger {
         return log4js.getLogger("app");
     }
@@ -148,7 +146,12 @@ export class Logger {
 
 // tslint:disable-next-line:max-classes-per-file
 export class TextUtils {
-    public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
+    public static prettyJson(
+        object: any,
+        options?: any,
+        color?: boolean,
+        append?: string
+    ): string {
         return JSON.stringify(object);
     }
 }

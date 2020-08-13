@@ -1,20 +1,23 @@
 /*
-* This program and the accompanying materials are made available under the terms of the *
-* Eclipse Public License v2.0 which accompanies this distribution, and is available at *
-* https://www.eclipse.org/legal/epl-v20.html                                      *
-*                                                                                 *
-* SPDX-License-Identifier: EPL-2.0                                                *
-*                                                                                 *
-* Copyright Contributors to the Zowe Project.                                     *
-*                                                                                 *
-*/
+ * This program and the accompanying materials are made available under the terms of the *
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
+ * https://www.eclipse.org/legal/epl-v20.html                                      *
+ *                                                                                 *
+ * SPDX-License-Identifier: EPL-2.0                                                *
+ *                                                                                 *
+ * Copyright Contributors to the Zowe Project.                                     *
+ *                                                                                 *
+ */
 
 import * as vscode from "vscode";
 import { Session, IProfileLoaded } from "@zowe/imperative";
 import { IJob } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
 
-export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
+export type IZoweNodeType =
+    | IZoweDatasetTreeNode
+    | IZoweUSSTreeNode
+    | IZoweJobTreeNode;
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
@@ -26,7 +29,11 @@ export interface IZoweTreeNode {
     /**
      * The icon path or [ThemeIcon](#ThemeIcon) for the tree item.
      */
-    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon;
+    iconPath?:
+        | string
+        | vscode.Uri
+        | { light: string | vscode.Uri; dark: string | vscode.Uri }
+        | vscode.ThemeIcon;
     /**
      * Indicator that the child data may have become stale and requires refreshing.
      */
@@ -126,7 +133,6 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
  * @interface export interface IZoweUSSTreeNode extends IZoweTreeNode {
  */
 export interface IZoweUSSTreeNode extends IZoweTreeNode {
-
     /**
      * Retrieves an abridged for of the label
      */
@@ -184,7 +190,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    openUSS?(
+        download: boolean,
+        previewFile: boolean,
+        ussFileProvider: IZoweTree<IZoweUSSTreeNode>
+    );
     /**
      * Returns the local file path for the ZoweUSSNode
      *

@@ -9,6 +9,4 @@
  *                                                                                 *
  */
 
-export function isBinaryFileSync(path: string) {
-
-}
+export function isBinaryFileSync(path: string) {}

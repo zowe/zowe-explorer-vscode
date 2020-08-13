@@ -1,9 +1,7 @@
 {
   "default": true,
   "MD033": {
-    "allowed_elements": [
-      "br"
-    ]
+    "allowed_elements": ["br"]
   },
   "MD013": false
 }

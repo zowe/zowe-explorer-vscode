@@ -320,9 +320,9 @@ async function createGlobalMocks() {
     });
 
     // Create a mocked extension context
-    // tslint:disable-next-line: no-object-literal-type-assertion
     const mockExtensionCreator = jest.fn(
         () =>
+            // tslint:disable-next-line: no-object-literal-type-assertion
             ({
                 subscriptions: [],
                 extensionPath: path.join(__dirname, ".."),
@@ -380,8 +380,8 @@ describe("Extension Unit Tests", () => {
                 "[test]: /u/myUser/file.txt{file}",
                 "[test]: /u{session}",
             ],
-            // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
+                // tslint:disable-next-line: no-empty
                 {
                 }
             }),
@@ -456,8 +456,8 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockRmdirSync.mockImplementationOnce(() => {});
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => [""],
-            // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
+                // tslint:disable-next-line: no-empty
                 {
                 }
             }),
@@ -489,8 +489,8 @@ describe("Extension Unit Tests", () => {
         });
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "theia",
-            // tslint:disable-next-line: no-empty
             update: jest.fn(() => {
+                // tslint:disable-next-line: no-empty
                 {
                 }
             }),

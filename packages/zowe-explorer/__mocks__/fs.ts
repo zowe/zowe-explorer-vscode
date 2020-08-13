@@ -39,9 +39,7 @@ export function lstatSync(path: string): Stats {
 }
 
 export function readdirSync(path: string): string[] {
-    const value = [
-        "A[testSess]", "Parent[testSess]", "B"
-    ];
+    const value = ["A[testSess]", "Parent[testSess]", "B"];
     return value;
 }
 export function rmdirSync(path: string): void {}

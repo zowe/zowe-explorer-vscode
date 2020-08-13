@@ -12,7 +12,11 @@
 jest.mock("vscode");
 
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { getIconById, getIconByNode, IconId } from "../../../src/generators/icons/index";
+import {
+    getIconById,
+    getIconByNode,
+    IconId,
+} from "../../../src/generators/icons/index";
 import { IProfileLoaded, Session } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as vscode from "vscode";
@@ -22,8 +26,12 @@ describe("Checking icon generator's basics", () => {
         const createTreeView = jest.fn();
         const getConfiguration = jest.fn();
 
-        Object.defineProperty(vscode.window, "createTreeView", {value: createTreeView});
-        Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: createTreeView,
+        });
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: getConfiguration,
+        });
     };
     const generateTestSessionNode = () => {
         const session = new Session({
@@ -40,10 +48,17 @@ describe("Checking icon generator's basics", () => {
             profile: {},
             type: "zosmf",
             message: "",
-            failNotFound: false
+            failNotFound: false,
         };
-        return new ZoweDatasetNode("folder", vscode.TreeItemCollapsibleState.Collapsed,
-            null, session, undefined, undefined, profile);
+        return new ZoweDatasetNode(
+            "folder",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            null,
+            session,
+            undefined,
+            undefined,
+            profile
+        );
     };
 
     setGlobalMocks();

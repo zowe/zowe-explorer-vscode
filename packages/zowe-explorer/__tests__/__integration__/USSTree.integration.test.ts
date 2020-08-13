@@ -30,7 +30,7 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 describe("USSTree Integration Tests", async () => {
@@ -39,8 +39,15 @@ describe("USSTree Integration Tests", async () => {
 
     // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded,
-         null, session, "", false, testProfile.name);
+    const sessNode = new ZoweUSSNode(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        "",
+        false,
+        testProfile.name
+    );
     sessNode.contextValue = USS_SESSION_CONTEXT;
     const path = testConst.ussPattern;
     sessNode.fullPath = path;
@@ -48,12 +55,12 @@ describe("USSTree Integration Tests", async () => {
     testTree.mSessionNodes.splice(-1, 0, sessNode);
     let sandbox;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
     });
 
-    afterEach(async function() {
+    afterEach(async function () {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
@@ -61,9 +68,14 @@ describe("USSTree Integration Tests", async () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-USS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace
+            .getConfiguration()
+            .update(
+                "Zowe-USS-Persistent",
+                oldSettings,
+                vscode.ConfigurationTarget.Global
+            );
     });
-
 
     /*************************************************************************************************************
      * Creates a USSTree and checks that its members are all initialized by the constructor
@@ -77,8 +89,16 @@ describe("USSTree Integration Tests", async () => {
      * Calls getTreeItem with sample element and checks the return is vscode.TreeItem
      *************************************************************************************************************/
     it("Tests the getTreeItem method", async () => {
-        const sampleElement = new ZoweUSSNode("testValue", vscode.TreeItemCollapsibleState.None, null, null, null);
-        chai.expect(testTree.getTreeItem(sampleElement)).to.be.instanceOf(vscode.TreeItem);
+        const sampleElement = new ZoweUSSNode(
+            "testValue",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            null,
+            null
+        );
+        chai.expect(testTree.getTreeItem(sampleElement)).to.be.instanceOf(
+            vscode.TreeItem
+        );
     });
     /*************************************************************************************************************
      * Creates sample list of ZoweUSSNodes and checks that USS
@@ -95,22 +115,74 @@ describe("USSTree Integration Tests", async () => {
         const dirChildren = await testTree.getChildren(sessChildren2[2]);
 
         const sampleRChildren: ZoweUSSNode[] = [
-            new ZoweUSSNode(path + "/group/aDir3", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
-            new ZoweUSSNode(path + "/group/aDir4", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
-            new ZoweUSSNode(path + "/group/aDir5", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
-            new ZoweUSSNode(path + "/group/aDir6", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
+            new ZoweUSSNode(
+                path + "/group/aDir3",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                path + "/group/aDir4",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                path + "/group/aDir5",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                path + "/group/aDir6",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
         ];
 
-        sampleRChildren[0].command = {command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleRChildren[0]]};
-        sampleRChildren[3].command = {command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleRChildren[3]]};
+        sampleRChildren[0].command = {
+            command: "zowe.uss.ZoweUSSNode.open",
+            title: "",
+            arguments: [sampleRChildren[0]],
+        };
+        sampleRChildren[3].command = {
+            command: "zowe.uss.ZoweUSSNode.open",
+            title: "",
+            arguments: [sampleRChildren[3]],
+        };
 
         const samplePChildren: ZoweUSSNode[] = [
-            new ZoweUSSNode("/aFile4.txt", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null, null),
-            new ZoweUSSNode("/aFile5.txt", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null, null),
+            new ZoweUSSNode(
+                "/aFile4.txt",
+                vscode.TreeItemCollapsibleState.None,
+                sampleRChildren[2],
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                "/aFile5.txt",
+                vscode.TreeItemCollapsibleState.None,
+                sampleRChildren[2],
+                null,
+                null
+            ),
         ];
 
-        samplePChildren[0].command = {command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [samplePChildren[0]]};
-        samplePChildren[1].command = {command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [samplePChildren[1]]};
+        samplePChildren[0].command = {
+            command: "zowe.uss.ZoweUSSNode.open",
+            title: "",
+            arguments: [samplePChildren[0]],
+        };
+        samplePChildren[1].command = {
+            command: "zowe.uss.ZoweUSSNode.open",
+            title: "",
+            arguments: [samplePChildren[1]],
+        };
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be
@@ -122,7 +194,6 @@ describe("USSTree Integration Tests", async () => {
         expect(dirChildren[0].tooltip).toContain("/group/aDir5/aFile4.txt");
         expect(dirChildren[1].label).toBe("aFile5.txt");
         expect(dirChildren[1].tooltip).toContain("/group/aDir5/aFile5.txt");
-
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
@@ -163,7 +234,13 @@ describe("USSTree Integration Tests", async () => {
      *************************************************************************************************************/
     it("Tests that getParent returns the correct ZoweUSSNode when called on a non-rootNode ZoweUSSNode", async () => {
         // Creating structure of files and folders under profile
-        const sampleChild1: ZoweUSSNode = new ZoweUSSNode(path + "/aDir5", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
+        const sampleChild1: ZoweUSSNode = new ZoweUSSNode(
+            path + "/aDir5",
+            vscode.TreeItemCollapsibleState.None,
+            sessNode,
+            null,
+            null
+        );
 
         const parent1 = testTree.getParent(sampleChild1);
 
@@ -171,8 +248,13 @@ describe("USSTree Integration Tests", async () => {
         // of the rootNode, it should return null
         expect(parent1).toBe(sessNode);
 
-        const sampleChild2: ZoweUSSNode = new ZoweUSSNode(path + "/aDir5/aFile4.txt",
-            vscode.TreeItemCollapsibleState.None, sampleChild1, null, null);
+        const sampleChild2: ZoweUSSNode = new ZoweUSSNode(
+            path + "/aDir5/aFile4.txt",
+            vscode.TreeItemCollapsibleState.None,
+            sampleChild1,
+            null,
+            null
+        );
         const parent2 = testTree.getParent(sampleChild2);
 
         expect(parent2).toBe(sampleChild1);
@@ -208,11 +290,20 @@ describe("USSTree Integration Tests", async () => {
         it("should add the selected data set to the treeView", async () => {
             const log = new Logger(undefined);
             await testTree.addSession();
-            const favoriteNode = new ZoweUSSNode("file.txt", vscode.TreeItemCollapsibleState.Collapsed,
-                sessNode, null, sessNode.fullPath, testConst.profile.name);
+            const favoriteNode = new ZoweUSSNode(
+                "file.txt",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                sessNode.fullPath,
+                testConst.profile.name
+            );
             await testTree.addFavorite(favoriteNode);
-            const filtered = testTree.mFavorites.filter((temp) => temp.label ===
-                `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`);
+            const filtered = testTree.mFavorites.filter(
+                (temp) =>
+                    temp.label ===
+                    `[${favoriteNode.getSessionNode().label}]: ${favoriteNode.label}`
+            );
             expect(filtered.length).toEqual(1);
             expect(filtered[0].label).toContain("file.txt");
             testTree.mFavorites = [];
@@ -222,10 +313,13 @@ describe("USSTree Integration Tests", async () => {
             const log = new Logger(undefined);
             await testTree.addSession();
             await testTree.saveSearch(sessNode);
-            const filtered = testTree.mFavorites.filter((temp) =>
-                temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`);
+            const filtered = testTree.mFavorites.filter(
+                (temp) => temp.label === `[${sessNode.label}]: ${sessNode.fullPath}`
+            );
             expect(filtered.length).toEqual(1);
-            expect(filtered[0].label).toContain(`[${sessNode.label}]: ${sessNode.fullPath}`);
+            expect(filtered[0].label).toContain(
+                `[${sessNode.label}]: ${sessNode.fullPath}`
+            );
             testTree.mFavorites = [];
         }).timeout(TIMEOUT);
     });

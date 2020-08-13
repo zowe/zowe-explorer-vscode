@@ -7,9 +7,9 @@ export const profile: IProfile = {
     user: "zoweph",
     password: "wazi4me",
     rejectUnauthorized: false,
-    name: "tvt4119zosmf" // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
+    name: "tvt4119zosmf", // @NOTE: This profile name must match an existing zowe profile in the ~/.zowe/profiles/zosmf folder
 };
 
 export const normalPattern = "ZOWEPH";
 export const orPattern = "ZOWEPH";
-export const ussPattern = "/u/zoweph/temp1";  // @NOTE: This directory will be created and deleted
+export const ussPattern = "/u/zoweph/temp1"; // @NOTE: This directory will be created and deleted

@@ -27,7 +27,7 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 describe("ZoweUSSNode Integration Tests", async () => {
@@ -36,7 +36,15 @@ describe("ZoweUSSNode Integration Tests", async () => {
 
     // Uses loaded profile to create a zosmf session with Zowe
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessNode = new ZoweUSSNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, testProfile.name);
+    const sessNode = new ZoweUSSNode(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        null,
+        false,
+        testProfile.name
+    );
     sessNode.contextValue = USS_SESSION_CONTEXT;
     sessNode.dirty = true;
     const path = testConst.ussPattern;
@@ -47,14 +55,26 @@ describe("ZoweUSSNode Integration Tests", async () => {
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode is defined", async () => {
         // Tests empty node
-        const emptyPONode = new ZoweUSSNode(path + "/aDir4", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null);
+        const emptyPONode = new ZoweUSSNode(
+            path + "/aDir4",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            sessNode,
+            null,
+            null
+        );
 
         expect(emptyPONode.label).toBeDefined();
         expect(emptyPONode.collapsibleState).toBeDefined();
         // sexpect(emptyPONode.getParent()).toBeDefined();
 
         // Tests PS node
-        const PSNode = new ZoweUSSNode(path + "/aFile3.txt", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
+        const PSNode = new ZoweUSSNode(
+            path + "/aFile3.txt",
+            vscode.TreeItemCollapsibleState.None,
+            sessNode,
+            null,
+            null
+        );
 
         expect(PSNode.label).toBeDefined();
         expect(PSNode.collapsibleState).toBeDefined();
@@ -66,7 +86,13 @@ describe("ZoweUSSNode Integration Tests", async () => {
      *************************************************************************************************************/
     it("Testing that the ZoweUSSNode constructor works as expected when the label parameter is the empty string", async () => {
         // The ZoweUSSNode should still be constructed, and should not throw an error.
-        const edgeNode = new ZoweUSSNode("", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
+        const edgeNode = new ZoweUSSNode(
+            "",
+            vscode.TreeItemCollapsibleState.None,
+            sessNode,
+            null,
+            null
+        );
 
         expect(edgeNode.label).toBeDefined();
         expect(edgeNode.collapsibleState).toBeDefined();
@@ -80,25 +106,56 @@ describe("ZoweUSSNode Integration Tests", async () => {
         let sessChildren;
         try {
             sessChildren = await sessNode.getChildren();
-        }
-        catch (err) {
-            throw (err);
+        } catch (err) {
+            throw err;
         }
 
         // Creating structure of files and directories
         const sampleChildren: ZoweUSSNode[] = [
-            new ZoweUSSNode(path + "/group/aDir3", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
-            new ZoweUSSNode(path + "/group/aDir4", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
-            new ZoweUSSNode(path + "/group/aDir5", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
-            new ZoweUSSNode(path + "/group/aDir6", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null),
+            new ZoweUSSNode(
+                path + "/group/aDir3",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                path + "/group/aDir4",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                path + "/group/aDir5",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
+            new ZoweUSSNode(
+                path + "/group/aDir6",
+                vscode.TreeItemCollapsibleState.Collapsed,
+                sessNode,
+                null,
+                null
+            ),
         ];
 
-        sampleChildren[0].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[0].command = {
+            command: "zowe.uss.ZoweUSSNode.open",
+            title: "",
+            arguments: [sampleChildren[0]],
+        };
         // tslint:disable-next-line:no-magic-numbers
-        sampleChildren[1].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[1]] };
+        sampleChildren[1].command = {
+            command: "zowe.uss.ZoweUSSNode.open",
+            title: "",
+            arguments: [sampleChildren[1]],
+        };
 
         // Checking that the rootChildren are what they are expected to be
-// tslint:disable-next-line: no-magic-numbers
+        // tslint:disable-next-line: no-magic-numbers
         expect(sessChildren.length).toBe(4);
         expect(sessChildren[0].label).toBe("aDir3");
         expect(sessChildren[1].label).toBe("aDir4");
@@ -115,7 +172,9 @@ describe("ZoweUSSNode Integration Tests", async () => {
         const nullNode = new ZoweUSSNode(null, null, null, null, null);
         nullNode.contextValue = DS_PDS_CONTEXT;
         nullNode.dirty = true;
-        await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
+        await expectChai(nullNode.getChildren()).to.eventually.be.rejectedWith(
+            "Invalid node"
+        );
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
@@ -126,44 +185,72 @@ describe("ZoweUSSNode Integration Tests", async () => {
         chai.use(chaiAsPromised);
 
         // The method should throw an error.
-        const undefinedNode = new ZoweUSSNode(undefined, undefined, undefined, undefined, undefined);
+        const undefinedNode = new ZoweUSSNode(
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
+        );
         undefinedNode.contextValue = DS_PDS_CONTEXT;
         undefinedNode.dirty = true;
         // tslint:disable-next-line:max-line-length
-        await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith("Invalid node");
-
+        await expectChai(undefinedNode.getChildren()).to.eventually.be.rejectedWith(
+            "Invalid node"
+        );
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
-    * Checks that getChildren() returns the expected value when passed an empty directory
-    *************************************************************************************************************/
+     * Checks that getChildren() returns the expected value when passed an empty directory
+     *************************************************************************************************************/
     it("Testing that getChildren works as expected on an empty directory", async () => {
         // The method should return an empty array.
-        const PSNode = new ZoweUSSNode(path + "/aDir6", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
+        const PSNode = new ZoweUSSNode(
+            path + "/aDir6",
+            vscode.TreeItemCollapsibleState.None,
+            sessNode,
+            null,
+            null
+        );
         let PSNodeChildren;
         try {
             PSNodeChildren = await PSNode.getChildren();
-        }
-        catch (err) {
-            throw (err);
+        } catch (err) {
+            throw err;
         }
 
         expect(PSNodeChildren).toEqual([]);
-
     }).timeout(TIMEOUT);
 
     /*************************************************************************************************************
      * Checks that getSession() returns the expected value
      *************************************************************************************************************/
     it("Testing that getSession() works as expected", async () => {
-        const dir1 = new ZoweUSSNode(path + "./aDir5", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null);
-        const dir2 = new ZoweUSSNode(path + "/aDir6", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
-        const file1 = new ZoweUSSNode(path + "/aDir5/aFile4.txt", vscode.TreeItemCollapsibleState.None, dir1, null, null);
+        const dir1 = new ZoweUSSNode(
+            path + "./aDir5",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            sessNode,
+            null,
+            null
+        );
+        const dir2 = new ZoweUSSNode(
+            path + "/aDir6",
+            vscode.TreeItemCollapsibleState.None,
+            sessNode,
+            null,
+            null
+        );
+        const file1 = new ZoweUSSNode(
+            path + "/aDir5/aFile4.txt",
+            vscode.TreeItemCollapsibleState.None,
+            dir1,
+            null,
+            null
+        );
 
         expect(sessNode.getSession()).toEqual(session);
         expect(dir1.getSession()).toEqual(session);
         expect(dir2.getSession()).toEqual(session);
         expect(file1.getSession()).toEqual(session);
-
     }).timeout(TIMEOUT);
 });

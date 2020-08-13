@@ -10,19 +10,28 @@
  */
 
 import * as vscode from "vscode";
-import { checkTextFileIsOpened, closeOpenedTextFile } from "../../../src/utils/workspace";
+import {
+    checkTextFileIsOpened,
+    closeOpenedTextFile,
+} from "../../../src/utils/workspace";
 import { workspaceUtilMaxEmptyWindowsInTheRow } from "../../../src/config/constants";
 
 function createGlobalMocks() {
     const activeTextEditor = jest.fn();
     const executeCommand = jest.fn();
 
-    Object.defineProperty(vscode.window, "activeTextEditor", { get: activeTextEditor, configurable: true });
-    Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
+    Object.defineProperty(vscode.window, "activeTextEditor", {
+        get: activeTextEditor,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.commands, "executeCommand", {
+        value: executeCommand,
+        configurable: true,
+    });
 
     return {
         activeTextEditor,
-        executeCommand
+        executeCommand,
     };
 }
 
@@ -52,7 +61,11 @@ describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
 
         const result = await checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(false);
-        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(Array(workspaceUtilMaxEmptyWindowsInTheRow).fill("workbench.action.nextEditor"));
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(
+            Array(workspaceUtilMaxEmptyWindowsInTheRow).fill(
+                "workbench.action.nextEditor"
+            )
+        );
     });
     it("Checking logic when target tab is available", async () => {
         const globalMocks = createGlobalMocks();
@@ -61,28 +74,35 @@ describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
             {
                 id: 1,
                 document: {
-                    fileName: "/doc1"
-                }
+                    fileName: "/doc1",
+                },
             },
             {
                 id: 2,
                 document: {
-                    fileName: "/doc2"
-                }
+                    fileName: "/doc2",
+                },
             },
             {
                 id: 3,
                 document: {
-                    fileName: "/doc3"
-                }
-            }
+                    fileName: "/doc3",
+                },
+            },
         ];
-        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
+        globalMocks.activeTextEditor.mockImplementation(
+            generateCycledMock(mockDocuments)
+        );
 
         const result = await checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(true);
-        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
-            .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
+        expect(
+            globalMocks.executeCommand.mock.calls.map((call) => call[0])
+        ).toEqual([
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+        ]);
     });
     it("Checking logic when target tab is not available", async () => {
         const globalMocks = createGlobalMocks();
@@ -91,28 +111,35 @@ describe("Workspace Utils Unit Test - Function checkTextFileIsOpened", () => {
             {
                 id: 1,
                 document: {
-                    fileName: "/doc1"
-                }
+                    fileName: "/doc1",
+                },
             },
             {
                 id: 2,
                 document: {
-                    fileName: "/doc2"
-                }
+                    fileName: "/doc2",
+                },
             },
             {
                 id: 3,
                 document: {
-                    fileName: "/doc3"
-                }
-            }
+                    fileName: "/doc3",
+                },
+            },
         ];
-        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
+        globalMocks.activeTextEditor.mockImplementation(
+            generateCycledMock(mockDocuments)
+        );
 
         const result = await checkTextFileIsOpened(targetTextFile);
         expect(result).toBe(false);
-        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
-            .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
+        expect(
+            globalMocks.executeCommand.mock.calls.map((call) => call[0])
+        ).toEqual([
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+        ]);
     });
 });
 describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
@@ -123,7 +150,11 @@ describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
 
         const result = await closeOpenedTextFile(targetTextFile);
         expect(result).toBe(false);
-        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(Array(workspaceUtilMaxEmptyWindowsInTheRow).fill("workbench.action.nextEditor"));
+        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0])).toEqual(
+            Array(workspaceUtilMaxEmptyWindowsInTheRow).fill(
+                "workbench.action.nextEditor"
+            )
+        );
     });
     it("Checking logic when target tab is available", async () => {
         const globalMocks = createGlobalMocks();
@@ -132,28 +163,35 @@ describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
             {
                 id: 1,
                 document: {
-                    fileName: "/doc1"
-                }
+                    fileName: "/doc1",
+                },
             },
             {
                 id: 2,
                 document: {
-                    fileName: "/doc2"
-                }
+                    fileName: "/doc2",
+                },
             },
             {
                 id: 3,
                 document: {
-                    fileName: "/doc3"
-                }
-            }
+                    fileName: "/doc3",
+                },
+            },
         ];
-        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
+        globalMocks.activeTextEditor.mockImplementation(
+            generateCycledMock(mockDocuments)
+        );
 
         const result = await closeOpenedTextFile(targetTextFile);
         expect(result).toBe(true);
-        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
-            .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.closeActiveEditor"]);
+        expect(
+            globalMocks.executeCommand.mock.calls.map((call) => call[0])
+        ).toEqual([
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+            "workbench.action.closeActiveEditor",
+        ]);
     });
     it("Checking logic when target tab is not available", async () => {
         const globalMocks = createGlobalMocks();
@@ -162,27 +200,34 @@ describe("Workspace Utils Unit Test - Function closeOpenedTextFile", () => {
             {
                 id: 1,
                 document: {
-                    fileName: "/doc1"
-                }
+                    fileName: "/doc1",
+                },
             },
             {
                 id: 2,
                 document: {
-                    fileName: "/doc2"
-                }
+                    fileName: "/doc2",
+                },
             },
             {
                 id: 3,
                 document: {
-                    fileName: "/doc3"
-                }
-            }
+                    fileName: "/doc3",
+                },
+            },
         ];
-        globalMocks.activeTextEditor.mockImplementation(generateCycledMock(mockDocuments));
+        globalMocks.activeTextEditor.mockImplementation(
+            generateCycledMock(mockDocuments)
+        );
 
         const result = await closeOpenedTextFile(targetTextFile);
         expect(result).toBe(false);
-        expect(globalMocks.executeCommand.mock.calls.map((call) => call[0]))
-            .toEqual(["workbench.action.nextEditor", "workbench.action.nextEditor", "workbench.action.nextEditor"]);
+        expect(
+            globalMocks.executeCommand.mock.calls.map((call) => call[0])
+        ).toEqual([
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+            "workbench.action.nextEditor",
+        ]);
     });
 });

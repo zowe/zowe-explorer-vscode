@@ -31,7 +31,7 @@ const testProfile: IProfileLoaded = {
     profile: testConst.profile,
     type: testConst.profile.type,
     message: "",
-    failNotFound: false
+    failNotFound: false,
 };
 
 describe("dsNodeActions integration test", async () => {
@@ -39,8 +39,15 @@ describe("dsNodeActions integration test", async () => {
     chai.use(chaiAsPromised);
 
     const session = zowe.ZosmfSession.createBasicZosmfSession(testConst.profile);
-    const sessionNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null,
-        session, undefined, undefined, testProfile);
+    const sessionNode = new ZoweDatasetNode(
+        testConst.profile.name,
+        vscode.TreeItemCollapsibleState.Collapsed,
+        null,
+        session,
+        undefined,
+        undefined,
+        testProfile
+    );
     sessionNode.contextValue = DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
@@ -49,12 +56,12 @@ describe("dsNodeActions integration test", async () => {
 
     let sandbox;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         this.timeout(TIMEOUT);
         sandbox = sinon.createSandbox();
     });
 
-    afterEach(async function() {
+    afterEach(async function () {
         this.timeout(TIMEOUT);
         sandbox.restore();
     });
@@ -62,25 +69,30 @@ describe("dsNodeActions integration test", async () => {
     const oldSettings = vscode.workspace.getConfiguration("Zowe-DS-Persistent");
 
     after(async () => {
-        await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent", oldSettings, vscode.ConfigurationTarget.Global);
+        await vscode.workspace
+            .getConfiguration()
+            .update(
+                "Zowe-DS-Persistent",
+                oldSettings,
+                vscode.ConfigurationTarget.Global
+            );
     });
 
     describe("Refresh ALL", async () => {
         it("It should call the RefreshALL function", async () => {
+            let eventFired = false;
 
-           let eventFired = false;
-
-           const listener = () => {
+            const listener = () => {
                 eventFired = true;
             };
 
-           const subscription = testTree.mOnDidChangeTreeData.event(listener);
-           await dsActions.refreshAll(testTree);
+            const subscription = testTree.mOnDidChangeTreeData.event(listener);
+            await dsActions.refreshAll(testTree);
 
-           expect(eventFired).equals(true);
+            expect(eventFired).equals(true);
             // expect(eventFired).toBe(true);
 
-           subscription.dispose();
+            subscription.dispose();
         }).timeout(TIMEOUT);
     });
 });
