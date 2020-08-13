@@ -14,6 +14,6 @@ const path = require('path');
 const packageName = process.argv[2];
 const extension = process.argv[3];
 const fullPackageName = `${packageName}-${process.env.npm_package_version}.${extension}`;
-const targetPath = path.join('..', '..', 'packaged-apps', fullPackageName);
+const targetPath = path.join('..', '..', 'dist', fullPackageName);
 fs.renameSync(fullPackageName, targetPath);
 console.log(`Published package to ${targetPath}.`);

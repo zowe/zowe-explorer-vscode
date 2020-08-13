@@ -21,6 +21,6 @@
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
     "license": "node ../../scripts/license.js",
-    "package": "yarn build && npm pack"
+    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   }
 }

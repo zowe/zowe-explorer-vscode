@@ -1176,7 +1176,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "gulp build && yarn license && yarn lint && webpack --mode production && yarn update",
+    "vscode:prepublish": "gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings",
     "build": "gulp build && yarn license && webpack --mode development",
     "build:integration": "gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
@@ -1184,7 +1184,7 @@
     "test": "yarn test:unit",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
-    "update": "node ../../scripts/stringUpdateScript.js",
+    "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/license.js",
     "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
