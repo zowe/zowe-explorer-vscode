@@ -135,13 +135,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Find matching profile node in this.mFavorites.
-     * @param favoritesNodes - The array of favorite nodes to search through (e.g. this.mFavorites)
+     * Find profile node that matches specified profile name in a tree nodes array (e.g. this.mFavorites or this.mSession).
+     * @param favoritesNodes - The array of tree nodes to search through (e.g. this.mFavorites)
      * @param profileName - The name of the profile you are looking for
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
-    public findMatchingProfileInFavs(favoritesNodes: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode|undefined {
-        return favoritesNodes.find((mFavorite) => mFavorite.label === profileName );
+    public findMatchingProfileInArray(treeNodesArray: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode|undefined {
+        return treeNodesArray.find((treeNode) => treeNode.label === profileName );
     }
 
     /**
@@ -190,7 +190,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             const favLabel = line.substring(line.indexOf(":") + 2, line.indexOf("{"));
             const favContextValue = line.substring(line.indexOf("{") + 1, line.lastIndexOf("}"));
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            let profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
             if (profileNodeInFavorites === undefined) {
                 // If favorite node for profile doesn't exist yet, create a new one for it
                 profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
@@ -254,7 +254,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.log = log;
         this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
         // Only process favorites with the parentNode's profile label.
-        const profileInFavs = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile ) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
@@ -352,7 +352,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let temp: ZoweDatasetNode;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
-        let profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
@@ -427,12 +427,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public async renameFavorite(node: IZoweDatasetTreeNode, newLabel: string) {
-        // Get node's profile node in favorites
-        const profileName = node.getProfileName();
-        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
-        const matchingNode = profileNodeInFavorites.children.find(
-            (temp) => (temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))
-        );
+        const matchingNode = this.findFavoritedNode(node);
         if (matchingNode) {
             matchingNode.label = newLabel;
             matchingNode.tooltip = newLabel;
@@ -449,7 +444,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public findFavoritedNode(node: IZoweDatasetTreeNode) {
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
-        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         return profileNodeInFavorites.children.find(
             (temp) => (temp.label === node.getLabel()) && (temp.contextValue.includes(node.contextValue))
         );
@@ -475,7 +470,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async removeFavorite(node: IZoweDatasetTreeNode) {
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
-        const profileNodeInFavorites = this.findMatchingProfileInFavs(this.mFavorites, profileName);
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter((temp) =>
             !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue)))
         );
