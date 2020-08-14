@@ -1533,6 +1533,37 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             "HLQ.TEST.RENAME.NODE.NEW"
         );
     });
+
+    it("Checking function with PS Dataset given lowercase name", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce(
+            "HLQ.TEST.RENAME.NODE.new"
+        );
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(
+            blockMocks.treeView
+        );
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.RENAME.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            blockMocks.session
+        );
+        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+
+        await testTree.rename(node);
+
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(
+            "HLQ.TEST.RENAME.NODE",
+            "HLQ.TEST.RENAME.NODE.NEW"
+        );
+    });
+
     it("Checking function with Favorite PS Dataset", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
@@ -1608,6 +1639,44 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(
+            blockMocks.treeView
+        );
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode(
+            "HLQ.TEST.RENAME.NODE",
+            vscode.TreeItemCollapsibleState.None,
+            testTree.mSessionNodes[1],
+            blockMocks.session
+        );
+        const child = new ZoweDatasetNode(
+            "mem1",
+            vscode.TreeItemCollapsibleState.None,
+            parent,
+            blockMocks.session
+        );
+        child.contextValue = globals.DS_MEMBER_CONTEXT;
+        const renameDataSetMemberSpy = jest.spyOn(
+            blockMocks.mvsApi,
+            "renameDataSetMember"
+        );
+
+        await testTree.rename(child);
+
+        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(
+            "HLQ.TEST.RENAME.NODE",
+            "mem1",
+            "MEM2"
+        );
+    });
+    it("Checking function with PDS Member given in lowercase", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(
             blockMocks.treeView
@@ -1637,7 +1706,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(
             "HLQ.TEST.RENAME.NODE",
             "mem1",
-            "mem2"
+            "MEM2"
         );
     });
     it("Checking function with favorite PDS Member", async () => {
@@ -1646,7 +1715,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(
             blockMocks.treeView
         );
@@ -1676,7 +1745,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(
             "HLQ.TEST.RENAME.NODE",
             "mem1",
-            "mem2"
+            "MEM2"
         );
     });
     it("Checking failed attempt to rename PDS Member", async () => {
@@ -1689,7 +1758,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         mocked(zowe.Rename.dataSetMember).mockImplementation(() => {
             throw defaultError;
         });
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(
             blockMocks.treeView
         );
@@ -1723,7 +1792,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(
             "HLQ.TEST.RENAME.NODE",
             "mem1",
-            "mem2"
+            "MEM2"
         );
         expect(error).toBe(defaultError);
     });

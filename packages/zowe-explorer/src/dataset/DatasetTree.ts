@@ -880,9 +880,16 @@ export class DatasetTree extends ZoweTreeProvider
         } else {
             dataSetName = node.getParent().getLabel();
         }
-        const afterMemberName = await vscode.window.showInputBox({
+        let afterMemberName = await vscode.window.showInputBox({
             value: beforeMemberName,
         });
+        if (!afterMemberName) {
+            vscode.window.showInformationMessage(
+                localize("renameDataSet.cancelled", "Rename operation cancelled.")
+            );
+            return;
+        }
+        afterMemberName = afterMemberName.toUpperCase();
         const beforeFullPath = getDocumentFilePath(
             `${node.getParent().getLabel()}(${node.getLabel()})`,
             node
@@ -893,7 +900,7 @@ export class DatasetTree extends ZoweTreeProvider
             localize("renameDataSet.log.debug", "Renaming data set ") +
                 afterMemberName
         );
-        if (afterMemberName) {
+        if (afterMemberName && afterMemberName !== beforeMemberName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(
                     node.getProfile()
@@ -958,9 +965,16 @@ export class DatasetTree extends ZoweTreeProvider
             favPrefix = node.label.substring(0, node.label.indexOf(":") + 2);
             beforeDataSetName = node.label.substring(node.label.indexOf(":") + 2);
         }
-        const afterDataSetName = await vscode.window.showInputBox({
+        let afterDataSetName = await vscode.window.showInputBox({
             value: beforeDataSetName,
         });
+        if (!afterDataSetName) {
+            vscode.window.showInformationMessage(
+                localize("renameDataSet.cancelled", "Rename operation cancelled.")
+            );
+            return;
+        }
+        afterDataSetName = afterDataSetName.toUpperCase();
         const beforeFullPath = getDocumentFilePath(node.getLabel(), node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
@@ -968,7 +982,7 @@ export class DatasetTree extends ZoweTreeProvider
             localize("renameDataSet.log.debug", "Renaming data set ") +
                 afterDataSetName
         );
-        if (afterDataSetName) {
+        if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(
                     node.getProfile()

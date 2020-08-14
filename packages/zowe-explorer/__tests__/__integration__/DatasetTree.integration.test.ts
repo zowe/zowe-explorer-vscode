@@ -414,6 +414,44 @@ describe("DatasetTree Integration Tests", async () => {
                     expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
                     expectChai(afterList.apiResponse.returnedRows).to.equal(1);
                 }).timeout(TIMEOUT);
+                it("should rename a data set in uppercase when given lowercase name", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    const lowercaseAfterDataSetName = `${pattern}.RENAME.after.TEST`;
+
+                    try {
+                        const testNode = new ZoweDatasetNode(
+                            beforeDataSetName,
+                            vscode.TreeItemCollapsibleState.None,
+                            sessNode,
+                            session
+                        );
+                        const inputBoxStub = sandbox.stub(
+                            vscode.window,
+                            "showInputBox"
+                        );
+                        inputBoxStub.returns(lowercaseAfterDataSetName);
+
+                        await testTree.rename(testNode);
+                        beforeList = await zowe.List.dataSet(
+                            sessNode.getSession(),
+                            beforeDataSetName
+                        );
+                        afterList = await zowe.List.dataSet(
+                            sessNode.getSession(),
+                            afterDataSetName
+                        );
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expectChai(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
             });
             describe("Rename Member", () => {
                 beforeEach(async () => {
@@ -429,6 +467,43 @@ describe("DatasetTree Integration Tests", async () => {
                     );
                 });
                 it("should rename a data set member", async () => {
+                    let error;
+                    let list;
+
+                    try {
+                        const parentNode = new ZoweDatasetNode(
+                            beforeDataSetName,
+                            vscode.TreeItemCollapsibleState.None,
+                            sessNode,
+                            session
+                        );
+                        const childNode = new ZoweDatasetNode(
+                            "mem1",
+                            vscode.TreeItemCollapsibleState.None,
+                            parentNode,
+                            session
+                        );
+                        const inputBoxStub = sandbox.stub(
+                            vscode.window,
+                            "showInputBox"
+                        );
+                        inputBoxStub.returns("MEM2");
+
+                        await testTree.rename(childNode);
+                        list = await zowe.List.allMembers(
+                            sessNode.getSession(),
+                            beforeDataSetName
+                        );
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(list.apiResponse.returnedRows).to.equal(1);
+                    expectChai(list.apiResponse.items[0].member).to.equal("MEM2");
+                }).timeout(TIMEOUT);
+                it("should rename a data set member in uppercase when given lowercase", async () => {
                     let error;
                     let list;
 
@@ -511,6 +586,44 @@ describe("DatasetTree Integration Tests", async () => {
                     expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
                     expectChai(afterList.apiResponse.returnedRows).to.equal(1);
                 }).timeout(TIMEOUT);
+                it("should rename a data set in uppercase when given lowercase name", async () => {
+                    let error;
+                    let beforeList;
+                    let afterList;
+
+                    const lowercaseAfterDataSetName = `${pattern}.RENAME.after.TEST`;
+
+                    try {
+                        const testNode = new ZoweDatasetNode(
+                            beforeDataSetName,
+                            vscode.TreeItemCollapsibleState.None,
+                            sessNode,
+                            session
+                        );
+                        const inputBoxStub = sandbox.stub(
+                            vscode.window,
+                            "showInputBox"
+                        );
+                        inputBoxStub.returns(lowercaseAfterDataSetName);
+
+                        await testTree.rename(testNode);
+                        beforeList = await zowe.List.dataSet(
+                            sessNode.getSession(),
+                            beforeDataSetName
+                        );
+                        afterList = await zowe.List.dataSet(
+                            sessNode.getSession(),
+                            afterDataSetName
+                        );
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expectChai(error).to.be.equal(undefined);
+
+                    expectChai(beforeList.apiResponse.returnedRows).to.equal(0);
+                    expectChai(afterList.apiResponse.returnedRows).to.equal(1);
+                }).timeout(TIMEOUT);
             });
         });
         describe("Failure Scenarios", () => {
@@ -560,7 +673,7 @@ describe("DatasetTree Integration Tests", async () => {
                             vscode.window,
                             "showInputBox"
                         );
-                        inputBoxStub.returns("mem2");
+                        inputBoxStub.returns("MEM2");
 
                         await testTree.rename(childNode);
                     } catch (err) {
