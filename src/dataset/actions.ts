@@ -91,7 +91,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: IZowe
 
 export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
     try {
-        const datasetName = dsUtils.getDatasetLabel(node);
+        const datasetName = node.label;
         const prof = node.getProfile();
         await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
             encoding: prof.profile.encoding

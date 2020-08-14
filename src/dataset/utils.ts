@@ -37,12 +37,3 @@ export function getNodeLabels(node: IZoweNodeType) {
         return getProfileAndDataSetName(node);
     }
 }
-
-export function getDatasetLabel(node: ZoweDatasetNode) {
-    if (node.getParent() && contextually.isFavoriteContext(node.getParent())) {
-        const profileEnd = "]: ";
-        const profileIndex = node.label.indexOf(profileEnd);
-        return node.label.substr(profileIndex + profileEnd.length, node.label.length);
-    }
-    return node.label;
-}
