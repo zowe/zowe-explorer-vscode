@@ -688,11 +688,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             } else {
                 // executing search from saved search in favorites
-                pattern = node.label.trim().substring(node.getLabel().indexOf(":") + 2);
-                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-                await this.addSession(session);
+                pattern = node.getLabel();
+                const sessionName = node.getProfileName();
+                await this.addSession(sessionName);
                 const faveNode = node;
-                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
+                node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === sessionName);
                 if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
                     node.getSession().ISession.user = faveNode.getSession().ISession.user;
                     node.getSession().ISession.password = faveNode.getSession().ISession.password;
