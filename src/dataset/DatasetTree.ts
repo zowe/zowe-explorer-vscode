@@ -136,12 +136,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     /**
      * Find profile node that matches specified profile name in a tree nodes array (e.g. this.mFavorites or this.mSession).
-     * @param favoritesNodes - The array of tree nodes to search through (e.g. this.mFavorites)
+     * @param datasetProvider - The array of tree nodes to search through (e.g. this.mFavorites)
      * @param profileName - The name of the profile you are looking for
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
-    public findMatchingProfileInArray(treeNodesArray: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode|undefined {
-        return treeNodesArray.find((treeNode) => treeNode.label === profileName );
+    public findMatchingProfileInArray(datasetProvider: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode|undefined {
+        return datasetProvider.find((treeNode) => treeNode.label === profileName );
     }
 
     /**
