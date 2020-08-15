@@ -508,12 +508,12 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     let label = "";
     let fav = false;
     try {
-        if (node.getParent().contextValue.includes(globals.FAVORITE_CONTEXT)) {
-            label = node.label.substring(node.label.indexOf(":") + 1).trim();
+        if (node.getParent().contextValue.includes(globals.FAV_SUFFIX)) {
+            label = node.getLabel();
             fav = true;
-        } else if (node.getParent().contextValue.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
-            label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel() + ")";
-            fav = true;
+            if (node.getParent().contextValue.includes(globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX)) {
+                label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
+            }
         } else if (node.getParent().contextValue.includes(globals.DS_SESSION_CONTEXT)) {
             label = node.getLabel();
         } else if (node.getParent().contextValue.includes(globals.DS_PDS_CONTEXT)) {
@@ -541,25 +541,20 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
     // remove node from tree
     if (fav) {
         datasetProvider.mSessionNodes.forEach((ses) => {
-            if (node.label.substring(node.label.indexOf("[") + 1, node.label.indexOf("]")) === ses.label.trim()||
-                node.getParent().getLabel().substring(node.getParent().getLabel().indexOf("["),
-                        node.getParent().getLabel().indexOf("]")) === ses.label) {
+            if (node.getProfileName() === ses.label.trim()) {
                 ses.dirty = true;
             }
         });
         datasetProvider.removeFavorite(node);
     } else {
         node.getSessionNode().dirty = true;
-        const temp = node.label;
-        node.label = "[" + node.getSessionNode().label.trim() + "]: " + node.label;
         datasetProvider.removeFavorite(node);
-        node.label = temp;
     }
 
     // refresh Tree View & favorites
     if (node.getParent() && node.getParent().contextValue !== globals.DS_SESSION_CONTEXT) {
         datasetProvider.refreshElement(node.getParent());
-        if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
+        if (contextually.isFavorite(node) || contextually.isFavorite(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node.getParent());
             if (nonFavNode) { datasetProvider.refreshElement(nonFavNode); }
         } else {

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession, Session } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
@@ -245,31 +245,24 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Loads favorites for the Favorites profile that was clicked on.
+     * Loads profile for the profile node in Favorites that was clicked on, as well as for its children favorites.
      * @param log
      */
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweDatasetTreeNode) {
         const profileName = parentNode.label;
         const updatedFavsForProfile: IZoweDatasetTreeNode[] = [];
+        let profile: IProfileLoaded;
+        let session: Session;
         this.log = log;
         this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
-        // Only process favorites with the parentNode's profile label.
-        const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        const favsForProfile = profileInFavs.children;
-        for (const favorite of favsForProfile ) {
-            // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
-            if (favorite.getProfile() && favorite.getSession()) {
-                updatedFavsForProfile.push(favorite);
-                continue;
-            }
-            // If no profile/session for favorite node yet, then add session and profile to favorite node:
-            let profile: IProfileLoaded;
+        // Load profile for parent profile node in this.mFavorites array
+        if (!parentNode.getProfile() || !parentNode.getSession()) {
+            // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-                favorite.setProfileToChoice(profile);
-                favorite.setSessionToChoice(session);
-                updatedFavsForProfile.push(favorite);
+                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                parentNode.setProfileToChoice(profile);
+                parentNode.setSessionToChoice(session);
             } catch (error) {
                 const errMessage: string =
                     localize("loadProfilesForFavorites.error.profile1",
@@ -280,8 +273,23 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         "or remove the favorites with this profile name from the Zowe-DS-Persistent setting in your {0} user settings.",
                         getAppName(globals.ISTHEIA));
                 await errorHandling(error, null, errMessage);
+            }
+        }
+        profile = parentNode.getProfile();
+        session = parentNode.getSession();
+        // Pass loaded profile/session to the parent node's favorites children.
+        const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        const favsForProfile = profileInFavs.children;
+        for (const favorite of favsForProfile ) {
+            // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
+            if (favorite.getProfile() && favorite.getSession()) {
+                updatedFavsForProfile.push(favorite);
                 continue;
             }
+            // If no profile/session for favorite node yet, then add session and profile to favorite node:
+            favorite.setProfileToChoice(profile);
+            favorite.setSessionToChoice(session);
+            updatedFavsForProfile.push(favorite);
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
