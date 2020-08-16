@@ -485,7 +485,7 @@ export async function submitMember(node: IZoweTreeNode) {
 }
 
 /**
- * Deletes a dataset
+ * Deletes a dataset/data set member
  *
  * @export
  * @param {IZoweTreeNode} node - The node to be deleted
@@ -634,6 +634,7 @@ export async function refreshPS(node: IZoweDatasetTreeNode) {
  * @param {DatasetTree} datasetProvider - Current DatasetTree used to populate the TreeView
  * @returns {Promise<void>}
  */
+// This function does not appear to be called by anything except unit and integration tests.
 export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: DatasetTree) {
     if (globals.LOG) {
         globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
