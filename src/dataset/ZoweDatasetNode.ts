@@ -207,11 +207,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).dataSet(pattern.trim(), {attributes: true}));
                 }
             } else {
-                // Check if node is a favorite
-                let label = this.label.trim();
-                if (this.label.startsWith("[")) {
-                    label = this.label.substring(this.label.indexOf(":") + 1).trim();
-                }
+                const label = this.label.trim();
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(this.getProfile()).allMembers(label, {attributes: true}));
             }
         } catch (err) {
