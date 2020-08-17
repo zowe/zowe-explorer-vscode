@@ -299,11 +299,7 @@ export async function createFile(node: IZoweDatasetTreeNode, datasetProvider: IZ
 export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     await datasetProvider.checkCurrentProfile(parent);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-        let label = parent.label.trim();
-        if (contextually.isFavoritePds(parent) || contextually.isFavoriteDs(parent)) {
-            label = parent.label.trim().substring(parent.label.trim().indexOf(":") + 2);
-        }
-
+        const label = parent.label.trim();
         globals.LOG.debug(localize("showDSAttributes.debug", "showing attributes of data set ") + label);
         let attributes: any;
         try {
