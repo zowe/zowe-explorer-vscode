@@ -125,7 +125,7 @@ Set up your Theia workspace for development purposes.
 1. Build a VSIX file with your changes.
 
 2. Build and run the Theia browser example, using [Setting up your Theia workspace](https://github.com/zowe/vscode-extension-for-zowe/blob/master/docs/README-Theia.md#setting-up-your-theia-workspace).
-      
+
    **Note**: Ensure that your latest VSIX file is in the `plugins` folder.
 
 3. Open a web browser and navigate to <http://localhost:3000> to verify your setup.
@@ -142,7 +142,7 @@ npm run test:theia
 
 The regression tests output appears in your VSC debug console.
 
-### Run Tests with Firefox UI Visibility Components 
+### Run Tests with Firefox UI Visibility Components
 
 Disable headless mode to see changes in Firefox while your tests are in progress.
 
