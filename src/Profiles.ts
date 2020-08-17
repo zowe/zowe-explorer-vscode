@@ -158,9 +158,14 @@ export class Profiles {
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
             node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)){
+            return node;
         } else {
             node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
         }
+        // tslint:disable-next-line:no-console
+        console.log(node.contextValue);
+        return node;
     }
 
     public async enableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
@@ -199,9 +204,12 @@ export class Profiles {
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "");
             node.contextValue += `${globals.VALIDATE_SUFFIX}true`;
+        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)){
+            return node;
         } else {
             node.contextValue += `${globals.VALIDATE_SUFFIX}true`;
         }
+        return node;
     }
 
     public async checkProfileValidationSetting(theProfile: IProfileLoaded): Promise<boolean> {

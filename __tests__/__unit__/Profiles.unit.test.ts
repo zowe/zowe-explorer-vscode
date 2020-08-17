@@ -27,6 +27,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { Job } from "../../src/job/ZoweJobNode";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
+import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
 
 jest.mock("vscode");
 jest.mock("child_process");
@@ -1025,6 +1026,7 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
             iJob: createIJobObject(),
             imperativeProfile: createIProfile(),
             session: null,
+
             testSchemas: createTestSchemas(),
             profileInstance: null
         };
@@ -1577,6 +1579,108 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         });
         await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+});
+
+describe("Profiles Unit Tests - Function disableValidationContext", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            session: null,
+            datasetSessionNode: null,
+            mockNode: null,
+            mockDisableValidationContext: jest.fn(),
+        };
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    disableValidationContext: newMocks.mockDisableValidationContext.mockReturnValue(newMocks.mockNode)
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that disableValidationContext returns correct node context if is already enabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+        const result = await theProfiles.disableValidationContext(resultNode);
+        expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+
+    it("Tests that disableValidationContext returns correct node context if validation context isn't set", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}`;
+        const result = await theProfiles.disableValidationContext(resultNode);
+        expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+});
+
+describe("Profiles Unit Tests - Function enableValidationContext", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            session: null,
+            datasetSessionNode: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+        };
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    enableValidationContext: newMocks.mockEnableValidationContext.mockReturnValue(newMocks.mockNode)
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that enableValidationContext returns correct node context if is already disabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        const result = await theProfiles.enableValidationContext(resultNode);
+        expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
+    });
+
+    it("Tests that enableValidationContext returns correct node context if validation context isn't set", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}`;
+        const result = await theProfiles.enableValidationContext(resultNode);
+        expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
 });
 
