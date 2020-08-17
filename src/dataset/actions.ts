@@ -356,6 +356,7 @@ export async function showDSAttributes(parent: IZoweDatasetTreeNode, datasetProv
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
+// This function does not appear to currently be made available in the UI
 export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>) {
     if (!vscode.window.activeTextEditor) {
         vscode.window.showErrorMessage(
@@ -428,36 +429,26 @@ export async function submitJcl(datasetProvider: IZoweTree<IZoweDatasetTreeNode>
  * @param node The dataset member
  */
 export async function submitMember(node: IZoweTreeNode) {
-    const labelregex = /\[(.+)\]\: (.+)/g;
-    let label;
-    let sesName;
-    let sessProfile;
-    let regex;
+    let label: string;
+    let sesName: string;
+    let sessProfile: IProfileLoaded;
     const profiles = Profiles.getInstance();
     profiles.checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
         switch (true) {
-            case contextually.isFavoriteContext(node.getParent()):
-                regex = labelregex.exec(node.getLabel());
-                sesName = regex[1];
-                label = regex[2];
-                sessProfile = profiles.loadNamedProfile(sesName);
-                break;
-            case contextually.isFavoritePds(node.getParent()):
-                regex = labelregex.exec(node.getParent().getLabel());
-                sesName = regex[1];
-                label = regex[2] + "(" + node.label.trim()+ ")";
-                sessProfile = node.getParent().getProfile();
-                break;
+             // For favorited or non-favorited sequential DS:
+            case contextually.isFavorite(node):
             case contextually.isSessionNotFav(node.getParent()):
                 sesName = node.getParent().getLabel();
                 label = node.label;
-                sessProfile = node.getParent().getProfile();
+                sessProfile = node.getProfile();
                 break;
+            // For favorited or non-favorited data set members:
+            case contextually.isFavoritePds(node.getParent()):
             case contextually.isPdsNotFav(node.getParent()):
                 sesName = node.getParent().getParent().getLabel();
                 label = node.getParent().getLabel() + "(" + node.label.trim()+ ")";
-                sessProfile = node.getParent().getParent().getProfile();
+                sessProfile = node.getProfile();
                 break;
             default:
                 vscode.window.showErrorMessage(localize("submitMember.invalidNode", "submitMember() called from invalid node."));
