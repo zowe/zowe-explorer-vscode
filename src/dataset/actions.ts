@@ -130,7 +130,7 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
 }
 
 /**
- * Downloads and displays a PS in a text editor view
+ * Downloads and displays a PS or data set member in a text editor view
  *
  * @param {IZoweDatasetTreeNode} node
  */
@@ -140,15 +140,13 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
         try {
             let label: string;
             switch (true) {
+                // For favorited and non-favorited sequential DS:
                 case contextually.isFavorite(node):
-                    label = node.label.substring(node.label.indexOf(":") + 1).trim();
-                    break;
-                case contextually.isFavoritePds(node.getParent()):
-                    label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
-                    break;
                 case contextually.isSessionNotFav(node.getParent()):
                     label = node.label.trim();
                     break;
+                // For favorited and non-favorited data set members:
+                case contextually.isFavoritePds(node.getParent()):
                 case contextually.isPdsNotFav(node.getParent()):
                     label = node.getParent().getLabel().trim() + "(" + node.getLabel()+ ")";
                     break;
