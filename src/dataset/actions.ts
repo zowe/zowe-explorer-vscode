@@ -790,7 +790,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     if (docPath.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) === -1) {
         globals.LOG.debug(localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
             localize("saveFile.log.debug.directory",
-                             "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, globals.DS_DIR));
+                "Assuming we are not in the DS_DIR directory: ") + path.relative(docPath, globals.DS_DIR));
         return;
     }
     const start = path.join(globals.DS_DIR + path.sep).length;
@@ -835,25 +835,15 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: IZoweT
     }
     // Get specific node based on label and parent tree (session / favorites)
     let nodes: IZoweNodeType[];
-    let isFromFavorites: boolean;
     if (!sesNode || sesNode.children.length === 0) {
         // saving from favorites
         nodes = concatChildNodes(datasetProvider.mFavorites);
-        isFromFavorites = true;
     } else {
         // saving from session
         nodes = concatChildNodes([sesNode]);
-        isFromFavorites = false;
     }
     node = nodes.find((zNode) => {
-        // dataset in Favorites
-        if (contextually.isFavoriteDs(zNode)) {
-            return (zNode.label === `[${sesName}]: ${label}`);
-            // member in Favorites
-        } else if (contextually.isDsMember(zNode) && isFromFavorites) {
-            const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
-            return (`${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `[${sesName}]: ${label}`);
-        } else if (contextually.isDsMember(zNode) && !isFromFavorites) {
+        if (contextually.isDsMember(zNode)) {
             const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
             return (`${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`);
         } else if (contextually.isDs(zNode)) {
