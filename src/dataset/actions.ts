@@ -112,11 +112,7 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
     const name = await vscode.window.showInputBox({ placeHolder: localize("createMember.inputBox", "Name of Member") });
     globals.LOG.debug(localize("createMember.log.debug.createNewDataSet", "creating new data set member of name ") + name);
     if (name) {
-        let label = parent.label.trim();
-        if (contextually.isFavoritePds(parent)) {
-            label = parent.label.substring(parent.label.indexOf(":") + 2); // TODO MISSED TESTING
-        }
-
+        const label = parent.label.trim();
         try {
             await ZoweExplorerApiRegister.getMvsApi(parent.getProfile()).createDataSetMember(label + "(" + name + ")");
         } catch (err) {
