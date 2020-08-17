@@ -30,21 +30,18 @@ More information:
 * [Usage Tips](#usage-tips)
 * [Extending Zowe Explorer](#extending-zowe-explorer)
 
-## What's new in Zowe Explorer 1.7.0
+## What's new in Zowe Explorer 1.8.0
 
-New features:
+New features and improvements:
 
-* Added a credentials check feature that allows users to update their credentials if they receive an authorization error.
-* Added a star icon which clearly denotes data sets, USS files, and jobs as favorites.
-* Added a profile validation feature that checks whether a profile is valid. The feature is triggered when any action is performed with the profile. Validated profiles are indicated by a green mark.
-* Disallowed case sensitivity for profiles with same names.
+* Added a webpack that works with localization and logging.
+* Allowed extenders to load the saved profile sessions upon activation.
+* Added an automatic re-validation for invalid profiles.
 
-Improvements:
+Bug Fixes:
 
-* Enabled editing of search filters.
-* Enabled editing of ASCII files in USS.
-* Improved text in confirmation dialogs.
-* Reorganized the Data Sets context menu to match the order of commands recommended by VSCode.
+* Fixed the bug related to saving USS files.
+* Fixed the bug related to the deletion of datasets.
 
 For more information, see [Changelog](https://marketplace.visualstudio.com/items/Zowe.vscode-extension-for-zowe/changelog).
 

@@ -28,7 +28,7 @@ jobs:
 
     # run audit on 1 system to avoid overloading the audit API
     - name: Audit from Windows / Node 12.x
-      run: npm audit --audit-level=moderate
+      run: npm audit --production --audit-level=moderate
       if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
 
     - name: Create test data file
