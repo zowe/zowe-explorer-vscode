@@ -140,12 +140,12 @@ export async function openPS(node: IZoweDatasetTreeNode, previewMember: boolean,
         try {
             let label: string;
             switch (true) {
-                // For favorited and non-favorited sequential DS:
+                // For favorited or non-favorited sequential DS:
                 case contextually.isFavorite(node):
                 case contextually.isSessionNotFav(node.getParent()):
                     label = node.label.trim();
                     break;
-                // For favorited and non-favorited data set members:
+                // For favorited or non-favorited data set members:
                 case contextually.isFavoritePds(node.getParent()):
                 case contextually.isPdsNotFav(node.getParent()):
                     label = node.getParent().getLabel().trim() + "(" + node.getLabel()+ ")";
@@ -572,18 +572,16 @@ export async function deleteDataset(node: IZoweTreeNode, datasetProvider: IZoweT
  * @param {IZoweDatasetTreeNode} node - The node which represents the dataset
  */
 export async function refreshPS(node: IZoweDatasetTreeNode) {
-    let label;
+    let label: string;
     try {
         switch (true) {
-            case contextually.isFavoriteContext(node.getParent()):
-                label = node.label.substring(node.label.indexOf(":") + 1).trim();
-                break;
-            case contextually.isFavoritePds(node.getParent()):
-                label = node.getParent().getLabel().substring(node.getParent().getLabel().indexOf(":") + 1).trim() + "(" + node.getLabel()+ ")";
-                break;
+            // For favorited or non-favorited sequential DS:
+            case contextually.isFavorite(node):
             case contextually.isSessionNotFav(node.getParent()):
                 label = node.label.trim();
                 break;
+            // For favorited or non-favorited data set members:
+            case contextually.isFavoritePds(node.getParent()):
             case contextually.isPdsNotFav(node.getParent()):
                 label = node.getParent().getLabel() + "(" + node.getLabel() + ")";
                 break;
