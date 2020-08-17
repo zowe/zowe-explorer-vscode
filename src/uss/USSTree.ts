@@ -82,23 +82,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const oldFavorite: IZoweUSSTreeNode = contextually.isFavorite(originalNode) ? originalNode : this.mFavorites.find((temp: ZoweUSSNode) =>
             (temp.shortLabel === oldLabel) && (temp.fullPath.substr(0, temp.fullPath.indexOf(oldLabel)) === parentPath)
         );
-        const loadedNodes = await this.getAllLoadedItems();
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
+        const loadedNodes = await this.getAllLoadedItems();
+
         const options: vscode.InputBoxOptions = {
             prompt: localize("renameUSSNode.enterName",
                 "Enter a new name for the {0}", nodeType),
             value: oldLabel.replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
-            validateInput: (value) => {
-                for (const node of loadedNodes) {
-                    if (value === node.label.trim() && contextually.isFolder(node)) {
-                        return localize("renameUSSNode.duplicateName",
-                            "A {0} already exists with this name. Please choose a different one.",
-                            nodeType);
-                    }
-                }
-                return null;
-            }
+            validateInput: (value) => this.checkDuplicateLabel(value, loadedNodes, nodeType)
         };
         const newName = await vscode.window.showInputBox(options);
         if (newName && newName !== oldLabel) {
@@ -123,6 +115,19 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         }
     }
+
+    public checkDuplicateLabel(newLabel: string, nodesToCheck: IZoweUSSTreeNode[], newNodeType: string) {
+        for (const node of nodesToCheck) {
+            const nodeType = contextually.isFolder(node) ? "folder" : "file";
+            if (newLabel === node.label.trim() && newNodeType === nodeType) {
+                return localize("renameUSSNode.duplicateName",
+                    "A {0} already exists with this name. Please choose a different one.",
+                    newNodeType);
+            }
+        }
+        return null;
+    }
+
     public open(node: IZoweUSSTreeNode, preview: boolean) {
         throw new Error("Method not implemented.");
     }

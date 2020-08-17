@@ -197,18 +197,6 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
     });
 
-    it("Tests that USSTree.rename() prevents the user from naming two folders the same", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.testUSSNode.label = "test";
-        globalMocks.testUSSNode.shortLabel = "test";
-        const contextuallySpy = jest.spyOn(contextually, "isFolder");
-
-        globalMocks.showInputBox.mockReturnValueOnce("test");
-
-        await globalMocks.testTree.rename(globalMocks.testUSSNode);
-        expect(contextuallySpy.mock.calls.length).toBe(1);
-    });
-
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testUSSNode.label = "";
@@ -255,6 +243,21 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
         expect(removeFavorite.mock.calls.length).toBe(1);
         expect(addFavorite.mock.calls.length).toBe(1);
+    });
+});
+
+describe("USSTree Unit Tests - Function USSTree.checkDuplicateLabel()", () => {
+    it("Tests that checkDuplicateLabel() returns null if passed a unique name", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("totallyNewLabel", [globalMocks.testUSSNode], "file");
+        expect(returnVal).toEqual(null);
+    });
+    it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("usstest", [globalMocks.testUSSNode], "file");
+        expect(returnVal).toEqual("A file already exists with this name. Please choose a different one.");
     });
 });
 

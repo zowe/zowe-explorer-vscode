@@ -44,6 +44,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
 export function createUSSNode(session, profile) {
     const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profile.name);
+    mParent.contextValue = globals.USS_DIR_CONTEXT;
     ussNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.fullPath = "/u/myuser";
     return ussNode;
