@@ -166,7 +166,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, blockMocks.session);
         const nonFavoriteLabel = parent.label;
-        parent.label = `[${blockMocks.datasetSessionNode.label}]: ${parent.label}`;
+        parent.label = `${parent.label}`;
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
@@ -351,7 +351,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-        parent.contextValue = globals.FAVORITE_CONTEXT;
+        child.contextValue = globals.DS_FAV_CONTEXT;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
@@ -489,7 +489,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
-        parent.contextValue = globals.FAVORITE_CONTEXT;
+        parent.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
             parent, null, undefined, undefined, blockMocks.imperativeProfile);
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
