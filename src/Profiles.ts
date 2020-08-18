@@ -26,6 +26,10 @@ import { PersistentFilters } from "./PersistentFilters";
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+export interface IExtIProfileLoaded extends IProfileLoaded {
+    validation?: boolean;
+}
+
 interface IUrlValidator {
     valid: boolean;
     protocol: string;
@@ -73,7 +77,7 @@ export class Profiles {
     private baseEncd: string;
     private constructor(private log: Logger) {}
 
-    public async checkCurrentProfile(theProfile: IProfileLoaded) {
+    public async checkCurrentProfile(theProfile: IExtIProfileLoaded) {
         let profileStatus: IProfileValidation;
         if (!theProfile.validation) {
             profileStatus = {
@@ -122,7 +126,7 @@ export class Profiles {
 
     public async disableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
                                    jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
-        const theProfile: IProfileLoaded = node.getProfile();
+        const theProfile: IExtIProfileLoaded = node.getProfile();
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             return;
         } else {
@@ -166,7 +170,7 @@ export class Profiles {
 
     public async enableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
                                   jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
-        const theProfile: IProfileLoaded = node.getProfile();
+        const theProfile: IExtIProfileLoaded = node.getProfile();
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)){
             theProfile.validation = true;
             // Disable validation for profile in uss tree
@@ -208,7 +212,7 @@ export class Profiles {
         return node;
     }
 
-    public async checkProfileValidationSetting(theProfile: IProfileLoaded): Promise<boolean> {
+    public async checkProfileValidationSetting(theProfile: IExtIProfileLoaded): Promise<boolean> {
         // Gets global validation settings from settings.json
         const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
         if (validationSetting === false) {
