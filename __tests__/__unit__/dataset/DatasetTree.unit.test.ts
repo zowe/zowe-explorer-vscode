@@ -24,7 +24,7 @@ import {
     createISession, createISessionWithoutCredentials, createQuickPickContent,
     createTreeView, createWorkspaceConfiguration
 } from "../../../__mocks__/mockCreators/shared";
-import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
 
@@ -941,10 +941,13 @@ describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const datasetFavoritesNode = createDatasetFavoritesNode(session, imperativeProfile);
 
         return {
             session,
+            imperativeProfile,
             datasetSessionNode,
+            datasetFavoritesNode,
             treeView
         };
     }
@@ -957,10 +960,13 @@ describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
-        const favoriteNode = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`,
-            vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+        const favProfileNode = new ZoweDatasetNode(blockMocks.imperativeProfile.name,
+            vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetFavoritesNode, null, globals.FAV_PROFILE_CONTEXT);
+        const favoriteNode = new ZoweDatasetNode(`${node.label}`,
+            vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, null);
         favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        testTree.mFavorites.push(favoriteNode);
+        favProfileNode.children.push(favoriteNode);
+        testTree.mFavorites.push(favProfileNode);
 
         const foundNode = testTree.findFavoritedNode(node);
 
