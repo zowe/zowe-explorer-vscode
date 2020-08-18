@@ -426,8 +426,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         testTree.addFavorite(node);
 
-        expect(testTree.mFavorites[0].label).toBe(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_DS_CONTEXT}${globals.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
+        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
+        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${globals.DS_DS_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking adding of PDS Dataset node", async () => {
         createGlobalMocks();
@@ -442,8 +444,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         testTree.addFavorite(node);
 
-        expect(testTree.mFavorites[0].label).toBe(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_PDS_CONTEXT}${globals.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
+        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
+        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${globals.DS_PDS_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking adding of PDS Member node", async () => {
         createGlobalMocks();
@@ -461,8 +465,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         testTree.addFavorite(child);
 
-        expect(testTree.mFavorites[0].label).toBe(`[${blockMocks.datasetSessionNode.label}]: ${parent.label}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_PDS_CONTEXT}${globals.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
+        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
+        expect(testTree.mFavorites[0].children[0].label).toBe(`${parent.label}`);
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${globals.DS_PDS_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking adding of Session node", async () => {
         createGlobalMocks();
@@ -476,8 +482,10 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         await testTree.addFavorite(testTree.mSessionNodes[1]);
 
-        expect(testTree.mFavorites[0].label).toBe(`[${blockMocks.datasetSessionNode.label}]: ${testTree.mSessionNodes[1].pattern}`);
-        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_SESSION_CONTEXT}${globals.FAV_SUFFIX}`);
+        expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
+        expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
+        expect(testTree.mFavorites[0].children[0].label).toBe(`${testTree.mSessionNodes[1].pattern}`);
+        expect(testTree.mFavorites[0].children[0].contextValue).toBe(`${globals.DS_SESSION_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking attempt to add a duplicate node", async () => {
         createGlobalMocks();
@@ -492,7 +500,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         testTree.addFavorite(node);
         testTree.addFavorite(node);
 
-        expect(testTree.mFavorites.map((entry) => entry.label)).toEqual([`[${blockMocks.datasetSessionNode.label}]: ${node.label}`]);
+        expect(testTree.mFavorites[0].children.map((entry) => entry.label)).toEqual([`${node.label}`]);
     });
     it("Checking attempt to add a member of favorite PDS", async () => {
         createGlobalMocks();
@@ -513,7 +521,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("PDS already in favorites");
     });
 });
-describe("Dataset Tree Unit Tests - Function removeSession", () => {
+describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -540,9 +548,9 @@ describe("Dataset Tree Unit Tests - Function removeSession", () => {
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
         testTree.addFavorite(node);
-        expect(testTree.mFavorites[0].label).toBe(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`);
-        testTree.removeFavorite(testTree.mFavorites[0]);
-        expect(testTree.mFavorites[0]).not.toBeDefined();
+        expect(testTree.mFavorites[0].children[0].label).toBe(`${node.label}`);
+        testTree.removeFavorite(testTree.mFavorites[0].children[0]);
+        expect(testTree.mFavorites[0].children[0]).not.toBeDefined();
     });
 });
 describe("Dataset Tree Unit Tests - Function deleteSession", () => {
