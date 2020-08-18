@@ -20,6 +20,7 @@ import {
 import {
     createDatasetAttributes,
     createDatasetSessionNode,
+    createDatasetFavoritesNode,
     createDatasetTree
 } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -650,7 +651,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const datasetFavoritesNode = createDatasetFavoritesNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView, datasetFavoritesNode);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 
@@ -661,6 +663,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             treeView,
             imperativeProfile,
             datasetSessionNode,
+            datasetFavoritesNode,
             mvsApi,
             profileInstance,
             testDatasetTree
@@ -853,19 +856,25 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode(`[${blockMocks.imperativeProfile.name}]: HLQ.TEST.AFILE`, vscode.TreeItemCollapsibleState.None,
+        // Create nodes for Session section
+        const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
         node.contextValue = globals.DS_PDS_CONTEXT;
         const childNode = new ZoweDatasetNode("MEM", vscode.TreeItemCollapsibleState.None,
             node, null, undefined, undefined, blockMocks.imperativeProfile);
-        const favoriteNode = new ZoweDatasetNode(`[${blockMocks.imperativeProfile.name}]: HLQ.TEST.AFILE`, vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
+        // Create nodes for Favorites section
+        const favProfileNode = new ZoweDatasetNode("testProfile",
+        vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetFavoritesNode, null, globals.FAV_PROFILE_CONTEXT);
+        const favoriteNode = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
+        favProfileNode, null, undefined, undefined, blockMocks.imperativeProfile);
         favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         const favoriteChildNode = new ZoweDatasetNode("MEM", vscode.TreeItemCollapsibleState.None,
             favoriteNode, null, undefined, undefined, blockMocks.imperativeProfile);
+        // Push nodes into respective Session or Favorites sections
         node.children.push(childNode);
         favoriteNode.children.push(favoriteChildNode);
-        blockMocks.testDatasetTree.mFavorites.push(favoriteNode);
+        blockMocks.testDatasetTree.mFavorites.push(favProfileNode);
+        blockMocks.testDatasetTree.mFavorites[0].children.push(favoriteNode);
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node, childNode]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([]);

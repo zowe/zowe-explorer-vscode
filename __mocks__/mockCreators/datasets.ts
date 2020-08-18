@@ -23,7 +23,15 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
     return datasetNode;
 }
 
-export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): any {
+export function createDatasetFavoritesNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
+    const datasetNode = new ZoweDatasetNode("favtest", vscode.TreeItemCollapsibleState.Expanded,
+        null, session, undefined, undefined, profile);
+    datasetNode.contextValue = globals.FAVORITE_CONTEXT;
+
+    return datasetNode;
+}
+
+export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, favoritesNode?: ZoweDatasetNode): any {
     const testDatasetTree = {
         mSessionNodes: [sessionNode],
         mFavorites: [],
@@ -66,7 +74,10 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
     testDatasetTree.getFileHistory.mockImplementation(() => { return testDatasetTree.mFileHistory });
     testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
     testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
-
+    if (!favoritesNode) {
+        return testDatasetTree;
+    }
+    testDatasetTree.mFavorites.push(favoritesNode);
     return testDatasetTree;
 }
 
