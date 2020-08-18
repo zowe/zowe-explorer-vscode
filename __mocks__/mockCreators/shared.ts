@@ -77,7 +77,8 @@ export function createIProfile(): imperative.IProfileLoaded {
         },
         type: "zosmf",
         message: "",
-        failNotFound: false
+        failNotFound: false,
+        validation: true
     };
 }
 
@@ -95,7 +96,8 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
         },
         type: "zosmf",
         message: "",
-        failNotFound: false
+        failNotFound: false,
+        validation: true
     };
 }
 
@@ -113,7 +115,8 @@ export function createValidIProfile(): imperative.IProfileLoaded {
         },
         type: "zosmf",
         message: "",
-        failNotFound: false
+        failNotFound: false,
+        validation: true
     };
 }
 
@@ -130,7 +133,8 @@ export function createAltTypeIProfile(): imperative.IProfileLoaded {
         },
         type: "alternativeType",
         message: "",
-        failNotFound: false
+        failNotFound: false,
+        validation: true
     };
 }
 
