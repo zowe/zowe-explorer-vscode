@@ -21,8 +21,6 @@ import { IZoweTree } from "./api/IZoweTree";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 import { PersistentFilters } from "./PersistentFilters";
-import { ZoweTreeNode } from "./abstract/ZoweTreeNode";
-import { util } from "chai";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -111,7 +109,7 @@ export class Profiles {
                 this.validProfile = ValidProfileEnum.VALID;
                 return profileStatus;
             } else {
-                // return invalid if credetials are not provided
+                // return invalid if credentials are not provided
                 this.validProfile = ValidProfileEnum.INVALID;
                 return profileStatus;
             }
@@ -163,8 +161,6 @@ export class Profiles {
         } else {
             node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
         }
-        // tslint:disable-next-line:no-console
-        console.log(node.contextValue);
         return node;
     }
 

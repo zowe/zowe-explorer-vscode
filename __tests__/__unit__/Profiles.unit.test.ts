@@ -28,6 +28,7 @@ import { Job } from "../../src/job/ZoweJobNode";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject, } from "../../__mocks__/mockCreators/jobs";
 import { IZoweNodeType } from "../../src/api/IZoweTreeNode";
+import { PersistentFilters } from "../../src/PersistentFilters";
 
 jest.mock("vscode");
 jest.mock("child_process");
@@ -1579,6 +1580,55 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         });
         await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
+    });
+});
+describe("Profiles Unit Tests - Function checkProfileValidationSetting", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            imperativeProfile: createIProfile(),
+            profileInstance: null,
+            session: null,
+            mockValidationSetting: null
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that checkProfileValidationSetting returns correct validation when global setting is true", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(PersistentFilters, "getDirectValue", {
+            value: jest.fn(() => {
+                return true;
+            }),
+        });
+
+        const response = await theProfiles.checkProfileValidationSetting(blockMocks.imperativeProfile);
+        expect(response).toEqual(true);
+
+    });
+
+    it("Tests that checkProfileValidationSetting returns correct validation when global setting is false", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(PersistentFilters, "getDirectValue", {
+            value: jest.fn(() => {
+                return false;
+            }),
+        });
+
+        const response = await theProfiles.checkProfileValidationSetting(blockMocks.imperativeProfile);
+        expect(response).toEqual(false);
+
     });
 });
 
