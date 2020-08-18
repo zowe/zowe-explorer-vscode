@@ -979,10 +979,13 @@ describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const datasetFavoritesNode = createDatasetFavoritesNode(session, imperativeProfile);
 
         return {
             session,
+            imperativeProfile,
             datasetSessionNode,
+            datasetFavoritesNode,
             treeView
         };
     }
@@ -995,8 +998,10 @@ describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
-        const favoriteNode = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`,
-            vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
+        const favProfileNode = new ZoweDatasetNode(blockMocks.imperativeProfile.name,
+            vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetFavoritesNode, null, globals.FAV_PROFILE_CONTEXT);
+        const favoriteNode = new ZoweDatasetNode(`${node.label}`,
+            vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, null);
         favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         testTree.mSessionNodes[1].children.push(node);
 
