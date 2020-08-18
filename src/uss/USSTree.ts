@@ -513,7 +513,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return;
             }
             // Uses loaded profile to create a session with the USS API
-            const session = await Profiles.getInstance().getValidSession(profileLoaded.profile, profileLoaded.name);
+            const session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name);
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profileLoaded.name);

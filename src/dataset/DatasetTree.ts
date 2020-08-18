@@ -734,7 +734,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return;
             }
             // Uses loaded profile to create a session with the MVS API
-            const session = await Profiles.getInstance().getValidSession(profileLoaded.profile, profileLoaded.name);
+            const session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name);
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
             const node = new ZoweDatasetNode(
                 profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileLoaded);

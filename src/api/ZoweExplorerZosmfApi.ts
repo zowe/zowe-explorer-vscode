@@ -40,7 +40,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public async getSession(profile?: IProfileLoaded): Promise<Session> {
         if (!this.session) {
             const a = await Profiles.getInstance();
-            this.session = await a.getValidSession((profile||this.profile).profile, (profile||this.profile).name);
+            this.session = await a.getValidSession((profile||this.profile), (profile||this.profile).name);
         }
         return this.session;
     }
@@ -48,7 +48,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public async getStatus(validateProfile?: IProfileLoaded, profileType?: string): Promise<string> {
         // This API call is specific for z/OSMF profiles
         if (profileType === "zosmf") {
-            const validateSession = await (Profiles.getInstance().getValidSession(validateProfile.profile, validateProfile.name));
+            const validateSession = await (Profiles.getInstance().getValidSession(validateProfile, validateProfile.name));
             let sessionStatus;
             if (validateSession) { sessionStatus = await zowe.CheckStatus.getZosmfInfo(validateSession); }
 

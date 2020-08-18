@@ -1121,7 +1121,7 @@
           "default": {
             "folderPath": ""
           },
-          "description": "Zowe-Temp-Folder-Loacation",
+          "description": "Zowe-Temp-Folder-Location",
           "scope": "window"
         },
         "Zowe Security: Credential Key": {
@@ -1255,7 +1255,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/cli": "^6.18.0",
+    "@zowe/cli": "^6.21.1",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

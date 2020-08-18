@@ -49,13 +49,13 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
                 vscode.window.showErrorMessage(errMsg);
                 const profileInstance = Profiles.getInstance();
                 const profileLoaded = profileInstance.loadNamedProfile(label.trim());
-                profileInstance.getValidSession(profileLoaded.profile, label.trim(), null, true);
+                profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
             } else {
                 vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
                         const profileInstance = Profiles.getInstance();
                         const profileLoaded = profileInstance.loadNamedProfile(label.trim());
-                        await profileInstance.getValidSession(profileLoaded.profile, label.trim(), null, true);
+                        await profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
                     }
                 });
             }
