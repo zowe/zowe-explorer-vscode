@@ -1743,6 +1743,7 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
             validProfile: createValidIProfile(),
             profileInstance: null,
         };
+        newMocks.validProfile.validation = true;
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
@@ -1755,7 +1756,6 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        blockMocks.validProfile.validation = true;
         Object.defineProperty(CheckStatus, "getZosmfInfo", {
             value: jest.fn(() => {
                 return undefined;
