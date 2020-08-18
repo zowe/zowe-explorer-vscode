@@ -536,12 +536,15 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const parent = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT",
+        const parent = new ZoweDatasetNode("HLQ.TEST.DELETE.PARENT",
             vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
-        parent.contextValue = globals.FAVORITE_CONTEXT;
-        const child = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, parent, null);
-        blockMocks.datasetSessionNode.children.push(parent, child);
-        blockMocks.testDatasetTree.mFavorites.push(child);
+        parent.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const child = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, parent, null, globals.DS_DS_CONTEXT);
+        blockMocks.datasetSessionNode.children.push(child);
+        blockMocks.testDatasetTree.mFavorites.push(parent);
+        // Simulate context value update when PS is added as a favorite
+        child.contextValue = globals.DS_FAV_CONTEXT;
+        blockMocks.testDatasetTree.mFavorites[0].children.push(child);
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
