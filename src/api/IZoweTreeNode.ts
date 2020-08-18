@@ -209,6 +209,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     renameUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
     /**
+     * Refreshes node and reopens it.
+     * @param hasClosedInstance
+     */
+    refreshAndReopen?(hasClosedInstance?: boolean);
+    /**
      * Adds a search node to the USS favorites list
      *
      * @param {USSTree} ussFileProvider

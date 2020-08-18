@@ -1,9 +1,23 @@
+codecov:
+  notify:
+    require_ci_to_pass: yes
 coverage:
+  precision: 2
+  round: up
+  range: "50...100"
+
   status:
-    patch:
-      default:
-        target: 90
     project:
       default:
-        target: 90
-
+        against: auto
+        target: 90%
+        threshold: 1%
+    patch:
+      default:
+        against: auto
+        target: auto
+        threshold: 1%
+        if_no_uploads: success
+        if_not_found: success
+        if_ci_failed: error
+    changes: no

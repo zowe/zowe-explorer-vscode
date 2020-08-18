@@ -20,7 +20,10 @@ import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import { getZoweDir } from "../utils";
 import * as nls from "vscode-nls";
-const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
+
+// Set up localization
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const LINKS_FOLDER = "profile_links";
 const FILE_SUFFIX = ".yaml";

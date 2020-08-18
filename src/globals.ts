@@ -12,6 +12,7 @@
 import * as path from "path";
 import { Logger } from "@zowe/imperative";
 import * as vscode from "vscode";
+import * as loggerConfig from "../log4jsconfig.json";
 
 // Globals
 export let ZOWETEMPFOLDER;
@@ -20,6 +21,7 @@ export let USS_DIR;
 export let DS_DIR;
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: Logger;
+export const COMMAND_COUNT = 77;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
@@ -42,9 +44,21 @@ export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
 export const VSAM_CONTEXT = "vsam";
+export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
+export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
 export const ICON_STATE_OPEN = "open";
 export const ICON_STATE_CLOSED = "closed";
 export const THEIA = "Eclipse Theia";
+export const ROOTPATH = path.join(__dirname, "..", "..");
+
+/**
+ * The types of persistence schemas wich are available in settings.json
+ */
+export enum PersistenceSchemaEnum {
+    Dataset = "Zowe-DS-Persistent",
+    USS = "Zowe-USS-Persistent",
+    Job = "Zowe-Jobs-Persistent"
+}
 
 /**
  * Defines all global variables
@@ -70,10 +84,10 @@ export function defineGlobals(tempPath: string | undefined) {
  * @param context The extension context
  */
 export function initLogger(context: vscode.ExtensionContext) {
-    const loggerConfig = require(path.join(context.extensionPath, "log4jsconfig.json"));
-    loggerConfig.log4jsConfig.appenders.default.filename = path.join(context.extensionPath, "logs", "imperative.log");
-    loggerConfig.log4jsConfig.appenders.imperative.filename = path.join(context.extensionPath, "logs", "imperative.log");
-    loggerConfig.log4jsConfig.appenders.app.filename = path.join(context.extensionPath, "logs", "zowe.log");
+    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)){
+        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
+            context.extensionPath, loggerConfig.log4jsConfig.appenders[appenderName].filename);
+    }
     Logger.initLogger(loggerConfig);
     this.LOG = Logger.getAppLogger();
 }

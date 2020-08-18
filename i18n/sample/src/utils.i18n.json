@@ -1,4 +1,3 @@
 {
-    "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for ",
-    "errorHandling.invalid.credentials2": " are valid or this may lead to a lock-out."
+    "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out."
 }

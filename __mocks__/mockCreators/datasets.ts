@@ -13,6 +13,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import * as globals from "../../src/globals";
+import { removeNodeFromArray } from "./shared";
 
 export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
     const datasetNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded,
@@ -24,24 +25,29 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
 
 export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): any {
     const testDatasetTree = {
-        mSessionNodes: [],
+        mSessionNodes: [sessionNode],
         mFavorites: [],
+        mFileHistory: [],
         treeView,
         addSession: jest.fn(),
-        addHistory: jest.fn(),
-        addRecall: jest.fn(),
-        getHistory: jest.fn(),
-        getRecall: jest.fn(),
+        addSearchHistory: jest.fn(),
+        addFileHistory: jest.fn(),
+        addFavorite: jest.fn(),
+        getSearchHistory: jest.fn(),
+        getFileHistory: jest.fn(),
         refresh: jest.fn(),
         refreshElement: jest.fn(),
         checkCurrentProfile: jest.fn(),
         getChildren: jest.fn(),
+        getTreeType: jest.fn().mockImplementation(() => globals.PersistenceSchemaEnum.Dataset),
+        createZoweSession: jest.fn(),
         createFilterString: jest.fn(),
         setItem: jest.fn(),
         getTreeView: jest.fn().mockImplementation(() => treeView),
         searchInLoadedItems: jest.fn(),
         removeFavorite: jest.fn(),
-        removeRecall: jest.fn(),
+        deleteSession: jest.fn(),
+        removeFileHistory: jest.fn(),
         enterPattern: jest.fn(),
         initializeFavorites: jest.fn(),
         openItemFromPath: jest.fn(),
@@ -54,8 +60,12 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any): 
         getSession: jest.fn(),
         getProfiles: jest.fn()
     };
-    testDatasetTree.mSessionNodes = [];
-    testDatasetTree.mSessionNodes.push(sessionNode);
+    testDatasetTree.addFavorite.mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite));
+    testDatasetTree.addFileHistory.mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile));
+    testDatasetTree.removeFileHistory.mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1));
+    testDatasetTree.getFileHistory.mockImplementation(() => { return testDatasetTree.mFileHistory });
+    testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
+    testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
 
     return testDatasetTree;
 }
