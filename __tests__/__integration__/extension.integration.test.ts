@@ -823,48 +823,50 @@ describe("Extension Integration Tests", () => {
             await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const testTree3 = await createDatasetTree(log);
-            const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
-            `[${profileName}]: ${pattern}.EXT.PS`,
-            `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
-            `[${profileName}]: ${pattern}.EXT`];
-            expect(testTree3.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
+            const initializedFavLabels = [`${pattern}.EXT.PDS`,
+            `${pattern}.EXT.PS`,
+            `${pattern}.EXT.SAMPLE.PDS`,
+            `${pattern}.EXT`];
+            expect(testTree3.mFavorites[0].children.map((node) => node.label)).to.deep.equal(initializedFavLabels);
         }).timeout(TIMEOUT);
 
-        it("should show an error message when provided an invalid Favorites list", async () => {
+        it("should log a warn message when provided an invalid Favorites list", async () => {
             const log = Logger.getAppLogger();
             const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
-
-            const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
+            const logWarnStub = sandbox.spy(log, "warn");
             await createDatasetTree(log);
-            const gotCalled = showErrorStub.calledWith("Favorites file corrupted: " + corruptedFavorite);
-            expect(gotCalled).to.equal(true);
+            expect(logWarnStub.gotCalledOnce);
         }).timeout(TIMEOUT);
 
-        it("should show an error message and still load other valid-profile favorites when given a favorite with invalid profile name", async () => {
+        it("should still create favorite nodes when given a favorite with invalid profile name", async () => {
             const log = Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
-            // Then, update
+            // Then, update favorites in settings
             const favorites = [`[${profileName}]: ${pattern}.EXT.PDS{pds}`,
             `[${profileName}]: ${pattern}.EXT.PS{ds}`,
-            `['badProfileName']: ${pattern}.EXT.PS{ds}`,
+            `[badProfileName]: ${pattern}.BAD.PROFILE.EXT.PS{ds}`,
             `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS{pds}`,
             `[${profileName}]: ${pattern}.EXT{session}`];
             await vscode.workspace.getConfiguration().update("Zowe-DS-Persistent",
                 { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
-            const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
             await testTree.initializeFavorites(log);
-            const favoritesArray = [`[${profileName}]: ${pattern}.EXT.PDS`,
-            `[${profileName}]: ${pattern}.EXT.PS`,
-            `[${profileName}]: ${pattern}.EXT.SAMPLE.PDS`,
-            `[${profileName}]: ${pattern}.EXT`];
-            const gotCalledOnce = showErrorStub.calledOnce;
-            expect(testTree.mFavorites.map((node) => node.label)).to.deep.equal(favoritesArray);
-            expect(gotCalledOnce).to.equal(true);
+            const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
+            const goodProfileFavLabels = [
+            `${pattern}.EXT.PDS`,
+            `${pattern}.EXT.PS`,
+            `${pattern}.EXT.SAMPLE.PDS`,
+            `${pattern}.EXT`];
+            const badProfileFavLabels = [`${pattern}.BAD.PROFILE.EXT.PS`];
+            // Profile nodes for both valid and invalid profiles should be created in mFavorites. (Error checking happens on expand.)
+            expect(testTree.mFavorites.map((favProfileNode) => favProfileNode.label)).to.deep.equal(initializedFavProfileLabels);
+            // Favorite item nodes should be created for favorite profile nodes of both valid and valid profiles.
+            expect(testTree.mFavorites[0].children.map((node) => node.label)).to.deep.equal(goodProfileFavLabels);
+            expect(testTree.mFavorites[1].children.map((node) => node.label)).to.deep.equal(badProfileFavLabels);
         }).timeout(TIMEOUT);
     });
 });
