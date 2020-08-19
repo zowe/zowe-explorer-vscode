@@ -40,6 +40,8 @@
     "pretty": "yarn workspaces run pretty",
     "build": "yarn workspaces run build",
     "test": "yarn workspaces run test",
-    "package": "yarn workspaces run package"
+    "package": "yarn workspaces run package",
+    "pretest:integration": "ts-node ./scripts/create-env.ts",
+    "posttest:integration": "ts-node ./scripts/clean-env.ts"
   }
 }
