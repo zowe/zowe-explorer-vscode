@@ -1700,6 +1700,21 @@ describe("Profiles Unit Tests - Function disableValidation", () => {
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
+
+    it("Tests that disableValidation returns undefined if already disabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        // tslint:disable-next-line:max-line-length
+        const response = await theProfiles.disableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
+        expect(response).toEqual(undefined);
+    });
 });
 
 describe("Profiles Unit Tests - Function enableValidation", () => {
@@ -1754,6 +1769,21 @@ describe("Profiles Unit Tests - Function enableValidation", () => {
         const response = await theProfiles.enableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
         expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
         expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+
+    it("Tests that enableValidation returns undefined if already enabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        // tslint:disable-next-line:max-line-length
+        const response = await theProfiles.enableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
+        expect(response).toEqual(undefined);
     });
 });
 
