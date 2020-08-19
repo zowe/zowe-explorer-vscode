@@ -516,7 +516,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async searchInLoadedItems(nodeToMatch?: string): Promise<IZoweDatasetTreeNode[]> {
+    public async getAllLoadedItems() {
         this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedItems: IZoweDatasetTreeNode[] = [];
         const sessions = await this.getChildren();
@@ -527,14 +527,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (session.children) {
                     for (const node of session.children) {
                         if (node.contextValue !== globals.INFORMATION_CONTEXT) {
-                            if (!nodeToMatch || node.label === nodeToMatch) {
-                                loadedItems.push(node);
-                            }
+                            loadedItems.push(node);
                             for (const member of node.children) {
                                 if (member.contextValue !== globals.INFORMATION_CONTEXT) {
-                                    if (!nodeToMatch || node.label === nodeToMatch) {
-                                        loadedItems.push(member);
-                                    }
+                                    loadedItems.push(member);
                                 }
                             }
                         }
