@@ -27,6 +27,7 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) wiki
 - [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
 - [ ] PR Description is included
+- [ ] gif or screenshot is included if visual changes are made
 - [ ] `npm run vscode:prepublish` has been executed
 - [ ] All checks have passed (DCO, Jenkins and Code Coverage)
 - [ ] I have added unit test and it is passing

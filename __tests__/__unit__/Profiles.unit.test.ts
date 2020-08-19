@@ -1628,3 +1628,30 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
     });
 });
 
+describe("Profiles Unit Tests - Function refresh", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            invalidProfile: createInvalidIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null,
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that Profile refresh empties profilesForValidation[]", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesForValidation.push({status: "active", name: blockMocks.validProfile.name});
+        await theProfiles.refresh();
+        expect(theProfiles.profilesForValidation.length).toBe(0);
+    });
+});
+

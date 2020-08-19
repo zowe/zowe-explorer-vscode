@@ -117,6 +117,23 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     };
 }
 
+export function createAltTypeIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "altTypeProfile",
+        profile: {
+            type: "alternativeType",
+            host: "test",
+            port: 999,
+            user: "test",
+            password: "test",
+            rejectUnauthorized: false,
+        },
+        type: "alternativeType",
+        message: "",
+        failNotFound: false
+    };
+}
+
 export function createTreeView(): vscode.TreeView<ZoweTreeProvider> {
     return {
         reveal: jest.fn(),

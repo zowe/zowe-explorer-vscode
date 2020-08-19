@@ -187,6 +187,9 @@ export class Profiles {
                 for (const element of profileManager.configurations) { this.allTypes.push(element.type); }
             }
         }
+        while (this.profilesForValidation.length > 0) {
+            this.profilesForValidation.pop();
+        }
     }
 
     /**
