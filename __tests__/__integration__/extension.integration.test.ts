@@ -398,10 +398,10 @@ describe("Extension Integration Tests", () => {
             const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
                 session, FAV_PROFILE_CONTEXT, undefined, testProfile);
             testTree.mFavorites.push(favProfileNode);
-        })
+        });
         afterEach(() => {
             testTree.mFavorites = [];
-        })
+        });
         describe("Success Scenarios", () => {
             describe("Sequential > Sequential", () => {
                 const fromDataSetName = `${pattern}.COPY.FROM.SET`;
