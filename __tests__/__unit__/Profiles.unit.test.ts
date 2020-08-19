@@ -11,7 +11,7 @@
 
 import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
          createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
-         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+         createPersistentConfig, createInvalidIProfile, createValidIProfile, createAltTypeIProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
@@ -1013,6 +1013,7 @@ describe("Profiles Unit Tests - Function editSession", () => {
 });
 
 describe("Profiles Unit Tests - Function deleteProfile", () => {
+
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             log: Logger.getAppLogger(),
@@ -1632,6 +1633,131 @@ describe("Profiles Unit Tests - Function checkProfileValidationSetting", () => {
     });
 });
 
+describe("Profiles Unit Tests - Function disableValidation", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            ussSessionNode: null,
+            iJob: createIJobObject(),
+            profiles: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockDisableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn()
+        };
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.imperativeProfile, newMocks.treeView);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile),
+                    disableValidationContext: newMocks.mockDisableValidationContext.mockReturnValue(newMocks.datasetSessionNode)
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that disableValidation returns correct node context", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        // tslint:disable-next-line:max-line-length
+        const response = await theProfiles.disableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, blockMocks.datasetSessionNode);
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+        expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
+    });
+
+    it("Tests that disableValidation returns correct node context if already enabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        // tslint:disable-next-line:max-line-length
+        const response = await theProfiles.disableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+        expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}true`);
+    });
+});
+
+describe("Profiles Unit Tests - Function enableValidation", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            testDatasetTree: null,
+            testUSSTree: null,
+            testJobTree: null,
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            ussSessionNode: null,
+            iJob: createIJobObject(),
+            profiles: null,
+            imperativeProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn()
+        };
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testJobTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.imperativeProfile, newMocks.treeView);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile),
+                    enableValidationContext: newMocks.mockEnableValidationContext.mockReturnValue(newMocks.datasetSessionNode)
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that enableValidation returns correct node context", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+
+        // tslint:disable-next-line:max-line-length
+        const response = await theProfiles.enableValidation(blockMocks.testDatasetTree, ussTree, blockMocks.testJobTree, resultNode);
+        expect(response.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
+        expect(response.contextValue).not.toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+});
+
+
 describe("Profiles Unit Tests - Function disableValidationContext", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -1743,7 +1869,6 @@ describe("Profiles Unit Tests - Function validateProfiles", () => {
             validProfile: createValidIProfile(),
             profileInstance: null,
         };
-        newMocks.validProfile.validation = true;
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
         newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
