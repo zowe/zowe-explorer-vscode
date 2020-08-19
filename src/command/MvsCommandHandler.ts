@@ -94,7 +94,7 @@ export class MvsCommandHandler {
         }
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            session = await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name);
+            session = await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name, null, true);
             let command1: string = command;
             if (!command) {
                 command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");

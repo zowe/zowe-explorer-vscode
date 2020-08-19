@@ -89,35 +89,30 @@ export class Profiles {
     }
 
     public async getValidSession(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfile, prompt?: boolean) {
-        // Check if any baseProfile can be found
+        // Retrieve baseProfile
         if (!baseProfile) { baseProfile = this.getDefaultProfile("base").profile; }
 
-        // Prompt for missing details, if necessary
-        const schemaArray = [];
-        // if (prompt) {
-        //     // Select for prompting only fields which are not defined
-        //     if (!baseProfile || (baseProfile && !baseProfile.tokenValue)) {
-        //         if (!serviceProfile.user && (baseProfile && !baseProfile.user)) { schemaArray.push("user"); }
-        //         if (!serviceProfile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
-        //     }
-        //     if (!serviceProfile.host && (baseProfile && !baseProfile.host)) {
-        //         schemaArray.push("host");
-        //         if (!serviceProfile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
-        //         if (!serviceProfile.basePath) { schemaArray.push("basePath"); }
-        //     }
-        // }
+        // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
         if (serviceProfile.profile.user) {
-            // const newDetails = await this.collectProfileDetails(profileName, null, schemaArray);
-            // for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
-            // User exists in serviceProfile. serviceProfile has precedence over baseProfile so use serviceProfile to login
-            // try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile); }
-            // catch (error) { await errorHandling(error.message); }
-        } else if (baseProfile) {
-            // const newDetails = await this.collectProfileDetails(profileName, null, schemaArray);
-            // for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
+            // Select for prompting only fields which are not defined
+            const schemaArray = [];
+            if (!baseProfile || (baseProfile && !baseProfile.tokenValue)) {
+                if (!serviceProfile.profile.user && (baseProfile && !baseProfile.user)) { schemaArray.push("user"); }
+                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
+            }
+            if (!serviceProfile.profile.host && (baseProfile && !baseProfile.host)) {
+                schemaArray.push("host");
+                if (!serviceProfile.profile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
+                if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
+            }
 
+            const newDetails = await this.collectProfileDetails(schemaArray);
+            for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
+            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile); }
+            catch (error) { await errorHandling(error.message); }
+        } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
-            const sessCfg = {
+            let sessCfg = {
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized : baseProfile.rejectUnauthorized,
                 basePath: serviceProfile.profile.basePath,
                 hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.host,
@@ -133,12 +128,17 @@ export class Profiles {
 
             const profileType = serviceProfile.type;
             const schema = JSON.stringify(await this.getSchema(profileType));
-            const profileDetails = [schema, profileType, profileName];
 
             try {
                 let connectableSessCfg: ISession;
-                connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
-                                                                                                { requestToken: false, doPrompting: true, getValuesBack: this.collectProfileDetails(profileDetails) });
+                if (prompt) {
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                                                                                                    { requestToken: false, doPrompting: prompt, getValuesBack: this.collectProfileDetails });
+                } else {
+                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+                                                                                                    { requestToken: false, doPrompting: false });
+                }
+
                 return new Session(connectableSessCfg);
             } catch (error) {
                 await errorHandling(error.message); }
@@ -286,7 +286,9 @@ export class Profiles {
             catch (error) { await errorHandling(error, chosenProfile, error.message); }
             if (newprofile) {
                 try { await Profiles.getInstance().refresh(); }
-                catch (error) { await errorHandling(error, newprofile, error.message); }
+                catch (error) {
+                    await errorHandling(error, newprofile, error.message);
+                }
                 await zoweFileProvider.addSession(newprofile);
                 await zoweFileProvider.refresh();
             }
@@ -299,19 +301,19 @@ export class Profiles {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
-        const schema = JSON.stringify(await this.getSchema(profileLoaded.type));
-        const profileDetails: Array<string> = [schema, profileLoaded.type, profileName];
-        const updSchemaValues = await this.collectProfileDetails(profileDetails);
+        const updSchemaValues = await this.collectProfileDetails();
         updSchemaValues.name = profileName;
 
         try {
-            const updSession = await Profiles.getInstance().getValidSession(updSchemaValues, profileName);
+            const updSession = await Profiles.getInstance().getValidSession(updSchemaValues, profileName, null, true);
             updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));
 
             return updSchemaValues;
-        } catch (error) { await errorHandling(error.message); }
+        } catch (error) {
+            await errorHandling(error.message);
+        }
     }
 
     public async getProfileType(): Promise<string> {
@@ -349,11 +351,8 @@ export class Profiles {
                 "Profile name was not supplied. Operation Cancelled"));
             return undefined;
         }
-        
-        const profileType = requestedProfileType ? requestedProfileType : await this.getProfileType();
-        const schema = JSON.stringify(await this.getSchema(profileType));
-        const profileDetails: Array<string> = [schema, profileType, profileName];
-        const newProfileDetails = await this.collectProfileDetails(profileDetails);
+
+        const newProfileDetails = await this.collectProfileDetails();
         newProfileDetails.name = newProfileName;
 
         try {
@@ -367,7 +366,9 @@ export class Profiles {
             await this.saveProfile(newProfileDetails, newProfileDetails.name, newProfileDetails.type);
             vscode.window.showInformationMessage("Profile " + newProfileDetails.name + " was created.");
             return newProfileDetails.name;
-        } catch (error) { await errorHandling(error.message); }
+        } catch (error) {
+            await errorHandling(error.message);
+        }
     }
 
     public async collectProfileDetails(detailsToGet?: string[]): Promise<any> {
@@ -376,14 +377,11 @@ export class Profiles {
         let newUser: string;
         let newPass: string;
         let newRU: boolean;
-
-        const profileName = detailsToGet.pop();
-        const profileType = detailsToGet.pop();
-        const schema = JSON.parse(detailsToGet.pop());
-        if (detailsToGet.length === 3) { detailsToGet = Object.keys(schema); }
-
         const schemaValues: any = {};
-        schemaValues.name = profileName;
+
+        const profileType = await Profiles.getInstance().getProfileType();
+        const schema = await Profiles.getInstance().getSchema(profileType);
+        if (!detailsToGet) { detailsToGet = Object.keys(schema); }
         schemaValues.type = profileType;
 
         // Go through array of schema for input values
@@ -403,11 +401,10 @@ export class Profiles {
                             };
 
                             // Check that the URL is valid
-                            let url: URL;
-                            try { url = new URL(newUrl); }
+                            try { newUrl = new URL(value); }
                             catch (error) { return localize("createNewConnection.invalidzosURL", "Please enter a valid host URL in the format 'https://url:port'."); }
                     
-                            if (newUrl === "https://") {
+                            if (value === "https://") {
                                 // User did not enter a host/port
                                 validationResult.host = "";
                                 validationResult.port = 0;
@@ -415,8 +412,8 @@ export class Profiles {
                                 newUrl = validationResult;
                             } else {
                                 // User would like to store host/port
-                                validationResult.port = Number(url.port);
-                                validationResult.host = url.hostname;
+                                validationResult.port = Number(newUrl.port);
+                                validationResult.host = newUrl.hostname;
                                 validationResult.valid = true;
                                 newUrl = validationResult;
                             }
@@ -425,7 +422,7 @@ export class Profiles {
                         }
                     }
 
-                    vscode.window.showInputBox(hostOptions);
+                    await vscode.window.showInputBox(hostOptions);
 
                     schemaValues[profileDetail] = newUrl.host;
                     if (newUrl.port !== 0) { schemaValues.port = newUrl.port; }
@@ -468,12 +465,12 @@ export class Profiles {
                         break;
                     }
                     break;
-                case "user" :
+                case "user":
                     const userOptions = {
                         placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "Optional: User Name"),
                         prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection."),
                         ignoreFocusOut: true,
-                        validateInput: (value) => { 
+                        validateInput: (value) => {
                             if (value === undefined || value.trim() === undefined) {
                                 return localize("createNewConnection.invalidUser", "Please enter a valid username");
                             } else { return null; }
