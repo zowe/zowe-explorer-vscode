@@ -1066,7 +1066,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const datasetFavoritesNode = createDatasetFavoritesNode(session, imperativeProfile)
+        const datasetFavoritesNode = createDatasetFavoritesNode(session, imperativeProfile);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
 

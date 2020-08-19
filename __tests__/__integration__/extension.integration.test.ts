@@ -31,7 +31,7 @@ import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import { IZoweTreeNode } from "../../src/api/IZoweTreeNode";
 import { USS_DIR, DS_SESSION_CONTEXT, DS_DIR, ZOWETEMPFOLDER, FAV_SUFFIX, DS_PDS_CONTEXT,
-    DS_MEMBER_CONTEXT, DS_DS_CONTEXT, USS_SESSION_CONTEXT, FAVORITE_CONTEXT } from "../../src/globals";
+    DS_MEMBER_CONTEXT, DS_DS_CONTEXT, USS_SESSION_CONTEXT, FAVORITE_CONTEXT, FAV_PROFILE_CONTEXT } from "../../src/globals";
 
 const TIMEOUT = 45000;
 declare var it: Mocha.ITestDefinition;
@@ -394,6 +394,14 @@ describe("Extension Integration Tests", () => {
     });
 
     describe("Copying data sets", () => {
+        beforeEach(() => {
+            const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+            testTree.mFavorites.push(favProfileNode);
+        })
+        afterEach(() => {
+            testTree.mFavorites = [];
+        })
         describe("Success Scenarios", () => {
             describe("Sequential > Sequential", () => {
                 const fromDataSetName = `${pattern}.COPY.FROM.SET`;
