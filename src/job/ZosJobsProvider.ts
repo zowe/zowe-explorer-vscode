@@ -212,8 +212,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
                 let favJob: Job;
                 if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")).startsWith(globals.JOBS_JOB_CONTEXT)) {
-                    favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
-                    (await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name, null, false)), new JobDetail(nodeName), zosmfProfile);
+                    favJob = new Job(line.substring(0, line.indexOf("{")),
+                                     vscode.TreeItemCollapsibleState.Collapsed,
+                                     this.mFavoriteSession,
+                                     (await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name, null, false)),
+                                     new JobDetail(nodeName),
+                                     zosmfProfile);
                     favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
                     favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
                 } else { // for search

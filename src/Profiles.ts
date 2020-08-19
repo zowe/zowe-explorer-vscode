@@ -38,7 +38,6 @@ interface IProfileValidation {
     name: string;
 }
 
-let InputBoxOptions: vscode.InputBoxOptions;
 export enum ValidProfileEnum {
     VALID = 0,
     INVALID = -1
@@ -94,26 +93,27 @@ export class Profiles {
 
         // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
         if (serviceProfile.profile.user) {
-            // Select for prompting only fields which are not defined
-            const schemaArray = [];
-            if (!baseProfile || (baseProfile && !baseProfile.tokenValue)) {
-                if (!serviceProfile.profile.user && (baseProfile && !baseProfile.user)) { schemaArray.push("user"); }
+            if (prompt) {
+                // Select for prompting only fields which are not defined
+                const schemaArray = [];
                 if (!serviceProfile.profile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
-            }
-            if (!serviceProfile.profile.host && (baseProfile && !baseProfile.host)) {
-                schemaArray.push("host");
-                if (!serviceProfile.profile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
-                if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
-            }
+                if (!serviceProfile.profile.host && (baseProfile && !baseProfile.host)) {
+                    schemaArray.push("host");
+                    if (!serviceProfile.profile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
+                    if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
+                }
 
-            const newDetails = await this.collectProfileDetails(schemaArray);
-            for (const detail of schemaArray) { serviceProfile[detail] = newDetails[detail]; }
-            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile); }
+                const newDetails = await this.collectProfileDetails(schemaArray);
+                // if (newDetails.indexOf("host")) { serviceProfile.profile.hostname = newDetails[newDetails.indexOf("host")] }
+                for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
+            }
+            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
             catch (error) { await errorHandling(error.message); }
         } else if (baseProfile) {
             // baseProfile exists, so APIML login is possible
-            let sessCfg = {
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized : baseProfile.rejectUnauthorized,
+            const sessCfg = {
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized :
+                                                                                baseProfile.rejectUnauthorized,
                 basePath: serviceProfile.profile.basePath,
                 hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.host,
                 port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.port,
@@ -126,14 +126,13 @@ export class Profiles {
                 tokenValue: baseProfile.tokenValue
             };
 
-            const profileType = serviceProfile.type;
-            const schema = JSON.stringify(await this.getSchema(profileType));
-
             try {
                 let connectableSessCfg: ISession;
                 if (prompt) {
                     connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
-                                                                                                    { requestToken: false, doPrompting: prompt, getValuesBack: this.collectProfileDetails });
+                                                                                                    { requestToken: false,
+                                                                                                      doPrompting: prompt,
+                                                                                                      getValuesBack: this.collectProfileDetails });
                 } else {
                     connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
                                                                                                     { requestToken: false, doPrompting: false });
@@ -391,7 +390,7 @@ export class Profiles {
         for (const profileDetail of detailsToGet) {
             switch (profileDetail) {
                 case "host" :
-                    let hostOptions: vscode.InputBoxOptions = {
+                    const hostOptions: vscode.InputBoxOptions = {
                         ignoreFocusOut: true,
                         placeHolder: localize("createNewConnection.option.prompt.url.placeholder", "Optional: https://url:port"),
                         prompt: localize("createNewConnection.option.prompt.url", "Enter a z/OS URL in the format 'https://url:port'."),
@@ -406,7 +405,7 @@ export class Profiles {
                             // Check that the URL is valid
                             try { newUrl = new URL(value); }
                             catch (error) { return localize("createNewConnection.invalidzosURL", "Please enter a valid host URL in the format 'https://url:port'."); }
-                    
+
                             if (value === "https://") {
                                 // User did not enter a host/port
                                 validationResult.host = "";
@@ -423,7 +422,7 @@ export class Profiles {
 
                             return null;
                         }
-                    }
+                    };
 
                     await vscode.window.showInputBox(hostOptions);
 
@@ -434,12 +433,12 @@ export class Profiles {
                     if (schemaValues[profileDetail] === undefined) {
                         let portOptions: vscode.InputBoxOptions = {
                             ignoreFocusOut: true,
-                            validateInput: (value) => { 
+                            validateInput: (value) => {
                                 if (Number.isNaN(Number(value))) {
                                     return localize("createNewConnection.invalidPort", "Please enter a valid port number");
                                 } else { return null; }
                             }
-                        }
+                        };
 
                         // Use as default value the port number from the profile type's default schema
                         // (default is defined for each profile type in ...node_modules\@zowe\cli\lib\imperative.js)
@@ -489,7 +488,7 @@ export class Profiles {
                         prompt: localize("createNewConnection.option.prompt.password", "Enter the password for the connection."),
                         password: true,
                         ignoreFocusOut: true,
-                        validateInput: (value) => { 
+                        validateInput: (value) => {
                             if (value === undefined || value.trim() === undefined) {
                                 return localize("createNewConnection.invalidUser", "Please enter a valid password");
                             } else { return null; }
@@ -509,7 +508,7 @@ export class Profiles {
                                     "False - Accept connections with self-signed certificates"];
 
                     const chosenRU = await vscode.window.showQuickPick(ruOptions, quickPickOptions);
-            
+
                     if (chosenRU === ruOptions[0]) { newRU = true; }
                     else if (chosenRU === ruOptions[1]) { newRU = false; }
                     else {
@@ -580,7 +579,7 @@ export class Profiles {
                             }
                             break;
                         case "boolean" :
-                            let isTrue: boolean;
+                            let boolVal: boolean;
                             const selectBoolean = ["True", "False"];
                             const booleanOptions: vscode.QuickPickOptions = {
                                 placeHolder: schema[profileDetail].optionDefinition.description.toString(),
@@ -590,15 +589,15 @@ export class Profiles {
 
                             const chosenValue = await vscode.window.showQuickPick(selectBoolean, booleanOptions);
 
-                            if (chosenValue === selectBoolean[0]) { isTrue = true; }
-                            else if (chosenValue === selectBoolean[1]) { isTrue = false; }
-                            else { isTrue = undefined; }
+                            if (chosenValue === selectBoolean[0]) { boolVal = true; }
+                            else if (chosenValue === selectBoolean[1]) { boolVal = false; }
+                            else { boolVal = undefined; }
 
-                            if (isTrue === undefined) {
+                            if (boolVal === undefined) {
                                 vscode.window.showInformationMessage(localize("createNewConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             } else {
-                                schemaValues[profileDetail] = isTrue;
+                                schemaValues[profileDetail] = boolVal;
                                 break;
                             }
                         default :

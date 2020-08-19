@@ -1638,7 +1638,7 @@ describe("Profiles Unit Tests - Function refresh", () => {
             profileInstance: null,
         };
         newMocks.profiles = await Profiles.createInstance(newMocks.log);
-        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, createBasicZosmfSession(newMocks.validProfile));
         globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
 
         return newMocks;
