@@ -24,7 +24,7 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
 }
 
 export function createDatasetFavoritesNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const datasetNode = new ZoweDatasetNode("favtest", vscode.TreeItemCollapsibleState.Expanded,
+    const datasetNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded,
         null, session, undefined, undefined, profile);
     datasetNode.contextValue = globals.FAVORITE_CONTEXT;
 
@@ -77,7 +77,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
     if (!favoritesNode) {
         return testDatasetTree;
     }
-    testDatasetTree.mFavorites.push(favoritesNode);
+    testDatasetTree.mSessionNodes.push(favoritesNode);
     return testDatasetTree;
 }
 

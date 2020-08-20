@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
 import * as fs from "fs";
 import * as zowe from "@zowe/cli";
+import { Logger } from "@zowe/imperative";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as utils from "../../../src/utils";
@@ -203,15 +204,32 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const node = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None,
+        const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, blockMocks.session);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
-        testTree.mFavorites.push(node);
+        testTree.mFavorites.push(favProfileNode);
 
         const children = await testTree.getChildren(testTree.mSessionNodes[0]);
 
-        expect(children).toEqual([node]);
+        expect(children).toEqual([favProfileNode]);
+    });
+    it("Checking function for profile node in Favorites section", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const log = Logger.getAppLogger();
+        const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode, blockMocks.session);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mFavorites.push(favProfileNode);
+        const loadProfilesForFavoritesSpy= jest.spyOn(testTree, "loadProfilesForFavorites");
+
+        await testTree.getChildren(favProfileNode);
+
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
     it("Checking function for PDS Dataset node", async () => {
         createGlobalMocks();
