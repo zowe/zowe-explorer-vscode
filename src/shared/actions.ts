@@ -21,7 +21,7 @@ import { FilterItem, resolveQuickPickHelper, FilterDescriptor } from "../utils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
-import { Profiles } from "../Profiles";
+import { Profiles, IExtIProfileLoaded } from "../Profiles";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -208,11 +208,12 @@ export async function returnIconState(node: IZoweNodeType) {
 }
 
 export async function resetValidationSettings(node: IZoweNodeType) {
-    const profile: IProfileLoaded = node.getProfile();
+    const profile: IExtIProfileLoaded = node.getProfile();
     const setting = await Profiles.getInstance().checkProfileValidationSetting(profile);
     if (setting){
         Profiles.getInstance().enableValidationContext(node);
     } else {
         Profiles.getInstance().disableValidationContext(node);
     }
+    return node;
 }
