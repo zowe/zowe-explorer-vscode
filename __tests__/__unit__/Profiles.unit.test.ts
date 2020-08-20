@@ -1816,7 +1816,7 @@ describe("Profiles Unit Tests - Function disableValidationContext", () => {
         return newMocks;
     }
 
-    it("Tests that disableValidationContext returns correct node context if is already enabled", async () => {
+    it("Tests that disableValidationContext returns correct node context if it is enabled", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -1834,6 +1834,17 @@ describe("Profiles Unit Tests - Function disableValidationContext", () => {
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
         resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}`;
+        const result = await theProfiles.disableValidationContext(resultNode);
+        expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+    });
+
+    it("Tests that disableValidationContext returns correct node context if it is already disabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
         const result = await theProfiles.disableValidationContext(resultNode);
         expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
     });
@@ -1867,13 +1878,24 @@ describe("Profiles Unit Tests - Function enableValidationContext", () => {
         return newMocks;
     }
 
-    it("Tests that enableValidationContext returns correct node context if is already disabled", async () => {
+    it("Tests that enableValidationContext returns correct node context if it is disabled", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
         const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
         resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}false`;
+        const result = await theProfiles.enableValidationContext(resultNode);
+        expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
+    });
+
+    it("Tests that enableValidationContext returns correct node context if it is already enabled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        const resultNode: IZoweNodeType = blockMocks.datasetSessionNode;
+        resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}${globals.VALIDATE_SUFFIX}true`;
         const result = await theProfiles.enableValidationContext(resultNode);
         expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
     });
