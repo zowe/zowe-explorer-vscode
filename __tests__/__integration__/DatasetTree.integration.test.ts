@@ -340,6 +340,12 @@ describe("DatasetTree Integration Tests", async () => {
                         new Buffer("abc"),
                         `${beforeDataSetName}(mem1)`
                     );
+                    const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                        session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+                    testTree.mFavorites.push(favProfileNode);
+                });
+                afterEach(() => {
+                    testTree.mFavorites = [];
                 });
                 it("should rename a data set member", async () => {
                     let error;
