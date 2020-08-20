@@ -37,6 +37,7 @@ function createGlobalMocks() {
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true })
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
@@ -134,6 +135,61 @@ describe("Dataset Tree Unit Tests - Function getTreeItem", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
         expect(testTree.getTreeItem(node)).toBeInstanceOf(vscode.TreeItem);
+    });
+});
+describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            imperativeProfile,
+            session,
+            datasetSessionNode
+        };
+    }
+
+    it("Checking function for PDS favorite", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const node = new ZoweDatasetNode("BRTVS99.PUBLIC",
+            vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, undefined, globals.PDS_FAV_CONTEXT);
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", globals.DS_PDS_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile).toEqual(node);
+    });
+    it("Checking function for sequential DS favorite", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const node = new ZoweDatasetNode("BRTVS99.PS",
+            vscode.TreeItemCollapsibleState.None, favProfileNode, undefined, globals.DS_FAV_CONTEXT);
+        node.command = {command: "zowe.ZoweNode.openPS", title: "", arguments: [node]};
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PS", globals.DS_DS_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile).toEqual(node);
+    });
+    it("Checking function for invalid context value", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
+
+        expect(showErrorMessageSpy).toBeCalledTimes(1);
     });
 });
 describe("Dataset Tree Unit Tests - Function getChildren", () => {
