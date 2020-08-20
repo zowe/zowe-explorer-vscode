@@ -204,7 +204,6 @@ describe("DatasetTree Integration Tests", async () => {
         });
         it("should add the selected data set to the treeView", async () => {
             const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            const len = testTree.mFavorites[0].children.length;
             await testTree.addFavorite(favoriteNode);
             const filtered = testTree.mFavorites[0].children.filter((temp) => temp.label === `${favoriteNode.label}`);
             expect(filtered.length).toEqual(1);
@@ -221,20 +220,28 @@ describe("DatasetTree Integration Tests", async () => {
     });
 
     describe("removeFavorite()", () => {
-        it("should remove the selected favorite data set from the treeView", () => {
+        beforeEach(() => {
+            const favProfileNode = new ZoweDatasetNode(testConst.profile.name, vscode.TreeItemCollapsibleState.Expanded, null,
+                session, FAV_PROFILE_CONTEXT, undefined, testProfile);
+            testTree.mFavorites.push(favProfileNode);
+        });
+        afterEach(() => {
+            testTree.mFavorites = [];
+        });
+        it("should remove the selected favorite data set from the treeView", async () => {
             const favoriteNode = new ZoweDatasetNode(pattern + ".TPDS",
                 vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            testTree.addFavorite(favoriteNode);
-            const len = testTree.mFavorites.length;
-            testTree.removeFavorite(testTree.mFavorites[len - 1]);
-            expect(testTree.mFavorites.length).toEqual(len - 1);
+            await testTree.addFavorite(favoriteNode);
+            const len = testTree.mFavorites[0].children.length;
+            await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
+            expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
         });
 
-        it("should remove the selected favorite search from the treeView", () => {
-            testTree.addFavorite(sessNode);
-            const len = testTree.mFavorites.length;
-            testTree.removeFavorite(testTree.mFavorites[len - 1]);
-            expect(testTree.mFavorites.length).toEqual(len - 1);
+        it("should remove the selected favorite search from the treeView", async () => {
+            await testTree.addFavorite(sessNode);
+            const len = testTree.mFavorites[0].children.length;
+            await testTree.removeFavorite(testTree.mFavorites[0].children[len - 1]);
+            expect(testTree.mFavorites[0].children.length).toEqual(len - 1);
         });
     });
 
