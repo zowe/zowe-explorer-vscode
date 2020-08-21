@@ -335,7 +335,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetFavoriteNode, null, globals.FAV_PROFILE_CONTEXT, undefined, undefined);
         const testTree = new DatasetTree();
-        testTree.mFavorites.push(favProfileNode)
+        testTree.mFavorites.push(favProfileNode);
         const expectedFavProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetFavoriteNode, blockMocks.session, globals.FAV_PROFILE_CONTEXT, undefined, blockMocks.imperativeProfile);
 

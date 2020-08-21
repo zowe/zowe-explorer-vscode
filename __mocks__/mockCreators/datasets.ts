@@ -70,8 +70,10 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
     };
     testDatasetTree.addFavorite.mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite));
     testDatasetTree.addFileHistory.mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile));
-    testDatasetTree.removeFileHistory.mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1));
-    testDatasetTree.getFileHistory.mockImplementation(() => { return testDatasetTree.mFileHistory });
+    testDatasetTree.removeFileHistory.mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(
+        testDatasetTree.mFileHistory.indexOf(badFile), 1
+    ));
+    testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
     testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
     testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
     if (!favoritesNode) {
