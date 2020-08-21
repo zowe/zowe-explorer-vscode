@@ -1954,7 +1954,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             child.getSessionNode().label.trim(), `${parent.label}(${child.label})`));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(`${parent.label}(${child.label})`, child));
     });
-    it("Checking of opening for PDS Member of favorite session", async () => {
+    it("Checking of opening for sequential DS of favorite session", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1967,16 +1967,36 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             }
         });
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.None, null,
+        const favProfileNode = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.None, null,
             null, undefined, undefined, blockMocks.imperativeProfile);
-        parent.contextValue = globals.FAVORITE_CONTEXT;
-        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
-        child.contextValue = globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX;
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, favProfileNode, null);
+        child.contextValue = globals.DS_FAV_CONTEXT;
 
         await dsActions.openPS(child, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR,
             blockMocks.imperativeProfile.name, child.label));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(child.label, child));
+    });
+    it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const parentNode = new ZoweDatasetNode("badParent", vscode.TreeItemCollapsibleState.Collapsed, null,
+            blockMocks.session, "badContext", undefined, blockMocks.imperativeProfile);
+        const node = new ZoweDatasetNode("cantOpen", vscode.TreeItemCollapsibleState.None, parentNode,
+            blockMocks.session, globals.DS_MEMBER_CONTEXT, undefined, blockMocks.imperativeProfile);
+        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const logErrorSpy = jest.spyOn(globals.LOG, "error");
+
+        try {
+            await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+        } catch (err) {
+            // Do nothing
+        }
+
+        expect(showErrorMessageSpy).toBeCalledWith("openPS() called from invalid node.");
+        expect(logErrorSpy).toBeCalledTimes(1);
     });
 });
