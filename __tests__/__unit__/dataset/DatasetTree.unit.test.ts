@@ -37,7 +37,7 @@ function createGlobalMocks() {
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true })
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
@@ -276,7 +276,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const blockMocks = createBlockMocks();
         const log = Logger.getAppLogger();
         const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode, blockMocks.session);
+            blockMocks.datasetSessionNode, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -307,6 +307,58 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const children = await testTree.getChildren(parent);
 
         expect(children).toEqual(sampleChildren);
+    });
+});
+describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
+    function createBlockMocks() {
+        const log = Logger.getAppLogger();
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetFavoriteNode = createDatasetFavoritesNode(null, null);
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
+
+        return {
+            log,
+            imperativeProfile,
+            session,
+            datasetFavoriteNode,
+            treeView,
+            mvsApi
+        };
+    }
+
+    it("Checking that loaded profile and session values are added to the profile grouping node in Favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.datasetFavoriteNode, null, globals.FAV_PROFILE_CONTEXT, undefined, undefined);
+        const testTree = new DatasetTree();
+        testTree.mFavorites.push(favProfileNode)
+        const expectedFavProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.datasetFavoriteNode, blockMocks.session, globals.FAV_PROFILE_CONTEXT, undefined, blockMocks.imperativeProfile);
+
+        // Mocking successful loading of profile/session
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn(() => {
+                        return blockMocks.imperativeProfile;
+                    }),
+                };
+            })
+        });
+        Object.defineProperty(blockMocks.mvsApi, "getSession", {
+            value: jest.fn(() => {
+                return blockMocks.session;
+            })
+        });
+
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        const resultFavProfileNode = testTree.mFavorites[0];
+
+        expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
     });
 });
 describe("Dataset Tree Unit Tests - Function getParent", () => {
