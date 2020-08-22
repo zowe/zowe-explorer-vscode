@@ -1121,6 +1121,70 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
         expect(mocked(vscode.workspace.getConfiguration)).toBeCalledTimes(2);
     });
 });
+describe("Dataset Tree Unit Tests - Function renameNode", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode
+        };
+    }
+
+    it("Checking common run of function", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        const beforeNode = new ZoweDatasetNode("TO.RENAME", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode,
+            blockMocks.session, globals.DS_PDS_CONTEXT, undefined, blockMocks.imperativeProfile);
+        const afterNode = new ZoweDatasetNode("RENAMED", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode,
+            blockMocks.session, globals.DS_PDS_CONTEXT, undefined, blockMocks.imperativeProfile);
+        blockMocks.datasetSessionNode.children.push(beforeNode);
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        await testTree.renameNode("sestest", "TO.RENAME", "RENAMED");
+
+        expect(testTree.mSessionNodes[1].children[0]).toEqual(afterNode);
+    });
+});
+describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode
+        };
+    }
+
+    it("Checking common run of function", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        const nodeFromSession = new ZoweDatasetNode("TO.RENAME", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode,
+            blockMocks.session, globals.DS_PDS_CONTEXT, undefined, blockMocks.imperativeProfile);
+        // Parent is normally a profile node in Favorites section, but is null here because it does not matter for this test
+        const matchingFavNode = new ZoweDatasetNode("TO.RENAME", vscode.TreeItemCollapsibleState.Collapsed, null,
+            blockMocks.session, globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX, undefined, blockMocks.imperativeProfile);
+        const expectedMatchingFavNodeResult = new ZoweDatasetNode("RENAMED", vscode.TreeItemCollapsibleState.Collapsed, null,
+            blockMocks.session, globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX, undefined, blockMocks.imperativeProfile);
+        Object.defineProperty(testTree, "findFavoritedNode", {
+            value: jest.fn( () => {
+                return matchingFavNode;
+            }),
+        });
+
+        await testTree.renameFavorite(nodeFromSession, "RENAMED");
+
+        expect(matchingFavNode).toEqual(expectedMatchingFavNodeResult);
+    });
+});
 describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
     function createBlockMocks() {
         const session = createISession();
