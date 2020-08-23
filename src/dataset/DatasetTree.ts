@@ -238,7 +238,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         } else {
             // This case should not happen if the regex for initializeFavorites is defined correctly, but is here as a catch-all just in case.
             vscode.window.showErrorMessage(
-                localize("getFavoritesForProfile.loadError", "Error creating data set favorite node: {0} for profile {1}.", label, profileName)
+                localize("initializeFavChildNodeForProfile.error",
+                    "Error creating data set favorite node: {0} for profile {1}.", label, profileName)
             );
         }
         return node;
