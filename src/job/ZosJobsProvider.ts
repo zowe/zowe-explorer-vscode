@@ -292,20 +292,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async loadProfilesForFavorites(log: Logger, parentNode: IZoweJobTreeNode ) {
         const profileName = parentNode.label;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
-        let loadedProfile: IProfileLoaded;
+        let profile: IProfileLoaded;
         let session: Session;
         this.log = log;
         this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
-                loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
-                // session = ZosmfSession.createBasicZosmfSession(loadedProfile.profile);
-                // tslint:disable-next-line: no-console
-                // console.log(session);
-                session = ZoweExplorerApiRegister.getJesApi(loadedProfile).getSession();
-                // tslint:disable-next-line: no-console
-                console.log(session);
+                profile = Profiles.getInstance().loadNamedProfile(profileName);
+                session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
+                parentNode.setProfileToChoice(profile);
+                parentNode.setSessionToChoice(session);
             } catch(error) {
                 const errMessage: string =
                 localize("initializeJobsFavorites.error.profile1",
@@ -318,7 +315,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 errorHandling(error, null, errMessage);
             }
         }
-        loadedProfile = parentNode.getProfile();
+        profile = parentNode.getProfile();
         session = parentNode.getSession();
         // Pass loaded profile/session to the parent node's favorites children.
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -330,7 +327,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 continue;
             }
             // If no profile/session for favorite node yet, then add session and profile to favorite node:
-            favorite.setProfileToChoice(loadedProfile);
+            favorite.setProfileToChoice(profile);
             favorite.setSessionToChoice(session);
             updatedFavsForProfile.push(favorite);
         }
