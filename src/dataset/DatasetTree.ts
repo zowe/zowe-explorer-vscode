@@ -135,7 +135,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Find profile node that matches specified profile name in a tree nodes array (e.g. this.mFavorites or this.mSession).
+     * Find profile node that matches specified profile name in a tree nodes array (e.g. this.mFavorites or this.mSessionNodes).
      * @param datasetProvider - The array of tree nodes to search through (e.g. this.mFavorites)
      * @param profileName - The name of the profile you are looking for
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
