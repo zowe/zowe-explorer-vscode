@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as jobUtils from "../job/utils";
 import * as globals from "../globals";
 import { ZosmfSession, IJob } from "@zowe/cli";
-import { IProfileLoaded, Logger, IProfile, ISession } from "@zowe/imperative";
+import { IProfileLoaded, Logger, IProfile, ISession, Session } from "@zowe/imperative";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { Job } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, labelRefresh } from "../shared/utils";
@@ -138,6 +138,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
             }
+            if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT){
+                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
+                return favsForProfile;
+            }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             return element.getChildren();
         }
@@ -197,54 +201,141 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
+     * Find profile node that matches specified profile name in a tree nodes array (e.g. this.mFavorites or this.mSessionNodes).
+     * @param jobsProvider - The array of tree nodes to search through (e.g. this.mFavorites)
+     * @param profileName - The name of the profile you are looking for
+     * @returns {IZoweJobTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
+     */
+    public findMatchingProfileInArray(jobsProvider: IZoweJobTreeNode[], profileName: string): IZoweJobTreeNode|undefined {
+        return jobsProvider.find((treeNode) => treeNode.label === profileName );
+    }
+
+    /**
+     * Creates and returns new profile node, and pushes it to mFavorites
+     * @param profileName Name of profile
+     * @returns {Job}
+     */
+    public createProfileNodeForFavs(profileName: string): Job {
+        const favProfileNode = new Job(profileName, vscode.TreeItemCollapsibleState.Collapsed,
+            this.mFavoriteSession, null, null, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const icon = getIconByNode(favProfileNode);
+        if (icon) {
+            favProfileNode.iconPath = icon.path;
+        }
+        this.mFavorites.push(favProfileNode);
+        return favProfileNode;
+    }
+
+    /**
      * Initialize the favorites and history information
      * @param log - Logger
      */
     public async initializeJobsTree(log: Logger) {
         this.log = log;
-        this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
+        this.log.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
-        lines.forEach((line) => {
+        if (lines.length === 0) {
+            this.log.debug(localize("initializeJobsTree.no.favorites", "No jobs favorites found."));
+            return;
+        }
+        // Parse line
+        lines.forEach(async (line) => {
             const profileName = line.substring(1, line.lastIndexOf("]"));
-            const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
-            const sesName = line.substring(1, line.lastIndexOf("]")).trim();
-            try {
-                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
-                let favJob: Job;
-                if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")).startsWith(globals.JOBS_JOB_CONTEXT)) {
-                    favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
-                        ZosmfSession.createBasicZosmfSession(zosmfProfile.profile), new JobDetail(nodeName), zosmfProfile);
-                    favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-                    favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
-                } else { // for search
-                    favJob = new Job(
-                        line.substring(0, line.indexOf("{")),
-                        vscode.TreeItemCollapsibleState.None,
-                        this.mFavoriteSession,
-                        ZosmfSession.createBasicZosmfSession(zosmfProfile.profile),
-                        null, zosmfProfile
-                    );
-                    favJob.command = {command: "zowe.jobs.search", title: "", arguments: [favJob]};
-                    favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-                }
-                const icon = getIconByNode(favJob);
-                if (icon) {
-                    favJob.iconPath = icon.path;
-                }
-                this.mFavorites.push(favJob);
-            } catch (e) {
-                const errMessage: string =
-                    localize("initializeJobsFavorites.error.profile1",
-                        "Error: You have Jobs favorites that refer to a non-existent CLI profile named: ") + profileName +
-                    localize("initializeJobsFavorites.error.profile2",
-                        ". To resolve this, you can create a profile with this name, ") +
-                    localize("initializeJobsFavorites.error.profile3",
-                        "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your ") +
-                    getAppName(globals.ISTHEIA) + localize("initializeJobsFavorites.error.profile4", " user settings.");
-                errorHandling(e, null, errMessage);
-                return;
+            const favLabel = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
+            const favContextValue = line.substring(line.indexOf("{") + 1, line.lastIndexOf("}"));
+            // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
+            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+            if (profileNodeInFavorites === undefined) {
+                // If favorite node for profile doesn't exist yet, create a new one for it
+                profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
             }
+            // Initialize and attach favorited item nodes under their respective profile node in Favorrites
+            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
+            profileNodeInFavorites.children.push(favChildNodeForProfile);
         });
+    }
+
+    /**
+     * Creates an individual favorites node WITHOUT profiles or sessions, to be added to the specified profile node in Favorites during activation.
+     * This allows label and contextValue to be passed into these child nodes.
+     * @param label The favorited data set's label
+     * @param contextValue The favorited data set's context value
+     * @param parentNode The profile node in this.mFavorites that the favorite belongs to
+     * @returns IZoweDatasetTreeNode
+     */
+    public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweJobTreeNode){
+        let favJob: Job;
+        if (contextValue.startsWith(globals.JOBS_JOB_CONTEXT)){
+            favJob = new Job(label, vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode, null, new JobDetail(label), null);
+            favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+            favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
+        } else { // for search
+            favJob = new Job(label, vscode.TreeItemCollapsibleState.None,
+                this.mFavoriteSession, null, null, null);
+            favJob.command = {command: "zowe.jobs.search", title: "", arguments: [favJob]};
+            favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        }
+        const icon = getIconByNode(favJob);
+        if (icon) {
+            favJob.iconPath = icon.path;
+        }
+        return favJob;
+    }
+
+    /**
+     * Loads profile for the profile node in Favorites that was clicked on, as well as for its children favorites.
+     * @param log
+     * @param parentNode
+     */
+    public async loadProfilesForFavorites(log: Logger, parentNode: IZoweJobTreeNode ) {
+        const profileName = parentNode.label;
+        const updatedFavsForProfile: IZoweJobTreeNode[] = [];
+        let loadedProfile: IProfileLoaded;
+        let session: Session;
+        this.log = log;
+        this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
+        // Load profile for parent profile node in this.mFavorites array
+        if (!parentNode.getProfile() || !parentNode.getSession()) {
+            try {
+                loadedProfile = Profiles.getInstance().loadNamedProfile(profileName);
+                // session = ZosmfSession.createBasicZosmfSession(loadedProfile.profile);
+                // tslint:disable-next-line: no-console
+                // console.log(session);
+                session = ZoweExplorerApiRegister.getJesApi(loadedProfile).getSession();
+                // tslint:disable-next-line: no-console
+                console.log(session);
+            } catch(error) {
+                const errMessage: string =
+                localize("initializeJobsFavorites.error.profile1",
+                    "Error: You have Jobs favorites that refer to a non-existent CLI profile named: ") + profileName +
+                localize("initializeJobsFavorites.error.profile2",
+                    ". To resolve this, you can create a profile with this name, ") +
+                localize("initializeJobsFavorites.error.profile3",
+                    "or remove the favorites with this profile name from the Zowe-Jobs-Persistent setting, which can be found in your ") +
+                getAppName(globals.ISTHEIA) + localize("initializeJobsFavorites.error.profile4", " user settings.");
+                errorHandling(error, null, errMessage);
+            }
+        }
+        loadedProfile = parentNode.getProfile();
+        session = parentNode.getSession();
+        // Pass loaded profile/session to the parent node's favorites children.
+        const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        const favsForProfile = profileInFavs.children;
+        for (const favorite of favsForProfile ) {
+            // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
+            if (favorite.getProfile() && favorite.getSession()) {
+                updatedFavsForProfile.push(favorite);
+                continue;
+            }
+            // If no profile/session for favorite node yet, then add session and profile to favorite node:
+            favorite.setProfileToChoice(loadedProfile);
+            favorite.setSessionToChoice(session);
+            updatedFavsForProfile.push(favorite);
+        }
+        // This updates the profile node's children in the this.mFavorites array, as well.
+        return updatedFavsForProfile;
     }
 
     /**
