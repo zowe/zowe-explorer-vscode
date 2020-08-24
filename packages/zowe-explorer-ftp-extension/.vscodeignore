@@ -2,6 +2,7 @@
 src
 .*ignore
 .*rc*
+*.config.js
 tsconfig.json
 **/*.map
 **/*.ts
