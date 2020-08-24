@@ -22,5 +22,8 @@
   // Enforce prettier on save
   "editor.formatOnSave": true,
   "npm.packageManager": "yarn",
-  "eslint.packageManager": "yarn"
+  "eslint.packageManager": "yarn",
+  "eslint.workingDirectories": [
+    { "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true }
+  ]
 }
