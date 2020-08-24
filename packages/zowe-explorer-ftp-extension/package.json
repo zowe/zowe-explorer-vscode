@@ -16,19 +16,19 @@
   "activationEvents": [
     "*"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/src/extension.js",
   "contributes": {},
   "extensionDependencies": [
     "Zowe.vscode-extension-for-zowe"
   ],
   "scripts": {
     "prepare": "yarn build",
-    "build": "yarn clean && tsc -p ./",
+    "build": "yarn clean && webpack --mode development",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
     "pretty": "prettier --write .",
-    "watch": "tsc -watch -p ./",
+    "watch": "webpack --mode development --watch --info-verbosity verbose",
     "clean": "rimraf out",
-    "vscode:prepublish": "yarn license && yarn build && yarn lint",
+    "vscode:prepublish": "yarn license && yarn lint && webpack --mode production",
     "license": "node ../../scripts/license.js",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
@@ -47,6 +47,8 @@
     "concurrently": "^5.2.0",
     "eslint": "^7.1.0",
     "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-prettier": "^3.1.3"
+    "eslint-plugin-prettier": "^3.1.3",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   }
 }
