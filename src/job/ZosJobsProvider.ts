@@ -293,6 +293,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
+                parentNode.owner = session.ISession.user;
             } catch(error) {
                 const errMessage: string =
                 localize("initializeJobsFavorites.error.profile1",
@@ -311,6 +312,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile ) {
+            if (!favorite.owner) {
+                // Needed for setting tooltip
+                favorite.owner = session.ISession.user;
+            }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
                 updatedFavsForProfile.push(favorite);
