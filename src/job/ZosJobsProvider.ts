@@ -363,10 +363,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {IZoweJobTreeNode} node
      */
     public async removeFavorite(node: IZoweJobTreeNode) {
-        const startLength = this.mFavorites.length;
-        this.mFavorites = this.mFavorites.filter((temp) =>
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        const startLength = profileNodeInFavorites.children.length;
+        profileNodeInFavorites.children = profileNodeInFavorites.children.filter((temp) =>
             !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue))));
-        if (startLength !== this.mFavorites.length) {
+        if (startLength !== profileNodeInFavorites.children.length) {
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
