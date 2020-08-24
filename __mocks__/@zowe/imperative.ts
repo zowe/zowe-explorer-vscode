@@ -58,18 +58,20 @@ export class CliProfileManager {
     constructor(options: ICliOptions) { }
 
     public load(opts: ILoadOptions) {
-        return { name: "profile1", profile: {
-                        type : "zosmf",
-                        host: "test",
-                        port: 1443,
-                        user: "test",
-                        password: "test",
-                        rejectUnauthorized: false,
-                        name: "testName"
-                    },
-                    type: "zosmf",
-                    message: "",
-                    failNotFound: false };
+        return {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                user: "test",
+                password: "test",
+                rejectUnauthorized: false,
+                name: "testName"
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false };
     }
     public loadAll() {
         return [

@@ -74,16 +74,16 @@ export class Profiles {
             if ((!profileLoaded.profile.user || !profileLoaded.profile.password) && !validSession) {
                 // Credentials are invalid
                 this.validProfile = ValidProfileEnum.INVALID;
-                return "inactive";
+                return { status: "inactive", name: profileLoaded.name };
             } else {
                 // Credentials are valid
                 this.validProfile = ValidProfileEnum.VALID;
-                return "active";
+                return { status: "active", name: profileLoaded.name };
             }
         } catch (error) {
             errorHandling(error, profileLoaded.name,
                 localize("checkCurrentProfile.error", "Error encountered in {0}", `checkCurrentProfile.optionalProfiles!`));
-            return "inactive";
+            return { status: "inactive", name: profileLoaded.name };
         }
     }
 
@@ -104,7 +104,6 @@ export class Profiles {
                 }
 
                 const newDetails = await this.collectProfileDetails(schemaArray);
-                // if (newDetails.indexOf("host")) { serviceProfile.profile.hostname = newDetails[newDetails.indexOf("host")] }
                 for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
             }
             try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }

@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
+import { createTestSchemas } from "./profiles";
 
 export function createPersistentConfig() {
     return {
@@ -171,10 +172,15 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded, session: imperative.Session) {
     return {
-        allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
+        allProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
+                      { name: "profile1", profile: {}, type: "zosmf" },
+                      { name: "profile2", profile: {}, type: "zosmf" }],
         defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
+        getProfileType: jest.fn(() => "zosmf"),
+        getSchema: jest.fn(() => createTestSchemas().pop()),
         promptCredentials: jest.fn(),
+        collectProfileDetails: jest.fn(() => { return {} }),
         loadNamedProfile: jest.fn(),
         getValidSession: jest.fn(() => { return session }),
         usesSecurity: true,
