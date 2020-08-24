@@ -89,26 +89,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public async saveSearch(node: IZoweJobTreeNode) {
+    public saveSearch(node: IZoweJobTreeNode): Job {
         const favSessionContext = contextually.asFavorite(node);
-        const favJob = new Job("[" + node.getProfileName() + "]: " +
-            this.createSearchLabel(node.owner, node.prefix, node.searchId),
+        const favJob = new Job(this.createSearchLabel(node.owner, node.prefix, node.searchId),
         vscode.TreeItemCollapsibleState.None, node.getParent(), node.getSession(), node.job, node.getProfile());
         favJob.owner = node.owner;
         favJob.prefix = node.prefix;
         favJob.searchId = node.searchId;
         favJob.contextValue = favSessionContext;
         favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
-        const icon = getIconByNode(favJob);
-        if (icon) {
-            favJob.iconPath = icon.path;
-        }
-        if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
-            this.mFavorites.push(favJob);
-            sortTreeItems(this.mFavorites, favSessionContext);
-            await this.updateFavorites();
-            this.refreshElement(this.mFavoriteSession);
-        }
+        return favJob;
     }
     public saveFile(document: vscode.TextDocument) {
         throw new Error("Method not implemented.");
@@ -341,6 +331,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {IZoweJobTreeNode} node
      */
     public async addFavorite(node: IZoweJobTreeNode) {
+        let favJob: Job;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -348,7 +339,15 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             // If favorite node for profile doesn't exist yet, create a new one for it
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
         }
-        const favJob = this.createJobsFavorite(node);
+        if (contextually.isSession(node)) {
+            favJob = this.saveSearch(node);
+        } else {
+            favJob = this.createJobsFavorite(node);
+        }
+        const icon = getIconByNode(favJob);
+        if (icon) {
+            favJob.iconPath = icon.path;
+        }
         if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === favJob.label)) {
             profileNodeInFavorites.children.push(favJob);
             sortTreeItems(profileNodeInFavorites.children, globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
@@ -402,12 +401,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let choice: vscode.QuickPickItem;
         let searchCriteria: string = "";
         const hasHistory = this.mHistory.getSearchHistory().length > 0;
-        let sesNamePrompt: string;
-        if (contextually.isFavorite(node)) {
-            sesNamePrompt = node.label.substring(1, node.label.indexOf("]"));
-        } else {
-            sesNamePrompt = node.label;
-        }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
             if (contextually.isSessionNotFav(node)) { // This is the profile object context
@@ -515,8 +508,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 this.applySearchLabelToNode(node, searchCriteria);
             } else {
                 // executing search from saved search in favorites
-                searchCriteria = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
+                searchCriteria = node.label.trim();
+                const session = node.getProfileName();
                 const faveNode = node;
                 await this.addSession(session);
                 node = this.mSessionNodes.find((tempNode) => tempNode.label.trim() === session);
@@ -651,15 +644,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    private createJobsFavorite(node: IZoweJobTreeNode): IZoweJobTreeNode {
+    private createJobsFavorite(node: IZoweJobTreeNode): Job {
         const favJob = new Job(node.label.substring(0, node.label.lastIndexOf(")") + 1),
             vscode.TreeItemCollapsibleState.Collapsed, node.getParent(), node.getSession(), node.job, node.getProfile());
         favJob.contextValue = contextually.asFavorite(node);
         favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
-        const icon = getIconByNode(favJob);
-        if (icon) {
-            favJob.iconPath = icon.path;
-        }
         return favJob;
     }
 

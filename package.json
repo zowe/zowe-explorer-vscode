@@ -875,7 +875,7 @@
         },
         {
           "when": "view == zowe.jobs && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.jobs.saveSearch",
+          "command": "zowe.jobs.addFavorite",
           "group": "2_workspace@0"
         },
         {
