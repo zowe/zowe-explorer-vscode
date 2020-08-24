@@ -488,14 +488,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Writes favorites to the settings file.
      */
     public async updateFavorites() {
-        const settings = [];
+        const favoritesArray = [];
         this.mFavorites.forEach( (profileNode) => {
             profileNode.children.forEach( (favorite) => {
                 const favoriteEntry = "[" + profileNode.label.trim() + "]: " + favorite.label + "{" + contextually.getBaseContext(favorite) + "}";
-                settings.push(favoriteEntry);
+                favoritesArray.push(favoriteEntry);
             });
         });
-        this.mHistory.updateFavorites(settings);
+        this.mHistory.updateFavorites(favoritesArray);
     }
 
     public async onDidChangeConfiguration(e) {
