@@ -341,10 +341,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {IZoweJobTreeNode} node
      */
     public async addFavorite(node: IZoweJobTreeNode) {
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        if (profileNodeInFavorites === undefined) {
+            // If favorite node for profile doesn't exist yet, create a new one for it
+            profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+        }
         const favJob = this.createJobsFavorite(node);
-        if (!this.mFavorites.find((tempNode) => tempNode.label === favJob.label)) {
-            this.mFavorites.push(favJob);
-            sortTreeItems(this.mFavorites, globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
+        if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === favJob.label)) {
+            profileNodeInFavorites.children.push(favJob);
+            sortTreeItems(profileNodeInFavorites.children, globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -368,10 +375,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async updateFavorites() {
         const settings: any = {...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema)};
         if (settings.persistence) {
-            settings.favorites = this.mFavorites.map((fav) => fav.label +
-                "{" + (contextually.isFavoriteJob(fav) ?
-                    globals.JOBS_JOB_CONTEXT :
-                    globals.JOBS_SESSION_CONTEXT) + "}");
+            settings.favorites = [];
+            this.mFavorites.forEach((profileNode) => {
+                profileNode.children.forEach((fav) => {
+                    const favoriteEntry = "[" + profileNode.label.trim() + "]: " + fav.label + "{" + (contextually.isFavoriteJob(fav) ?
+                        globals.JOBS_JOB_CONTEXT :
+                        globals.JOBS_SESSION_CONTEXT) + "}";
+                    settings.favorites.push(favoriteEntry);
+                    }
+                );
+            });
             await vscode.workspace.getConfiguration().update(ZosJobsProvider.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
         }
     }
@@ -636,8 +649,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     private createJobsFavorite(node: IZoweJobTreeNode): IZoweJobTreeNode {
-        const favJob = new Job("[" + node.getSessionNode().label + "]: " +
-            node.label.substring(0, node.label.lastIndexOf(")") + 1),
+        const favJob = new Job(node.label.substring(0, node.label.lastIndexOf(")") + 1),
             vscode.TreeItemCollapsibleState.Collapsed, node.getParent(), node.getSession(), node.job, node.getProfile());
         favJob.contextValue = contextually.asFavorite(node);
         favJob.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob]};
