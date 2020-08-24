@@ -423,10 +423,14 @@ export class Profiles {
                         }
                     };
 
-                    await vscode.window.showInputBox(hostOptions);
-
-                    schemaValues[profileDetail] = newUrl.host;
-                    if (newUrl.port !== 0) { schemaValues.port = newUrl.port; }
+                    newUrl = await vscode.window.showInputBox(hostOptions);
+                    if (!newUrl) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
+                        schemaValues[profileDetail] = undefined;
+                    } else {
+                        schemaValues[profileDetail] = newUrl.host;
+                        if (newUrl.port !== 0) { schemaValues.port = newUrl.port; }
+                    }
                     break;
                 case "port" :
                     if (schemaValues[profileDetail] === undefined) {
@@ -455,7 +459,12 @@ export class Profiles {
                             };
                         }
 
-                        let port = Number(await vscode.window.showInputBox(portOptions));
+                        let port;
+                        let portFromUser = await vscode.window.showInputBox(portOptions);
+                        if (Number.isNaN(Number(portFromUser))) {
+                            vscode.window.showInformationMessage(localize("createNewConnection.undefined.port", "Invalid Port number provided or operation was cancelled"));
+                            port = 0;
+                        } else { port = Number(portFromUser) }
 
                         // Use default from schema if user entered 0 as port number
                         if (port === 0 && schema[profileDetail].optionDefinition.hasOwnProperty("defaultValue")) {
@@ -479,7 +488,10 @@ export class Profiles {
                     };
 
                     newUser = await vscode.window.showInputBox(userOptions);
-                    schemaValues[profileDetail] = newUser;
+                    if (!newUser) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "Operation Cancelled"));
+                        schemaValues[profileDetail] = undefined;
+                    } else { schemaValues[profileDetail] = newUser; }
                     break;
                 case "password" :
                     const passOptions = {
@@ -495,7 +507,10 @@ export class Profiles {
                     };
 
                     newPass = await vscode.window.showInputBox(passOptions);
-                    schemaValues[profileDetail] = newPass;
+                    if (!newUser) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "Operation Cancelled"));
+                        schemaValues[profileDetail] = undefined;
+                    } else { schemaValues[profileDetail] = newPass; }
                     break;
                 case "rejectUnauthorized" :
                     const quickPickOptions: vscode.QuickPickOptions = {
@@ -518,7 +533,7 @@ export class Profiles {
                     // User did not select an option from the list
                     if (newRU === undefined) {
                         vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize", "Operation Cancelled"));
-                        return undefined;
+                        schemaValues[profileDetail] = undefined;
                     }
 
                     schemaValues[profileDetail] = newRU;
@@ -594,7 +609,7 @@ export class Profiles {
 
                             if (boolVal === undefined) {
                                 vscode.window.showInformationMessage(localize("createNewConnection.booleanValue", "Operation Cancelled"));
-                                return undefined;
+                                schemaValues[profileDetail] = undefined;
                             } else {
                                 schemaValues[profileDetail] = boolVal;
                                 break;
