@@ -103,8 +103,10 @@ export class Profiles {
                     if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
                 }
 
-                const newDetails = await this.collectProfileDetails(schemaArray);
-                for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
+                try {
+                    const newDetails = await this.collectProfileDetails(schemaArray);
+                    for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
+                } catch (error) { await errorHandling(error.message); }
             }
             try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
             catch (error) { await errorHandling(error.message); }
@@ -302,10 +304,10 @@ export class Profiles {
     }
 
     public async editSession(profileLoaded: IProfileLoaded, profileName: string): Promise<any| undefined> {
-        const updSchemaValues = await this.collectProfileDetails();
-        updSchemaValues.name = profileName;
-
         try {
+            const updSchemaValues = await this.collectProfileDetails();
+            updSchemaValues.name = profileName;
+
             const updSession = await Profiles.getInstance().getValidSession(updSchemaValues, profileName, null, true);
             updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
@@ -353,10 +355,10 @@ export class Profiles {
             return undefined;
         }
 
-        const newProfileDetails = await this.collectProfileDetails();
-        newProfileDetails.name = newProfileName;
-
         try {
+            const newProfileDetails = await this.collectProfileDetails();
+            newProfileDetails.name = newProfileName;
+
             for (const profile of this.allProfiles) {
                 if (profile.name.toLowerCase() === profileName.toLowerCase()) {
                     vscode.window.showErrorMessage(localize("createNewConnection.duplicateProfileName",
@@ -381,6 +383,7 @@ export class Profiles {
         const schemaValues: any = {};
 
         const profileType = await Profiles.getInstance().getProfileType();
+        if (!profileType) { throw new Error(localize("createNewConnection.profileTypeMissing", "No profile type was chosen. Operation Cancelled")) }
         const schema = await Profiles.getInstance().getSchema(profileType);
         if (!detailsToGet) { detailsToGet = Object.keys(schema); }
         schemaValues.type = profileType;
@@ -425,8 +428,7 @@ export class Profiles {
 
                     newUrl = await vscode.window.showInputBox(hostOptions);
                     if (!newUrl) {
-                        vscode.window.showInformationMessage(localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
-                        schemaValues[profileDetail] = undefined;
+                        throw new Error(localize("createNewConnection.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                     } else {
                         schemaValues[profileDetail] = newUrl.host;
                         if (newUrl.port !== 0) { schemaValues.port = newUrl.port; }
@@ -462,8 +464,7 @@ export class Profiles {
                         let port;
                         let portFromUser = await vscode.window.showInputBox(portOptions);
                         if (Number.isNaN(Number(portFromUser))) {
-                            vscode.window.showInformationMessage(localize("createNewConnection.undefined.port", "Invalid Port number provided or operation was cancelled"));
-                            port = 0;
+                            throw new Error(localize("createNewConnection.undefined.port", "Invalid Port number provided or operation was cancelled"));
                         } else { port = Number(portFromUser) }
 
                         // Use default from schema if user entered 0 as port number
@@ -489,9 +490,10 @@ export class Profiles {
 
                     newUser = await vscode.window.showInputBox(userOptions);
                     if (!newUser) {
-                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "Operation Cancelled"));
-                        schemaValues[profileDetail] = undefined;
-                    } else { schemaValues[profileDetail] = newUser; }
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "No username defined."));
+                        newUser = null;
+                    }
+                    schemaValues[profileDetail] = newUser;
                     break;
                 case "password" :
                     const passOptions = {
@@ -507,10 +509,11 @@ export class Profiles {
                     };
 
                     newPass = await vscode.window.showInputBox(passOptions);
-                    if (!newUser) {
-                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.username", "Operation Cancelled"));
-                        schemaValues[profileDetail] = undefined;
-                    } else { schemaValues[profileDetail] = newPass; }
+                    if (!newPass) {
+                        vscode.window.showInformationMessage(localize("createNewConnection.undefined.password", "No password defined."));
+                        newPass = null;
+                    }
+                    schemaValues[profileDetail] = newPass;
                     break;
                 case "rejectUnauthorized" :
                     const quickPickOptions: vscode.QuickPickOptions = {
@@ -526,14 +529,7 @@ export class Profiles {
                     if (chosenRU === ruOptions[0]) { newRU = true; }
                     else if (chosenRU === ruOptions[1]) { newRU = false; }
                     else {
-                        vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize", "Operation Cancelled"));
-                        newRU = undefined;
-                    }
-
-                    // User did not select an option from the list
-                    if (newRU === undefined) {
-                        vscode.window.showInformationMessage(localize("createNewConnection.rejectUnauthorize", "Operation Cancelled"));
-                        schemaValues[profileDetail] = undefined;
+                        throw new Error(localize("createNewConnection.rejectUnauthorize", "No certificate option selected. Operation Cancelled"));
                     }
 
                     schemaValues[profileDetail] = newRU;
@@ -608,8 +604,7 @@ export class Profiles {
                             else { boolVal = undefined; }
 
                             if (boolVal === undefined) {
-                                vscode.window.showInformationMessage(localize("createNewConnection.booleanValue", "Operation Cancelled"));
-                                schemaValues[profileDetail] = undefined;
+                                throw new Error(localize("createNewConnection.booleanValue", "No boolean selected. Operation Cancelled"));
                             } else {
                                 schemaValues[profileDetail] = boolVal;
                                 break;
