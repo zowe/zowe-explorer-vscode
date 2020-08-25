@@ -22,6 +22,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { IZoweJobTreeNode } from "../../../src/api/IZoweTreeNode";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -300,8 +301,14 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
 
         await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
 
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        const favoritedNode = profileNodeInFavs.children[0];
+
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: MYHLQ(JOB1283)");
+        expect(profileNodeInFavs.label).toEqual("sestest");
+        expect(profileNodeInFavs.children.length).toEqual(1);
+        expect(favoritedNode.label).toEqual("MYHLQ(JOB1283)");
+
     });
 });
 
@@ -322,12 +329,14 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
         globalMocks.testJobsProvider.mFavorites = [];
 
         await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        const favoritedNode = profileNodeInFavs.children[0];
 
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
+        expect(profileNodeInFavs.children.length).toEqual(1);
 
-        await globalMocks.testJobsProvider.removeFavorite(globalMocks.testJobsProvider.mFavorites[0]);
+        await globalMocks.testJobsProvider.removeFavorite(favoritedNode);
 
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
+        expect(profileNodeInFavs.children.length).toEqual(0);
     });
 });
 
