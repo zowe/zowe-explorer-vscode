@@ -296,7 +296,6 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
     it("Tests that addFavorite successfully favorites a job", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
         globalMocks.testJobsProvider.mFavorites = [];
 
         await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
@@ -308,7 +307,19 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         expect(profileNodeInFavs.label).toEqual("sestest");
         expect(profileNodeInFavs.children.length).toEqual(1);
         expect(favoritedNode.label).toEqual("MYHLQ(JOB1283)");
+    });
+    it("Tests that addFavorite successfully favorites a search", async () => {
+        const globalMocks = await createGlobalMocks();
+        await createBlockMocks(globalMocks);
+        globalMocks.testJobsProvider.mFavorites = [];
+        globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
+        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
 
+        await globalMocks.testJobsProvider.addFavorite(globalMocks.testJobsProvider.mSessionNodes[1]);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+
+        expect(profileNodeInFavs.children.length).toEqual(1);
+        expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
     });
 });
 
@@ -342,9 +353,11 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
 
 describe("ZoweJobNode unit tests - Function saveSearch", () => {
     async function createBlockMocks(globalMocks) {
+        const testSession = globalMocks.testJobsProvider.mSessionNodes[1].getSession();
         const newMocks = {
+            testSession,
             testJobNode: new Job("MYHLQ(JOB1283) - Input", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testJobsProvider.mSessionNodes[1],
-                                 globalMocks.testJobsProvider.mSessionNodes[1].getSession(), globalMocks.testIJob, globalMocks.testProfile)
+                                 testSession, globalMocks.testIJob, globalMocks.testProfile)
         };
 
         globalMocks.testJobsProvider.mFavorites = [];
@@ -364,15 +377,21 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
 
     it("Tests that saveSearch is executed successfully when owner is set", async () => {
         const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
+        const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
         globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
 
-        await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
+        const favJob = await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
+        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
+        const expectedJob = new Job("Owner:myHLQ Prefix:*", vscode.TreeItemCollapsibleState.None, profileNodeInFavs,
+            blockMocks.testSession, globalMocks.testIJob, globalMocks.testProfile);
+        favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
 
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: Owner:myHLQ Prefix:*");
+        expect(favJob).toEqual(expectedJob);
+        // expect(profileNodeInFavs.children.length).toEqual(1);
+        // expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
     });
 
     it("Tests that saveSearch is executed successfully when prefix is set", async () => {
