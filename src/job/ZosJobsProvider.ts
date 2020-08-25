@@ -90,9 +90,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {IZoweJobTreeNode} node
      */
     public saveSearch(node: IZoweJobTreeNode) {
-        node.owner = node.owner;
-        node.prefix = node.prefix;
-        node.searchId = node.searchId;
         node.contextValue = contextually.asFavorite(node);
         return node;
     }
@@ -341,12 +338,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
         }
         if (contextually.isSession(node)) {
+            // Favorite a search/session
             favJob = new Job(this.createSearchLabel(node.owner, node.prefix, node.searchId), vscode.TreeItemCollapsibleState.None,
                 profileNodeInFavorites, node.getSession(), node.job, node.getProfile());
             favJob.contextValue = node.contextValue;
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
             this.saveSearch(favJob);
         } else {
+            // Favorite a job
             favJob = new Job(node.label.trim(), vscode.TreeItemCollapsibleState.Collapsed,
                 profileNodeInFavorites, node.getSession(), node.job, node.getProfile());
             favJob.contextValue = node.contextValue;

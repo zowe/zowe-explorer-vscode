@@ -362,63 +362,24 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
 
         globalMocks.testJobsProvider.mFavorites = [];
         globalMocks.testJobNode.label = "MYHLQ(JOB1283) - Input";
-        globalMocks.getConfiguration.mockReturnValue({
-            get: (setting: string) => [
-                "[sestest]: Owner:stonecc Prefix:*{server}",
-                "[sestest]: USER1(JOB30148){job}",
-            ],
-            update: jest.fn(()=>{
-                return {};
-            })
-        });
 
         return newMocks;
     }
 
-    it("Tests that saveSearch is executed successfully when owner is set", async () => {
+    it("Tests that saveSearch is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const favJob = blockMocks.testJobNode;
+        favJob.owner = "myHLQ";
+        favJob.prefix = "*";
+        favJob.contextValue = globals.JOBS_SESSION_CONTEXT;
 
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
+        const expectedJob = favJob;
+        expectedJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
-        const favJob = await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
-        const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
-        const expectedJob = new Job("Owner:myHLQ Prefix:*", vscode.TreeItemCollapsibleState.None, profileNodeInFavs,
-            blockMocks.testSession, globalMocks.testIJob, globalMocks.testProfile);
-        favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
+        const savedFavJob = await globalMocks.testJobsProvider.saveSearch(favJob);
 
-        expect(favJob).toEqual(expectedJob);
-        // expect(profileNodeInFavs.children.length).toEqual(1);
-        // expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
-    });
-
-    it("Tests that saveSearch is executed successfully when prefix is set", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "aH*";
-
-        await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: Owner:* Prefix:aH*");
-    });
-
-    it("Tests that saveSearch is executed successfully when searchId is set", async () => {
-        const globalMocks = await createGlobalMocks();
-        await createBlockMocks(globalMocks);
-
-        globalMocks.testJobsProvider.mSessionNodes[1].owner = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
-        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
-
-        await globalMocks.testJobsProvider.saveSearch(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
-        expect(globalMocks.testJobsProvider.mFavorites[0].label).toEqual("[sestest]: JobId:JOB1234");
+        expect(savedFavJob).toEqual(expectedJob);
     });
 });
 
