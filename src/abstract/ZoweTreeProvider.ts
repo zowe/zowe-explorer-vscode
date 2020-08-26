@@ -141,7 +141,7 @@ export class ZoweTreeProvider {
     public async editSession(node: IZoweTreeNode) {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
-        // Check what happens is inactive
+        // Check what happens if inactive
         await Profiles.getInstance().checkCurrentProfile(profile, true);
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
@@ -192,6 +192,11 @@ export class ZoweTreeProvider {
                 localize("validateProfiles.invalid2",
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."));
         } else if (profileStatus.status === "active") {
+            let sessionNode = node;
+            while (sessionNode.getParent()) {
+                sessionNode = sessionNode.getParent();
+            }
+            Object.defineProperty(sessionNode, "session", { value: profileStatus.session, configurable: true });
             if ((node.contextValue.toLowerCase().includes("session") || node.contextValue.toLowerCase().includes("server"))) {
                 // change contextValue only if the word active is not there
                 if (node.contextValue.toLowerCase().indexOf("active") === -1) {

@@ -179,6 +179,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded, sess
         getDefaultProfile: jest.fn(),
         getProfileType: jest.fn(() => "zosmf"),
         getSchema: jest.fn(),
+        createZoweSession: jest.fn(),
         promptCredentials: jest.fn(),
         collectProfileDetails: jest.fn(() => { return {} }),
         loadNamedProfile: jest.fn(),

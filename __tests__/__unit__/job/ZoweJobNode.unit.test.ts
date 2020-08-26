@@ -156,11 +156,11 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function deleteSession", () => {
-    it("Tests that deleteSession removes the session from the tree", async () => {
+describe("ZoweJobNode unit tests - Function hideSession", () => {
+    it("Tests that hideSession removes the session from the tree", async () => {
         const globalMocks = await createGlobalMocks();
 
-        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1]);
+        await globalMocks.testJobsProvider.hideSession(globalMocks.testJobsProvider.mSessionNodes[1]);
 
         expect(globalMocks.testJobsProvider.mSessionNodes.length).toBe(1);
     });

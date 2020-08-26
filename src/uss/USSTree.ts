@@ -162,7 +162,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (sessionName) {
             const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (profile) {
-                this.addSingleSession(profile);
+                await this.addSingleSession(profile);
             }
         } else {
             const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
@@ -173,12 +173,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === profile.name) {
-                        this.addSingleSession(profile);
+                        await this.addSingleSession(profile);
                     }
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -189,7 +189,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} [node]
      */
-    public deleteSession(node: IZoweUSSTreeNode) {
+    public hideSession(node: IZoweUSSTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
         let revisedLabel =  node.label;
         if (revisedLabel.includes("[")) {
@@ -322,10 +322,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (this.log) {
             this.log.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
-        let sessionNode = node.getSessionNode();
+        await this.checkCurrentProfile(node, true);
         let remotepath: string;
-        await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
+            let sessionNode = node.getSessionNode();
             if (contextually.isSessionNotFav(node)) {
                 if (this.mHistory.getSearchHistory().length > 0) {
 
@@ -512,8 +512,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profileLoaded.name)) {
                 return;
             }
-            // Uses loaded profile to create a session with the USS API
-            const session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+            let session;
+            try {
+                // Uses loaded profile to create a session with the USS API
+                session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+            } catch (error) {
+                // When no password is entered, we should silence the error message for not providing it
+                // since password is optional in Zowe Explorer
+                if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+            }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new ZoweUSSNode(profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, "", false,
                              profileLoaded.name);

@@ -167,7 +167,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Deletes a root node from the tree.
      * @param node: A root node representing a session
      */
-    deleteSession(node: IZoweNodeType): any;
+    hideSession(node: IZoweNodeType): any;
     /**
      * Lets the user open a dataset by filtering the currently-loaded list
      */

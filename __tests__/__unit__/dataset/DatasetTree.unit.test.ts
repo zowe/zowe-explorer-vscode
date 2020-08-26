@@ -547,7 +547,7 @@ describe("Dataset Tree Unit Tests - Function removeSession", () => {
         expect(testTree.mFavorites[0]).not.toBeDefined();
     });
 });
-describe("Dataset Tree Unit Tests - Function deleteSession", () => {
+describe("Dataset Tree Unit Tests - Function hideSession", () => {
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -569,7 +569,7 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        testTree.deleteSession(testTree.mSessionNodes[1]);
+        testTree.hideSession(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
     });

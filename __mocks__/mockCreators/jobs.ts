@@ -74,7 +74,7 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
         addSession: jest.fn(),
         refresh: jest.fn(),
         getTreeView: jest.fn(),
-        deleteSession: jest.fn(),
+        hideSession: jest.fn(),
         addFavorite: jest.fn(),
         removeFavorite: jest.fn(),
         treeView,
@@ -90,7 +90,7 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
     testJobsTree.addFavorite.mockImplementation((newFavorite) => {
         testJobsTree.mFavorites.push(newFavorite);
     });
-    testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
+    testJobsTree.hideSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
     testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
 
     return testJobsTree;

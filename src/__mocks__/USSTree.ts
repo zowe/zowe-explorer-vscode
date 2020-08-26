@@ -189,7 +189,7 @@ export class USSTree implements vscode.TreeDataProvider<ZoweUSSNode> {
     }
 
     @MockMethod()
-    public async deleteSession(node?: ZoweUSSNode): Promise<void> {
+    public async hideSession(node?: ZoweUSSNode): Promise<void> {
         return new Promise<void>((resolve) => {
             return resolve();
         });

@@ -163,7 +163,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (sessionName) {
             const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
             if (zosmfProfile) {
-                this.addSingleSession(zosmfProfile);
+                await this.addSingleSession(zosmfProfile);
             }
         } else {
             const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
@@ -174,12 +174,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
                 for (const session of this.mHistory.getSessions()) {
                     if (session === zosmfProfile.name) {
-                        this.addSingleSession(zosmfProfile);
+                        await this.addSingleSession(zosmfProfile);
                     }
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -450,7 +450,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    public deleteSession(node: IZoweJobTreeNode) {
+    public hideSession(node: IZoweJobTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
         this.deleteSessionByLabel(node.getLabel());
     }
@@ -574,8 +574,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profileLoaded.name)) {
                 return;
             }
-            // Uses loaded profile to create a zosmf session with Zowe
-            const session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+
+            let session;
+            try {
+                // Uses loaded profile to create a zosmf session with Zowe
+                session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+            } catch (error) {
+                // When no password is entered, we should silence the error message for not providing it
+                // since password is optional in Zowe Explorer
+                if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+            }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
             const node = new Job(profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profileLoaded);
             node.contextValue = globals.JOBS_SESSION_CONTEXT;

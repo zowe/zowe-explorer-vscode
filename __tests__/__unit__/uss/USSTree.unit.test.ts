@@ -364,7 +364,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
+describe("USSTree Unit Tests - Function USSTree.hideSession()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testTree2: new USSTree(),
@@ -380,11 +380,11 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         return newMocks;
     }
 
-    it("Tests that deleteSession works properly", async () => {
+    it("Tests that hideSession works properly", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testTree2.deleteSession(blockMocks.testTree2.mSessionNodes[blockMocks.startLength - 1]);
+        blockMocks.testTree2.hideSession(blockMocks.testTree2.mSessionNodes[blockMocks.startLength - 1]);
         expect(blockMocks.testTree2.mSessionNodes.length).toEqual(blockMocks.startLength - 1);
     });
 });
@@ -781,7 +781,7 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
+describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Tests that getChildren() returns valid list of elements", async () => {
         const globalMocks = await createGlobalMocks();
 

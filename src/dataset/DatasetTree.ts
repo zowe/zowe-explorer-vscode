@@ -255,7 +255,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      *
      * @param node
      */
-    public deleteSession(node: IZoweDatasetTreeNode) {
+    public hideSession(node: IZoweDatasetTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
         let revisedLabel = node.label;
         if (revisedLabel.includes("[")) {
@@ -742,22 +742,29 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async addSingleSession(profileLoaded: IProfileLoaded) {
         if (profileLoaded) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profileLoaded.name)) {
-                return;
-            }
-            // Uses loaded profile to create a session with the MVS API
-            const session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
-            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweDatasetNode(
-                profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileLoaded);
-            node.contextValue = globals.DS_SESSION_CONTEXT;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
-            this.mSessionNodes.push(node);
-            this.mHistory.addSession(profileLoaded.name);
+                // If session is already added, do nothing
+                if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profileLoaded.name)) {
+                    return;
+                }
+                let session;
+                try {
+                    // Uses loaded profile to create a session with the MVS API
+                    session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+                } catch (error) {
+                    // When no password is entered, we should silence the error message for not providing it
+                    // since password is optional in Zowe Explorer
+                    if (error.message !== "Must have user & password OR base64 encoded credentials") { await errorHandling(error); }
+                }
+                // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
+                const node = new ZoweDatasetNode(
+                    profileLoaded.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileLoaded);
+                node.contextValue = globals.DS_SESSION_CONTEXT;
+                const icon = getIconByNode(node);
+                if (icon) {
+                    node.iconPath = icon.path;
+                }
+                this.mSessionNodes.push(node);
+                this.mHistory.addSession(profileLoaded.name);
         }
     }
 }
