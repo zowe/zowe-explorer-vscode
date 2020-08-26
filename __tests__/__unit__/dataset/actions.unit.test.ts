@@ -651,7 +651,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const zosmfSession = createBasicZosmfSession(imperativeProfile);
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const datasetFavoritesNode = createDatasetFavoritesNode(session, imperativeProfile);
+        const datasetFavoritesNode = createDatasetFavoritesNode();
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView, datasetFavoritesNode);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);

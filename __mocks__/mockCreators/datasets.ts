@@ -23,9 +23,8 @@ export function createDatasetSessionNode(session: imperative.Session, profile: i
     return datasetNode;
 }
 
-export function createDatasetFavoritesNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const datasetNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded,
-        null, session, undefined, undefined, profile);
+export function createDatasetFavoritesNode() {
+    const datasetNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
     datasetNode.contextValue = globals.FAVORITE_CONTEXT;
 
     return datasetNode;
