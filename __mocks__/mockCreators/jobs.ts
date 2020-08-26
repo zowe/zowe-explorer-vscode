@@ -95,3 +95,18 @@ export function createJobsTree(session: imperative.Session, iJob: zowe.IJob, pro
 
     return testJobsTree;
 }
+
+export function createJobSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
+    const jobSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed,
+    null, session, null, profile);
+    jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+
+    return jobSessionNode;
+}
+
+export function createJobFavoritesNode() {
+    const jobFavoritesNode = new Job("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
+    jobFavoritesNode.contextValue = globals.FAVORITE_CONTEXT;
+
+    return jobFavoritesNode;
+}
