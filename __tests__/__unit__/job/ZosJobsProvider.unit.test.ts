@@ -17,7 +17,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils";
 import { Logger } from "@zowe/imperative";
-import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { createIProfile, createISession, createInstanceOfProfile, createISessionWithoutCredentials, createQuickPickContent, createTreeView } from "../../../__mocks__/mockCreators/shared";
@@ -218,5 +218,65 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         await testTree.getChildren(testTree.mSessionNodes[1]);
 
         expect(elementGetChildrenSpy).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const jobSessionNode = createJobSessionNode(session, imperativeProfile);
+        const jobFavoritesNode = createJobFavoritesNode();
+
+        return {
+            imperativeProfile,
+            session,
+            jobSessionNode,
+            jobFavoritesNode
+        };
+    }
+    it("Checks that profile-less node is initiated for favorited Job", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new ZosJobsProvider();
+
+        const favProfileNode = new Job("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.jobFavoritesNode, null, null, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const node = new Job("testJob(JOB123)", vscode.TreeItemCollapsibleState.Collapsed,
+            favProfileNode, null, new MockJobDetail("testJob(JOB123)"), null);
+        node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+        node.command = {command: "zowe.zosJobsSelectjob", title: "", arguments: [node]};
+        const targetIcon = getIconByNode(node);
+        if (targetIcon) {
+            node.iconPath = targetIcon.path;
+        }
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile).toEqual(node);
+    });
+    it("Checks that profile-less node is initiated for favorited search", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new ZosJobsProvider();
+
+        const favProfileNode = new Job("testProfile", vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.jobFavoritesNode, null, null, null);
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const node = new Job("Owner:USER Prefix:*", vscode.TreeItemCollapsibleState.None,
+            testTree.mFavoriteSession, null, null, null);
+        node.command = {command: "zowe.jobs.search", title: "", arguments: [node]};
+        node.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        const targetIcon = getIconByNode(node);
+        if (targetIcon) {
+            node.iconPath = targetIcon.path;
+        }
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
+            "Owner:USER Prefix:*", globals.JOBS_SESSION_CONTEXT, favProfileNode
+            );
+
+        expect(favChildNodeForProfile).toEqual(node);
     });
 });

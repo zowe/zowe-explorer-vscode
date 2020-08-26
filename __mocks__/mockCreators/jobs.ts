@@ -110,3 +110,26 @@ export function createJobFavoritesNode() {
 
     return jobFavoritesNode;
 }
+
+// Because the JobDetail class in ZosJobsProvider.ts is not exported:
+export class MockJobDetail implements zowe.IJob {
+    public jobid: string;
+    public jobname: string;
+    public subsystem: string;
+    public owner: string;
+    public status: string;
+    public type: string;
+    public class: string;
+    public retcode: string;
+    public url: string;
+    public "files-url": string;
+    public "job-correlator": string;
+    public phase: number;
+    public "phase-name": string;
+    public "reason-not-running"?: string;
+
+    constructor(combined: string) {
+        this.jobname = combined.substring(0, combined.indexOf("("));
+        this.jobid = combined.substring(combined.indexOf("(") + 1, combined.indexOf(")"));
+    }
+}
