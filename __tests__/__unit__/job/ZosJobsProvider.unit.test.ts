@@ -265,7 +265,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new Job("Owner:USER Prefix:*", vscode.TreeItemCollapsibleState.None,
-            testTree.mFavoriteSession, null, null, null);
+           favProfileNode, null, null, null);
         node.command = {command: "zowe.jobs.search", title: "", arguments: [node]};
         node.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const targetIcon = getIconByNode(node);
