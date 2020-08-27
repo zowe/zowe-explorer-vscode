@@ -564,8 +564,8 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         await createBlockMocks(globalMocks);
 
-        globalMocks.testJobNode.label = "[sestest]: Owner:stonecc Prefix:*";
-        globalMocks.testJobNode.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
+        globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const checkSession = jest.spyOn(globalMocks.testJobsProvider, "addSession");
         expect(checkSession).not.toHaveBeenCalled();
 
@@ -573,6 +573,23 @@ describe("ZoweJobNode unit tests - Function searchPrompt", () => {
 
         expect(checkSession).toHaveBeenCalledTimes(1);
         expect(checkSession).toHaveBeenLastCalledWith("sestest");
+    });
+
+    it("Testing that searchPrompt from favorited search can pass session values into node in Sessions", async () => {
+        const globalMocks = await createGlobalMocks();
+        await createBlockMocks(globalMocks);
+        globalMocks.testJobNode.label = "Owner:stonecc Prefix:*";
+        globalMocks.testJobNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+
+        const sessionNoCreds = createISessionWithoutCredentials();
+        globalMocks.testJobsProvider.mSessionNodes[1].session = sessionNoCreds;
+        const sessNodeNoCreds = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobNode);
+
+        expect(sessNodeNoCreds.session.ISession.user).toEqual(globalMocks.testJobNode.session.ISession.user);
+        expect(sessNodeNoCreds.session.ISession.password).toEqual(globalMocks.testJobNode.session.ISession.password);
+        expect(sessNodeNoCreds.session.ISession.base64EncodedAuth).toEqual(globalMocks.testJobNode.session.ISession.base64EncodedAuth);
     });
 
     it("Testing that searchPrompt is successfully executed when searching by owner, Theia route", async () => {

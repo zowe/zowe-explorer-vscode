@@ -33,7 +33,6 @@ async function createGlobalMocks() {
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
         createTreeView: jest.fn(),
-        mockCreateBasicZosmfSession: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
@@ -79,7 +78,6 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.mockShowInformationMessage, configurable: true });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
     Object.defineProperty(globalMocks.mockGetJobs, "getJobsByOwnerAndPrefix", { value: globalMocks.mockGetJobsByOwnerAndPrefix, configurable: true });
-    Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: globalMocks.mockCreateBasicZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.mockGetJobs, "getSpoolFiles", { value: globalMocks.mockGetSpoolFiles, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.mockShowQuickPick, configurable: true });
@@ -104,25 +102,17 @@ async function createGlobalMocks() {
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
 
-    globalMocks.mockCreateBasicZosmfSession.mockReturnValue(globalMocks.testSession);
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
-    globalMocks.testJobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded,
-                                      null, globalMocks.testSession, globalMocks.testIJob, globalMocks.testProfile);
-    globalMocks.testJobNode.contextValue = "job";
-    globalMocks.testJobNode.dirty = true;
-    globalMocks.testIJobComplete.jobid = "JOB1235";
-    globalMocks.testIJobComplete.retcode = "0";
-    globalMocks.testSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed,
-                                        null, globalMocks.testSession, null, globalMocks.testProfile);
-    globalMocks.testSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,
         get: (setting: string) => [],
-        // tslint:disable-next-line: no-empty
-        update: jest.fn(()=>{ {} })
+        update: jest.fn(() => {
+            return {};
+        })
     });
     globalMocks.testJobsProvider = await createJobsTree(Logger.getAppLogger());
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", { value: globalMocks.mockRefresh, configurable: true });
