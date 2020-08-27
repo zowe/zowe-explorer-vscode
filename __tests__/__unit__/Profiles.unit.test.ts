@@ -9,9 +9,11 @@
 *                                                                                 *
 */
 
-import { createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
-         createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
-         createPersistentConfig, createInvalidIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import {
+    createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
+    createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
+    createPersistentConfig, createInvalidIProfile, createValidIProfile
+} from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
@@ -328,7 +330,6 @@ describe("Profiles Unit Tests - Function createNewConnection", () => {
 
         blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
         globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("143");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockShowInputBox.mockResolvedValueOnce("");
         globalMocks.mockShowQuickPick.mockResolvedValueOnce("True");
@@ -517,7 +518,7 @@ describe("Profiles Unit Tests - Function getSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks();
         Object.defineProperty(globalMocks.profiles, "getCliProfileManager",
-               { value: jest.fn(() => Promise.resolve(globalMocks.mockCliProfileManager)) });
+            { value: jest.fn(() => Promise.resolve(globalMocks.mockCliProfileManager)) });
 
         const response = await globalMocks.profiles.getSchema("zosmf");
         // tslint:disable-next-line: no-magic-numbers
@@ -531,8 +532,8 @@ describe("Profiles Unit Tests - Property allProfiles", () => {
 
         const loadedProfiles = globalMocks.profiles.allProfiles;
         expect(loadedProfiles).toEqual([{ name: "sestest", profile: {}, type: "zosmf" },
-                                        { name: "profile1", profile: {}, type: "zosmf" },
-                                        { name: "profile2", profile: {}, type: "zosmf" }]);
+        { name: "profile1", profile: {}, type: "zosmf" },
+        { name: "profile2", profile: {}, type: "zosmf" }]);
     });
 });
 
@@ -764,8 +765,8 @@ describe("Profiles Unit Tests - Function editSession", () => {
 
         globalMocks.profiles.getProfileType = () => new Promise((resolve) => { resolve("alternate"); });
         blockMocks.profileInstance.getSchema.mockResolvedValueOnce(blockMocks.testSchemas[1]);
-        globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake:143");
-        globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("https://fake");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("bad");
 
         await globalMocks.profiles.editSession(blockMocks.imperativeProfile, blockMocks.imperativeProfile.name);
         expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Error: Invalid Port number provided or operation was cancelled");
@@ -878,8 +879,8 @@ describe("Profiles Unit Tests - Function deleteProfile", () => {
         const dsNode = new ZoweDatasetNode(
             "testNode", vscode.TreeItemCollapsibleState.Expanded, null, blockMocks.session, undefined, undefined, blockMocks.imperativeProfile);
         const dsNodeAsFavorite = new ZoweDatasetNode(`[${blockMocks.datasetSessionNode.label.trim()}]: testNode`,
-                                        vscode.TreeItemCollapsibleState.None, blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session,
-                                        dsNode.contextValue, null, dsNode.getProfile());
+            vscode.TreeItemCollapsibleState.None, blockMocks.testDatasetTree.mFavoriteSession, blockMocks.session,
+            dsNode.contextValue, null, dsNode.getProfile());
         dsNode.contextValue = globals.DS_SESSION_CONTEXT;
         blockMocks.testDatasetTree.mSessionNodes.push(dsNode);
         blockMocks.testDatasetTree.addFavorite(dsNodeAsFavorite);
@@ -976,8 +977,8 @@ describe("Profiles Unit Tests - Function createInstance", () => {
             mockJSONParse: jest.spyOn(JSON, "parse"),
             profileInstance: null,
             testProfiles: [{ name: "sestest", profile: {}, type: "zosmf" },
-                           { name: "profile1", profile: {}, type: "zosmf" },
-                           { name: "profile2", profile: {}, type: "zosmf" }]
+            { name: "profile1", profile: {}, type: "zosmf" },
+            { name: "profile2", profile: {}, type: "zosmf" }]
         };
         (child_process.spawnSync as any) = jest.fn((program: string, args: string[], options: any) => {
             const createFakeChildProcess = (status: number, stdout: string, stderr: string) => {
@@ -1086,8 +1087,8 @@ describe("Profiles Unit Tests - Function getProfiles", () => {
         const profiles = await Profiles.createInstance(blockMocks.log);
         const loadedProfiles = profiles.getProfiles("zosmf");
         expect(loadedProfiles).toEqual([{ name: "sestest", profile: {}, type: "zosmf" },
-                                        { name: "profile1", profile: {}, type: "zosmf" },
-                                        { name: "profile2", profile: {}, type: "zosmf" }]);
+        { name: "profile1", profile: {}, type: "zosmf" },
+        { name: "profile2", profile: {}, type: "zosmf" }]);
     });
 });
 
@@ -1228,7 +1229,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(blockMocks.profiles, "getValidSession", { value: jest.fn(() => blockMocks.session)});
+        Object.defineProperty(blockMocks.profiles, "getValidSession", { value: jest.fn(() => blockMocks.session) });
         Object.defineProperty(theProfiles, "validateProfiles", {
             value: jest.fn(() => {
                 return {
@@ -1247,7 +1248,7 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        Object.defineProperty(blockMocks.profiles, "getValidSession", { value: jest.fn(() => blockMocks.session)});
+        Object.defineProperty(blockMocks.profiles, "getValidSession", { value: jest.fn(() => blockMocks.session) });
         Object.defineProperty(theProfiles, "validateProfiles", {
             value: jest.fn(() => {
                 return {
@@ -1338,9 +1339,8 @@ describe("Profiles Unit Tests - Function refresh", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         const theProfiles = await Profiles.createInstance(blockMocks.log);
-        theProfiles.profilesForValidation.push({status: "active", name: blockMocks.validProfile.name});
+        theProfiles.profilesForValidation.push({ status: "active", name: blockMocks.validProfile.name });
         await theProfiles.refresh();
         expect(theProfiles.profilesForValidation.length).toBe(0);
     });
 });
-

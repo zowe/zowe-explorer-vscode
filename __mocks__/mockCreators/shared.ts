@@ -187,9 +187,9 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded, sess
         usesSecurity: true,
         validProfile: ValidProfileEnum.VALID,
         checkCurrentProfile: jest.fn(() => {
-            return {status: "active", name: "sestest"};
+            return {status: "active", name: "sestest", session: session};
         }),
-        profilesForValidation: [{status: "active", name: "sestest"}],
+        profilesForValidation: [{status: "active", name: "sestest", session: session}],
         validateProfiles: jest.fn(),
         editSession: jest.fn(),
         createNewConnection: jest.fn(() => {

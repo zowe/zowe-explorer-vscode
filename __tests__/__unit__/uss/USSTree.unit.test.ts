@@ -57,7 +57,7 @@ async function createGlobalMocks() {
         testResponse: createFileResponse({ items: [] }),
         testUSSNode: null,
         testTree: null,
-        profilesForValidation: {status: "active", name: "fake"},
+        profilesForValidation: null
     };
 
     Object.defineProperty(workspaceUtils, "closeOpenedTextFile", {
@@ -129,6 +129,7 @@ async function createGlobalMocks() {
     const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
+    globalMocks.profilesForValidation = {status: "active", name: "fake", session: globalMocks.testSession};
 
     return globalMocks;
 }
@@ -882,7 +883,7 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
         failNotFound: true,
         message: "fake"
     };
-    const profilesForValidation = {status: "active", name: "fake"};
+    // const profilesForValidation = {status: "active", name: "fake", session: globalMocks};
     /*************************************************************************************************************
      * Test the editSession command
      *************************************************************************************************************/
@@ -898,7 +899,7 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
                         return profileLoad;
                     }),
                     checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
+                        return globalMocks.profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
                 };

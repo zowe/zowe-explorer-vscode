@@ -436,12 +436,12 @@ export class Profiles {
                         throw new Error(localize("collectProfileDetails.zosmfURL", "No valid value for z/OS URL. Operation Cancelled"));
                     } else {
                         newUrl = new URL(newUrl);
-                        schemaValues[profileDetail] = newUrl.host.substring(0, newUrl.host.indexOf(`:`));
+                        schemaValues[profileDetail] = (newUrl.host ? newUrl.host : newUrl.host.substring(0, (newUrl.host.indexOf(`:`))));
                         if (newUrl.port !== 0) { schemaValues.port = Number(newUrl.port); }
                     }
                     break;
                 case "port" :
-                    if (schemaValues[profileDetail] === undefined) {
+                    if (schemaValues[profileDetail] === 0) {
                         let portOptions: vscode.InputBoxOptions = {
                             ignoreFocusOut: true,
                             validateInput: (value) => {
