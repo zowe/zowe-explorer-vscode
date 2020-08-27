@@ -245,7 +245,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param label The favorited data set's label
      * @param contextValue The favorited data set's context value
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
-     * @returns IZoweDatasetTreeNode
+     * @returns IZoweJobTreeNode
      */
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweJobTreeNode){
         let favJob: Job;
