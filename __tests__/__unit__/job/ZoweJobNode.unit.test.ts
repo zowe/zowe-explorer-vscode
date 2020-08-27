@@ -177,6 +177,16 @@ describe("ZoweJobNode unit tests - Function delete", () => {
             `Job ${globalMocks.testJobNode.job.jobname}(${globalMocks.testJobNode.job.jobid}) deleted`
         );
     });
+    it("Tests that delete handles an error thrown during job deletion", async () => {
+        const globalMocks = await createGlobalMocks();
+        const badJobNode = new Job("badJobNode",vscode.TreeItemCollapsibleState.Collapsed, null,
+            globalMocks.testSession, null, globalMocks.testProfile);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await globalMocks.testJobsProvider.delete(badJobNode);
+
+        expect(errorHandlingSpy).toBeCalledTimes(1);
+    });
 });
 
 describe("ZoweJobNode unit tests - Function onDidConfiguration", () => {
