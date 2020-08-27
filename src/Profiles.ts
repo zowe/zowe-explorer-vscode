@@ -108,7 +108,7 @@ export class Profiles {
                     for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
                 } catch (error) { await errorHandling(error.message); }
             }
-            if (!serviceProfile.profile.user) { delete serviceProfile.profile.user; }
+            // if (!serviceProfile.profile.user) { delete serviceProfile.profile.user; }
             if (!serviceProfile.profile.password) { delete serviceProfile.profile.password; }
             try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
             catch (error) { throw new Error(error.message); }

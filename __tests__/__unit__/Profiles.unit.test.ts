@@ -12,7 +12,7 @@
 import {
     createISessionWithoutCredentials, createTreeView, createIProfile, createInstanceOfProfile,
     createQuickPickItem, createQuickPickContent, createInputBox, createBasicZosmfSession,
-    createPersistentConfig, createInvalidIProfile, createValidIProfile
+    createPersistentConfig, createInvalidIProfile, createValidIProfile, createValidBaseProfile
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, createTestSchemas } from "../../__mocks__/mockCreators/profiles";
@@ -1204,6 +1204,175 @@ describe("Profiles Unit Tests - Function loadNamedProfile", () => {
             success = true;
         }
         expect(success).toBe(true);
+    });
+});
+
+describe("Profiles Unit Tests - Function getValidProfile", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            session: createISessionWithoutCredentials(),
+            profileInstance: null,
+            mockGetDefaultProfile: jest.fn(),
+            mockCollectProfileDetails: jest.fn(),
+            baseProfile: createValidBaseProfile(),
+            serviceProfile: createValidIProfile()
+        };
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles, newMocks.session);
+        newMocks.mockGetDefaultProfile.mockResolvedValue(newMocks.baseProfile);
+        newMocks.profileInstance.getDefaultProfile = newMocks.mockGetDefaultProfile;
+        newMocks.profileInstance.collectProfileDetails = newMocks.mockCollectProfileDetails;
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profileInstance);
+
+        return newMocks;
+    }
+
+    it("Tests that getValidProfile tries to retrieve the baseProfile immediately, if it is not passed in", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const getDefaultSpy = jest.spyOn(globalMocks.profiles, "getDefaultProfile");
+        await globalMocks.profiles.getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile);
+
+        expect(getDefaultSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Tests that getValidProfile prompts for password if prompting = true", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.serviceProfile.profile.password = null;
+        blockMocks.baseProfile.password = null;
+
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(['password']);
+    });
+
+    it("Tests that getValidProfile prompts for host if prompting = true", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.serviceProfile.profile.host = null;
+        blockMocks.baseProfile.host = null;
+
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(['host']);
+    });
+
+    it("Tests that getValidProfile prompts for port if prompting = true", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.serviceProfile.profile.port = null;
+        blockMocks.baseProfile.port = null;
+
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(['port']);
+    });
+
+    it("Tests that getValidProfile prompts for basePath if prompting = true", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.serviceProfile.profile.basePath = null;
+        blockMocks.baseProfile.basePath = null;
+
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(['basePath']);
+    });
+
+    it("Tests that getValidProfile successfully returns an array of new profile details", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.serviceProfile.profile.password = null;
+        blockMocks.baseProfile.password = null;
+        blockMocks.serviceProfile.profile.host = null;
+        blockMocks.baseProfile.host = null;
+        blockMocks.serviceProfile.profile.port = null;
+        blockMocks.baseProfile.port = null;
+        blockMocks.serviceProfile.profile.basePath = null;
+        blockMocks.baseProfile.basePath = null;
+        blockMocks.mockCollectProfileDetails.mockResolvedValue({
+            "host": "testHostNew",
+            "port": 1234,
+            "password": "testPassNew",
+            "basePath": "testBasePathNew"
+        });
+
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledTimes(1);
+        expect(blockMocks.mockCollectProfileDetails).toHaveBeenCalledWith(["password", "host", "port", "basePath"]);
+    });
+
+    it("Tests that getValidProfile throws an error if prompting fails", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.mockCollectProfileDetails.mockImplementation(() => { throw new Error("Test error!") });
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile, true);
+
+        expect(blockMocks.mockCollectProfileDetails).toThrowError("Test error!");
+    });
+
+    it("Tests that getValidProfile removes the 'password' key from the service profile if password is null", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.serviceProfile.profile.password = null;
+        const serviceProfileNoPassword = blockMocks.serviceProfile;
+        delete serviceProfileNoPassword.profile.password;
+
+        await Profiles.getInstance().getValidSession(blockMocks.serviceProfile, "sestest", blockMocks.baseProfile);
+
+        expect(globalMocks.mockCreateBasicZosmfSession).toBeCalledWith(serviceProfileNoPassword);
+    });
+
+    it("Tests that getValidProfile successfully returns a connected Session when not using the baseProfile (non-token auth)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+    });
+
+    it("Tests that getValidProfile throws an error if generating a Session fails when not using the baseProfile (non-token auth)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+    });
+
+    it("Tests that getValidProfile successfully returns a connected Session when prompting = true (token auth)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+    });
+
+    it("Tests that getValidProfile successfully returns a connected Session when prompting = false (token auth)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+    });
+
+    it("Tests that getValidProfile throws an error if generating a Session fails when using the baseProfile (token auth)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+    });
+
+    
+    it("Tests that getValidProfile throws an error if baseProfile and serviceProfile.user are both missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
     });
 });
 
