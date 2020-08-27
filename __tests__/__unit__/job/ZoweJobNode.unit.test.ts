@@ -297,6 +297,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         globalMocks.testJobsProvider.mFavorites = [];
+        blockMocks.testJobNode.contextValue = globals.JOBS_JOB_CONTEXT;
 
         await globalMocks.testJobsProvider.addFavorite(blockMocks.testJobNode);
 
@@ -307,6 +308,7 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         expect(profileNodeInFavs.label).toEqual("sestest");
         expect(profileNodeInFavs.children.length).toEqual(1);
         expect(favoritedNode.label).toEqual("MYHLQ(JOB1283)");
+        expect(favoritedNode.contextValue).toEqual(globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX);
     });
     it("Tests that addFavorite successfully favorites a search", async () => {
         const globalMocks = await createGlobalMocks();
@@ -314,12 +316,14 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         globalMocks.testJobsProvider.mFavorites = [];
         globalMocks.testJobsProvider.mSessionNodes[1].owner = "myHLQ";
         globalMocks.testJobsProvider.mSessionNodes[1].prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = globals.JOBS_SESSION_CONTEXT;
 
         await globalMocks.testJobsProvider.addFavorite(globalMocks.testJobsProvider.mSessionNodes[1]);
         const profileNodeInFavs: IZoweJobTreeNode = globalMocks.testJobsProvider.mFavorites[0];
 
         expect(profileNodeInFavs.children.length).toEqual(1);
         expect(profileNodeInFavs.children[0].label).toEqual("Owner:myHLQ Prefix:*");
+        expect(profileNodeInFavs.children[0].contextValue).toEqual(globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
     });
 });
 
