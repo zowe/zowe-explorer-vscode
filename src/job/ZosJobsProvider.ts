@@ -383,20 +383,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     public async updateFavorites() {
-        const settings: any = {...vscode.workspace.getConfiguration().get(ZosJobsProvider.persistenceSchema)};
-        if (settings.persistence) {
-            settings.favorites = [];
-            this.mFavorites.forEach((profileNode) => {
-                profileNode.children.forEach((fav) => {
-                    const favoriteEntry = "[" + profileNode.label.trim() + "]: " + fav.label + "{" + (contextually.isFavoriteJob(fav) ?
-                        globals.JOBS_JOB_CONTEXT :
-                        globals.JOBS_SESSION_CONTEXT) + "}";
-                    settings.favorites.push(favoriteEntry);
-                    }
-                );
+        const favoritesArray = [];
+        this.mFavorites.forEach((profileNode) => {
+            profileNode.children.forEach((fav) => {
+                const favoriteEntry = "[" + profileNode.label.trim() + "]: " + fav.label + "{" + (contextually.isFavoriteJob(fav) ?
+                    globals.JOBS_JOB_CONTEXT :
+                    globals.JOBS_SESSION_CONTEXT) + "}";
+                favoritesArray.push(favoriteEntry);
             });
-            await vscode.workspace.getConfiguration().update(ZosJobsProvider.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
-        }
+        });
+        this.mHistory.updateFavorites(favoritesArray);
     }
 
     /**
