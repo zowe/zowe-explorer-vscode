@@ -791,9 +791,9 @@ export class Profiles {
 
         // Delete from Jobs Favorites
         jobsProvider.mFavorites.forEach((ses) => {
-            const findNode = ses.label.substring(1, ses.label.indexOf("]")).trim();
+            const findNode = ses.label.trim();
             if (findNode === deleteLabel) {
-                jobsProvider.removeFavorite(ses);
+                jobsProvider.mFavorites = jobsProvider.mFavorites.filter((tempNode) => tempNode.label.trim() !== findNode);
                 ses.dirty = true;
                 jobsProvider.refresh();
             }
