@@ -344,7 +344,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public deleteSession(node: IZoweDatasetTreeNode) {
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
-        this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.trim() !== node.label.trim());
         this.mHistory.removeSession(node.label);
         this.refresh();
     }
