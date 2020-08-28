@@ -994,7 +994,7 @@ export class Profiles {
             throw error;
         }
 
-        vscode.window.showInformationMessage("Profile " + profileName + " was deleted.");
+        vscode.window.showInformationMessage(localize("deleteProfile.success.info", "Profile {0} was deleted.", profileName));
         return profileName;
     }
 
