@@ -534,25 +534,25 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 errorHandling(error, null, errMessage);
                 return;
             }
-            profile = parentNode.getProfile();
-            session = parentNode.getSession();
-            // Pass loaded profile/session to the parent node's favorites children.
-            const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
-            const favsForProfile = profileInFavs.children;
-            for (const favorite of favsForProfile ) {
-                // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
-                if (favorite.getProfile() && favorite.getSession()) {
-                    updatedFavsForProfile.push(favorite);
-                    continue;
-                }
-                // If no profile/session for favorite node yet, then add session and profile to favorite node:
-                favorite.setProfileToChoice(profile);
-                favorite.setSessionToChoice(session);
-                updatedFavsForProfile.push(favorite);
-            }
-            // This updates the profile node's children in the this.mFavorites array, as well.
-            return updatedFavsForProfile;
         }
+        profile = parentNode.getProfile();
+        session = parentNode.getSession();
+            // Pass loaded profile/session to the parent node's favorites children.
+        const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        const favsForProfile = profileInFavs.children;
+        for (const favorite of favsForProfile ) {
+            // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
+            if (favorite.getProfile() && favorite.getSession()) {
+                updatedFavsForProfile.push(favorite);
+                continue;
+            }
+            // If no profile/session for favorite node yet, then add session and profile to favorite node:
+            favorite.setProfileToChoice(profile);
+            favorite.setSessionToChoice(session);
+            updatedFavsForProfile.push(favorite);
+        }
+        // This updates the profile node's children in the this.mFavorites array, as well.
+        return updatedFavsForProfile;
     }
 
     public async addFileHistory(criteria: string) {
