@@ -478,19 +478,18 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const directorySearchPattern = /^\[.+\]\:\s.*\{directory\}$/;
         let node: ZoweUSSNode;
         if (directorySearchPattern.test(line)) {
-            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
+            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode,
                 null, "", false, null);
         } else if (favoriteSearchPattern.test(line)) {
-            const newLabel = "[" + parentNode.label + "]: " + label;
-            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, this.mFavoriteSession,
+            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, parentNode,
                 null, null, false, null);
             node.contextValue = globals.USS_SESSION_CONTEXT;
-            node.fullPath = newLabel;
-            node.label = node.tooltip = newLabel;
+            node.fullPath = label;
+            node.label = node.tooltip = label;
             // add a command to execute the search
             node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
         } else {
-            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, this.mFavoriteSession,
+            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, parentNode,
                 null, "", false, null);
             node.command = {command: "zowe.uss.ZoweUSSNode.open",
                             title: localize("initializeUSSFavorites.lines.title", "Open"), arguments: [node]};
@@ -520,7 +519,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
              // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+                session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 parentNode.setProfileToChoice(profile);
                 parentNode.setSessionToChoice(session);
             } catch(error) {

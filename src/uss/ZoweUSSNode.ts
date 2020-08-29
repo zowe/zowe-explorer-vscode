@@ -88,14 +88,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.fullPath = this.tooltip = "/" + label;
             }
         }
-        if (mParent && contextually.isFavoriteContext(mParent)) {
-            this.profileName = "[" + mProfileName + "]: ";
+        if (mParent && mParent.contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.profileName = mProfileName;
             this.fullPath = label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
-            this.label = this.profileName + this.shortLabel;
-            this.tooltip = this.profileName + this.fullPath;
+            this.label = this.shortLabel;
+            this.tooltip = this.fullPath;
         }
         // TODO: this should not be necessary if each node gets initialized with the profile reference.
         if (mProfileName) {

@@ -76,7 +76,7 @@ describe("ussNodeActions integration test", async () => {
             await vscode.workspace.getConfiguration().update("Zowe-USS-Persistent",
                 {persistence: true, favorites}, vscode.ConfigurationTarget.Global);
             const showErrorStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await testTree.initialize(Logger.getAppLogger());
+            await testTree.initializeFavorites(Logger.getAppLogger());
             const ussFavoritesArray = [`[${profileName}]: tester1`,
                 `[${profileName}]: testfile1`,
                 `[${profileName}]: tester2`,
