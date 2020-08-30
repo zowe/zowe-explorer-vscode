@@ -210,6 +210,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async addFavorite(node: IZoweUSSTreeNode) {
         let temp: ZoweUSSNode;
+        const label = node.fullPath;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -217,16 +218,22 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // If favorite node for profile doesn't exist yet, create a new one for it
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
         }
-        temp = new ZoweUSSNode(node.fullPath,
-            node.collapsibleState,
-            profileNodeInFavorites,
-            node.getSession(),
-            node.getParent().fullPath,
-            false,
-            node.getSessionNode().getProfileName());
-        temp.contextValue = contextually.asFavorite(temp);
-        if (contextually.isFavoriteTextOrBinary(temp)) {
-            temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
+        if (contextually.isUssSession(node)) {
+            // Favorite a USS search
+            temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, profileNodeInFavorites,
+                node.getSession(), null, false, node.getSessionNode().getProfileName());
+            temp.fullPath = node.fullPath;
+            this.saveSearch(temp);
+            temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
+
+        } else {
+            // Favorite USS files and directories
+            temp = new ZoweUSSNode(label, node.collapsibleState, profileNodeInFavorites,
+                node.getSession(), node.getParent().fullPath, false, node.getSessionNode().getProfileName());
+            temp.contextValue = contextually.asFavorite(temp);
+            if (contextually.isFavoriteTextOrBinary(temp)) {
+                temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
+            }
         }
         const icon = getIconByNode(temp);
         if (icon) {
@@ -246,24 +253,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {IZoweUSSTreeNode} node
      */
     public async saveSearch(node: IZoweUSSTreeNode) {
-        const label = "[" + node.getSessionNode().getProfileName() + "]: " + node.fullPath;
-        const temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None,
-            this.mFavoriteSession, node.getSession(), null, false, node.getSessionNode().getProfileName());
-
-        temp.fullPath = node.fullPath;
-        temp.label = temp.tooltip = label;
-        temp.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        const icon = getIconByNode(temp);
-        if (icon) {
-            temp.iconPath = icon.path;
-        }
-        temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
-        if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
-            this.mFavorites.push(temp);
-            sortTreeItems(this.mFavorites, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
-            await this.updateFavorites();
-            this.refreshElement(this.mFavoriteSession);
-        }
+        const fullPathLabel = node.fullPath;
+        node.label = node.tooltip = fullPathLabel;
+        node.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+        return node;
     }
 
     /**
@@ -282,7 +275,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {
-                const favoriteEntry = "[" + fav.getProfileName() + "]: " + fav.fullPath + "{" + contextually.getBaseContext(fav) + "}";
+                const favoriteEntry = "[" + profileNode.label.trim() + "]: " + fav.fullPath + "{" + contextually.getBaseContext(fav) + "}";
                 favoritesArray.push(favoriteEntry);
             });
         });

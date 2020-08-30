@@ -597,7 +597,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.saveSearch",
+          "command": "zowe.uss.addFavorite",
           "group": "3_workspace@2"
         },
         {
