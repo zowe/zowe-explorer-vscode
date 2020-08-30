@@ -383,12 +383,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             } else {
                 // executing search from saved search in favorites
-                remotepath = node.label.trim().substring(node.label.trim().indexOf(":") + 2);
-                const session = node.label.trim().substring(node.label.trim().indexOf("[") + 1, node.label.trim().indexOf("]"));
-                await this.addSession(session);
+                remotepath = node.label.trim();
+                const profileName = node.getProfileName();
+                await this.addSession(profileName);
                 const faveNode = node;
                 sessionNode = this.mSessionNodes.find((tempNode) =>
-                    tempNode.getProfileName() === session
+                    tempNode.getProfileName() === profileName
                 );
                 if ((!sessionNode.getSession().ISession.user) || (!sessionNode.getSession().ISession.password)) {
                     sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
