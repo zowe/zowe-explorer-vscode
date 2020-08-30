@@ -210,9 +210,16 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async addFavorite(node: IZoweUSSTreeNode) {
         let temp: ZoweUSSNode;
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        if (profileNodeInFavorites === undefined) {
+            // If favorite node for profile doesn't exist yet, create a new one for it
+            profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+        }
         temp = new ZoweUSSNode(node.fullPath,
             node.collapsibleState,
-            this.mFavoriteSession,
+            profileNodeInFavorites,
             node.getSession(),
             node.getParent().fullPath,
             false,
@@ -225,9 +232,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (icon) {
             temp.iconPath = icon.path;
         }
-        if (!this.mFavorites.find((tempNode) => tempNode.label === temp.label)) {
-            this.mFavorites.push(temp);
-            sortTreeItems(this.mFavorites, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
+        if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === temp.label)) {
+            profileNodeInFavorites.children.push(temp);
+            sortTreeItems(profileNodeInFavorites.children, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             await this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
@@ -272,16 +279,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     public async updateFavorites() {
-        const settings: any = { ...vscode.workspace.getConfiguration().get(USSTree.persistenceSchema) };
-        if (settings.persistence) {
-            settings.favorites = this.mFavorites.map((fav) => {
-                const correctedProfileName = "[" + fav.getProfileName() + "]: ";
-                return (fav.fullPath.startsWith(correctedProfileName) ? fav.fullPath : correctedProfileName + fav.fullPath) + "{" +
-                    contextually.getBaseContext(fav) + "}";
-                }
-            );
-            await vscode.workspace.getConfiguration().update(USSTree.persistenceSchema, settings, vscode.ConfigurationTarget.Global);
-        }
+        const favoritesArray = [];
+        this.mFavorites.forEach((profileNode) => {
+            profileNode.children.forEach((fav) => {
+                const favoriteEntry = "[" + fav.getProfileName() + "]: " + fav.fullPath + "{" + contextually.getBaseContext(fav) + "}";
+                favoritesArray.push(favoriteEntry);
+            });
+        });
+        this.mHistory.updateFavorites(favoritesArray);
     }
 
     /**
