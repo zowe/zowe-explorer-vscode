@@ -265,8 +265,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {IZoweUSSTreeNode} node
      */
     public async removeFavorite(node: IZoweUSSTreeNode) {
-        this.mFavorites = this.mFavorites.filter((temp) =>
-            !((temp.fullPath === node.fullPath) && (temp.contextValue.startsWith(node.contextValue))));
+        // Get node's profile node in favorites
+        const profileName = node.getProfileName();
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        profileNodeInFavorites.children = profileNodeInFavorites.children.filter((temp) =>
+            !((temp.label === node.label) && (temp.contextValue.startsWith(node.contextValue)))
+        );
         await this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
     }
