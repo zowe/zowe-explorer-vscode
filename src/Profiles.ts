@@ -250,7 +250,7 @@ export class Profiles {
         return profileSetting.setting;
     }
 
-    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean) {
+    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
@@ -1142,8 +1142,6 @@ export class Profiles {
                 this.profilesForValidation.push(filteredProfile);
             }
         }
-        // tslint:disable-next-line:no-console
-        console.log(filteredProfile);
         return filteredProfile;
     }
 

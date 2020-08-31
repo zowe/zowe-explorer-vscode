@@ -1563,6 +1563,23 @@ describe("Profiles Unit Tests - Function checkCurrentProfile", () => {
         expect(theProfiles.validProfile).toBe(ValidProfileEnum.INVALID);
     });
 
+    it("Tests that checkCurrentProfile will handle unverified profiles", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        Object.defineProperty(theProfiles, "getProfileSetting", {
+            value: jest.fn(() => {
+                return {
+                    status: "unverified",
+                    name: blockMocks.invalidProfile.name
+                };
+            })
+        });
+        const response = await theProfiles.checkCurrentProfile(blockMocks.invalidProfile);
+        expect(response).toEqual({name: blockMocks.invalidProfile.name, status: "unverified"});
+    });
+
     it("Tests that checkCurrentProfile will handle inactive profiles", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -1630,6 +1647,83 @@ describe("Profiles Unit Tests - Function checkProfileValidationSetting", () => {
         const response = await theProfiles.checkProfileValidationSetting(blockMocks.imperativeProfile);
         expect(response).toEqual(false);
 
+    });
+});
+
+describe("Profiles Unit Tests - Function getProfileSetting", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            imperativeProfile: createInvalidIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            mockNode: null,
+            mockDisableValidationContext: jest.fn(),
+            mockLoadNamedProfile: jest.fn(),
+            mockValidateProfile: jest.fn()
+        };
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: newMocks.mockLoadNamedProfile.mockReturnValue(newMocks.imperativeProfile),
+                    validateProfiles: newMocks.mockValidateProfile.mockReturnValue({ status: "active", name: "sestest" })
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that getProfileSetting returns profile status for disabled profile already set in profilesForValidation", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultSetting = { status: "unverified", name: "sestest" };
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesForValidation = [{ status: "unverified", name: "sestest" }];
+
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        expect(response).toEqual(resultSetting);
+    });
+
+    it("Tests that getProfileSetting returns profile status for disabled profile not already set in profilesForValidation", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultSetting = { status: "unverified", name: "sestest" };
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesForValidation = [{ status: "inactive", name: "sestest" }];
+
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        expect(response).toEqual(resultSetting);
+    });
+
+    it("Tests that getProfileSetting returns profile status for disabled profile non existant in profilesForValidation", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultSetting = { status: "unverified", name: "sestest" };
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+        theProfiles.profilesForValidation = [];
+
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        expect(response).toEqual(resultSetting);
+    });
+
+    it("Tests that getProfileSetting returns profile status for enabled profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const resultSetting = { status: "inactive", name: "sestest" };
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+
+        const response = await theProfiles.getProfileSetting(blockMocks.imperativeProfile);
+        expect(response).toEqual(resultSetting);
     });
 });
 
@@ -1879,6 +1973,101 @@ describe("Profiles Unit Tests - Function enableValidationContext", () => {
         resultNode.contextValue = `${globals.DS_SESSION_CONTEXT}`;
         const result = await theProfiles.enableValidationContext(resultNode);
         expect(result.contextValue).toContain(`${globals.VALIDATE_SUFFIX}true`);
+    });
+});
+
+describe("Profiles Unit Tests - Function validationArraySetup", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            log: Logger.getAppLogger(),
+            profiles: null,
+            imperativeProfile: createIProfile(),
+            validProfile: createValidIProfile(),
+            profileInstance: null,
+            session: null,
+            datasetSessionNode: null,
+            mockNode: null,
+            mockEnableValidationContext: jest.fn(),
+        };
+        newMocks.mockNode = newMocks.datasetSessionNode;
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.profiles = await Profiles.createInstance(newMocks.log);
+        newMocks.profileInstance = createInstanceOfProfile(newMocks.profiles);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    enableValidationContext: newMocks.mockEnableValidationContext.mockReturnValue(newMocks.mockNode)
+                };
+            }),
+        });
+        globalMocks.mockGetInstance.mockReturnValue(newMocks.profiles);
+
+        return newMocks;
+    }
+
+    it("Tests that validationArraySetup returns profileSetting if same setting is passed", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const returnedSetting = {
+            name: blockMocks.imperativeProfile.name,
+            setting: false
+        };
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: false}];
+
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
+        expect(response).toEqual(returnedSetting);
+    });
+
+    it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting if different setting is passed", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const returnedSetting = {
+            name: blockMocks.imperativeProfile.name,
+            setting: false
+        };
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
+        expect(response).toEqual(returnedSetting);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false}]);
+    });
+
+    it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting when array empty", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const returnedSetting = {
+            name: blockMocks.imperativeProfile.name,
+            setting: false
+        };
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [];
+
+        const response = await theProfiles.validationArraySetup(blockMocks.imperativeProfile, false);
+        expect(response).toEqual(returnedSetting);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: false}]);
+    });
+
+    it("Tests that validationArraySetup returns profileSetting and updates profilesValidationSetting when profile name not found", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.validProfile.name = "test2";
+        const returnedSetting = {
+            name: blockMocks.validProfile.name,
+            setting: false
+        };
+
+        const theProfiles = await Profiles.createInstance(blockMocks.log);
+        theProfiles.profilesValidationSetting = [{name: blockMocks.imperativeProfile.name, setting: true}];
+
+        const response = await theProfiles.validationArraySetup(blockMocks.validProfile, false);
+        expect(response).toEqual(returnedSetting);
+        expect(theProfiles.profilesValidationSetting).toEqual([{name: blockMocks.imperativeProfile.name, setting: true},
+            {name: blockMocks.validProfile.name, setting: false}]);
     });
 });
 

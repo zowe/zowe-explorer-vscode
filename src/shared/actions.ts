@@ -210,8 +210,6 @@ export async function returnIconState(node: IZoweNodeType) {
 export async function resetValidationSettings(node: IZoweNodeType) {
     const profile: IProfileLoaded = node.getProfile();
     const setting = await Profiles.getInstance().checkProfileValidationSetting(profile);
-    // tslint:disable-next-line:no-console
-    console.log("setting: " + setting);
     if (setting){
         Profiles.getInstance().enableValidationContext(node);
     } else {
