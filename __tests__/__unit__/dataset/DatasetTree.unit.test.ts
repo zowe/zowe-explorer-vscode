@@ -355,19 +355,18 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
 });
 describe("Dataset Tree Unit Tests - Function addSession", () => {
     function createBlockMocks() {
-        const session = createISession();
-        const imperativeProfile = createIProfile();
-        const treeView = createTreeView();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profile = createInstanceOfProfile(imperativeProfile);
-
-        return {
-            session,
-            datasetSessionNode,
-            treeView,
-            imperativeProfile,
-            profile
+        const newMocks = {
+            session: createISession(),
+            imperativeProfile: createIProfile(),
+            treeView: createTreeView(),
+            datasetSessionNode: null,
+            profile: null,
+            mockCheckProfileValidationSetting: jest.fn()
         };
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.profile = createInstanceOfProfile(newMocks.imperativeProfile);
+
+        return newMocks;
     }
 
     it("Checking successful adding of session", async () => {

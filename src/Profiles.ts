@@ -26,10 +26,6 @@ import { PersistentFilters } from "./PersistentFilters";
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-export interface IExtIProfileLoaded extends IProfileLoaded {
-    validation?: boolean;
-}
-
 interface IUrlValidator {
     valid: boolean;
     protocol: string;
@@ -40,6 +36,11 @@ interface IUrlValidator {
 interface IProfileValidation {
     status: string;
     name: string;
+}
+
+interface IValidationSetting {
+    name: string;
+    setting?: boolean;
 }
 
 let InputBoxOptions: vscode.InputBoxOptions;
@@ -62,6 +63,7 @@ export class Profiles {
     private static loader: Profiles;
 
     public profilesForValidation: IProfileValidation[] = [];
+    public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: IProfileLoaded[] = [];
     public loadedProfile: IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
@@ -77,19 +79,15 @@ export class Profiles {
     private baseEncd: string;
     private constructor(private log: Logger) {}
 
-    public async checkCurrentProfile(theProfile: IExtIProfileLoaded) {
-        let profileStatus: IProfileValidation;
-        if (!theProfile.validation) {
-            profileStatus = {
-                status: "unverified",
-                name: theProfile.name
-            };
-        } else {
-            // Check what happens if there's an error
-            profileStatus = await this.validateProfiles(theProfile);
-        }
+    public async checkCurrentProfile(theProfile: IProfileLoaded) {
+        const profileStatus: IProfileValidation = await this.getProfileSetting(theProfile);
+
         if (profileStatus.status === "inactive") {
             this.validProfile = ValidProfileEnum.INVALID;
+            return profileStatus;
+        }
+
+        if (profileStatus.status === "unverified") {
             return profileStatus;
         }
 
@@ -124,103 +122,171 @@ export class Profiles {
 
     }
 
+    public async getProfileSetting(theProfile: IProfileLoaded): Promise<IProfileValidation> {
+        let profileStatus: IProfileValidation;
+        let found: boolean = false;
+        this.profilesValidationSetting.filter(async (instance) => {
+            if ((instance.name === theProfile.name) && (instance.setting === false)) {
+                profileStatus = {
+                    status: "unverified",
+                    name: instance.name
+                };
+                if (this.profilesForValidation.length > 0) {
+                    this.profilesForValidation.filter((profile) => {
+                        if ((profile.name === theProfile.name) && (profile.status === "unverified")) {
+                            found = true;
+                        }
+                        if ((profile.name === theProfile.name) && (profile.status !== "unverified")) {
+                            found = true;
+                            const index = this.profilesForValidation.lastIndexOf(profile);
+                            this.profilesForValidation.splice(index, 1, profileStatus);
+                        }
+                    });
+                }
+                if (!found) {
+                    this.profilesForValidation.push(profileStatus);
+                }
+            }
+        });
+        if (profileStatus === undefined) {
+            profileStatus = await this.validateProfiles(theProfile);
+        }
+        return profileStatus;
+    }
+
     public async disableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
                                    jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
-        const theProfile: IExtIProfileLoaded = node.getProfile();
-        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
-            return;
-        } else {
-            theProfile.validation = false;
-            // Disable validation for profile in uss tree
-            ussTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === theProfile.name) {
-                    this.disableValidationContext(sessNode);
-                    ussTree.refresh();
-                }
-            });
-            // Disable validation for profile in data set tree
-            datasetTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === theProfile.name) {
-                    this.disableValidationContext(sessNode);
-                    datasetTree.refresh();
-                }
-            });
-            // Disable validation for profile in jobs tree
-            jobsProvider.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === theProfile.name) {
-                    this.disableValidationContext(sessNode);
-                    jobsProvider.refresh();
-                }
-            });
-        }
+        // Check and set profilesForValidation setting value
+        const theProfile: IProfileLoaded = node.getProfile();
+        await this.validationArraySetup(theProfile, false);
+
+        // Disable validation for profile in uss tree
+        ussTree.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === theProfile.name) {
+                this.disableValidationContext(sessNode);
+                ussTree.refresh();
+            }
+        });
+        // Disable validation for profile in data set tree
+        datasetTree.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === theProfile.name) {
+                this.disableValidationContext(sessNode);
+                datasetTree.refresh();
+            }
+        });
+        // Disable validation for profile in jobs tree
+        jobsProvider.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === theProfile.name) {
+                this.disableValidationContext(sessNode);
+                jobsProvider.refresh();
+            }
+        });
         return node;
     }
 
     public async disableValidationContext(node: IZoweNodeType) {
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
             node.contextValue = node.contextValue.replace(/(_validate=true)/g, "").replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
-            node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
         } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)){
             return node;
         } else {
-            node.contextValue += `${globals.VALIDATE_SUFFIX}false`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
         }
+
         return node;
     }
 
     public async enableValidation(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>,
                                   jobsProvider: IZoweTree<IZoweJobTreeNode>, node?: IZoweNodeType): Promise<IZoweNodeType>{
-        const theProfile: IExtIProfileLoaded = node.getProfile();
-        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)){
-            theProfile.validation = true;
-            // Disable validation for profile in uss tree
-            ussTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === theProfile.name) {
-                    this.enableValidationContext(sessNode);
-                    ussTree.refresh();
-                }
-            });
-            // Disable validation for profile in data set tree
-            datasetTree.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === theProfile.name) {
-                    this.enableValidationContext(sessNode);
-                    datasetTree.refresh();
-                }
-            });
-            // Disable validation for profile in jobs tree
-            jobsProvider.mSessionNodes.forEach((sessNode) => {
-                if (sessNode.getProfileName() === theProfile.name) {
-                    this.enableValidationContext(sessNode);
-                    jobsProvider.refresh();
-                }
-            });
-        } else {
-            return;
-        }
+        const theProfile: IProfileLoaded = node.getProfile();
+
+        await this.validationArraySetup(theProfile, true);
+
+        // Disable validation for profile in uss tree
+        ussTree.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === theProfile.name) {
+                this.enableValidationContext(sessNode);
+                ussTree.refresh();
+            }
+        });
+        // Disable validation for profile in data set tree
+        datasetTree.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === theProfile.name) {
+                this.enableValidationContext(sessNode);
+                datasetTree.refresh();
+            }
+        });
+        // Disable validation for profile in jobs tree
+        jobsProvider.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === theProfile.name) {
+                this.enableValidationContext(sessNode);
+                jobsProvider.refresh();
+            }
+        });
         return node;
     }
 
     public async enableValidationContext(node: IZoweNodeType) {
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
             node.contextValue = node.contextValue.replace(/(_validate=false)/g, "");
-            node.contextValue += `${globals.VALIDATE_SUFFIX}true`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
         } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)){
             return node;
         } else {
-            node.contextValue += `${globals.VALIDATE_SUFFIX}true`;
+            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
         }
+
         return node;
     }
 
-    public async checkProfileValidationSetting(theProfile: IExtIProfileLoaded): Promise<boolean> {
+    public async checkProfileValidationSetting(theProfile: IProfileLoaded): Promise<boolean> {
         // Gets global validation settings from settings.json
-        const validationSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
-        if (validationSetting === false) {
-            theProfile.validation = false;
+        let profileSetting: IValidationSetting;
+        const globalSetting = PersistentFilters.getDirectValue("Zowe-Automatic-Validation") as boolean;
+
+        profileSetting = await this.validationArraySetup(theProfile, globalSetting);
+
+        return profileSetting.setting;
+    }
+
+    public async validationArraySetup(theProfile: IProfileLoaded, validationSetting: boolean) {
+        let found: boolean = false;
+        let profileSetting: IValidationSetting;
+        if (this.profilesValidationSetting.length > 0) {
+            this.profilesValidationSetting.filter((instance) => {
+                if ((instance.name === theProfile.name) && (instance.setting === validationSetting)) {
+                    found = true;
+                    profileSetting = {
+                        name: instance.name,
+                        setting: instance.setting
+                    };
+                }
+                if ((instance.name === theProfile.name) && (instance.setting !== validationSetting)) {
+                    found = true;
+                    profileSetting = {
+                        name: instance.name,
+                        setting: validationSetting
+                    };
+                    const index = this.profilesValidationSetting.lastIndexOf(instance);
+                    this.profilesValidationSetting.splice(index, 1, profileSetting);
+                }
+            });
+            if (!found) {
+                profileSetting = {
+                    name: theProfile.name,
+                    setting: validationSetting
+                };
+                this.profilesValidationSetting.push(profileSetting);
+            }
         } else {
-            theProfile.validation = true;
+            profileSetting = {
+                name: theProfile.name,
+                setting: validationSetting
+            };
+            this.profilesValidationSetting.push(profileSetting);
         }
-        return theProfile.validation;
+        return profileSetting;
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
@@ -1037,7 +1103,7 @@ export class Profiles {
                             // will be returned as undefined
                             vscode.window.showInformationMessage(localize("Profiles.validateProfiles.validationCancelled", "Validating {0} was cancelled.", theProfile.name));
                         });
-                        await getSessStatus.getStatus(theProfile, theProfile.type);
+                        return getSessStatus.getStatus(theProfile, theProfile.type);
                     });
                 } else {
                     profileStatus = "unverified";
@@ -1067,7 +1133,6 @@ export class Profiles {
                         this.profilesForValidation.push(filteredProfile);
                         break;
                 }
-
             } catch (error) {
                 this.log.debug("Validate Error - Invalid Profile: " + error);
                 filteredProfile = {
@@ -1077,7 +1142,8 @@ export class Profiles {
                 this.profilesForValidation.push(filteredProfile);
             }
         }
-
+        // tslint:disable-next-line:no-console
+        console.log(filteredProfile);
         return filteredProfile;
     }
 

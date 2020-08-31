@@ -246,15 +246,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     }
                 }
             }
-            if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-            }
             for (const node of this.mSessionNodes) {
                 if (validate) {
                     Profiles.getInstance().enableValidationContext(node);
                 } else {
                     Profiles.getInstance().disableValidationContext(node);
                 }
+            }
+            if (this.mSessionNodes.length === 1) {
+                this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();

@@ -14,7 +14,7 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { ValidProfileEnum, IExtIProfileLoaded } from "../../src/Profiles";
+import { ValidProfileEnum } from "../../src/Profiles";
 import * as utils from "../../src/utils";
 import * as zowe from "@zowe/cli";
 
@@ -99,7 +99,7 @@ export function createInvalidIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createValidIProfile(): IExtIProfileLoaded {
+export function createValidIProfile(): imperative.IProfileLoaded {
     return {
         name: "sestest",
         profile: {
@@ -113,8 +113,7 @@ export function createValidIProfile(): IExtIProfileLoaded {
         },
         type: "zosmf",
         message: "",
-        failNotFound: false,
-        validation: true
+        failNotFound: false
     };
 }
 
