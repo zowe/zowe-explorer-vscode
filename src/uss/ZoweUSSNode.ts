@@ -412,15 +412,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             try {
                 let label: string;
                 switch (true) {
-                    case (contextually.isFavoriteContext(this.getParent())):
-                        label = this.label.substring(this.label.indexOf(":") + 1).trim();
+                    // For opening favorited and non-favorited files
+                    case (this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT):
+                    case (contextually.isUssSession(this.getParent())):
+                        label = this.label;
                         break;
                     // Handle file path for files in directories and favorited directories
                     case (contextually.isUssDirectory(this.getParent())):
                         label = this.fullPath;
-                        break;
-                    case (contextually.isUssSession(this.getParent())):
-                        label = this.label;
                         break;
                     default:
                         vscode.window.showErrorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
