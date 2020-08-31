@@ -135,10 +135,11 @@ async function createGlobalMocks() {
 describe("USSTree Unit Tests - Function USSTree.initialize()", () => {
     it("Tests that initialize() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-
         const testTree1 = await createUSSTree(Logger.getAppLogger());
+        const favProfileNode = testTree1.mFavorites[0];
         expect(testTree1.mSessionNodes).toBeDefined();
-        expect(testTree1.mFavorites.length).toBe(2);
+        expect(testTree1.mFavorites.length).toBe(1);
+        expect(favProfileNode.children.length).toBe(2);
 
         const expectedUSSFavorites: ZoweUSSNode[] = [
             new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, globalMocks.testSession, "",
@@ -153,33 +154,18 @@ describe("USSTree Unit Tests - Function USSTree.initialize()", () => {
                 node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
             }
         });
-        expect(testTree1.mFavorites[0].fullPath).toEqual("/u/aDir");
-        expect(testTree1.mFavorites[1].label).toEqual("[test]: myFile.txt");
+        expect(favProfileNode.children[0].fullPath).toEqual("/u/aDir");
+        expect(favProfileNode.children[1].label).toEqual("myFile.txt");
     });
 });
 
 describe("USSTree Unit Tests - Function initializeUSSTree()", () => {
     it("Tests if initializeUSSTree() is executed successfully", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        const expectedUSSFavorites: ZoweUSSNode[] = [
-            new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, globalMocks.testSession, "",
-                false, "test"),
-            new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, globalMocks.testSession, "",
-                false, "test"),
-        ];
-
-        expectedUSSFavorites.forEach((node) => node.contextValue += globals.FAV_SUFFIX);
-        expectedUSSFavorites.forEach((node) => {
-            if (node.contextValue !== globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX) {
-                node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
-            }
-        });
-
         const testTree1 = await createUSSTree(Logger.getAppLogger());
-        expect(testTree1.mFavorites.length).toBe(2);
-        expect(testTree1.mFavorites[0].fullPath).toEqual("/u/aDir");
-        expect(testTree1.mFavorites[1].label).toEqual("[test]: myFile.txt");
+        const favProfileNode = testTree1.mFavorites[0];
+        expect(favProfileNode.children.length).toBe(2);
+        expect(favProfileNode.children[0].fullPath).toEqual("/u/aDir");
+        expect(favProfileNode.children[1].label).toEqual("myFile.txt");
     });
 });
 
