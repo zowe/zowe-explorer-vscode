@@ -147,3 +147,10 @@ export function createProfileManager() {
     }) as CliProfileManager;
     return newManager;
 }
+
+export function createDefaultProfileManager() {
+    return {
+        getDefaultProfile: jest.fn(),
+        setDefaultProfile: jest.fn(),
+    }
+}

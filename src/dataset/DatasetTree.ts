@@ -26,6 +26,7 @@ import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
+import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -244,7 +245,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                await this.addSingleSession(DefaultProfileManager.getInstance().getDefaultProfile("zosmf"));
             }
         }
         this.refresh();
@@ -749,7 +750,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 let session;
                 try {
                     // Uses loaded profile to create a session with the MVS API
-                    session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+                    session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
+                                                           .getValidSession(profileLoaded,
+                                                                            profileLoaded.name,
+                                                                            DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                            false);
                 } catch (error) {
                     // When no password is entered, we should silence the error message for not providing it
                     // since password is optional in Zowe Explorer

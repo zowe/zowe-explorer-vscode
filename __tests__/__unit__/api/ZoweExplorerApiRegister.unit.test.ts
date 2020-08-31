@@ -18,6 +18,8 @@ import { ZoweExplorerApi } from "../../../src/api/ZoweExplorerApi";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 import { ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "../../../src/api/ZoweExplorerZosmfApi";
 import { Profiles } from "../../../src/Profiles";
+import { createDefaultProfileManager } from "../../../__mocks__/mockCreators/profiles";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: IProfileLoaded;
@@ -58,6 +60,9 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
         throw new Error("Method not implemented.");
     }
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+    public async collectProfileDetails?(detailsToGet?: string[]): Promise<any> {
         throw new Error("Method not implemented.");
     }
 }
@@ -103,20 +108,24 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
     public getStatus?(profile?: IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
+    public async collectProfileDetails?(detailsToGet?: string[]): Promise<any> {
+        throw new Error("Method not implemented.");
+    }
 }
 
 describe("ZoweExplorerApiRegister unit testing", () => {
-
     const log = Logger.getAppLogger();
-    let profiles: Profiles;
-    beforeEach(async () => {
-        profiles = await Profiles.createInstance(log);
-    });
-
+    const mockRefresh = jest.fn(async (): Promise<void> => {return;});
+    const profilesForValidation = {status: "active", name: "fake"};
+    const mockProfileManagerInstance = createDefaultProfileManager();
     const registry = ZoweExplorerApiRegister.getInstance();
 
     it("registers an API only once per profile type", async () => {
-        const defaultProfile = profiles.getDefaultProfile();
+        const defaultProfileManagerInstance = await DefaultProfileManager.createInstance(log);
+        const profiles = await Profiles.createInstance(log);
+
+        const defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+        Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => mockProfileManagerInstance), configurable: true });
 
         const defaultUssApi = registry.getUssApi(defaultProfile);
         registry.registerUssApi(new ZosmfUssApi());
@@ -132,6 +141,8 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         registry.registerJesApi(new ZosmfJesApi());
         const anotherJesApiInstance = registry.getJesApi(defaultProfile);
         expect(anotherJesApiInstance).toEqual(defaultJesApi);
+
+        Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => defaultProfileManagerInstance), configurable: true });
     });
 
     it("registers multiple API instances in parallel", async () => {
@@ -160,7 +171,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(mockRefresh.mock.calls.length).toBe(2);
     });
 
-    it("throws errors when registering invalid APIs", () => {
+    it("throws errors when registering invalid APIs", async () => {
         const api1 = new MockUssApi1();
         const mockGetProfileTypeName = jest.fn(() => undefined);
         api1.getProfileTypeName = mockGetProfileTypeName;
@@ -184,8 +195,13 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(() => {registry.getJesApi(undefined);}).toThrow();
     });
 
-    it("provides access to the common api for a profile registered to any api regsitry", () => {
-        const defaultProfile = profiles.getDefaultProfile();
+    it("provides access to the common api for a profile registered to any api regsitry", async () => {
+        const defaultProfileManagerInstance = await DefaultProfileManager.createInstance(log);
+        const profiles = await Profiles.createInstance(log);
+
+        const defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+        Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => mockProfileManagerInstance), configurable: true });
+
         const ussApi = ZoweExplorerApiRegister.getUssApi(defaultProfile);
         const profileUnused: IProfileLoaded = {
             name: "profileUnused",
@@ -201,5 +217,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile)).toEqual(ussApi);
         expect(ZoweExplorerApiRegister.getCommonApi(defaultProfile).getProfileTypeName()).toEqual(defaultProfile.type);
         expect(() => {ZoweExplorerApiRegister.getCommonApi(profileUnused);}).toThrow();
+
+        Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => defaultProfileManagerInstance), configurable: true });
     });
 });

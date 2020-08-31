@@ -11,6 +11,7 @@
 
 import { IProfileLoaded } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import * as vscode from "vscode";
 import { ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi } from "./ZoweExplorerZosmfApi";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import * as nls from "vscode-nls";
@@ -249,6 +250,22 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             }
         }
         return result;
+    }
+
+    public async getProfileType(): Promise<string> {
+        let profileType: string;
+        const profTypes = this.registeredApiTypes();
+        const typeOptions = Array.from(profTypes);
+        if (typeOptions.length === 1 && typeOptions[0] === "zosmf") { profileType = typeOptions[0]; }
+        else {
+            const quickPickTypeOptions: vscode.QuickPickOptions = {
+                placeHolder: localize("getProfileType.option.prompt.type.placeholder", "Profile Type"),
+                ignoreFocusOut: true,
+                canPickMany: false
+            };
+            profileType = await vscode.window.showQuickPick(typeOptions, quickPickTypeOptions);
+        }
+        return profileType;
     }
 
     /**

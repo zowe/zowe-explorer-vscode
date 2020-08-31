@@ -17,6 +17,7 @@ import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as utils from "../../../src/utils";
 import { Profiles } from "../../../src/Profiles";
+import { Logger } from "@zowe/imperative";
 import { getIconByNode } from "../../../src/generators/icons";
 import {
     createInstanceOfProfile,
@@ -27,12 +28,22 @@ import {
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as workspaceUtils from "../../../src/utils/workspace";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 
 jest.mock("fs");
 jest.mock("util");
 
-function createGlobalMocks() {
-    const isTheia = jest.fn();
+async function createGlobalMocks() {
+    const globalMocks = {
+        isTheia: jest.fn(),
+        defaultProfileManagerInstance: null,
+        defaultProfile: null,
+        mockGetMvsApi: jest.fn(),
+        mvsApi: null,
+        testProfile: createIProfile(),
+        testSession: createISession()
+    }
 
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
@@ -44,7 +55,7 @@ function createGlobalMocks() {
     Object.defineProperty(zowe, "Rename", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Rename, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Rename, "dataSetMember", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
+    Object.defineProperty(globals, "ISTHEIA", { get: globalMocks.isTheia, configurable: true });
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
@@ -73,10 +84,21 @@ function createGlobalMocks() {
         }),
         configurable: true
     });
+    
+    // Mocking Default Profile Manager
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
-    return {
-        isTheia
-    };
+    // USS API mocks
+    globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
+    globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
+    Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
+    ZoweExplorerApiRegister.getMvsApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
+
+    return globalMocks;
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -96,7 +118,7 @@ describe("Dataset Tree Unit Tests - Initialisation", () => {
     }
 
     it("Checking definition of the dataset tree", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -123,7 +145,7 @@ describe("Dataset Tree Unit Tests - Function getTreeItem", () => {
     }
 
     it("Checking function with PS Dataset", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const node = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None,
@@ -153,7 +175,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
     }
 
     it("Checking function for root node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -172,7 +194,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(blockMocks.datasetSessionNode).toMatchObject(children[1]);
     });
     it("Checking function for session node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -200,7 +222,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(children).toEqual(sampleChildren);
     });
     it("Checking function for favorite node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         const node = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None,
@@ -214,7 +236,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(children).toEqual([node]);
     });
     it("Checking function for PDS Dataset node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -250,7 +272,7 @@ describe("Dataset Tree Unit Tests - Function getParent", () => {
     }
 
     it("Checking function on the root node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -262,7 +284,7 @@ describe("Dataset Tree Unit Tests - Function getParent", () => {
         expect(parentNode).toBeNull();
     });
     it("Checking function on the non-root node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -289,7 +311,7 @@ describe("Dataset Tree Unit Tests - Function getSearchHistory", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -315,7 +337,7 @@ describe("Dataset Tree Unit Tests - Function addFileHistory", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -341,7 +363,7 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -371,11 +393,10 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
     }
 
     it("Checking successful adding of session", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.profile.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
-        // mocked(Profiles.createInstance).mockReturnValue(blockMocks.profile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -385,7 +406,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
     it("Checking failed attempt to add a session due to the missing profile", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.profile.loadNamedProfile.mockReturnValueOnce(null);
@@ -416,7 +437,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
     }
 
     it("Checking adding of PS Dataset node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -431,7 +452,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_DS_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking adding of PDS Dataset node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -447,7 +468,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_PDS_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking adding of PDS Member node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -466,7 +487,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_PDS_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking adding of Session node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -481,7 +502,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.DS_SESSION_CONTEXT}${globals.FAV_SUFFIX}`);
     });
     it("Checking attempt to add a duplicate node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -496,7 +517,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites.map((entry) => entry.label)).toEqual([`[${blockMocks.datasetSessionNode.label}]: ${node.label}`]);
     });
     it("Checking attempt to add a member of favorite PDS", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -529,7 +550,7 @@ describe("Dataset Tree Unit Tests - Function removeSession", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -561,7 +582,7 @@ describe("Dataset Tree Unit Tests - Function hideSession", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -590,7 +611,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
     }
 
     it("Checking flipping of PDS Dataset node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -608,7 +629,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
     });
     it("Checking flipping of Favorite PDS Dataset node", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -626,7 +647,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
     });
     it("Checking flipping of PDS Dataset with credential prompt", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -644,7 +665,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
     });
     it("Checking flipping of favorite Dataset session", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -677,7 +698,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
     }
 
     it("Checking adding of new filter - Theia", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -694,7 +715,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter - Theia", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -710,7 +731,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter - Theia", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -727,7 +748,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelling of filter prompt with available filters - Theia", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -743,7 +764,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made.");
     });
     it("Checking function on favorites", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -760,7 +781,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(addSessionSpy).toHaveBeenLastCalledWith(blockMocks.datasetSessionNode.label.trim());
     });
     it("Checking adding of new filter", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -776,7 +797,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -791,7 +812,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -812,7 +833,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelling of filter prompt with available filters", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
@@ -848,7 +869,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.profile.editSession.mockResolvedValueOnce("testProfile");
@@ -879,7 +900,7 @@ describe("Dataset Tree Unit Tests - Function searchInLoadedItems", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -911,7 +932,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.workspace.getConfiguration).mockReturnValue(blockMocks.workspaceConfiguration);
@@ -943,7 +964,7 @@ describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -975,7 +996,7 @@ describe("Dataset Tree Unit Tests - Function findNonFavoritedNode", () => {
     }
 
     it("Checking common run of function", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1007,7 +1028,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
     }
 
     it("Checking opening of PS Dataset", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1023,7 +1044,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         expect(testTree.getSearchHistory()).toEqual([node.label]);
     });
     it("Checking opening of PDS Member", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1062,7 +1083,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
     it("Checking function with PS Dataset", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
@@ -1080,7 +1101,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
     it("Checking function with PS Dataset given lowercase name", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
@@ -1098,7 +1119,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
     it("Checking function with Favorite PS Dataset", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
@@ -1117,7 +1138,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking failed attempt to rename PS Dataset", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1144,7 +1165,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking function with PDS Member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
@@ -1164,7 +1185,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking function with PDS Member given in lowercase", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
@@ -1184,7 +1205,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking function with favorite PDS Member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
@@ -1205,7 +1226,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
     });
     it("Checking failed attempt to rename PDS Member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);

@@ -13,7 +13,8 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Session, IProfileLoaded } from "@zowe/imperative";
-import { errorHandling, refreshTree } from "../utils";
+import { errorHandling } from "../utils";
+import { refreshTree } from "../profiles/utils";
 import { IZoweDatasetTreeNode } from "../api/IZoweTreeNode";
 import { ZoweTreeNode } from "../abstract/ZoweTreeNode";
 import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
@@ -216,8 +217,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         } catch (err) {
             try{
-            await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
-            await refreshTree(sessNode);
+                await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+                await refreshTree(sessNode);
             } catch (err) {
                 await errorHandling(err, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
             }

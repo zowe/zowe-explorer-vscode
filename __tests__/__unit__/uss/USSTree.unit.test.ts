@@ -26,6 +26,8 @@ import * as zowe from "@zowe/cli";
 import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -47,6 +49,10 @@ async function createGlobalMocks() {
         createBasicZosmfSession: jest.fn(),
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
+        defaultProfileManagerInstance: null,
+        defaultProfile: null,
+        mockGetUssApi: jest.fn(),
+        ussApi: null,
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15
@@ -109,6 +115,19 @@ async function createGlobalMocks() {
         }),
         configurable: true
     });
+
+    // Mocking Default Profile Manager
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+
+    // USS API mocks
+    globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+    globalMocks.mockGetUssApi.mockReturnValue(globalMocks.ussApi);
+    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
+    ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetUssApi.bind(ZoweExplorerApiRegister);
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);

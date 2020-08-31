@@ -35,6 +35,7 @@ import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { KeytarCredentialManager } from "./KeytarCredentialManager";
 import { linkProfileDialog } from "./utils/profileLink";
 import * as nls from "vscode-nls";
+import { DefaultProfileManager } from "./profiles/DefaultProfileManager";
 declare const __webpack_require__: typeof require;
 declare const __non_webpack_require__: typeof require;
 
@@ -105,6 +106,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             profileRootDirectory: path.join(getZoweDir(), "profiles"),
         });
 
+        // Initialize default profile manager
+        await DefaultProfileManager.createInstance(globals.LOG);
         // Initialize profile manager
         await Profiles.createInstance(globals.LOG);
         // Initialize dataset provider

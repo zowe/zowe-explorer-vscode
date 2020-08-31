@@ -25,6 +25,7 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -178,7 +179,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(DefaultProfileManager.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -515,7 +516,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             let session;
             try {
                 // Uses loaded profile to create a session with the USS API
-                session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+                session = ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded,
+                                                                                              profileLoaded.name,
+                                                                                              DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                                              false);
             } catch (error) {
                 // When no password is entered, we should silence the error message for not providing it
                 // since password is optional in Zowe Explorer

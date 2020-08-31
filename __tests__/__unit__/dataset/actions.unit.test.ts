@@ -31,7 +31,9 @@ import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
-import * as utils from "../../../src/utils";
+import { Logger } from "@zowe/imperative";
+import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -39,11 +41,20 @@ jest.mock("fs");
 let mockClipboardData = null;
 let clipboard;
 
-function createGlobalMocks() {
+async function createGlobalMocks() {
     clipboard = {
         writeText: jest.fn().mockImplementation((value) => mockClipboardData = value),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
     };
+
+    const globalMocks = {
+        testProfile: createIProfile(),
+        testSession: createISession(),
+        mockGetMvsApi: jest.fn(),
+        mvsApi: null,
+        defaultProfileManagerInstance: null,
+        defaultProfile: null
+    }
 
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Upload", { value: jest.fn(), configurable: true });
@@ -76,6 +87,21 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    
+    // Mocking Default Profile Manager
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+
+    // USS API mocks
+    globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile);
+    globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
+    Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
+    ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
+
+    return globalMocks;
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -90,8 +116,8 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         const profileInstance = createInstanceOfProfile(imperativeProfile, session);
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
+        // const mvsApi = createMvsApi(imperativeProfile);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -100,7 +126,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             profileInstance,
             imperativeProfile,
             datasetSessionNode,
-            mvsApi,
+            // mvsApi,
             testDatasetTree
         };
     }
@@ -108,7 +134,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking of common dataset member creation", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, blockMocks.session);
@@ -118,7 +144,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
-        jest.spyOn(blockMocks.mvsApi, "getContents").mockResolvedValueOnce({
+        jest.spyOn(globalMocks.mvsApi, "getContents").mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -137,7 +163,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         );
     });
     it("Checking failed attempt to create dataset member", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, blockMocks.session);
@@ -155,7 +181,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Unable to create member: test Error: test");
     });
     it("Checking of attempt to create member without name", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, blockMocks.session);
@@ -166,7 +192,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         expect(mocked(zowe.Upload.bufferToDataSet)).not.toBeCalled();
     });
     it("Checking of member creation for favorite dataset", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.datasetSessionNode, blockMocks.session);
@@ -179,7 +205,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
-        jest.spyOn(blockMocks.mvsApi, "getContents").mockResolvedValueOnce({
+        jest.spyOn(globalMocks.mvsApi, "getContents").mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -208,8 +234,8 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const profileInstance = createInstanceOfProfile(imperativeProfile, session);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
+        // const mvsApi = createMvsApi(imperativeProfile);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -218,7 +244,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             treeView,
             imperativeProfile,
             datasetSessionNode,
-            mvsApi,
+            // mvsApi,
             testDatasetTree
         };
     }
@@ -227,7 +253,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
     it("Checking common PS dataset refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
@@ -258,7 +284,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking duplicate PS dataset refresh attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
@@ -278,7 +304,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking failed attempt to refresh PS dataset (not found exception)", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
 
@@ -293,7 +319,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -316,7 +342,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE7", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
@@ -338,7 +364,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking favorite PDS Member refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -361,7 +387,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking favorite PS refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, parent, null);
@@ -393,8 +419,8 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
         const profileInstance = createInstanceOfProfile(imperativeProfile, session);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
+        // const mvsApi = createMvsApi(imperativeProfile);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -403,7 +429,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             imperativeProfile,
             datasetSessionNode,
             profileInstance,
-            mvsApi,
+            // mvsApi,
             testDatasetTree
         };
     }
@@ -412,7 +438,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
     it("Checking common PS dataset deletion", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
@@ -420,7 +446,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
@@ -432,7 +458,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
@@ -440,7 +466,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(false);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
@@ -449,7 +475,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
@@ -457,7 +483,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockRejectedValueOnce(Error("not found"));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
@@ -466,7 +492,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
@@ -474,7 +500,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockRejectedValueOnce(Error(""));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
@@ -482,7 +508,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking PS deletion attempt which was rejected by user in the process", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.NODE", vscode.TreeItemCollapsibleState.None,
@@ -490,7 +516,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Cancel" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
@@ -500,7 +526,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
@@ -511,7 +537,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
@@ -525,7 +551,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking Favorite PDS Member deletion", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
@@ -534,7 +560,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
 
@@ -548,7 +574,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking Favorite PS dataset deletion", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const parent = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.PARENT",
@@ -560,7 +586,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
 
@@ -573,7 +599,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     });
     it("Checking incorrect dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
@@ -583,7 +609,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(globalMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
 
         await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
@@ -599,8 +625,8 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
+        // const mvsApi = createMvsApi(imperativeProfile);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -608,7 +634,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
             treeView,
             imperativeProfile,
             datasetSessionNode,
-            mvsApi,
+            // mvsApi,
             testDatasetTree
         };
     }
@@ -616,7 +642,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common dataset filter action", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.pattern = "TEST";
@@ -632,7 +658,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         expect(mocked(vscode.window.showInformationMessage)).not.toBeCalled();
     });
     it("Checking common dataset filter failed attempt", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.pattern = "TEST";
@@ -644,7 +670,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking favorite dataset filter action", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favoriteSample = new ZoweDatasetNode("[sestest]: HLQ.TEST", vscode.TreeItemCollapsibleState.None, undefined, null);
 
@@ -663,8 +689,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
+        // const mvsApi = createMvsApi(imperativeProfile);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -673,7 +699,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             treeView,
             imperativeProfile,
             datasetSessionNode,
-            mvsApi,
+            // mvsApi,
             profileInstance,
             testDatasetTree
         };
@@ -683,7 +709,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
     it("Checking common dataset saving action when no session is defined", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const nodeWithoutSession = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
             null, null, undefined, undefined, blockMocks.imperativeProfile);
@@ -692,8 +718,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([nodeWithoutSession]);
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const getSessionSpy = jest.spyOn(blockMocks.mvsApi, "getSession");
-        jest.spyOn(blockMocks.mvsApi, "getSession").mockResolvedValue(blockMocks.sessionWithoutCredentials);
+        const getSessionSpy = jest.spyOn(globalMocks.mvsApi, "getSession");
+        jest.spyOn(globalMocks.mvsApi, "getSession").mockResolvedValue(blockMocks.sessionWithoutCredentials);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
@@ -703,7 +729,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking common dataset saving failed attempt due to inability to locate session and profile", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const nodeWithoutSession = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None,
             null, null, undefined, undefined, blockMocks.imperativeProfile);
@@ -720,7 +746,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking common dataset saving failed attempt due to its absence on the side of the server", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, undefined, undefined, undefined, blockMocks.imperativeProfile);
@@ -728,7 +754,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([node, blockMocks.datasetSessionNode]);
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValueOnce({
+        const dataSetSpy = jest.spyOn(globalMocks.mvsApi, "dataSet").mockResolvedValueOnce({
             success: true,
             commandResponse: "",
             apiResponse: {
@@ -745,7 +771,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking common dataset saving", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
             null, undefined, undefined, blockMocks.imperativeProfile);
@@ -784,7 +810,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking common dataset failed saving attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
             null, undefined, undefined, blockMocks.imperativeProfile);
@@ -821,7 +847,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking favorite dataset saving", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
             null, undefined, undefined, blockMocks.imperativeProfile);
@@ -864,7 +890,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking favorite PDS Member saving", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(`[${blockMocks.imperativeProfile.name}]: HLQ.TEST.AFILE`, vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null, undefined, undefined, blockMocks.imperativeProfile);
@@ -914,7 +940,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
             null, undefined, undefined, blockMocks.imperativeProfile);
@@ -933,7 +959,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking PDS member saving attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
             "HLQ.TEST.AFILE(mem)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
@@ -971,7 +997,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     });
     it("Checking common dataset saving failed due to conflict with server version", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
             null, undefined, undefined, blockMocks.imperativeProfile);
@@ -1026,8 +1052,8 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
-        const mvsApi = createMvsApi(imperativeProfile);
-        bindMvsApi(mvsApi);
+        // const mvsApi = createMvsApi(imperativeProfile);
+        // bindMvsApi(mvsApi);
 
         return {
             session,
@@ -1036,7 +1062,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
             treeView,
             imperativeProfile,
             datasetSessionNode,
-            mvsApi,
+            // mvsApi,
             profileInstance,
             testDatasetTree
         };
@@ -1046,7 +1072,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
 
     it("Checking PS dataset attributes showing", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None,
@@ -1058,7 +1084,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
                 html: ""
             }
         } as any);
-        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        const datasetListSpy = jest.spyOn(globalMocks.mvsApi, "dataSet");
         datasetListSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
@@ -1074,7 +1100,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
     it("Checking PDS dataset attributes showing", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None,
@@ -1086,7 +1112,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
                 html: ""
             }
         } as any);
-        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        const datasetListSpy = jest.spyOn(globalMocks.mvsApi, "dataSet");
         datasetListSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
@@ -1102,7 +1128,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
     it("Checking Favorite PS dataset attributes showing", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None,
@@ -1115,7 +1141,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
                 html: ""
             }
         } as any);
-        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        const datasetListSpy = jest.spyOn(globalMocks.mvsApi, "dataSet");
         datasetListSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
@@ -1131,7 +1157,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
     it("Checking Favorite PDS dataset attributes showing", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("[session]: AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None,
@@ -1144,7 +1170,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
                 html: ""
             }
         } as any);
-        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        const datasetListSpy = jest.spyOn(globalMocks.mvsApi, "dataSet");
         datasetListSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
@@ -1160,7 +1186,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     });
     it("Checking failed attempt of dataset attributes showing (empty response)", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("AUSER.A1557332.A996850.TEST1", vscode.TreeItemCollapsibleState.None,
@@ -1172,7 +1198,7 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
                 html: ""
             }
         } as any);
-        const datasetListSpy = jest.spyOn(blockMocks.mvsApi, "dataSet");
+        const datasetListSpy = jest.spyOn(globalMocks.mvsApi, "dataSet");
         datasetListSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
@@ -1218,7 +1244,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
 
     it("Checking copy the label of a node to the clipboard", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_DS_CONTEXT;
@@ -1232,7 +1258,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode("[sestest]: HLQ.TEST.DELETE.NODE", vscode.TreeItemCollapsibleState.None,
             blockMocks.datasetSessionNode, null);
@@ -1247,7 +1273,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     });
     it("Checking copy the label of a member to the clipboard", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("parent", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         parent.contextValue = globals.DS_PDS_CONTEXT;
@@ -1264,7 +1290,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode("[sestest]: parent", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
@@ -1311,7 +1337,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
 
     it("Should call zowe.Copy.dataSet when pasting to sequential data set", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
@@ -1338,7 +1364,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     });
     it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
@@ -1360,7 +1386,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode,
@@ -1382,7 +1408,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     });
     it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None,
@@ -1420,7 +1446,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     });
     it("Should throw an error when pasting to a member that already exists", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
@@ -1453,7 +1479,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
     });
     it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const favoritedNode = new ZoweDatasetNode("[sestest]: HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None,
@@ -1531,7 +1557,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
 
     it("Checking PS dataset migrate", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
@@ -1583,7 +1609,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
 
     it("Checking PS dataset recall", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
@@ -1632,7 +1658,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
     }
 
     it("Checking of proper configuration being picked up for different DS types", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
@@ -1668,7 +1694,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
@@ -1707,7 +1733,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt for favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
@@ -1746,7 +1772,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
     });
     it("Checking PS dataset creation", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
@@ -1765,7 +1791,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
     it("Checking PS dataset errored creation", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
@@ -1790,7 +1816,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", undefined);
     });
     it("Checking dataset attempt of creation with empty type", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
@@ -1809,7 +1835,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
     it("Checking of history being properly updated for new query", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
@@ -1827,7 +1853,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
     });
     it("Checking history was overwritten with new query if empty", async () => {
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
@@ -1874,7 +1900,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
 
     it("Checking of opening for common dataset", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.withProgress).mockResolvedValueOnce({
@@ -1895,7 +1921,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     });
     it("Checking of failed attempt to open dataset", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.withProgress).mockRejectedValueOnce(Error("testError"));
@@ -1912,7 +1938,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     });
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.withProgress).mockResolvedValueOnce({
@@ -1936,7 +1962,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     });
     it("Checking of opening for PDS Member of favorite dataset", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.withProgress).mockResolvedValueOnce({
@@ -1960,7 +1986,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     });
     it("Checking of opening for PDS Member of favorite session", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.withProgress).mockResolvedValueOnce({

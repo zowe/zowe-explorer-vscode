@@ -26,6 +26,7 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
+import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -179,7 +180,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
+                await this.addSingleSession(DefaultProfileManager.getInstance().getDefaultProfile(profileType));
             }
         }
         this.refresh();
@@ -215,7 +216,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     favJob = new Job(line.substring(0, line.indexOf("{")),
                                      vscode.TreeItemCollapsibleState.Collapsed,
                                      this.mFavoriteSession,
-                                     (await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name, null, false)),
+                                     (await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
+                                                                   .getValidSession(zosmfProfile,
+                                                                                    zosmfProfile.name,
+                                                                                    DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                                    false)),
                                      new JobDetail(nodeName),
                                      zosmfProfile);
                     favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
@@ -225,7 +230,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                         line.substring(0, line.indexOf("{")),
                         vscode.TreeItemCollapsibleState.None,
                         this.mFavoriteSession,
-                        (await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name, null, false)),
+                        (await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
+                                                      .getValidSession(zosmfProfile,
+                                                                       zosmfProfile.name,
+                                                                       DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                       false)),
                         null, zosmfProfile
                     );
                     favJob.command = {command: "zowe.jobs.search", title: "", arguments: [favJob]};
@@ -578,7 +587,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             let session;
             try {
                 // Uses loaded profile to create a zosmf session with Zowe
-                session = await Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, false);
+                session = await ZoweExplorerApiRegister.getCommonApi(profileLoaded)
+                                                       .getValidSession(profileLoaded,
+                                                                        profileLoaded.name,
+                                                                        DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                        false);
             } catch (error) {
                 // When no password is entered, we should silence the error message for not providing it
                 // since password is optional in Zowe Explorer

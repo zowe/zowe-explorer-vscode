@@ -11,13 +11,15 @@
 
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import { IProfileLoaded, ISession, Session, IProfile } from "@zowe/imperative";
+import { IProfileLoaded, Session } from "@zowe/imperative";
 import * as globals from "../globals";
 import { Profiles, ValidProfileEnum } from "../Profiles";
 import { PersistentFilters } from "../PersistentFilters";
 import { FilterDescriptor, FilterItem, resolveQuickPickHelper, errorHandling } from "../utils";
 import { IZoweTreeNode } from "../api/IZoweTreeNode";
 import * as nls from "vscode-nls";
+import { ZoweExplorerApiRegister } from "../api/ZoweExplorerApiRegister";
+import { DefaultProfileManager } from "../profiles/DefaultProfileManager";
 
 // Set up localization
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
@@ -94,7 +96,11 @@ export class MvsCommandHandler {
         }
         await Profiles.getInstance().checkCurrentProfile(zosmfProfile, true);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID) {
-            session = await Profiles.getInstance().getValidSession(zosmfProfile, zosmfProfile.name, null, true);
+            session = await ZoweExplorerApiRegister.getCommonApi(zosmfProfile)
+                                                   .getValidSession(zosmfProfile,
+                                                                    zosmfProfile.name,
+                                                                    DefaultProfileManager.getInstance().getDefaultProfile("base").profile,
+                                                                    true);
             let command1: string = command;
             if (!command) {
                 command1 = await this.getQuickPick(session && session.ISession ? session.ISession.hostname : "unknown");

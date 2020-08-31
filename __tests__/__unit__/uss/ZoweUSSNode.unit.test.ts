@@ -13,13 +13,16 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles, ValidProfileEnum } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { createISession, createISessionWithoutCredentials, createIProfile,
+import { createISessionWithoutCredentials, createIProfile,
     createFileResponse, createTreeView, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { createDefaultProfileManager } from "../../../__mocks__/mockCreators/profiles";
 import * as fs from "fs";
 import * as path from "path";
+import { Logger } from "@zowe/imperative";
 import * as globals from "../../../src/globals";
 import { ZoweExplorerApiRegister } from "../../../src/api/ZoweExplorerApiRegister";
+import { DefaultProfileManager } from "../../../src/profiles/DefaultProfileManager";
 
 jest.mock("fs");
 jest.mock("path");
@@ -50,20 +53,32 @@ async function createGlobalMocks() {
         mockGetValidSession: jest.fn(),
         ZosmfSession: jest.fn(),
         getUssApiMock: jest.fn(),
+        defaultProfileManagerInstance: null,
+        defaultProfile: null,
+        session: createISessionWithoutCredentials(),
+        profileOne: createIProfile(),
+        profileOps: null,
+        defaultProfileOps: null,
+        response: createFileResponse({etag: "123"}),
+        ussApi: null,
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15
             };
-        }),
-        session: createISessionWithoutCredentials(),
-        profileOne: createIProfile(),
-        profileOps: null,
-        response: createFileResponse({etag: "123"}),
-        ussApi: null
+        })
     };
 
+    // Mocking Default Profile Manager
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
+
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne, globalMocks.session);
+    globalMocks.defaultProfileOps = createDefaultProfileManager();
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
+    Object.defineProperty(globalMocks.ussApi, "getValidSession", { value: jest.fn(() => globalMocks.session), configurable: true });
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
@@ -90,6 +105,8 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(Profiles, "createInstance", { value: jest.fn(() => globalMocks.profileOps), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(() => globalMocks.profileOps), configurable: true });
+    Object.defineProperty(DefaultProfileManager, "createInstance", { value: jest.fn(() => globalMocks.defaultProfileOps), configurable: true });
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileOps), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
 

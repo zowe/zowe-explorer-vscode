@@ -9,16 +9,15 @@
 *                                                                                 *
 */
 
-import { IProfileLoaded, Logger, CliProfileManager, IProfile, ISession, IUpdateProfileFromCliArgs,
-         ICommandArguments, Session, ConnectionPropsForSessCfg, SessConstants } from "@zowe/imperative";
+import { IProfileLoaded, Logger, CliProfileManager, IProfile, IUpdateProfileFromCliArgs } from "@zowe/imperative";
 import * as path from "path";
 import { URL } from "url";
-import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "./globals";
 import { ZoweExplorerApiRegister } from "./api/ZoweExplorerApiRegister";
 import { errorHandling, getZoweDir, FilterDescriptor, FilterItem, resolveQuickPickHelper } from "./utils";
 import { IZoweTree } from "./api/IZoweTree";
+import { DefaultProfileManager } from "./profiles/DefaultProfileManager";
 import { IZoweNodeType, IZoweUSSTreeNode, IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 
@@ -63,13 +62,12 @@ export class Profiles {
     private jobsSchema: string = "Zowe-Jobs-Persistent";
     private allTypes: string[];
     private profilesByType = new Map<string, IProfileLoaded[]>();
-    private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
     private constructor(private log: Logger) {}
 
     public async checkCurrentProfile(profileLoaded: IProfileLoaded, prompt?: boolean) {
         try {
-            const validSession = await (Profiles.getInstance().getValidSession(profileLoaded, profileLoaded.name, null, prompt));
+            const validSession = await (ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(profileLoaded, profileLoaded.name, null, prompt));
 
             if ((!profileLoaded.profile.user || !profileLoaded.profile.password) && !validSession) {
                 // Credentials are invalid
@@ -87,69 +85,69 @@ export class Profiles {
         }
     }
 
-    public async getValidSession(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfile, prompt?: boolean) {
-        // Retrieve baseProfile
-        if (!baseProfile) { baseProfile = this.getDefaultProfile("base").profile; }
+    // public async getValidSession(serviceProfile: IProfileLoaded, profileName: string, baseProfile?: IProfile, prompt?: boolean) {
+    //     // Retrieve baseProfile
+    //     if (!baseProfile) { baseProfile = DefaultProfileManager.getInstance().getDefaultProfile("base").profile; }
 
-        // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
-        if (serviceProfile.profile.user) {
-            if (prompt) {
-                // Select for prompting only fields which are not defined
-                const schemaArray = [];
-                if (!serviceProfile.profile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
-                if (!serviceProfile.profile.host && (baseProfile && !baseProfile.host)) {
-                    schemaArray.push("host");
-                    if (!serviceProfile.profile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
-                    if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
-                }
+    //     // If user exists in serviceProfile, use serviceProfile to login because it has precedence over baseProfile
+    //     if (serviceProfile.profile.user) {
+    //         if (prompt) {
+    //             // Select for prompting only fields which are not defined
+    //             const schemaArray = [];
+    //             if (!serviceProfile.profile.password && (baseProfile && !baseProfile.password)) { schemaArray.push("password"); }
+    //             if (!serviceProfile.profile.host && (baseProfile && !baseProfile.host)) {
+    //                 schemaArray.push("host");
+    //                 if (!serviceProfile.profile.port && (baseProfile && !baseProfile.port)) { schemaArray.push("port"); }
+    //                 if (!serviceProfile.profile.basePath) { schemaArray.push("basePath"); }
+    //             }
 
-                try {
-                    const newDetails = await this.collectProfileDetails(schemaArray);
-                    for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
-                } catch (error) { await errorHandling(error.message); }
-            }
-            // if (!serviceProfile.profile.user) { delete serviceProfile.profile.user; }
-            if (!serviceProfile.profile.password) { delete serviceProfile.profile.password; }
-            try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
-            catch (error) { throw new Error(error.message); }
-        } else if (baseProfile) {
-            // baseProfile exists, so APIML login is possible
-            const sessCfg = {
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized :
-                                                                                baseProfile.rejectUnauthorized,
-                basePath: serviceProfile.profile.basePath,
-                hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.host,
-                port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.port,
-            };
+    //             try {
+    //                 const newDetails = await this.collectProfileDetails(schemaArray);
+    //                 for (const detail of schemaArray) { serviceProfile.profile[detail] = newDetails[detail]; }
+    //             } catch (error) { await errorHandling(error.message); }
+    //         }
+    //         // if (!serviceProfile.profile.user) { delete serviceProfile.profile.user; }
+    //         if (!serviceProfile.profile.password) { delete serviceProfile.profile.password; }
+    //         try { return zowe.ZosmfSession.createBasicZosmfSession(serviceProfile.profile); }
+    //         catch (error) { throw new Error(error.message); }
+    //     } else if (baseProfile) {
+    //         // baseProfile exists, so APIML login is possible
+    //         const sessCfg = {
+    //             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized ? serviceProfile.profile.rejectUnauthorized :
+    //                                                                             baseProfile.rejectUnauthorized,
+    //             basePath: serviceProfile.profile.basePath,
+    //             hostname: serviceProfile.profile.host ? serviceProfile.profile.host : baseProfile.host,
+    //             port: serviceProfile.profile.port ? serviceProfile.profile.port : baseProfile.port,
+    //         };
 
-            const cmdArgs: ICommandArguments = {
-                $0: "zowe",
-                _: [""],
-                tokenType: SessConstants.TOKEN_TYPE_APIML,
-                tokenValue: baseProfile.tokenValue
-            };
+    //         const cmdArgs: ICommandArguments = {
+    //             $0: "zowe",
+    //             _: [""],
+    //             tokenType: SessConstants.TOKEN_TYPE_APIML,
+    //             tokenValue: baseProfile.tokenValue
+    //         };
 
-            try {
-                let connectableSessCfg: ISession;
-                if (prompt) {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
-                                                                                                    { requestToken: false,
-                                                                                                      doPrompting: prompt,
-                                                                                                      getValuesBack: this.collectProfileDetails });
-                } else {
-                    connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
-                                                                                                    { requestToken: false, doPrompting: false });
-                }
+    //         try {
+    //             let connectableSessCfg: ISession;
+    //             if (prompt) {
+    //                 connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+    //                                                                                                 { requestToken: false,
+    //                                                                                                   doPrompting: prompt,
+    //                                                                                                   getValuesBack: this.collectProfileDetails });
+    //             } else {
+    //                 connectableSessCfg = await ConnectionPropsForSessCfg.addPropsOrPrompt<ISession>(sessCfg, cmdArgs,
+    //                                                                                                 { requestToken: false, doPrompting: false });
+    //             }
 
-                return new Session(connectableSessCfg);
-            } catch (error) {
-                await errorHandling(error.message); }
-        } else {
-            // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
-            throw new Error(localize("getValidSession.loginImpossible",
-                                     "Profile {0} is invalid. Please check your login details and try again.", profileName));
-        }
-    }
+    //             return new Session(connectableSessCfg);
+    //         } catch (error) {
+    //             await errorHandling(error.message); }
+    //     } else {
+    //         // No baseProfile exists, nor a user in serviceProfile. It is impossible to login with the currently-provided information.
+    //         throw new Error(localize("getValidSession.loginImpossible",
+    //                                  "Profile {0} is invalid. Please check your login details and try again.", profileName));
+    //     }
+    // }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
         for (const profile of this.allProfiles) {
@@ -157,8 +155,6 @@ export class Profiles {
         }
         throw new Error(localize("loadNamedProfile.error.profileName", "Could not find profile named: {0}.", name));
     }
-
-    public getDefaultProfile(type: string = "zosmf"): IProfileLoaded { return this.defaultProfileByType.get(type); }
 
     public getProfiles(type: string = "zosmf"): IProfileLoaded[] { return this.profilesByType.get(type); }
 
@@ -168,7 +164,7 @@ export class Profiles {
 
         // Set the default base profile (base is not a type included in registeredApiTypes)
         let profileManager = await this.getCliProfileManager("base");
-        this.defaultProfileByType.set("base", (await profileManager.load({ loadDefault: true })));
+        DefaultProfileManager.getInstance().setDefaultProfile("base", (await profileManager.load({ loadDefault: true })));
 
         // Handle all API profiles
         for (const type of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
@@ -182,7 +178,7 @@ export class Profiles {
                 try { defaultProfile = await profileManager.load({ loadDefault: true }); }
                 catch (error) { vscode.window.showInformationMessage(error.message); }
 
-                this.defaultProfileByType.set(type, defaultProfile);
+                DefaultProfileManager.getInstance().setDefaultProfile(type, defaultProfile);
             }
             // This is in the loop because I need an instantiated profile manager config
             if (profileManager.configurations && this.allTypes.length === 0) {
@@ -310,7 +306,7 @@ export class Profiles {
             const updSchemaValues = await this.collectProfileDetails();
             updSchemaValues.name = profileName;
 
-            const updSession = await Profiles.getInstance().getValidSession(updSchemaValues, profileName, null, true);
+            const updSession = await ZoweExplorerApiRegister.getCommonApi(profileLoaded).getValidSession(updSchemaValues, profileName, null, true);
             updSchemaValues.base64EncodedAuth = updSession.ISession.base64EncodedAuth;
             await this.updateProfile({profile: updSchemaValues, name: profileName, type: profileLoaded.type});
             vscode.window.showInformationMessage(localize("editConnection.success", "Profile was successfully updated"));

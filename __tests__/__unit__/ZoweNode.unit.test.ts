@@ -20,66 +20,89 @@ import { ValidProfileEnum, Profiles } from "../../src/Profiles";
 import { List } from "@zowe/cli";
 import { DS_PDS_CONTEXT, DS_SESSION_CONTEXT, INFORMATION_CONTEXT, DS_MEMBER_CONTEXT,
     DS_MIGRATED_FILE_CONTEXT, DS_DS_CONTEXT, VSAM_CONTEXT } from "../../src/globals";
-import { createISession, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { createISession, createValidIProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../src/api/ZoweExplorerApiRegister";
+import { DefaultProfileManager } from "../../src/profiles/DefaultProfileManager";
+import { Logger } from "@zowe/imperative";
 
-describe("Unit Tests (Jest)", () => {
-    // Globals
-    const session = createISession();
-    const profileOne = createValidIProfile();
-    const profilesForValidation = {status: "active", name: "sestest"};
-    const mockLoadNamedProfile = jest.fn();
-    const showErrorMessage = jest.fn();
-    const mockGetValidSession = jest.fn();
-    const withProgress = jest.fn();
-    const mockCheckCurrentProfile = jest.fn();
-    const getMvsApiMock = jest.fn();
-    const mockGetInstance = jest.fn();
-    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profileOne);
-    const mockInstance = {
-        allProfiles: [profileOne, { name: "profile1" }, { name: "secondName" }],
-        defaultProfile: jest.fn(() => profileOne),
-        type: "zosmf",
-        validProfile: ValidProfileEnum.VALID,
-        getValidSession: mockGetValidSession,
-        checkCurrentProfile: jest.fn(() => profilesForValidation),
-        profilesForValidation: [],
-        validateProfiles: jest.fn(),
-        loadNamedProfile: mockLoadNamedProfile
-    };
-
-    beforeEach(() => {
-        withProgress.mockImplementation((progLocation, callback) => {
-            return callback();
-        });
-        mockLoadNamedProfile.mockReturnValue(profileOne);
-        mockCheckCurrentProfile.mockReturnValue(profilesForValidation);
-        mockGetValidSession.mockResolvedValue(session);
-        mockGetInstance.mockResolvedValue(mockInstance);
-        getMvsApiMock.mockReturnValue(mvsApi);
-        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
-        const ProgressLocation = jest.fn().mockImplementation(() => {
+async function createGlobalMocks() {
+    const globalMocks = {
+        session: createISession(),
+        profileOne: createValidIProfile(),
+        profilesForValidation: {status: "active", name: "sestest"},
+        mockLoadNamedProfile: jest.fn(),
+        showErrorMessage: jest.fn(),
+        mockGetValidSession: jest.fn(),
+        withProgress: jest.fn(),
+        mockCheckCurrentProfile: jest.fn(),
+        getMvsApiMock: jest.fn(),
+        mockGetInstance: jest.fn(),
+        mvsApi: null,
+        mockInstance: null,
+        mockGetMvsApi: jest.fn(),
+        testProfile: createIProfile(),
+        testSession: createISession(),
+        defaultProfileManagerInstance: null,
+        defaultProfile: null,
+        ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15
             };
-        });
+        })
+    }
 
-        Object.defineProperty(vscode, "ProgressLocation", {value: ProgressLocation, configurable: true});
-        Object.defineProperty(vscode.window, "withProgress", {value: withProgress, configurable: true});
-        Object.defineProperty(vscode.window, "showErrorMessage", {value: showErrorMessage, configurable: true});
-        Object.defineProperty(Profiles, "createInstance", { value: jest.fn(() => mockInstance), configurable: true });
-        Object.defineProperty(Profiles, "getInstance", { value: mockGetInstance, configurable: true });
+    globalMocks.mvsApi = ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
+    globalMocks.mockInstance = {
+        allProfiles: [globalMocks.profileOne, { name: "profile1" }, { name: "secondName" }],
+        defaultProfile: jest.fn(() => globalMocks.profileOne),
+        type: "zosmf",
+        validProfile: ValidProfileEnum.VALID,
+        getValidSession: globalMocks.mockGetValidSession,
+        checkCurrentProfile: jest.fn(() => globalMocks.profilesForValidation),
+        profilesForValidation: [],
+        validateProfiles: jest.fn(),
+        loadNamedProfile: globalMocks.mockLoadNamedProfile
+    };
+    globalMocks.withProgress.mockImplementation((progLocation, callback) => {
+        return callback();
     });
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
+    globalMocks.mockCheckCurrentProfile.mockReturnValue(globalMocks.profilesForValidation);
+    globalMocks.mockGetValidSession.mockResolvedValue(globalMocks.session);
+    globalMocks.mockGetInstance.mockResolvedValue(globalMocks.mockInstance);
+    globalMocks.getMvsApiMock.mockReturnValue(globalMocks.mvsApi);
+    ZoweExplorerApiRegister.getMvsApi = globalMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
 
-    afterEach(() => {
-        jest.resetAllMocks();
-    });
+    // Mocking Default Profile Manager
+    globalMocks.defaultProfileManagerInstance = await DefaultProfileManager.createInstance(Logger.getAppLogger());
+    await Profiles.createInstance(Logger.getAppLogger());
+    globalMocks.defaultProfile = DefaultProfileManager.getInstance().getDefaultProfile("zosmf");
+    Object.defineProperty(DefaultProfileManager, "getInstance", { value: jest.fn(() => globalMocks.defaultProfileManagerInstance), configurable: true });
+    Object.defineProperty(globalMocks.defaultProfileManagerInstance, "getDefaultProfile", { value: jest.fn(() => globalMocks.defaultProfile), configurable: true });
 
+    // USS API mocks
+    globalMocks.mvsApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+    globalMocks.mockGetMvsApi.mockReturnValue(globalMocks.mvsApi);
+    Object.defineProperty(globalMocks.mvsApi, "getValidSession", { value: jest.fn(() => globalMocks.testSession), configurable: true });
+    ZoweExplorerApiRegister.getUssApi = globalMocks.mockGetMvsApi.bind(ZoweExplorerApiRegister);
+
+    Object.defineProperty(vscode, "ProgressLocation", {value: globalMocks.ProgressLocation, configurable: true});
+    Object.defineProperty(vscode.window, "withProgress", {value: globalMocks.withProgress, configurable: true});
+    Object.defineProperty(vscode.window, "showErrorMessage", {value: globalMocks.showErrorMessage, configurable: true});
+    Object.defineProperty(Profiles, "createInstance", { value: jest.fn(() => globalMocks.mockInstance), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", { value: globalMocks.mockGetInstance, configurable: true });
+
+    return globalMocks;
+}
+
+describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweDatasetNode is defined", async () => {
-        const testNode = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, null, session);
+        const globalMocks = await createGlobalMocks();
+
+        const testNode = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, null, globalMocks.session);
         testNode.contextValue = DS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
@@ -93,8 +116,10 @@ describe("Unit Tests (Jest)", () => {
      * Creates sample ZoweDatasetNode list and checks that getChildren() returns the correct array
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]>", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.dirty = true;
         rootNode.contextValue = DS_SESSION_CONTEXT;
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
@@ -102,13 +127,13 @@ describe("Unit Tests (Jest)", () => {
 
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweDatasetNode[] = [
-            new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, rootNode, null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, rootNode, null, undefined, undefined, globalMocks.profileOne),
             new ZoweDatasetNode("BRTVS99.CA10", vscode.TreeItemCollapsibleState.None, rootNode, null, DS_MIGRATED_FILE_CONTEXT,
-                undefined, profileOne),
+                undefined, globalMocks.profileOne),
             new ZoweDatasetNode("BRTVS99.CA11.SPFTEMP0.CNTL", vscode.TreeItemCollapsibleState.Collapsed,
-                                rootNode, null, undefined, undefined, profileOne),
-            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, profileOne),
-            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode, null, VSAM_CONTEXT, undefined, profileOne)
+                                rootNode, null, undefined, undefined, globalMocks.profileOne),
+            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, globalMocks.profileOne),
+            new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode, null, VSAM_CONTEXT, undefined, globalMocks.profileOne)
         ];
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
@@ -123,13 +148,13 @@ describe("Unit Tests (Jest)", () => {
         expect(rootChildren).toEqual(sampleChildren);
 
         // Check that error is thrown when label is blank
-        const errorNode = new ZoweDatasetNode("", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const errorNode = new ZoweDatasetNode("", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         errorNode.dirty = true;
         await expect(errorNode.getChildren()).rejects.toEqual(Error("Invalid node"));
 
         // Check that label is different when label contains a []
         const rootNode2 = new ZoweDatasetNode("root[test]", vscode.TreeItemCollapsibleState.Collapsed,
-                                            null, session, undefined, undefined, profileOne);
+                                            null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode2.dirty = true;
         rootChildren = await rootNode2.getChildren();
     });
@@ -138,18 +163,20 @@ describe("Unit Tests (Jest)", () => {
      * Creates sample ZoweDatasetNode list and checks that getChildren() returns the correct array for a PO
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]> for a PO", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.None, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.None, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
         rootNode.dirty = true;
-        const subNode = new ZoweDatasetNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, profileOne);
+        const subNode = new ZoweDatasetNode("sub", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, globalMocks.profileOne);
         subNode.dirty = true;
         const subChildren = await subNode.getChildren();
 
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweDatasetNode[] = [
-            new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, profileOne),
-            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, profileOne),
+            new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, globalMocks.profileOne),
+            new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, globalMocks.profileOne),
         ];
 
         sampleChildren[0].command = { command: "zowe.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -163,15 +190,17 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
         "it throws an error and the catch block is reached", async () => {
-            showErrorMessage.mockReset();
+            const globalMocks = await createGlobalMocks();
+
+            globalMocks.showErrorMessage.mockReset();
             // Creating a rootNode
-            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
             rootNode.contextValue = DS_SESSION_CONTEXT;
             rootNode.pattern = "THROW ERROR";
             rootNode.dirty = true;
             await rootNode.getChildren();
-            expect(showErrorMessage.mock.calls.length).toEqual(2);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual(
+            expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(2);
+            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
                 "Retrieving response from zowe.List Error: Throwing an error to check error handling for unit tests!");
         });
 
@@ -180,61 +209,71 @@ describe("Unit Tests (Jest)", () => {
      *************************************************************************************************************/
     it("Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " +
         "it throws an error and the catch block is reached", async () => {
+            const globalMocks = await createGlobalMocks();
+
             // Creating a rootNode
-            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session,
-                undefined, undefined, profileOne);
+            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session,
+                undefined, undefined, globalMocks.profileOne);
             rootNode.contextValue = DS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweDatasetNode("Response Fail", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null,
-                undefined, undefined, profileOne);
+                undefined, undefined, globalMocks.profileOne);
             subNode.dirty = true;
             await expect(subNode.getChildren()).rejects.toThrow("The response from Zowe CLI was not successful");
         });
 
     /*************************************************************************************************************
-     * Checks that passing a session node that is not dirty ignores the getChildren() method
+     * Checks that passing a globalMocks.session node that is not dirty ignores the getChildren() method
      *************************************************************************************************************/
-    it("Checks that passing a session node that is not dirty the getChildren() method is exited early", async () => {
+    it("Checks that passing a globalMocks.session node that is not dirty the getChildren() method is exited early", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         const infoChild = new ZoweDatasetNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null,
-            INFORMATION_CONTEXT, undefined, profileOne);
+            INFORMATION_CONTEXT, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
     /*************************************************************************************************************
-     * Checks that passing a session node with no hlq ignores the getChildren() method
+     * Checks that passing a globalMocks.session node with no hlq ignores the getChildren() method
      *************************************************************************************************************/
-    it("Checks that passing a session node with no hlq the getChildren() method is exited early", async () => {
+    it("Checks that passing a globalMocks.session node with no hlq the getChildren() method is exited early", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         const infoChild = new ZoweDatasetNode("Use the search button to display datasets", vscode.TreeItemCollapsibleState.None, rootNode, null,
-            INFORMATION_CONTEXT, undefined, profileOne);
+            INFORMATION_CONTEXT, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
     /*************************************************************************************************************
-     * Checks that when getSession() is called on a memeber it returns the proper session
+     * Checks that when getSession() is called on a memeber it returns the proper globalMocks.session
      *************************************************************************************************************/
-    it("Checks that a member can reach its session properly", async () => {
+    it("Checks that a member can reach its globalMocks.session properly", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.contextValue = DS_SESSION_CONTEXT;
         const subNode = new ZoweDatasetNode(DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, rootNode, null,
-            undefined, undefined, profileOne);
+            undefined, undefined, globalMocks.profileOne);
         const member = new ZoweDatasetNode(DS_MEMBER_CONTEXT, vscode.TreeItemCollapsibleState.None, subNode, null,
-            undefined, undefined, profileOne);
+            undefined, undefined, globalMocks.profileOne);
         await expect(member.getSession()).toBeDefined();
     });
     /*************************************************************************************************************
      * Tests that certain types can't have children
      *************************************************************************************************************/
     it("Testing that certain types can't have children", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.dirty = true;
         rootNode.contextValue = DS_DS_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
@@ -247,10 +286,12 @@ describe("Unit Tests (Jest)", () => {
      * Tests that we shouldn't be updating children
      *************************************************************************************************************/
     it("Tests that we shouldn't be updating children", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
-        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+        const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         rootNode.children = [new ZoweDatasetNode("onestep", vscode.TreeItemCollapsibleState.Collapsed,
-                                                 null, session, undefined, undefined, profileOne)];
+                                                 null, globalMocks.session, undefined, undefined, globalMocks.profileOne)];
         rootNode.dirty = false;
         rootNode.contextValue = DS_PDS_CONTEXT;
         expect((await rootNode.getChildren())[0].label).toEqual("onestep");
@@ -260,9 +301,11 @@ describe("Unit Tests (Jest)", () => {
      * Run with a favorite
      *************************************************************************************************************/
     it("Testing Run with a favorite", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
         const pds = new ZoweDatasetNode("[root]: something", vscode.TreeItemCollapsibleState.Collapsed,
-                                         null, session, undefined, undefined, profileOne);
+                                         null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         pds.dirty = true;
         pds.contextValue = DS_PDS_CONTEXT;
         expect((await pds.getChildren())[0].label).toEqual("BRTVS99");
@@ -272,9 +315,11 @@ describe("Unit Tests (Jest)", () => {
      * No values returned
      *************************************************************************************************************/
     it("Testing what happens when response is zero", async () => {
+        const globalMocks = await createGlobalMocks();
+
         // Creating a rootNode
         const pds = new ZoweDatasetNode("[root]: something", vscode.TreeItemCollapsibleState.Collapsed,
-                                         null, session, undefined, undefined, profileOne);
+                                         null, globalMocks.session, undefined, undefined, globalMocks.profileOne);
         pds.dirty = true;
         pds.contextValue = DS_PDS_CONTEXT;
         const allMembers = jest.fn();

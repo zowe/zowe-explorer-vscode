@@ -16,7 +16,7 @@ import * as globals from "./globals";
 import * as os from "os";
 import * as path from "path";
 import { ISession, IProfile, ImperativeConfig } from "@zowe/imperative";
-import { Profiles } from "./Profiles";
+// import { Profiles } from "./Profiles";
 import { IZoweTreeNode } from "./api/IZoweTreeNode";
 import * as nls from "vscode-nls";
 
@@ -47,15 +47,15 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
 
             if (globals.ISTHEIA) {
                 vscode.window.showErrorMessage(errMsg);
-                const profileInstance = Profiles.getInstance();
-                const profileLoaded = profileInstance.loadNamedProfile(label.trim());
-                profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
+                // const profileInstance = Profiles.getInstance();
+                // const profileLoaded = profileInstance.loadNamedProfile(label.trim());
+                // profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
             } else {
                 vscode.window.showErrorMessage(errMsg, "Check Credentials").then(async (selection) => {
                     if (selection) {
-                        const profileInstance = Profiles.getInstance();
-                        const profileLoaded = profileInstance.loadNamedProfile(label.trim());
-                        await profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
+                        // const profileInstance = Profiles.getInstance();
+                        // const profileLoaded = profileInstance.loadNamedProfile(label.trim());
+                        // await profileInstance.getValidSession(profileLoaded, label.trim(), null, true);
                     }
                 });
             }
@@ -68,25 +68,6 @@ export function errorHandling(errorDetails: any, label?: string, moreInfo?: stri
             break;
     }
     return;
-}
-
-/*************************************************************************************************************
- * Refresh Profile and Session
- * @param {sessNode} IZoweTreeNode
- *************************************************************************************************************/
-export function refreshTree(sessNode: IZoweTreeNode) {
-    const allProf = Profiles.getInstance().getProfiles();
-    for (const profNode of allProf) {
-        if (sessNode.getProfileName() === profNode.name) {
-            setProfile(sessNode, profNode.profile);
-            const SessionProfile = profNode.profile as ISession;
-            if (sessNode.getSession().ISession !== SessionProfile) {
-                setSession(sessNode, SessionProfile);
-            }
-        }
-    }
-    sessNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-
 }
 
 export async function resolveQuickPickHelper(quickpick: vscode.QuickPick<vscode.QuickPickItem>): Promise<vscode.QuickPickItem | undefined> {
